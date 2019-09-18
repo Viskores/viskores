@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSetExplicit_h
 #define vtk_m_cont_CellSetExplicit_h
@@ -38,7 +28,7 @@ namespace cont
 namespace detail
 {
 
-template <typename CellSetType, typename FromTopology, typename ToTopology>
+template <typename CellSetType, typename VisitTopology, typename IncidentTopology>
 struct CellSetExplicitConnectivityChooser
 {
   using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<>;
@@ -73,13 +63,13 @@ class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
                                     ConnectivityStorageTag,
                                     OffsetsStorageTag>;
 
-  template <typename FromTopology, typename ToTopology>
+  template <typename VisitTopology, typename IncidentTopology>
   struct ConnectivityChooser
   {
     using ConnectivityType =
       typename detail::CellSetExplicitConnectivityChooser<Thisclass,
-                                                          FromTopology,
-                                                          ToTopology>::ConnectivityType;
+                                                          VisitTopology,
+                                                          IncidentTopology>::ConnectivityType;
 
     using ShapeArrayType = typename ConnectivityType::ShapeArrayType;
     using NumIndicesArrayType = typename ConnectivityType::NumIndicesArrayType;
@@ -87,22 +77,33 @@ class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
     using IndexOffsetArrayType = typename ConnectivityType::IndexOffsetArrayType;
   };
 
+  using VisitCellsWithPointsInternalsType =
+    typename ConnectivityChooser<vtkm::TopologyElementTagCell,
+                                 vtkm::TopologyElementTagPoint>::ConnectivityType;
+
+  using VisitPointsWithCellsInternalsType =
+    typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
+                                 vtkm::TopologyElementTagCell>::ConnectivityType;
+
 public:
   using SchedulingRangeType = vtkm::Id;
 
   //point to cell is used when iterating cells and asking for point properties
-  using PointToCellConnectivityType =
-    ConnectivityChooser<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
+  using VisitCellsWithPointsConnectivityType =
+    ConnectivityChooser<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
 
-  using ShapeArrayType = typename PointToCellConnectivityType::ShapeArrayType;
-  using NumIndicesArrayType = typename PointToCellConnectivityType::NumIndicesArrayType;
-  using ConnectivityArrayType = typename PointToCellConnectivityType::ConnectivityArrayType;
-  using IndexOffsetArrayType = typename PointToCellConnectivityType::IndexOffsetArrayType;
+  using ShapeArrayType = typename VisitCellsWithPointsConnectivityType::ShapeArrayType;
+  using NumIndicesArrayType = typename VisitCellsWithPointsConnectivityType::NumIndicesArrayType;
+  using ConnectivityArrayType =
+    typename VisitCellsWithPointsConnectivityType::ConnectivityArrayType;
+  using IndexOffsetArrayType = typename VisitCellsWithPointsConnectivityType::IndexOffsetArrayType;
 
-  VTKM_CONT CellSetExplicit(const std::string& name = std::string());
+  VTKM_CONT CellSetExplicit();
   VTKM_CONT CellSetExplicit(const Thisclass& src);
+  VTKM_CONT CellSetExplicit(Thisclass&& src) noexcept;
 
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
+  VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
   virtual ~CellSetExplicit();
 
@@ -111,13 +112,18 @@ public:
   vtkm::Id GetNumberOfFaces() const override;
   vtkm::Id GetNumberOfEdges() const override;
   void PrintSummary(std::ostream& out) const override;
+  void ReleaseResourcesExecution() override;
+
+  std::shared_ptr<CellSet> NewInstance() const override;
+  void DeepCopy(const CellSet* src) override;
 
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const;
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override;
+  void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override;
 
-  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const;
+  VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellIndex) const override;
 
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const;
@@ -143,14 +149,14 @@ public:
             const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>& offsets =
               vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>());
 
-  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
   struct ExecutionTypes
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
 
-    using ConnectivityTypes = ConnectivityChooser<FromTopology, ToTopology>;
+    using ConnectivityTypes = ConnectivityChooser<VisitTopology, IncidentTopology>;
 
     using ShapePortalType = typename ConnectivityTypes::ShapeArrayType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
@@ -170,73 +176,127 @@ public:
                                                             IndexOffsetPortalType>;
   };
 
-  template <typename Device, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
-    PrepareForInput(Device, FromTopology, ToTopology) const;
+  template <typename Device, typename VisitTopology, typename IncidentTopology>
+  typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(Device, VisitTopology, IncidentTopology) const;
 
-  template <typename FromTopology, typename ToTopology>
-  VTKM_CONT const typename ConnectivityChooser<FromTopology, ToTopology>::ShapeArrayType&
-    GetShapesArray(FromTopology, ToTopology) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapeArrayType&
+    GetShapesArray(VisitTopology, IncidentTopology) const;
 
-  template <typename FromTopology, typename ToTopology>
-  VTKM_CONT const typename ConnectivityChooser<FromTopology, ToTopology>::NumIndicesArrayType&
-    GetNumIndicesArray(FromTopology, ToTopology) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT const typename ConnectivityChooser<VisitTopology,
+                                               IncidentTopology>::NumIndicesArrayType&
+    GetNumIndicesArray(VisitTopology, IncidentTopology) const;
 
-  template <typename FromTopology, typename ToTopology>
-  VTKM_CONT const typename ConnectivityChooser<FromTopology, ToTopology>::ConnectivityArrayType&
-    GetConnectivityArray(FromTopology, ToTopology) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT const typename ConnectivityChooser<VisitTopology,
+                                               IncidentTopology>::ConnectivityArrayType&
+    GetConnectivityArray(VisitTopology, IncidentTopology) const;
 
-  template <typename FromTopology, typename ToTopology>
-  VTKM_CONT const typename ConnectivityChooser<FromTopology, ToTopology>::IndexOffsetArrayType&
-    GetIndexOffsetArray(FromTopology, ToTopology) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT const typename ConnectivityChooser<VisitTopology,
+                                               IncidentTopology>::IndexOffsetArrayType&
+    GetIndexOffsetArray(VisitTopology, IncidentTopology) const;
+
+  // Can be used to check if e.g. CellToPoint table is built.
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT bool HasConnectivity(VisitTopology from, IncidentTopology to) const
+  {
+    return this->HasConnectivityImpl(from, to);
+  }
+
+  // Can be used to reset a connectivity table, mostly useful for benchmarking.
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT void ResetConnectivity(VisitTopology from, IncidentTopology to)
+  {
+    this->ResetConnectivityImpl(from, to);
+  }
 
 protected:
-  VTKM_CONT void BuildConnectivity(
-    vtkm::TopologyElementTagPoint,
-    vtkm::TopologyElementTagCell,
-    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker()) const;
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+                                   vtkm::TopologyElementTagCell,
+                                   vtkm::TopologyElementTagPoint) const;
 
-  VTKM_CONT void BuildConnectivity(
-    vtkm::TopologyElementTagCell,
-    vtkm::TopologyElementTagPoint,
-    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker()) const;
+  VTKM_CONT void BuildConnectivity(vtkm::cont::DeviceAdapterId,
+                                   vtkm::TopologyElementTagPoint,
+                                   vtkm::TopologyElementTagCell) const;
 
-  typename ConnectivityChooser<vtkm::TopologyElementTagPoint,
-                               vtkm::TopologyElementTagCell>::ConnectivityType PointToCell;
+  VTKM_CONT bool HasConnectivityImpl(vtkm::TopologyElementTagCell,
+                                     vtkm::TopologyElementTagPoint) const
+  {
+    return this->Data->VisitCellsWithPoints.ElementsValid;
+  }
 
-  typename ConnectivityChooser<vtkm::TopologyElementTagCell,
-                               vtkm::TopologyElementTagPoint>::ConnectivityType CellToPoint;
+  VTKM_CONT bool HasConnectivityImpl(vtkm::TopologyElementTagPoint,
+                                     vtkm::TopologyElementTagCell) const
+  {
+    return this->Data->VisitPointsWithCells.ElementsValid;
+  }
 
-  // These are used in the AddCell and related methods to incrementally add
-  // cells. They need to be protected as subclasses of CellSetExplicit
-  // need to set these values when implementing Fill()
-  vtkm::Id ConnectivityAdded;
-  vtkm::Id NumberOfCellsAdded;
-  vtkm::Id NumberOfPoints;
+  VTKM_CONT void ResetConnectivityImpl(vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint)
+  {
+    // Reset entire cell set
+    this->Data->VisitCellsWithPoints = VisitCellsWithPointsInternalsType{};
+    this->Data->VisitPointsWithCells = VisitPointsWithCellsInternalsType{};
+    this->Data->ConnectivityAdded = -1;
+    this->Data->NumberOfCellsAdded = -1;
+    this->Data->NumberOfPoints = 0;
+  }
+
+  VTKM_CONT void ResetConnectivityImpl(vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell)
+  {
+    this->Data->VisitPointsWithCells = VisitPointsWithCellsInternalsType{};
+  }
+
+  // Store internals in a shared pointer so shallow copies stay consistent.
+  // See #2268.
+  struct Internals
+  {
+    VisitCellsWithPointsInternalsType VisitCellsWithPoints;
+    VisitPointsWithCellsInternalsType VisitPointsWithCells;
+
+    // These are used in the AddCell and related methods to incrementally add
+    // cells. They need to be protected as subclasses of CellSetExplicit
+    // need to set these values when implementing Fill()
+    vtkm::Id ConnectivityAdded;
+    vtkm::Id NumberOfCellsAdded;
+    vtkm::Id NumberOfPoints;
+
+    VTKM_CONT
+    Internals()
+      : ConnectivityAdded(-1)
+      , NumberOfCellsAdded(-1)
+      , NumberOfPoints(0)
+    {
+    }
+  };
+
+  std::shared_ptr<Internals> Data;
 
 private:
-  auto GetConnectivity(vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell) const -> const
-    decltype(Thisclass::PointToCell)&
+  const VisitCellsWithPointsInternalsType& GetConnectivity(vtkm::TopologyElementTagCell,
+                                                           vtkm::TopologyElementTagPoint) const
   {
-    return this->PointToCell;
+    return this->Data->VisitCellsWithPoints;
   }
 
-  auto GetConnectivity(vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell)
-    -> decltype(Thisclass::PointToCell)&
+  const VisitCellsWithPointsInternalsType& GetConnectivity(vtkm::TopologyElementTagCell,
+                                                           vtkm::TopologyElementTagPoint)
   {
-    return this->PointToCell;
+    return this->Data->VisitCellsWithPoints;
   }
 
-  auto GetConnectivity(vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint) const -> const
-    decltype(Thisclass::CellToPoint)&
+  const VisitPointsWithCellsInternalsType& GetConnectivity(vtkm::TopologyElementTagPoint,
+                                                           vtkm::TopologyElementTagCell) const
   {
-    return this->CellToPoint;
+    return this->Data->VisitPointsWithCells;
   }
 
-  auto GetConnectivity(vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint)
-    -> decltype(Thisclass::CellToPoint)&
+  const VisitPointsWithCellsInternalsType& GetConnectivity(vtkm::TopologyElementTagPoint,
+                                                           vtkm::TopologyElementTagCell)
   {
-    return this->CellToPoint;
+    return this->Data->VisitPointsWithCells;
   }
 };
 
@@ -246,8 +306,8 @@ namespace detail
 template <typename Storage1, typename Storage2, typename Storage3, typename Storage4>
 struct CellSetExplicitConnectivityChooser<
   vtkm::cont::CellSetExplicit<Storage1, Storage2, Storage3, Storage4>,
-  vtkm::TopologyElementTagPoint,
-  vtkm::TopologyElementTagCell>
+  vtkm::TopologyElementTagCell,
+  vtkm::TopologyElementTagPoint>
 {
   using ConnectivityType =
     vtkm::cont::internal::ConnectivityExplicitInternals<Storage1, Storage2, Storage3, Storage4>;
@@ -255,8 +315,8 @@ struct CellSetExplicitConnectivityChooser<
 
 template <typename CellSetType>
 struct CellSetExplicitConnectivityChooser<CellSetType,
-                                          vtkm::TopologyElementTagCell,
-                                          vtkm::TopologyElementTagPoint>
+                                          vtkm::TopologyElementTagPoint,
+                                          vtkm::TopologyElementTagCell>
 {
   //only specify the shape type as it will be constant as everything
   //is a vertex. otherwise use the defaults.
@@ -279,6 +339,76 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
 /// \endcond
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
+struct SerializableTypeString<
+  vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "CS_Explicit<" +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST," +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, OffsetST>>::Get() + "_ST>";
+
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename ShapeST, typename CountST, typename ConnectivityST, typename OffsetST>
+struct Serialization<vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>>
+{
+private:
+  using Type = vtkm::cont::CellSetExplicit<ShapeST, CountST, ConnectivityST, OffsetST>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    vtkmdiy::save(bb, cs.GetNumberOfPoints());
+    vtkmdiy::save(
+      bb, cs.GetShapesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
+    vtkmdiy::save(
+      bb, cs.GetNumIndicesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
+    vtkmdiy::save(
+      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
+    vtkmdiy::save(
+      bb, cs.GetIndexOffsetArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    vtkm::Id numberOfPoints = 0;
+    vtkmdiy::load(bb, numberOfPoints);
+    vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeST> shapes;
+    vtkmdiy::load(bb, shapes);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent, CountST> counts;
+    vtkmdiy::load(bb, counts);
+    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
+    vtkmdiy::load(bb, connectivity);
+    vtkm::cont::ArrayHandle<vtkm::Id, OffsetST> offsets;
+    vtkmdiy::load(bb, offsets);
+
+    cs = Type{};
+    cs.Fill(numberOfPoints, shapes, counts, connectivity, offsets);
+  }
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #include <vtkm/cont/CellSetExplicit.hxx>
 

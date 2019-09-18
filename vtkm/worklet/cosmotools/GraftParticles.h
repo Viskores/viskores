@@ -1,21 +1,11 @@
-
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -76,17 +66,17 @@ template <typename T>
 class GraftParticles : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> index,             // (input) index into particles
-    FieldIn<IdType> partId,            // (input) particle id sorted by bin
-    FieldIn<IdType> binId,             // (input) bin id sorted by bin
-    FieldIn<UInt32TagType> activeFlag, // (input) flag indicates which of neighbor ranges are used
-    WholeArrayIn<IdType> partIdArray,  // (input) particle id sorted by bin entire array
-    WholeArrayIn<Vec3TagType<T>> location, // (input) location of particles
-    WholeArrayIn<IdType> firstParticleId,  // (input) first particle index vector
-    WholeArrayIn<IdType> lastParticleId,   // (input) last particle index vector
-    WholeArrayOut<IdType> haloId);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  using ControlSignature =
+    void(FieldIn index,                // (input) index into particles
+         FieldIn partId,               // (input) particle id sorted by bin
+         FieldIn binId,                // (input) bin id sorted by bin
+         FieldIn activeFlag,           // (input) flag indicates which of neighbor ranges are used
+         WholeArrayIn partIdArray,     // (input) particle id sorted by bin entire array
+         WholeArrayIn location,        // (input) location of particles
+         WholeArrayIn firstParticleId, // (input) first particle index vector
+         WholeArrayIn lastParticleId,  // (input) last particle index vector
+         WholeArrayOut haloId);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;

@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_worklet_colorconversion_LookupTable_h
 #define vtk_m_worklet_colorconversion_LookupTable_h
 
@@ -37,10 +25,8 @@ namespace worklet
 namespace colorconversion
 {
 
-struct LookupTableTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::UInt8, 3>,
-                                            vtkm::Vec<vtkm::UInt8, 4>,
-                                            vtkm::Vec<vtkm::Float32, 3>,
-                                            vtkm::Vec<vtkm::Float64, 4>>
+struct LookupTableTypes
+  : vtkm::ListTagBase<vtkm::Vec3ui_8, vtkm::Vec4ui_8, vtkm::Vec3f_32, vtkm::Vec4f_64>
 {
 };
 
@@ -72,10 +58,8 @@ struct LookupTable : public vtkm::worklet::WorkletMapField
     this->NumberOfSamples = colorTableSamples.NumberOfSamples;
   }
 
-  typedef void ControlSignature(FieldIn<> in,
-                                WholeArrayIn<LookupTableTypes> lookup,
-                                FieldOut<> color);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn in, WholeArrayIn lookup, FieldOut color);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T, typename WholeFieldIn, typename U, int N>
   VTKM_EXEC void operator()(const T& in,

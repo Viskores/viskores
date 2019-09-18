@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_CellShape_h
 #define vtk_m_CellShape_h
@@ -36,7 +26,7 @@ enum CellShapeIdEnum
   CELL_SHAPE_VERTEX = 1,
   //CELL_SHAPE_POLY_VERTEX      = 2,
   CELL_SHAPE_LINE = 3,
-  //CELL_SHAPE_POLY_LINE        = 4,
+  CELL_SHAPE_POLY_LINE = 4,
   CELL_SHAPE_TRIANGLE = 5,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
   CELL_SHAPE_POLYGON = 7,
@@ -120,7 +110,7 @@ VTKM_DEFINE_CELL_TAG(Empty, CELL_SHAPE_EMPTY);
 VTKM_DEFINE_CELL_TAG(Vertex, CELL_SHAPE_VERTEX);
 //VTKM_DEFINE_CELL_TAG(PolyVertex, CELL_SHAPE_POLY_VERTEX);
 VTKM_DEFINE_CELL_TAG(Line, CELL_SHAPE_LINE);
-//VTKM_DEFINE_CELL_TAG(PolyLine, CELL_SHAPE_POLY_LINE);
+VTKM_DEFINE_CELL_TAG(PolyLine, CELL_SHAPE_POLY_LINE);
 VTKM_DEFINE_CELL_TAG(Triangle, CELL_SHAPE_TRIANGLE);
 //VTKM_DEFINE_CELL_TAG(TriangleStrip, CELL_SHAPE_TRIANGLE_STRIP);
 VTKM_DEFINE_CELL_TAG(Polygon, CELL_SHAPE_POLYGON);
@@ -192,6 +182,7 @@ struct CellShapeTagGeneric
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_EMPTY, call);                                           \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_VERTEX, call);                                          \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_LINE, call);                                            \
+  vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLY_LINE, call);                                       \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_TRIANGLE, call);                                        \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_POLYGON, call);                                         \
   vtkmGenericCellShapeMacroCase(CELL_SHAPE_QUAD, call);                                            \

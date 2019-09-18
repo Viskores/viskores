@@ -2,31 +2,21 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_gradient_GradientOutput_h
 #define vtk_m_worklet_gradient_GradientOutput_h
 
-#include <vtkm/BaseComponent.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
 #include <vtkm/worklet/gradient/Divergence.h>
@@ -37,12 +27,11 @@ namespace vtkm
 {
 namespace exec
 {
-
 template <typename T, typename DeviceAdapter>
-struct GradientScalarOutput : public vtkm::exec::ExecutionObjectBase
+struct GradientScalarOutputExecutionObject
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   struct PortalTypes
   {
@@ -51,17 +40,9 @@ struct GradientScalarOutput : public vtkm::exec::ExecutionObjectBase
     using Portal = typename ExecutionTypes::Portal;
   };
 
-  GradientScalarOutput() = default;
+  GradientScalarOutputExecutionObject() = default;
 
-  GradientScalarOutput(bool,
-                       bool,
-                       bool,
-                       bool,
-                       vtkm::cont::ArrayHandle<ValueType>& gradient,
-                       vtkm::cont::ArrayHandle<BaseTType>&,
-                       vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>>&,
-                       vtkm::cont::ArrayHandle<BaseTType>&,
-                       vtkm::Id size)
+  GradientScalarOutputExecutionObject(vtkm::cont::ArrayHandle<ValueType> gradient, vtkm::Id size)
   {
     this->GradientPortal = gradient.PrepareForOutput(size, DeviceAdapter());
   }
@@ -76,11 +57,43 @@ struct GradientScalarOutput : public vtkm::exec::ExecutionObjectBase
   typename PortalTypes::Portal GradientPortal;
 };
 
-template <typename T, typename DeviceAdapter>
-struct GradientVecOutput : public vtkm::exec::ExecutionObjectBase
+template <typename T>
+struct GradientScalarOutput : public vtkm::cont::ExecutionObjectBase
 {
   using ValueType = vtkm::Vec<T, 3>;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
+  template <typename Device>
+
+  VTKM_CONT vtkm::exec::GradientScalarOutputExecutionObject<T, Device> PrepareForExecution(
+    Device) const
+  {
+    return vtkm::exec::GradientScalarOutputExecutionObject<T, Device>(this->Gradient, this->Size);
+  }
+
+  GradientScalarOutput() = default;
+
+  GradientScalarOutput(bool,
+                       bool,
+                       bool,
+                       bool,
+                       vtkm::cont::ArrayHandle<ValueType>& gradient,
+                       vtkm::cont::ArrayHandle<BaseTType>&,
+                       vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>>&,
+                       vtkm::cont::ArrayHandle<BaseTType>&,
+                       vtkm::Id size)
+    : Size(size)
+    , Gradient(gradient)
+  {
+  }
+  vtkm::Id Size;
+  vtkm::cont::ArrayHandle<ValueType> Gradient;
+};
+
+template <typename T, typename DeviceAdapter>
+struct GradientVecOutputExecutionObject
+{
+  using ValueType = vtkm::Vec<T, 3>;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   template <typename FieldType>
   struct PortalTypes
@@ -90,17 +103,17 @@ struct GradientVecOutput : public vtkm::exec::ExecutionObjectBase
     using Portal = typename ExecutionTypes::Portal;
   };
 
-  GradientVecOutput() = default;
+  GradientVecOutputExecutionObject() = default;
 
-  GradientVecOutput(bool g,
-                    bool d,
-                    bool v,
-                    bool q,
-                    vtkm::cont::ArrayHandle<ValueType>& gradient,
-                    vtkm::cont::ArrayHandle<BaseTType>& divergence,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>>& vorticity,
-                    vtkm::cont::ArrayHandle<BaseTType>& qcriterion,
-                    vtkm::Id size)
+  GradientVecOutputExecutionObject(bool g,
+                                   bool d,
+                                   bool v,
+                                   bool q,
+                                   vtkm::cont::ArrayHandle<ValueType> gradient,
+                                   vtkm::cont::ArrayHandle<BaseTType> divergence,
+                                   vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>> vorticity,
+                                   vtkm::cont::ArrayHandle<BaseTType> qcriterion,
+                                   vtkm::Id size)
   {
     this->SetGradient = g;
     this->SetDivergence = d;
@@ -168,24 +181,77 @@ struct GradientVecOutput : public vtkm::exec::ExecutionObjectBase
   typename PortalTypes<BaseTType>::Portal QCriterionPortal;
 };
 
-template <typename T, typename DeviceAdapter>
-struct GradientOutput : public GradientScalarOutput<T, DeviceAdapter>
+template <typename T>
+struct GradientVecOutput : public vtkm::cont::ExecutionObjectBase
 {
-  using GradientScalarOutput<T, DeviceAdapter>::GradientScalarOutput;
+  using ValueType = vtkm::Vec<T, 3>;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
+
+  template <typename Device>
+  VTKM_CONT vtkm::exec::GradientVecOutputExecutionObject<T, Device> PrepareForExecution(
+    Device) const
+  {
+    return vtkm::exec::GradientVecOutputExecutionObject<T, Device>(this->G,
+                                                                   this->D,
+                                                                   this->V,
+                                                                   this->Q,
+                                                                   this->Gradient,
+                                                                   this->Divergence,
+                                                                   this->Vorticity,
+                                                                   this->Qcriterion,
+                                                                   this->Size);
+  }
+
+  GradientVecOutput() = default;
+
+  GradientVecOutput(bool g,
+                    bool d,
+                    bool v,
+                    bool q,
+                    vtkm::cont::ArrayHandle<ValueType>& gradient,
+                    vtkm::cont::ArrayHandle<BaseTType>& divergence,
+                    vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>>& vorticity,
+                    vtkm::cont::ArrayHandle<BaseTType>& qcriterion,
+                    vtkm::Id size)
+  {
+    this->G = g;
+    this->D = d;
+    this->V = v;
+    this->Q = q;
+    this->Gradient = gradient;
+    this->Divergence = divergence;
+    this->Vorticity = vorticity;
+    this->Qcriterion = qcriterion;
+    this->Size = size;
+  }
+
+  bool G;
+  bool D;
+  bool V;
+  bool Q;
+  vtkm::cont::ArrayHandle<ValueType> Gradient;
+  vtkm::cont::ArrayHandle<BaseTType> Divergence;
+  vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>> Vorticity;
+  vtkm::cont::ArrayHandle<BaseTType> Qcriterion;
+  vtkm::Id Size;
 };
 
-template <typename DeviceAdapter>
-struct GradientOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>
+template <typename T>
+struct GradientOutput : public GradientScalarOutput<T>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>::GradientVecOutput;
+  using GradientScalarOutput<T>::GradientScalarOutput;
 };
 
-template <typename DeviceAdapter>
-struct GradientOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>
-  : public GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>
+template <>
+struct GradientOutput<vtkm::Vec3f_32> : public GradientVecOutput<vtkm::Vec3f_32>
 {
-  using GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>::GradientVecOutput;
+  using GradientVecOutput<vtkm::Vec3f_32>::GradientVecOutput;
+};
+
+template <>
+struct GradientOutput<vtkm::Vec3f_64> : public GradientVecOutput<vtkm::Vec3f_64>
+{
+  using GradientVecOutput<vtkm::Vec3f_64>::GradientVecOutput;
 };
 }
 } // namespace vtkm::exec
@@ -210,7 +276,9 @@ struct TransportTagGradientOut
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagGradientOut, ContObjectType, Device>
 {
-  using ExecObjectType = vtkm::exec::GradientOutput<typename ContObjectType::ValueType, Device>;
+  using ExecObjectFacotryType = vtkm::exec::GradientOutput<typename ContObjectType::ValueType>;
+  using ExecObjectType =
+    decltype(std::declval<ExecObjectFacotryType>().PrepareForExecution(Device()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
@@ -218,7 +286,8 @@ struct Transport<vtkm::cont::arg::TransportTagGradientOut, ContObjectType, Devic
                                       vtkm::Id vtkmNotUsed(inputRange),
                                       vtkm::Id outputRange) const
   {
-    return object.PrepareForOutput(outputRange, Device());
+    ExecObjectFacotryType ExecutionObjectFacotry = object.PrepareForOutput(outputRange);
+    return ExecutionObjectFacotry.PrepareForExecution(Device());
   }
 };
 }

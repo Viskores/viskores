@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/CosmoTools.h>
@@ -68,7 +58,7 @@ vtkm::cont::DataSet MakeCosmo_2DDataSet_0()
   // Coordinates
   const int nVerts = 17;
   const int nCells = 17;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
 
   coords[0] = CoordType(1, 1, 0);
@@ -100,7 +90,7 @@ vtkm::cont::DataSet MakeCosmo_2DDataSet_0()
     numindices.push_back(1);
     conn.push_back(pt);
   }
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 xLocation[nCells] = { 1, 1, 2, 1, 3, 1, 1, 3, 2, 3, 4, 3, 5, 5, 4, 5, 6 };
@@ -130,7 +120,7 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
   // Coordinates
   const int nVerts = 14;
   const int nCells = 14;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
 
   coords[0] = CoordType(20.8125f, 10.8864f, 0.309784f);
@@ -159,7 +149,7 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
     numindices.push_back(1);
     conn.push_back(pt);
   }
-  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates");
 
   // Field data
   vtkm::Float32 xLocation[nCells] = { 20.8125f, 29.6871f, 29.724f,  29.6783f, 29.7051f,
@@ -198,7 +188,7 @@ void TestCosmo_2DHaloFind()
 
   // Create the input 2D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_2DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
@@ -232,8 +222,7 @@ void TestCosmo_2DHaloFind()
                            linkingLength,
                            resultHaloId,
                            resultMBP,
-                           resultPot,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                           resultPot);
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -251,7 +240,7 @@ void TestCosmo_3DHaloFind()
 
   // Create the input 3D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_3DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
@@ -285,8 +274,7 @@ void TestCosmo_3DHaloFind()
                            linkingLength,
                            resultHaloId,
                            resultMBP,
-                           resultPot,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+                           resultPot);
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -304,7 +292,7 @@ void TestCosmo_3DCenterFind()
 
   // Create the input 3D particle dataset
   vtkm::cont::DataSet dataSet = MakeCosmo_3DDataSet_0();
-  vtkm::Id nCells = dataSet.GetCellSet(0).GetNumberOfCells();
+  vtkm::Id nCells = dataSet.GetNumberOfCells();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray;
@@ -322,21 +310,11 @@ void TestCosmo_3DCenterFind()
   vtkm::Float32 particleMass = 1.0f;
 
   vtkm::worklet::CosmoTools cosmoTools;
-  cosmoTools.RunMBPCenterFinderNxN(xLocArray,
-                                   yLocArray,
-                                   zLocArray,
-                                   nCells,
-                                   particleMass,
-                                   nxnResult,
-                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  cosmoTools.RunMBPCenterFinderNxN(
+    xLocArray, yLocArray, zLocArray, nCells, particleMass, nxnResult);
 
-  cosmoTools.RunMBPCenterFinderMxN(xLocArray,
-                                   yLocArray,
-                                   zLocArray,
-                                   nCells,
-                                   particleMass,
-                                   mxnResult,
-                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  cosmoTools.RunMBPCenterFinderMxN(
+    xLocArray, yLocArray, zLocArray, nCells, particleMass, mxnResult);
 
   VTKM_TEST_ASSERT(test_equal(nxnResult.first, mxnResult.first),
                    "NxN and MxN got different results");
@@ -350,7 +328,7 @@ void TestCosmoTools()
   TestCosmo_3DCenterFind();
 }
 
-int UnitTestCosmoTools(int, char* [])
+int UnitTestCosmoTools(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCosmoTools);
+  return vtkm::cont::testing::Testing::Run(TestCosmoTools, argc, argv);
 }

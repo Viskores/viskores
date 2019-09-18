@@ -264,12 +264,16 @@ typedef __int64          intmax_t;
 // makes the fmt::literals implementation easier. However, an explicit check
 // for variadic templates is added here just in case.
 // For Intel's compiler both it and the system gcc/msc must support UDLs.
-# define FMT_USE_USER_DEFINED_LITERALS \
-   FMT_USE_VARIADIC_TEMPLATES && FMT_USE_RVALUE_REFERENCES && \
+#if FMT_USE_VARIADIC_TEMPLATES && FMT_USE_RVALUE_REFERENCES && \
    (FMT_HAS_FEATURE(cxx_user_literals) || \
      (FMT_GCC_VERSION >= 407 && FMT_HAS_GXX_CXX11) || FMT_MSC_VER >= 1900) && \
    (!defined(FMT_ICC_VERSION) || FMT_ICC_VERSION >= 1500)
+#define FMT_USE_USER_DEFINED_LITERALS 1
+#else
+define FMT_USE_USER_DEFINED_LITERALS 0
 #endif
+#endif
+
 
 #ifndef FMT_USE_EXTERN_TEMPLATES
 # define FMT_USE_EXTERN_TEMPLATES \
@@ -1187,7 +1191,7 @@ struct ConvertToInt {
   template <> \
   struct ConvertToInt<Type> {  enum { value = 0 }; }
 
-// Silence warnings about convering float to int.
+// Silence warnings about converting float to int.
 FMT_DISABLE_CONVERSION_TO_INT(float);
 FMT_DISABLE_CONVERSION_TO_INT(double);
 FMT_DISABLE_CONVERSION_TO_INT(long double);

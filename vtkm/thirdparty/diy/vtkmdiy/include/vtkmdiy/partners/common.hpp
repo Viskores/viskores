@@ -1,5 +1,5 @@
-#ifndef DIY_PARTNERS_COMMON_HPP
-#define DIY_PARTNERS_COMMON_HPP
+#ifndef VTKMDIY_PARTNERS_COMMON_HPP
+#define VTKMDIY_PARTNERS_COMMON_HPP
 
 #include "../decomposition.hpp"
 #include "../types.hpp"
@@ -187,7 +187,7 @@ factor(int k, int tot_b, std::vector<int>& kv)
         if (rem % j == 0)
         {
           kv.push_back(j);
-          rem /= k;
+          rem /= j;
           break;
         }
       }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/CellDerivative.h>
@@ -38,7 +28,7 @@ namespace
 std::mt19937 g_RandomGenerator;
 
 // Establish simple mapping between world and parametric coordinates.
-// Actuall world/parametric coordinates are in a different test.
+// Actual world/parametric coordinates are in a different test.
 template <typename T>
 vtkm::Vec<T, 3> ParametricToWorld(const vtkm::Vec<T, 3>& pcoord)
 {
@@ -61,9 +51,10 @@ struct LinearField
   template <typename T>
   FieldType GetValue(vtkm::Vec<T, 3> coordinates) const
   {
-    return ((coordinates[0] * this->Gradient[0] + coordinates[1] * this->Gradient[1] +
-             coordinates[2] * this->Gradient[2]) +
-            this->OriginValue);
+    return static_cast<FieldType>((coordinates[0] * this->Gradient[0] +
+                                   coordinates[1] * this->Gradient[1] +
+                                   coordinates[2] * this->Gradient[2]) +
+                                  this->OriginValue);
   }
 };
 
@@ -112,7 +103,7 @@ struct TestDerivativeFunctor
     vtkm::VecVariable<FieldType, MAX_POINTS> fieldValues;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> wcoords = worldCoordinates[pointIndex];
+      vtkm::Vec3f wcoords = worldCoordinates[pointIndex];
       FieldType value = static_cast<FieldType>(field.GetValue(wcoords));
       fieldValues.Append(value);
     }
@@ -124,11 +115,11 @@ struct TestDerivativeFunctor
     for (vtkm::IdComponent trial = 0; trial < 5; trial++)
     {
       // Generate a random pcoords that we know is in the cell.
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoords(0);
+      vtkm::Vec3f pcoords(0);
       vtkm::FloatDefault totalWeight = 0;
       for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
       {
-        vtkm::Vec<vtkm::FloatDefault, 3> pointPcoords =
+        vtkm::Vec3f pointPcoords =
           vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
         VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
         vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
@@ -165,13 +156,13 @@ struct TestDerivativeFunctor
     vtkm::exec::FunctorBase workletProxy;
     workletProxy.SetErrorMessageBuffer(errorMessage);
 
-    vtkm::VecVariable<vtkm::Vec<vtkm::FloatDefault, 3>, MAX_POINTS> worldCoordinates;
+    vtkm::VecVariable<vtkm::Vec3f, MAX_POINTS> worldCoordinates;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoords =
+      vtkm::Vec3f pcoords =
         vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-      vtkm::Vec<vtkm::FloatDefault, 3> wcoords = ParametricToWorld(pcoords);
+      vtkm::Vec3f wcoords = ParametricToWorld(pcoords);
       VTKM_TEST_ASSERT(test_equal(pcoords, WorldToParametric(wcoords)),
                        "Test world/parametric conversion broken.");
       worldCoordinates.Append(wcoords);
@@ -291,19 +282,19 @@ void TestDerivative()
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float64>());
   std::cout << "======== Vec<Float32,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec<vtkm::Float32, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec3f_32>());
   std::cout << "======== Vec<Float64,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec<vtkm::Float64, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec3f_64>());
 
   std::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
-  vtkm::Vec<vtkm::FloatDefault, 3> origin = vtkm::Vec<vtkm::FloatDefault, 3>(0.25f, 0.25f, 0.25f);
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(2.0f, 2.0f, 2.0f);
+  vtkm::Vec3f origin = vtkm::Vec3f(0.25f, 0.25f, 0.25f);
+  vtkm::Vec3f spacing = vtkm::Vec3f(2.0f, 2.0f, 2.0f);
 
   LinearField<vtkm::Float64> scalarField;
   scalarField.OriginValue = randomDist(g_RandomGenerator);
   scalarField.Gradient = vtkm::make_Vec(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
-  vtkm::Vec<vtkm::Float64, 3> expectedScalarGradient = scalarField.Gradient;
+  vtkm::Vec3f_64 expectedScalarGradient = scalarField.Gradient;
 
   TestDerivativeFunctor<vtkm::Float64> testFunctorScalar;
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
@@ -324,7 +315,7 @@ void TestDerivative()
                                       scalarField,
                                       expectedScalarGradient);
 
-  LinearField<vtkm::Vec<vtkm::Float64, 3>> vectorField;
+  LinearField<vtkm::Vec3f_64> vectorField;
   vectorField.OriginValue = vtkm::make_Vec(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
   vectorField.Gradient = vtkm::make_Vec(
@@ -334,22 +325,22 @@ void TestDerivative()
       randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator)),
     vtkm::make_Vec(
       randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator)));
-  vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expectedVectorGradient = vectorField.Gradient;
+  vtkm::Vec<vtkm::Vec3f_64, 3> expectedVectorGradient = vectorField.Gradient;
 
-  TestDerivativeFunctor<vtkm::Vec<vtkm::Float64, 3>> testFunctorVector;
+  TestDerivativeFunctor<vtkm::Vec3f_64> testFunctorVector;
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagHexahedron(),
                                       vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),
                                       vectorField,
                                       expectedVectorGradient);
   std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
-  expectedVectorGradient[2] = vtkm::Vec<vtkm::Float64, 3>(0.0);
+  expectedVectorGradient[2] = vtkm::Vec3f_64(0.0);
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagQuad(),
                                       vtkm::VecAxisAlignedPointCoordinates<2>(origin, spacing),
                                       vectorField,
                                       expectedVectorGradient);
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
-  expectedVectorGradient[1] = vtkm::Vec<vtkm::Float64, 3>(0.0);
+  expectedVectorGradient[1] = vtkm::Vec3f_64(0.0);
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagLine(),
                                       vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing),
                                       vectorField,
@@ -358,7 +349,7 @@ void TestDerivative()
 
 } // anonymous namespace
 
-int UnitTestCellDerivative(int, char* [])
+int UnitTestCellDerivative(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestDerivative);
+  return vtkm::testing::Testing::Run(TestDerivative, argc, argv);
 }

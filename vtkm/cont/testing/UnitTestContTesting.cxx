@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 // This meta-test makes sure that the testing environment is properly reporting
@@ -46,16 +36,16 @@ void GoodAssert()
 
 } // anonymous namespace
 
-int UnitTestContTesting(int, char* [])
+int UnitTestContTesting(int argc, char* argv[])
 {
   std::cout << "-------\nThis call should fail." << std::endl;
-  if (vtkm::cont::testing::Testing::Run(TestFail) == 0)
+  if (vtkm::cont::testing::Testing::Run(TestFail, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
   }
   std::cout << "-------\nThis call should fail." << std::endl;
-  if (vtkm::cont::testing::Testing::Run(BadTestAssert) == 0)
+  if (vtkm::cont::testing::Testing::Run(BadTestAssert, argc, argv) == 0)
   {
     std::cout << "Did not get expected fail!" << std::endl;
     return 1;
@@ -63,5 +53,5 @@ int UnitTestContTesting(int, char* [])
 
   std::cout << "-------\nThis call should pass." << std::endl;
   // This is what your main function typically looks like.
-  return vtkm::cont::testing::Testing::Run(GoodAssert);
+  return vtkm::cont::testing::Testing::Run(GoodAssert, argc, argv);
 }

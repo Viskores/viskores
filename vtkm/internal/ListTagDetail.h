@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_internal_ListTagDetail_h
@@ -54,10 +44,10 @@ struct UniversalTag
 };
 
 //-----------------------------------------------------------------------------
-template <typename ListTag1, typename ListTag2>
+template <typename... ListTags>
 struct ListJoin
 {
-  using type = brigand::append<ListTag1, ListTag2>;
+  using type = brigand::append<ListTags...>;
 };
 
 template <typename ListTag>
@@ -127,6 +117,40 @@ struct ListContainsImpl
   using find_result = brigand::find<List, std::is_same<brigand::_1, Type>>;
   using size = brigand::size<find_result>;
   static constexpr bool value = (size::value != 0);
+};
+
+//-----------------------------------------------------------------------------
+template <typename BrigandList>
+struct ListSizeImpl;
+
+template <typename... Ts>
+struct ListSizeImpl<brigand::list<Ts...>>
+{
+  static constexpr vtkm::IdComponent value = vtkm::IdComponent{ sizeof...(Ts) };
+};
+
+//-----------------------------------------------------------------------------
+template <typename Type, typename RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl;
+
+template <typename Type, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<>, NumBefore>
+{
+  // Could not find index.
+  static constexpr vtkm::IdComponent value = -1;
+};
+
+template <typename Type, typename T1, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<T1, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value =
+    ListIndexOfImpl<Type, brigand::list<RemainingList...>, NumBefore + 1>::value;
+};
+
+template <typename Type, typename... RemainingList, vtkm::IdComponent NumBefore>
+struct ListIndexOfImpl<Type, brigand::list<Type, RemainingList...>, NumBefore>
+{
+  static constexpr vtkm::IdComponent value = NumBefore;
 };
 
 //-----------------------------------------------------------------------------
@@ -229,7 +253,14 @@ struct ListCrossProductImpl
           brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
 };
 
-
+//-----------------------------------------------------------------------------
+template <typename List, typename Type>
+struct ListAppendUniqueImpl
+{
+  using type = typename std::conditional<ListContainsImpl<Type, List>::value,
+                                         List,
+                                         typename ListJoin<List, ListBase<Type>>::type>::type;
+};
 
 } // namespace detail
 

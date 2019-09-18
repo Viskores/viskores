@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_exec_ArrayHandleExecutionManager_h
 #define vtk_m_cont_exec_ArrayHandleExecutionManager_h
@@ -152,9 +142,9 @@ public:
   void ReleaseResources() { this->ReleaseResourcesImpl(); }
 
   template <typename DeviceAdapter>
-  VTKM_CONT bool IsDeviceAdapter(DeviceAdapter) const
+  VTKM_CONT bool IsDeviceAdapter(DeviceAdapter device) const
   {
-    return this->IsDeviceAdapterImpl(vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
+    return this->IsDeviceAdapterImpl(device);
   }
 
   VTKM_CONT
@@ -255,16 +245,10 @@ protected:
   void ReleaseResourcesImpl() { this->Transfer.ReleaseResources(); }
 
   VTKM_CONT
-  bool IsDeviceAdapterImpl(const DeviceAdapterId& id) const
-  {
-    return id == vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-  }
+  bool IsDeviceAdapterImpl(const DeviceAdapterId& id) const { return id == DeviceAdapter(); }
 
   VTKM_CONT
-  DeviceAdapterId GetDeviceAdapterIdImpl() const
-  {
-    return vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
-  }
+  DeviceAdapterId GetDeviceAdapterIdImpl() const { return DeviceAdapter(); }
 
 private:
   ArrayTransferType Transfer;

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/CrossProduct.h>
@@ -106,11 +96,11 @@ void TestCrossProduct()
 
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
     vtkm::Vec<T, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)), resN(vtkm::Normal(res));
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v1N), T(0.0)), "Wrong result for cross product");
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v2N), T(0.0)), "Wrong result for cross product");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v1N), T(0.0)), "Wrong result for cross product");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v2N), T(0.0)), "Wrong result for cross product");
 
     T sinAngle = vtkm::Magnitude(res) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
-    T cosAngle = vtkm::dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
+    T cosAngle = vtkm::Dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
     VTKM_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, T(1.0)),
                      "Bad cross product length.");
   }
@@ -124,7 +114,7 @@ void TestCrossProductWorklets()
 }
 }
 
-int UnitTestCrossProduct(int, char* [])
+int UnitTestCrossProduct(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCrossProductWorklets);
+  return vtkm::cont::testing::Testing::Run(TestCrossProductWorklets, argc, argv);
 }

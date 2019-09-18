@@ -2,29 +2,19 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayCopy_h
 #define vtk_m_cont_ArrayCopy_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/Logging.h>
 
 // TODO: When virtual arrays are available, compile the implementation in a .cxx/.cu file. Common
 // arrays are copied directly but anything else would be copied through virtual methods.
@@ -34,110 +24,91 @@ namespace vtkm
 namespace cont
 {
 
-/// \brief Does a deep copy from one array to another array.
-///
-/// Given a source \c ArrayHandle and a destination \c ArrayHandle, this function allocates the
-/// destination \c ArrayHandle to the correct size and deeply copies all the values from the source
-/// to the destination.
-///
-/// This version of the method takes a device adapter on which to perform the copy. If you do not
-/// have a device adapter handy, use a version of \c ArrayCopy that uses a \c RuntimeDeviceTracker
-/// (or no device at all) to choose a good option for you.
-///
-template <typename InValueType,
-          typename InStorage,
-          typename OutValueType,
-          typename OutStorage,
-          typename Device>
-VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
-                         vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
-                         Device)
-{
-  vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
-    vtkm::cont::make_ArrayHandleCast<OutValueType>(source), destination);
-}
-
 namespace detail
 {
 
-template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
-struct ArrayCopyFunctor
+// normal element-wise copy:
+template <typename InArrayType, typename OutArrayType>
+void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* Copy storage */)
 {
-  using InArrayHandleType = vtkm::cont::ArrayHandle<InValueType, InStorage>;
-  InArrayHandleType InputArray;
+  // Find the device that already has a copy of the data:
+  vtkm::cont::DeviceAdapterId devId = in.GetDeviceAdapterId();
 
-  using OutArrayHandleType = vtkm::cont::ArrayHandle<OutValueType, OutStorage>;
-  OutArrayHandleType OutputArray;
-
-  bool OnlyUseCurrentInputDevice;
-
-  VTKM_CONT
-  ArrayCopyFunctor(const InArrayHandleType& input,
-                   OutArrayHandleType& output,
-                   bool onlyUseCurrentInputDevice)
-    : InputArray(input)
-    , OutputArray(output)
-    , OnlyUseCurrentInputDevice(onlyUseCurrentInputDevice)
+  // If the data is not on any device, let the runtime tracker pick an available
+  // parallel copy algorithm.
+  if (devId.GetValue() == VTKM_DEVICE_ADAPTER_UNDEFINED)
   {
+    devId = vtkm::cont::make_DeviceAdapterId(VTKM_DEVICE_ADAPTER_ANY);
   }
 
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+  bool success = vtkm::cont::Algorithm::Copy(devId, in, out);
 
-    if (this->OnlyUseCurrentInputDevice &&
-        (vtkm::cont::DeviceAdapterTraits<Device>::GetId() != this->InputArray.GetDeviceAdapterId()))
-    {
-      // We were asked to only copy on the device that already has the data from the input array.
-      // This is not that device, so return without copying.
-      return false;
-    }
-
-    vtkm::cont::ArrayCopy(this->InputArray, this->OutputArray, Device());
-
-    return true;
+  if (!success && devId.GetValue() != VTKM_DEVICE_ADAPTER_ANY)
+  { // Retry on any device if the first attempt failed.
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "Failed to run ArrayCopy on device '" << devId.GetName()
+                                                     << "'. Retrying on any device.");
+    success = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, in, out);
   }
-};
+
+  if (!success)
+  {
+    throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
+  }
+}
+
+// Copy storage for implicit arrays, must be of same type:
+template <typename ArrayType>
+void ArrayCopyImpl(const ArrayType& in, ArrayType& out, std::true_type /* Copy storage */)
+{
+  // This is only called if in/out are the same type and the handle is not
+  // writable. This allows read-only implicit array handles to be copied.
+  auto newStorage = in.GetStorage();
+  out = ArrayType(newStorage);
+}
 
 } // namespace detail
 
 /// \brief Does a deep copy from one array to another array.
 ///
-/// Given a source \c ArrayHandle and a destination \c ArrayHandle, this function allocates the
-/// destination \c ArrayHandle to the correct size and deeply copies all the values from the source
-/// to the destination.
+/// Given a source \c ArrayHandle and a destination \c ArrayHandle, this
+/// function allocates the destination \c ArrayHandle to the correct size and
+/// deeply copies all the values from the source to the destination.
 ///
-/// This method optionally takes a \c RuntimeDeviceTracker to control which devices to try.
+/// This method will attempt to copy the data using the device that the input
+/// data is already valid on. If the input data is only valid in the control
+/// environment, the runtime device tracker is used to try to find another
+/// device.
+///
+/// This should work on some non-writable array handles as well, as long as
+/// both \a source and \a destination are the same type.
 ///
 template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
-VTKM_CONT void ArrayCopy(
-  const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
-  vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
+                         vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination)
 {
-  bool isCopied = false;
+  using InArrayType = vtkm::cont::ArrayHandle<InValueType, InStorage>;
+  using OutArrayType = vtkm::cont::ArrayHandle<OutValueType, OutStorage>;
+  using SameTypes = std::is_same<InArrayType, OutArrayType>;
+  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<OutArrayType>;
 
-  detail::ArrayCopyFunctor<InValueType, InStorage, OutValueType, OutStorage> functor(
-    source, destination, true);
+  // There are three cases handled here:
+  // 1. Output is writable:
+  //    -> Do element-wise copy (normal copy behavior)
+  // 2. Output is not writable and arrays are same type:
+  //    -> just copy storage (special case for implicit array cloning)
+  // 3. Output is not writable and arrays are different types:
+  //    -> fail (cannot copy)
 
-  // First pass, only use source's already loaded device.
-  isCopied = vtkm::cont::TryExecute(functor, tracker);
-  if (isCopied)
-  {
-    return;
-  }
+  // Give a nice error message for case 3:
+  VTKM_STATIC_ASSERT_MSG(IsWritable::value || SameTypes::value,
+                         "Cannot copy to a read-only array with a different "
+                         "type than the source.");
 
-  // Second pass, use any available device.
-  functor.OnlyUseCurrentInputDevice = false;
-  isCopied = vtkm::cont::TryExecute(functor, tracker);
-  if (isCopied)
-  {
-    return;
-  }
+  using JustCopyStorage = std::integral_constant<bool, SameTypes::value && !IsWritable::value>;
 
-  // If we are here, then we just failed to copy.
-  throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
+  // Static dispatch cases 1 & 2
+  detail::ArrayCopyImpl(source, destination, JustCopyStorage{});
 }
 }
 } // namespace vtkm::cont

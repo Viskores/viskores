@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_internal_ConnectivityStructuredInternals_h
@@ -26,6 +16,8 @@
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecVariable.h>
+
+#include <vtkm/internal/Assume.h>
 
 namespace vtkm
 {
@@ -46,6 +38,9 @@ public:
   void SetPointDimensions(vtkm::Id dimensions) { this->PointDimensions = dimensions; }
 
   VTKM_EXEC_CONT
+  void SetGlobalPointIndexStart(vtkm::Id start) { this->GlobalPointIndexStart = start; }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetPointDimensions() const { return this->PointDimensions; }
 
   VTKM_EXEC_CONT
@@ -62,6 +57,9 @@ public:
   {
     return this->GetNumberOfPoints();
   }
+
+  VTKM_EXEC_CONT
+  SchedulingRangeType GetGlobalPointIndexStart() const { return this->GlobalPointIndexStart; }
 
   static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 2;
   static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 2;
@@ -80,6 +78,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
   {
+    VTKM_ASSUME(index >= 0);
+
     vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = index;
     pointIds[1] = pointIds[0] + 1;
@@ -89,6 +89,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::IdComponent GetNumberOfCellsOnPoint(vtkm::Id pointIndex) const
   {
+    VTKM_ASSUME(pointIndex >= 0);
+
     if ((pointIndex > 0) && (pointIndex < this->PointDimensions - 1))
     {
       return 2;
@@ -102,6 +104,9 @@ public:
   VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
   {
+    VTKM_ASSUME(index >= 0);
+    VTKM_ASSUME(this->PointDimensions > 1);
+
     vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> cellIds;
 
     if (index > 0)
@@ -115,6 +120,7 @@ public:
 
     return cellIds;
   }
+
 
   VTKM_EXEC_CONT
   vtkm::Id FlatToLogicalPointIndex(vtkm::Id flatPointIndex) const { return flatPointIndex; }
@@ -137,7 +143,8 @@ public:
   }
 
 private:
-  vtkm::Id PointDimensions;
+  vtkm::Id PointDimensions = 0;
+  vtkm::Id GlobalPointIndexStart = 0;
 };
 
 //2 D specialization.
@@ -149,6 +156,9 @@ public:
 
   VTKM_EXEC_CONT
   void SetPointDimensions(vtkm::Id2 dims) { this->PointDimensions = dims; }
+
+  VTKM_EXEC_CONT
+  void SetGlobalPointIndexStart(vtkm::Id2 start) { this->GlobalPointIndexStart = start; }
 
   VTKM_EXEC_CONT
   const vtkm::Id2& GetPointDimensions() const { return this->PointDimensions; }
@@ -170,6 +180,9 @@ public:
   {
     return this->GetPointDimensions();
   }
+
+  VTKM_EXEC_CONT
+  const vtkm::Id2& GetGlobalPointIndexStart() const { return this->GlobalPointIndexStart; }
 
   static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 4;
   static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 4;
@@ -295,7 +308,8 @@ public:
   }
 
 private:
-  vtkm::Id2 PointDimensions;
+  vtkm::Id2 PointDimensions = { 0, 0 };
+  vtkm::Id2 GlobalPointIndexStart = { 0, 0 };
 };
 
 //3 D specialization.
@@ -312,6 +326,9 @@ public:
     this->CellDimensions = dims - vtkm::Id3(1);
     this->CellDim01 = (dims[0] - 1) * (dims[1] - 1);
   }
+
+  VTKM_EXEC_CONT
+  void SetGlobalPointIndexStart(vtkm::Id3 start) { this->GlobalPointIndexStart = start; }
 
   VTKM_EXEC_CONT
   const vtkm::Id3& GetPointDimensions() const { return this->PointDimensions; }
@@ -333,6 +350,9 @@ public:
   {
     return this->GetPointDimensions();
   }
+
+  VTKM_EXEC_CONT
+  const vtkm::Id3& GetGlobalPointIndexStart() const { return this->GlobalPointIndexStart; }
 
   static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 8;
   static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 8;
@@ -488,28 +508,29 @@ public:
   }
 
 private:
-  vtkm::Id3 PointDimensions;
-  vtkm::Id3 CellDimensions;
-  vtkm::Id CellDim01;
+  vtkm::Id3 PointDimensions = { 0, 0, 0 };
+  vtkm::Id3 GlobalPointIndexStart = { 0, 0, 0 };
+  vtkm::Id3 CellDimensions = { 0, 0, 0 };
+  vtkm::Id CellDim01 = 0;
 };
 
 // We may want to generalize this class depending on how ConnectivityExplicit
 // eventually handles retrieving cell to point connectivity.
 
-template <typename From, typename To, vtkm::IdComponent Dimension>
+template <typename VisitTopology, typename IncidentTopology, vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper
 {
   // We want an unconditional failure if this unspecialized class ever gets
   // instantiated, because it means someone missed a topology mapping type.
   // We need to create a test which depends on the templated types so
   // it doesn't get picked up without a concrete instantiation.
-  VTKM_STATIC_ASSERT_MSG(sizeof(To) == static_cast<size_t>(-1),
+  VTKM_STATIC_ASSERT_MSG(sizeof(VisitTopology) == static_cast<size_t>(-1),
                          "Missing Specialization for Topologies");
 };
 
 template <vtkm::IdComponent Dimension>
-struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
-                                         vtkm::TopologyElementTagCell,
+struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
+                                         vtkm::TopologyElementTagPoint,
                                          Dimension>
 {
   using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
@@ -569,8 +590,8 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
 };
 
 template <vtkm::IdComponent Dimension>
-struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
-                                         vtkm::TopologyElementTagPoint,
+struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
+                                         vtkm::TopologyElementTagCell,
                                          Dimension>
 {
   using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;

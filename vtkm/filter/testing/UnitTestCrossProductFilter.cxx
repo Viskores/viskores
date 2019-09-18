@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -83,15 +73,14 @@ void createVectors(std::size_t numPts,
   }
 }
 
-void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field1,
-                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
+void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
+                 const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field2,
                  const vtkm::cont::DataSet& result)
 {
-  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
-                   "Output field is missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("crossproduct"), "Output field is missing.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputArray;
-  result.GetField("crossproduct", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(outputArray);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> outputArray;
+  result.GetPointField("crossproduct").GetData().CopyTo(outputArray);
 
   auto v1Portal = field1.GetPortalConstControl();
   auto v2Portal = field2.GetPortalConstControl();
@@ -104,21 +93,20 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
 
   for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
-    vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
-    vtkm::Vec<vtkm::FloatDefault, 3> res = outPortal.Get(j);
+    vtkm::Vec3f v1 = v1Portal.Get(j);
+    vtkm::Vec3f v2 = v2Portal.Get(j);
+    vtkm::Vec3f res = outPortal.Get(j);
 
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
-    vtkm::Vec<vtkm::FloatDefault, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)),
-      resN(vtkm::Normal(res));
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v1N), vtkm::FloatDefault(0.0)),
+    vtkm::Vec3f v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)), resN(vtkm::Normal(res));
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v1N), vtkm::FloatDefault(0.0)),
                      "Wrong result for cross product");
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v2N), vtkm::FloatDefault(0.0)),
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(resN, v2N), vtkm::FloatDefault(0.0)),
                      "Wrong result for cross product");
 
     vtkm::FloatDefault sinAngle =
       vtkm::Magnitude(res) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
-    vtkm::FloatDefault cosAngle = vtkm::dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
+    vtkm::FloatDefault cosAngle = vtkm::Dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
     VTKM_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, vtkm::FloatDefault(1.0)),
                      "Bad cross product length.");
   }
@@ -136,12 +124,12 @@ void TestCrossProduct()
     std::cout << "Case " << i << std::endl;
 
     vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
-    vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
-    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vecs1, vecs2;
+    std::vector<vtkm::Vec3f> vecs1, vecs2;
     createVectors(static_cast<std::size_t>(nVerts), i, vecs1, vecs2);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> field1, field2;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> field1, field2;
     field1 = vtkm::cont::make_ArrayHandle(vecs1);
     field2 = vtkm::cont::make_ArrayHandle(vecs2);
 
@@ -154,7 +142,22 @@ void TestCrossProduct()
       std::cout << "  Both vectors as normal fields" << std::endl;
       vtkm::filter::CrossProduct filter;
       filter.SetPrimaryField("vec1");
-      filter.SetSecondaryField("vec2");
+      filter.SetSecondaryField("vec2", vtkm::cont::Field::Association::POINTS);
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() ==
+                         vtkm::cont::Field::Association::POINTS,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }
@@ -165,6 +168,17 @@ void TestCrossProduct()
       filter.SetUseCoordinateSystemAsPrimaryField(true);
       filter.SetPrimaryCoordinateSystem(1);
       filter.SetSecondaryField("vec2");
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == true,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetSecondaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }
@@ -175,6 +189,17 @@ void TestCrossProduct()
       filter.SetPrimaryField("vec1");
       filter.SetUseCoordinateSystemAsSecondaryField(true);
       filter.SetSecondaryCoordinateSystem(2);
+
+      // Check to make sure the fields are reported as correct.
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
+      VTKM_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == vtkm::cont::Field::Association::ANY,
+                       "Bad field association.");
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
+                       "Bad use coordinates.");
+
+      VTKM_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == true,
+                       "Bad use coordinates.");
+
       vtkm::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
     }
@@ -182,7 +207,7 @@ void TestCrossProduct()
 }
 } // anonymous namespace
 
-int UnitTestCrossProductFilter(int, char* [])
+int UnitTestCrossProductFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCrossProduct);
+  return vtkm::cont::testing::Testing::Run(TestCrossProduct, argc, argv);
 }

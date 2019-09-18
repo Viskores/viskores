@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/CellEdge.h>
@@ -34,7 +24,7 @@
 namespace
 {
 
-using EdgeType = vtkm::Vec<vtkm::IdComponent, 2>;
+using EdgeType = vtkm::IdComponent2;
 
 void MakeEdgeCanonical(EdgeType& edge)
 {
@@ -225,6 +215,14 @@ struct TestCellFacesFunctor
     this->TryShapeWithNumPoints(vtkm::CellTraits<CellShapeTag>::NUM_POINTS, CellShapeTag());
   }
 
+  void operator()(vtkm::CellShapeTagPolyLine) const
+  {
+    for (vtkm::IdComponent numPoints = 3; numPoints < 7; numPoints++)
+    {
+      this->TryShapeWithNumPoints(numPoints, vtkm::CellShapeTagPolyLine());
+    }
+  }
+
   void operator()(vtkm::CellShapeTagPolygon) const
   {
     for (vtkm::IdComponent numPoints = 3; numPoints < 7; numPoints++)
@@ -241,7 +239,7 @@ void TestAllShapes()
 
 } // anonymous namespace
 
-int UnitTestCellEdgeFace(int, char* [])
+int UnitTestCellEdgeFace(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestAllShapes);
+  return vtkm::testing::Testing::Run(TestAllShapes, argc, argv);
 }

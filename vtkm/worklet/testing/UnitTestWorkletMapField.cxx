@@ -2,24 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -29,52 +20,32 @@
 class TestMapFieldWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ControlSignature = void(FieldIn, FieldOut, FieldInOut);
+  using ExecutionSignature = _3(_1, _2, _3, WorkIndex);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
+  VTKM_EXEC T operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong input value.");
     }
-    out = in - T(100);
+    out = static_cast<T>(in - T(100));
     if (!test_equal(inout, TestValue(workIndex, T()) + T(100)))
     {
       this->RaiseError("Got wrong in-out value.");
     }
-    inout = inout - T(100);
+
+    // We return the new value of inout. Since _3 is both an arg and return,
+    // this tests that the return value is set after updating the arg values.
+    return static_cast<T>(inout - T(100));
   }
 
   template <typename T1, typename T2, typename T3>
-  VTKM_EXEC void operator()(const T1&, const T2&, const T3&, vtkm::Id) const
+  VTKM_EXEC T3 operator()(const T1&, const T2&, const T3&, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
-  }
-};
-
-class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
-{
-public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
-  typedef _2 ExecutionSignature(_1, _3, WorkIndex);
-
-  template <typename T1, typename T3>
-  VTKM_EXEC T1 operator()(const T1& in, T3& inout, vtkm::Id workIndex) const
-  {
-    if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
-    {
-      this->RaiseError("Got wrong input value.");
-    }
-
-    if (!test_equal(inout, TestValue(workIndex, T3()) + T3(100)))
-    {
-      this->RaiseError("Got wrong in-out value.");
-    }
-    inout = inout - T3(100);
-
-    return in - T1(100);
+    return vtkm::TypeTraits<T3>::ZeroInitialization();
   }
 };
 
@@ -93,22 +64,26 @@ struct DoStaticTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = TestValue(index, T()) + T(100);
+      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> outputHandle;
-    vtkm::cont::ArrayHandle<T> inoutHandle;
+    vtkm::cont::ArrayHandle<T> outputHandle, outputHandleAsPtr;
+    vtkm::cont::ArrayHandle<T> inoutHandle, inoutHandleAsPtr;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandleAsPtr);
 
-    std::cout << "Create and run dispatcher." << std::endl;
+    std::cout << "Create and run dispatchers." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
+    dispatcher.Invoke(&inputHandle, &outputHandleAsPtr, &inoutHandleAsPtr);
 
-    std::cout << "Check result." << std::endl;
+    std::cout << "Check results." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
+    CheckPortal(outputHandleAsPtr.GetPortalConstControl());
+    CheckPortal(inoutHandleAsPtr.GetPortalConstControl());
 
     std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
     inputHandle.Shrink(ARRAY_SIZE / 2);
@@ -127,7 +102,7 @@ struct DoStaticTestWorklet
 };
 
 template <typename WorkletType>
-struct DoDynamicTestWorklet
+struct DoVariantTestWorklet
 {
   template <typename T>
   VTKM_CONT void operator()(T) const
@@ -137,26 +112,49 @@ struct DoDynamicTestWorklet
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      inputArray[index] = TestValue(index, T()) + T(100);
+      inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
-    std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
+    std::cout << "Create and run dispatcher with variant arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::DynamicArrayHandle inputDynamic(inputHandle);
-    vtkm::cont::DynamicArrayHandle outputDynamic(outputHandle);
-    vtkm::cont::DynamicArrayHandle inoutDynamic(inoutHandle);
+    vtkm::cont::VariantArrayHandle inputVariant(inputHandle);
 
-    dispatcher.Invoke(inputDynamic, outputDynamic, inoutDynamic);
+    { //Verify we can pass by value
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
+      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        outputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
+                        inoutVariant.ResetTypes(vtkm::ListTagBase<T>{}));
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+    }
 
-    CheckPortal(outputHandle.GetPortalConstControl());
-    CheckPortal(inoutHandle.GetPortalConstControl());
+    { //Verify we can pass by pointer
+      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
+      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, &outputVariant, inoutHandle);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+
+      vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+      dispatcher.Invoke(inputHandle, outputHandle, &inoutVariant);
+      CheckPortal(outputHandle.GetPortalConstControl());
+      CheckPortal(inoutHandle.GetPortalConstControl());
+    }
   }
 };
 
@@ -168,42 +166,22 @@ struct DoTestWorklet
   {
     DoStaticTestWorklet<WorkletType> sw;
     sw(t);
-    DoDynamicTestWorklet<WorkletType> dw;
+    DoVariantTestWorklet<WorkletType> dw;
     dw(t);
   }
 };
 
-void TestWorkletMapField()
+void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
-            << std::endl;
+  std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
-  std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
                                    vtkm::TypeListTagCommon());
-
-  std::cout << "--- Worklet accepting some types." << std::endl;
-  vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorkletLimitedTypes>(),
-                                   vtkm::TypeListTagFieldScalar());
-
-  std::cout << "--- Sending bad type to worklet." << std::endl;
-  try
-  {
-    //can only test with dynamic arrays, as static arrays will fail to compile
-    DoDynamicTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
-    badWorkletTest(vtkm::Vec<vtkm::Float32, 3>());
-    VTKM_TEST_FAIL("Did not throw expected error.");
-  }
-  catch (vtkm::cont::ErrorBadType& error)
-  {
-    std::cout << "Got expected error: " << error.GetMessage() << std::endl;
-  }
 }
 
 } // mapfield namespace
 
-int UnitTestWorkletMapField(int, char* [])
+int UnitTestWorkletMapField(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(mapfield::TestWorkletMapField);
+  return vtkm::cont::testing::Testing::RunOnDevice(mapfield::TestWorkletMapField, argc, argv);
 }

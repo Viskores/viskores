@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleImplicit_h
 #define vtk_m_cont_ArrayHandleImplicit_h
 
@@ -77,19 +65,14 @@ public:
   }
 
   VTKM_EXEC_CONT
+  const FunctorType& GetFunctor() const { return this->Functor; }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
-
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
-    VTKM_ASSERT(false && "Cannot write to read-only implicit array.");
-#endif
-  }
 
   using IteratorType =
     vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalImplicit<FunctorType>>;
@@ -112,7 +95,8 @@ private:
 /// array at that position.
 ///
 template <class FunctorType>
-class ArrayHandleImplicit : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
+class VTKM_ALWAYS_EXPORT ArrayHandleImplicit
+  : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
 {
 private:
   using ArrayTraits = typename detail::ArrayHandleImplicitTraits<FunctorType>;
@@ -141,5 +125,73 @@ VTKM_CONT vtkm::cont::ArrayHandleImplicit<FunctorType> make_ArrayHandleImplicit(
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename Functor>
+struct SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Implicit<" + SerializableTypeString<Functor>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename Functor>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
+  vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename Functor>
+struct Serialization<vtkm::cont::ArrayHandleImplicit<Functor>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleImplicit<Functor>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkmdiy::save(bb, obj.GetNumberOfValues());
+    vtkmdiy::save(bb, obj.GetPortalConstControl().GetFunctor());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::Id count = 0;
+    vtkmdiy::load(bb, count);
+
+    Functor functor;
+    vtkmdiy::load(bb, functor);
+
+    obj = vtkm::cont::make_ArrayHandleImplicit(functor, count);
+  }
+};
+
+template <typename Functor>
+struct Serialization<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
+  vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
+  : Serialization<vtkm::cont::ArrayHandleImplicit<Functor>>
+{
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleImplicit_h

@@ -2,26 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 namespace
 {
 
-template <typename DeviceTag>
 struct CallWorklet
 {
   vtkm::Id Stride;
@@ -38,7 +27,7 @@ struct CallWorklet
   template <typename CellSetType>
   void operator()(const CellSetType& cells) const
   {
-    this->Output = this->Worklet.Run(cells, this->Stride, DeviceTag());
+    this->Output = this->Worklet.Run(cells, this->Stride);
   }
 };
 
@@ -58,31 +47,28 @@ inline VTKM_CONT Mask::Mask()
 }
 
 //-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+template <typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   vtkm::cont::DynamicCellSet cellOut;
-  CallWorklet<DeviceAdapter> workletCaller(this->Stride, cellOut, this->Worklet);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(workletCaller);
+  CallWorklet workletCaller(this->Stride, cellOut, this->Worklet);
+  vtkm::filter::ApplyPolicyCellSet(cells, policy).CastAndCall(workletCaller);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.AddCellSet(cellOut);
+  output.SetCellSet(cellOut);
   return output;
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
                                        const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                        const vtkm::filter::FieldMetadata& fieldMeta,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                       const DeviceAdapter& device)
+                                       vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::Field output;
 
@@ -92,7 +78,7 @@ inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
   }
   else if (fieldMeta.IsCellField())
   {
-    output = fieldMeta.AsField(this->Worklet.ProcessCellField(input, device));
+    output = fieldMeta.AsField(this->Worklet.ProcessCellField(input));
   }
   else
   {

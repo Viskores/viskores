@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_internal_FunctionInterface_h
 #define vtk_m_internal_FunctionInterface_h
@@ -600,7 +590,7 @@ public:
   ///
   template <typename Transform>
   VTKM_CONT typename StaticTransformType<Transform>::type StaticTransformCont(
-    const Transform& transform) const
+    const Transform& transform)
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformCont(transform, this->Parameters, newFuncInterface.Parameters);
@@ -608,7 +598,7 @@ public:
   }
   template <typename Transform>
   VTKM_EXEC typename StaticTransformType<Transform>::type StaticTransformExec(
-    const Transform& transform) const
+    const Transform& transform)
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
     detail::DoStaticTransformExec(transform, this->Parameters, newFuncInterface.Parameters);
@@ -776,7 +766,7 @@ public:
 
     static constexpr std::size_t newArity = NextInterfaceType::ARITY;
     static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
-    typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
+    using ShouldDoNextTransformType = std::integral_constant<bool, (newArity < oldArity)>;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
 

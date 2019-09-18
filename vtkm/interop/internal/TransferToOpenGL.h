@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_interop_internal_TransferToOpenGL_h
 #define vtk_m_interop_internal_TransferToOpenGL_h
@@ -63,7 +53,7 @@ public:
     if (this->Size != numberOfValues)
     {
       this->Size = numberOfValues;
-      T* storage = new T[this->Size];
+      T* storage = new T[static_cast<std::size_t>(this->Size)];
       this->TempStorage.reset(reinterpret_cast<vtkm::UInt8*>(storage));
     }
   }
@@ -95,7 +85,7 @@ namespace detail
 {
 
 template <class ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
+VTKM_CONT void CopyFromHandle(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
                               vtkm::interop::BufferState& state,
                               DeviceAdapterTag)
 {
@@ -145,7 +135,7 @@ VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& ha
 
 template <class ValueType, class DeviceAdapterTag>
 VTKM_CONT void CopyFromHandle(
-  vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
+  const vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
   vtkm::interop::BufferState& state,
   DeviceAdapterTag)
 {
@@ -196,7 +186,7 @@ public:
   }
 
   template <typename StorageTag>
-  VTKM_CONT void Transfer(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
+  VTKM_CONT void Transfer(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
     //make a buffer for the handle if the user has forgotten too
     if (!glIsBuffer(*this->State.GetHandle()))

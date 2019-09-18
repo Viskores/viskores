@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_Jacobian_h
 #define vtk_m_exec_Jacobian_h
@@ -58,7 +48,7 @@ struct Space2D
   Vec2 ConvertCoordToSpace(const Vec3 coord) const
   {
     Vec3 vec = coord - this->Origin;
-    return Vec2(vtkm::dot(vec, this->Basis0), vtkm::dot(vec, this->Basis1));
+    return Vec2(vtkm::Dot(vec, this->Basis0), vtkm::Dot(vec, this->Basis1));
   }
 
   template <typename U>
@@ -212,7 +202,7 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
 {
   const vtkm::IdComponent numPoints = wCoords.GetNumberOfComponents();
   vtkm::Vec<JacobianType,2> pc(pcoords[0], pcoords[1]);
-  JacobianType deltaAngle = static_cast<JacobianType>(2*vtkm::Pi()/numPoints);
+  JacobianType deltaAngle = 2*vtkm::Pi<JacobianType>()/numPoints;
 
   jacobian = vtkm::Matrix<JacobianType,2,2>(0);
   for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)

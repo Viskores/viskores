@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 #-----------------------------------------------------------------------------
@@ -84,11 +74,6 @@ function(vtkm_find_gl)
 endfunction()
 
 #-----------------------------------------------------------------------------
-if(TARGET vtkm_rendering_gl_context)
-  return()
-endif()
-
-add_library(vtkm_rendering_gl_context INTERFACE)
 if(VTKm_ENABLE_GL_CONTEXT OR
    VTKm_ENABLE_OSMESA_CONTEXT OR
    VTKm_ENABLE_EGL_CONTEXT
@@ -96,6 +81,11 @@ if(VTKm_ENABLE_GL_CONTEXT OR
   vtkm_find_gl(REQUIRED GL GLEW
                OPTIONAL
                QUIET)
+endif()
+
+#-----------------------------------------------------------------------------
+if(VTKm_ENABLE_RENDERING AND NOT TARGET vtkm_rendering_gl_context)
+  add_library(vtkm_rendering_gl_context INTERFACE)
 endif()
 
 #-----------------------------------------------------------------------------

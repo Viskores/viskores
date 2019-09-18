@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
@@ -42,26 +30,25 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
                      const vtkm::Bounds& bounds)
 {
   //Verify basics..
-  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Wrong number of cell sets.");
+
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
-                   "Wrong number of coordinates.");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells, "Wrong number of cells.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    ds.GetCellField("cellvar");
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    ds.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -74,21 +61,21 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   if (dim == 1)
   {
     vtkm::cont::CellSetStructured<1> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
   }
   else if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Wrong element type");
   }
   else if (dim == 3)
   {
     vtkm::cont::CellSetStructured<3> cellSet;
-    ds.GetCellSet(0).CopyTo(cellSet);
+    ds.GetCellSet().CopyTo(cellSet);
     vtkm::IdComponent shape = cellSet.GetCellShape();
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong element type");
   }
@@ -302,8 +289,8 @@ void TestDataSetBuilderRectilinear()
 
 } // namespace DataSetBuilderRectilinearNamespace
 
-int UnitTestDataSetBuilderRectilinear(int, char* [])
+int UnitTestDataSetBuilderRectilinear(int argc, char* argv[])
 {
   using namespace DataSetBuilderRectilinearNamespace;
-  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear);
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear, argc, argv);
 }

@@ -2,27 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_SortAndUniqueIndices_h
 #define vtk_m_worklet_SortAndUniqueIndices_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -31,7 +22,6 @@ namespace worklet
 
 /// Produces an ArrayHandle<vtkm::Id> index array that stable-sorts and
 /// optionally uniquifies an input array.
-template <typename DeviceAdapter>
 struct StableSortIndices
 {
   using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -74,6 +64,26 @@ struct StableSortIndices
     }
   };
 
+  // Allows you to pass an IndirectSortPredicate to a device algorithm without knowing the device.
+  template <typename KeyArrayType>
+  struct IndirectSortPredicateExecObject : public vtkm::cont::ExecutionObjectBase
+  {
+    const KeyArrayType KeyArray;
+
+    VTKM_CONT IndirectSortPredicateExecObject(const KeyArrayType& keyArray)
+      : KeyArray(keyArray)
+    {
+    }
+
+    template <typename Device>
+    IndirectSortPredicate<typename KeyArrayType::template ExecutionTypes<Device>::PortalConst>
+      PrepareForExecution(Device) const
+    {
+      auto keyPortal = this->KeyArray.PrepareForInput(Device());
+      return IndirectSortPredicate<decltype(keyPortal)>(keyPortal);
+    }
+  };
+
   // Allows Unique to be called on an array that indexes into KeyPortal.
   template <typename KeyPortalType>
   struct IndirectUniquePredicate
@@ -93,6 +103,50 @@ struct StableSortIndices
     }
   };
 
+  // Allows you to pass an IndirectUniquePredicate to a device algorithm without knowing the device.
+  template <typename KeyArrayType>
+  struct IndirectUniquePredicateExecObject : public vtkm::cont::ExecutionObjectBase
+  {
+    const KeyArrayType KeyArray;
+
+    VTKM_CONT IndirectUniquePredicateExecObject(const KeyArrayType& keyArray)
+      : KeyArray(keyArray)
+    {
+    }
+
+    template <typename Device>
+    IndirectUniquePredicate<typename KeyArrayType::template ExecutionTypes<Device>::PortalConst>
+      PrepareForExecution(Device) const
+    {
+      auto keyPortal = this->KeyArray.PrepareForInput(Device());
+      return IndirectUniquePredicate<decltype(keyPortal)>(keyPortal);
+    }
+  };
+
+  /// Permutes the @a indices array so that it will map @a keys into a stable
+  /// sorted order. The @a keys array is not modified.
+  ///
+  /// @param device The Id for the device on which to compute the sort
+  /// @param keys The ArrayHandle containing data to be sorted.
+  /// @param indices The ArrayHandle<vtkm::Id> containing the permutation indices.
+  ///
+  /// @note @a indices is expected to contain the values (0, numKeys] in
+  /// increasing order. If the values in @a indices are not sequential, the sort
+  /// will succeed and be consistently reproducible, but the result is not
+  /// guaranteed to be stable with respect to the original ordering of @a keys.
+  template <typename KeyType, typename Storage>
+  VTKM_CONT static void Sort(vtkm::cont::DeviceAdapterId device,
+                             const vtkm::cont::ArrayHandle<KeyType, Storage>& keys,
+                             IndexArrayType& indices)
+  {
+    using KeyArrayType = vtkm::cont::ArrayHandle<KeyType, Storage>;
+    using SortPredicate = IndirectSortPredicateExecObject<KeyArrayType>;
+
+    VTKM_ASSERT(keys.GetNumberOfValues() == indices.GetNumberOfValues());
+
+    vtkm::cont::Algorithm::Sort(device, indices, SortPredicate(keys));
+  }
+
   /// Permutes the @a indices array so that it will map @a keys into a stable
   /// sorted order. The @a keys array is not modified.
   ///
@@ -107,16 +161,27 @@ struct StableSortIndices
   VTKM_CONT static void Sort(const vtkm::cont::ArrayHandle<KeyType, Storage>& keys,
                              IndexArrayType& indices)
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    using KeyArrayType = vtkm::cont::ArrayHandle<KeyType, Storage>;
-    using KeyPortalType =
-      typename KeyArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-    using SortPredicate = IndirectSortPredicate<KeyPortalType>;
+    StableSortIndices::Sort(vtkm::cont::DeviceAdapterTagAny(), keys, indices);
+  }
 
-    VTKM_ASSERT(keys.GetNumberOfValues() == indices.GetNumberOfValues());
+  /// Returns an index array that maps the @a keys array into a stable sorted
+  /// ordering. The @a keys array is not modified.
+  ///
+  /// This is a convenience overload that generates the index array.
+  template <typename KeyType, typename Storage>
+  VTKM_CONT static IndexArrayType Sort(vtkm::cont::DeviceAdapterId device,
+                                       const vtkm::cont::ArrayHandle<KeyType, Storage>& keys)
+  {
+    // Generate the initial index array
+    IndexArrayType indices;
+    {
+      vtkm::cont::ArrayHandleIndex indicesSrc(keys.GetNumberOfValues());
+      vtkm::cont::Algorithm::Copy(device, indicesSrc, indices);
+    }
 
-    KeyPortalType keyPortal = keys.PrepareForInput(DeviceAdapter());
-    Algo::Sort(indices, SortPredicate(keyPortal));
+    StableSortIndices::Sort(device, keys, indices);
+
+    return indices;
   }
 
   /// Returns an index array that maps the @a keys array into a stable sorted
@@ -126,23 +191,22 @@ struct StableSortIndices
   template <typename KeyType, typename Storage>
   VTKM_CONT static IndexArrayType Sort(const vtkm::cont::ArrayHandle<KeyType, Storage>& keys)
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    return StableSortIndices::Sort(vtkm::cont::DeviceAdapterTagAny(), keys);
+  }
+
+  /// Reduces the array returned by @a Sort so that the mapped @a keys are
+  /// unique. The @a indices array will be modified in-place and the @a keys
+  /// array is not modified.
+  ///
+  template <typename KeyType, typename Storage>
+  VTKM_CONT static void Unique(vtkm::cont::DeviceAdapterId device,
+                               const vtkm::cont::ArrayHandle<KeyType, Storage>& keys,
+                               IndexArrayType& indices)
+  {
     using KeyArrayType = vtkm::cont::ArrayHandle<KeyType, Storage>;
-    using KeyPortalType =
-      typename KeyArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-    using SortPredicate = IndirectSortPredicate<KeyPortalType>;
+    using UniquePredicate = IndirectUniquePredicateExecObject<KeyArrayType>;
 
-    // Generate the initial index array
-    IndexArrayType indices;
-    {
-      vtkm::cont::ArrayHandleIndex indicesSrc(keys.GetNumberOfValues());
-      Algo::Copy(indicesSrc, indices);
-    }
-
-    KeyPortalType keyPortal = keys.PrepareForInput(DeviceAdapter());
-    Algo::Sort(indices, SortPredicate(keyPortal));
-
-    return indices;
+    vtkm::cont::Algorithm::Unique(device, indices, UniquePredicate(keys));
   }
 
   /// Reduces the array returned by @a Sort so that the mapped @a keys are
@@ -153,14 +217,7 @@ struct StableSortIndices
   VTKM_CONT static void Unique(const vtkm::cont::ArrayHandle<KeyType, Storage>& keys,
                                IndexArrayType& indices)
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    using KeyArrayType = vtkm::cont::ArrayHandle<KeyType, Storage>;
-    using KeyPortalType =
-      typename KeyArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-    using UniquePredicate = IndirectUniquePredicate<KeyPortalType>;
-
-    KeyPortalType keyPortal = keys.PrepareForInput(DeviceAdapter());
-    Algo::Unique(indices, UniquePredicate(keyPortal));
+    StableSortIndices::Unique(vtkm::cont::DeviceAdapterTagAny(), keys, indices);
   }
 };
 }

@@ -2,28 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_arg_FetchTagExecObject_h
 #define vtk_m_exec_arg_FetchTagExecObject_h
 
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
-
-#include <vtkm/exec/ExecutionObjectBase.h>
 
 #include <type_traits>
 
@@ -51,14 +39,6 @@ struct Fetch<vtkm::exec::arg::FetchTagExecObject,
              ThreadIndicesType,
              ExecObjectType>
 {
-  // If you get a compile error here, it means you tried to use an object that
-  // is not an execution object as an argument that is expected to be one. All
-  // execution objects are expected to inherit from
-  // vtkm::exec::ExecutionObjectBase.
-  static_assert(
-    std::is_base_of<vtkm::exec::ExecutionObjectBase, ExecObjectType>::value,
-    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
-
   using ValueType = ExecObjectType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS

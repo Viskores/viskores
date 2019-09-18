@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_internal_VTKDataSetCells_h
 #define vtk_m_io_internal_VTKDataSetCells_h
@@ -60,8 +50,7 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   {
     vtkm::UInt8 shape = shapes.GetPortalConstControl().Get(i);
     vtkm::IdComponent numInds = numIndices.GetPortalConstControl().Get(i);
-    vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl connPortal =
-      connectivity.GetPortalConstControl();
+    auto connPortal = connectivity.GetPortalConstControl();
     switch (shape)
     {
       case vtkm::CELL_SHAPE_VERTEX:
@@ -219,9 +208,7 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
 
 inline bool IsSingleShape(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes)
 {
-  vtkm::cont::ArrayHandle<vtkm::UInt8>::PortalConstControl shapesPortal =
-    shapes.GetPortalConstControl();
-
+  auto shapesPortal = shapes.GetPortalConstControl();
   vtkm::UInt8 shape0 = shapesPortal.Get(0);
   for (vtkm::Id i = 1; i < shapes.GetNumberOfValues(); ++i)
   {

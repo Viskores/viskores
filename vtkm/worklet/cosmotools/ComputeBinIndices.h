@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -75,11 +65,11 @@ template <typename T>
 class ComputeBinIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> binId, // (input) bin Id
-                                FieldOut<IdType> binX, // (output) bin indices
-                                FieldOut<IdType> binY,
-                                FieldOut<IdType> binZ);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ControlSignature = void(FieldIn binId, // (input) bin Id
+                                FieldOut binX, // (output) bin indices
+                                FieldOut binY,
+                                FieldOut binZ);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   vtkm::Id numBinsX, numBinsY, numBinsZ; // Number of bins each dimension

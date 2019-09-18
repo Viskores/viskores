@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_arg_ThreadIndicesBasic_h
 #define vtk_m_exec_arg_ThreadIndicesBasic_h
@@ -49,13 +39,24 @@ public:
   ThreadIndicesBasic(vtkm::Id threadIndex,
                      vtkm::Id inIndex,
                      vtkm::IdComponent visitIndex,
+                     vtkm::Id outIndex,
                      vtkm::Id globalThreadIndexOffset = 0)
-    : InputIndex(inIndex)
-    , OutputIndex(threadIndex)
+    : ThreadIndex(threadIndex)
+    , InputIndex(inIndex)
+    , OutputIndex(outIndex)
     , VisitIndex(visitIndex)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The index into the input domain.
   ///
@@ -98,9 +99,10 @@ public:
   ///
   /// Global index (for streaming)
   VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
+  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->ThreadIndex); }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;

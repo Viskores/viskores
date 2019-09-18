@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/worklet/ScatterCounting.h>
 
@@ -55,7 +43,7 @@ TestScatterArrays MakeScatterArraysShort()
   const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 0, 0 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -78,7 +66,7 @@ TestScatterArrays MakeScatterArraysLong()
   const vtkm::IdComponent visitArray[outputSize] = { 0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -98,7 +86,7 @@ TestScatterArrays MakeScatterArraysZero()
   const vtkm::Id inputToOutputMap[countArraySize] = { 0, 0, 0, 0, 0, 0 };
 
   TestScatterArrays arrays;
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // Need to copy arrays so that the data does not go out of scope.
   Algorithm::Copy(vtkm::cont::make_ArrayHandle(countArray, countArraySize), arrays.CountArray);
@@ -112,33 +100,18 @@ TestScatterArrays MakeScatterArraysZero()
 
 struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inputIndices,
-                                FieldOut<> copyIndices,
-                                FieldOut<> recordVisit,
-                                FieldOut<> recordWorkId);
-  typedef void ExecutionSignature(_1, _2, _3, _4, VisitIndex, WorkIndex);
+  using ControlSignature = void(FieldIn inputIndices,
+                                FieldOut copyIndices,
+                                FieldOut recordVisit,
+                                FieldOut recordWorkId);
+  using ExecutionSignature = void(_1, _2, _3, _4, VisitIndex, WorkIndex);
 
   using ScatterType = vtkm::worklet::ScatterCounting;
 
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
   template <typename CountArrayType>
-  VTKM_CONT TestScatterCountingWorklet(const CountArrayType& countArray)
-    : Scatter(countArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG())
+  VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
   {
-  }
-
-  template <typename CountArrayType, typename Device>
-  VTKM_CONT TestScatterCountingWorklet(const CountArrayType& countArray, Device)
-    : Scatter(countArray, Device())
-  {
-  }
-
-  VTKM_CONT
-  TestScatterCountingWorklet(const vtkm::worklet::ScatterCounting& scatter)
-    : Scatter(scatter)
-  {
+    return ScatterType(countArray);
   }
 
   VTKM_EXEC
@@ -153,9 +126,6 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
     writeVisit = visitIndex;
     captureWorkId = TestValue(workId, vtkm::Float32());
   }
-
-private:
-  ScatterType Scatter;
 };
 
 template <typename T>
@@ -183,7 +153,7 @@ void TestScatterArrayGeneration(const TestScatterArrays& arrays)
   std::cout << "  Testing array generation" << std::endl;
 
   vtkm::worklet::ScatterCounting scatter(
-    arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG(), true);
+    arrays.CountArray, vtkm::cont::DeviceAdapterTagAny(), true);
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
 
@@ -203,9 +173,8 @@ void TestScatterWorklet(const TestScatterArrays& arrays)
 {
   std::cout << "  Testing scatter counting in a worklet." << std::endl;
 
-  vtkm::worklet::ScatterCounting scatter(arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  TestScatterCountingWorklet worklet(scatter);
-  vtkm::worklet::DispatcherMapField<TestScatterCountingWorklet> dispatcher(worklet);
+  vtkm::worklet::DispatcherMapField<TestScatterCountingWorklet> dispatcher(
+    TestScatterCountingWorklet::MakeScatter(arrays.CountArray));
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex inputIndices(inputSize);
@@ -244,7 +213,7 @@ void TestScatterCounting()
 
 } // anonymous namespace
 
-int UnitTestScatterCounting(int, char* [])
+int UnitTestScatterCounting(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScatterCounting);
+  return vtkm::cont::testing::Testing::Run(TestScatterCounting, argc, argv);
 }

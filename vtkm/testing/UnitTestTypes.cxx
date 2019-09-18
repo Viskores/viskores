@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/Types.h>
@@ -189,13 +179,13 @@ void GeneralVecCTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = aSrc / b;
   VTKM_TEST_ASSERT(test_equal(div, correct_div), "Tuples not divided correctly.");
 
-  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
+  ComponentType d = static_cast<ComponentType>(vtkm::Dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < Size; ++i)
   {
     correct_d = ComponentType(correct_d + a[i] * b[i]);
   }
-  VTKM_TEST_ASSERT(test_equal(d, correct_d), "dot(Tuple) wrong");
+  VTKM_TEST_ASSERT(test_equal(d, correct_d), "Dot(Tuple) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -286,13 +276,13 @@ void GeneralVecCConstTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = aSrc / b;
   VTKM_TEST_ASSERT(test_equal(div, correct_div), "Tuples not divided correctly.");
 
-  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
+  ComponentType d = static_cast<ComponentType>(vtkm::Dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < Size; ++i)
   {
     correct_d = ComponentType(correct_d + a[i] * b[i]);
   }
-  VTKM_TEST_ASSERT(test_equal(d, correct_d), "dot(Tuple) wrong");
+  VTKM_TEST_ASSERT(test_equal(d, correct_d), "Dot(Tuple) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -403,13 +393,13 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = a / ComponentType(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Tuple does not divide by Scalar correctly.");
 
-  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
+  ComponentType d = static_cast<ComponentType>(vtkm::Dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < T::NUM_COMPONENTS; ++i)
   {
     correct_d = ComponentType(correct_d + a[i] * b[i]);
   }
-  VTKM_TEST_ASSERT(test_equal(d, correct_d), "dot(Tuple) wrong");
+  VTKM_TEST_ASSERT(test_equal(d, correct_d), "Dot(Tuple) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -443,15 +433,32 @@ void TypeTest(const vtkm::Vec<ComponentType, Size>&)
 }
 
 template <typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar, 1>&)
+{
+  using Vector = vtkm::Vec<Scalar, 1>;
+  std::cout << "Checking constexpr construction for Vec1." << std::endl;
+
+  constexpr Vector constExprVec1(Scalar(1));
+  constexpr Vector constExprVec2 = { Scalar(1) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec1 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec1 failed equality test.");
+}
+
+template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 2>&)
 {
   using Vector = vtkm::Vec<Scalar, 2>;
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4);
-  Vector b(1, 2);
+  Vector a{ 2, 4 };
+  Vector b = { 1, 2 };
   Scalar s = 5;
+
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4)), "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 2>{ Scalar(2), Scalar(4) }),
+                   "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6)), "Vectors do not add correctly.");
@@ -477,8 +484,8 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
   VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(1, 2)),
                    "Vector does not divide by Scalar correctly.");
 
-  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
-  VTKM_TEST_ASSERT(test_equal(d, Scalar(10)), "dot(Vector2) wrong");
+  Scalar d = static_cast<Scalar>(vtkm::Dot(a, b));
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(10)), "Dot(Vector2) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -501,6 +508,18 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec2." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec2 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec2 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec2 failed equality test.");
 }
 
 template <typename Scalar>
@@ -510,9 +529,14 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4, 6);
-  Vector b(1, 2, 3);
+  Vector a = { 2, 4, 6 };
+  Vector b{ 1, 2, 3 };
   Scalar s = 5;
+
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6)),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 3>{ Scalar(2), Scalar(4), Scalar(6) }),
+                   "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9)), "Vectors do not add correctly.");
@@ -539,8 +563,8 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
   div = a / Scalar(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
 
-  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
-  VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "dot(Vector3) wrong");
+  Scalar d = static_cast<Scalar>(vtkm::Dot(a, b));
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "Dot(Vector3) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -563,6 +587,18 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec3." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2), Scalar(3) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec3 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec3 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec3 failed equality test.");
 }
 
 template <typename Scalar>
@@ -572,9 +608,14 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4, 6, 8);
-  Vector b(1, 2, 3, 4);
+  Vector a{ 2, 4, 6, 8 };
+  Vector b = { 1, 2, 3, 4 };
   Scalar s = 5;
+
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6), Scalar(8)),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 4>{ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
+                   "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9, 12)), "Vectors do not add correctly.");
@@ -601,8 +642,8 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
   div = a / Scalar(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
 
-  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
-  VTKM_TEST_ASSERT(test_equal(d, Scalar(60)), "dot(Vector4) wrong");
+  Scalar d = static_cast<Scalar>(vtkm::Dot(a, b));
+  VTKM_TEST_ASSERT(test_equal(d, Scalar(60)), "Dot(Vector4) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
   VTKM_TEST_ASSERT((b < a), "operator< wrong");
@@ -625,6 +666,41 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec4." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3), Scalar(4));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2), Scalar(3), Scalar(4) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3), Scalar(4));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec4 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec4 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec4 failed equality test.");
+
+  Scalar values[4] = { Scalar(1), Scalar(1), Scalar(1), Scalar(1) };
+  Vector lvalVec1 = vtkm::make_Vec(values[0], values[1], values[2], values[3]);
+  Vector lvalVec2 = Vector(values[0], values[1], values[2], values[3]);
+  VTKM_TEST_ASSERT(test_equal(lvalVec1, lvalVec2), "lvalue ctor Vec4 failed equality test.");
+}
+
+template <typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar, 6>&)
+{
+  using Vector = vtkm::Vec<Scalar, 6>;
+  std::cout << "Checking constexpr construction for Vec6." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6));
+  Vector braceVec = { Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6) };
+  constexpr Vector madeVec =
+    vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec6 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(braceVec, madeVec), "constexpr Vec6 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2 = Vector(Scalar(8), Scalar(8), Scalar(8), Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec6 failed equality test.");
 }
 
 template <typename Scalar>
@@ -668,21 +744,111 @@ void TypeTest(Scalar)
     VTKM_TEST_FAIL("operator!= wrong");
   }
 
-  if (vtkm::dot(a, b) != 8)
+  if (vtkm::Dot(a, b) != 8)
   {
-    VTKM_TEST_FAIL("dot(Scalar) wrong");
+    VTKM_TEST_FAIL("Dot(Scalar) wrong");
   }
 
   //verify we don't roll over
   Scalar c = 128;
   Scalar d = 32;
-  auto r = vtkm::dot(c, d);
+  auto r = vtkm::Dot(c, d);
   VTKM_TEST_ASSERT((sizeof(r) >= sizeof(int)),
-                   "dot(Scalar) didn't promote smaller than 32bit types");
+                   "Dot(Scalar) didn't promote smaller than 32bit types");
   if (r != 4096)
   {
-    VTKM_TEST_FAIL("dot(Scalar) wrong");
+    VTKM_TEST_FAIL("Dot(Scalar) wrong");
   }
+}
+
+template <typename Scalar>
+void TypeTest(vtkm::Vec<vtkm::Vec<Scalar, 2>, 3>)
+{
+  using Vector = vtkm::Vec<vtkm::Vec<Scalar, 2>, 3>;
+
+  {
+    Vector vec = { { 0, 1 }, { 2, 3 }, { 4, 5 } };
+    std::cout << "Initialize completely " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 2), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 3), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 4), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 5), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { vtkm::make_Vec(Scalar(0), Scalar(1)) };
+    std::cout << "Initialize inner " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 1), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { { 0, 1 } };
+    std::cout << "Initialize inner " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 1), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { { 0 }, { 1 }, { 2 } };
+    std::cout << "Initialize outer " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 2), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 2), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    // Both of these constructors are disallowed.
+    //Vector vec1 = { 0, 1, 2 };
+    //Vector vec2 = { 0, 1 };
+  }
+
+  {
+    std::cout << "Checking constexpr construction for Vec3<Vec2>." << std::endl;
+    constexpr Vector constExprVec1(
+      vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2));
+    constexpr Vector constExprVec2 = { { 1, 2 }, { 1, 2 }, { 1, 2 } };
+    constexpr Vector madeVec = vtkm::make_Vec(vtkm::make_Vec(Scalar(1), Scalar(2)),
+                                              vtkm::make_Vec(Scalar(1), Scalar(2)),
+                                              vtkm::make_Vec(Scalar(1), Scalar(2)));
+
+    VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec),
+                     "constexpr Vec3<Vec2> failed equality test.");
+    VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec),
+                     "constexpr Vec3<Vec2> failed equality test.");
+
+    // Check fill constructor.
+    Vector fillVec1 = { { Scalar(1), Scalar(2) } };
+    Vector fillVec2(
+      vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2));
+    VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec3ofVec2 failed equality test.");
+  }
+}
+
+template <typename Scalar>
+void TypeTest(vtkm::Vec<vtkm::Vec<Scalar, 2>, 5>)
+{
+  using Vector = vtkm::Vec<vtkm::Vec<Scalar, 2>, 5>;
+  Vector braceVec = { { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }, { 5, 5 } };
+  constexpr Vector constExprVec = vtkm::make_Vec(vtkm::make_Vec(Scalar(1), Scalar(1)),
+                                                 vtkm::make_Vec(Scalar(2), Scalar(2)),
+                                                 vtkm::make_Vec(Scalar(3), Scalar(3)),
+                                                 vtkm::make_Vec(Scalar(4), Scalar(4)),
+                                                 vtkm::make_Vec(Scalar(5), Scalar(5)));
+  VTKM_TEST_ASSERT(test_equal(constExprVec, braceVec), "Vec5<Vec2> failed equality test.");
 }
 
 struct TypeTestFunctor
@@ -696,10 +862,14 @@ struct TypeTestFunctor
 
 struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExemplarTypes,
                                        vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 6>,
-                                                         vtkm::Vec<vtkm::Id, 4>,
+                                                         vtkm::Id4,
                                                          vtkm::Vec<unsigned char, 4>,
                                                          vtkm::Vec<vtkm::Id, 1>,
-                                                         vtkm::Vec<vtkm::Float64, 1>>>
+                                                         vtkm::Id2,
+                                                         vtkm::Vec<vtkm::Float64, 1>,
+                                                         vtkm::Vec<vtkm::Id2, 3>,
+                                                         vtkm::Vec<vtkm::Vec2f_32, 3>,
+                                                         vtkm::Vec<vtkm::Vec2f_32, 5>>>
 {
 };
 
@@ -712,7 +882,7 @@ void TestTypes()
 
 } // anonymous namespace
 
-int UnitTestTypes(int, char* [])
+int UnitTestTypes(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTypes);
+  return vtkm::testing::Testing::Run(TestTypes, argc, argv);
 }

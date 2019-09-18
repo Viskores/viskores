@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
@@ -27,7 +17,7 @@ namespace
 // data we want are valid values between 0 and 1 that represent the fraction
 // of the range we want to map into.
 std::vector<float> test_values = { 0.0f, 0.125f, 0.25f, 0.5f, 0.625, 0.75f, 1.0f };
-std::vector<vtkm::Vec<vtkm::UInt8, 3>> rgb_result = {
+std::vector<vtkm::Vec3ui_8> rgb_result = {
   { 0, 0, 0 },       { 32, 32, 32 },    { 64, 64, 64 },    { 128, 128, 128 },
   { 159, 159, 159 }, { 191, 191, 191 }, { 255, 255, 255 },
 };
@@ -45,56 +35,52 @@ vtkm::UInt8 as_color<vtkm::UInt8>(vtkm::Float32 v, vtkm::Float32)
 }
 
 template <>
-vtkm::Vec<vtkm::Float32, 2> as_color<vtkm::Vec<vtkm::Float32, 2>>(vtkm::Float32 v,
-                                                                  vtkm::Float32 alpha)
+vtkm::Vec2f_32 as_color<vtkm::Vec2f_32>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate luminance+alpha values
-  return vtkm::Vec<vtkm::Float32, 2>(v, alpha);
+  return vtkm::Vec2f_32(v, alpha);
 }
 template <>
-vtkm::Vec<vtkm::Float64, 2> as_color<vtkm::Vec<vtkm::Float64, 2>>(vtkm::Float32 v,
-                                                                  vtkm::Float32 alpha)
+vtkm::Vec2f_64 as_color<vtkm::Vec2f_64>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate luminance+alpha values
-  return vtkm::Vec<vtkm::Float64, 2>(v, alpha);
+  return vtkm::Vec2f_64(v, alpha);
 }
 template <>
-vtkm::Vec<vtkm::UInt8, 2> as_color<vtkm::Vec<vtkm::UInt8, 2>>(vtkm::Float32 v, vtkm::Float32 alpha)
+vtkm::Vec2ui_8 as_color<vtkm::Vec2ui_8>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate luminance+alpha values
-  return vtkm::Vec<vtkm::UInt8, 2>(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
-                                   static_cast<vtkm::UInt8>(alpha * 255.0f + 0.5f));
+  return vtkm::Vec2ui_8(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
+                        static_cast<vtkm::UInt8>(alpha * 255.0f + 0.5f));
 }
 
 template <>
-vtkm::Vec<vtkm::UInt8, 3> as_color<vtkm::Vec<vtkm::UInt8, 3>>(vtkm::Float32 v, vtkm::Float32)
+vtkm::Vec3ui_8 as_color<vtkm::Vec3ui_8>(vtkm::Float32 v, vtkm::Float32)
 { //vec 3 are always rgb
-  return vtkm::Vec<vtkm::UInt8, 3>(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f));
+  return vtkm::Vec3ui_8(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f));
 }
 
 template <>
-vtkm::Vec<vtkm::Float32, 4> as_color<vtkm::Vec<vtkm::Float32, 4>>(vtkm::Float32 v,
-                                                                  vtkm::Float32 alpha)
+vtkm::Vec4f_32 as_color<vtkm::Vec4f_32>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate rgba
-  return vtkm::Vec<vtkm::Float32, 4>(v, v, v, alpha);
+  return vtkm::Vec4f_32(v, v, v, alpha);
 }
 template <>
-vtkm::Vec<vtkm::Float64, 4> as_color<vtkm::Vec<vtkm::Float64, 4>>(vtkm::Float32 v,
-                                                                  vtkm::Float32 alpha)
+vtkm::Vec4f_64 as_color<vtkm::Vec4f_64>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate rgba
-  return vtkm::Vec<vtkm::Float64, 4>(v, v, v, alpha);
+  return vtkm::Vec4f_64(v, v, v, alpha);
 }
 template <>
-vtkm::Vec<vtkm::UInt8, 4> as_color<vtkm::Vec<vtkm::UInt8, 4>>(vtkm::Float32 v, vtkm::Float32 alpha)
+vtkm::Vec4ui_8 as_color<vtkm::Vec4ui_8>(vtkm::Float32 v, vtkm::Float32 alpha)
 { //generate rgba
-  return vtkm::Vec<vtkm::UInt8, 4>(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
-                                   static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
-                                   static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
-                                   static_cast<vtkm::UInt8>(alpha * 255.0f + 0.5f));
+  return vtkm::Vec4ui_8(static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
+                        static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
+                        static_cast<vtkm::UInt8>(v * 255.0f + 0.5f),
+                        static_cast<vtkm::UInt8>(alpha * 255.0f + 0.5f));
 }
 
 
 template <typename T>
 vtkm::cont::ArrayHandle<T> make_data(const vtkm::Range& r)
 {
-  using BaseT = typename vtkm::BaseComponent<T>::Type;
+  using BaseT = typename vtkm::VecTraits<T>::BaseComponentType;
   vtkm::Float32 shift, scale;
   vtkm::worklet::colorconversion::ComputeShiftScale(r, shift, scale);
   const bool shiftscale = vtkm::worklet::colorconversion::needShiftScale(BaseT{}, shift, scale);
@@ -131,7 +117,7 @@ vtkm::cont::ArrayHandle<T> make_data(const vtkm::Range& r)
   return handle;
 }
 
-bool verify(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output)
+bool verify(vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output)
 {
   auto portal = output.GetPortalConstControl();
   vtkm::Id index = 0;
@@ -151,7 +137,7 @@ bool verify(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output)
   return valid;
 }
 
-bool verify(vtkm::Float32 alpha, vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output)
+bool verify(vtkm::Float32 alpha, vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output)
 {
   const vtkm::UInt8 a = vtkm::worklet::colorconversion::ColorToUChar(alpha);
   auto portal = output.GetPortalConstControl();
@@ -192,13 +178,12 @@ struct TestToRGB
   {
   }
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
     //use each component to generate the output
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
-    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
+    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output);
     bool valid = verify(output);
     VTKM_TEST_ASSERT(valid, "scalar RGB failed");
   }
@@ -210,10 +195,10 @@ struct TestToRGB
     using T = vtkm::Vec<U, N>;
 
     auto input = make_data<T>(this->Worklet.GetRange());
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
 
     //use all components to generate the output
-    this->Worklet.Run(input, output, DeviceAdapter());
+    this->Worklet.Run(input, output);
     valid = verify(output);
     VTKM_TEST_ASSERT(valid, "all components RGB failed");
 
@@ -233,7 +218,7 @@ struct TestToRGB
       }
 
       vtkm::worklet::ScalarsToColors magWorklet(magr);
-      magWorklet.RunMagnitude(input, output, DeviceAdapter());
+      magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
       auto portal2 = output.GetPortalControl();
@@ -256,7 +241,7 @@ struct TestToRGB
     int end = (N % 2 == 0) ? (N - 1) : N;
     for (int i = 0; i < end; ++i)
     {
-      this->Worklet.RunComponent(input, i, output, DeviceAdapter());
+      this->Worklet.RunComponent(input, i, output);
       valid = verify(output);
       VTKM_TEST_ASSERT(valid, "per component RGB failed");
     }
@@ -277,13 +262,12 @@ struct TestToRGBA
   {
   }
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
     //use each component to generate the output
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
-    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
+    this->Worklet.Run(make_data<T>(this->Worklet.GetRange()), output);
 
     bool valid = verify(this->Worklet.GetAlpha(), output);
     VTKM_TEST_ASSERT(valid, "scalar RGBA failed");
@@ -294,13 +278,13 @@ struct TestToRGBA
   {
     bool valid = false;
     using T = vtkm::Vec<U, N>;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
 
     auto input = make_data<T>(this->Worklet.GetRange());
     // vtkm::cont::printSummary_ArrayHandle(input, std::cout, true);
 
     //use all components to generate the output
-    this->Worklet.Run(input, output, DeviceAdapter());
+    this->Worklet.Run(input, output);
     valid = verify(this->Worklet.GetAlpha(), output);
     VTKM_TEST_ASSERT(valid, "all components RGBA failed");
 
@@ -320,7 +304,7 @@ struct TestToRGBA
       }
 
       vtkm::worklet::ScalarsToColors magWorklet(magr);
-      magWorklet.RunMagnitude(input, output, DeviceAdapter());
+      magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
       auto portal2 = output.GetPortalControl();
@@ -343,7 +327,7 @@ struct TestToRGBA
     int end = (N % 2 == 0) ? (N - 1) : N;
     for (int i = 0; i < end; ++i)
     {
-      this->Worklet.RunComponent(input, i, output, DeviceAdapter());
+      this->Worklet.RunComponent(input, i, output);
       valid = verify(this->Worklet.GetAlpha(), output);
       VTKM_TEST_ASSERT(valid, "per component RGB failed");
     }
@@ -357,19 +341,17 @@ struct TestToRGBA
 
 struct TypeListTagScalarColorTypes : vtkm::ListTagBase<vtkm::Float32,
                                                        vtkm::Float64,
-                                                       vtkm::Vec<vtkm::Float32, 2>,
-                                                       vtkm::Vec<vtkm::Float64, 2>,
-                                                       vtkm::Vec<vtkm::Float32, 3>,
-                                                       vtkm::Vec<vtkm::Float64, 3>,
-                                                       vtkm::Vec<vtkm::Float32, 4>,
-                                                       vtkm::Vec<vtkm::Float64, 4>>
+                                                       vtkm::Vec2f_32,
+                                                       vtkm::Vec2f_64,
+                                                       vtkm::Vec3f_32,
+                                                       vtkm::Vec3f_64,
+                                                       vtkm::Vec4f_32,
+                                                       vtkm::Vec4f_64>
 {
 };
 
-struct TypeListTagUIntColorTypes : vtkm::ListTagBase<vtkm::UInt8,
-                                                     vtkm::Vec<vtkm::UInt8, 2>,
-                                                     vtkm::Vec<vtkm::UInt8, 3>,
-                                                     vtkm::Vec<vtkm::UInt8, 4>>
+struct TypeListTagUIntColorTypes
+  : vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec2ui_8, vtkm::Vec3ui_8, vtkm::Vec4ui_8>
 {
 };
 
@@ -405,7 +387,7 @@ void TestScalarsToColors()
 }
 }
 
-int UnitTestScalarsToColors(int, char* [])
+int UnitTestScalarsToColors(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScalarsToColors);
+  return vtkm::cont::testing::Testing::Run(TestScalarsToColors, argc, argv);
 }

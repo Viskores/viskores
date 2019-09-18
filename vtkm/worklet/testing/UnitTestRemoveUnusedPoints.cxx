@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/RemoveUnusedPoints.h>
@@ -27,7 +17,7 @@ namespace
 
 vtkm::cont::CellSetExplicit<> CreateInputCellSet()
 {
-  vtkm::cont::CellSetExplicit<> cellSet("cells");
+  vtkm::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0, 2, 4));
   cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(4, 2, 6, 8));
@@ -47,13 +37,13 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(0) == 3, "Wrong num points");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(1) == 4, "Wrong num points");
 
-  vtkm::Vec<vtkm::Id, 3> pointIds3;
+  vtkm::Id3 pointIds3;
   cellSet.GetIndices(0, pointIds3);
   VTKM_TEST_ASSERT(pointIds3[0] == 0, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[1] == 1, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[2] == 2, "Wrong point id for cell");
 
-  vtkm::Vec<vtkm::Id, 4> pointIds4;
+  vtkm::Id4 pointIds4;
   cellSet.GetIndices(1, pointIds4);
   VTKM_TEST_ASSERT(pointIds4[0] == 2, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds4[1] == 1, "Wrong point id for cell");
@@ -70,8 +60,6 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
 
 void RunTest()
 {
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   std::cout << "Creating input" << std::endl;
   vtkm::cont::CellSetExplicit<> inCellSet = CreateInputCellSet();
 
@@ -80,10 +68,9 @@ void RunTest()
   SetPortal(inField.GetPortalControl());
 
   std::cout << "Removing unused points" << std::endl;
-  vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet, Device());
-  vtkm::cont::CellSetExplicit<> outCellSet = compactPoints.MapCellSet(inCellSet, Device());
-  vtkm::cont::ArrayHandle<vtkm::Float32> outField =
-    compactPoints.MapPointFieldDeep(inField, Device());
+  vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet);
+  vtkm::cont::CellSetExplicit<> outCellSet = compactPoints.MapCellSet(inCellSet);
+  vtkm::cont::ArrayHandle<vtkm::Float32> outField = compactPoints.MapPointFieldDeep(inField);
 
   std::cout << "Checking resulting cell set" << std::endl;
   CheckOutputCellSet(outCellSet, outField);
@@ -91,7 +78,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestRemoveUnusedPoints(int, char* [])
+int UnitTestRemoveUnusedPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

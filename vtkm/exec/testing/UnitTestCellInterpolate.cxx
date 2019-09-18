@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/CellInterpolate.h>
@@ -83,7 +73,7 @@ struct TestInterpolateFunctor
     std::cout << "  Test interpolated value at each cell node." << std::endl;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoord =
+      vtkm::Vec3f pcoord =
         vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
@@ -97,13 +87,13 @@ struct TestInterpolateFunctor
     if (numPoints > 0)
     {
       std::cout << "  Test interpolated value at cell center." << std::endl;
-      vtkm::Vec<vtkm::FloatDefault, 3> pcoord =
-        vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, workletProxy);
+      vtkm::Vec3f pcoord = vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       FieldType interpolatedValue =
         vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
+      std::cout << "AVG= " << averageValue << " interp= " << interpolatedValue << std::endl;
       VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
                        "Interpolation at center not average value.");
     }
@@ -154,13 +144,13 @@ void TestInterpolate()
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Float64>());
   std::cout << "======== Vec<Float32,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float32, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec3f_32>());
   std::cout << "======== Vec<Float64,3> ===================" << std::endl;
-  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec<vtkm::Float64, 3>>());
+  vtkm::testing::Testing::TryAllCellShapes(TestInterpolateFunctor<vtkm::Vec3f_64>());
 
-  TestInterpolateFunctor<vtkm::Vec<vtkm::FloatDefault, 3>> testFunctor;
-  vtkm::Vec<vtkm::FloatDefault, 3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>());
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
+  TestInterpolateFunctor<vtkm::Vec3f> testFunctor;
+  vtkm::Vec3f origin = TestValue(0, vtkm::Vec3f());
+  vtkm::Vec3f spacing = TestValue(1, vtkm::Vec3f());
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
   testFunctor.DoTestWithField(vtkm::CellShapeTagLine(),
                               vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing));
@@ -174,7 +164,7 @@ void TestInterpolate()
 
 } // anonymous namespace
 
-int UnitTestCellInterpolate(int, char* [])
+int UnitTestCellInterpolate(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestInterpolate);
+  return vtkm::testing::Testing::Run(TestInterpolate, argc, argv);
 }

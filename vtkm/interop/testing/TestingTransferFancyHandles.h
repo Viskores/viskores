@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_testing_TestingFancyArrayHandles_h
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
@@ -162,9 +150,8 @@ void test_ArrayHandleCartesianProduct()
 
 void test_ArrayHandleCast()
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> handle =
-    makeArray(100000, vtkm::Vec<vtkm::Float64, 3>());
-  auto castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec<vtkm::Float32, 3>());
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> handle = makeArray(100000, vtkm::Vec3f_64());
+  auto castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec3f_32());
 
   vtkm::interop::BufferState state;
   vtkm::interop::TransferToOpenGL(castArray, state);
@@ -173,8 +160,8 @@ void test_ArrayHandleCast()
   validate(castArray, state);
 
   //resize down
-  handle = makeArray(1000, vtkm::Vec<vtkm::Float64, 3>());
-  castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec<vtkm::Float32, 3>());
+  handle = makeArray(1000, vtkm::Vec3f_64());
+  castArray = vtkm::cont::make_ArrayHandleCast(handle, vtkm::Vec3f_32());
   vtkm::interop::TransferToOpenGL(castArray, state);
   validate(castArray, state);
 }
@@ -267,7 +254,10 @@ public:
     }
   };
 
-  static int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
+  static int Run(int argc, char* argv[])
+  {
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
+  }
 };
 }
 }

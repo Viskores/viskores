@@ -2,26 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleZip_h
 #define vtk_m_cont_ArrayHandleZip_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/ArrayPortalHelpers.h>
 
 namespace vtkm
 {
@@ -35,8 +26,19 @@ namespace internal
 template <typename ValueType_, typename PortalTypeFirst_, typename PortalTypeSecond_>
 class ArrayPortalZip
 {
+  using ReadableP1 = vtkm::internal::PortalSupportsGets<PortalTypeFirst_>;
+  using ReadableP2 = vtkm::internal::PortalSupportsGets<PortalTypeSecond_>;
+  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst_>;
+  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond_>;
+
+  using Readable = std::integral_constant<bool, ReadableP1::value && ReadableP2::value>;
+  using Writable = std::integral_constant<bool, WritableP1::value && WritableP2::value>;
+
 public:
   using ValueType = ValueType_;
+  using T = typename ValueType::FirstType;
+  using U = typename ValueType::SecondType;
+
   using IteratorType = ValueType_;
   using PortalTypeFirst = PortalTypeFirst_;
   using PortalTypeSecond = PortalTypeSecond_;
@@ -70,14 +72,16 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->PortalFirst.GetNumberOfValues(); }
 
-  VTKM_EXEC
-  ValueType Get(vtkm::Id index) const
+  template <typename Readable_ = Readable,
+            typename = typename std::enable_if<Readable_::value>::type>
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const noexcept
   {
     return vtkm::make_Pair(this->PortalFirst.Get(index), this->PortalSecond.Get(index));
   }
 
-  VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const noexcept
   {
     this->PortalFirst.Set(index, value.first);
     this->PortalSecond.Set(index, value.second);
@@ -130,14 +134,16 @@ struct ArrayHandleZipTraits
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename T, typename FirstHandleType, typename SecondHandleType>
-class Storage<T, StorageTagZip<FirstHandleType, SecondHandleType>>
+template <typename FirstHandleType, typename SecondHandleType>
+class Storage<vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
+              StorageTagZip<FirstHandleType, SecondHandleType>>
 {
   VTKM_IS_ARRAY_HANDLE(FirstHandleType);
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
 
 public:
-  using ValueType = T;
+  using ValueType =
+    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
 
   using PortalType = vtkm::exec::internal::ArrayPortalZip<ValueType,
                                                           typename FirstHandleType::PortalControl,
@@ -213,15 +219,21 @@ private:
   SecondHandleType SecondArray;
 };
 
-template <typename T, typename FirstHandleType, typename SecondHandleType, typename Device>
-class ArrayTransfer<T, StorageTagZip<FirstHandleType, SecondHandleType>, Device>
+template <typename FirstHandleType, typename SecondHandleType, typename Device>
+class ArrayTransfer<
+  vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
+  StorageTagZip<FirstHandleType, SecondHandleType>,
+  Device>
 {
+public:
+  using ValueType =
+    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
+
+private:
   using StorageTag = StorageTagZip<FirstHandleType, SecondHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  using ValueType = T;
-
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -343,5 +355,75 @@ VTKM_CONT vtkm::cont::ArrayHandleZip<FirstHandleType, SecondHandleType> make_Arr
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH1, typename AH2>
+struct SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Zip<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH1, typename AH2>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
+                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+{
+};
+}
+} // namespace vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename AH1, typename AH2>
+struct Serialization<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+{
+private:
+  using Type = typename vtkm::cont::ArrayHandleZip<AH1, AH2>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH1 a1;
+    AH2 a2;
+
+    vtkmdiy::load(bb, a1);
+    vtkmdiy::load(bb, a2);
+
+    obj = vtkm::cont::make_ArrayHandleZip(a1, a2);
+  }
+};
+
+template <typename AH1, typename AH2>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
+                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
+  : Serialization<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+{
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleZip_h

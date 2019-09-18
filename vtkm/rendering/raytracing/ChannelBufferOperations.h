@@ -2,26 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_rendering_raytracing_ChannelBuffer_Operations_h
 #define vtkm_rendering_raytracing_ChannelBuffer_Operations_h
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 
 #include <vtkm/rendering/raytracing/ChannelBuffer.h>
@@ -50,8 +41,8 @@ public:
     : NumChannels(numChannels)
   {
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, FieldIn<>, WholeArrayOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ControlSignature = void(FieldIn, WholeArrayIn, FieldIn, WholeArrayOut);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   template <typename InBufferPortalType, typename OutBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::UInt8& mask,
                             const InBufferPortalType& inBuffer,
@@ -85,8 +76,8 @@ public:
     : NumChannels(numChannels)
   {
   }
-  typedef void ControlSignature(FieldOut<>, WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(FieldOut, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ValueType, typename PortalType>
   VTKM_EXEC void operator()(ValueType& outValue,
                             const PortalType& source,
@@ -102,23 +93,22 @@ public:
 class ChannelBufferOperations
 {
 public:
-  template <typename Device, typename Precision>
+  template <typename Precision>
   static void Compact(ChannelBuffer<Precision>& buffer,
                       vtkm::cont::ArrayHandle<UInt8>& masks,
-                      const vtkm::Id& newSize,
-                      Device)
+                      const vtkm::Id& newSize)
   {
     vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-    offsets.PrepareForOutput(buffer.Size, Device());
+    offsets.Allocate(buffer.Size);
     vtkm::cont::ArrayHandleCast<vtkm::Id, vtkm::cont::ArrayHandle<vtkm::UInt8>> castedMasks(masks);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(castedMasks, offsets);
+    vtkm::cont::Algorithm::ScanExclusive(castedMasks, offsets);
 
     vtkm::cont::ArrayHandle<Precision> compactedBuffer;
-    compactedBuffer.PrepareForOutput(newSize * buffer.NumChannels, Device());
+    compactedBuffer.Allocate(newSize * buffer.NumChannels);
 
-    vtkm::worklet::DispatcherMapField<detail::CompactBuffer, Device>(
-      detail::CompactBuffer(buffer.NumChannels))
-      .Invoke(masks, buffer.Buffer, offsets, compactedBuffer);
+    vtkm::worklet::DispatcherMapField<detail::CompactBuffer> dispatcher(
+      detail::CompactBuffer(buffer.NumChannels));
+    dispatcher.Invoke(masks, buffer.Buffer, offsets, compactedBuffer);
     buffer.Buffer = compactedBuffer;
     buffer.Size = newSize;
   }
@@ -133,16 +123,17 @@ public:
       std::string msg = "ChannelBuffer: number of bins in sourse signature must match NumChannels";
       throw vtkm::cont::ErrorBadValue(msg);
     }
-    vtkm::worklet::DispatcherMapField<detail::InitBuffer, Device>(
-      detail::InitBuffer(buffer.NumChannels))
-      .Invoke(buffer.Buffer, sourceSignature);
+    vtkm::worklet::DispatcherMapField<detail::InitBuffer> initBufferDispatcher(
+      detail::InitBuffer(buffer.NumChannels));
+    initBufferDispatcher.SetDevice(Device());
+    initBufferDispatcher.Invoke(buffer.Buffer, sourceSignature);
   }
 
   template <typename Device, typename Precision>
   static void InitConst(ChannelBuffer<Precision>& buffer, const Precision value, Device)
   {
-    vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(value))
-      .Invoke(buffer.Buffer);
+    vtkm::cont::ArrayHandleConstant<Precision> valueHandle(value, buffer.GetBufferLength());
+    vtkm::cont::Algorithm::Copy(Device(), valueHandle, buffer.Buffer);
   }
 };
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/Field.h>
@@ -25,6 +15,59 @@ namespace vtkm
 namespace cont
 {
 
+/// constructors for points / whole mesh
+VTKM_CONT
+Field::Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data)
+  : Name(name)
+  , FieldAssociation(association)
+  , Data(data)
+  , Range()
+  , ModifiedFlag(true)
+{
+}
+
+VTKM_CONT
+Field::Field(const vtkm::cont::Field& src)
+  : Name(src.Name)
+  , FieldAssociation(src.FieldAssociation)
+  , Data(src.Data)
+  , Range(src.Range)
+  , ModifiedFlag(src.ModifiedFlag)
+{
+}
+
+VTKM_CONT
+Field::Field(vtkm::cont::Field&& src) noexcept : Name(std::move(src.Name)),
+                                                 FieldAssociation(std::move(src.FieldAssociation)),
+                                                 Data(std::move(src.Data)),
+                                                 Range(std::move(src.Range)),
+                                                 ModifiedFlag(std::move(src.ModifiedFlag))
+{
+}
+
+VTKM_CONT
+Field& Field::operator=(const vtkm::cont::Field& src)
+{
+  this->Name = src.Name;
+  this->FieldAssociation = src.FieldAssociation;
+  this->Data = src.Data;
+  this->Range = src.Range;
+  this->ModifiedFlag = src.ModifiedFlag;
+  return *this;
+}
+
+VTKM_CONT
+Field& Field::operator=(vtkm::cont::Field&& src) noexcept
+{
+  this->Name = std::move(src.Name);
+  this->FieldAssociation = std::move(src.FieldAssociation);
+  this->Data = std::move(src.Data);
+  this->Range = std::move(src.Range);
+  this->ModifiedFlag = std::move(src.ModifiedFlag);
+  return *this;
+}
+
+
 VTKM_CONT
 void Field::PrintSummary(std::ostream& out) const
 {
@@ -32,55 +75,39 @@ void Field::PrintSummary(std::ostream& out) const
   out << " assoc= ";
   switch (this->GetAssociation())
   {
-    case ASSOC_ANY:
+    case Association::ANY:
       out << "Any ";
       break;
-    case ASSOC_WHOLE_MESH:
+    case Association::WHOLE_MESH:
       out << "Mesh ";
       break;
-    case ASSOC_POINTS:
+    case Association::POINTS:
       out << "Points ";
       break;
-    case ASSOC_CELL_SET:
+    case Association::CELL_SET:
       out << "Cells ";
-      break;
-    case ASSOC_LOGICAL_DIM:
-      out << "LogicalDim ";
       break;
   }
   this->Data.PrintSummary(out);
 }
 
 VTKM_CONT
-const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
+Field::~Field()
 {
-  return this->GetRange(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
 
-VTKM_CONT
-void Field::GetRange(vtkm::Range* range) const
-{
-  this->GetRange(range, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
 
 VTKM_CONT
-const vtkm::cont::DynamicArrayHandle& Field::GetData() const
+const vtkm::cont::VariantArrayHandle& Field::GetData() const
 {
   return this->Data;
 }
 
 VTKM_CONT
-vtkm::cont::DynamicArrayHandle& Field::GetData()
+vtkm::cont::VariantArrayHandle& Field::GetData()
 {
   this->ModifiedFlag = true;
   return this->Data;
-}
-
-VTKM_CONT
-const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange(VTKM_DEFAULT_TYPE_LIST_TAG,
-                                                            VTKM_DEFAULT_STORAGE_LIST_TAG) const
-{
-  return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
 }
 } // namespace vtkm::cont

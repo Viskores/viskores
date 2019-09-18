@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_Hash_h
 #define vtk_m_Hash_h
@@ -77,7 +67,7 @@ VTKM_EXEC_CONT inline vtkm::HashType HashFNV1a64(const InVecType& inVec)
 
 // If you get a compile error saying that there is no implementation of the class HashChooser,
 // then you have tried to make a hash from an invalid type (like a float).
-template <typename NumericTag, vtkm::Id DataSize>
+template <typename NumericTag, std::size_t DataSize>
 struct HashChooser;
 
 template <>

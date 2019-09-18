@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -63,6 +53,8 @@
 
 #include <vtkm/worklet/cosmotools/CosmoTools.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -76,19 +68,16 @@ namespace cosmotools
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
-  vtkm::cont::ArrayHandle<vtkm::Id>& resultHaloId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& resultMBP,
-  vtkm::cont::ArrayHandle<T>& resultPot)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::HaloFinder(vtkm::cont::ArrayHandle<vtkm::Id>& resultHaloId,
+                                            vtkm::cont::ArrayHandle<vtkm::Id>& resultMBP,
+                                            vtkm::cont::ArrayHandle<T>& resultPot)
 {
   // Package locations for worklets
   using CompositeLocationType =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<LocationType,
-                                                        LocationType,
-                                                        LocationType>::type;
+    typename vtkm::cont::ArrayHandleCompositeVector<LocationType, LocationType, LocationType>;
   CompositeLocationType location;
-  location = make_ArrayHandleCompositeVector(xLoc, 0, yLoc, 0, zLoc, 0);
+  location = make_ArrayHandleCompositeVector(xLoc, yLoc, zLoc);
 
   vtkm::cont::ArrayHandle<vtkm::Id> leftNeighbor;  // lower particle id to check for linking length
   vtkm::cont::ArrayHandle<vtkm::Id> rightNeighbor; // upper particle id to check for linking length
@@ -196,18 +185,17 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
 // Bin all particles in the system for halo finding
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& leftNeighbor,
-  vtkm::cont::ArrayHandle<vtkm::Id>& rightNeighbor)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::BinParticlesAll(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& binId,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& leftNeighbor,
+                                                 vtkm::cont::ArrayHandle<vtkm::Id>& rightNeighbor)
 {
   // Compute number of bins and ranges for each bin
   vtkm::Vec<T, 2> result;
-  vtkm::Vec<T, 2> xInit(xLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> yInit(yLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> zInit(zLoc.GetPortalConstControl().Get(0));
+  vtkm::Vec<T, 2> xInit(vtkm::cont::ArrayGetValue(0, xLoc));
+  vtkm::Vec<T, 2> yInit(vtkm::cont::ArrayGetValue(0, yLoc));
+  vtkm::Vec<T, 2> zInit(vtkm::cont::ArrayGetValue(0, zLoc));
   result = DeviceAlgorithm::Reduce(xLoc, xInit, vtkm::MinAndMax<T>());
   T minX = result[0];
   T maxX = result[1];
@@ -295,12 +283,11 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesAll(
 // Method uses ReduceByKey() and Scatter()
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& haloId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& mbpId,
-  vtkm::cont::ArrayHandle<T>& minPotential)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                        vtkm::cont::ArrayHandle<vtkm::Id>& haloId,
+                                                        vtkm::cont::ArrayHandle<vtkm::Id>& mbpId,
+                                                        vtkm::cont::ArrayHandle<T>& minPotential)
 {
   // Sort particles into groups according to halo id using an index into WholeArrays
   DeviceAlgorithm::SortByKey(haloId, partId);
@@ -330,20 +317,16 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
 #endif
 
   // Setup the ScatterCounting worklets needed to expand the ReduceByKeyResults
-  vtkm::worklet::ScatterCounting scatter(particlesPerHalo, DeviceAdapter());
-  ScatterWorklet<vtkm::Id> scatterWorkletId(scatter);
-  ScatterWorklet<T> scatterWorklet(scatter);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<vtkm::Id>> scatterWorkletIdDispatcher(
-    scatterWorkletId);
-  vtkm::worklet::DispatcherMapField<ScatterWorklet<T>> scatterWorkletDispatcher(scatterWorklet);
+  vtkm::worklet::ScatterCounting scatter(particlesPerHalo);
+  vtkm::cont::Invoker invoke;
 
   // Calculate the minimum particle index per halo id and scatter
   DeviceAlgorithm::ScanExclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, minParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, minParticle);
 
   // Calculate the maximum particle index per halo id and scatter
   DeviceAlgorithm::ScanInclusive(particlesPerHalo, tempI);
-  scatterWorkletIdDispatcher.Invoke(tempI, maxParticle);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, tempI, maxParticle);
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
   vtkm::cont::ArrayHandleTransform<IdArrayType, ScaleBiasFunctor<vtkm::Id>> scaleBias =
@@ -372,7 +355,7 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
 
   // Find minimum potential for all particles in a halo and scatter
   DeviceAlgorithm::ReduceByKey(haloId, potential, uniqueHaloIds, tempT, vtkm::Minimum());
-  scatterWorkletDispatcher.Invoke(tempT, minPotential);
+  invoke(ScatterWorklet<T>{}, scatter, tempT, minPotential);
 #ifdef DEBUG_PRINT
   DebugPrint("potential", potential);
   DebugPrint("minPotential", minPotential);
@@ -389,7 +372,7 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByHalo(
   vtkm::cont::ArrayHandle<vtkm::Id> minIndx;
   minIndx.Allocate(nParticles);
   DeviceAlgorithm::ReduceByKey(haloId, mbpId, uniqueHaloIds, minIndx, vtkm::Maximum());
-  scatterWorkletIdDispatcher.Invoke(minIndx, mbpId);
+  invoke(ScatterWorklet<vtkm::Id>{}, scatter, minIndx, mbpId);
 
   // Resort particle ids and mbpId to starting order
   vtkm::cont::ArrayHandle<vtkm::Id> savePartId;

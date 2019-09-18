@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 #-----------------------------------------------------------------------------
@@ -29,12 +19,15 @@ set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
+set(VTKM_ENABLE_OPENMP ${VTKm_ENABLE_OPENMP})
 set(VTKM_ENABLE_MPI ${VTKm_ENABLE_MPI})
 
 if(VTKM_ENABLE_CUDA)
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\1" VTKM_CUDA_VERSION_MAJOR ${CMAKE_CUDA_COMPILER_VERSION})
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\2" VTKM_CUDA_VERSION_MINOR ${CMAKE_CUDA_COMPILER_VERSION})
 endif()
+
+set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
 
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
@@ -53,8 +46,10 @@ unset(VTKM_NO_ASSERT)
 
 
 set(headers
+  ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h
+  ArrayPortalVirtual.h
   Assume.h
   brigand.hpp
   ConfigureFor32.h
@@ -65,9 +60,12 @@ set(headers
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
   IndexTag.h
+  IndicesExtrude.h
   Invocation.h
   ListTagDetail.h
   Unreachable.h
+  Variant.h
+  VariantDetail.h
   Windows.h
   )
 
@@ -75,6 +73,7 @@ vtkm_declare_headers(${headers})
 
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPre.h)
 vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
+vtkm_pyexpander_generated_file(VariantDetail.h)
 
 add_subdirectory(testing)
 

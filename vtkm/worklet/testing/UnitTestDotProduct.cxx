@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -97,7 +87,7 @@ void TestDotProduct()
     vtkm::Vec<T, 3> v2 = inputArray2.GetPortalConstControl().Get(i);
     T ans = answer[static_cast<std::size_t>(i)];
 
-    VTKM_TEST_ASSERT(test_equal(ans, vtkm::dot(v1, v2)), "Wrong result for dot product");
+    VTKM_TEST_ASSERT(test_equal(ans, vtkm::Dot(v1, v2)), "Wrong result for dot product");
   }
 }
 
@@ -109,7 +99,7 @@ void TestDotProductWorklets()
 }
 }
 
-int UnitTestDotProduct(int, char* [])
+int UnitTestDotProduct(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDotProductWorklets);
+  return vtkm::cont::testing::Testing::Run(TestDotProductWorklets, argc, argv);
 }

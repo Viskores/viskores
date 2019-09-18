@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/VectorAnalysis.h>
 
@@ -134,8 +122,8 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 
   std::cout << "  Orthogonality" << std::endl;
   // The cross product result should be perpendicular to input vectors.
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(cross, x), T(0.0)), "Cross product not perpendicular.");
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(cross, y), T(0.0)), "Cross product not perpendicular.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, x), T(0.0)), "Cross product not perpendicular.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, y), T(0.0)), "Cross product not perpendicular.");
 
   std::cout << "  Length" << std::endl;
   // The length of cross product should be the lengths of the input vectors
@@ -144,7 +132,7 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 
   // The dot product is likewise the lengths of the input vectors times the
   // cos of the angle between them.
-  T cosAngle = vtkm::dot(x, y) * vtkm::RMagnitude(x) * vtkm::RMagnitude(y);
+  T cosAngle = vtkm::Dot(x, y) * vtkm::RMagnitude(x) * vtkm::RMagnitude(y);
 
   // Test that these are the actual sin and cos of the same angle with a
   // basic trigonometric identity.
@@ -154,8 +142,23 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
   std::cout << "  Triangle normal" << std::endl;
   // Test finding the normal to a triangle (similar to cross product).
   Vec3 normal = vtkm::TriangleNormal(x, y, Vec3(0, 0, 0));
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(normal, x - y), T(0.0)),
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(normal, x - y), T(0.0)),
                    "Triangle normal is not really normal.");
+}
+
+template <typename VectorBasisType>
+void TestOrthonormalize(const VectorBasisType& inputs, int expectedRank)
+{
+  VectorBasisType outputs;
+  int actualRank = vtkm::Orthonormalize(inputs, outputs);
+  std::cout << "Testing orthonormalize\n"
+            << "  Rank " << actualRank << " expected " << expectedRank << "\n"
+            << "  Basis vectors:\n";
+  for (int i = 0; i < actualRank; ++i)
+  {
+    std::cout << "    " << i << "  " << outputs[i] << "\n";
+  }
+  VTKM_TEST_ASSERT(test_equal(actualRank, expectedRank), "Orthonormalized rank is unexpected.");
 }
 
 struct TestLinearFunctor
@@ -208,15 +211,48 @@ struct TestCrossFunctor
   }
 };
 
+struct TestVectorFunctor
+{
+  template <typename VectorType>
+  void operator()(const VectorType&) const
+  {
+    constexpr int NUM_COMPONENTS = VectorType::NUM_COMPONENTS;
+    using Traits = vtkm::VecTraits<VectorType>;
+    using ComponentType = typename Traits::ComponentType;
+    vtkm::Vec<VectorType, NUM_COMPONENTS> basis;
+    VectorType normalizedVector = VectorType(vtkm::RSqrt(ComponentType(NUM_COMPONENTS)));
+    VectorType zeroVector = VectorType(ComponentType(0));
+    // Test with a degenerate set of inputs:
+    basis[0] = zeroVector;
+    basis[1] = normalizedVector;
+    for (int ii = 2; ii < NUM_COMPONENTS; ++ii)
+    {
+      basis[ii] = zeroVector;
+    }
+    TestOrthonormalize(basis, 1);
+    // Now test with a valid set of inputs:
+    for (int ii = 0; ii < NUM_COMPONENTS; ++ii)
+    {
+      for (int jj = 0; jj < NUM_COMPONENTS; ++jj)
+      {
+        basis[ii][jj] =
+          ComponentType(jj == ii ? 1.0 : 0.0) + ComponentType(0.05) * ComponentType(jj);
+      }
+    }
+    TestOrthonormalize(basis, NUM_COMPONENTS);
+  }
+};
+
 void TestVectorAnalysis()
 {
   vtkm::testing::Testing::TryTypes(TestLinearFunctor(), vtkm::TypeListTagField());
   vtkm::testing::Testing::TryTypes(TestCrossFunctor(), vtkm::TypeListTagFieldVec3());
+  vtkm::testing::Testing::TryTypes(TestVectorFunctor(), vtkm::TypeListTagFloatVec());
 }
 
 } // anonymous namespace
 
-int UnitTestVectorAnalysis(int, char* [])
+int UnitTestVectorAnalysis(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVectorAnalysis);
+  return vtkm::testing::Testing::Run(TestVectorAnalysis, argc, argv);
 }

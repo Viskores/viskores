@@ -2,20 +2,10 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 set(headers
@@ -23,8 +13,11 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingArrayHandleMultiplexer.h
   TestingArrayHandleVirtualCoordinates.h
-  TestingCellLocatorTwoLevelUniformGrid.h
+  TestingCellLocatorRectilinearGrid.h
+  TestingCellLocatorUniformBins.h
+  TestingCellLocatorUniformGrid.h
   TestingColorTable.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
@@ -33,6 +26,7 @@ set(headers
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorUniformGrid.h
+  TestingSerialization.h
   TestingVirtualObjectHandle.h
   )
 
@@ -41,11 +35,14 @@ vtkm_declare_headers(${headers})
 set(unit_tests
   UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
+  UnitTestArrayGetValues.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleExtractComponent.cxx
+  UnitTestArrayHandleExtrude.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
@@ -54,9 +51,12 @@ set(unit_tests
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
+  UnitTestArrayHandleVirtual.cxx
   UnitTestArrayPortalToIterators.cxx
-  UnitTestCellLocator.cxx
+  UnitTestCellLocatorGeneral.cxx
+  UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx
+  UnitTestCellSetExtrude.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderExplicit.cxx
@@ -67,23 +67,31 @@ set(unit_tests
   UnitTestDataSetUniform.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
-  UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
-  UnitTestMultiBlock.cxx
+  UnitTestInitialize.cxx
+  UnitTestLogging.cxx
+  UnitTestMoveConstructors.cxx
+  UnitTestPartitionedDataSet.cxx
   UnitTestRuntimeDeviceInformation.cxx
+  UnitTestRuntimeDeviceNames.cxx
+  UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   UnitTestTryExecute.cxx
+  UnitTestVariantArrayHandle.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
-
+vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 
 # add distributed tests i.e. test to run with MPI
 # if MPI is enabled.
 set(mpi_unit_tests
-  UnitTestFieldRangeGlobalCompute.cxx)
-vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})
+  UnitTestFieldRangeGlobalCompute.cxx
+  UnitTestSerializationArrayHandle.cxx
+  UnitTestSerializationDataSet.cxx
+  )
+vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_exec_serial_internal_TaskTiling_h
@@ -36,7 +26,8 @@ namespace internal
 {
 
 template <typename WType>
-void TaskTilingSetErrorBuffer(void* w, const vtkm::exec::internal::ErrorMessageBuffer& buffer)
+void VTKM_NEVER_EXPORT
+TaskTilingSetErrorBuffer(void* w, const vtkm::exec::internal::ErrorMessageBuffer& buffer)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   WorkletType* const worklet = static_cast<WorkletType*>(w);
@@ -44,11 +35,11 @@ void TaskTilingSetErrorBuffer(void* w, const vtkm::exec::internal::ErrorMessageB
 }
 
 template <typename WType, typename IType>
-void TaskTiling1DExecute(void* w,
-                         void* const v,
-                         vtkm::Id globalIndexOffset,
-                         vtkm::Id start,
-                         vtkm::Id end)
+void VTKM_NEVER_EXPORT TaskTiling1DExecute(void* w,
+                                           void* const v,
+                                           vtkm::Id globalIndexOffset,
+                                           vtkm::Id start,
+                                           vtkm::Id end)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   using InvocationType = typename std::remove_cv<IType>::type;
@@ -65,13 +56,15 @@ void TaskTiling1DExecute(void* w,
       worklet->GetThreadIndices(index,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
+                                invocation->ThreadToOutputMap,
                                 invocation->GetInputDomain(),
                                 globalIndexOffset));
   }
 }
 
 template <typename FType>
-void FunctorTiling1DExecute(void* f, void* const, vtkm::Id, vtkm::Id start, vtkm::Id end)
+void VTKM_NEVER_EXPORT
+FunctorTiling1DExecute(void* f, void* const, vtkm::Id, vtkm::Id start, vtkm::Id end)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -83,13 +76,13 @@ void FunctorTiling1DExecute(void* f, void* const, vtkm::Id, vtkm::Id start, vtkm
 }
 
 template <typename WType, typename IType>
-void TaskTiling3DExecute(void* w,
-                         void* const v,
-                         vtkm::Id globalIndexOffset,
-                         vtkm::Id istart,
-                         vtkm::Id iend,
-                         vtkm::Id j,
-                         vtkm::Id k)
+void VTKM_NEVER_EXPORT TaskTiling3DExecute(void* w,
+                                           void* const v,
+                                           vtkm::Id globalIndexOffset,
+                                           vtkm::Id istart,
+                                           vtkm::Id iend,
+                                           vtkm::Id j,
+                                           vtkm::Id k)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   using InvocationType = typename std::remove_cv<IType>::type;
@@ -108,19 +101,20 @@ void TaskTiling3DExecute(void* w,
       worklet->GetThreadIndices(index,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
+                                invocation->ThreadToOutputMap,
                                 invocation->GetInputDomain(),
                                 globalIndexOffset));
   }
 }
 
 template <typename FType>
-void FunctorTiling3DExecute(void* f,
-                            void* const,
-                            vtkm::Id,
-                            vtkm::Id istart,
-                            vtkm::Id iend,
-                            vtkm::Id j,
-                            vtkm::Id k)
+void VTKM_NEVER_EXPORT FunctorTiling3DExecute(void* f,
+                                              void* const,
+                                              vtkm::Id,
+                                              vtkm::Id istart,
+                                              vtkm::Id iend,
+                                              vtkm::Id j,
+                                              vtkm::Id k)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -140,7 +134,7 @@ void FunctorTiling3DExecute(void* f,
 //
 // Note: The worklet and invocation must have a lifetime that is at least
 // as long as the Task
-class VTKM_ALWAYS_EXPORT TaskTiling1D : public vtkm::exec::TaskBase
+class VTKM_NEVER_EXPORT TaskTiling1D : public vtkm::exec::TaskBase
 {
 public:
   TaskTiling1D()
@@ -232,7 +226,7 @@ protected:
 //
 // Note: The worklet and invocation must have a lifetime that is at least
 // as long as the Task
-class VTKM_ALWAYS_EXPORT TaskTiling3D : public vtkm::exec::TaskBase
+class VTKM_NEVER_EXPORT TaskTiling3D : public vtkm::exec::TaskBase
 {
 public:
   TaskTiling3D()

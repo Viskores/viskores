@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -63,6 +53,8 @@
 
 #include <vtkm/worklet/cosmotools/CosmoTools.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -77,8 +69,8 @@ namespace cosmotools
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename T, typename StorageType, typename DeviceAdapter>
-vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPotential)
+template <typename T, typename StorageType>
+vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> partId;
   vtkm::cont::ArrayHandle<vtkm::Id> binId;
@@ -151,7 +143,9 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
 
   // Use the worst estimate for the first selected bin to compare to best of all others
   // Any bin that passes is a candidate for having the MBP
-  T cutoffPotential = worstEstPotential.GetPortalControl().Get(0);
+  T cutoffPotential = vtkm::cont::ArrayGetValue(0, worstEstPotential);
+  worstEstPotential.ReleaseResources();
+  tempBest.ReleaseResources();
 
   vtkm::cont::ArrayHandle<vtkm::Id> candidate;
   DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nParticles), candidate);
@@ -188,8 +182,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
 #endif
 
   // Return the found MBP particle and its potential
-  vtkm::Id mxnMBP = mparticles.GetPortalControl().Get(0);
-  *mxnPotential = mpotential.GetPortalControl().Get(0);
+  vtkm::Id mxnMBP = vtkm::cont::ArrayGetValue(0, mparticles);
+  *mxnPotential = vtkm::cont::ArrayGetValue(0, mpotential);
 
   return mxnMBP;
 }
@@ -199,21 +193,20 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderMxN(T* mxnPot
 // Bin particles in one halo for quick MBP finding
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& uniqueBins,
-  vtkm::cont::ArrayHandle<vtkm::Id>& partPerBin,
-  vtkm::cont::ArrayHandle<vtkm::Id>& particleOffset,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binX,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binY,
-  vtkm::cont::ArrayHandle<vtkm::Id>& binZ)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::BinParticlesHalo(vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binId,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& uniqueBins,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& partPerBin,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& particleOffset,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binX,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binY,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id>& binZ)
 {
   // Compute number of bins and ranges for each bin
-  vtkm::Vec<T, 2> xRange(xLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> yRange(yLoc.GetPortalConstControl().Get(0));
-  vtkm::Vec<T, 2> zRange(zLoc.GetPortalConstControl().Get(0));
+  vtkm::Vec<T, 2> xRange(vtkm::cont::ArrayGetValue(0, xLoc));
+  vtkm::Vec<T, 2> yRange(vtkm::cont::ArrayGetValue(0, yLoc));
+  vtkm::Vec<T, 2> zRange(vtkm::cont::ArrayGetValue(0, zLoc));
   xRange = DeviceAlgorithm::Reduce(xLoc, xRange, vtkm::MinAndMax<T>());
   T minX = xRange[0];
   T maxX = xRange[1];
@@ -286,7 +279,6 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
 #endif
 
   // Calculate the bin indices
-  vtkm::cont::ArrayHandleIndex uniqueIndex(uniqueBins.GetNumberOfValues());
   ComputeBinIndices<T> computeBinIndices(numBinsX, numBinsY, numBinsZ);
   vtkm::worklet::DispatcherMapField<ComputeBinIndices<T>> computeBinIndicesDispatcher(
     computeBinIndices);
@@ -307,11 +299,10 @@ void CosmoTools<T, StorageType, DeviceAdapter>::BinParticlesHalo(
 // Method uses ScanInclusiveByKey() and ArrayHandleReverse
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
-  vtkm::cont::ArrayHandle<vtkm::Id>& keyId,
-  vtkm::cont::ArrayHandle<vtkm::Id>& partId,
-  vtkm::cont::ArrayHandle<T>& minPotential)
+template <typename T, typename StorageType>
+void CosmoTools<T, StorageType>::MBPCenterFindingByKey(vtkm::cont::ArrayHandle<vtkm::Id>& keyId,
+                                                       vtkm::cont::ArrayHandle<vtkm::Id>& partId,
+                                                       vtkm::cont::ArrayHandle<T>& minPotential)
 {
   // Compute starting and ending indices of each key (bin or halo)
   vtkm::cont::ArrayHandleIndex indexArray(nParticles);
@@ -386,8 +377,8 @@ void CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFindingByKey(
 // Method uses ScanInclusiveByKey() and ArrayHandleReverse
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderNxN(T* nxnPotential)
+template <typename T, typename StorageType>
+vtkm::Id CosmoTools<T, StorageType>::MBPCenterFinderNxN(T* nxnPotential)
 {
   vtkm::cont::ArrayHandle<T> potential;
   vtkm::cont::ArrayHandle<T> minPotential;
@@ -424,8 +415,8 @@ vtkm::Id CosmoTools<T, StorageType, DeviceAdapter>::MBPCenterFinderNxN(T* nxnPot
   DeviceAlgorithm::ScanInclusive(centerId, centerId, vtkm::Maximum());
   DeviceAlgorithm::ScanInclusive(centerIdReverse, centerIdReverse, vtkm::Maximum());
 
-  vtkm::Id nxnMBP = centerId.GetPortalConstControl().Get(0);
-  *nxnPotential = potential.GetPortalConstControl().Get(nxnMBP);
+  vtkm::Id nxnMBP = vtkm::cont::ArrayGetValue(0, centerId);
+  *nxnPotential = vtkm::cont::ArrayGetValue(nxnMBP, potential);
 
   return nxnMBP;
 }

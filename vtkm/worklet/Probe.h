@@ -2,26 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_Probe_h
 #define vtk_m_worklet_Probe_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorGeneral.h>
+#include <vtkm/exec/CellInside.h>
+#include <vtkm/exec/CellInterpolate.h>
+#include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -38,46 +32,55 @@ namespace worklet
 class Probe
 {
   //============================================================================
+public:
+  class FindCellWorklet : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn points,
+                                  ExecObject locator,
+                                  FieldOut cellIds,
+                                  FieldOut pcoords);
+    using ExecutionSignature = void(_1, _2, _3, _4);
+
+    template <typename LocatorType>
+    VTKM_EXEC void operator()(const vtkm::Vec3f& point,
+                              const LocatorType& locator,
+                              vtkm::Id& cellId,
+                              vtkm::Vec3f& pcoords) const
+    {
+      locator->FindCell(point, cellId, pcoords, *this);
+    }
+  };
+
 private:
-  template <typename CellSetType>
-  static vtkm::ListTagBase<CellSetType> GetCellSetListTag(const CellSetType&)
-  {
-    return {};
-  }
-
-  template <typename CellSetList>
-  static CellSetList GetCellSetListTag(const vtkm::cont::DynamicCellSetBase<CellSetList>&)
-  {
-    return {};
-  }
-
-  template <typename CellSetType, typename PointsType, typename PointsStorage, typename Device>
+  template <typename CellSetType, typename PointsType, typename PointsStorage>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
-               const vtkm::cont::ArrayHandle<PointsType, PointsStorage>& points,
-               Device device)
+               const vtkm::cont::ArrayHandle<PointsType, PointsStorage>& points)
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
 
-    vtkm::cont::CellLocator locator;
+    vtkm::cont::CellLocatorGeneral locator;
     locator.SetCellSet(this->InputCellSet);
     locator.SetCoordinates(coords);
-    locator.Build(device);
-    locator.FindCells(
-      points, this->CellIds, this->ParametricCoordinates, device, GetCellSetListTag(cells));
+    locator.Update();
+
+    vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
+    // CellLocatorGeneral is non-copyable. Pass it via a pointer.
+    dispatcher.Invoke(points, &locator, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================
 public:
-  class ProbeUniformPoints : public vtkm::worklet::WorkletMapPointToCell
+  class ProbeUniformPoints : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<Vec3> coords,
-                                  WholeArrayIn<Vec3> points,
-                                  WholeArrayOut<IdType> cellIds,
-                                  WholeArrayOut<Vec3> parametricCoords);
-    typedef void ExecutionSignature(InputIndex, CellShape, _2, _3, _4, _5);
+    using ControlSignature = void(CellSetIn cellset,
+                                  FieldInPoint coords,
+                                  WholeArrayIn points,
+                                  WholeArrayOut cellIds,
+                                  WholeArrayOut parametricCoords);
+    using ExecutionSignature = void(InputIndex, CellShape, _2, _3, _4, _5);
     using InputDomain = _1;
 
     template <typename CellShapeTag,
@@ -137,56 +140,53 @@ public:
   };
 
 private:
-  template <typename CellSetType, typename Device>
+  template <typename CellSetType>
   void RunImpl(const CellSetType& cells,
                const vtkm::cont::CoordinateSystem& coords,
-               const vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass& points,
-               Device)
+               const vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass& points)
   {
     this->InputCellSet = vtkm::cont::DynamicCellSet(cells);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
+    vtkm::cont::ArrayCopy(
       vtkm::cont::make_ArrayHandleConstant(vtkm::Id(-1), points.GetNumberOfValues()),
       this->CellIds);
     this->ParametricCoordinates.Allocate(points.GetNumberOfValues());
 
-    vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints, Device>().Invoke(
-      cells, coords, points, this->CellIds, this->ParametricCoordinates);
+    vtkm::worklet::DispatcherMapTopology<ProbeUniformPoints> dispatcher;
+    dispatcher.Invoke(cells, coords, points, this->CellIds, this->ParametricCoordinates);
   }
 
   //============================================================================
   struct RunImplCaller
   {
-    template <typename PointsArrayType, typename CellSetType, typename Device>
+    template <typename PointsArrayType, typename CellSetType>
     void operator()(const PointsArrayType& points,
                     Probe& worklet,
                     const CellSetType& cells,
-                    const vtkm::cont::CoordinateSystem& coords,
-                    Device device) const
+                    const vtkm::cont::CoordinateSystem& coords) const
     {
-      worklet.RunImpl(cells, coords, points, device);
+      worklet.RunImpl(cells, coords, points);
     }
   };
 
 public:
-  template <typename CellSetType, typename PointsArrayType, typename Device>
+  template <typename CellSetType, typename PointsArrayType>
   void Run(const CellSetType& cells,
            const vtkm::cont::CoordinateSystem& coords,
-           const PointsArrayType& points,
-           Device device)
+           const PointsArrayType& points)
   {
-    vtkm::cont::CastAndCall(points, RunImplCaller(), *this, cells, coords, device);
+    vtkm::cont::CastAndCall(points, RunImplCaller(), *this, cells, coords);
   }
 
   //============================================================================
   class InterpolatePointField : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> cellIds,
-                                  FieldIn<Vec3> parametricCoords,
+    using ControlSignature = void(FieldIn cellIds,
+                                  FieldIn parametricCoords,
                                   WholeCellSetIn<> inputCells,
-                                  WholeArrayIn<> inputField,
-                                  FieldOut<> result);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+                                  WholeArrayIn inputField,
+                                  FieldOut result);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     template <typename ParametricCoordType, typename CellSetType, typename InputFieldPortalType>
     VTKM_EXEC void operator()(vtkm::Id cellId,
@@ -207,20 +207,18 @@ public:
   /// Intepolate the input point field data at the points of the geometry
   template <typename T,
             typename Storage,
-            typename Device,
             typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   vtkm::cont::ArrayHandle<T> ProcessPointField(
     const vtkm::cont::ArrayHandle<T, Storage>& field,
-    Device,
     InputCellSetTypeList icsTypes = InputCellSetTypeList()) const
   {
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::DispatcherMapField<InterpolatePointField, Device>().Invoke(
-      this->CellIds,
-      this->ParametricCoordinates,
-      this->InputCellSet.ResetCellSetList(icsTypes),
-      field,
-      result);
+    vtkm::worklet::DispatcherMapField<InterpolatePointField> dispatcher;
+    dispatcher.Invoke(this->CellIds,
+                      this->ParametricCoordinates,
+                      this->InputCellSet.ResetCellSetList(icsTypes),
+                      field,
+                      result);
 
     return result;
   }
@@ -229,10 +227,8 @@ public:
   class MapCellField : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> cellIds,
-                                  WholeArrayIn<> inputField,
-                                  FieldOut<> result);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn cellIds, WholeArrayIn inputField, FieldOut result);
+    using ExecutionSignature = void(_1, _2, _3);
 
     template <typename InputFieldPortalType>
     VTKM_EXEC void operator()(vtkm::Id cellId,
@@ -250,12 +246,13 @@ public:
   /// associated with its containing cell. For points that fall on cell edges, the containing
   /// cell is chosen arbitrarily.
   ///
-  template <typename T, typename Storage, typename Device>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, Storage>& field,
-                                              Device) const
+  template <typename T, typename Storage>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
     vtkm::cont::ArrayHandle<T> result;
-    vtkm::worklet::DispatcherMapField<MapCellField, Device>().Invoke(this->CellIds, field, result);
+    vtkm::worklet::DispatcherMapField<MapCellField> dispatcher;
+    dispatcher.Invoke(this->CellIds, field, result);
 
     return result;
   }
@@ -263,9 +260,8 @@ public:
   //============================================================================
   struct HiddenPointsWorklet : public WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<IdType> cellids,
-                                  FieldOut<vtkm::ListTagBase<vtkm::UInt8>> hfield);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn cellids, FieldOut hfield);
+    using ExecutionSignature = _2(_1);
 
     VTKM_EXEC vtkm::UInt8 operator()(vtkm::Id cellId) const { return (cellId == -1) ? HIDDEN : 0; }
   };
@@ -273,22 +269,19 @@ public:
   /// Get an array of flags marking the invalid points (points that do not fall inside any of
   /// the cells of the input). The flag value is the same as the HIDDEN flag in VTK and VISIT.
   ///
-  template <typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField(DeviceAdapter) const
+  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenPointsField() const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapField<HiddenPointsWorklet, DeviceAdapter>().Invoke(this->CellIds,
-                                                                                   field);
+    vtkm::worklet::DispatcherMapField<HiddenPointsWorklet> dispatcher;
+    dispatcher.Invoke(this->CellIds, field);
     return field;
   }
 
   //============================================================================
-  struct HiddenCellsWorklet : public WorkletMapPointToCell
+  struct HiddenCellsWorklet : public WorkletVisitCellsWithPoints
   {
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<IdType> cellids,
-                                  FieldOutCell<vtkm::ListTagBase<vtkm::UInt8>>);
-    typedef _3 ExecutionSignature(_2, PointCount);
+    using ControlSignature = void(CellSetIn cellset, FieldInPoint cellids, FieldOutCell);
+    using ExecutionSignature = _3(_2, PointCount);
 
     template <typename CellIdsVecType>
     VTKM_EXEC vtkm::UInt8 operator()(const CellIdsVecType& cellIds,
@@ -308,12 +301,12 @@ public:
   /// Get an array of flags marking the invalid cells. Invalid cells are the cells with at least
   /// one invalid point. The flag value is the same as the HIDDEN flag in VTK and VISIT.
   ///
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset, DeviceAdapter) const
+  template <typename CellSetType>
+  vtkm::cont::ArrayHandle<vtkm::UInt8> GetHiddenCellsField(CellSetType cellset) const
   {
     vtkm::cont::ArrayHandle<vtkm::UInt8> field;
-    vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet, DeviceAdapter>().Invoke(
-      cellset, this->CellIds, field);
+    vtkm::worklet::DispatcherMapTopology<HiddenCellsWorklet> dispatcher;
+    dispatcher.Invoke(cellset, this->CellIds, field);
     return field;
   }
 
@@ -322,7 +315,7 @@ private:
   static constexpr vtkm::UInt8 HIDDEN = 2; // from vtk
 
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> ParametricCoordinates;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> ParametricCoordinates;
   vtkm::cont::DynamicCellSet InputCellSet;
 };
 }

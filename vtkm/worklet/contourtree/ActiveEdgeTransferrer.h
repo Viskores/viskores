@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -94,36 +84,21 @@ namespace contourtree
 {
 
 // Worklet: set initial chain maximum value
-template <typename DeviceAdapter>
 class ActiveEdgeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> vertexID,              // (input) active vertex ID
-    FieldIn<IdType> newPosition,           // (input) new position of edge in array
-    FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
-    WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
-    WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
-    WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
-    WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
-    WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ControlSignature = void(FieldIn vertexID,          // (input) active vertex ID
+                                FieldIn newPosition,       // (input) new position of edge in array
+                                FieldIn newOutdegree,      // (input) the new updegree computed
+                                WholeArrayIn activeEdges,  // (input) active edges
+                                WholeArrayIn prunesTo,     // (input) where a vertex prunes to
+                                WholeArrayInOut firstEdge, // (i/o) first edge of each active vertex
+                                WholeArrayInOut outdegree, // (i/o) existing vertex updegrees
+                                WholeArrayInOut chainExtremum, // (i/o) chain extremum for vertices
+                                WholeArrayInOut edgeFar,       // (i/o) high end of each edge
+                                WholeArrayOut newActiveEdges); // (output) new active edge list
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10);
   using InputDomain = _1;
-
-  // Passed in constructor because of argument limit on operator
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-  IdPortalType activeEdges; // (input) active edges
-  IdPortalType prunesTo;    // (input) where a vertex prunes to
-
-  // Constructor
-  VTKM_EXEC_CONT
-  ActiveEdgeTransferrer(IdPortalType ActiveEdges, IdPortalType PrunesTo)
-    : activeEdges(ActiveEdges)
-    , prunesTo(PrunesTo)
-  {
-  }
 
   // WARNING: POTENTIAL RISK FOR I/O
   // chainMaximum is safe for I/O here because:
@@ -134,10 +109,12 @@ public:
   //		reads the current value before writing to it
   //		the same is true of firstEdge and updegree
 
-  template <typename InOutFieldPortalType, typename OutFieldPortalType>
+  template <typename InFieldPortalType, typename InOutFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertexID,
                             const vtkm::Id& newPosition,
                             const vtkm::Id& newOutdegree,
+                            const InFieldPortalType& activeEdges,
+                            const InFieldPortalType& prunesTo,
                             const InOutFieldPortalType& firstEdge,
                             const InOutFieldPortalType& outdegree,
                             const InOutFieldPortalType& chainExtremum,

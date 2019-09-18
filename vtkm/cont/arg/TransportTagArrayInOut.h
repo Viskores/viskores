@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_arg_TransportTagArrayInOut_h
 #define vtk_m_cont_arg_TransportTagArrayInOut_h
@@ -50,10 +40,10 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInPlace(Device()));
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(ContObjectType object,
+  VTKM_CONT ExecObjectType operator()(ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id vtkmNotUsed(inputRange),
                                       vtkm::Id outputRange) const

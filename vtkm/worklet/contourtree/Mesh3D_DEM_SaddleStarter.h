@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -95,7 +85,6 @@ namespace contourtree
 {
 
 // Worklet for setting initial chain maximum value
-template <typename DeviceAdapter>
 class Mesh3D_DEM_SaddleStarter : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -103,56 +92,48 @@ public:
   {
   };
 
-  typedef void ControlSignature(
-    FieldIn<IdType> vertex,             // (input) index into active vertices
-    FieldIn<PairType> outDegFirstEdge,  // (input) out degree/first edge of vertex
-    FieldIn<IdType> valueIndex,         // (input) index into regular graph
-    WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
-    WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
-    WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
-    WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
-    WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
-    WholeArrayOut<IdType> activeEdges); // (output) active edge list
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  using ControlSignature = void(FieldIn vertex,          // (input) index into active vertices
+                                FieldIn outDegFirstEdge, // (input) out degree/first edge of vertex
+                                FieldIn valueIndex,      // (input) index into regular graph
+                                WholeArrayIn linkMask,   // (input) neighbors of vertex
+                                WholeArrayIn arcArray,   // (input) chain extrema per vertex
+                                WholeArrayIn inverseIndex,   // (input) permutation of index
+                                WholeArrayIn neighbourTable, // (input) table for neighbour offsets
+                                WholeArrayIn caseTable,      // (input) case table for neighbours
+                                WholeArrayOut edgeNear,      // (output) low end of edges
+                                WholeArrayOut edgeFar,       // (output) high end of edges
+                                WholeArrayOut activeEdges);  // (output) active edge list
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11);
   using InputDomain = _1;
 
-  using IdComponentPortalType = typename vtkm::cont::ArrayHandle<
-    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
-
-  vtkm::Id nRows;                       // (input) number of rows in 3D
-  vtkm::Id nCols;                       // (input) number of cols in 3D
-  vtkm::Id nSlices;                     // (input) number of cols in 3D
-  bool ascending;                       // (input) ascending or descending (join or split)
-  IdComponentPortalType neighbourTable; // (input) table for neighbour offsets
-  IdPortalType caseTable;               // (input) case table for neighbours
+  vtkm::Id nRows;   // (input) number of rows in 3D
+  vtkm::Id nCols;   // (input) number of cols in 3D
+  vtkm::Id nSlices; // (input) number of cols in 3D
+  bool ascending;   // (input) ascending or descending (join or split)
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           vtkm::Id NSlices,
-                           bool Ascending,
-                           IdComponentPortalType NeighbourTable,
-                           IdPortalType CaseTable)
+  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows, vtkm::Id NCols, vtkm::Id NSlices, bool Ascending)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
     , ascending(Ascending)
-    , neighbourTable(NeighbourTable)
-    , caseTable(CaseTable)
   {
   }
 
   // operator() routine that executes the loop
-  template <typename InFieldPortalType, typename OutFieldPortalType>
+  template <typename InFieldPortalType,
+            typename NeighbourTableType,
+            typename CaseTableType,
+            typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Pair<vtkm::Id, vtkm::Id>& outDegFirstEdge,
                             const vtkm::Id& valueIndex,
                             const InFieldPortalType& linkMask,
                             const InFieldPortalType& arcArray,
                             const InFieldPortalType& inverseIndex,
+                            const NeighbourTableType& neighbourTable,
+                            const CaseTableType& caseTable,
                             const OutFieldPortalType& edgeNear,
                             const OutFieldPortalType& edgeFar,
                             const OutFieldPortalType& activeEdges) const

@@ -1,5 +1,5 @@
-#ifndef DIY_IO_BOV_HPP
-#define DIY_IO_BOV_HPP
+#ifndef VTKMDIY_IO_BOV_HPP
+#define VTKMDIY_IO_BOV_HPP
 
 #include <vector>
 #include <algorithm>
@@ -71,7 +71,7 @@ void
 diy::io::BOV::
 read(const DiscreteBounds& bounds, T* buffer, bool collective, int chunk) const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int dim   = shape_.size();
   int total = 1;
   std::vector<int> subsizes;
@@ -130,7 +130,7 @@ void
 diy::io::BOV::
 write(const DiscreteBounds& bounds, const T* buffer, const DiscreteBounds& core, bool collective, int chunk)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int dim   = shape_.size();
   std::vector<int> subsizes;
   std::vector<int> buffer_shape, buffer_start;
@@ -155,7 +155,7 @@ write(const DiscreteBounds& bounds, const T* buffer, const DiscreteBounds& core,
   }
 
   MPI_Datatype fileblk, subbuffer;
-  MPI_Type_create_subarray(dim, (int*) &shape_[0],       &subsizes[0], (int*) &bounds.min[0],   MPI_ORDER_C, T_type, &fileblk);
+  MPI_Type_create_subarray(dim, (int*) &shape_[0],       &subsizes[0], (int*) &core.min[0],     MPI_ORDER_C, T_type, &fileblk);
   MPI_Type_create_subarray(dim, (int*) &buffer_shape[0], &subsizes[0], (int*) &buffer_start[0], MPI_ORDER_C, T_type, &subbuffer);
   MPI_Type_commit(&fileblk);
   MPI_Type_commit(&subbuffer);

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_reader_BOVDataSetReader_h
 #define vtk_m_io_reader_BOVDataSetReader_h
@@ -75,12 +65,12 @@ private:
     if (stream.fail())
       throw vtkm::io::ErrorIO("Failed to open file: " + this->FileName);
 
-    DataFormat dataFormat;
+    DataFormat dataFormat = ByteData;
     std::string bovFile, line, token, options, variableName;
     vtkm::Id numComponents = 1;
     vtkm::Id3 dim;
-    vtkm::Vec<vtkm::FloatDefault, 3> origin(0, 0, 0);
-    vtkm::Vec<vtkm::FloatDefault, 3> spacing(1, 1, 1);
+    vtkm::Vec3f origin(0, 0, 0);
+    vtkm::Vec3f spacing(1, 1, 1);
     bool spacingSet = false;
 
     while (stream.good())
@@ -220,13 +210,13 @@ private:
     {
       if (dataFormat == FloatData)
       {
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> var;
+        vtkm::cont::ArrayHandle<vtkm::Vec3f_32> var;
         ReadVector(fullPathDataFile, numTuples, var);
         dsf.AddPointField(this->DataSet, variableName, var);
       }
       else if (dataFormat == DoubleData)
       {
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> var;
+        vtkm::cont::ArrayHandle<vtkm::Vec3f_64> var;
         ReadVector(fullPathDataFile, numTuples, var);
         dsf.AddPointField(this->DataSet, variableName, var);
       }

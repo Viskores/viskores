@@ -1,0 +1,5 @@
+leak:libX11*
+leak:libtbb*
+leak:/usr/lib/x86_64-linux-gnu/openmp*
+leak:/usr/lib/x86_64-linux-gnu/libopen-pal*
+leak:loguru::set_thread_name

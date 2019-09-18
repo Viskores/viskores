@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -86,7 +76,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
 #include <vtkm/BinaryPredicates.h>
@@ -148,23 +138,12 @@ namespace cosmotools
 template <typename T>
 struct ScatterWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn inIndices, FieldOut outIndices);
+  using ExecutionSignature = void(_1, _2);
   using ScatterType = vtkm::worklet::ScatterCounting;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  VTKM_CONT
-  ScatterWorklet(const vtkm::worklet::ScatterCounting& scatter)
-    : Scatter(scatter)
-  {
-  }
 
   VTKM_EXEC
   void operator()(T inputIndex, T& outputIndex) const { outputIndex = inputIndex; }
-private:
-  ScatterType Scatter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,11 +168,11 @@ struct ScaleBiasFunctor
   T operator()(T value) const { return (Scale * value + Bias); }
 };
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class CosmoTools
 {
 public:
-  using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using DeviceAlgorithm = vtkm::cont::Algorithm;
   const vtkm::Id NUM_NEIGHBORS = 9;
 
   // geometry of domain
@@ -265,14 +244,14 @@ public:
 // Constructor for all particles in the system
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
-                                                      const T mass,
-                                                      const vtkm::Id pmin,
-                                                      const T bb,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& X,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Y,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Z)
+template <typename T, typename StorageType>
+CosmoTools<T, StorageType>::CosmoTools(const vtkm::Id NParticles,
+                                       const T mass,
+                                       const vtkm::Id pmin,
+                                       const T bb,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& X,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Y,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Z)
   : nParticles(NParticles)
   , particleMass(mass)
   , minPartPerHalo(pmin)
@@ -288,12 +267,12 @@ CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
 // Constructor for particles in a single halo
 //
 ///////////////////////////////////////////////////////////////////////////////
-template <typename T, typename StorageType, typename DeviceAdapter>
-CosmoTools<T, StorageType, DeviceAdapter>::CosmoTools(const vtkm::Id NParticles,
-                                                      const T mass,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& X,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Y,
-                                                      vtkm::cont::ArrayHandle<T, StorageType>& Z)
+template <typename T, typename StorageType>
+CosmoTools<T, StorageType>::CosmoTools(const vtkm::Id NParticles,
+                                       const T mass,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& X,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Y,
+                                       vtkm::cont::ArrayHandle<T, StorageType>& Z)
   : nParticles(NParticles)
   , particleMass(mass)
   , minPartPerHalo(10)

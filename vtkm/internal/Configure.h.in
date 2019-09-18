@@ -2,26 +2,22 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_internal_Configure_h
 #define vtk_m_internal_Configure_h
 
+// Defined when NVCC is compiling either __host__ or __device__ code.
 #ifdef __CUDACC__
 #define VTKM_CUDA
+#endif
+
+// Defined only when NVCC is compiling __device__ code.
+#ifdef __CUDA_ARCH__
+#define VTKM_CUDA_DEVICE_PASS
 #endif
 
 #if defined(_MSC_VER)
@@ -229,6 +225,10 @@
 #ifndef VTKM_ENABLE_TBB
 #cmakedefine VTKM_ENABLE_TBB
 #endif
+//Mark if we are building with OpenMP enabled
+#ifndef VTKM_ENABLE_OPENMP
+#cmakedefine VTKM_ENABLE_OPENMP
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
@@ -248,6 +248,9 @@
 #else
 #error "VTK-m requires at least a C++11 compiler"
 #endif
+
+//Mark if we have enabled logging.
+#cmakedefine VTKM_ENABLE_LOGGING
 
 
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
@@ -310,6 +313,25 @@
 //
 #pragma warning(disable:4251)
 
+#endif
+
+//----------------------------------------------------------------------------
+// Switch case fall-through policy.
+
+// Use "VTKM_FALLTHROUGH;" to annotate deliberate fall-through in switches,
+// use it analogously to "break;".  The trailing semi-colon is required.
+#if !defined(VTKM_FALLTHROUGH) && defined(__has_cpp_attribute)
+# if __cplusplus >= 201703L && __has_cpp_attribute(fallthrough)
+#  define VTKM_FALLTHROUGH [[fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(gnu::fallthrough)
+#  define VTKM_FALLTHROUGH [[gnu::fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(clang::fallthrough)
+#  define VTKM_FALLTHROUGH [[clang::fallthrough]]
+# endif
+#endif
+
+#ifndef VTKM_FALLTHROUGH
+# define VTKM_FALLTHROUGH ((void)0)
 #endif
 
 #endif //vtkm_internal_Configure_h

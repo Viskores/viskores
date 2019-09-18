@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleCounting_h
 #define vtk_m_cont_ArrayHandleCounting_h
@@ -77,18 +67,18 @@ public:
   }
 
   VTKM_EXEC_CONT
+  ValueType GetStart() const { return this->Start; }
+
+  VTKM_EXEC_CONT
+  ValueType GetStep() const { return this->Step; }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     return ValueType(this->Start + this->Step * ValueType(static_cast<ComponentType>(index)));
-  }
-
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-    VTKM_ASSERT(false && "Cannot write to read-only counting array.");
   }
 
 private:
@@ -99,11 +89,10 @@ private:
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a counting storage.
-template <typename ConstantValueType>
+template <typename ValueType>
 struct ArrayHandleCountingTraits
 {
-  using Tag =
-    vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ConstantValueType>>;
+  using Tag = vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ValueType>>;
 };
 
 } // namespace internal
@@ -141,5 +130,73 @@ make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Counting<" + SerializableTypeString<T>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename T>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandleCounting<T>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleCounting<T>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto portal = obj.GetPortalConstControl();
+    vtkmdiy::save(bb, portal.GetStart());
+    vtkmdiy::save(bb, portal.GetStep());
+    vtkmdiy::save(bb, portal.GetNumberOfValues());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    T start{}, step{};
+    vtkm::Id count = 0;
+
+    vtkmdiy::load(bb, start);
+    vtkmdiy::load(bb, step);
+    vtkmdiy::load(bb, count);
+
+    obj = vtkm::cont::make_ArrayHandleCounting(start, step, count);
+  }
+};
+
+template <typename T>
+struct Serialization<
+  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+  : Serialization<vtkm::cont::ArrayHandleCounting<T>>
+{
+};
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleCounting_h

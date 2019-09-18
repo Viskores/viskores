@@ -2,32 +2,22 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_TetrahedralizeStructured_h
 #define vtk_m_worklet_TetrahedralizeStructured_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
@@ -46,17 +36,14 @@ namespace tetrahedralize
 // Worklet to turn hexahedra into tetrahedra
 // Vertices remain the same and each cell is processed with needing topology
 //
-class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+class TetrahedralizeCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-  typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell connectivityOut);
+  using ExecutionSignature = void(PointIndices, _2, ThreadIndices);
   using InputDomain = _1;
 
-  using ScatterType = vtkm::worklet::ScatterUniform;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(5); }
+  using ScatterType = vtkm::worklet::ScatterUniform<5>;
 
   // Each hexahedron cell produces five tetrahedron cells
   template <typename ConnectivityInVec, typename ConnectivityOutVec, typename ThreadIndicesType>
@@ -85,7 +72,6 @@ public:
 }
 
 /// \brief Compute the tetrahedralize cells for a uniform grid data set
-template <typename DeviceAdapter>
 class TetrahedralizeStructured
 {
 public:
@@ -93,17 +79,14 @@ public:
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
-    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    vtkm::cont::CellSetSingleType<> outCellSet;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell, DeviceAdapter>
-      dispatcher;
+    vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell> dispatcher;
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
 
     // Fill in array of output cells per input cell
-    DeviceAlgorithm::Copy(
+    vtkm::cont::ArrayCopy(
       vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(5, cellSet.GetNumberOfCells()),
       outCellsPerCell);
 

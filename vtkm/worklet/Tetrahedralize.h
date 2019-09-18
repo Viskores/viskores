@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_m_worklet_Tetrahedralize_h
 #define vtkm_m_worklet_Tetrahedralize_h
@@ -36,18 +26,15 @@ public:
   //
   struct DistributeCellData : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn inIndices, FieldOut outIndices);
+    using ExecutionSignature = void(_1, _2);
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    template <typename CountArrayType, typename DeviceAdapter>
-    VTKM_CONT DistributeCellData(const CountArrayType& countArray, DeviceAdapter device)
-      : Scatter(countArray, device)
+    template <typename CountArrayType>
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
+      return ScatterType(countArray);
     }
 
     template <typename T>
@@ -55,9 +42,6 @@ public:
     {
       outputIndex = inputIndex;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   Tetrahedralize()
@@ -66,37 +50,34 @@ public:
   }
 
   // Tetrahedralize explicit data set, save number of tetra cells per input
-  template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const DeviceAdapter&)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet)
   {
-    TetrahedralizeExplicit<DeviceAdapter> worklet;
+    TetrahedralizeExplicit worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   // Tetrahedralize structured data set, save number of tetra cells per input
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet,
-                                      const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet)
   {
-    TetrahedralizeStructured<DeviceAdapter> worklet;
+    TetrahedralizeStructured worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&, const DeviceAdapter&)
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
   }
 
   // Using the saved input to output cells, expand cell data
-  template <typename T, typename StorageType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T> ProcessCellField(const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                              const DeviceAdapter& device) const
+  template <typename T, typename StorageType>
+  vtkm::cont::ArrayHandle<T> ProcessCellField(
+    const vtkm::cont::ArrayHandle<T, StorageType>& input) const
   {
     vtkm::cont::ArrayHandle<T> output;
 
-    DistributeCellData distribute(this->OutCellsPerCell, device);
-    vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(distribute);
+    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
+      DistributeCellData::MakeScatter(this->OutCellsPerCell));
     dispatcher.Invoke(input, output);
 
     return output;

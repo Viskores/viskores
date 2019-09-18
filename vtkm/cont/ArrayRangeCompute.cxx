@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayRangeCompute.hxx>
@@ -33,18 +23,18 @@ void ThrowArrayRangeComputeFailed()
 #define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                                \
   VTKM_CONT                                                                                        \
   vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
-    const vtkm::cont::ArrayHandle<T, Storage>& input, vtkm::cont::RuntimeDeviceTracker tracker)    \
+    const vtkm::cont::ArrayHandle<T, Storage>& input, vtkm::cont::DeviceAdapterId device)          \
   {                                                                                                \
-    return detail::ArrayRangeComputeImpl(input, tracker);                                          \
+    return detail::ArrayRangeComputeImpl(input, device);                                           \
   }                                                                                                \
   struct SwallowSemicolon
 #define VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(T, N, Storage)                                           \
   VTKM_CONT                                                                                        \
   vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input,                                \
-    vtkm::cont::RuntimeDeviceTracker tracker)                                                      \
+    vtkm::cont::DeviceAdapterId device)                                                            \
   {                                                                                                \
-    return detail::ArrayRangeComputeImpl(input, tracker);                                          \
+    return detail::ArrayRangeComputeImpl(input, device);                                           \
   }                                                                                                \
   struct SwallowSemicolon
 
@@ -76,10 +66,6 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
 
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::FloatDefault,
-                                  3,
-                                  vtkm::cont::ArrayHandleVirtualCoordinates::StorageTag);
-
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC
 
@@ -87,16 +73,16 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::FloatDefault,
 // to determine.
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f,
                                 vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
-  vtkm::cont::RuntimeDeviceTracker)
+  vtkm::cont::DeviceAdapterId)
 {
   vtkm::internal::ArrayPortalUniformPointCoordinates portal = array.GetPortalConstControl();
 
   // In this portal we know that the min value is the first entry and the
   // max value is the last entry.
-  vtkm::Vec<vtkm::FloatDefault, 3> minimum = portal.Get(0);
-  vtkm::Vec<vtkm::FloatDefault, 3> maximum = portal.Get(portal.GetNumberOfValues() - 1);
+  vtkm::Vec3f minimum = portal.Get(0);
+  vtkm::Vec3f maximum = portal.Get(portal.GetNumberOfValues() - 1);
 
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray;
   rangeArray.Allocate(3);
@@ -106,33 +92,6 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   outPortal.Set(2, vtkm::Range(minimum[2], maximum[2]));
 
   return rangeArray;
-}
-
-// Special implementation for composite vectors.
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<
-    vtkm::Vec<vtkm::Float32, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<
-      vtkm::Vec<vtkm::Float32, 3>(vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>)>::StorageTag>& input,
-  vtkm::cont::RuntimeDeviceTracker tracker)
-{
-  return detail::ArrayRangeComputeImpl(input, tracker);
-}
-
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<
-    vtkm::Vec<vtkm::Float64, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<
-      vtkm::Vec<vtkm::Float64, 3>(vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>)>::StorageTag>& input,
-  vtkm::cont::RuntimeDeviceTracker tracker)
-{
-  return detail::ArrayRangeComputeImpl(input, tracker);
 }
 }
 } // namespace vtkm::cont

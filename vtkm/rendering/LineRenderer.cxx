@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/LineRenderer.h>
@@ -37,8 +27,8 @@ LineRenderer::LineRenderer(const vtkm::rendering::Canvas* canvas,
 {
 }
 
-void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                              const vtkm::Vec<vtkm::Float64, 2>& point1,
+void LineRenderer::RenderLine(const vtkm::Vec2f_64& point0,
+                              const vtkm::Vec2f_64& point1,
                               vtkm::Float32 lineWidth,
                               const vtkm::rendering::Color& color)
 {
@@ -48,13 +38,13 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
              color);
 }
 
-void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
-                              const vtkm::Vec<vtkm::Float64, 3>& point1,
+void LineRenderer::RenderLine(const vtkm::Vec3f_64& point0,
+                              const vtkm::Vec3f_64& point1,
                               vtkm::Float32 vtkmNotUsed(lineWidth),
                               const vtkm::rendering::Color& color)
 {
-  vtkm::Vec<vtkm::Float32, 3> p0 = TransformPoint(point0);
-  vtkm::Vec<vtkm::Float32, 3> p1 = TransformPoint(point1);
+  vtkm::Vec3f_32 p0 = TransformPoint(point0);
+  vtkm::Vec3f_32 p1 = TransformPoint(point1);
 
   vtkm::Id x0 = static_cast<vtkm::Id>(vtkm::Round(p0[0]));
   vtkm::Id y0 = static_cast<vtkm::Id>(vtkm::Round(p0[1]));
@@ -69,7 +59,7 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
     vtkm::rendering::Canvas::ColorBufferType(Canvas->GetColorBuffer()).GetPortalControl();
   auto depthPortal =
     vtkm::rendering::Canvas::DepthBufferType(Canvas->GetDepthBuffer()).GetPortalControl();
-  vtkm::Vec<vtkm::Float32, 4> colorC = color.Components;
+  vtkm::Vec4f_32 colorC = color.Components;
 
   while (x0 >= 0 && x0 < Canvas->GetWidth() && y0 >= 0 && y0 < Canvas->GetHeight())
   {
@@ -77,12 +67,12 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
     t = vtkm::Min(1.f, vtkm::Max(0.f, t));
     vtkm::Float32 z = vtkm::Lerp(z0, z1, t);
     vtkm::Id index = y0 * Canvas->GetWidth() + x0;
-    vtkm::Vec<vtkm::Float32, 4> currentColor = colorPortal.Get(index);
+    vtkm::Vec4f_32 currentColor = colorPortal.Get(index);
     vtkm::Float32 currentZ = depthPortal.Get(index);
     bool blend = currentColor[3] < 1.f && z > currentZ;
     if (currentZ > z || blend)
     {
-      vtkm::Vec<vtkm::Float32, 4> writeColor = colorC;
+      vtkm::Vec4f_32 writeColor = colorC;
       vtkm::Float32 depth = z;
 
       if (blend)
@@ -120,15 +110,14 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
   }
 }
 
-vtkm::Vec<vtkm::Float32, 3> LineRenderer::TransformPoint(
-  const vtkm::Vec<vtkm::Float64, 3>& point) const
+vtkm::Vec3f_32 LineRenderer::TransformPoint(const vtkm::Vec3f_64& point) const
 {
-  vtkm::Vec<vtkm::Float32, 4> temp(static_cast<vtkm::Float32>(point[0]),
-                                   static_cast<vtkm::Float32>(point[1]),
-                                   static_cast<vtkm::Float32>(point[2]),
-                                   1.0f);
+  vtkm::Vec4f_32 temp(static_cast<vtkm::Float32>(point[0]),
+                      static_cast<vtkm::Float32>(point[1]),
+                      static_cast<vtkm::Float32>(point[2]),
+                      1.0f);
   temp = vtkm::MatrixMultiply(Transform, temp);
-  vtkm::Vec<vtkm::Float32, 3> p;
+  vtkm::Vec3f_32 p;
   for (vtkm::IdComponent i = 0; i < 3; ++i)
   {
     p[i] = static_cast<vtkm::Float32>(temp[i] / temp[3]);

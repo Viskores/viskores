@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_filter_FieldFilter_h
@@ -24,8 +14,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/MultiBlock.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -55,15 +44,16 @@ public:
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
-  void SetActiveField(const std::string& name,
-                      vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  void SetActiveField(
+    const std::string& name,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->ActiveFieldName = name;
     this->ActiveFieldAssociation = association;
   }
 
   VTKM_CONT const std::string& GetActiveFieldName() const { return this->ActiveFieldName; }
-  VTKM_CONT vtkm::cont::Field::AssociationEnum GetActiveFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetActiveFieldAssociation() const
   {
     return this->ActiveFieldAssociation;
   }
@@ -80,8 +70,9 @@ public:
 
 
   //@{
-  /// Select the coordinate system index to make active to use as the field when
-  /// UseCoordinateSystemAsField is true.
+  /// Select the coordinate system index to make active to use when processing the input
+  /// DataSet. This is used primarily by the Filter to select the coordinate system
+  /// to use as a field when \c UseCoordinateSystemAsField is true.
   VTKM_CONT
   void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
@@ -89,16 +80,8 @@ public:
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
   //@}
 
-private:
+  //@{
   /// These are provided to satisfy the Filter API requirements.
-
-  /// They simply pass the field to the result dataset as there's no mapping
-  /// needed for FilterField.
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
     const vtkm::cont::DataSet& input,
@@ -115,12 +98,14 @@ private:
     const vtkm::cont::DataSet& input,
     const vtkm::cont::CoordinateSystem& field,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  //@}
 
-
+protected:
+private:
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;
-  vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
+  vtkm::cont::Field::Association ActiveFieldAssociation;
   bool UseCoordinateSystemAsField;
 
   friend class vtkm::filter::Filter<Derived>;

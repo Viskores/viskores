@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleConcatenate_h
 #define vtk_m_cont_ArrayHandleConcatenate_h
 
@@ -34,6 +22,10 @@ namespace internal
 template <typename PortalType1, typename PortalType2>
 class VTKM_ALWAYS_EXPORT ArrayPortalConcatenate
 {
+  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalType1>;
+  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalType2>;
+  using Writable = std::integral_constant<bool, WritableP1::value && WritableP2::value>;
+
 public:
   using ValueType = typename PortalType1::ValueType;
 
@@ -70,18 +62,27 @@ public:
   ValueType Get(vtkm::Id index) const
   {
     if (index < this->portal1.GetNumberOfValues())
+    {
       return this->portal1.Get(index);
+    }
     else
+    {
       return this->portal2.Get(index - this->portal1.GetNumberOfValues());
+    }
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     if (index < this->portal1.GetNumberOfValues())
+    {
       this->portal1.Set(index, value);
+    }
     else
+    {
       this->portal2.Set(index - this->portal1.GetNumberOfValues(), value);
+    }
   }
 
   VTKM_EXEC_CONT
@@ -323,5 +324,72 @@ VTKM_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2> make_ArrayH
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH1, typename AH2>
+struct SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Concatenate<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH1, typename AH2>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<typename AH1::ValueType, vtkm::cont::StorageTagConcatenate<AH1, AH2>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename AH1, typename AH2>
+struct Serialization<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleConcatenate<AH1, AH2>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    vtkmdiy::save(bb, storage.GetArray1());
+    vtkmdiy::save(bb, storage.GetArray2());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH1 array1;
+    AH2 array2;
+
+    vtkmdiy::load(bb, array1);
+    vtkmdiy::load(bb, array2);
+
+    obj = vtkm::cont::make_ArrayHandleConcatenate(array1, array2);
+  }
+};
+
+template <typename AH1, typename AH2>
+struct Serialization<
+  vtkm::cont::ArrayHandle<typename AH1::ValueType, vtkm::cont::StorageTagConcatenate<AH1, AH2>>>
+  : Serialization<vtkm::cont::ArrayHandleConcatenate<AH1, AH2>>
+{
+};
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleConcatenate_h

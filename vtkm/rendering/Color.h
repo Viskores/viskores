@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_Color_h
 #define vtk_m_rendering_Color_h
@@ -38,7 +28,7 @@ namespace rendering
 class Color
 {
 public:
-  vtkm::Vec<vtkm::Float32, 4> Components;
+  vtkm::Vec4f_32 Components;
 
   VTKM_EXEC_CONT
   Color()
@@ -53,7 +43,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Color(const vtkm::Vec<vtkm::Float32, 4>& components)
+  Color(const vtkm::Vec4f_32& components)
     : Components(components)
   {
   }
@@ -72,7 +62,7 @@ public:
     // here using byte(254), /255 gives us .99608, which
     // *256 gives us 254.996, which is then rounded
     // back down to 254 below.  So it actually reverses
-    // correctly, even though the mutliplier and
+    // correctly, even though the multiplier and
     // divider don't match between these two methods.
     //
     // Of course, converting in GetComponentAsByte from

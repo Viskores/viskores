@@ -2,39 +2,33 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <algorithm>
+#include <cctype>
 #include <memory>
 
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/cont/ColorTablePrivate.hxx>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/TryExecute.h>
+
 
 namespace vtkm
 {
 namespace cont
 {
 
-namespace detail
+namespace internal
 {
-bool loadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table);
 std::set<std::string> GetPresetNames();
-bool loadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
-}
+bool LoadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table);
+bool LoadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
+} // namespace internal
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
@@ -44,7 +38,7 @@ ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
   if (!loaded)
   { //if we failed to load the requested color table, call SetColorSpace
     //so that the internal host side cache is constructed and we leave
-    //the constructor in a valid state. We use RGB as it is the default
+    //the constructor in a valid state. We use LAB as it is the default
     //when the no parameter constructor is called
     this->SetColorSpace(ColorSpace::LAB);
   }
@@ -59,7 +53,7 @@ ColorTable::ColorTable(const std::string& name)
   if (!loaded)
   { //if we failed to load the requested color table, call SetColorSpace
     //so that the internal host side cache is constructed and we leave
-    //the constructor in a valid state. We use RGB as it is the default
+    //the constructor in a valid state. We use LAB as it is the default
     //when the no parameter constructor is called
     this->SetColorSpace(ColorSpace::LAB);
   }
@@ -100,26 +94,54 @@ ColorTable::ColorTable(const vtkm::Range& range,
 }
 
 //----------------------------------------------------------------------------
+ColorTable::ColorTable(const std::string& name,
+                       vtkm::cont::ColorSpace colorSpace,
+                       const vtkm::Vec<double, 3>& nanColor,
+                       const std::vector<double>& rgbPoints,
+                       const std::vector<double>& alphaPoints)
+  : Impl(std::make_shared<detail::ColorTableInternals>())
+{
+  this->SetName(name);
+  this->SetColorSpace(colorSpace);
+  this->SetNaNColor(nanColor);
+  this->FillColorTableFromDataPointer(static_cast<vtkm::Int32>(rgbPoints.size()), rgbPoints.data());
+  this->FillOpacityTableFromDataPointer(static_cast<vtkm::Int32>(alphaPoints.size()),
+                                        alphaPoints.data());
+}
+
+//----------------------------------------------------------------------------
 ColorTable::~ColorTable()
 {
 }
 
 //----------------------------------------------------------------------------
-bool ColorTable::LoadPreset(vtkm::cont::ColorTable::Preset preset)
+const std::string& ColorTable::GetName() const
 {
-  return detail::loadColorTablePreset(preset, *this);
+  return this->Impl->Name;
 }
 
 //----------------------------------------------------------------------------
-std::set<std::string> ColorTable::GetPresets() const
+void ColorTable::SetName(const std::string& name)
 {
-  return detail::GetPresetNames();
+  this->Impl->Name = name;
+}
+
+//----------------------------------------------------------------------------
+bool ColorTable::LoadPreset(vtkm::cont::ColorTable::Preset preset)
+{
+  return internal::LoadColorTablePreset(preset, *this);
+}
+
+//----------------------------------------------------------------------------
+std::set<std::string> ColorTable::GetPresets()
+{
+  return internal::GetPresetNames();
 }
 
 //----------------------------------------------------------------------------
 bool ColorTable::LoadPreset(const std::string& name)
 {
-  return detail::loadColorTablePreset(name, *this);
+  return internal::LoadColorTablePreset(name, *this);
 }
 
 //----------------------------------------------------------------------------
@@ -153,51 +175,47 @@ ColorSpace ColorTable::GetColorSpace() const
 //----------------------------------------------------------------------------
 void ColorTable::SetColorSpace(ColorSpace space)
 {
+
   if (this->Impl->CSpace != space || this->Impl->HostSideCache.get() == nullptr)
   {
+    this->Impl->HostSideCacheChanged = true;
     this->Impl->CSpace = space;
-    //Remove any existing host and execution data
+    //Remove any existing host information
 
-    using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>;
     switch (space)
     {
       case vtkm::cont::ColorSpace::RGB:
       {
         auto* hostPortal = new vtkm::exec::ColorTableRGB();
-        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
         this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::HSV:
       {
         auto* hostPortal = new vtkm::exec::ColorTableHSV();
-        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
         this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::HSV_WRAP:
       {
         auto* hostPortal = new vtkm::exec::ColorTableHSVWrap();
-        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
         this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::LAB:
       {
         auto* hostPortal = new vtkm::exec::ColorTableLab();
-        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
         this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::DIVERGING:
       {
         auto* hostPortal = new vtkm::exec::ColorTableDiverging();
-        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
         this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       default:
-        throw vtkm::cont::ErrorBadType("unkown vtkm::cont::ColorType requested");
+        throw vtkm::cont::ErrorBadType("unknown vtkm::cont::ColorType requested");
     }
   }
 }
@@ -359,8 +377,8 @@ vtkm::Int32 ColorTable::AddPoint(double x, const vtkm::Vec<float, 3>& rgb)
     }
     else
     {
-      this->Impl->ColorNodePos.emplace(pos, x);
       this->Impl->ColorRGB.emplace(this->Impl->ColorRGB.begin() + std::distance(begin, pos), rgb);
+      this->Impl->ColorNodePos.emplace(pos, x);
     }
   }
   this->Impl->TableRange.Include(x); //update range to include x
@@ -542,11 +560,11 @@ vtkm::Int32 ColorTable::AddPointAlpha(double x, float alpha, float midpoint, flo
     }
     else
     {
-      this->Impl->OpacityNodePos.emplace(pos, x);
       this->Impl->OpacityAlpha.emplace(this->Impl->OpacityAlpha.begin() + std::distance(begin, pos),
                                        alpha);
       this->Impl->OpacityMidSharp.emplace(
         this->Impl->OpacityMidSharp.begin() + std::distance(begin, pos), midsharp);
+      this->Impl->OpacityNodePos.emplace(pos, x);
     }
   }
   this->Impl->OpacityArraysChanged = true;
@@ -750,7 +768,7 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* pt
   }
   this->ClearAlpha();
 
-  std::size_t size = static_cast<std::size_t>(n / 2);
+  std::size_t size = static_cast<std::size_t>(n / 4);
   this->Impl->OpacityNodePos.reserve(size);
   this->Impl->OpacityAlpha.reserve(size);
   this->Impl->OpacityMidSharp.reserve(size);
@@ -775,7 +793,7 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr
   this->ClearAlpha();
 
 
-  std::size_t size = static_cast<std::size_t>(n / 2);
+  std::size_t size = static_cast<std::size_t>(n / 4);
   this->Impl->OpacityNodePos.reserve(size);
   this->Impl->OpacityAlpha.reserve(size);
   this->Impl->OpacityMidSharp.reserve(size);
@@ -787,65 +805,32 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr
   this->Impl->OpacityArraysChanged = true;
   return true;
 }
+
 //---------------------------------------------------------------------------
-bool ColorTable::Sample(vtkm::Int32 numSamples,
-                        vtkm::cont::ColorTableSamplesRGBA& samples,
-                        double tolerance) const
+vtkm::Id ColorTable::GetModifiedCount() const
 {
-  if (numSamples <= 1)
-  {
-    return false;
-  }
-  samples.NumberOfSamples = numSamples;
-  samples.SampleRange = this->GetRange();
-  return sampleColorTable(this, numSamples, samples.Samples, tolerance, true);
+  return this->Impl->HostSideCache->GetModifiedCount();
 }
 
-
-//---------------------------------------------------------------------------
-bool ColorTable::Sample(vtkm::Int32 numSamples,
-                        vtkm::cont::ColorTableSamplesRGB& samples,
-                        double tolerance) const
+//----------------------------------------------------------------------------
+bool ColorTable::NeedToCreateExecutionColorTable() const
 {
-  if (numSamples <= 1)
-  {
-    return false;
-  }
-  samples.NumberOfSamples = numSamples;
-  samples.SampleRange = this->GetRange();
-  return sampleColorTable(this, numSamples, samples.Samples, tolerance, true);
+  return this->Impl->HostSideCacheChanged;
 }
 
-//---------------------------------------------------------------------------
-bool ColorTable::Sample(vtkm::Int32 numSamples,
-                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& colors,
-                        double tolerance) const
+//----------------------------------------------------------------------------
+void ColorTable::UpdateExecutionColorTable(
+  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* handle) const
 {
-  if (numSamples <= 1)
-  {
-    return false;
-  }
-  return sampleColorTable(this, numSamples, colors, tolerance, false);
+  this->Impl->ExecHandle.reset(handle);
 }
 
-//---------------------------------------------------------------------------
-bool ColorTable::Sample(vtkm::Int32 numSamples,
-                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& colors,
-                        double tolerance) const
-{
-  if (numSamples <= 1)
-  {
-    return false;
-  }
-  return sampleColorTable(this, numSamples, colors, tolerance, false);
-}
-
-//---------------------------------------------------------------------------
-vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHandleForExecution()
-  const
+//----------------------------------------------------------------------------
+ColorTable::TransferState ColorTable::GetExecutionDataForTransfer() const
 {
   //Only rebuild the array handles that have changed since the last time
   //we have modified or color / opacity information
+
   if (this->Impl->ColorArraysChanged)
   {
     this->Impl->ColorPosHandle = vtkm::cont::make_ArrayHandle(this->Impl->ColorNodePos);
@@ -859,48 +844,32 @@ vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHand
     this->Impl->OpacityMidSharpHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp);
   }
 
-  if (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged)
-  {
-    vtkm::cont::TryExecute(
-      detail::transfer_color_table_to_device{}, this->Impl->HostSideCache.get(), this->Impl.get());
-
-    this->Impl->HostSideCache->Modified();
-  }
+  TransferState state = { (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged ||
+                           this->Impl->HostSideCacheChanged),
+                          this->Impl->HostSideCache.get(),
+                          this->Impl->ColorPosHandle,
+                          this->Impl->ColorRGBHandle,
+                          this->Impl->OpacityPosHandle,
+                          this->Impl->OpacityAlphaHandle,
+                          this->Impl->OpacityMidSharpHandle };
 
   this->Impl->ColorArraysChanged = false;
   this->Impl->OpacityArraysChanged = false;
+  this->Impl->HostSideCacheChanged = false;
+  return state;
+}
+
+//----------------------------------------------------------------------------
+vtkm::exec::ColorTableBase* ColorTable::GetControlRepresentation() const
+{
+  return this->Impl->HostSideCache.get();
+}
+
+//----------------------------------------------------------------------------
+vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase> const* ColorTable::GetExecutionHandle()
+  const
+{
   return this->Impl->ExecHandle.get();
 }
-
-//---------------------------------------------------------------------------
-vtkm::Id ColorTable::GetModifiedCount() const
-{
-  return this->Impl->HostSideCache->GetModifiedCount();
-}
-
-
-/*
-#define ColorTableExportMapFunctions(T)                                                            \
-  template VTKM_CONT_EXPORT bool ColorTable::Map(                                                  \
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>&,                                \
-    const vtkm::cont::ColorTableSamplesRGBA&,                                                      \
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>&) const;                                    \
-  template VTKM_CONT_EXPORT bool ColorTable::Map(                                                  \
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>&,                                \
-    const vtkm::cont::ColorTableSamplesRGB&,                                                       \
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>&) const;                                    \
-  template VTKM_CONT_EXPORT bool ColorTable::Map(                                                  \
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>&,                                \
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>&) const;                                    \
-  template VTKM_CONT_EXPORT bool ColorTable::Map(                                                  \
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>&,                                \
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>&) const;
-ColorTableExportMapFunctions(char);
-ColorTableExportMapFunctions(vtkm::UInt8);
-ColorTableExportMapFunctions(vtkm::Int8);
-ColorTableExportMapFunctions(vtkm::Float32);
-ColorTableExportMapFunctions(vtkm::Float64);
-#undef ColorTableExportMapFunctions
-*/
 }
 } //namespace vtkm::cont

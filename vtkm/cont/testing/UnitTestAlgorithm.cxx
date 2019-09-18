@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/Algorithm.h>
@@ -28,7 +18,7 @@ namespace
 {
 // The goal of this unit test is not to verify the correctness
 // of the various algorithms. Since Algorithm is a header, we
-// need to ensure we instatiate each algorithm in a source
+// need to ensure we instantiate each algorithm in a source
 // file to verify compilation.
 //
 static constexpr vtkm::Id ARRAY_SIZE = 10;
@@ -109,6 +99,8 @@ void ScanTest()
   out = vtkm::cont::Algorithm::ScanExclusive(input, output, vtkm::Maximum(), vtkm::Id(0));
   vtkm::cont::Algorithm::ScanExclusiveByKey(keys, input, output, vtkm::Id(0), vtkm::Maximum());
   vtkm::cont::Algorithm::ScanExclusiveByKey(keys, input, output);
+  vtkm::cont::Algorithm::ScanExtended(input, output);
+  vtkm::cont::Algorithm::ScanExtended(input, output, vtkm::Maximum(), vtkm::Id(0));
   (void)out;
 }
 
@@ -136,6 +128,15 @@ struct CompFunctor
   }
 };
 
+struct CompExecObject : vtkm::cont::ExecutionObjectBase
+{
+  template <typename Device>
+  VTKM_CONT CompFunctor PrepareForExecution(Device)
+  {
+    return CompFunctor();
+  }
+};
+
 void SortTest()
 {
   vtkm::cont::ArrayHandle<vtkm::Id> input;
@@ -146,8 +147,10 @@ void SortTest()
 
   vtkm::cont::Algorithm::Sort(input);
   vtkm::cont::Algorithm::Sort(input, CompFunctor());
+  vtkm::cont::Algorithm::Sort(input, CompExecObject());
   vtkm::cont::Algorithm::SortByKey(keys, input);
   vtkm::cont::Algorithm::SortByKey(keys, input, CompFunctor());
+  vtkm::cont::Algorithm::SortByKey(keys, input, CompExecObject());
 }
 
 void SynchronizeTest()
@@ -163,6 +166,7 @@ void UniqueTest()
 
   vtkm::cont::Algorithm::Unique(input);
   vtkm::cont::Algorithm::Unique(input, CompFunctor());
+  vtkm::cont::Algorithm::Unique(input, CompExecObject());
 }
 
 void TestAll()
@@ -179,7 +183,7 @@ void TestAll()
 
 } // anonymous namespace
 
-int UnitTestAlgorithm(int, char* [])
+int UnitTestAlgorithm(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestAll);
+  return vtkm::cont::testing::Testing::Run(TestAll, argc, argv);
 }

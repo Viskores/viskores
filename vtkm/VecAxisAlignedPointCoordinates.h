@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_VecAxisAlignedPointCoordinates_h
@@ -88,7 +78,7 @@ template <vtkm::IdComponent NumDimensions>
 class VecAxisAlignedPointCoordinates
 {
 public:
-  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using ComponentType = vtkm::Vec3f;
 
   static constexpr vtkm::IdComponent NUM_COMPONENTS =
     detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
@@ -146,8 +136,8 @@ struct TypeTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   VTKM_EXEC_CONT
   static vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ZeroInitialization()
   {
-    return vtkm::VecAxisAlignedPointCoordinates<NumDimensions>(
-      vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0), vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0));
+    return vtkm::VecAxisAlignedPointCoordinates<NumDimensions>(vtkm::Vec3f(0, 0, 0),
+                                                               vtkm::Vec3f(0, 0, 0));
   }
 };
 
@@ -156,7 +146,8 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
   using VecType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
-  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using ComponentType = vtkm::Vec3f;
+  using BaseComponentType = vtkm::FloatDefault;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
@@ -170,6 +161,13 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   {
     return vector[componentIndex];
   }
+
+  // These are a bit of a hack since VecAxisAlignedPointCoordinates only supports one component
+  // type. Using these might not work as expected.
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Vec<NewComponentType, NUM_COMPONENTS>;
+  template <typename NewComponentType>
+  using ReplaceBaseComponenttype = vtkm::Vec<vtkm::Vec<NewComponentType, 3>, NUM_COMPONENTS>;
 
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)

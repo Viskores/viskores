@@ -2,23 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #define vtkm_cont_StorageBasic_cxx
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/internal/Configure.h>
 
@@ -117,11 +108,11 @@ StorageBasicBase::~StorageBasicBase()
   this->ReleaseResources();
 }
 
-StorageBasicBase::StorageBasicBase(StorageBasicBase&& src)
-  : Array(src.Array)
-  , AllocatedByteSize(src.AllocatedByteSize)
-  , NumberOfValues(src.NumberOfValues)
-  , DeleteFunction(src.DeleteFunction)
+StorageBasicBase::StorageBasicBase(StorageBasicBase&& src) noexcept
+  : Array(src.Array),
+    AllocatedByteSize(src.AllocatedByteSize),
+    NumberOfValues(src.NumberOfValues),
+    DeleteFunction(src.DeleteFunction)
 
 {
   src.Array = nullptr;
@@ -145,7 +136,7 @@ StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   }
 }
 
-StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
+StorageBasicBase& StorageBasicBase::operator=(StorageBasicBase&& src) noexcept
 {
   this->ReleaseResources();
   this->Array = src.Array;
@@ -160,7 +151,7 @@ StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
   return *this;
 }
 
-StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
+StorageBasicBase& StorageBasicBase::operator=(const StorageBasicBase& src)
 {
   if (src.DeleteFunction)
   {
@@ -218,8 +209,16 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
       // Make sure our state is OK.
       this->AllocatedByteSize = 0;
       this->NumberOfValues = 0;
+      VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+                 "Could not allocate control array of %s.",
+                 vtkm::cont::GetSizeString(allocsize).c_str());
       throw vtkm::cont::ErrorBadAllocation("Could not allocate basic control array.");
     }
+    VTKM_LOG_S(vtkm::cont::LogLevel::MemCont,
+               "Allocated control array of " << vtkm::cont::GetSizeString(allocsize).c_str()
+                                             << ". [element count "
+                                             << static_cast<std::int64_t>(numberOfValues)
+                                             << "]");
   }
   else
   {
@@ -246,6 +245,9 @@ void StorageBasicBase::ReleaseResources()
     VTKM_ASSERT(this->Array != nullptr);
     if (this->DeleteFunction)
     {
+      VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+                 "Freeing control allocation of %s.",
+                 vtkm::cont::GetSizeString(this->AllocatedByteSize).c_str());
       this->DeleteFunction(this->Array);
     }
     this->Array = nullptr;
@@ -298,23 +300,25 @@ void* StorageBasicBase::GetCapacityPointer() const
   return static_cast<void*>(v);
 }
 
-#define _VTKM_STORAGE_INSTANTIATE(Type)                                                            \
+#define VTKM_STORAGE_INSTANTIATE(Type)                                                             \
   template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;                                  \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;                    \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;                    \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_STORAGE_INSTANTIATE(char)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
-_VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
-_VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
+VTKM_STORAGE_INSTANTIATE(char)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
+VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
+VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
+VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
+VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
+
+#undef VTKM_STORAGE_INSTANTIATE
 }
 }
 } // namespace vtkm::cont::internal

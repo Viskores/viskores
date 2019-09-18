@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/FieldMetadata.h>
@@ -42,7 +32,7 @@ inline VTKM_CONT FilterField<Derived>::FilterField()
   : OutputFieldName()
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
-  , ActiveFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
   , UseCoordinateSystemAsField(false)
 {
 }
@@ -85,13 +75,14 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-
-  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
+    vtkm::filter::ApplyPolicyFieldActive(field, policy, vtkm::filter::FilterTraits<Derived>()),
+    internal::ResolveFieldTypeAndExecute(),
+    static_cast<Derived*>(this),
+    input,
+    metaData,
+    policy,
+    result);
   return result;
 }
 
@@ -105,35 +96,24 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
-
   vtkm::filter::FieldMetadata metaData(field);
   vtkm::cont::DataSet result;
 
-  using FunctorType =
-    internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, vtkm::cont::DataSet>;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
-
   using Traits = vtkm::filter::FilterTraits<Derived>;
-  constexpr bool supportsVec3 = vtkm::ListContains<typename Traits::InputFieldTypeList,
-                                                   vtkm::Vec<vtkm::FloatDefault, 3>>::value;
+  constexpr bool supportsVec3 =
+    vtkm::ListContains<typename Traits::InputFieldTypeList, vtkm::Vec3f>::value;
 
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
-  vtkm::cont::ConditionalCastAndCall(
-    supportsCoordinateSystem(), field, functor, this->GetRuntimeDeviceTracker());
+  vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),
+                                     field,
+                                     internal::ResolveFieldTypeAndExecute(),
+                                     static_cast<Derived*>(this),
+                                     input,
+                                     metaData,
+                                     policy,
+                                     result);
 
   return result;
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
-template <typename DerivedPolicy>
-inline VTKM_CONT bool FilterField<Derived>::MapFieldOntoOutput(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  result.AddField(field);
-  return true;
 }
 }
 }

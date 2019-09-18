@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/rendering/CanvasRayTracer.h>
 
@@ -24,10 +14,8 @@
 #include <vtkm/rendering/MapperConnectivity.h>
 #include <vtkm/rendering/View.h>
 
-#include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
-
 #include <cstdlib>
+#include <vtkm/rendering/raytracing/Camera.h>
 
 namespace vtkm
 {
@@ -81,10 +69,18 @@ void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                                      const vtkm::Range& vtkmNotUsed(scalarRange))
 {
   vtkm::rendering::ConnectivityProxy tracerProxy(cellset, coords, scalarField);
-  if (SampleDistance != -1.f)
+  if (SampleDistance == -1.f)
   {
-    tracerProxy.SetSampleDistance(SampleDistance);
+    // set a default distance
+    vtkm::Bounds bounds = coords.GetBounds();
+    vtkm::Float64 x2 = bounds.X.Length() * bounds.X.Length();
+    vtkm::Float64 y2 = bounds.Y.Length() * bounds.Y.Length();
+    vtkm::Float64 z2 = bounds.Z.Length() * bounds.Z.Length();
+    vtkm::Float64 length = vtkm::Sqrt(x2 + y2 + z2);
+    constexpr vtkm::Float64 defaultSamples = 200.;
+    SampleDistance = static_cast<vtkm::Float32>(length / defaultSamples);
   }
+  tracerProxy.SetSampleDistance(SampleDistance);
   tracerProxy.SetColorMap(ColorMap);
   tracerProxy.Trace(camera, CanvasRT);
 }

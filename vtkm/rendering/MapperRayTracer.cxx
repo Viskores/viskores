@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -29,6 +19,9 @@
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
+#include <vtkm/rendering/raytracing/SphereExtractor.h>
+#include <vtkm/rendering/raytracing/SphereIntersector.h>
+#include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
 namespace vtkm
 {
@@ -42,10 +35,12 @@ struct MapperRayTracer::InternalsType
   vtkm::rendering::raytracing::Camera RayCamera;
   vtkm::rendering::raytracing::Ray<vtkm::Float32> Rays;
   bool CompositeBackground;
+  bool Shade;
   VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
     , CompositeBackground(true)
+    , Shade(true)
   {
   }
 };
@@ -89,32 +84,47 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");
-  vtkm::cont::Timer<> tot_timer;
-  vtkm::cont::Timer<> timer;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> indices;
-  vtkm::Id numberOfTriangles;
+  vtkm::cont::Timer tot_timer;
+  tot_timer.Start();
+  vtkm::cont::Timer timer;
 
-  vtkm::rendering::internal::RunTriangulator(cellset, indices, numberOfTriangles);
-  vtkm::Float64 time = timer.GetElapsedTime();
-  logger->AddLogData("triangulator", time);
+  // make sure we start fresh
+  this->Internals->Tracer.Clear();
+  //
+  // Add supported shapes
+  //
+  vtkm::Bounds shapeBounds;
+  raytracing::TriangleExtractor triExtractor;
+  triExtractor.ExtractCells(cellset);
+  if (triExtractor.GetNumberOfTriangles() > 0)
+  {
+    auto triIntersector = std::make_shared<raytracing::TriangleIntersector>();
+    triIntersector->SetData(coords, triExtractor.GetTriangles());
+    this->Internals->Tracer.AddShapeIntersector(triIntersector);
+    shapeBounds.Include(triIntersector->GetShapeBounds());
+  }
+
+  //
+  // Create rays
+  //
   vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
   cam.SetParameters(camera, *this->Internals->Canvas);
   this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
 
-  this->Internals->RayCamera.CreateRays(this->Internals->Rays, coords);
+  this->Internals->RayCamera.CreateRays(this->Internals->Rays, shapeBounds);
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
 
-  vtkm::Bounds dataBounds = coords.GetBounds();
-  vtkm::cont::Field& field = const_cast<vtkm::cont::Field&>(scalarField);
-  this->Internals->Tracer.SetData(
-    coords.GetData(), indices, field, numberOfTriangles, scalarRange, dataBounds);
+
+
+  this->Internals->Tracer.SetField(scalarField, scalarRange);
 
   this->Internals->Tracer.SetColorMap(this->ColorMap);
+  this->Internals->Tracer.SetShadingOn(this->Internals->Shade);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
-  timer.Reset();
+  timer.Start();
   this->Internals->Canvas->WriteToCanvas(
     this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
 
@@ -123,7 +133,7 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     this->Internals->Canvas->BlendBackground();
   }
 
-  time = timer.GetElapsedTime();
+  vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("write_to_canvas", time);
   time = tot_timer.GetElapsedTime();
   logger->CloseLogEntry(time);
@@ -132,6 +142,11 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 void MapperRayTracer::SetCompositeBackground(bool on)
 {
   this->Internals->CompositeBackground = on;
+}
+
+void MapperRayTracer::SetShadingOn(bool on)
+{
+  this->Internals->Shade = on;
 }
 
 void MapperRayTracer::StartScene()

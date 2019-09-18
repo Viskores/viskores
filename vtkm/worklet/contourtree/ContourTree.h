@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -153,13 +143,14 @@
 #include <vtkm/worklet/contourtree/UpdateOutbound.h>
 
 #include <vtkm/Pair.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#define DEBUG_PRINT 1
+//#define DEBUG_PRINT 1
 //#define DEBUG_TIMING 1
 
 namespace vtkm
@@ -169,12 +160,10 @@ namespace worklet
 namespace contourtree
 {
 
-template <typename T, typename StorageType, typename DeviceAdapter>
+template <typename T, typename StorageType>
 class ContourTree
 {
 public:
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
   using ValueArrayType = vtkm::cont::ArrayHandle<T>;
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
@@ -193,10 +182,10 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> activeSupernodes;
 
   // references to join & split trees
-  MergeTree<T, StorageType, DeviceAdapter> &joinTree, &splitTree;
+  MergeTree<T, StorageType> &joinTree, &splitTree;
 
   // references to join & split graphs
-  ChainGraph<T, StorageType, DeviceAdapter> &joinGraph, &splitGraph;
+  ChainGraph<T, StorageType> &joinGraph, &splitGraph;
 
   // vectors of up & down degree used during computation
   vtkm::cont::ArrayHandle<vtkm::Id> updegree, downdegree;
@@ -209,10 +198,10 @@ public:
 
   // contour tree constructor
   ContourTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
-              MergeTree<T, StorageType, DeviceAdapter>& JoinTree,
-              MergeTree<T, StorageType, DeviceAdapter>& SplitTree,
-              ChainGraph<T, StorageType, DeviceAdapter>& JoinGraph,
-              ChainGraph<T, StorageType, DeviceAdapter>& SplitGraph);
+              MergeTree<T, StorageType>& JoinTree,
+              MergeTree<T, StorageType>& SplitTree,
+              ChainGraph<T, StorageType>& JoinGraph,
+              ChainGraph<T, StorageType>& SplitGraph);
 
   // routines for computing the contour tree
   // combines the list of active vertices for join & split trees
@@ -244,10 +233,8 @@ public:
 struct VertexAssigned : vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> supernode,
-                                WholeArrayIn<IdType> superarcs,
-                                FieldOut<IdType> hasSuperArc);
-  typedef _3 ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn supernode, WholeArrayIn superarcs, FieldOut hasSuperArc);
+  using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 
   bool vertexIsAssigned;
@@ -279,13 +266,12 @@ public:
 };
 
 // creates contour tree
-template <typename T, typename StorageType, typename DeviceAdapter>
-ContourTree<T, StorageType, DeviceAdapter>::ContourTree(
-  const vtkm::cont::ArrayHandle<T, StorageType>& Values,
-  MergeTree<T, StorageType, DeviceAdapter>& JoinTree,
-  MergeTree<T, StorageType, DeviceAdapter>& SplitTree,
-  ChainGraph<T, StorageType, DeviceAdapter>& JoinGraph,
-  ChainGraph<T, StorageType, DeviceAdapter>& SplitGraph)
+template <typename T, typename StorageType>
+ContourTree<T, StorageType>::ContourTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+                                         MergeTree<T, StorageType>& JoinTree,
+                                         MergeTree<T, StorageType>& SplitTree,
+                                         ChainGraph<T, StorageType>& JoinGraph,
+                                         ChainGraph<T, StorageType>& SplitGraph)
   : values(Values)
   , joinTree(JoinTree)
   , splitTree(SplitTree)
@@ -338,8 +324,8 @@ ContourTree<T, StorageType, DeviceAdapter>::ContourTree(
 
 // combines the list of active vertices for join & split trees
 // then reduces them to eliminate regular vertices & non-connectivity critical points
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::FindSupernodes()
 {
   // both trees may have non-connectivity critical points, so we first make a joint list
   // here, we will explicitly assume that the active lists are in numerical order
@@ -351,9 +337,9 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   // take the union of the two sets of vertices
   vtkm::cont::ArrayHandleConcatenate<IdArrayType, IdArrayType> candidateArray(
     joinGraph.valueIndex, splitGraph.valueIndex);
-  DeviceAlgorithm::Copy(candidateArray, candidates);
-  DeviceAlgorithm::Sort(candidates);
-  DeviceAlgorithm::Unique(candidates);
+  vtkm::cont::Algorithm::Copy(candidateArray, candidates);
+  vtkm::cont::Algorithm::Sort(candidates);
+  vtkm::cont::Algorithm::Unique(candidates);
 
   nCandidates = candidates.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex candidateIndexArray(nCandidates);
@@ -362,7 +348,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   vtkm::Id nValues = values.GetNumberOfValues();
   vtkm::cont::ArrayHandle<vtkm::Id> regularToCritical;
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noVertArray(NO_VERTEX_ASSIGNED, nValues);
-  DeviceAlgorithm::Copy(noVertArray, regularToCritical);
+  vtkm::cont::Algorithm::Copy(noVertArray, regularToCritical);
 
   if (nCandidates > 0)
   {
@@ -386,8 +372,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> initCandidateArray(0, nCandidates);
   vtkm::cont::ArrayHandle<vtkm::Id> upCandidate;
   vtkm::cont::ArrayHandle<vtkm::Id> downCandidate;
-  DeviceAlgorithm::Copy(initCandidateArray, upCandidate);
-  DeviceAlgorithm::Copy(initCandidateArray, downCandidate);
+  vtkm::cont::Algorithm::Copy(initCandidateArray, upCandidate);
+  vtkm::cont::Algorithm::Copy(initCandidateArray, downCandidate);
 
   // This next chunk changes in parallel - it has to count the up & down degree for each
   // vertex. It's a simple loop in serial, but in parallel, what we have to do is:
@@ -414,7 +400,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   }
 
   // 2. Sort the lower ends of the edges
-  DeviceAlgorithm::Sort(sortVector);
+  vtkm::cont::Algorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -457,7 +443,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   }
 
   // 2. Sort the lower ends of the edges
-  DeviceAlgorithm::Sort(sortVector);
+  vtkm::cont::Algorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -502,11 +488,11 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
   // do a compaction to find the new index for each
   // We end with 0 in position 0, and need one extra position to find the new size
   vtkm::cont::ArrayHandle<vtkm::Id> supernodeID;
-  DeviceAlgorithm::ScanExclusive(isSupernode, supernodeID);
+  vtkm::cont::Algorithm::ScanExclusive(isSupernode, supernodeID);
 
   // size is the position of the last element + the size of the last element (0/1)
-  vtkm::Id nSupernodes = supernodeID.GetPortalConstControl().Get(nCandidates - 1) +
-    isSupernode.GetPortalConstControl().Get(nCandidates - 1);
+  vtkm::Id nSupernodes = vtkm::cont::ArrayGetValue(nCandidates - 1, supernodeID) +
+    vtkm::cont::ArrayGetValue(nCandidates - 1, isSupernode);
 
   // allocate memory for our arrays
   supernodes.ReleaseResources();
@@ -560,13 +546,13 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
 
   vtkm::cont::ArrayHandleConstant<vtkm::Id> newsuperarcs(NO_VERTEX_ASSIGNED, nSupernodes);
   superarcs.ReleaseResources();
-  DeviceAlgorithm::Copy(newsuperarcs, superarcs);
+  vtkm::cont::Algorithm::Copy(newsuperarcs, superarcs);
 
   // create the active supernode vector
   activeSupernodes.ReleaseResources();
   activeSupernodes.Allocate(nSupernodes);
   vtkm::cont::ArrayHandleIndex supernodeSeq(nSupernodes);
-  DeviceAlgorithm::Copy(supernodeSeq, activeSupernodes);
+  vtkm::cont::Algorithm::Copy(supernodeSeq, activeSupernodes);
 
 #ifdef DEBUG_PRINT
   DebugPrint("Supernodes Found");
@@ -574,8 +560,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindSupernodes()
 } // FindSupernodes()
 
 // transfers leaves from join/split trees to contour tree
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::TransferLeaves()
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::TransferLeaves()
 {
   FindLeaves findLeaves;
   vtkm::worklet::DispatcherMapField<FindLeaves> findLeavesDispatcher(findLeaves);
@@ -592,15 +578,15 @@ void ContourTree<T, StorageType, DeviceAdapter>::TransferLeaves()
 } // TransferLeaves()
 
 // collapses regular edges along leaf superarcs
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::CollapseRegular(bool isJoin)
 {
   // we'll have a vector for tracking outwards
   vtkm::Id nSupernodes = supernodes.GetNumberOfValues();
   vtkm::cont::ArrayHandleConstant<vtkm::Id> nullArray(0, nSupernodes);
   vtkm::cont::ArrayHandle<vtkm::Id> outbound;
   outbound.Allocate(nSupernodes);
-  DeviceAlgorithm::Copy(nullArray, outbound);
+  vtkm::cont::ArrayCopy(nullArray, outbound);
 
   // and a reference for the inwards array and to the degrees
   vtkm::cont::ArrayHandle<vtkm::Id> inbound;
@@ -608,15 +594,15 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
   vtkm::cont::ArrayHandle<vtkm::Id> outdegree;
   if (isJoin)
   {
-    DeviceAlgorithm::Copy(joinArcs, inbound);
-    DeviceAlgorithm::Copy(downdegree, indegree);
-    DeviceAlgorithm::Copy(updegree, outdegree);
+    vtkm::cont::ArrayCopy(joinArcs, inbound);
+    vtkm::cont::ArrayCopy(downdegree, indegree);
+    vtkm::cont::ArrayCopy(updegree, outdegree);
   }
   else
   {
-    DeviceAlgorithm::Copy(splitArcs, inbound);
-    DeviceAlgorithm::Copy(updegree, indegree);
-    DeviceAlgorithm::Copy(downdegree, outdegree);
+    vtkm::cont::ArrayCopy(splitArcs, inbound);
+    vtkm::cont::ArrayCopy(updegree, indegree);
+    vtkm::cont::ArrayCopy(downdegree, outdegree);
   }
 
   // loop to copy join/split
@@ -670,8 +656,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollapseRegular(bool isJoin)
 } // CollapseRegular()
 
 // compresses trees to remove transferred vertices
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::CompressTrees()
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::CompressTrees()
 {
   // Compute the number of log steps required in this pass
   vtkm::Id nActiveSupernodes = activeSupernodes.GetNumberOfValues();
@@ -697,8 +683,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CompressTrees()
 } // CompressTrees()
 
 // compresses active set of supernodes
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::CompressActiveSupernodes()
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::CompressActiveSupernodes()
 {
   // copy only if the superarc is not set
   vtkm::cont::ArrayHandle<vtkm::Id> noSuperarcArray;
@@ -710,10 +696,10 @@ void ContourTree<T, StorageType, DeviceAdapter>::CompressActiveSupernodes()
   vertexAssignedDispatcher.Invoke(activeSupernodes, superarcs, noSuperarcArray);
 
   vtkm::cont::ArrayHandle<vtkm::Id> compressSupernodes;
-  DeviceAlgorithm::CopyIf(activeSupernodes, noSuperarcArray, compressSupernodes);
+  vtkm::cont::Algorithm::CopyIf(activeSupernodes, noSuperarcArray, compressSupernodes);
 
   activeSupernodes.ReleaseResources();
-  DeviceAlgorithm::Copy(compressSupernodes, activeSupernodes);
+  vtkm::cont::ArrayCopy(compressSupernodes, activeSupernodes);
 
 #ifdef DEBUG_PRINT
   DebugPrint("Active Supernodes Compressed");
@@ -721,8 +707,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CompressActiveSupernodes()
 } // CompressActiveSupernodes()
 
 // recomputes the degree of each supernode from the join & split trees
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::FindDegrees()
 {
   if (activeSupernodes.GetNumberOfValues() == 0)
     return;
@@ -753,7 +739,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   }
 
   // 2. Sort the neighbours
-  DeviceAlgorithm::Sort(sortVector);
+  vtkm::cont::Algorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -796,7 +782,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::FindDegrees()
   }
 
   // 2. Sort the neighbours
-  DeviceAlgorithm::Sort(sortVector);
+  vtkm::cont::Algorithm::Sort(sortVector);
 
   // 3. For each value, store the beginning & end of the range (in parallel)
   //	The 0th element is guaranteed to be NO_VERTEX_ASSIGNED, & can be skipped
@@ -874,36 +860,45 @@ struct SaddlePeakSort
 };
 
 // sorted print routine
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::CollectSaddlePeak(
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::CollectSaddlePeak(
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>>& saddlePeak)
 {
   // Collect the valid saddle peak pairs
   std::vector<vtkm::Pair<vtkm::Id, vtkm::Id>> superarcVector;
+  const auto supernodePortal = supernodes.GetPortalConstControl();
+  const auto superarcPortal = superarcs.GetPortalConstControl();
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   {
     // ID of regular node
-    vtkm::Id regularID = supernodes.GetPortalConstControl().Get(supernode);
+    const vtkm::Id regularID = supernodePortal.Get(supernode);
 
     // retrieve ID of target supernode
-    vtkm::Id superTo = superarcs.GetPortalConstControl().Get(supernode);
+    const vtkm::Id superTo = superarcPortal.Get(supernode);
+    ;
 
     // if this is true, it is the last pruned vertex
     if (superTo == NO_VERTEX_ASSIGNED)
+    {
       continue;
+    }
 
     // retrieve the regular ID for it
-    vtkm::Id regularTo = supernodes.GetPortalConstControl().Get(superTo);
+    const vtkm::Id regularTo = supernodePortal.Get(superTo);
 
     // how we print depends on which end has lower ID
     if (regularID < regularTo)
     { // from is lower
       // extra test to catch duplicate edge
-      if (superarcs.GetPortalConstControl().Get(superTo) != supernode)
+      if (superarcPortal.Get(superTo) != supernode)
+      {
         superarcVector.push_back(vtkm::make_Pair(regularID, regularTo));
+      }
     } // from is lower
     else
+    {
       superarcVector.push_back(vtkm::make_Pair(regularTo, regularID));
+    }
   } // per vertex
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
@@ -911,8 +906,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollectSaddlePeak(
     vtkm::cont::make_ArrayHandle(superarcVector);
 
   // now sort it
-  DeviceAlgorithm::Sort(tempArray, SaddlePeakSort());
-  DeviceAlgorithm::Copy(tempArray, saddlePeak);
+  vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
+  vtkm::cont::Algorithm::Copy(tempArray, saddlePeak);
 
 #ifdef DEBUG_PRINT
   const vtkm::Id arcVecSize = static_cast<vtkm::Id>(superarcVector.size());
@@ -926,8 +921,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollectSaddlePeak(
 } // CollectSaddlePeak()
 
 // debug routine
-template <typename T, typename StorageType, typename DeviceAdapter>
-void ContourTree<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
+template <typename T, typename StorageType>
+void ContourTree<T, StorageType>::DebugPrint(const char* message)
 {
   std::cout << "---------------------------" << std::endl;
   std::cout << std::string(message) << std::endl;
@@ -941,7 +936,7 @@ void ContourTree<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
   printIndices("Supernodes", supernodes);
 
   vtkm::cont::ArrayHandle<vtkm::Id> supervalues;
-  DeviceAlgorithm::Copy(PermuteValueType(supernodes, values), supervalues);
+  vtkm::cont::ArrayCopy(PermuteValueType(supernodes, values), supervalues);
   printValues("Value", supervalues);
 
   printIndices("Up degree", updegree);
@@ -958,23 +953,23 @@ void ContourTree<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
   printIndices("Active Supernodes", activeSupernodes);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeUpdegree;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeSupernodes, updegree), activeUpdegree);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, updegree), activeUpdegree);
   printIndices("Active Up Degree", activeUpdegree);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeDowndegree;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeSupernodes, downdegree), activeDowndegree);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, downdegree), activeDowndegree);
   printIndices("Active Down Degree", activeDowndegree);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeJoinArcs;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeSupernodes, joinArcs), activeJoinArcs);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, joinArcs), activeJoinArcs);
   printIndices("Active Join Arcs", activeJoinArcs);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeSplitArcs;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeSupernodes, splitArcs), activeSplitArcs);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, splitArcs), activeSplitArcs);
   printIndices("Active Split Arcs", activeSplitArcs);
 
   vtkm::cont::ArrayHandle<vtkm::Id> activeSuperarcs;
-  DeviceAlgorithm::Copy(PermuteIndexType(activeSupernodes, superarcs), activeSuperarcs);
+  vtkm::cont::ArrayCopy(PermuteIndexType(activeSupernodes, superarcs), activeSuperarcs);
   printIndices("Active Superarcs", activeSuperarcs);
   std::cout << std::endl;
 } // DebugPrint()

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_internal_ArrayPortalFromIterators_h
 #define vtk_m_cont_internal_ArrayPortalFromIterators_h
@@ -53,9 +43,7 @@ public:
   using ValueType = typename std::iterator_traits<IteratorT>::value_type;
   using IteratorType = IteratorT;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
-  ArrayPortalFromIterators() {}
+  ArrayPortalFromIterators() = default;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT
@@ -81,7 +69,7 @@ public:
   /// type casting that the iterators do (like the non-const to const cast).
   ///
   template <class OtherIteratorT>
-  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {
@@ -128,7 +116,7 @@ public:
   using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalFromIterators()
     : BeginIterator(nullptr)
     , NumberOfValues(0)
@@ -158,8 +146,9 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <class OtherIteratorT>
-  VTKM_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
+  VTKM_EXEC_CONT ArrayPortalFromIterators(const ArrayPortalFromIterators<OtherIteratorT>& src)
     : BeginIterator(src.GetIteratorBegin())
     , NumberOfValues(src.GetNumberOfValues())
   {
@@ -213,17 +202,17 @@ namespace cont
 /// ArrayPortalFromIterators. Returns the original array rather than
 /// the portal wrapped in an \c IteratorFromArrayPortal.
 ///
-template <typename _IteratorType>
-class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>>
+template <typename IterType>
+class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<IterType>>
 {
-  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>;
+  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<IterType>;
 
 public:
 #if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-  using IteratorType = _IteratorType;
+  using IteratorType = IterType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)
     : Iterator(portal.GetIteratorBegin())
     , NumberOfValues(portal.GetNumberOfValues())
@@ -234,10 +223,10 @@ public:
   // The MSVC compiler issues warnings when using raw pointer math when in
   // debug mode. To keep the compiler happy (and add some safety checks),
   // wrap the iterator in checked_array_iterator.
-  using IteratorType = stdext::checked_array_iterator<_IteratorType>;
+  using IteratorType = stdext::checked_array_iterator<IterType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)
     : Iterator(portal.GetIteratorBegin(), static_cast<size_t>(portal.GetNumberOfValues()))
     , NumberOfValues(portal.GetNumberOfValues())

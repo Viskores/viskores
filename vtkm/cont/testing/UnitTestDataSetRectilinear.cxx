@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/CellShape.h>
@@ -50,9 +40,8 @@ static void TwoDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make2DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<2> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
+  dataSet.GetCellSet().CopyTo(cellSet);
 
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
   VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
                    "Incorrect number of coordinate systems");
@@ -62,16 +51,16 @@ static void TwoDimRectilinearTest()
   // test various field-getting methods and associations
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    dataSet.GetCellField("cellvar");
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    dataSet.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -87,20 +76,19 @@ static void TwoDimRectilinearTest()
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Incorrect element type.");
   }
 
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 2>
-    pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                          vtkm::TopologyElementTagPoint(),
-                                          vtkm::TopologyElementTagCell());
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 2>
-    cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+    pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
                                           vtkm::TopologyElementTagCell(),
                                           vtkm::TopologyElementTagPoint());
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 2>
+    cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                          vtkm::TopologyElementTagPoint(),
+                                          vtkm::TopologyElementTagCell());
 
   vtkm::Id cells[2][4] = { { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
   for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
   {
-    vtkm::Vec<vtkm::Id, 4> pointIds =
-      pointToCell.GetIndices(pointToCell.FlatToLogicalToIndex(cellIndex));
+    vtkm::Id4 pointIds = pointToCell.GetIndices(pointToCell.FlatToLogicalToIndex(cellIndex));
     for (vtkm::IdComponent localPointIndex = 0; localPointIndex < 4; localPointIndex++)
     {
       VTKM_TEST_ASSERT(pointIds[localPointIndex] == cells[cellIndex][localPointIndex],
@@ -134,9 +122,7 @@ static void ThreeDimRectilinearTest()
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
 
   vtkm::cont::CellSetStructured<3> cellSet;
-  dataSet.GetCellSet(0).CopyTo(cellSet);
-
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
+  dataSet.GetCellSet().CopyTo(cellSet);
 
   VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == 2, "Incorrect number of fields");
 
@@ -149,16 +135,16 @@ static void ThreeDimRectilinearTest()
 
   try
   {
-    dataSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    dataSet.GetCellField("cellvar");
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    dataSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    dataSet.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -175,10 +161,10 @@ static void ThreeDimRectilinearTest()
   }
 
   //Test regular connectivity.
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                          vtkm::TopologyElementTagPoint(),
-                                          vtkm::TopologyElementTagCell());
+                                          vtkm::TopologyElementTagCell(),
+                                          vtkm::TopologyElementTagPoint());
   vtkm::Id expectedPointIds[8] = { 0, 1, 4, 3, 6, 7, 10, 9 };
   vtkm::Vec<vtkm::Id, 8> retrievedPointIds = pointToCell.GetIndices(vtkm::Id3(0));
   for (vtkm::IdComponent localPointIndex = 0; localPointIndex < 8; localPointIndex++)
@@ -187,10 +173,10 @@ static void ThreeDimRectilinearTest()
                      "Incorrect point ID for cell");
   }
 
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
     cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                          vtkm::TopologyElementTagCell(),
-                                          vtkm::TopologyElementTagPoint());
+                                          vtkm::TopologyElementTagPoint(),
+                                          vtkm::TopologyElementTagCell());
   vtkm::Id retrievedCellIds[6] = { 0, -1, -1, -1, -1, -1 };
   vtkm::VecVariable<vtkm::Id, 6> expectedCellIds = cellToPoint.GetIndices(vtkm::Id3(0));
   VTKM_TEST_ASSERT(expectedCellIds.GetNumberOfComponents() <= 6,
@@ -204,7 +190,7 @@ static void ThreeDimRectilinearTest()
   }
 }
 
-int UnitTestDataSetRectilinear(int, char* [])
+int UnitTestDataSetRectilinear(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDataSet_Rectilinear);
+  return vtkm::cont::testing::Testing::Run(TestDataSet_Rectilinear, argc, argv);
 }

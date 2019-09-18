@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/FunctorBase.h>
@@ -147,11 +137,11 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
   for (vtkm::IdComponent trial = 0; trial < 5; trial++)
   {
     // Generate a random pcoords that we know is in the cell.
-    vtkm::Vec<vtkm::FloatDefault, 3> pcoords(0);
+    vtkm::Vec3f pcoords(0);
     vtkm::FloatDefault totalWeight = 0;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> pointPcoords =
+      vtkm::Vec3f pointPcoords =
         vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
       vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
@@ -212,7 +202,7 @@ struct TestPCoordsFunctor
         numPoints, pointIndex, pcoords, CellShapeTag(), workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
-      Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::dot(pcoords, sheerVec));
+      Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::Dot(pcoords, sheerVec));
       pointWCoords.Append(wCoords);
     }
 
@@ -260,9 +250,9 @@ void TestAllPCoords()
 
   std::cout << "======== Rectilinear Shapes ===============" << std::endl;
   std::uniform_real_distribution<vtkm::FloatDefault> randomDist(0.01f, 1.0f);
-  vtkm::Vec<vtkm::FloatDefault, 3> origin(
+  vtkm::Vec3f origin(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
-  vtkm::Vec<vtkm::FloatDefault, 3> spacing(
+  vtkm::Vec3f spacing(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
 
   TestPCoords(vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),
@@ -273,7 +263,7 @@ void TestAllPCoords()
 
 } // Anonymous namespace
 
-int UnitTestParametricCoordinates(int, char* [])
+int UnitTestParametricCoordinates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestAllPCoords);
+  return vtkm::testing::Testing::Run(TestAllPCoords, argc, argv);
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CellSetSingleType_h
 #define vtk_m_cont_CellSetSingleType_h
@@ -56,8 +46,8 @@ class VTKM_ALWAYS_EXPORT CellSetSingleType
 
 public:
   VTKM_CONT
-  CellSetSingleType(const std::string& name = std::string())
-    : Superclass(name)
+  CellSetSingleType()
+    : Superclass()
     , ExpectedNumberOfCellsAdded(-1)
     , CellShapeAsId(CellShapeTagEmpty::Id)
     , NumberOfPointsPerCell(0)
@@ -74,9 +64,27 @@ public:
   }
 
   VTKM_CONT
+  CellSetSingleType(Thisclass&& src) noexcept : Superclass(std::forward<Superclass>(src)),
+                                                ExpectedNumberOfCellsAdded(-1),
+                                                CellShapeAsId(src.CellShapeAsId),
+                                                NumberOfPointsPerCell(src.NumberOfPointsPerCell)
+  {
+  }
+
+
+  VTKM_CONT
   Thisclass& operator=(const Thisclass& src)
   {
     this->Superclass::operator=(src);
+    this->CellShapeAsId = src.CellShapeAsId;
+    this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
+    return *this;
+  }
+
+  VTKM_CONT
+  Thisclass& operator=(Thisclass&& src) noexcept
+  {
+    this->Superclass::operator=(std::forward<Superclass>(src));
     this->CellShapeAsId = src.CellShapeAsId;
     this->NumberOfPointsPerCell = src.NumberOfPointsPerCell;
     return *this;
@@ -90,10 +98,10 @@ public:
   {
     this->CellShapeAsId = vtkm::CELL_SHAPE_EMPTY;
 
-    this->PointToCell.Connectivity.Allocate(connectivityMaxLen);
+    this->Data->VisitCellsWithPoints.Connectivity.Allocate(connectivityMaxLen);
 
-    this->NumberOfCellsAdded = 0;
-    this->ConnectivityAdded = 0;
+    this->Data->NumberOfCellsAdded = 0;
+    this->Data->ConnectivityAdded = 0;
     this->ExpectedNumberOfCellsAdded = numCells;
   }
 
@@ -110,7 +118,8 @@ public:
       throw vtkm::cont::ErrorBadValue("Not enough indices given to CellSetSingleType::AddCell.");
     }
 
-    if (this->ConnectivityAdded + numVertices > this->PointToCell.Connectivity.GetNumberOfValues())
+    if (this->Data->ConnectivityAdded + numVertices >
+        this->Data->VisitCellsWithPoints.Connectivity.GetNumberOfValues())
     {
       throw vtkm::cont::ErrorBadValue(
         "Connectivity increased passed estimated maximum connectivity.");
@@ -140,31 +149,31 @@ public:
     }
     for (vtkm::IdComponent iVert = 0; iVert < numVertices; ++iVert)
     {
-      this->PointToCell.Connectivity.GetPortalControl().Set(this->ConnectivityAdded + iVert,
-                                                            Traits::GetComponent(ids, iVert));
+      this->Data->VisitCellsWithPoints.Connectivity.GetPortalControl().Set(
+        this->Data->ConnectivityAdded + iVert, Traits::GetComponent(ids, iVert));
     }
-    this->NumberOfCellsAdded++;
-    this->ConnectivityAdded += numVertices;
+    this->Data->NumberOfCellsAdded++;
+    this->Data->ConnectivityAdded += numVertices;
   }
 
   /// Third and final method to add cells -- one at a time.
   VTKM_CONT
   void CompleteAddingCells(vtkm::Id numPoints)
   {
-    this->NumberOfPoints = numPoints;
-    this->PointToCell.Connectivity.Shrink(this->ConnectivityAdded);
+    this->Data->NumberOfPoints = numPoints;
+    this->VisitCellsWithPoints.Connectivity.Shrink(this->ConnectivityAdded);
 
     vtkm::Id numCells = this->NumberOfCellsAdded;
 
-    this->PointToCell.Shapes =
+    this->VisitCellsWithPoints.Shapes =
       vtkm::cont::make_ArrayHandleConstant(this->GetCellShape(0), numCells);
-    this->PointToCell.NumIndices =
+    this->VisitCellsWithPoints.NumIndices =
       vtkm::cont::make_ArrayHandleConstant(this->NumberOfPointsPerCell, numCells);
-    this->PointToCell.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(this->NumberOfPointsPerCell), numCells);
 
-    this->PointToCell.ElementsValid = true;
-    this->PointToCell.IndexOffsetsValid = true;
+    this->VisitCellsWithPoints.ElementsValid = true;
+    this->VisitCellsWithPoints.IndexOffsetsValid = true;
 
     if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
     {
@@ -183,39 +192,61 @@ public:
             vtkm::IdComponent numberOfPointsPerCell,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>& connectivity)
   {
-    this->NumberOfPoints = numPoints;
+    this->Data->NumberOfPoints = numPoints;
     this->CellShapeAsId = shapeId;
     this->CheckNumberOfPointsPerCell(numberOfPointsPerCell);
     const vtkm::Id numCells = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
     VTKM_ASSERT((connectivity.GetNumberOfValues() % numberOfPointsPerCell) == 0);
-    this->PointToCell.Shapes = vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
-    this->PointToCell.NumIndices =
+    this->Data->VisitCellsWithPoints.Shapes =
+      vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
+    this->Data->VisitCellsWithPoints.NumIndices =
       vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell, numCells);
-    this->PointToCell.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->Data->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(numberOfPointsPerCell), numCells);
-    this->PointToCell.Connectivity = connectivity;
+    this->Data->VisitCellsWithPoints.Connectivity = connectivity;
 
-    this->PointToCell.ElementsValid = true;
-    this->PointToCell.IndexOffsetsValid = true;
+    this->Data->VisitCellsWithPoints.ElementsValid = true;
+    this->Data->VisitCellsWithPoints.IndexOffsetsValid = true;
+
+    this->ResetConnectivity(TopologyElementTagPoint{}, TopologyElementTagCell{});
   }
 
   VTKM_CONT
   vtkm::Id GetCellShapeAsId() const { return this->CellShapeAsId; }
 
   VTKM_CONT
-  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const
+  vtkm::UInt8 GetCellShape(vtkm::Id vtkmNotUsed(cellIndex)) const override
   {
     return static_cast<vtkm::UInt8>(this->CellShapeAsId);
   }
 
-  virtual void PrintSummary(std::ostream& out) const
+  VTKM_CONT
+  std::shared_ptr<CellSet> NewInstance() const override
   {
-    out << "   ExplicitSingleCellSet: " << this->Name << " Type " << this->CellShapeAsId
-        << std::endl;
-    out << "   PointToCell: " << std::endl;
-    this->PointToCell.PrintSummary(out);
-    out << "   CellToPoint: " << std::endl;
-    this->CellToPoint.PrintSummary(out);
+    return std::make_shared<CellSetSingleType>();
+  }
+
+  VTKM_CONT
+  void DeepCopy(const CellSet* src) override
+  {
+    const auto* other = dynamic_cast<const CellSetSingleType*>(src);
+    if (!other)
+    {
+      throw vtkm::cont::ErrorBadType("CellSetSingleType::DeepCopy types don't match");
+    }
+
+    this->Superclass::DeepCopy(other);
+    this->CellShapeAsId = other->CellShapeAsId;
+    this->NumberOfPointsPerCell = other->NumberOfPointsPerCell;
+  }
+
+  virtual void PrintSummary(std::ostream& out) const override
+  {
+    out << "   CellSetSingleType ShapeType " << this->CellShapeAsId << std::endl;
+    out << "   VisitCellsWithPoints: " << std::endl;
+    this->Data->VisitCellsWithPoints.PrintSummary(out);
+    out << "   VisitPointsWithCells: " << std::endl;
+    this->Data->VisitPointsWithCells.PrintSummary(out);
   }
 
 private:
@@ -257,5 +288,65 @@ private:
 };
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename ConnectivityST>
+struct SerializableTypeString<vtkm::cont::CellSetSingleType<ConnectivityST>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "CS_Single<" +
+      SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST>>::Get() + "_ST>";
+
+    return name;
+  }
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename ConnectivityST>
+struct Serialization<vtkm::cont::CellSetSingleType<ConnectivityST>>
+{
+private:
+  using Type = vtkm::cont::CellSetSingleType<ConnectivityST>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& cs)
+  {
+    vtkmdiy::save(bb, cs.GetNumberOfPoints());
+    vtkmdiy::save(bb, cs.GetCellShape(0));
+    vtkmdiy::save(bb, cs.GetNumberOfPointsInCell(0));
+    vtkmdiy::save(
+      bb, cs.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{}));
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& cs)
+  {
+    vtkm::Id numberOfPoints = 0;
+    vtkmdiy::load(bb, numberOfPoints);
+    vtkm::UInt8 shape;
+    vtkmdiy::load(bb, shape);
+    vtkm::IdComponent count;
+    vtkmdiy::load(bb, count);
+    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityST> connectivity;
+    vtkmdiy::load(bb, connectivity);
+
+    cs = Type{};
+    cs.Fill(numberOfPoints, shape, count, connectivity);
+  }
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_CellSetSingleType_h

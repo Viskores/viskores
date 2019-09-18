@@ -1,7 +1,7 @@
-#ifndef DIY_LOG_HPP
-#define DIY_LOG_HPP
+#ifndef VTKMDIY_LOG_HPP
+#define VTKMDIY_LOG_HPP
 
-#ifndef DIY_USE_SPDLOG
+#ifndef VTKMDIY_USE_SPDLOG
 
 #include <memory>
 #include "fmt/format.h"

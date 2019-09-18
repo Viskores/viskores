@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/testing/VecTraitsTests.h>
 
@@ -27,11 +17,26 @@ namespace
 static constexpr vtkm::Id MAX_VECTOR_SIZE = 5;
 static constexpr vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
+void ExpectTrueType(std::true_type)
+{
+}
+
+void ExpectFalseType(std::false_type)
+{
+}
+
+struct TypeWithoutVecTraits
+{
+};
+
 struct TestVecTypeFunctor
 {
   template <typename T>
   void operator()(const T&) const
   {
+    // Make sure that VecTraits actually exists
+    ExpectTrueType(vtkm::HasVecTraits<T>());
+
     using Traits = vtkm::VecTraits<T>;
     using ComponentType = typename Traits::ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
@@ -59,9 +64,11 @@ void TestVecTraits()
   std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
   test(vtkm::Vec<vtkm::FloatDefault, 5>());
 
+  ExpectFalseType(vtkm::HasVecTraits<TypeWithoutVecTraits>());
+
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 3>>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 4>>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec3f>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec4f>();
   vtkm::testing::TestVecComponentsTag<vtkm::VecC<vtkm::FloatDefault>>();
   vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id>>();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
@@ -70,7 +77,7 @@ void TestVecTraits()
 
 } // anonymous namespace
 
-int UnitTestVecTraits(int, char* [])
+int UnitTestVecTraits(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVecTraits);
+  return vtkm::testing::Testing::Run(TestVecTraits, argc, argv);
 }

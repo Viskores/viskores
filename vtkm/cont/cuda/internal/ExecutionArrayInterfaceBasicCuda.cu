@@ -2,23 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
+
+#include <vtkm/cont/Logging.h>
 
 using vtkm::cont::cuda::internal::CudaAllocator;
 
@@ -29,15 +21,9 @@ namespace cont
 namespace internal
 {
 
-ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::ExecutionArrayInterfaceBasic(
-  StorageBasicBase& storage)
-  : Superclass(storage)
-{
-}
-
 DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId() const
 {
-  return VTKM_DEVICE_ADAPTER_CUDA;
+  return DeviceAdapterTagCuda{};
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
@@ -65,6 +51,19 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
     }
   }
 
+  const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() / sizeOfValue);
+  if (static_cast<std::size_t>(numberOfValues) > maxNumVals)
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
+               "Refusing to allocate CUDA memory; number of values (%llu) exceeds "
+               "std::size_t capacity.",
+               static_cast<vtkm::UInt64>(numberOfValues));
+
+    std::ostringstream err;
+    err << "Failed to allocate " << numberOfValues << " values on device: "
+        << "Number of bytes is not representable by std::size_t.";
+    throw vtkm::cont::ErrorBadAllocation(err.str());
+  }
   if (execArray.Array != nullptr)
   {
     const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -
@@ -125,7 +124,10 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
 
   if (execArray.Array != nullptr)
   {
-    CudaAllocator::Free(execArray.Array);
+    const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -
+                                                       static_cast<char*>(execArray.Array));
+
+    CudaAllocator::FreeDeferred(execArray.Array, cap);
     execArray.Array = nullptr;
     execArray.ArrayEnd = nullptr;
     execArray.ArrayCapacity = nullptr;
@@ -144,6 +146,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
     CudaAllocator::PrepareForInput(executionPtr, numBytes);
     return;
   }
+
+  VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+             "Copying host --> CUDA dev: %s (%llu bytes)",
+             vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+             numBytes);
 
   VTKM_CUDA_CALL(cudaMemcpyAsync(executionPtr,
                                  controlPtr,
@@ -170,32 +177,46 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
 
     // If it is managed, just return and let CUDA handle the migration for us.
     CudaAllocator::PrepareForControl(controlPtr, numBytes);
-    return;
+  }
+  else
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+               "Copying CUDA dev --> host: %s (%llu bytes)",
+               vtkm::cont::GetHumanReadableSize(numBytes).c_str(),
+               numBytes);
+
+    VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
+                                   executionPtr,
+                                   static_cast<std::size_t>(numBytes),
+                                   cudaMemcpyDeviceToHost,
+                                   cudaStreamPerThread));
   }
 
-  VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
-                                 executionPtr,
-                                 static_cast<std::size_t>(numBytes),
-                                 cudaMemcpyDeviceToHost,
-                                 cudaStreamPerThread));
+  //In all cases we have possibly multiple async calls queued up in
+  //our stream. We need to block on the copy back to control since
+  //we don't wanting it accessing memory that hasn't finished
+  //being used by the GPU
+  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTagCuda>::Synchronize();
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(const void* controlPtr,
-                                                                      const void* executionPtr,
-                                                                      vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForInput(executionPtr, static_cast<size_t>(numBytes));
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(const void* controlPtr,
-                                                                       const void* executionPtr,
-                                                                       vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForOutput(executionPtr, static_cast<size_t>(numBytes));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForReadWrite(
-  const void* controlPtr,
+  const void* vtkmNotUsed(controlPtr),
   const void* executionPtr,
   vtkm::UInt64 numBytes) const
 {

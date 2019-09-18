@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_Interpolate_h
 #define vtk_m_exec_Interpolate_h
@@ -26,6 +16,11 @@
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/FunctorBase.h>
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
 
 namespace vtkm
 {
@@ -81,7 +76,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   //
   // First, we define an implicit plane as:
   //
-  // dot((p - wcoords), planeNormal) = 0
+  // Dot((p - wcoords), planeNormal) = 0
   //
   // where planeNormal is the normal to the plane (easily computed from the
   // triangle), and p is any point in the plane. Next, we define the parametric
@@ -98,7 +93,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   // definition of p(d) into p for the plane equation. With some basic algebra
   // you get:
   //
-  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  // d = Dot((wcoords - p0), planeNormal)/Dot((p1-p0), planeNormal)
   //
   // From here, the u coordinate is simply d. The v coordinate follows
   // similarly.
@@ -117,7 +112,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
     Vector3 p2 = pointWCoords[2 - dimension];
     Vector3 planeNormal = vtkm::Cross(triangleNormal, p2 - p0);
 
-    T d = vtkm::dot(wcoords - p0, planeNormal) / vtkm::dot(p1 - p0, planeNormal);
+    T d = vtkm::Dot(wcoords - p0, planeNormal) / vtkm::Dot(p1 - p0, planeNormal);
 
     pcoords[dimension] = d;
   }
@@ -187,14 +182,69 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagLine,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagLine,
+                                      const vtkm::exec::FunctorBase&)
 {
-  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using T = vtkm::Vec3f;
 
+  const T& origin = field.GetOrigin();
+  const T& spacing = field.GetSpacing();
+
+  return T(
+    origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0], origin[1], origin[2]);
+}
+
+//-----------------------------------------------------------------------------
+template <typename FieldVecType, typename ParametricCoordType>
+VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = ParametricCoordType;
+
+  T dt = 1 / static_cast<T>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(pcoords[0] / dt);
+  if (idx == numPoints - 1)
+    return field[numPoints - 1];
+
+  T t = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
+
+  return vtkm::Lerp(field[idx], field[idx + 1], t);
+}
+
+template <typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<1>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagPolyLine,
+                                      const vtkm::exec::FunctorBase& worklet)
+{
+  const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using T = vtkm::Vec3f;
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
 
@@ -267,10 +317,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   ParametricCoordType angle = vtkm::ATan2(pcoords[1] - 0.5f, pcoords[0] - 0.5f);
   if (angle < 0)
   {
-    angle += static_cast<ParametricCoordType>(2 * vtkm::Pi());
+    angle += 2 * vtkm::Pi<ParametricCoordType>();
   }
-  const ParametricCoordType deltaAngle =
-    static_cast<ParametricCoordType>(2 * vtkm::Pi() / numPoints);
+  const ParametricCoordType deltaAngle = 2 * vtkm::Pi<ParametricCoordType>() / numPoints;
   vtkm::IdComponent firstPointIndex =
     static_cast<vtkm::IdComponent>(vtkm::Floor(angle / deltaAngle));
   vtkm::IdComponent secondPointIndex = firstPointIndex + 1;
@@ -330,13 +379,12 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<2>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagQuad,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<2>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagQuad,
+                                      const vtkm::exec::FunctorBase&)
 {
-  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using T = vtkm::Vec3f;
 
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
@@ -385,15 +433,14 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 
 template <typename ParametricCoordType>
-VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecAxisAlignedPointCoordinates<3>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagHexahedron,
-  const vtkm::exec::FunctorBase&)
+VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates<3>& field,
+                                      const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                      vtkm::CellShapeTagHexahedron,
+                                      const vtkm::exec::FunctorBase&)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoordsCast(static_cast<vtkm::FloatDefault>(pcoords[0]),
-                                               static_cast<vtkm::FloatDefault>(pcoords[1]),
-                                               static_cast<vtkm::FloatDefault>(pcoords[2]));
+  vtkm::Vec3f pcoordsCast(static_cast<vtkm::FloatDefault>(pcoords[0]),
+                          static_cast<vtkm::FloatDefault>(pcoords[1]),
+                          static_cast<vtkm::FloatDefault>(pcoords[2]));
 
   return field.GetOrigin() + pcoordsCast * field.GetSpacing();
 }
@@ -440,5 +487,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 }
 } // namespace vtkm::exec
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 #endif //vtk_m_exec_Interpolate_h

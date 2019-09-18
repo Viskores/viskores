@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -35,11 +25,11 @@ namespace
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperGL M;
-  typedef vtkm::rendering::CanvasOSMesa C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-  typedef vtkm::rendering::View1D V1;
+  using M = vtkm::rendering::MapperGL;
+  using C = vtkm::rendering::CanvasOSMesa;
+  using V3 = vtkm::rendering::View3D;
+  using V2 = vtkm::rendering::View2D;
+  using V1 = vtkm::rendering::View1D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("inferno");
@@ -60,7 +50,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperOSMesa(int, char* [])
+int UnitTestMapperOSMesa(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

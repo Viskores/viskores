@@ -2,28 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_DeviceAdapterAlgorithm_h
 #define vtk_m_cont_DeviceAdapterAlgorithm_h
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
+
 
 #ifdef _WIN32
 #include <sys/timeb.h>
@@ -50,6 +42,15 @@ template <class DeviceAdapterTag>
 struct DeviceAdapterAlgorithm
 #ifdef VTKM_DOXYGEN_ONLY
 {
+  /// \brief Create a unique, unsorted list of indices denoting which bits are
+  /// set in a bitfield.
+  ///
+  /// Returns the total number of set bits.
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices);
+
   /// \brief Copy the contents of one ArrayHandle to another
   ///
   /// Copies the contents of \c input to \c output. The array \c output will be
@@ -117,6 +118,35 @@ struct DeviceAdapterAlgorithm
                                      vtkm::Id numberOfElementsToCopy,
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0);
+
+  /// \brief Returns the total number of "1" bits in BitField.
+  VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits);
+
+  /// \brief Fill the BitField with a specific pattern of bits.
+  /// For boolean values, all bits are set to 1 if value is true, or 0 if value
+  /// is false.
+  /// For word masks, the word type must be an unsigned integral type, which
+  /// will be stamped across the BitField.
+  /// If numBits is provided, the BitField is resized appropriately.
+  /// @{
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value, vtkm::Id numBits);
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value);
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, vtkm::Id numBits);
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, bool value);
+  /// @}
+
+  /// Fill @a array with @a value. If @a numValues is specified, the array will
+  /// be resized.
+  /// @{
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& array, const T& value);
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& array,
+                             const T& value,
+                             const vtkm::Id numValues);
+  /// @}
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -348,6 +378,55 @@ struct DeviceAdapterAlgorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output);
 
+  /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
+  ///
+  /// Computes an extended prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. This produces an output
+  /// array that contains both an inclusive scan (in elements [1, size)) and an
+  /// exclusive scan (in elements [0, size-1)). By using ArrayHandleView,
+  /// arrays containing both inclusive and exclusive scans can be generated
+  /// from an extended scan with minimal memory usage.
+  ///
+  /// This algorithm may also be more efficient than ScanInclusive and
+  /// ScanExclusive on some devices, since it may be able to avoid copying the
+  /// total sum to the control environment to return.
+  ///
+  /// ScanExtended is similar to the stl partial sum function, exception that
+  /// ScanExtended doesn't do a serial summation. This means that if you have
+  /// defined a custom plus operator for T it must be associative, or you will
+  /// get inconsistent results.
+  ///
+  /// This overload of ScanExtended uses vtkm::Add for the binary functor, and
+  /// uses zero for the initial value of the scan operation.
+  ///
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output);
+
+  /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
+  ///
+  /// Computes an extended prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. This produces an output
+  /// array that contains both an inclusive scan (in elements [1, size)) and an
+  /// exclusive scan (in elements [0, size-1)). By using ArrayHandleView,
+  /// arrays containing both inclusive and exclusive scans can be generated
+  /// from an extended scan with minimal memory usage.
+  ///
+  /// This algorithm may also be more efficient than ScanInclusive and
+  /// ScanExclusive on some devices, since it may be able to avoid copying the
+  /// total sum to the control environment to return.
+  ///
+  /// ScanExtended is similar to the stl partial sum function, exception that
+  /// ScanExtended doesn't do a serial summation. This means that if you have
+  /// defined a custom plus operator for T it must be associative, or you will
+  /// get inconsistent results.
+  ///
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output,
+                                     BinaryFunctor binaryFunctor,
+                                     const T& initialValue);
+
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
   /// Calls the \c functor on several threads. This is the function used in the
@@ -539,6 +618,11 @@ template <class DeviceAdapterTag>
 class DeviceAdapterTimerImplementation
 {
 public:
+  struct TimeStamp
+  {
+    vtkm::Int64 Seconds;
+    vtkm::Int64 Microseconds;
+  };
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
@@ -548,7 +632,30 @@ public:
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT void Reset() { this->StartTime = this->GetCurrentTime(); }
+  VTKM_CONT void Reset()
+  {
+    this->StartReady = false;
+    this->StopReady = false;
+  }
+
+  VTKM_CONT void Start()
+  {
+    this->Reset();
+    this->StartTime = this->GetCurrentTime();
+    this->StartReady = true;
+  }
+
+  VTKM_CONT void Stop()
+  {
+    this->StopTime = this->GetCurrentTime();
+    this->StopReady = true;
+  }
+
+  VTKM_CONT bool Started() const { return this->StartReady; }
+
+  VTKM_CONT bool Stopped() const { return this->StopReady; }
+
+  VTKM_CONT bool Ready() const { return true; }
 
   /// Returns the elapsed time in seconds between the construction of this
   /// class or the last call to Reset and the time this function is called. The
@@ -556,25 +663,28 @@ public:
   /// number of times to get the progressive time. This method synchronizes all
   /// asynchronous operations.
   ///
-  VTKM_CONT vtkm::Float64 GetElapsedTime()
+  VTKM_CONT vtkm::Float64 GetElapsedTime() const
   {
-    TimeStamp currentTime = this->GetCurrentTime();
+    assert(this->StartReady);
+    if (!this->StartReady)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "Start() function should be called first then trying to call GetElapsedTime().");
+      return 0;
+    }
+
+    TimeStamp startTime = this->StartTime;
+    TimeStamp stopTime = this->StopReady ? this->StopTime : this->GetCurrentTime();
 
     vtkm::Float64 elapsedTime;
-    elapsedTime = vtkm::Float64(currentTime.Seconds - this->StartTime.Seconds);
-    elapsedTime += (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds) /
-                    vtkm::Float64(1000000));
+    elapsedTime = vtkm::Float64(stopTime.Seconds - startTime.Seconds);
+    elapsedTime +=
+      (vtkm::Float64(stopTime.Microseconds - startTime.Microseconds) / vtkm::Float64(1000000));
 
     return elapsedTime;
   }
-  struct TimeStamp
-  {
-    vtkm::Int64 Seconds;
-    vtkm::Int64 Microseconds;
-  };
-  TimeStamp StartTime;
 
-  VTKM_CONT TimeStamp GetCurrentTime()
+  VTKM_CONT TimeStamp GetCurrentTime() const
   {
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Synchronize();
 
@@ -592,6 +702,11 @@ public:
 #endif
     return retval;
   }
+
+  bool StartReady;
+  bool StopReady;
+  TimeStamp StartTime;
+  TimeStamp StopTime;
 };
 
 /// \brief Class providing a device-specific runtime support detector.
@@ -607,26 +722,23 @@ template <class DeviceAdapterTag>
 class DeviceAdapterRuntimeDetector
 {
 public:
-  /// Returns true if the given device adapter is supported on the current
-  /// machine.
-  ///
-  /// The default implementation is to return the value of
-  /// vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>::Valid
-  ///
-  VTKM_CONT bool Exists() const
-  {
-    using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-    return DeviceAdapterTraits::Valid;
-  }
+/// Returns true if the given device adapter is supported on the current
+/// machine.
+///
+/// No default implementation is provided as it could possible cause
+/// ODR violations when headers are included in differing order.
+#ifdef VTKM_DOXYGEN_ONLY
+  VTKM_CONT bool Exists() const;
+#endif
 };
 
 /// \brief Class providing a device-specific support for atomic operations.
 ///
-/// The class provide the actual implementation used by
-/// vtkm::cont::DeviceAdapterAtomicArrayImplementation.
-///
-template <typename T, typename DeviceTag>
-class DeviceAdapterAtomicArrayImplementation;
+/// AtomicInterfaceControl provides atomic operations for the control
+/// environment, and may be subclassed to implement the device interface when
+/// appropriate for a CPU-based device.
+template <typename DeviceTag>
+class AtomicInterfaceExecution;
 
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.

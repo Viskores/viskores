@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_reader_VTKRectilinearGridReader_h
 #define vtk_m_io_reader_VTKRectilinearGridReader_h
@@ -51,8 +41,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name);
+      this->ReadGlobalFields();
       this->DataFile->Stream >> tag;
     }
 
@@ -64,7 +53,7 @@ private:
     //Read the points.
     std::string dataType;
     std::size_t numPoints[3];
-    vtkm::cont::DynamicArrayHandle X, Y, Z;
+    vtkm::cont::VariantArrayHandle X, Y, Z;
 
     // Always read coordinates as vtkm::FloatDefault
     std::string readDataType = vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name();
@@ -72,17 +61,20 @@ private:
     this->DataFile->Stream >> tag >> numPoints[0] >> dataType >> std::ws;
     if (tag != "X_COORDINATES")
       throw vtkm::io::ErrorIO("X_COORDINATES tag not found");
-    this->DoReadDynamicArray(readDataType, numPoints[0], 1, X);
+    X =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[0], 1);
 
     this->DataFile->Stream >> tag >> numPoints[1] >> dataType >> std::ws;
     if (tag != "Y_COORDINATES")
       throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
-    this->DoReadDynamicArray(readDataType, numPoints[1], 1, Y);
+    Y =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[1], 1);
 
     this->DataFile->Stream >> tag >> numPoints[2] >> dataType >> std::ws;
     if (tag != "Z_COORDINATES")
       throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
-    this->DoReadDynamicArray(readDataType, numPoints[2], 1, Z);
+    Z =
+      this->DoReadArrayVariant(vtkm::cont::Field::Association::ANY, readDataType, numPoints[2], 1);
 
     if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
                          static_cast<vtkm::Id>(numPoints[1]),
@@ -102,7 +94,7 @@ private:
     vtkm::cont::CoordinateSystem coordSys("coordinates", coords);
     this->DataSet.AddCoordinateSystem(coordSys);
 
-    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
+    this->DataSet.SetCellSet(internal::CreateCellSetStructured(dim));
 
     // Read points and cell attributes
     this->ReadAttributes();

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -103,14 +93,6 @@ public:
 
   inline VTKM_EXEC bool operator()(const vtkm::Id& i, const vtkm::Id& j, bool ascending) const
   {
-// For numerous calls of this function GCC is able to determine if i is
-// always greater than j ( or vice-versa ) and optimizes those call sites.
-// But when it does these optimizations is presumes that i and j will not
-// overflow and emits a Wstrict-overflow warning
-#ifdef VTKM_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
-#endif
     if (values.Get(i) < values.Get(j))
     {
       return ascending ^ true;
@@ -127,9 +109,6 @@ public:
     {
       return ascending ^ false;
     }
-#ifdef VTKM_GCC
-#pragma GCC diagnostic pop
-#endif
     // fall through to return false
     return false;
   }

@@ -2,32 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#ifndef vtk_m_filter_Field_to_Colors_hxx
-#define vtk_m_filter_Field_to_Colors_hxx
-
-#include <vtkm/filter/FieldToColors.h>
 
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
-
 
 namespace vtkm
 {
@@ -144,13 +127,12 @@ inline VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   //If the table has been modified we need to rebuild our
   //sample tables
@@ -163,7 +145,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
 
 
   std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (outputName.empty())
   {
     // Default name is name of input_colors.
     outputName = fieldMetadata.GetName() + "_colors";
@@ -175,7 +157,7 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
   if (this->OutputMode == RGBA)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)
@@ -219,11 +201,11 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::ASSOC_POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
   else
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> output;
+    vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output;
 
     bool ran = false;
     switch (this->InputMode)
@@ -267,13 +249,11 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
-    outField = vtkm::cont::Field(outputName, vtkm::cont::Field::ASSOC_POINTS, output);
+    outField = vtkm::cont::make_FieldPoint(outputName, output);
   }
 
 
-  return internal::CreateResult(input, outField);
+  return CreateResult(input, outField);
 }
 }
 } // namespace vtkm::filter
-
-#endif //vtk_m_filter_Field_to_Colors_hxx

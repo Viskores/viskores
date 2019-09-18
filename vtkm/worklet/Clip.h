@@ -2,43 +2,42 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_m_worklet_Clip_h
 #define vtkm_m_worklet_Clip_h
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/internal/ClipTables.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
+#include <vtkm/worklet/clip/ClipTables.h>
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
+#include <utility>
 #include <vtkm/exec/FunctorBase.h>
 
 #if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 &&     \
   THRUST_SUBMINOR_VERSION < 3
 // Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
 // wrong results
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/detail/type_traits.h>
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -49,103 +48,31 @@ namespace vtkm
 {
 namespace worklet
 {
-
-namespace internal
-{
-
-template <typename T>
-VTKM_EXEC_CONT T Scale(const T& val, vtkm::Float64 scale)
-{
-  return static_cast<T>(scale * static_cast<vtkm::Float64>(val));
-}
-
-template <typename T, vtkm::IdComponent NumComponents>
-VTKM_EXEC_CONT vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponents>& val,
-                                                 vtkm::Float64 scale)
-{
-  return val * scale;
-}
-
-template <typename DeviceAdapter>
-class ExecutionConnectivityExplicit : vtkm::exec::ExecutionObjectBase
-{
-private:
-  using UInt8Portal =
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<DeviceAdapter>::Portal;
-
-  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
-    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::Portal;
-
-  using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal;
-
-public:
-  VTKM_CONT
-  ExecutionConnectivityExplicit()
-    : Shapes()
-    , NumIndices()
-    , Connectivity()
-    , IndexOffsets()
-  {
-  }
-
-  VTKM_CONT
-  ExecutionConnectivityExplicit(const UInt8Portal& shapes,
-                                const IdComponentPortal& numIndices,
-                                const IdPortal& connectivity,
-                                const IdPortal& indexOffsets)
-    : Shapes(shapes)
-    , NumIndices(numIndices)
-    , Connectivity(connectivity)
-    , IndexOffsets(indexOffsets)
-  {
-  }
-
-  VTKM_EXEC
-  void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape) { this->Shapes.Set(cellIndex, shape); }
-
-  VTKM_EXEC
-  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
-  {
-    this->NumIndices.Set(cellIndex, numIndices);
-  }
-
-  VTKM_EXEC
-  void SetIndexOffset(vtkm::Id cellIndex, vtkm::Id indexOffset)
-  {
-    this->IndexOffsets.Set(cellIndex, indexOffset);
-  }
-
-  VTKM_EXEC
-  void SetConnectivity(vtkm::Id connectivityIndex, vtkm::Id pointIndex)
-  {
-    this->Connectivity.Set(connectivityIndex, pointIndex);
-  }
-
-private:
-  UInt8Portal Shapes;
-  IdComponentPortal NumIndices;
-  IdPortal Connectivity;
-  IdPortal IndexOffsets;
-};
-
-} // namespace internal
-
 struct ClipStats
 {
   vtkm::Id NumberOfCells = 0;
   vtkm::Id NumberOfIndices = 0;
-  vtkm::Id NumberOfNewPoints = 0;
+  vtkm::Id NumberOfEdgeIndices = 0;
+
+  // Stats for interpolating new points within cell.
+  vtkm::Id NumberOfInCellPoints = 0;
+  vtkm::Id NumberOfInCellIndices = 0;
+  vtkm::Id NumberOfInCellInterpPoints = 0;
+  vtkm::Id NumberOfInCellEdgeIndices = 0;
 
   struct SumOp
   {
     VTKM_EXEC_CONT
-    ClipStats operator()(const ClipStats& cs1, const ClipStats& cs2) const
+    ClipStats operator()(const ClipStats& stat1, const ClipStats& stat2) const
     {
-      ClipStats sum = cs1;
-      sum.NumberOfCells += cs2.NumberOfCells;
-      sum.NumberOfIndices += cs2.NumberOfIndices;
-      sum.NumberOfNewPoints += cs2.NumberOfNewPoints;
+      ClipStats sum = stat1;
+      sum.NumberOfCells += stat2.NumberOfCells;
+      sum.NumberOfIndices += stat2.NumberOfIndices;
+      sum.NumberOfEdgeIndices += stat2.NumberOfEdgeIndices;
+      sum.NumberOfInCellPoints += stat2.NumberOfInCellPoints;
+      sum.NumberOfInCellIndices += stat2.NumberOfInCellIndices;
+      sum.NumberOfInCellInterpPoints += stat2.NumberOfInCellInterpPoints;
+      sum.NumberOfInCellEdgeIndices += stat2.NumberOfInCellEdgeIndices;
       return sum;
     }
   };
@@ -176,178 +103,406 @@ struct EdgeInterpolation
   };
 };
 
+namespace internal
+{
+
+template <typename T>
+VTKM_EXEC_CONT T Scale(const T& val, vtkm::Float64 scale)
+{
+  return static_cast<T>(scale * static_cast<vtkm::Float64>(val));
+}
+
+template <typename T, vtkm::IdComponent NumComponents>
+VTKM_EXEC_CONT vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponents>& val,
+                                                 vtkm::Float64 scale)
+{
+  return val * scale;
+}
+
+template <typename Device>
+class ExecutionConnectivityExplicit
+{
+private:
+  using UInt8Portal =
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<Device>::Portal;
+  using IdComponentPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<Device>::Portal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
+
+public:
+  VTKM_CONT
+  ExecutionConnectivityExplicit() = default;
+
+  VTKM_CONT
+  ExecutionConnectivityExplicit(vtkm::cont::ArrayHandle<vtkm::UInt8> shapes,
+                                vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
+                                vtkm::cont::ArrayHandle<vtkm::Id> connectivity,
+                                vtkm::cont::ArrayHandle<vtkm::Id> offsets,
+                                ClipStats stats)
+    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device()))
+    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device()))
+    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device()))
+    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device()))
+  {
+  }
+
+  VTKM_EXEC
+  void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape) { this->Shapes.Set(cellIndex, shape); }
+
+  VTKM_EXEC
+  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
+  {
+    this->NumberOfIndices.Set(cellIndex, numIndices);
+  }
+
+  VTKM_EXEC
+  void SetIndexOffset(vtkm::Id cellIndex, vtkm::Id indexOffset)
+  {
+    this->Offsets.Set(cellIndex, indexOffset);
+  }
+
+  VTKM_EXEC
+  void SetConnectivity(vtkm::Id connectivityIndex, vtkm::Id pointIndex)
+  {
+    this->Connectivity.Set(connectivityIndex, pointIndex);
+  }
+
+private:
+  UInt8Portal Shapes;
+  IdComponentPortal NumberOfIndices;
+  IdPortal Connectivity;
+  IdPortal Offsets;
+};
+
+class ConnectivityExplicit : vtkm::cont::ExecutionObjectBase
+{
+public:
+  VTKM_CONT
+  ConnectivityExplicit() = default;
+
+  VTKM_CONT
+  ConnectivityExplicit(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+                       const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numberOfIndices,
+                       const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+                       const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
+                       const ClipStats& stats)
+    : Shapes(shapes)
+    , NumberOfIndices(numberOfIndices)
+    , Connectivity(connectivity)
+    , Offsets(offsets)
+    , Stats(stats)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(Device) const
+  {
+    ExecutionConnectivityExplicit<Device> execConnectivity(
+      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats);
+    return execConnectivity;
+  }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::UInt8> Shapes;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> NumberOfIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id> Connectivity;
+  vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
+  vtkm::worklet::ClipStats Stats;
+};
+
+
+} // namespace internal
+
 class Clip
 {
+  // Add support for invert
 public:
   struct TypeClipStats : vtkm::ListTagBase<ClipStats>
   {
   };
 
-  template <typename DeviceAdapter>
-  class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
+  struct TypeEdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
   {
-    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
+  };
 
+  class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
+  {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<ScalarAll> scalars,
-                                  FieldOutCell<IdType> clipTableIdxs,
-                                  FieldOutCell<TypeClipStats> stats);
-    typedef void ExecutionSignature(_2, CellShape, PointCount, _3, _4);
-
     VTKM_CONT
-    ComputeStats(vtkm::Float64 value, const ClipTablesPortal& clipTables, bool invert)
+    ComputeStats(vtkm::Float64 value, bool invert)
       : Value(value)
-      , ClipTables(clipTables)
       , Invert(invert)
     {
     }
 
-    template <typename ScalarsVecType, typename CellShapeTag>
-    VTKM_EXEC void operator()(const ScalarsVecType& scalars,
-                              CellShapeTag shape,
-                              vtkm::Id count,
-                              vtkm::Id& clipTableIdx,
-                              ClipStats& stats) const
+    using ControlSignature =
+      void(CellSetIn, FieldInPoint, ExecObject clippingData, FieldOutCell, FieldOutCell);
+
+    using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5);
+
+    using InputDomain = _1;
+
+    template <typename CellShapeTag, typename ScalarFieldVec, typename DeviceAdapter>
+    VTKM_EXEC void operator()(const CellShapeTag shape,
+                              const vtkm::IdComponent pointCount,
+                              const ScalarFieldVec& scalars,
+                              const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
+                              ClipStats& clipStat,
+                              vtkm::Id& clipDataIndex) const
     {
       (void)shape; // C4100 false positive workaround
-      const vtkm::Id mask[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
-
       vtkm::Id caseId = 0;
-      for (vtkm::IdComponent i = 0; i < count; ++i)
+      for (vtkm::IdComponent iter = pointCount - 1; iter >= 0; iter--)
       {
-        if (this->Invert)
+        if (!this->Invert && static_cast<vtkm::Float64>(scalars[iter]) <= this->Value)
         {
-          caseId |= (static_cast<vtkm::Float64>(scalars[i]) <= this->Value) ? mask[i] : 0;
+          caseId++;
+        }
+        else if (this->Invert && static_cast<vtkm::Float64>(scalars[iter]) >= this->Value)
+        {
+          caseId++;
+        }
+        if (iter > 0)
+          caseId *= 2;
+      }
+      vtkm::Id index = clippingData.GetCaseIndex(shape.Id, caseId);
+      clipDataIndex = index;
+      vtkm::Id numberOfCells = clippingData.ValueAt(index++);
+      clipStat.NumberOfCells = numberOfCells;
+      for (vtkm::IdComponent shapes = 0; shapes < numberOfCells; shapes++)
+      {
+        vtkm::Id cellShape = clippingData.ValueAt(index++);
+        vtkm::Id numberOfIndices = clippingData.ValueAt(index++);
+        if (cellShape == 0)
+        {
+          --clipStat.NumberOfCells;
+          // Shape is 0, which is a case of interpolating new point within a cell
+          // Gather stats for later operation.
+          clipStat.NumberOfInCellPoints = 1;
+          clipStat.NumberOfInCellInterpPoints = numberOfIndices;
+          for (vtkm::IdComponent points = 0; points < numberOfIndices; points++, index++)
+          {
+            //Find how many points need to be calculated using edge interpolation.
+            vtkm::Id element = clippingData.ValueAt(index);
+            clipStat.NumberOfInCellEdgeIndices += (element < 100) ? 1 : 0;
+          }
         }
         else
         {
-          caseId |= (static_cast<vtkm::Float64>(scalars[i]) > this->Value) ? mask[i] : 0;
+          // Collect number of indices required for storing current shape
+          clipStat.NumberOfIndices += numberOfIndices;
+          // Collect number of new points
+          for (vtkm::IdComponent points = 0; points < numberOfIndices; points++, index++)
+          {
+            //Find how many points need to found using edge interpolation.
+            vtkm::Id element = clippingData.ValueAt(index);
+            if (element == 255)
+            {
+              clipStat.NumberOfInCellIndices++;
+            }
+            else if (element < 100)
+            {
+              clipStat.NumberOfEdgeIndices++;
+            }
+          }
         }
       }
-
-      vtkm::Id idx = this->ClipTables.GetCaseIndex(shape.Id, caseId);
-      clipTableIdx = idx;
-
-      vtkm::Id numberOfCells = this->ClipTables.ValueAt(idx++);
-      vtkm::Id numberOfIndices = 0;
-      vtkm::Id numberOfNewPoints = 0;
-      for (vtkm::Id cell = 0; cell < numberOfCells; ++cell)
-      {
-        ++idx; // skip shape-id
-        vtkm::Id npts = this->ClipTables.ValueAt(idx++);
-        numberOfIndices += npts;
-        while (npts--)
-        {
-          // value < 100 means a new point needs to be generated by clipping an edge
-          numberOfNewPoints += (this->ClipTables.ValueAt(idx++) < 100) ? 1 : 0;
-        }
-      }
-
-      stats.NumberOfCells = numberOfCells;
-      stats.NumberOfIndices = numberOfIndices;
-      stats.NumberOfNewPoints = numberOfNewPoints;
     }
 
   private:
     vtkm::Float64 Value;
-    ClipTablesPortal ClipTables;
     bool Invert;
   };
 
-  template <typename DeviceAdapter>
-  class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
+  class GenerateCellSet : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
-    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
-
   public:
-    struct EdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
-    {
-    };
-
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<ScalarAll> scalars,
-                                  FieldInCell<IdType> clipTableIdxs,
-                                  FieldInCell<TypeClipStats> cellSetIdxs,
-                                  ExecObject connectivityExplicit,
-                                  WholeArrayInOut<EdgeInterp> interpolation,
-                                  WholeArrayInOut<IdType> newPointsConnectivityReverseMap,
-                                  WholeArrayOut<IdType> cellMapOutputToInput);
-    typedef void ExecutionSignature(CellShape, InputIndex, _2, FromIndices, _3, _4, _5, _6, _7, _8);
-
     VTKM_CONT
-    GenerateCellSet(vtkm::Float64 value, const ClipTablesPortal clipTables)
+    GenerateCellSet(vtkm::Float64 value)
       : Value(value)
-      , ClipTables(clipTables)
     {
     }
 
+    using ControlSignature = void(CellSetIn,
+                                  FieldInPoint,
+                                  FieldInCell clipTableIndices,
+                                  FieldInCell clipStats,
+                                  ExecObject clipTables,
+                                  ExecObject connectivityObject,
+                                  WholeArrayOut edgePointReverseConnectivity,
+                                  WholeArrayOut edgePointInterpolation,
+                                  WholeArrayOut inCellReverseConnectivity,
+                                  WholeArrayOut inCellEdgeReverseConnectivity,
+                                  WholeArrayOut inCellEdgeInterpolation,
+                                  WholeArrayOut inCellInterpolationKeys,
+                                  WholeArrayOut inCellInterpolationInfo,
+                                  WholeArrayOut cellMapOutputToInput);
+
+    using ExecutionSignature = void(CellShape,
+                                    WorkIndex,
+                                    PointIndices,
+                                    _2,
+                                    _3,
+                                    _4,
+                                    _5,
+                                    _6,
+                                    _7,
+                                    _8,
+                                    _9,
+                                    _10,
+                                    _11,
+                                    _12,
+                                    _13,
+                                    _14);
+
     template <typename CellShapeTag,
-              typename ScalarsVecType,
-              typename IndicesVecType,
-              typename InterpolationWholeArrayType,
-              typename ReverseMapWholeArrayType,
-              typename CellMapType>
-    VTKM_EXEC void operator()(
-      CellShapeTag shape,
-      vtkm::Id inputCellIdx,
-      const ScalarsVecType& scalars,
-      const IndicesVecType& indices,
-      vtkm::Id clipTableIdx,
-      ClipStats cellSetIndices,
-      internal::ExecutionConnectivityExplicit<DeviceAdapter>& connectivityExplicit,
-      InterpolationWholeArrayType& interpolation,
-      ReverseMapWholeArrayType& newPointsConnectivityReverseMap,
-      CellMapType& cellMap) const
+              typename PointVecType,
+              typename ScalarVecType,
+              typename ConnectivityObject,
+              typename IdArrayType,
+              typename EdgeInterpolationPortalType,
+              typename DeviceAdapter>
+    VTKM_EXEC void operator()(const CellShapeTag shape,
+                              const vtkm::Id workIndex,
+                              const PointVecType points,
+                              const ScalarVecType scalars,
+                              const vtkm::Id clipDataIndex,
+                              const ClipStats clipStats,
+                              const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
+                              ConnectivityObject& connectivityObject,
+                              IdArrayType& edgePointReverseConnectivity,
+                              EdgeInterpolationPortalType& edgePointInterpolation,
+                              IdArrayType& inCellReverseConnectivity,
+                              IdArrayType& inCellEdgeReverseConnectivity,
+                              EdgeInterpolationPortalType& inCellEdgeInterpolation,
+                              IdArrayType& inCellInterpolationKeys,
+                              IdArrayType& inCellInterpolationInfo,
+                              IdArrayType& cellMapOutputToInput) const
     {
-      (void)shape; //C4100 false positive workaround
-      vtkm::Id idx = clipTableIdx;
+      (void)shape;
+      vtkm::Id clipIndex = clipDataIndex;
+      // Start index for the cells of this case.
+      vtkm::Id cellIndex = clipStats.NumberOfCells;
+      // Start index to store connevtivity of this case.
+      vtkm::Id connectivityIndex = clipStats.NumberOfIndices;
+      // Start indices for reverse mapping into connectivity for this case.
+      vtkm::Id edgeIndex = clipStats.NumberOfEdgeIndices;
+      vtkm::Id inCellIndex = clipStats.NumberOfInCellIndices;
+      vtkm::Id inCellPoints = clipStats.NumberOfInCellPoints;
+      // Start Indices to keep track of interpolation points for new cell.
+      vtkm::Id inCellInterpPointIndex = clipStats.NumberOfInCellInterpPoints;
+      vtkm::Id inCellEdgeInterpIndex = clipStats.NumberOfInCellEdgeIndices;
 
-      // index of first cell
-      vtkm::Id cellIdx = cellSetIndices.NumberOfCells;
-      // index of first cell in connectivity array
-      vtkm::Id connectivityIdx = cellSetIndices.NumberOfIndices;
-      // index of new points generated by first cell
-      vtkm::Id newPtsIdx = cellSetIndices.NumberOfNewPoints;
-
-      vtkm::Id numberOfCells = this->ClipTables.ValueAt(idx++);
-      for (vtkm::Id cell = 0; cell < numberOfCells; ++cell, ++cellIdx)
+      // Iterate over the shapes for the current cell and begin to fill connectivity.
+      vtkm::Id numberOfCells = clippingData.ValueAt(clipIndex++);
+      for (vtkm::Id cell = 0; cell < numberOfCells; ++cell)
       {
-        cellMap.Set(cellIdx, inputCellIdx);
-        connectivityExplicit.SetCellShape(cellIdx, this->ClipTables.ValueAt(idx++));
-        vtkm::IdComponent numPoints = this->ClipTables.ValueAt(idx++);
-        connectivityExplicit.SetNumberOfIndices(cellIdx, numPoints);
-        connectivityExplicit.SetIndexOffset(cellIdx, connectivityIdx);
-
-        for (vtkm::Id pt = 0; pt < numPoints; ++pt, ++idx)
+        vtkm::UInt8 cellShape = clippingData.ValueAt(clipIndex++);
+        vtkm::IdComponent numberOfPoints = clippingData.ValueAt(clipIndex++);
+        if (cellShape == 0)
         {
-          vtkm::IdComponent entry = static_cast<vtkm::IdComponent>(this->ClipTables.ValueAt(idx));
-          if (entry >= 100) // existing point
-          {
-            connectivityExplicit.SetConnectivity(connectivityIdx++, indices[entry - 100]);
-          }
-          else // edge, new point to be generated by cutting the edge
-          {
-            internal::ClipTables::EdgeVec edge = this->ClipTables.GetEdge(shape.Id, entry);
-            // Sanity check to make sure the edge is valid.
-            VTKM_ASSERT(edge[0] != 255);
-            VTKM_ASSERT(edge[1] != 255);
+          // Case for a new cell point.
 
-            EdgeInterpolation ei;
-            ei.Vertex1 = indices[edge[0]];
-            ei.Vertex2 = indices[edge[1]];
-            if (ei.Vertex1 > ei.Vertex2)
+          // 1. Output the input cell id for which we need to generate new point.
+          // 2. Output number of points used for interpolation.
+          // 3. If vertex
+          //    - Add vertex to connectivity interpolation information.
+          // 4. If edge
+          //    - Add edge interpolation information for new points.
+          //    - Reverse connectivity map for new points.
+          // Make an array which has all the elements that need to be used
+          // for interpolation.
+          for (vtkm::IdComponent point = 0; point < numberOfPoints;
+               point++, inCellInterpPointIndex++, clipIndex++)
+          {
+            vtkm::IdComponent entry =
+              static_cast<vtkm::IdComponent>(clippingData.ValueAt(clipIndex));
+            inCellInterpolationKeys.Set(inCellInterpPointIndex, workIndex);
+            if (entry >= 100)
             {
-              this->swap(ei.Vertex1, ei.Vertex2);
-              this->swap(edge[0], edge[1]);
+              inCellInterpolationInfo.Set(inCellInterpPointIndex, points[entry - 100]);
             }
-            ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->Value) /
-              static_cast<vtkm::Float64>(scalars[edge[0]] - scalars[edge[1]]);
+            else
+            {
+              internal::ClipTables::EdgeVec edge = clippingData.GetEdge(shape.Id, entry);
+              VTKM_ASSERT(edge[0] != 255);
+              VTKM_ASSERT(edge[1] != 255);
+              EdgeInterpolation ei;
+              ei.Vertex1 = points[edge[0]];
+              ei.Vertex2 = points[edge[1]];
+              // For consistency purposes keep the points ordered.
+              if (ei.Vertex1 > ei.Vertex2)
+              {
+                this->swap(ei.Vertex1, ei.Vertex2);
+                this->swap(edge[0], edge[1]);
+              }
+              ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->Value) /
+                static_cast<vtkm::Float64>(scalars[edge[1]] - scalars[edge[0]]);
 
-            interpolation.Set(newPtsIdx, ei);
-            newPointsConnectivityReverseMap.Set(newPtsIdx, connectivityIdx++);
-            ++newPtsIdx;
+              inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
+              inCellEdgeInterpolation.Set(inCellEdgeInterpIndex, ei);
+              inCellEdgeInterpIndex++;
+            }
           }
+        }
+        else
+        {
+          // Just a normal cell, generate edge representations,
+
+          // 1. Add cell type to connectivity information.
+          // 2. If vertex
+          //    - Add vertex to connectivity information.
+          // 3. If edge point
+          //    - Add edge to edge points
+          //    - Add edge point index to edge point reverse connectivity.
+          // 4. If cell point
+          //    - Add cell point index to connectivity
+          //      (as there is only one cell point per required cell)
+          // 5. Store input cell index against current cell for mapping cell data.
+          connectivityObject.SetCellShape(cellIndex, cellShape);
+          connectivityObject.SetNumberOfIndices(cellIndex, numberOfPoints);
+          connectivityObject.SetIndexOffset(cellIndex, connectivityIndex);
+          for (vtkm::IdComponent point = 0; point < numberOfPoints; point++, clipIndex++)
+          {
+            vtkm::IdComponent entry =
+              static_cast<vtkm::IdComponent>(clippingData.ValueAt(clipIndex));
+            if (entry == 255) // case of cell point interpolation
+            {
+              // Add index of the corresponding cell point.
+              inCellReverseConnectivity.Set(inCellIndex++, connectivityIndex);
+              connectivityObject.SetConnectivity(connectivityIndex, inCellPoints);
+              connectivityIndex++;
+            }
+            else if (entry >= 100) // existing vertex
+            {
+              connectivityObject.SetConnectivity(connectivityIndex++, points[entry - 100]);
+            }
+            else // case of a new edge point
+            {
+              internal::ClipTables::EdgeVec edge = clippingData.GetEdge(shape.Id, entry);
+              VTKM_ASSERT(edge[0] != 255);
+              VTKM_ASSERT(edge[1] != 255);
+              EdgeInterpolation ei;
+              ei.Vertex1 = points[edge[0]];
+              ei.Vertex2 = points[edge[1]];
+              // For consistency purposes keep the points ordered.
+              if (ei.Vertex1 > ei.Vertex2)
+              {
+                this->swap(ei.Vertex1, ei.Vertex2);
+                this->swap(edge[0], edge[1]);
+              }
+              ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->Value) /
+                static_cast<vtkm::Float64>(scalars[edge[1]] - scalars[edge[0]]);
+              //Add to set of new edge points
+              //Add reverse connectivity;
+              edgePointReverseConnectivity.Set(edgeIndex, connectivityIndex++);
+              edgePointInterpolation.Set(edgeIndex, ei);
+              edgeIndex++;
+            }
+          }
+          cellMapOutputToInput.Set(cellIndex, workIndex);
+          ++cellIndex;
         }
       }
     }
@@ -362,175 +517,193 @@ public:
 
   private:
     vtkm::Float64 Value;
-    ClipTablesPortal ClipTables;
   };
 
-  // The following can be done using DeviceAdapterAlgorithm::LowerBounds followed by
-  // a worklet for updating connectivity. We are going with a custom worklet, that
-  // combines lower-bounds computation and connectivity update, because this is
-  // currently faster and uses less memory.
-  template <typename DeviceAdapter>
-  class AmendConnectivity : public vtkm::exec::FunctorBase
+  class ScatterEdgeConnectivity : public vtkm::worklet::WorkletMapField
   {
-    using IdPortal =
-      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal;
-    using IdPortalConst = typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
-    using EdgeInterpolationPortalConst = typename vtkm::cont::ArrayHandle<
-      EdgeInterpolation>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
   public:
     VTKM_CONT
-    AmendConnectivity(EdgeInterpolationPortalConst newPoints,
-                      EdgeInterpolationPortalConst uniqueNewPoints,
-                      IdPortalConst newPointsConnectivityReverseMap,
-                      vtkm::Id newPointsOffset,
-                      IdPortal connectivity)
-      : NewPoints(newPoints)
-      , UniqueNewPoints(uniqueNewPoints)
-      , NewPointsConnectivityReverseMap(newPointsConnectivityReverseMap)
-      , NewPointsOffset(newPointsOffset)
-      , Connectivity(connectivity)
+    ScatterEdgeConnectivity(vtkm::Id edgePointOffset)
+      : EdgePointOffset(edgePointOffset)
     {
     }
 
-    VTKM_EXEC
-    void operator()(vtkm::Id idx) const
+    using ControlSignature = void(FieldIn sourceValue,
+                                  FieldIn destinationIndices,
+                                  WholeArrayOut destinationData);
+
+    using ExecutionSignature = void(_1, _2, _3);
+
+    using InputDomain = _1;
+
+    template <typename ConnectivityDataType>
+    VTKM_EXEC void operator()(const vtkm::Id sourceValue,
+                              const vtkm::Id destinationIndex,
+                              ConnectivityDataType& destinationData) const
     {
-      EdgeInterpolation current = this->NewPoints.Get(idx);
-      typename EdgeInterpolation::LessThanOp lt;
-
-      // find point index by looking up in the unique points array (binary search)
-      vtkm::Id count = UniqueNewPoints.GetNumberOfValues();
-      vtkm::Id first = 0;
-      while (count > 0)
-      {
-        vtkm::Id step = count / 2;
-        vtkm::Id mid = first + step;
-        if (lt(this->UniqueNewPoints.Get(mid), current))
-        {
-          first = ++mid;
-          count -= step + 1;
-        }
-        else
-        {
-          count = step;
-        }
-      }
-
-      this->Connectivity.Set(this->NewPointsConnectivityReverseMap.Get(idx),
-                             this->NewPointsOffset + first);
+      destinationData.Set(destinationIndex, (sourceValue + EdgePointOffset));
     }
 
   private:
-    EdgeInterpolationPortalConst NewPoints;
-    EdgeInterpolationPortalConst UniqueNewPoints;
-    IdPortalConst NewPointsConnectivityReverseMap;
-    vtkm::Id NewPointsOffset;
-    IdPortal Connectivity;
+    vtkm::Id EdgePointOffset;
+  };
+
+  class ScatterInCellConnectivity : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    VTKM_CONT
+    ScatterInCellConnectivity(vtkm::Id inCellPointOffset)
+      : InCellPointOffset(inCellPointOffset)
+    {
+    }
+
+    using ControlSignature = void(FieldIn destinationIndices, WholeArrayOut destinationData);
+
+    using ExecutionSignature = void(_1, _2);
+
+    using InputDomain = _1;
+
+    template <typename ConnectivityDataType>
+    VTKM_EXEC void operator()(const vtkm::Id destinationIndex,
+                              ConnectivityDataType& destinationData) const
+    {
+      auto sourceValue = destinationData.Get(destinationIndex);
+      destinationData.Set(destinationIndex, (sourceValue + InCellPointOffset));
+    }
+
+  private:
+    vtkm::Id InCellPointOffset;
   };
 
   Clip()
     : ClipTablesInstance()
-    , NewPointsInterpolation()
-    , NewPointsOffset()
+    , EdgePointsInterpolation()
+    , InCellInterpolationKeys()
+    , InCellInterpolationInfo()
+    , CellMapOutputToInput()
+    , EdgePointsOffset()
+    , InCellPointsOffset()
   {
   }
 
-  template <typename CellSetList, typename ScalarsArrayHandle, typename DeviceAdapter>
+  template <typename CellSetList, typename ScalarsArrayHandle>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                     const ScalarsArrayHandle& scalars,
                                     vtkm::Float64 value,
-                                    bool invert,
-                                    DeviceAdapter device)
+                                    bool invert)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    // Create the required output fields.
+    vtkm::cont::ArrayHandle<ClipStats> clipStats;
+    vtkm::cont::ArrayHandle<vtkm::Id> clipTableIndices;
 
-    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
-    ClipTablesPortal clipTablesDevicePortal = this->ClipTablesInstance.GetDevicePortal(device);
+    ComputeStats statsWorklet(value, invert);
+    //Send this CellSet to process
+    vtkm::worklet::DispatcherMapTopology<ComputeStats> statsDispatcher(statsWorklet);
+    statsDispatcher.Invoke(cellSet, scalars, this->ClipTablesInstance, clipStats, clipTableIndices);
 
-    // Step 1. compute counts for the elements of the cell set data structure
-    vtkm::cont::ArrayHandle<vtkm::Id> clipTableIdxs;
-    vtkm::cont::ArrayHandle<ClipStats> stats;
-
-    ComputeStats<DeviceAdapter> computeStats(value, clipTablesDevicePortal, invert);
-    DispatcherMapTopology<ComputeStats<DeviceAdapter>, DeviceAdapter>(computeStats)
-      .Invoke(cellSet, scalars, clipTableIdxs, stats);
-
-    // compute offsets for each invocation
     ClipStats zero;
-    vtkm::cont::ArrayHandle<ClipStats> cellSetIndices;
-    ClipStats total = Algorithm::ScanExclusive(stats, cellSetIndices, ClipStats::SumOp(), zero);
-    stats.ReleaseResources();
+    vtkm::cont::ArrayHandle<ClipStats> cellSetStats;
+    ClipStats total =
+      vtkm::cont::Algorithm::ScanExclusive(clipStats, cellSetStats, ClipStats::SumOp(), zero);
+    clipStats.ReleaseResources();
 
-    // Step 2. generate the output cell set
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-    vtkm::cont::ArrayHandle<vtkm::Id> cellToConnectivityMap;
-    internal::ExecutionConnectivityExplicit<DeviceAdapter> outConnectivity(
-      shapes.PrepareForOutput(total.NumberOfCells, device),
-      numIndices.PrepareForOutput(total.NumberOfCells, device),
-      connectivity.PrepareForOutput(total.NumberOfIndices, device),
-      cellToConnectivityMap.PrepareForOutput(total.NumberOfCells, device));
+    vtkm::cont::ArrayHandle<vtkm::Id> offsets;
+    internal::ConnectivityExplicit connectivityObject(
+      shapes, numberOfIndices, connectivity, offsets, total);
 
-    vtkm::cont::ArrayHandle<EdgeInterpolation> newPoints;
-    newPoints.Allocate(total.NumberOfNewPoints);
-    // reverse map from the new points to connectivity array
-    vtkm::cont::ArrayHandle<vtkm::Id> newPointsConnectivityReverseMap;
-    newPointsConnectivityReverseMap.Allocate(total.NumberOfNewPoints);
+    //Begin Process of Constructing the new CellSet.
+    vtkm::cont::ArrayHandle<vtkm::Id> edgePointReverseConnectivity;
+    edgePointReverseConnectivity.Allocate(total.NumberOfEdgeIndices);
+    vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
+    edgeInterpolation.Allocate(total.NumberOfEdgeIndices);
 
-    this->CellIdMap.Allocate(total.NumberOfCells);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellPointReverseConnectivity;
+    cellPointReverseConnectivity.Allocate(total.NumberOfInCellIndices);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellPointEdgeReverseConnectivity;
+    cellPointEdgeReverseConnectivity.Allocate(total.NumberOfInCellEdgeIndices);
+    vtkm::cont::ArrayHandle<EdgeInterpolation> cellPointEdgeInterpolation;
+    cellPointEdgeInterpolation.Allocate(total.NumberOfInCellEdgeIndices);
 
-    GenerateCellSet<DeviceAdapter> generateCellSet(value, clipTablesDevicePortal);
-    DispatcherMapTopology<GenerateCellSet<DeviceAdapter>, DeviceAdapter>(generateCellSet)
-      .Invoke(cellSet,
-              scalars,
-              clipTableIdxs,
-              cellSetIndices,
-              outConnectivity,
-              newPoints,
-              newPointsConnectivityReverseMap,
-              this->CellIdMap);
-    cellSetIndices.ReleaseResources();
+    this->InCellInterpolationKeys.Allocate(total.NumberOfInCellInterpPoints);
+    this->InCellInterpolationInfo.Allocate(total.NumberOfInCellInterpPoints);
+    this->CellMapOutputToInput.Allocate(total.NumberOfCells);
 
-    // Step 3. remove duplicates from the list of new points
-    vtkm::cont::ArrayHandle<vtkm::worklet::EdgeInterpolation> uniqueNewPoints;
+    GenerateCellSet cellSetWorklet(value);
+    //Send this CellSet to process
+    vtkm::worklet::DispatcherMapTopology<GenerateCellSet> cellSetDispatcher(cellSetWorklet);
+    cellSetDispatcher.Invoke(cellSet,
+                             scalars,
+                             clipTableIndices,
+                             cellSetStats,
+                             this->ClipTablesInstance,
+                             connectivityObject,
+                             edgePointReverseConnectivity,
+                             edgeInterpolation,
+                             cellPointReverseConnectivity,
+                             cellPointEdgeReverseConnectivity,
+                             cellPointEdgeInterpolation,
+                             this->InCellInterpolationKeys,
+                             this->InCellInterpolationInfo,
+                             this->CellMapOutputToInput);
 
-    Algorithm::SortByKey(
-      newPoints, newPointsConnectivityReverseMap, EdgeInterpolation::LessThanOp());
-    Algorithm::Copy(newPoints, uniqueNewPoints);
-    Algorithm::Unique(uniqueNewPoints, EdgeInterpolation::EqualToOp());
+    // Get unique EdgeInterpolation : unique edge points.
+    // LowerBound for edgeInterpolation : get index into new edge points array.
+    // LowerBound for cellPointEdgeInterpolation : get index into new edge points array.
+    vtkm::cont::Algorithm::SortByKey(
+      edgeInterpolation, edgePointReverseConnectivity, EdgeInterpolation::LessThanOp());
+    vtkm::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
+    vtkm::cont::Algorithm::Unique(this->EdgePointsInterpolation, EdgeInterpolation::EqualToOp());
 
-    this->NewPointsInterpolation = uniqueNewPoints;
-    this->NewPointsOffset = scalars.GetNumberOfValues();
+    vtkm::cont::ArrayHandle<vtkm::Id> edgeInterpolationIndexToUnique;
+    vtkm::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
+                                       edgeInterpolation,
+                                       edgeInterpolationIndexToUnique,
+                                       EdgeInterpolation::LessThanOp());
 
-    // Step 4. update the connectivity array with indexes to the new, unique points
-    AmendConnectivity<DeviceAdapter> computeNewPointsConnectivity(
-      newPoints.PrepareForInput(device),
-      uniqueNewPoints.PrepareForInput(device),
-      newPointsConnectivityReverseMap.PrepareForInput(device),
-      this->NewPointsOffset,
-      connectivity.PrepareForInPlace(device));
-    Algorithm::Schedule(computeNewPointsConnectivity, total.NumberOfNewPoints);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellInterpolationIndexToUnique;
+    vtkm::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
+                                       cellPointEdgeInterpolation,
+                                       cellInterpolationIndexToUnique,
+                                       EdgeInterpolation::LessThanOp());
+
+    this->EdgePointsOffset = scalars.GetNumberOfValues();
+    this->InCellPointsOffset =
+      this->EdgePointsOffset + this->EdgePointsInterpolation.GetNumberOfValues();
+
+    // Scatter these values into the connectivity array,
+    // scatter indices are given in reverse connectivity.
+    ScatterEdgeConnectivity scatterEdgePointConnectivity(this->EdgePointsOffset);
+    vtkm::worklet::DispatcherMapField<ScatterEdgeConnectivity> scatterEdgeDispatcher(
+      scatterEdgePointConnectivity);
+    scatterEdgeDispatcher.Invoke(
+      edgeInterpolationIndexToUnique, edgePointReverseConnectivity, connectivity);
+    scatterEdgeDispatcher.Invoke(cellInterpolationIndexToUnique,
+                                 cellPointEdgeReverseConnectivity,
+                                 this->InCellInterpolationInfo);
+    // Add offset in connectivity of all new in-cell points.
+    ScatterInCellConnectivity scatterInCellPointConnectivity(this->InCellPointsOffset);
+    vtkm::worklet::DispatcherMapField<ScatterInCellConnectivity> scatterInCellDispatcher(
+      scatterInCellPointConnectivity);
+    scatterInCellDispatcher.Invoke(cellPointReverseConnectivity, connectivity);
 
     vtkm::cont::CellSetExplicit<> output;
-    output.Fill(this->NewPointsOffset + uniqueNewPoints.GetNumberOfValues(),
-                shapes,
-                numIndices,
-                connectivity);
-
+    vtkm::Id numberOfPoints = scalars.GetNumberOfValues() +
+      this->EdgePointsInterpolation.GetNumberOfValues() + total.NumberOfInCellPoints;
+    output.Fill(numberOfPoints, shapes, numberOfIndices, connectivity);
     return output;
   }
 
-  template <typename DynamicCellSet, typename DeviceAdapter>
+  template <typename DynamicCellSet>
   class ClipWithImplicitFunction
   {
   public:
     VTKM_CONT
     ClipWithImplicitFunction(Clip* clipper,
                              const DynamicCellSet& cellSet,
-                             const vtkm::ImplicitFunction* function,
+                             const vtkm::cont::ImplicitFunctionHandle& function,
                              const bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
@@ -546,152 +719,196 @@ public:
     {
       // Evaluate the implicit function on the input coordinates using
       // ArrayHandleTransform
-      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::ImplicitFunctionValue> clipScalars(
-        handle, this->Function);
+      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::cont::ImplicitFunctionValueHandle>
+        clipScalars(handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to 0
-      *this->Result =
-        this->Clipper->Run(*this->CellSet, clipScalars, 0.0, this->Invert, DeviceAdapter());
+      *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, 0.0, this->Invert);
     }
 
   private:
     Clip* Clipper;
     const DynamicCellSet* CellSet;
-    vtkm::ImplicitFunctionValue Function;
+    vtkm::cont::ImplicitFunctionHandle Function;
     bool Invert;
     vtkm::cont::CellSetExplicit<>* Result;
   };
 
-  template <typename CellSetList, typename DeviceAdapter>
+  template <typename CellSetList>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                     const vtkm::cont::ImplicitFunctionHandle& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
-                                    const bool invert,
-                                    DeviceAdapter device)
+                                    const bool invert)
   {
     vtkm::cont::CellSetExplicit<> output;
 
-    ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>, DeviceAdapter> clip(
-      this, cellSet, clipFunction.PrepareForExecution(device), invert, &output);
+    ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>> clip(
+      this, cellSet, clipFunction, invert, &output);
 
     CastAndCall(coords, clip);
     return output;
   }
 
-  template <typename ArrayHandleType, typename DeviceAdapter>
+  template <typename ArrayHandleType>
   class InterpolateField
   {
   public:
     using ValueType = typename ArrayHandleType::ValueType;
-
-    template <typename T>
-    class Kernel : public vtkm::exec::FunctorBase
+    struct TypeMappedValue : vtkm::ListTagBase<ValueType>
     {
-    public:
-      using FieldPortal =
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::Portal;
-
-      using EdgeInterpolationPortalConst = typename vtkm::cont::ArrayHandle<
-        EdgeInterpolation>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-      VTKM_CONT
-      Kernel(EdgeInterpolationPortalConst interpolation,
-             vtkm::Id newPointsOffset,
-             FieldPortal field)
-        : Interpolation(interpolation)
-        , NewPointsOffset(newPointsOffset)
-        , Field(field)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id idx) const
-      {
-        EdgeInterpolation ei = this->Interpolation.Get(idx);
-        T v1 = Field.Get(ei.Vertex1);
-        T v2 = Field.Get(ei.Vertex2);
-        Field.Set(this->NewPointsOffset + idx,
-                  static_cast<T>(internal::Scale(T(v2 - v1), ei.Weight) + v1));
-      }
-
-    private:
-      EdgeInterpolationPortalConst Interpolation;
-      vtkm::Id NewPointsOffset;
-      FieldPortal Field;
     };
 
-    VTKM_CONT
-    InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> interpolationArray,
-                     vtkm::Id newPointsOffset,
+    InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolationArray,
+                     vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationKeys,
+                     vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationInfo,
+                     vtkm::Id edgePointsOffset,
+                     vtkm::Id inCellPointsOffset,
                      ArrayHandleType* output)
-      : InterpolationArray(interpolationArray)
-      , NewPointsOffset(newPointsOffset)
+      : EdgeInterpolationArray(edgeInterpolationArray)
+      , InCellInterpolationKeys(inCellInterpolationKeys)
+      , InCellInterpolationInfo(inCellInterpolationInfo)
+      , EdgePointsOffset(edgePointsOffset)
+      , InCellPointsOffset(inCellPointsOffset)
       , Output(output)
     {
     }
 
+    class PerformEdgeInterpolations : public vtkm::worklet::WorkletMapField
+    {
+    public:
+      PerformEdgeInterpolations(vtkm::Id edgePointsOffset)
+        : EdgePointsOffset(edgePointsOffset)
+      {
+      }
+
+      using ControlSignature = void(FieldIn edgeInterpolations, WholeArrayInOut outputField);
+
+      using ExecutionSignature = void(_1, _2, WorkIndex);
+
+      template <typename EdgeInterp, typename OutputFieldPortal>
+      VTKM_EXEC void operator()(const EdgeInterp& ei,
+                                OutputFieldPortal& field,
+                                const vtkm::Id workIndex) const
+      {
+        using T = typename OutputFieldPortal::ValueType;
+        T v1 = field.Get(ei.Vertex1);
+        T v2 = field.Get(ei.Vertex2);
+        field.Set(this->EdgePointsOffset + workIndex,
+                  static_cast<T>(internal::Scale(T(v1 - v2), ei.Weight) + v1));
+      }
+
+    private:
+      vtkm::Id EdgePointsOffset;
+    };
+
+    class PerformInCellInterpolations : public vtkm::worklet::WorkletReduceByKey
+    {
+    public:
+      using ControlSignature = void(KeysIn keys, ValuesIn toReduce, ReducedValuesOut centroid);
+
+      using ExecutionSignature = void(_2, _3);
+
+      template <typename MappedValueVecType, typename MappedValueType>
+      VTKM_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
+      {
+        vtkm::IdComponent numValues = toReduce.GetNumberOfComponents();
+        MappedValueType sum = toReduce[0];
+        for (vtkm::IdComponent i = 1; i < numValues; i++)
+        {
+          MappedValueType value = toReduce[i];
+          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
+          sum = static_cast<MappedValueType>(sum + value);
+        }
+        centroid = internal::Scale(sum, 1. / static_cast<vtkm::Float64>(numValues));
+      }
+    };
+
     template <typename Storage>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<ValueType, Storage>& field) const
     {
-      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+      vtkm::worklet::Keys<vtkm::Id> interpolationKeys(InCellInterpolationKeys);
 
-      vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
+      vtkm::Id numberOfOriginalValues = field.GetNumberOfValues();
+      vtkm::Id numberOfEdgePoints = EdgeInterpolationArray.GetNumberOfValues();
+      vtkm::Id numberOfInCellPoints = interpolationKeys.GetUniqueKeys().GetNumberOfValues();
 
       ArrayHandleType result;
-      result.Allocate(field.GetNumberOfValues() + count);
-      Algorithm::CopySubRange(field, 0, field.GetNumberOfValues(), result);
-      Kernel<ValueType> kernel(this->InterpolationArray.PrepareForInput(DeviceAdapter()),
-                               this->NewPointsOffset,
-                               result.PrepareForInPlace(DeviceAdapter()));
+      result.Allocate(numberOfOriginalValues + numberOfEdgePoints + numberOfInCellPoints);
+      vtkm::cont::Algorithm::CopySubRange(field, 0, numberOfOriginalValues, result);
 
-      Algorithm::Schedule(kernel, count);
+      PerformEdgeInterpolations edgeInterpWorklet(numberOfOriginalValues);
+      vtkm::worklet::DispatcherMapField<PerformEdgeInterpolations> edgeInterpDispatcher(
+        edgeInterpWorklet);
+      edgeInterpDispatcher.Invoke(this->EdgeInterpolationArray, result);
+
+      // Perform a gather on output to get all required values for calculation of
+      // centroids using the interpolation info array.
+      using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+      using ValueHandle = vtkm::cont::ArrayHandle<ValueType>;
+      vtkm::cont::ArrayHandlePermutation<IdHandle, ValueHandle> toReduceValues(
+        InCellInterpolationInfo, result);
+
+      vtkm::cont::ArrayHandle<ValueType> reducedValues;
+      vtkm::worklet::DispatcherReduceByKey<PerformInCellInterpolations>
+        inCellInterpolationDispatcher;
+      inCellInterpolationDispatcher.Invoke(interpolationKeys, toReduceValues, reducedValues);
+      vtkm::Id inCellPointsOffset = numberOfOriginalValues + numberOfEdgePoints;
+      vtkm::cont::Algorithm::CopySubRange(
+        reducedValues, 0, reducedValues.GetNumberOfValues(), result, inCellPointsOffset);
       *(this->Output) = result;
     }
 
   private:
-    vtkm::cont::ArrayHandle<EdgeInterpolation> InterpolationArray;
-    vtkm::Id NewPointsOffset;
+    vtkm::cont::ArrayHandle<EdgeInterpolation> EdgeInterpolationArray;
+    vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationKeys;
+    vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationInfo;
+    vtkm::Id EdgePointsOffset;
+    vtkm::Id InCellPointsOffset;
     ArrayHandleType* Output;
   };
 
-  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  template <typename ValueType, typename StorageType>
   vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData,
-    DeviceAdapter) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData) const
   {
     using ResultType = vtkm::cont::ArrayHandle<ValueType>;
-    using Worker = InterpolateField<ResultType, DeviceAdapter>;
+    using Worker = InterpolateField<ResultType>;
 
     ResultType output;
 
-    Worker worker = Worker(this->NewPointsInterpolation, this->NewPointsOffset, &output);
+    Worker worker = Worker(this->EdgePointsInterpolation,
+                           this->InCellInterpolationKeys,
+                           this->InCellInterpolationInfo,
+                           this->EdgePointsOffset,
+                           this->InCellPointsOffset,
+                           &output);
     worker(fieldData);
 
     return output;
   }
 
-  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  template <typename ValueType, typename StorageType>
   vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData,
-    DeviceAdapter) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldData) const
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     // Use a temporary permutation array to simplify the mapping:
-    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, fieldData);
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellMapOutputToInput, fieldData);
 
     // Copy into an array with default storage:
     vtkm::cont::ArrayHandle<ValueType> result;
-    Algo::Copy(tmp, result);
+    vtkm::cont::ArrayCopy(tmp, result);
 
     return result;
   }
 
 private:
   internal::ClipTables ClipTablesInstance;
-  vtkm::cont::ArrayHandle<EdgeInterpolation> NewPointsInterpolation;
-  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
-  vtkm::Id NewPointsOffset;
+  vtkm::cont::ArrayHandle<EdgeInterpolation> EdgePointsInterpolation;
+  vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationKeys;
+  vtkm::cont::ArrayHandle<vtkm::Id> InCellInterpolationInfo;
+  vtkm::cont::ArrayHandle<vtkm::Id> CellMapOutputToInput;
+  vtkm::Id EdgePointsOffset;
+  vtkm::Id InCellPointsOffset;
 };
 }
 } // namespace vtkm::worklet

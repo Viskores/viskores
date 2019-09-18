@@ -1,0 +1,9 @@
+# type      center       r       omega0      zeta
+periodic    16 16 16     8       3.14
+periodic    16 16 48     8       3.14
+periodic    16 48 16     8       3.14
+periodic    16 48 48     8       3.14
+periodic    48 16 16     8       3.14
+periodic    48 16 48     8       3.14
+periodic    48 48 16     8       3.14
+periodic    48 48 48     8       3.14

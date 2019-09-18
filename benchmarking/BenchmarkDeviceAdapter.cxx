@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include "Benchmarker.h"
@@ -26,11 +16,12 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
+#include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
@@ -44,9 +35,12 @@
 
 #include <vtkm/internal/Windows.h>
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
 #include <tbb/task_scheduler_init.h>
-#endif // TBB
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 // This benchmark has a number of commandline options to customize its behavior.
 // See The BenchDevAlgoConfig documentations for details.
@@ -60,20 +54,27 @@ namespace benchmarking
 
 enum BenchmarkName
 {
-  COPY = 1,
-  COPY_IF = 1 << 1,
-  LOWER_BOUNDS = 1 << 2,
-  REDUCE = 1 << 3,
-  REDUCE_BY_KEY = 1 << 4,
-  SCAN_INCLUSIVE = 1 << 5,
-  SCAN_EXCLUSIVE = 1 << 6,
-  SORT = 1 << 7,
-  SORT_BY_KEY = 1 << 8,
-  STABLE_SORT_INDICES = 1 << 9,
-  STABLE_SORT_INDICES_UNIQUE = 1 << 10,
-  UNIQUE = 1 << 11,
-  UPPER_BOUNDS = 1 << 12,
-  ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE | SCAN_EXCLUSIVE |
+  BITFIELD_TO_UNORDERED_SET = 1 << 0,
+  COPY = 1 << 1,
+  COPY_IF = 1 << 2,
+  COUNT_SET_BITS = 1 << 3,
+  FILL = 1 << 4,
+  LOWER_BOUNDS = 1 << 5,
+  REDUCE = 1 << 6,
+  REDUCE_BY_KEY = 1 << 7,
+  SCAN_EXCLUSIVE = 1 << 8,
+  SCAN_INCLUSIVE = 1 << 9,
+  SORT = 1 << 10,
+  SORT_BY_KEY = 1 << 11,
+  STABLE_SORT_INDICES = 1 << 12,
+  STABLE_SORT_INDICES_UNIQUE = 1 << 13,
+  UNIQUE = 1 << 14,
+  UPPER_BOUNDS = 1 << 15,
+
+  ALL = BITFIELD_TO_UNORDERED_SET | COPY | COPY_IF | COUNT_SET_BITS | FILL | LOWER_BOUNDS | REDUCE |
+    REDUCE_BY_KEY |
+    SCAN_EXCLUSIVE |
+    SCAN_INCLUSIVE |
     SORT |
     SORT_BY_KEY |
     STABLE_SORT_INDICES |
@@ -86,28 +87,20 @@ enum BenchmarkName
 /// described below:
 struct BenchDevAlgoConfig
 {
-  /// Benchmarks to run. Possible values:
-  /// Copy, CopyIf, LowerBounds, Reduce, ReduceByKey, ScanInclusive,
-  /// ScanExclusive, Sort, SortByKey, StableSortIndices, StableSortIndicesUnique,
-  /// Unique, UpperBounds, or All. (Default: All).
-  // Zero is for parsing, will change to 'all' in main if needed.
+  /// Benchmarks to run. See BenchmarkName enum.
   int BenchmarkFlags{ 0 };
 
   /// ValueTypes to test.
-  /// CLI arg: "TypeList [Base|Extended]" (Base is default).
+  /// CLI arg: "--base-typelist | --extended-typelist" (Base is default).
   bool ExtendedTypeList{ false };
 
   /// Run benchmarks using the same number of bytes for all arrays.
-  /// CLI arg: "FixBytes [n|off]" (n is the number of bytes, default: 2097152, ie. 2MiB)
-  /// @note FixBytes and FixSizes are not mutually exclusive. If both are
-  /// specified, both will run.
+  /// CLI arg: "--array-size-bytes [n]" (n is the number of bytes, default: 2097152, ie. 2MiB)
   bool TestArraySizeBytes{ true };
   vtkm::UInt64 ArraySizeBytes{ 1 << 21 };
 
   /// Run benchmarks using the same number of values for all arrays.
-  /// CLI arg: "FixSizes [n|off]" (n is the number of values, default: off)
-  /// @note FixBytes and FixSizes are not mutually exclusive. If both are
-  /// specified, both will run.
+  /// CLI arg: "--array-size-values [n]" (n is the number of values, default: off)
   bool TestArraySizeValues{ false };
   vtkm::UInt64 ArraySizeValues{ 1 << 21 };
 
@@ -115,7 +108,7 @@ struct BenchDevAlgoConfig
   /// values (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 75%, 100%
   /// unique). If false (default), the range is limited to 5%, 25%, 50%, 75%,
   /// 100%.
-  /// CLI arg: "DetailedOutputRange" enables the extended range.
+  /// CLI arg: "--more-output-range" enables the extended range.
   bool DetailedOutputRangeScaling{ false };
 
   // Internal: The benchmarking code will set this depending on execution phase:
@@ -129,6 +122,20 @@ struct BenchDevAlgoConfig
       ? static_cast<vtkm::Id>(this->ArraySizeBytes / static_cast<vtkm::UInt64>(sizeof(T)))
       : static_cast<vtkm::Id>(this->ArraySizeValues);
   }
+
+  // Compute the number of words in a bit field with the given type.
+  // If DoByteSizes is true, the specified buffer is rounded down to the nearest
+  // number of words that fit into the byte limit. Otherwise, ArraySizeValues
+  // is used to indicate the number of bits.
+  template <typename WordType>
+  VTKM_CONT vtkm::Id ComputeNumberOfWords()
+  {
+    static constexpr vtkm::UInt64 BytesPerWord = static_cast<vtkm::UInt64>(sizeof(WordType));
+    static constexpr vtkm::UInt64 BitsPerWord = BytesPerWord * 8;
+
+    return this->DoByteSizes ? static_cast<vtkm::Id>(this->ArraySizeBytes / BytesPerWord)
+                             : static_cast<vtkm::Id>(this->ArraySizeValues / BitsPerWord);
+  }
 };
 
 // Share a global instance of the config (only way to get it into the benchmark
@@ -140,14 +147,14 @@ struct BaseTypes : vtkm::ListTagBase<vtkm::UInt8,
                                      vtkm::Int64,
                                      vtkm::Pair<vtkm::Id, vtkm::Float32>,
                                      vtkm::Float32,
-                                     vtkm::Vec<vtkm::Float32, 3>,
+                                     vtkm::Vec3f_32,
                                      vtkm::Float64,
-                                     vtkm::Vec<vtkm::Float64, 3>>
+                                     vtkm::Vec3f_64>
 {
 };
 
 struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
-                                         vtkm::Vec<vtkm::UInt8, 4>,
+                                         vtkm::Vec4ui_8,
                                          vtkm::Int32,
                                          vtkm::Int64,
                                          vtkm::Pair<vtkm::Int32, vtkm::Float32>,
@@ -155,9 +162,9 @@ struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
                                          vtkm::Pair<vtkm::Int64, vtkm::Float64>,
                                          vtkm::Pair<vtkm::Int64, vtkm::Float64>,
                                          vtkm::Float32,
-                                         vtkm::Vec<vtkm::Float32, 3>,
+                                         vtkm::Vec3f_32,
                                          vtkm::Float64,
-                                         vtkm::Vec<vtkm::Float64, 3>>
+                                         vtkm::Vec3f_64>
 {
 };
 
@@ -166,25 +173,23 @@ static const std::string DIVIDER(40, '-');
 /// This class runs a series of micro-benchmarks to measure
 /// performance of the parallel primitives provided by each
 /// device adapter
-template <class DeviceAdapterTag>
 class BenchmarkDeviceAdapter
 {
   using StorageTag = vtkm::cont::StorageTagBasic;
 
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+  using Algorithm = vtkm::cont::Algorithm;
 
-  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
+  using Timer = vtkm::cont::Timer;
 
 public:
   // Various kernels used by the different benchmarks to accelerate
   // initialization of data
-  template <typename Value>
+  template <typename Value, typename PortalType>
   struct FillTestValueKernel : vtkm::exec::FunctorBase
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
-    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
 
@@ -197,11 +202,10 @@ public:
     VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i, Value())); }
   };
 
-  template <typename Value>
+  template <typename Value, typename PortalType>
   struct FillScaledTestValueKernel : vtkm::exec::FunctorBase
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
-    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id IdScale;
@@ -216,11 +220,10 @@ public:
     VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i * IdScale, Value())); }
   };
 
-  template <typename Value>
+  template <typename Value, typename PortalType>
   struct FillModuloTestValueKernel : vtkm::exec::FunctorBase
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
-    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id Modulus;
@@ -235,11 +238,10 @@ public:
     VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i % Modulus, Value())); }
   };
 
-  template <typename Value>
+  template <typename Value, typename PortalType>
   struct FillBinaryTestValueKernel : vtkm::exec::FunctorBase
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
-    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id Modulus;
@@ -257,8 +259,173 @@ public:
     }
   };
 
+  template <typename WordType, typename BitFieldPortal>
+  struct GenerateBitFieldFunctor : public vtkm::exec::FunctorBase
+  {
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Id MaxMaskedWord;
+    BitFieldPortal Portal;
+
+    VTKM_EXEC_CONT
+    GenerateBitFieldFunctor(WordType exemplar,
+                            vtkm::Id stride,
+                            vtkm::Id maxMaskedWord,
+                            const BitFieldPortal& portal)
+      : Exemplar(exemplar)
+      , Stride(stride)
+      , MaxMaskedWord(maxMaskedWord)
+      , Portal(portal)
+    {
+    }
+
+    VTKM_EXEC
+    void operator()(vtkm::Id wordIdx) const
+    {
+      if (wordIdx <= this->MaxMaskedWord && (wordIdx % this->Stride) == 0)
+      {
+        this->Portal.SetWordAtomic(wordIdx, this->Exemplar);
+      }
+      else
+      {
+        this->Portal.SetWordAtomic(wordIdx, static_cast<WordType>(0));
+      }
+    }
+  };
+
+  // Create a bit field for testing. The bit array will contain numWords words.
+  // The exemplar word is used to set bits in the array. Stride indicates how
+  // many words will be set to 0 between words initialized to the exemplar.
+  // Words with indices higher than maxMaskedWord will be set to 0.
+  // Stride and maxMaskedWord may be used to test different types of imbalanced
+  // loads.
+  template <typename WordType, typename DeviceAdapterTag>
+  static VTKM_CONT vtkm::cont::BitField GenerateBitField(WordType exemplar,
+                                                         vtkm::Id stride,
+                                                         vtkm::Id maxMaskedWord,
+                                                         vtkm::Id numWords)
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+
+    if (stride == 0)
+    {
+      stride = 1;
+    }
+
+    vtkm::Id numBits = numWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+
+    vtkm::cont::BitField bits;
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    using Functor = GenerateBitFieldFunctor<WordType, decltype(portal)>;
+
+    Algo::Schedule(Functor{ exemplar, stride, maxMaskedWord, portal }, numWords);
+    Algo::Synchronize();
+
+    return bits;
+  }
+
 private:
-  template <typename Value>
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchBitFieldToUnorderedSet
+  {
+    using IndicesArray = vtkm::cont::ArrayHandle<vtkm::Id>;
+
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Float32 FillRatio;
+    vtkm::Id MaxMaskedIndex;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+    IndicesArray Indices;
+
+    // See GenerateBitField for details. fillRatio is used to compute
+    // maxMaskedWord.
+    VTKM_CONT
+    BenchBitFieldToUnorderedSet(WordType exemplar,
+                                vtkm::Id stride,
+                                vtkm::Float32 fillRatio,
+                                const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , Exemplar(exemplar)
+      , Stride(stride)
+      , FillRatio(fillRatio)
+      , MaxMaskedIndex(this->NumWords / static_cast<vtkm::Id>(1. / this->FillRatio))
+      , Name(name)
+      , Bits(GenerateBitField<WordType, DeviceAdapter>(this->Exemplar,
+                                                       this->Stride,
+                                                       this->MaxMaskedIndex,
+                                                       this->NumWords))
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::BitFieldToUnorderedSet(DeviceAdapter{}, this->Bits, this->Indices);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numFilledWords = this->MaxMaskedIndex / this->Stride;
+      const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(this->Exemplar);
+
+      std::stringstream description;
+      description << "BitFieldToUnorderedSet" << this->Name << " ( "
+                  << "NumWords: " << this->NumWords << " "
+                  << "Exemplar: " << std::hex << this->Exemplar << std::dec << " "
+                  << "FillRatio: " << this->FillRatio << " "
+                  << "Stride: " << this->Stride << " "
+                  << "NumSetBits: " << numSetBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetNull,
+                      BenchBitFieldToUnorderedSet,
+                      0x00000000,
+                      1,
+                      0.f,
+                      "Null");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetFull,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      1,
+                      1.f,
+                      "Full");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetHalfWord,
+                      BenchBitFieldToUnorderedSet,
+                      0xffff0000,
+                      1,
+                      1.f,
+                      "HalfWord");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetHalfField,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      1,
+                      0.5f,
+                      "HalfField");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetAlternateWords,
+                      BenchBitFieldToUnorderedSet,
+                      0xffffffff,
+                      2,
+                      1.f,
+                      "AlternateWords");
+  VTKM_MAKE_BENCHMARK(BitFieldToUnorderedSetAlternateBits,
+                      BenchBitFieldToUnorderedSet,
+                      0x55555555,
+                      1,
+                      1.f,
+                      "AlternateBits");
+
+  template <typename Value, typename DeviceAdapter>
   struct BenchCopy
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -282,8 +449,10 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::Copy(ValueHandle_src, ValueHandle_dst);
+
       return timer.GetElapsedTime();
     }
 
@@ -293,13 +462,15 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Copy " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(Copy, BenchCopy);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchCopyIf
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -316,19 +487,21 @@ private:
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       vtkm::Id modulo = arraySize / N_VALID;
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
-      Algorithm::Schedule(FillBinaryTestValueKernel<vtkm::Id>(
-                            modulo, StencilHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
+      auto vHPortal = ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(vHPortal)>(vHPortal), arraySize);
+
+      auto sHPortal = StencilHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillBinaryTestValueKernel<vtkm::Id, decltype(sHPortal)>(modulo, sHPortal),
                           arraySize);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::CopyIf(ValueHandle, StencilHandle, OutHandle);
+
       return timer.GetElapsedTime();
     }
 
@@ -338,8 +511,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "CopyIf on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
-                  << PERCENT_VALID << "% valid values";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ") with " << PERCENT_VALID << "% valid values";
       return description.str();
     }
   };
@@ -356,7 +530,185 @@ private:
   VTKM_MAKE_BENCHMARK(CopyIf75, BenchCopyIf, 75);
   VTKM_MAKE_BENCHMARK(CopyIf100, BenchCopyIf, 100);
 
-  template <typename Value>
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchCountSetBits
+  {
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    WordType Exemplar;
+    vtkm::Id Stride;
+    vtkm::Float32 FillRatio;
+    vtkm::Id MaxMaskedIndex;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+
+    // See GenerateBitField for details. fillRatio is used to compute
+    // maxMaskedWord.
+    VTKM_CONT
+    BenchCountSetBits(WordType exemplar,
+                      vtkm::Id stride,
+                      vtkm::Float32 fillRatio,
+                      const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , Exemplar(exemplar)
+      , Stride(stride)
+      , FillRatio(fillRatio)
+      , MaxMaskedIndex(this->NumWords / static_cast<vtkm::Id>(1. / this->FillRatio))
+      , Name(name)
+      , Bits(GenerateBitField<WordType, DeviceAdapter>(this->Exemplar,
+                                                       this->Stride,
+                                                       this->MaxMaskedIndex,
+                                                       this->NumWords))
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::CountSetBits(DeviceAdapter{}, this->Bits);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numFilledWords = this->MaxMaskedIndex / this->Stride;
+      const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(this->Exemplar);
+
+      std::stringstream description;
+      description << "CountSetBits" << this->Name << " ( "
+                  << "NumWords: " << this->NumWords << " "
+                  << "Exemplar: " << std::hex << this->Exemplar << std::dec << " "
+                  << "FillRatio: " << this->FillRatio << " "
+                  << "Stride: " << this->Stride << " "
+                  << "NumSetBits: " << numSetBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(CountSetBitsNull, BenchCountSetBits, 0x00000000, 1, 0.f, "Null");
+  VTKM_MAKE_BENCHMARK(CountSetBitsFull, BenchCountSetBits, 0xffffffff, 1, 1.f, "Full");
+  VTKM_MAKE_BENCHMARK(CountSetBitsHalfWord, BenchCountSetBits, 0xffff0000, 1, 1.f, "HalfWord");
+  VTKM_MAKE_BENCHMARK(CountSetBitsHalfField, BenchCountSetBits, 0xffffffff, 1, 0.5f, "HalfField");
+  VTKM_MAKE_BENCHMARK(CountSetBitsAlternateWords,
+                      BenchCountSetBits,
+                      0xffffffff,
+                      2,
+                      1.f,
+                      "AlternateWords");
+  VTKM_MAKE_BENCHMARK(CountSetBitsAlternateBits,
+                      BenchCountSetBits,
+                      0x55555555,
+                      1,
+                      1.f,
+                      "AlternateBits");
+
+  template <typename ValueType, typename DeviceAdapter>
+  struct BenchFillArrayHandle
+  {
+    vtkm::cont::ArrayHandle<ValueType> Handle;
+
+    VTKM_CONT
+    BenchFillArrayHandle() {}
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      const vtkm::Id numVals = Config.ComputeSize<ValueType>();
+      Timer timer(DeviceAdapter{});
+      timer.Start();
+      Algorithm::Fill(DeviceAdapter{}, this->Handle, TestValue(19, ValueType{}), numVals);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      const vtkm::Id numVals = Config.ComputeSize<ValueType>();
+      std::stringstream description;
+      description << "Fill (ArrayHandle, " << numVals << " values)";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(FillArrayHandle, BenchFillArrayHandle);
+
+  template <typename WordType, typename DeviceAdapter>
+  struct BenchFillBitField
+  {
+    vtkm::Id NumWords;
+    vtkm::Id NumBits;
+    bool UseBool;
+    WordType Pattern;
+    std::string Name;
+
+    vtkm::cont::BitField Bits;
+
+    VTKM_CONT
+    BenchFillBitField(bool useBool, WordType pattern, const std::string& name)
+      : NumWords(Config.ComputeNumberOfWords<WordType>())
+      , NumBits(this->NumWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT))
+      , UseBool(useBool)
+      , Pattern(pattern)
+      , Name(name)
+    {
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      Timer timer(DeviceAdapter{});
+      if (this->UseBool)
+      {
+        timer.Start();
+        Algorithm::Fill(DeviceAdapter{}, this->Bits, this->Pattern != 0, this->NumBits);
+        return timer.GetElapsedTime();
+      }
+      else
+      {
+        timer.Start();
+        Algorithm::Fill(DeviceAdapter{}, this->Bits, this->Pattern, this->NumBits);
+        return timer.GetElapsedTime();
+      }
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      std::stringstream description;
+      description << "Fill (BitField)" << this->Name << " ( "
+                  << "FillPattern: " << std::hex << this->Pattern << std::dec << " "
+                  << "UseBool: " << this->UseBool << " "
+                  << "NumBits: " << this->NumBits << " )";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(FillBitFieldTrue, BenchFillBitField, true, 0x1, "True");
+  VTKM_MAKE_BENCHMARK(FillBitFieldFalse, BenchFillBitField, true, 0x0, "False");
+  VTKM_MAKE_BENCHMARK(FillBitField8Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt8>(0xcc),
+                      "8Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField16Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt16>(0xcccc),
+                      "16Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField32Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt32>(0xcccccccc),
+                      "32Bit");
+  VTKM_MAKE_BENCHMARK(FillBitField64Bit,
+                      BenchFillBitField,
+                      false,
+                      static_cast<vtkm::UInt64>(0xcccccccccccccccc),
+                      "64Bit");
+
+  template <typename Value, typename DeviceAdapter>
   struct BenchLowerBounds
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -372,19 +724,21 @@ private:
       , PERCENT_VALUES(value_percent)
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
-      Algorithm::Schedule(FillScaledTestValueKernel<Value>(
-                            2, ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())),
+      auto iHPortal = InputHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(iHPortal)>(iHPortal), arraySize);
+      auto vHPortal = ValueHandle.PrepareForOutput(N_VALS, DeviceAdapter());
+      Algorithm::Schedule(FillScaledTestValueKernel<Value, decltype(vHPortal)>(2, vHPortal),
                           N_VALS);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::LowerBounds(InputHandle, ValueHandle, OutHandle);
+
       return timer.GetElapsedTime();
     }
 
@@ -394,8 +748,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "LowerBounds on " << arraySize << " input values ("
-                  << "(" << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") ("
-                  << PERCENT_VALUES << "% configuration)";
+                  << "(" << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                             sizeof(Value))
+                  << ") (" << PERCENT_VALUES << "% configuration)";
       return description.str();
     }
   };
@@ -412,7 +767,7 @@ private:
   VTKM_MAKE_BENCHMARK(LowerBounds75, BenchLowerBounds, 75);
   VTKM_MAKE_BENCHMARK(LowerBounds100, BenchLowerBounds, 100);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchReduce
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -426,9 +781,8 @@ private:
     BenchReduce()
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
+      auto iHPortal = this->InputHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(iHPortal)>(iHPortal), arraySize);
       this->Result =
         Algorithm::Reduce(this->InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
     }
@@ -436,8 +790,11 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
-      Value tmp = Algorithm::Reduce(InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
+
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
+      Value tmp =
+        Algorithm::Reduce(this->InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
       vtkm::Float64 time = timer.GetElapsedTime();
       if (tmp != this->Result)
       {
@@ -452,13 +809,15 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Reduce on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(Reduce, BenchReduce);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchReduceByKey
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -474,11 +833,10 @@ private:
       , PERCENT_KEYS(key_percent)
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
-      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
-                            N_KEYS, KeyHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
+      auto vHPortal = ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(vHPortal)>(vHPortal), arraySize);
+      auto kHPortal = KeyHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id, decltype(kHPortal)>(N_KEYS, kHPortal),
                           arraySize);
       Algorithm::SortByKey(KeyHandle, ValueHandle);
     }
@@ -486,7 +844,8 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut, vtkm::Add());
       return timer.GetElapsedTime();
     }
@@ -497,8 +856,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ReduceByKey on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
-                  << N_KEYS << " (" << PERCENT_KEYS << "%) distinct vtkm::Id keys";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ") with " << N_KEYS << " (" << PERCENT_KEYS << "%) distinct vtkm::Id keys";
       return description.str();
     }
   };
@@ -515,7 +875,7 @@ private:
   VTKM_MAKE_BENCHMARK(ReduceByKey75, BenchReduceByKey, 75);
   VTKM_MAKE_BENCHMARK(ReduceByKey100, BenchReduceByKey, 100);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchScanInclusive
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -525,15 +885,15 @@ private:
     BenchScanInclusive()
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
+      auto vHPortal = ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(vHPortal)>(vHPortal), arraySize);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::ScanInclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
@@ -544,13 +904,15 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ScanInclusive on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(ScanInclusive, BenchScanInclusive);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchScanExclusive
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -561,15 +923,16 @@ private:
     BenchScanExclusive()
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
+      auto vHPortal = ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(vHPortal)>(vHPortal), arraySize);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::ScanExclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
@@ -580,13 +943,15 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ScanExclusive on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(ScanExclusive, BenchScanExclusive);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchSort
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -611,7 +976,8 @@ private:
       ValueArrayHandle array;
       Algorithm::Copy(this->ValueHandle, array);
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::Sort(array);
       return timer.GetElapsedTime();
     }
@@ -622,13 +988,15 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Sort on " << arraySize << " random values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(Sort, BenchSort);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchSortByKey
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -651,8 +1019,8 @@ private:
       {
         portal.Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
-      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
-                            N_KEYS, KeyHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
+      auto kHPortal = KeyHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id, decltype(kHPortal)>(N_KEYS, kHPortal),
                           arraySize);
     }
 
@@ -664,7 +1032,8 @@ private:
       Algorithm::Copy(this->KeyHandle, keys);
       Algorithm::Copy(this->ValueHandle, values);
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::SortByKey(keys, values);
       return timer.GetElapsedTime();
     }
@@ -675,8 +1044,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "SortByKey on " << arraySize << " random values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
-                  << N_KEYS << " (" << PERCENT_KEYS << "%) different vtkm::Id keys";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ") with " << N_KEYS << " (" << PERCENT_KEYS << "%) different vtkm::Id keys";
       return description.str();
     }
   };
@@ -693,10 +1063,10 @@ private:
   VTKM_MAKE_BENCHMARK(SortByKey75, BenchSortByKey, 75);
   VTKM_MAKE_BENCHMARK(SortByKey100, BenchSortByKey, 100);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchStableSortIndices
   {
-    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using SSI = vtkm::worklet::StableSortIndices;
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle ValueHandle;
@@ -721,7 +1091,8 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Id> indices;
       Algorithm::Copy(vtkm::cont::ArrayHandleIndex(arraySize), indices);
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       SSI::Sort(ValueHandle, indices);
       return timer.GetElapsedTime();
     }
@@ -732,22 +1103,25 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "StableSortIndices::Sort on " << arraySize << " random values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
   VTKM_MAKE_BENCHMARK(StableSortIndices, BenchStableSortIndices);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchStableSortIndicesUnique
   {
-    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using SSI = vtkm::worklet::StableSortIndices;
     using IndexArrayHandle = typename SSI::IndexArrayType;
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id N_VALID;
     const vtkm::Id PERCENT_VALID;
     ValueArrayHandle ValueHandle;
+    IndexArrayHandle IndexHandle;
 
     VTKM_CONT
     BenchStableSortIndicesUnique(vtkm::Id percent_valid)
@@ -755,17 +1129,20 @@ private:
       , PERCENT_VALID(percent_valid)
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillModuloTestValueKernel<Value>(
-          N_VALID, this->ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
+      auto vHPortal = this->ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillModuloTestValueKernel<Value, decltype(vHPortal)>(N_VALID, vHPortal),
+                          arraySize);
+      this->IndexHandle = SSI::Sort(this->ValueHandle);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      IndexArrayHandle indices = SSI::Sort(this->ValueHandle);
-      Timer timer;
+
+      IndexArrayHandle indices;
+      Algorithm::Copy(this->IndexHandle, indices);
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       SSI::Unique(this->ValueHandle, indices);
       return timer.GetElapsedTime();
     }
@@ -776,8 +1153,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "StableSortIndices::Unique on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
-                  << this->N_VALID << " (" << PERCENT_VALID << "%) valid values";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ") with " << this->N_VALID << " (" << PERCENT_VALID << "%) valid values";
       return description.str();
     }
   };
@@ -794,7 +1172,7 @@ private:
   VTKM_MAKE_BENCHMARK(StableSortIndicesUnique75, BenchStableSortIndicesUnique, 75);
   VTKM_MAKE_BENCHMARK(StableSortIndicesUnique100, BenchStableSortIndicesUnique, 100);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchUnique
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -809,8 +1187,8 @@ private:
       , PERCENT_VALID(percent_valid)
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(FillModuloTestValueKernel<Value>(
-                            N_VALID, ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
+      auto vHPortal = ValueHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillModuloTestValueKernel<Value, decltype(vHPortal)>(N_VALID, vHPortal),
                           arraySize);
       Algorithm::Sort(ValueHandle);
     }
@@ -818,10 +1196,12 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
+
       ValueArrayHandle array;
       Algorithm::Copy(this->ValueHandle, array);
 
-      Timer timer;
+      Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::Unique(array);
       return timer.GetElapsedTime();
     }
@@ -832,8 +1212,9 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Unique on " << arraySize << " values ("
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
-                  << N_VALID << " (" << PERCENT_VALID << "%) valid values";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ") with " << N_VALID << " (" << PERCENT_VALID << "%) valid values";
       return description.str();
     }
   };
@@ -850,7 +1231,7 @@ private:
   VTKM_MAKE_BENCHMARK(Unique75, BenchUnique, 75);
   VTKM_MAKE_BENCHMARK(Unique100, BenchUnique, 100);
 
-  template <typename Value>
+  template <typename Value, typename DeviceAdapter>
   struct BenchUpperBounds
   {
     using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
@@ -866,18 +1247,18 @@ private:
       , PERCENT_VALS(percent_vals)
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(
-        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-        arraySize);
-      Algorithm::Schedule(FillScaledTestValueKernel<Value>(
-                            2, ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())),
+      auto iHPortal = InputHandle.PrepareForOutput(arraySize, DeviceAdapter());
+      Algorithm::Schedule(FillTestValueKernel<Value, decltype(iHPortal)>(iHPortal), arraySize);
+      auto vHPortal = ValueHandle.PrepareForOutput(N_VALS, DeviceAdapter());
+      Algorithm::Schedule(FillScaledTestValueKernel<Value, decltype(vHPortal)>(2, vHPortal),
                           N_VALS);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      Timer timer;
+      vtkm::cont::Timer timer{ DeviceAdapter() };
+      timer.Start();
       Algorithm::UpperBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
@@ -889,7 +1270,9 @@ private:
       std::stringstream description;
       description << "UpperBounds on " << arraySize << " input and " << N_VALS << " ("
                   << PERCENT_VALS << "%) values (input array size: "
-                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
+                  << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(arraySize) *
+                                                      sizeof(Value))
+                  << ")";
       return description.str();
     }
   };
@@ -907,10 +1290,8 @@ private:
   VTKM_MAKE_BENCHMARK(UpperBounds100, BenchUpperBounds, 100);
 
 public:
-  static VTKM_CONT int Run()
+  static VTKM_CONT int Run(vtkm::cont::DeviceAdapterId id)
   {
-    std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
-
     // Run fixed bytes / size tests:
     for (int sizeType = 0; sizeType < 2; ++sizeType)
     {
@@ -920,11 +1301,11 @@ public:
         Config.DoByteSizes = true;
         if (!Config.ExtendedTypeList)
         {
-          RunInternal<BaseTypes>();
+          RunInternal<BaseTypes>(id);
         }
         else
         {
-          RunInternal<ExtendedTypes>();
+          RunInternal<ExtendedTypes>(id);
         }
       }
       if (sizeType == 1 && Config.TestArraySizeValues)
@@ -933,11 +1314,11 @@ public:
         Config.DoByteSizes = false;
         if (!Config.ExtendedTypeList)
         {
-          RunInternal<BaseTypes>();
+          RunInternal<BaseTypes>(id);
         }
         else
         {
-          RunInternal<ExtendedTypes>();
+          RunInternal<ExtendedTypes>(id);
         }
       }
     }
@@ -946,12 +1327,54 @@ public:
   }
 
   template <typename ValueTypes>
-  static VTKM_CONT void RunInternal()
+  static VTKM_CONT void RunInternal(vtkm::cont::DeviceAdapterId id)
   {
+    using UInt8Type = vtkm::ListTagBase<vtkm::UInt8>;
+    using UInt16Type = vtkm::ListTagBase<vtkm::UInt16>;
+    using UInt32Type = vtkm::ListTagBase<vtkm::UInt32>;
+    using UInt64Type = vtkm::ListTagBase<vtkm::UInt64>;
+
+    // These need specific word types:
+    if (Config.BenchmarkFlags & BITFIELD_TO_UNORDERED_SET)
+    {
+      std::cout << DIVIDER << "\nBenchmarking BitFieldToUnorderedSet\n";
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetNull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetFull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfWord, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetHalfField, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateWords, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(BitFieldToUnorderedSetAlternateBits, UInt32Type{}, id);
+    }
+
+    if (Config.BenchmarkFlags & COUNT_SET_BITS)
+    {
+      std::cout << DIVIDER << "\nBenchmarking CountSetBits\n";
+      VTKM_RUN_BENCHMARK(CountSetBitsNull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsFull, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsHalfWord, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsHalfField, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsAlternateWords, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(CountSetBitsAlternateBits, UInt32Type{}, id);
+    }
+
+    if (Config.BenchmarkFlags & FILL)
+    {
+      std::cout << DIVIDER << "\nBenchmarking Fill (ArrayHandle)\n";
+      VTKM_RUN_BENCHMARK(FillArrayHandle, ValueTypes{}, id);
+
+      std::cout << DIVIDER << "\nBenchmarking Fill (BitField)\n";
+      VTKM_RUN_BENCHMARK(FillBitFieldTrue, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitFieldFalse, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField8Bit, UInt8Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField16Bit, UInt16Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField32Bit, UInt32Type{}, id);
+      VTKM_RUN_BENCHMARK(FillBitField64Bit, UInt64Type{}, id);
+    }
+
     if (Config.BenchmarkFlags & COPY)
     {
       std::cout << DIVIDER << "\nBenchmarking Copy\n";
-      VTKM_RUN_BENCHMARK(Copy, ValueTypes());
+      VTKM_RUN_BENCHMARK(Copy, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & COPY_IF)
@@ -959,26 +1382,26 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking CopyIf\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf10, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf15, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf20, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf25, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf30, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf35, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf40, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf45, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf50, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf75, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf100, ValueTypes());
+        VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf25, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf50, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf75, ValueTypes());
-        VTKM_RUN_BENCHMARK(CopyIf100, ValueTypes());
+        VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(CopyIf100, ValueTypes(), id);
       }
     }
 
@@ -987,33 +1410,33 @@ public:
       std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds10, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds15, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds20, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds30, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds35, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds40, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds45, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds50, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds75, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds100, ValueTypes());
+        VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds50, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds75, ValueTypes());
-        VTKM_RUN_BENCHMARK(LowerBounds100, ValueTypes());
+        VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(LowerBounds100, ValueTypes(), id);
       }
     }
 
     if (Config.BenchmarkFlags & REDUCE)
     {
       std::cout << "\n" << DIVIDER << "\nBenchmarking Reduce\n";
-      VTKM_RUN_BENCHMARK(Reduce, ValueTypes());
+      VTKM_RUN_BENCHMARK(Reduce, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & REDUCE_BY_KEY)
@@ -1021,45 +1444,45 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking ReduceByKey\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey10, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey15, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey20, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey35, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey40, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey45, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey50, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey75, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey100, ValueTypes());
+        VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey50, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey75, ValueTypes());
-        VTKM_RUN_BENCHMARK(ReduceByKey100, ValueTypes());
+        VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(ReduceByKey100, ValueTypes(), id);
       }
     }
 
     if (Config.BenchmarkFlags & SCAN_INCLUSIVE)
     {
       std::cout << "\n" << DIVIDER << "\nBenchmarking ScanInclusive\n";
-      VTKM_RUN_BENCHMARK(ScanInclusive, ValueTypes());
+      VTKM_RUN_BENCHMARK(ScanInclusive, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & SCAN_EXCLUSIVE)
     {
       std::cout << "\n" << DIVIDER << "\nBenchmarking ScanExclusive\n";
-      VTKM_RUN_BENCHMARK(ScanExclusive, ValueTypes());
+      VTKM_RUN_BENCHMARK(ScanExclusive, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & SORT)
     {
       std::cout << "\n" << DIVIDER << "\nBenchmarking Sort\n";
-      VTKM_RUN_BENCHMARK(Sort, ValueTypes());
+      VTKM_RUN_BENCHMARK(Sort, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & SORT_BY_KEY)
@@ -1067,33 +1490,33 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking SortByKey\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey10, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey15, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey20, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey35, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey40, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey45, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey50, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey75, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey100, ValueTypes());
+        VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey50, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey75, ValueTypes());
-        VTKM_RUN_BENCHMARK(SortByKey100, ValueTypes());
+        VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(SortByKey100, ValueTypes(), id);
       }
     }
 
     if (Config.BenchmarkFlags & STABLE_SORT_INDICES)
     {
       std::cout << "\n" << DIVIDER << "\nBenchmarking StableSortIndices::Sort\n";
-      VTKM_RUN_BENCHMARK(StableSortIndices, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndices, ValueTypes(), id);
     }
 
     if (Config.BenchmarkFlags & STABLE_SORT_INDICES_UNIQUE)
@@ -1101,26 +1524,26 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking StableSortIndices::Unique\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique5, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique10, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique15, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique20, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique25, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique30, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique35, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique40, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique45, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique50, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique75, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique100, ValueTypes());
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique5, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique25, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique50, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique75, ValueTypes());
-        VTKM_RUN_BENCHMARK(StableSortIndicesUnique100, ValueTypes());
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(StableSortIndicesUnique100, ValueTypes(), id);
       }
     }
 
@@ -1129,26 +1552,26 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking Unique\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique10, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique15, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique20, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique25, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique30, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique35, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique40, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique45, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique50, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique75, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique100, ValueTypes());
+        VTKM_RUN_BENCHMARK(Unique5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique25, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique50, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique75, ValueTypes());
-        VTKM_RUN_BENCHMARK(Unique100, ValueTypes());
+        VTKM_RUN_BENCHMARK(Unique5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(Unique100, ValueTypes(), id);
       }
     }
 
@@ -1157,56 +1580,269 @@ public:
       std::cout << "\n" << DIVIDER << "\nBenchmarking UpperBounds\n";
       if (Config.DetailedOutputRangeScaling)
       {
-        VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds10, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds15, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds20, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds30, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds35, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds40, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds45, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds50, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds75, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds100, ValueTypes());
+        VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds10, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds15, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds20, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds30, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds35, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds40, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds45, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds100, ValueTypes(), id);
       }
       else
       {
-        VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds50, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds75, ValueTypes());
-        VTKM_RUN_BENCHMARK(UpperBounds100, ValueTypes());
+        VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds25, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds50, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds75, ValueTypes(), id);
+        VTKM_RUN_BENCHMARK(UpperBounds100, ValueTypes(), id);
       }
     }
   }
 };
 
 #undef ARRAY_SIZE
+
+struct Arg : vtkm::cont::internal::option::Arg
+{
+  static vtkm::cont::internal::option::ArgStatus Number(
+    const vtkm::cont::internal::option::Option& option,
+    bool msg)
+  {
+    bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
+    const char* c = option.arg;
+    while (argIsNum && (*c != '\0'))
+    {
+      argIsNum = argIsNum && static_cast<bool>(std::isdigit(*c));
+      ++c;
+    }
+
+    if (argIsNum)
+    {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
+      if (msg)
+      {
+        std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
+      }
+
+      return vtkm::cont::internal::option::ARG_ILLEGAL;
+    }
+  }
+};
 }
 } // namespace vtkm::benchmarking
 
+enum optionIndex
+{
+  UNKNOWN,
+  HELP,
+  NUM_THREADS,
+  TYPELIST,
+  ARRAY_SIZE,
+  MORE_OUTPUT_RANGE
+};
+
+enum typelistType
+{
+  BASE,
+  EXTENED
+};
+
+enum arraySizeType
+{
+  BYTES,
+  VALUES
+};
+
 int main(int argc, char* argv[])
 {
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-  int numThreads = tbb::task_scheduler_init::automatic;
-#endif // TBB
+  auto initConfig = vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::None);
+
+  if (initConfig.Device == vtkm::cont::DeviceAdapterTagUndefined())
+  {
+    initConfig.Device = vtkm::cont::DeviceAdapterTagAny();
+  }
+
+  namespace option = vtkm::cont::internal::option;
+  using Arg = vtkm::benchmarking::Arg;
+
+  std::vector<option::Descriptor> usage;
+  std::string usageHeader{ "Usage: " };
+  usageHeader.append(argv[0]);
+  usageHeader.append(" [options] [benchmarks]");
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, usageHeader.c_str() });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Options are:" });
+  usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, initConfig.Usage.c_str() });
+  usage.push_back({ NUM_THREADS,
+                    0,
+                    "",
+                    "num-threads",
+                    Arg::Number,
+                    "  --num-threads <N> \tSpecify the number of threads to use." });
+  usage.push_back({ TYPELIST,
+                    BASE,
+                    "",
+                    "base-typelist",
+                    Arg::None,
+                    "  --base-typelist \tBenchmark using the base set of types. (default)" });
+  usage.push_back({ TYPELIST,
+                    EXTENED,
+                    "",
+                    "extended-typelist",
+                    Arg::None,
+                    "  --extended-tyupelist \tBenchmark using an extended set of types." });
+  usage.push_back({ ARRAY_SIZE,
+                    BYTES,
+                    "",
+                    "array-size-bytes",
+                    Arg::Number,
+                    "  --array-size-bytes <N> \tRun the benchmarks with arrays of the given "
+                    "number of bytes. (Default is 2097152 (i.e. 2MB)" });
+  usage.push_back({ ARRAY_SIZE,
+                    VALUES,
+                    "",
+                    "array-size-values",
+                    Arg::Number,
+                    "  --array-size-values <N> \tRun the benchmarks with arrays of the given "
+                    "number of values." });
+  usage.push_back({ MORE_OUTPUT_RANGE,
+                    0,
+                    "",
+                    "more-output-range",
+                    Arg::None,
+                    "  --more-output-range \tIf specified, operations like Unique will test with "
+                    "a wider range of unique values (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, "
+                    "50%, 75%, 100% unique). By default, the range is limited to 5%, 25%, 50%, "
+                    "75%, 100%." });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Benchmarks are one or more of:" });
+  usage.push_back({ UNKNOWN,
+                    0,
+                    "",
+                    "",
+                    Arg::None,
+                    "\tBitFieldToUnorderedSet, Copy, CopyIf, CountSetBits, FillBitField, "
+                    "LowerBounds, Reduce, ReduceByKey, ScanExclusive, "
+                    "ScanInclusive, Sort, SortByKey, StableSortIndices, StableSortIndicesUnique, "
+                    "Unique, UpperBounds" });
+  usage.push_back(
+    { UNKNOWN, 0, "", "", Arg::None, "If no benchmarks are listed, all will be run." });
+  usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
+
+  vtkm::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
+  std::unique_ptr<option::Option[]> options{ new option::Option[stats.options_max] };
+  std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
+  option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
+
+  if (options[UNKNOWN])
+  {
+    std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
+    option::printUsage(std::cerr, usage.data());
+    exit(1);
+  }
+
+  if (options[HELP])
+  {
+    option::printUsage(std::cerr, usage.data());
+    exit(0);
+  }
 
   vtkm::benchmarking::BenchDevAlgoConfig& config = vtkm::benchmarking::Config;
 
-  for (int i = 1; i < argc; ++i)
+  int numThreads{ 0 };
+  if (options[NUM_THREADS])
   {
-    std::string arg = argv[i];
+    std::istringstream parse(options[NUM_THREADS].arg);
+    parse >> numThreads;
+    if (initConfig.Device == vtkm::cont::DeviceAdapterTagTBB() ||
+        initConfig.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+    {
+      std::cout << "Selected " << numThreads << " " << initConfig.Device.GetName() << " threads."
+                << std::endl;
+    }
+    else
+    {
+      std::cerr << options[NUM_THREADS].name << " not valid on this device. Ignoring." << std::endl;
+    }
+  }
+
+  if (options[TYPELIST])
+  {
+    switch (options[TYPELIST].last()->type())
+    {
+      case BASE:
+        config.ExtendedTypeList = false;
+        break;
+      case EXTENED:
+        config.ExtendedTypeList = true;
+        break;
+      default:
+        std::cerr << "Internal error. Unknown typelist." << std::endl;
+        break;
+    }
+  }
+
+  if (options[ARRAY_SIZE])
+  {
+    config.TestArraySizeBytes = false;
+    config.TestArraySizeValues = false;
+    for (const option::Option* opt = options[ARRAY_SIZE]; opt; opt = opt->next())
+    {
+      std::istringstream parse(opt->arg);
+      switch (opt->type())
+      {
+        case BYTES:
+          config.TestArraySizeBytes = true;
+          parse >> config.ArraySizeBytes;
+          break;
+        case VALUES:
+          config.TestArraySizeValues = true;
+          parse >> config.ArraySizeValues;
+          break;
+        default:
+          std::cerr << "Internal error. Unknown array size type." << std::endl;
+          break;
+      }
+    }
+  }
+
+  if (options[MORE_OUTPUT_RANGE])
+  {
+    config.DetailedOutputRangeScaling = true;
+  }
+
+  for (int i = 0; i < commandLineParse.nonOptionsCount(); ++i)
+  {
+    std::string arg = commandLineParse.nonOption(i);
     std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
       return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     });
-    if (arg == "copy")
+    if (arg == "bitfieldtounorderedset")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::BITFIELD_TO_UNORDERED_SET;
+    }
+    else if (arg == "copy")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY;
     }
     else if (arg == "copyif")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY_IF;
+    }
+    else if (arg == "countsetbits")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::COUNT_SET_BITS;
+    }
+    else if (arg == "fill")
+    {
+      config.BenchmarkFlags |= vtkm::benchmarking::FILL;
     }
     else if (arg == "lowerbounds")
     {
@@ -1252,89 +1888,22 @@ int main(int argc, char* argv[])
     {
       config.BenchmarkFlags |= vtkm::benchmarking::UPPER_BOUNDS;
     }
-    else if (arg == "typelist")
-    {
-      ++i;
-      arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "base")
-      {
-        config.ExtendedTypeList = false;
-      }
-      else if (arg == "extended")
-      {
-        config.ExtendedTypeList = true;
-      }
-      else
-      {
-        std::cerr << "Unrecognized TypeList: " << argv[i] << std::endl;
-        return 1;
-      }
-    }
-    else if (arg == "fixbytes")
-    {
-      ++i;
-      arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "off")
-      {
-        config.TestArraySizeBytes = false;
-      }
-      else
-      {
-        std::istringstream parse(arg);
-        config.TestArraySizeBytes = true;
-        parse >> config.ArraySizeBytes;
-      }
-    }
-    else if (arg == "fixsizes")
-    {
-      ++i;
-      arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      });
-      if (arg == "off")
-      {
-        config.TestArraySizeValues = false;
-      }
-      else
-      {
-        std::istringstream parse(arg);
-        config.TestArraySizeValues = true;
-        parse >> config.ArraySizeValues;
-      }
-    }
-    else if (arg == "detailedoutputrange")
-    {
-      config.DetailedOutputRangeScaling = true;
-    }
-    else if (arg == "numthreads")
-    {
-      ++i;
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-      std::istringstream parse(argv[i]);
-      parse >> numThreads;
-      std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
-#else
-      std::cerr << "NumThreads valid only on TBB. Ignoring." << std::endl;
-#endif // TBB
-    }
     else
     {
-      std::cerr << "Unrecognized benchmark: " << argv[i] << std::endl;
+      std::cerr << "Unrecognized benchmark: " << arg << std::endl;
+      option::printUsage(std::cerr, usage.data());
       return 1;
     }
   }
 
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
+#ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
-  tbb::task_scheduler_init init(numThreads);
-#endif // TBB
+  tbb::task_scheduler_init init((numThreads > 0) ? numThreads
+                                                 : tbb::task_scheduler_init::automatic);
+#endif
+#ifdef VTKM_ENABLE_OPENMP
+  omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
+#endif
 
   if (config.BenchmarkFlags == 0)
   {
@@ -1342,5 +1911,5 @@ int main(int argc, char* argv[])
   }
 
   //now actually execute the benchmarks
-  return vtkm::benchmarking::BenchmarkDeviceAdapter<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run();
+  return vtkm::benchmarking::BenchmarkDeviceAdapter::Run(initConfig.Device);
 }

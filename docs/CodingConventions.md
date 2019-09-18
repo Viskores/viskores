@@ -12,9 +12,10 @@ coding and because we expect vtkm to have continual interaction with VTK.
 
   + Copyright notices should appear at the top of all source,
     configuration, and text files. The statement should have the following
-    form (with 20XX replaced with the year the file was created):
+    form. Various copyright specific details are referenced in the LICENSE.txt
+    file.
 
-    ```
+```
 //==========================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
@@ -23,18 +24,8 @@ coding and because we expect vtkm to have continual interaction with VTK.
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//  
-//  Copyright 20XX National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 20XX UT-Battelle, LLC.
-//  Copyright 20XX Los Alamos National Security.
-//  
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //==========================================================================
-    ```
+```
 
   + The CopyrightStatement test checks all files for a similar statement.
     The test will print out a suggested text that can be copied and pasted
@@ -50,21 +41,20 @@ coding and because we expect vtkm to have continual interaction with VTK.
     directory, with non alphanumeric characters, such as / and . replaced
     with underscores. The `#endif` part of the guard at the bottom of the
     file should include the guard name in a comment. For example, the
-    vtkm/cont/ArrayHandle.h header contains the guard
-
-    ```cpp
-  #ifndef vtk_m_cont_ArrayHandle_h
-  #define vtk_m_cont_ArrayHandle_h
-    ```
-    at the top and
-    ```cpp
-  #endif //vtk_m_cont_ArrayHandle_h
-    ```
-    at the bottom.
+    vtkm/cont/ArrayHandle.h header contains the guard demostrated below.
 
     The unique use of vtk_m over vtkm is to allow auto-complete engines the
     ability to differentiate between the header guards and VTKM_ macros
     that are used within the code base.
+
+```cpp
+#ifndef vtk_m_cont_ArrayHandle_h
+#define vtk_m_cont_ArrayHandle_h
+
+// All ArrayHandle code here
+
+#endif //vtk_m_cont_ArrayHandle_h
+```
 
   + The VTK-m toolkit has several nested namespaces. The declaration of
     each namespace should be on its own line, and the code inside the
@@ -73,7 +63,7 @@ coding and because we expect vtkm to have continual interaction with VTK.
     the namespace. Namespaces can be grouped as desired. The following is a
     valid use of namespaces.
 
-    ```cpp
+```cpp
 namespace vtkm {
 namespace cont {
 namespace detail {
@@ -82,7 +72,7 @@ class InternalClass;
 class ExposedClass;
 }
 } // namespace vtkm::cont
-    ```
+```
 
   + Multiple inheritance is not allowed in VTK-m classes.
 
@@ -99,10 +89,34 @@ class ExposedClass;
       + Although tags are technically classes, they behave as an
         enumeration for the compiler. Multiple tags that make up this
         enumeration are collected together.
-      + Some classes, such as `vtkm::Tuple` are meant to behave as basic
+      + Some classes, such as `vtkm::Vec` are meant to behave as basic
         types. These are sometimes collected together as if they were
         related typedefs. The vtkm/Types.h header is a good example of
         this.
+
+  + The indentation style can be characterized as [Allman Style].
+    With the curly brace (scope delimiter) placed on the
+    following line and not-indented.
+
+```cpp
+if (test)
+{
+  clause;
+}    
+```
+
+  + Conditional clauses including loop conditionals such as for and while
+    must be in braces below the conditional.
+    
+```cpp
+for (auto v : vector)
+{
+  single line clause;
+}    
+```
+
+  + Two space indentation. Tabs are not allowed. Trailing whitespace
+    is not allowed.
 
   + Code formatting is strictly enforced. VTK-m's [development workflow]
     includes a reformatting step that compares the formatting of new source
@@ -155,7 +169,7 @@ class ExposedClass;
     or detail class clearly associated with it, the reference can be
     shortened to `internal::` or `detail::`.
 
-  + use `this->` inside of methods when accessing class methods and
+  + Use `this->` inside of methods when accessing class methods and
     instance variables to distinguish between local variables and instance
     variables.
 
@@ -198,3 +212,5 @@ copyright) are not meant to be dogmatic. Examples can be found in the
 existing code that break these conventions, particularly when the
 conventions stand in the way of readability (which is the point in having
 them in the first place).
+
+[Allman Style]:  https://en.wikipedia.org/wiki/Indent_style#Allman_style

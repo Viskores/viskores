@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_m_worklet_KdTree3D_h
 #define vtkm_m_worklet_KdTree3D_h
@@ -37,16 +27,13 @@ public:
   ///
   /// \tparam CoordType type of the x, y, z component of the point coordinates.
   /// \tparam CoordStorageTag
-  /// \tparam DeviceAdapter
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
-  /// \param device Tag for selecting device adapter.
   ///
-  template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coords,
-             DeviceAdapter device)
+  template <typename CoordType, typename CoordStorageTag>
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coords)
   {
     vtkm::worklet::spatialstructure::KdTree3DConstruction().Run(
-      coords, this->PointIds, this->SplitIds, device);
+      coords, this->PointIds, this->SplitIds);
   }
 
   /// \brief Nearest neighbor search using KD-Tree
@@ -73,10 +60,10 @@ public:
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& queryPoints,
            vtkm::cont::ArrayHandle<vtkm::Id>& nearestNeighborIds,
            vtkm::cont::ArrayHandle<CoordType>& distances,
-           DeviceAdapter device)
+           DeviceAdapter deviceId)
   {
     vtkm::worklet::spatialstructure::KdTree3DNNSearch().Run(
-      coords, this->PointIds, this->SplitIds, queryPoints, nearestNeighborIds, distances, device);
+      coords, this->PointIds, this->SplitIds, queryPoints, nearestNeighborIds, distances, deviceId);
   }
 
 private:

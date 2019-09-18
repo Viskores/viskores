@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandle_h
 #define vtk_m_cont_ArrayHandle_h
@@ -29,8 +19,12 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/SerializableTypeString.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
+
+#include <vtkm/internal/ArrayPortalHelpers.h>
 
 #include <algorithm>
 #include <iterator>
@@ -82,31 +76,16 @@ struct IsInValidArrayHandle
 {
 };
 
-/// Checks to see if the ArrayHandle for the given DeviceAdatper allows
-/// writing, as some ArrayHandles (Implicit) don't support writing.
-/// This check is compatible with the C++11 type_traits.
-/// It contains a typedef named type that is either
+/// Checks to see if the ArrayHandle allows writing, as some ArrayHandles
+/// (Implicit) don't support writing. These will be defined as either
 /// std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
 ///
-template <typename ArrayHandle, typename DeviceAdapterTag>
-struct IsWriteableArrayHandle
-{
-private:
-  template <typename T>
-  using ExecutionTypes = typename ArrayHandle::template ExecutionTypes<T>;
-
-  using ValueType = typename ExecutionTypes<DeviceAdapterTag>::Portal::ValueType;
-
-  //All ArrayHandles that use ImplicitStorage as the final writable location
-  //will have a value type of void*, which is what we are trying to detect
-  using RawValueType = typename std::remove_pointer<ValueType>::type;
-  using IsVoidType = std::is_void<RawValueType>;
-
-public:
-  using type = std::integral_constant<bool, !IsVoidType::value>;
-  static constexpr bool value = !IsVoidType::value;
-};
+/// \sa vtkm::internal::PortalSupportsSets
+///
+template <typename ArrayHandle>
+using IsWritableArrayHandle =
+  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::PortalControl>;
+/// @}
 
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with C++11 type_traits. It a typedef named \c type that is
@@ -123,7 +102,8 @@ public:
 template <typename T>
 struct ArrayHandleCheck
 {
-  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, T>::type;
+  using U = typename std::remove_pointer<T>::type;
+  using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
 #define VTKM_IS_ARRAY_HANDLE(T)                                                                    \
@@ -164,6 +144,9 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(Thisclass&& src) noexcept : Superclass(std::move(src)) {}                              \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
                                           typename__ Superclass::StorageTag>& src)                 \
     : Superclass(src)                                                                              \
@@ -171,9 +154,23 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  classname(vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                              \
+                                    typename__ Superclass::StorageTag>&& src) noexcept             \
+    : Superclass(std::move(src))                                                                   \
+  {                                                                                                \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   Thisclass& operator=(const Thisclass& src)                                                       \
   {                                                                                                \
     this->Superclass::operator=(src);                                                              \
+    return *this;                                                                                  \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
+  Thisclass& operator=(Thisclass&& src) noexcept                                                   \
+  {                                                                                                \
+    this->Superclass::operator=(std::move(src));                                                   \
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
@@ -295,7 +292,7 @@ public:
   /// with CUDA), then the automatically generated move constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+  ArrayHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
@@ -308,7 +305,7 @@ public:
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(StorageType&& storage);
+  ArrayHandle(StorageType&& storage) noexcept;
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -329,7 +326,7 @@ public:
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& operator=(
-    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src);
+    vtkm::cont::ArrayHandle<ValueType, StorageTag>&& src) noexcept;
 
   /// Like a pointer, two \c ArrayHandles are considered equal if they point
   /// to the same location in memory.
@@ -367,10 +364,14 @@ public:
   VTKM_CONT const StorageType& GetStorage() const;
 
   /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
   ///
   VTKM_CONT PortalControl GetPortalControl();
 
   /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
   ///
   VTKM_CONT PortalConstControl GetPortalConstControl() const;
 
@@ -496,7 +497,7 @@ public:
   {
     return this->Internals->ExecutionArrayValid
       ? this->Internals->ExecutionArray->GetDeviceAdapterId()
-      : VTKM_DEVICE_ADAPTER_UNDEFINED;
+      : DeviceAdapterTagUndefined{};
   }
 
   struct VTKM_ALWAYS_EXPORT InternalStruct
@@ -639,7 +640,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   vtkm::Id sz = array.GetNumberOfValues();
 
   out << "valueType=" << typeid(T).name() << " storageType=" << typeid(StorageT).name()
-      << " numValues=" << sz << " [";
+      << " numValues=" << sz << " bytes=" << (static_cast<size_t>(sz) * sizeof(T)) << " [";
 
   PortalType portal = array.GetPortalConstControl();
   if (full || sz <= 7)
@@ -672,8 +673,60 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 }
 } //namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename T>
+struct SerializableTypeString<ArrayHandle<T>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH<" + SerializableTypeString<T>::Get() + ">";
+    return name;
+  }
+};
+
+namespace internal
+{
+
+template <typename T, typename S>
+void VTKM_CONT ArrayHandleDefaultSerialization(vtkmdiy::BinaryBuffer& bb,
+                                               const vtkm::cont::ArrayHandle<T, S>& obj);
+
+} // internal
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename T>
+struct Serialization<vtkm::cont::ArrayHandle<T>>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::ArrayHandle<T>& obj)
+  {
+    vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandle<T>& obj);
+};
+
+} // diy
+/// @endcond SERIALIZATION
+
+#ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>
+#endif
+
+#ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_h
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
+#endif
+
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 
 #ifndef vtkm_cont_ArrayHandle_cxx
@@ -683,7 +736,7 @@ namespace vtkm
 namespace cont
 {
 
-#define _VTKM_ARRAYHANDLE_EXPORT(Type)                                                             \
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>;              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
     ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                              \
@@ -691,19 +744,19 @@ namespace cont
     ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-_VTKM_ARRAYHANDLE_EXPORT(char)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
-_VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
+VTKM_ARRAYHANDLE_EXPORT(char)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
+VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
 
-#undef _VTKM_ARRAYHANDLE_EXPORT
+#undef VTKM_ARRAYHANDLE_EXPORT
 }
 } // end vtkm::cont
 

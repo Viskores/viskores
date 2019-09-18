@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_Range_h
@@ -50,6 +40,7 @@ struct Range
   }
 
   Range(const Range&) = default;
+  Range(Range&&) = default;
 
   template <typename T1, typename T2>
   VTKM_EXEC_CONT Range(const T1& min, const T2& max)
@@ -59,6 +50,7 @@ struct Range
   }
 
   vtkm::Range& operator=(const vtkm::Range& src) = default;
+  vtkm::Range& operator=(vtkm::Range&& src) = default;
 
   /// \b Determine if the range is valid (i.e. has at least one valid point).
   ///
@@ -144,8 +136,8 @@ struct Range
   {
     if (range.IsNonEmpty())
     {
-      this->Include(range.Min);
-      this->Include(range.Max);
+      this->Min = vtkm::Min(this->Min, range.Min);
+      this->Max = vtkm::Max(this->Max, range.Max);
     }
   }
 
@@ -179,13 +171,13 @@ struct Range
   }
 };
 
-} // namespace vtkm
-
 /// Helper function for printing ranges during testing
 ///
-static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Range& range)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Range& range)
 {
   return stream << "[" << range.Min << ".." << range.Max << "]";
-}
+} // Declared inside of vtkm namespace so that the operator work with ADL lookup
+
+} // namespace vtkm
 
 #endif //vtk_m_Range_h

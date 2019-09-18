@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_gradient_CellGradient_h
@@ -40,14 +30,14 @@ struct CellGradientInType : vtkm::ListTagBase<T>
 };
 
 template <typename T>
-struct CellGradient : vtkm::worklet::WorkletMapPointToCell
+struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn,
-                                FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<CellGradientInType<T>> inputField,
+  using ControlSignature = void(CellSetIn,
+                                FieldInPoint pointCoordinates,
+                                FieldInPoint inputField,
                                 GradientOutputs outputFields);
 
-  typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
+  using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4);
   using InputDomain = _1;
 
   template <typename CellTagType,
@@ -60,8 +50,7 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
                             const FieldInVecType& field,
                             GradientOutType& outputGradient) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> center =
-      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
+    vtkm::Vec3f center = vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
 
     outputGradient = vtkm::exec::CellDerivative(field, wCoords, center, shape, *this);
   }

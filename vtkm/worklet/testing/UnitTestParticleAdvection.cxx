@@ -2,38 +2,30 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <typeinfo>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+
 namespace
 {
-
-vtkm::Float32 vecData[125 * 3] = {
+vtkm::FloatDefault vecData[125 * 3] = {
   -0.00603248f, -0.0966396f,  -0.000732792f, 0.000530014f,  -0.0986189f,  -0.000806706f,
   0.00684929f,  -0.100098f,   -0.000876566f, 0.0129235f,    -0.101102f,   -0.000942341f,
   0.0187515f,   -0.101656f,   -0.00100401f,  0.0706091f,    -0.083023f,   -0.00144278f,
@@ -100,56 +92,62 @@ vtkm::Float32 vecData[125 * 3] = {
 };
 }
 
-template <typename FieldType>
-void RandomPoint(const vtkm::Bounds& bounds, vtkm::Vec<FieldType, 3>& p)
+vtkm::Vec3f RandomPoint(const vtkm::Bounds& bounds)
 {
-  FieldType rx = static_cast<FieldType>(rand()) / static_cast<FieldType>(RAND_MAX);
-  FieldType ry = static_cast<FieldType>(rand()) / static_cast<FieldType>(RAND_MAX);
-  FieldType rz = static_cast<FieldType>(rand()) / static_cast<FieldType>(RAND_MAX);
+  vtkm::FloatDefault rx =
+    static_cast<vtkm::FloatDefault>(rand()) / static_cast<vtkm::FloatDefault>(RAND_MAX);
+  vtkm::FloatDefault ry =
+    static_cast<vtkm::FloatDefault>(rand()) / static_cast<vtkm::FloatDefault>(RAND_MAX);
+  vtkm::FloatDefault rz =
+    static_cast<vtkm::FloatDefault>(rand()) / static_cast<vtkm::FloatDefault>(RAND_MAX);
 
-  p[0] = static_cast<FieldType>(bounds.X.Min + rx * bounds.X.Length());
-  p[1] = static_cast<FieldType>(bounds.Y.Min + ry * bounds.Y.Length());
-  p[2] = static_cast<FieldType>(bounds.Z.Min + rz * bounds.Z.Length());
+  vtkm::Vec3f p;
+  p[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
+  p[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
+  p[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
+  return p;
 }
 
-template <typename FieldType>
 vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
 {
-  vtkm::Vec<FieldType, 3> origin(static_cast<FieldType>(bounds.X.Min),
-                                 static_cast<FieldType>(bounds.Y.Min),
-                                 static_cast<FieldType>(bounds.Z.Min));
-  vtkm::Vec<FieldType, 3> spacing(
-    static_cast<FieldType>(bounds.X.Length()) / static_cast<FieldType>((dims[0] - 1)),
-    static_cast<FieldType>(bounds.Y.Length()) / static_cast<FieldType>((dims[1] - 1)),
-    static_cast<FieldType>(bounds.Z.Length()) / static_cast<FieldType>((dims[2] - 1)));
+  vtkm::Vec3f origin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
+                     static_cast<vtkm::FloatDefault>(bounds.Y.Min),
+                     static_cast<vtkm::FloatDefault>(bounds.Z.Min));
+  vtkm::Vec3f spacing(static_cast<vtkm::FloatDefault>(bounds.X.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[0] - 1)),
+                      static_cast<vtkm::FloatDefault>(bounds.Y.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[1] - 1)),
+                      static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[2] - 1)));
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
   return ds;
 }
 
-template <typename FieldType>
 vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
 {
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
-  std::vector<FieldType> xvals, yvals, zvals;
+  std::vector<vtkm::FloatDefault> xvals, yvals, zvals;
 
-  vtkm::Vec<FieldType, 3> spacing(
-    static_cast<FieldType>(bounds.X.Length()) / static_cast<FieldType>((dims[0] - 1)),
-    static_cast<FieldType>(bounds.Y.Length()) / static_cast<FieldType>((dims[1] - 1)),
-    static_cast<FieldType>(bounds.Z.Length()) / static_cast<FieldType>((dims[2] - 1)));
+  vtkm::Vec3f spacing(static_cast<vtkm::FloatDefault>(bounds.X.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[0] - 1)),
+                      static_cast<vtkm::FloatDefault>(bounds.Y.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[1] - 1)),
+                      static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
+                        static_cast<vtkm::FloatDefault>((dims[2] - 1)));
   xvals.resize((size_t)dims[0]);
-  xvals[0] = static_cast<FieldType>(bounds.X.Min);
+  xvals[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min);
   for (size_t i = 1; i < (size_t)dims[0]; i++)
     xvals[i] = xvals[i - 1] + spacing[0];
 
   yvals.resize((size_t)dims[1]);
-  yvals[0] = static_cast<FieldType>(bounds.Y.Min);
+  yvals[0] = static_cast<vtkm::FloatDefault>(bounds.Y.Min);
   for (size_t i = 1; i < (size_t)dims[1]; i++)
     yvals[i] = yvals[i - 1] + spacing[1];
 
   zvals.resize((size_t)dims[2]);
-  zvals[0] = static_cast<FieldType>(bounds.Z.Min);
+  zvals[0] = static_cast<vtkm::FloatDefault>(bounds.Z.Min);
   for (size_t i = 1; i < (size_t)dims[2]; i++)
     zvals[i] = zvals[i - 1] + spacing[2];
 
@@ -157,69 +155,168 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
   return ds;
 }
 
-template <typename FieldType>
-void CreateConstantVectorField(vtkm::Id num,
-                               const vtkm::Vec<FieldType, 3>& vec,
-                               vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& vecField)
+enum class DataSetOption
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  SINGLE = 0,
+  CURVILINEAR,
+  EXPLICIT
+};
 
-  vtkm::cont::ArrayHandleConstant<vtkm::Vec<FieldType, 3>> vecConst;
-  vecConst = vtkm::cont::make_ArrayHandleConstant(vec, num);
-  DeviceAlgorithm::Copy(vecConst, vecField);
+template <class CellSetType, vtkm::IdComponent NDIM>
+static void MakeExplicitCells(const CellSetType& cellSet,
+                              vtkm::Vec<vtkm::Id, NDIM>& cellDims,
+                              vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+                              vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+                              vtkm::cont::ArrayHandle<vtkm::Id>& conn)
+{
+  using Connectivity = vtkm::internal::ConnectivityStructuredInternals<NDIM>;
+
+  vtkm::Id nCells = cellSet.GetNumberOfCells();
+  vtkm::IdComponent nVerts = (NDIM == 2 ? 4 : 8);
+  vtkm::Id connLen = (NDIM == 2 ? nCells * 4 : nCells * 8);
+
+  conn.Allocate(connLen);
+  shapes.Allocate(nCells);
+  numIndices.Allocate(nCells);
+
+  Connectivity structured;
+  structured.SetPointDimensions(cellDims + vtkm::Vec<vtkm::Id, NDIM>(1));
+
+  vtkm::Id idx = 0;
+  for (vtkm::Id i = 0; i < nCells; i++)
+  {
+    auto ptIds = structured.GetPointsOfCell(i);
+    for (vtkm::IdComponent j = 0; j < nVerts; j++, idx++)
+      conn.GetPortalControl().Set(idx, ptIds[j]);
+
+    shapes.GetPortalControl().Set(
+      i, (NDIM == 2 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
+    numIndices.GetPortalControl().Set(i, nVerts);
+  }
 }
 
-template <typename FieldType, typename Evaluator>
+vtkm::cont::DataSet CreateWeirdnessFromStructuredDataSet(const vtkm::cont::DataSet& input,
+                                                         DataSetOption option)
+{
+  using CoordType = vtkm::Vec3f;
+
+  auto inputCoords = input.GetCoordinateSystem(0).GetData();
+  vtkm::Id numPts = inputCoords.GetNumberOfValues();
+  vtkm::cont::ArrayHandle<CoordType> explCoords;
+  explCoords.Allocate(numPts);
+  auto explPortal = explCoords.GetPortalControl();
+  auto cp = inputCoords.GetPortalConstControl();
+  for (vtkm::Id i = 0; i < numPts; i++)
+    explPortal.Set(i, cp.Get(i));
+
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
+  vtkm::cont::ArrayHandle<vtkm::Id> conn;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
+  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+  vtkm::cont::DataSet output;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+
+  using Structured2DType = vtkm::cont::CellSetStructured<2>;
+  using Structured3DType = vtkm::cont::CellSetStructured<3>;
+
+  switch (option)
+  {
+    case DataSetOption::SINGLE:
+      if (cellSet.IsType<Structured2DType>())
+      {
+        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
+      }
+      else
+      {
+        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
+      }
+      break;
+
+    case DataSetOption::CURVILINEAR:
+      // In this case the cell set/connectivity is the same as the input
+      // Only the coords are no longer Uniform / Rectilinear
+      output.SetCellSet(cellSet);
+      output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", explCoords));
+      break;
+
+    case DataSetOption::EXPLICIT:
+      if (cellSet.IsType<Structured2DType>())
+      {
+        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
+        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
+        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+      }
+      else
+      {
+        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
+        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
+        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
+        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
+      }
+      break;
+  }
+  return output;
+}
+
+void CreateConstantVectorField(vtkm::Id num,
+                               const vtkm::Vec3f& vec,
+                               vtkm::cont::ArrayHandle<vtkm::Vec3f>& vecField)
+{
+  vtkm::cont::ArrayHandleConstant<vtkm::Vec3f> vecConst;
+  vecConst = vtkm::cont::make_ArrayHandleConstant(vec, num);
+  vtkm::cont::ArrayCopy(vecConst, vecField);
+}
+
 class TestEvaluatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  TestEvaluatorWorklet(Evaluator e)
-    : evaluator(e){};
+  using ControlSignature = void(FieldIn inputPoint,
+                                ExecObject evaluator,
+                                FieldOut validity,
+                                FieldOut outputPoint);
 
-  typedef void ControlSignature(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  typedef void ExecutionSignature(_1, _2, _3);
-
-  VTKM_EXEC
-  void operator()(vtkm::Vec<FieldType, 3>& pointIn,
-                  bool& validity,
-                  vtkm::Vec<FieldType, 3>& pointOut) const
+  template <typename EvaluatorType>
+  VTKM_EXEC void operator()(vtkm::Vec3f& pointIn,
+                            const EvaluatorType& evaluator,
+                            vtkm::worklet::particleadvection::EvaluatorStatus& status,
+                            vtkm::Vec3f& pointOut) const
   {
-    validity = evaluator.Evaluate(pointIn, pointOut);
+    status = evaluator.Evaluate(pointIn, pointOut);
   }
-
-private:
-  Evaluator evaluator;
 };
 
-template <typename EvalType, typename FieldType>
+template <typename EvalType>
 void ValidateEvaluator(const EvalType& eval,
-                       const std::vector<vtkm::Vec<FieldType, 3>>& pointIns,
-                       const vtkm::Vec<FieldType, 3>& vec,
+                       const std::vector<vtkm::Vec3f>& pointIns,
+                       const vtkm::Vec3f& vec,
                        const std::string& msg)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using EvalTester = TestEvaluatorWorklet<FieldType, EvalType>;
+  using EvalTester = TestEvaluatorWorklet;
   using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
-  EvalTester evalTester(eval);
+  using Status = vtkm::worklet::particleadvection::EvaluatorStatus;
+  EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
-    vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  pointsHandle.PrepareForInput(DeviceAdapter());
-  vtkm::cont::ArrayHandle<bool> evalStatus;
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> evalResults;
-  evalStatus.PrepareForOutput(numPoints, DeviceAdapter());
-  evalResults.PrepareForOutput(numPoints, DeviceAdapter());
-  evalTesterDispatcher.Invoke(pointsHandle, evalStatus, evalResults);
+  vtkm::cont::ArrayHandle<Status> evalStatus;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
+  evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
-    bool status = statusPortal.Get(index);
-    vtkm::Vec<FieldType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    Status status = statusPortal.Get(index);
+    vtkm::Vec3f result = resultsPortal.Get(index);
+    VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
@@ -227,62 +324,94 @@ void ValidateEvaluator(const EvalType& eval,
   evalResults.ReleaseResources();
 }
 
-template <typename FieldType, typename Integrator>
 class TestIntegratorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  TestIntegratorWorklet(Integrator i)
-    : integrator(i){};
+  using ControlSignature = void(FieldIn inputPoint,
+                                ExecObject integrator,
+                                FieldOut validity,
+                                FieldOut outputPoint);
 
-  typedef void ControlSignature(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  typedef void ExecutionSignature(_1, _2, _3);
-
-  VTKM_EXEC
-  void operator()(vtkm::Vec<FieldType, 3>& pointIn,
-                  vtkm::worklet::particleadvection::ParticleStatus& status,
-                  vtkm::Vec<FieldType, 3>& pointOut) const
+  template <typename IntegratorType>
+  VTKM_EXEC void operator()(vtkm::Vec3f& pointIn,
+                            const IntegratorType* integrator,
+                            vtkm::worklet::particleadvection::IntegratorStatus& status,
+                            vtkm::Vec3f& pointOut) const
   {
-    status = integrator.Step(pointIn, pointOut);
+    vtkm::FloatDefault time = 0;
+    status = integrator->Step(pointIn, time, pointOut);
   }
-
-private:
-  Integrator integrator;
 };
 
 
-template <typename IntegratorType, typename FieldType>
+template <typename IntegratorType>
 void ValidateIntegrator(const IntegratorType& integrator,
-                        const std::vector<vtkm::Vec<FieldType, 3>>& pointIns,
-                        const std::vector<vtkm::Vec<FieldType, 3>>& expStepResults,
+                        const std::vector<vtkm::Vec3f>& pointIns,
+                        const std::vector<vtkm::Vec3f>& expStepResults,
                         const std::string& msg)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using IntegratorTester = TestIntegratorWorklet<FieldType, IntegratorType>;
+  using IntegratorTester = TestIntegratorWorklet;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
-  using Status = vtkm::worklet::particleadvection::ParticleStatus;
-  IntegratorTester integratorTester(integrator);
-  IntegratorTesterDispatcher integratorTesterDispatcher(integratorTester);
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
-    vtkm::cont::make_ArrayHandle(pointIns);
+  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+  IntegratorTesterDispatcher integratorTesterDispatcher;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
-  pointsHandle.PrepareForInput(DeviceAdapter());
   vtkm::cont::ArrayHandle<Status> stepStatus;
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> stepResults;
-  stepStatus.PrepareForOutput(numPoints, DeviceAdapter());
-  stepResults.PrepareForOutput(numPoints, DeviceAdapter());
-  integratorTesterDispatcher.Invoke(pointsHandle, stepStatus, stepResults);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
+  integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
+  auto statusPortal = stepStatus.GetPortalConstControl();
+  auto pointsPortal = pointsHandle.GetPortalConstControl();
+  auto resultsPortal = stepResults.GetPortalConstControl();
+  for (vtkm::Id index = 0; index < numPoints; index++)
+  {
+    Status status = statusPortal.Get(index);
+    vtkm::Vec3f result = resultsPortal.Get(index);
+    VTKM_TEST_ASSERT(status != Status::FAIL, "Error in evaluator for " + msg);
+    if (status == Status::OUTSIDE_SPATIAL_BOUNDS)
+      VTKM_TEST_ASSERT(result == pointsPortal.Get(index),
+                       "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
+    else
+      VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
+                       "Error in evaluator result for " + msg);
+  }
+  pointsHandle.ReleaseResources();
+  stepStatus.ReleaseResources();
+  stepResults.ReleaseResources();
+}
+
+template <typename IntegratorType>
+void ValidateIntegratorForBoundary(const vtkm::Vec3f& vector,
+                                   const vtkm::Bounds& bounds,
+                                   const IntegratorType& integrator,
+                                   const std::vector<vtkm::Vec3f>& pointIns,
+                                   const std::string& msg)
+{
+  using IntegratorTester = TestIntegratorWorklet;
+  using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
+  using Status = vtkm::worklet::particleadvection::IntegratorStatus;
+
+  vtkm::FloatDefault tolerance = vtkm::Epsilon<vtkm::FloatDefault>() * 100;
+  IntegratorTesterDispatcher integratorTesterDispatcher;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
+  vtkm::cont::ArrayHandle<Status> stepStatus;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
+  integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
   auto statusPortal = stepStatus.GetPortalConstControl();
   auto resultsPortal = stepResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
-    vtkm::Vec<FieldType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status == Status::STATUS_OK || status == Status::TERMINATED ||
-                       status == Status::EXITED_SPATIAL_BOUNDARY,
-                     "Error in evaluator for " + msg);
-    VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
-                     "Error in evaluator result for " + msg);
+    vtkm::Vec3f result = resultsPortal.Get(index);
+    if (vector[0] == 1.)
+      VTKM_TEST_ASSERT((bounds.X.Max - result[0]) < tolerance, "X Tolerance not satisfied.");
+    if (vector[1] == 1.)
+      VTKM_TEST_ASSERT((bounds.Y.Max - result[1]) < tolerance, "Y Tolerance not satisfied.");
+    if (vector[2] == 1.)
+      VTKM_TEST_ASSERT((bounds.Z.Max - result[2]) < tolerance, "Z Tolerance not satisfied.");
+    VTKM_TEST_ASSERT(status == Status::OUTSIDE_SPATIAL_BOUNDS, "Error in evaluator for " + msg);
   }
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
@@ -291,39 +420,18 @@ void ValidateIntegrator(const IntegratorType& integrator,
 
 void TestEvaluators()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using FieldType = vtkm::Float32;
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
-  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  //Constant field evaluator and RK4 integrator.
-  using CEvalType = vtkm::worklet::particleadvection::ConstantField<FieldType>;
-  using RK4CType = vtkm::worklet::particleadvection::RK4Integrator<CEvalType, FieldType>;
-
-  //Uniform grid evaluator and RK4 integrator.
-  using UniformEvalType =
-    vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                          FieldType,
-                                                          DeviceAdapter>;
-  using RK4UniformType =
-    vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType, FieldType>;
-
-  //Rectilinear grid evaluator and RK4 integrator.
-  using RectilinearEvalType =
-    vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType,
-                                                              FieldType,
-                                                              DeviceAdapter>;
-  using RK4RectilinearType =
-    vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType, FieldType>;
-
-  std::vector<vtkm::Vec<FieldType, 3>> vecs;
-  vecs.push_back(vtkm::Vec<FieldType, 3>(1, 0, 0));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(0, 1, 0));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(0, 0, 1));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(1, 1, 0));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(0, 1, 1));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(1, 0, 1));
-  vecs.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
+  std::vector<vtkm::Vec3f> vecs;
+  vecs.push_back(vtkm::Vec3f(1, 0, 0));
+  vecs.push_back(vtkm::Vec3f(0, 1, 0));
+  vecs.push_back(vtkm::Vec3f(0, 0, 1));
+  vecs.push_back(vtkm::Vec3f(1, 1, 0));
+  vecs.push_back(vtkm::Vec3f(0, 1, 1));
+  vecs.push_back(vtkm::Vec3f(1, 0, 1));
+  vecs.push_back(vtkm::Vec3f(1, 1, 1));
 
   std::vector<vtkm::Bounds> bounds;
   bounds.push_back(vtkm::Bounds(0, 10, 0, 10, 0, 10));
@@ -335,163 +443,225 @@ void TestEvaluators()
   dims.push_back(vtkm::Id3(10, 5, 5));
   dims.push_back(vtkm::Id3(10, 5, 5));
 
-  std::vector<FieldType> steps;
-  steps.push_back(0.01f);
-  //  steps.push_back(0.05f);
-
-  srand(314);
-  for (std::size_t d = 0; d < dims.size(); d++)
+  for (auto& dim : dims)
   {
-    vtkm::Id3 dim = dims[d];
-
-    for (std::size_t i = 0; i < vecs.size(); i++)
+    for (auto& vec : vecs)
     {
-      vtkm::Vec<FieldType, 3> vec = vecs[i];
-
-      for (std::size_t j = 0; j < bounds.size(); j++)
+      for (auto& bound : bounds)
       {
-        //Create uniform and rectilinear data.
-        vtkm::cont::DataSet uniformData, rectData;
-        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> vecField;
-        uniformData = CreateUniformDataSet<FieldType>(bounds[j], dim);
-        rectData = CreateRectilinearDataSet<FieldType>(bounds[j], dim);
+        std::vector<vtkm::cont::DataSet> dataSets;
+        dataSets.push_back(CreateUniformDataSet(bound, dim));
+        dataSets.push_back(CreateRectilinearDataSet(bound, dim));
+
+        vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
 
-        for (std::size_t s = 0; s < steps.size(); s++)
+        vtkm::FloatDefault stepSize = 0.01f;
+        std::vector<vtkm::Vec3f> pointIns;
+        std::vector<vtkm::Vec3f> stepResult;
+        //Create a bunch of random points in the bounds.
+        srand(314);
+        //Generate points 2 steps inside the bounding box.
+        vtkm::Bounds interiorBounds = bound;
+        interiorBounds.X.Min += 2 * stepSize;
+        interiorBounds.Y.Min += 2 * stepSize;
+        interiorBounds.Z.Min += 2 * stepSize;
+        interiorBounds.X.Max -= 2 * stepSize;
+        interiorBounds.Y.Max -= 2 * stepSize;
+        interiorBounds.Z.Max -= 2 * stepSize;
+        for (int k = 0; k < 38; k++)
         {
-          FieldType stepSize = steps[s];
+          auto p = RandomPoint(interiorBounds);
+          pointIns.push_back(p);
+          stepResult.push_back(p + vec * stepSize);
+        }
 
-          //Constant vector field evaluator.
-          CEvalType constEval(bounds[j], vecs[i]);
-          RK4CType constRK4(constEval, stepSize);
+        std::vector<vtkm::Vec3f> boundaryPoints;
+        const vtkm::Range xRange(bound.X.Max - stepSize / 2., bound.X.Max);
+        const vtkm::Range yRange(bound.Y.Max - stepSize / 2., bound.Y.Max);
+        const vtkm::Range zRange(bound.Z.Max - stepSize / 2., bound.Z.Max);
+        vtkm::Bounds forBoundary(xRange, yRange, zRange);
+        for (int k = 0; k < 10; k++)
+        {
+          // Generate bunch of boundary points towards the face of the direction
+          // of the velocity field
+          // All velocities are in the +ve direction.
+          auto p = RandomPoint(forBoundary);
+          pointIns.push_back(p);
+        }
 
+        for (auto& ds : dataSets)
+        {
+          GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
+          ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
 
-          //Uniform vector field evaluator
-          UniformEvalType uniformEval(
-            uniformData.GetCoordinateSystem(), uniformData.GetCellSet(0), vecField);
-          RK4UniformType uniformRK4(uniformEval, stepSize);
+          RK4Type rk4(gridEval, stepSize);
+          ValidateIntegrator(rk4, pointIns, stepResult, "constant vector RK4");
 
-          //Rectilinear grid evaluator.
-          RectilinearEvalType rectEval(
-            rectData.GetCoordinateSystem(), rectData.GetCellSet(0), vecField);
-          RK4RectilinearType rectRK4(rectEval, stepSize);
-          std::vector<vtkm::Vec<FieldType, 3>> pointIns;
-          std::vector<vtkm::Vec<FieldType, 3>> stepResult;
-          //Create a bunch of random points in the bounds.
-          for (int k = 0; k < 38; k++)
-          {
-            //Generate points 2 steps inside the bounding box.
-            vtkm::Bounds interiorBounds = bounds[j];
-            interiorBounds.X.Min += 2 * stepSize;
-            interiorBounds.Y.Min += 2 * stepSize;
-            interiorBounds.Z.Min += 2 * stepSize;
-            interiorBounds.X.Max -= 2 * stepSize;
-            interiorBounds.Y.Max -= 2 * stepSize;
-            interiorBounds.Z.Max -= 2 * stepSize;
-            vtkm::Vec<FieldType, 3> p;
-            RandomPoint<FieldType>(interiorBounds, p);
-            pointIns.push_back(p);
-            stepResult.push_back(p + vec * stepSize);
-          }
-          //Test the result for the evaluator
-          ValidateEvaluator(constEval, pointIns, vec, "constant vector evaluator");
-          ValidateEvaluator(uniformEval, pointIns, vec, "uniform evaluator");
-          ValidateEvaluator(rectEval, pointIns, vec, "rectilinear evaluator");
-
-          //Test taking one step.
-          ValidateIntegrator(constRK4, pointIns, stepResult, "constant vector RK4");
-          ValidateIntegrator(uniformRK4, pointIns, stepResult, "uniform RK4");
-          ValidateIntegrator(rectRK4, pointIns, stepResult, "rectilinear evaluator");
+          ValidateIntegratorForBoundary(vec, bound, rk4, boundaryPoints, "constant vector RK4");
         }
       }
     }
   }
 }
 
+void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResult& res,
+                                     vtkm::Id nSeeds,
+                                     vtkm::Id maxSteps)
+{
+  VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == nSeeds,
+                   "Number of output particles does not match input.");
+  for (vtkm::Id i = 0; i < nSeeds; i++)
+    VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
+                     "Too many steps taken in particle advection");
+}
+
+void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
+                              vtkm::Id nSeeds,
+                              vtkm::Id maxSteps)
+{
+  VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == nSeeds,
+                   "Number of output streamlines does not match input.");
+
+  for (vtkm::Id i = 0; i < nSeeds; i++)
+    VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
+                     "Too many steps taken in streamline");
+}
+
 void TestParticleWorklets()
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  using FieldType = vtkm::Float32;
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
-  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-  FieldType stepSize = 0.05f;
-
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::FloatDefault stepSize = 0.01f;
 
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
+  std::vector<vtkm::Vec3f> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
-    FieldType x = vecData[i];
-    FieldType y = vecData[++i];
-    FieldType z = vecData[++i];
-    vtkm::Vec<FieldType, 3> vec(x, y, z);
+    vtkm::FloatDefault x = vecData[i];
+    vtkm::FloatDefault y = vecData[++i];
+    vtkm::FloatDefault z = vecData[++i];
+    vtkm::Vec3f vec(x, y, z);
     field.push_back(vtkm::Normal(vec));
   }
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
-
-  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                           FieldType,
-                                                                           DeviceAdapter>;
-  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType>;
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
-  RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
-  RK4RGType rk4(eval, stepSize);
+  std::vector<vtkm::Bounds> bounds;
+  bounds.push_back(vtkm::Bounds(0, 10, 0, 10, 0, 10));
+  bounds.push_back(vtkm::Bounds(-1, 1, -1, 1, -1, 1));
+  bounds.push_back(vtkm::Bounds(0, 1, 0, 1, -1, 1));
 
-  for (int i = 0; i < 2; i++)
+  vtkm::Id maxSteps = 1000;
+  for (auto& bound : bounds)
   {
-    std::vector<vtkm::Vec<FieldType, 3>> pts;
-    pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
-    pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
-    pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
+    std::vector<vtkm::cont::DataSet> dataSets;
+    dataSets.push_back(CreateUniformDataSet(bound, dims));
+    dataSets.push_back(CreateRectilinearDataSet(bound, dims));
+    // Create an explicit dataset.
+    dataSets.push_back(CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::SINGLE));
+    dataSets.push_back(
+      CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::CURVILINEAR));
+    dataSets.push_back(CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::EXPLICIT));
 
-    vtkm::Id maxSteps = 100;
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
-    seeds = vtkm::cont::make_ArrayHandle(pts);
+    //Generate three random points.
+    std::vector<vtkm::Vec3f> pts;
+    pts.push_back(RandomPoint(bound));
+    pts.push_back(RandomPoint(bound));
+    pts.push_back(RandomPoint(bound));
 
-    if (i == 0)
+    vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
+    std::vector<vtkm::Id> stepsTaken = { 10, 20, 600 };
+
+    for (auto& ds : dataSets)
     {
-      vtkm::worklet::ParticleAdvection particleAdvection;
-      vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-      res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
-      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-                       "Number of output particles does not match input.");
-    }
-    else if (i == 1)
-    {
-      vtkm::worklet::Streamline streamline;
-      vtkm::worklet::StreamlineResult<FieldType> res;
-      res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
+      GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+      RK4Type rk4(eval, stepSize);
 
-      //Make sure we have the right number of streamlines.
-      VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
-                       "Number of output streamlines does not match input.");
-
-      //Make sure we have the right number of samples in each streamline.
-      vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
-      for (vtkm::Id j = 0; j < nSeeds; j++)
+      //Do 4 tests on each dataset.
+      //Particle advection worklet with and without steps taken.
+      //Streamline worklet with and without steps taken.
+      for (int i = 0; i < 4; i++)
       {
-        vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(j));
-        vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(j);
-        VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+        auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
+        auto stepsTakenArray = vtkm::cont::make_ArrayHandle(stepsTaken, vtkm::CopyFlag::On);
+
+        if (i < 2)
+        {
+          vtkm::worklet::ParticleAdvection pa;
+          vtkm::worklet::ParticleAdvectionResult res;
+          if (i == 0)
+            res = pa.Run(rk4, seedsArray, maxSteps);
+          else
+            res = pa.Run(rk4, seedsArray, stepsTakenArray, maxSteps);
+          ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
+        }
+        else
+        {
+          vtkm::worklet::Streamline s;
+          vtkm::worklet::StreamlineResult res;
+          if (i == 2)
+            res = s.Run(rk4, seedsArray, maxSteps);
+          else
+            res = s.Run(rk4, seedsArray, stepsTakenArray, maxSteps);
+          ValidateStreamlineResult(res, nSeeds, maxSteps);
+        }
       }
     }
   }
+}
+
+void TestParticleStatus()
+{
+  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+  const vtkm::Id3 dims(5, 5, 5);
+  vtkm::cont::DataSet ds = CreateUniformDataSet(bounds, dims);
+
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2];
+
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
+  for (vtkm::Id i = 0; i < nElements; i++)
+    field.push_back(vtkm::Vec3f(1, 0, 0));
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::Id maxSteps = 1000;
+  vtkm::FloatDefault stepSize = 0.01f;
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  RK4Type rk4(eval, stepSize);
+
+  vtkm::worklet::ParticleAdvection pa;
+  std::vector<vtkm::Vec3f> pts;
+  pts.push_back(vtkm::Vec3f(.5, .5, .5));
+  pts.push_back(vtkm::Vec3f(-1, -1, -1));
+  auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
+  auto res = pa.Run(rk4, seedsArray, maxSteps);
+  auto statusPortal = res.status.GetPortalConstControl();
+
+  vtkm::Id tookStep0 = statusPortal.Get(0) &
+    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
+  vtkm::Id tookStep1 = statusPortal.Get(1) &
+    static_cast<vtkm::Id>(vtkm::worklet::particleadvection::ParticleStatus::TOOK_ANY_STEPS);
+  VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
+  VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
 }
 
 void TestParticleAdvection()
 {
   TestEvaluators();
   TestParticleWorklets();
+  TestParticleStatus();
 }
 
-int UnitTestParticleAdvection(int, char* [])
+int UnitTestParticleAdvection(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestParticleAdvection);
+  return vtkm::cont::testing::Testing::Run(TestParticleAdvection, argc, argv);
 }

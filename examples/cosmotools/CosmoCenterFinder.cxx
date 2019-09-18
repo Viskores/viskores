@@ -2,25 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/Timer.h>
+#include <vtkm/cont/Initialize.h>
+
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 
@@ -32,7 +22,7 @@
 #include <stdexcept>
 #include <string>
 
-using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel::UserFirst;
 
 void TestCosmoCenterFinder(const char* fileName)
 {
@@ -72,29 +62,27 @@ void TestCosmoCenterFinder(const char* fileName)
   vtkm::Pair<vtkm::Id, vtkm::Float32> nxnResult;
   vtkm::Pair<vtkm::Id, vtkm::Float32> mxnResult;
 
-  vtkm::cont::Timer<DeviceAdapter> total;
-  vtkm::cont::Timer<DeviceAdapter> timer;
-
-  // Create the worklet and run it
-  vtkm::Float32 particleMass = 1.08413e+09f;
-
+  const vtkm::Float32 particleMass = 1.08413e+09f;
   vtkm::worklet::CosmoTools cosmoTools;
-  cosmoTools.RunMBPCenterFinderNxN(
-    xLocArray, yLocArray, zLocArray, nParticles, particleMass, nxnResult, DeviceAdapter());
-  vtkm::Float64 nxnTime = timer.GetElapsedTime();
 
-  std::cout << "**** NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second
-            << std::endl;
-  std::cout << "**** Time for NxN: " << nxnTime << std::endl;
+  {
+    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing NxN");
 
-  timer.Reset();
-  cosmoTools.RunMBPCenterFinderMxN(
-    xLocArray, yLocArray, zLocArray, nParticles, particleMass, mxnResult, DeviceAdapter());
-  vtkm::Float64 estTime = timer.GetElapsedTime();
+    cosmoTools.RunMBPCenterFinderNxN(
+      xLocArray, yLocArray, zLocArray, nParticles, particleMass, nxnResult);
 
-  std::cout << "**** MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second
-            << std::endl;
-  std::cout << "**** Time for MxN: " << estTime << std::endl;
+    VTKM_LOG_S(CosmoLogLevel,
+               "NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second);
+  }
+
+  {
+    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing MxN");
+    cosmoTools.RunMBPCenterFinderMxN(
+      xLocArray, yLocArray, zLocArray, nParticles, particleMass, mxnResult);
+
+    VTKM_LOG_S(CosmoLogLevel,
+               "MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second);
+  }
 
   if (nxnResult.first == mxnResult.first)
     std::cout << "FOUND CORRECT PARTICLE " << mxnResult.first << " with potential "
@@ -123,11 +111,22 @@ void TestCosmoCenterFinder(const char* fileName)
 
 int main(int argc, char* argv[])
 {
+  vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
+  vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
+
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+
   if (argc < 2)
   {
     std::cout << "Usage: " << std::endl << "$ " << argv[0] << " <input_file>" << std::endl;
+    std::cout << config.Usage << std::endl;
     return 1;
   }
+
+#ifndef VTKM_ENABLE_LOGGING
+  std::cout << "Warning: turn on VTKm_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+#endif
 
   TestCosmoCenterFinder(argv[1]);
 

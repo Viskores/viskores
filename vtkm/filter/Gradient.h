@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_filter_Gradient_h
@@ -40,7 +30,8 @@ namespace filter
 class Gradient : public vtkm::filter::FilterCell<Gradient>
 {
 public:
-  Gradient();
+  using SupportedTypes =
+    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each
@@ -97,39 +88,24 @@ public:
   void SetQCriterionName(const std::string& name) { this->QCriterionName = name; }
   const std::string& GetQCriterionName() const { return this->QCriterionName; }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                 const vtkm::filter::FieldMetadata& fieldMeta,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                const DeviceAdapter& tag);
+                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  bool ComputePointGradient;
-  bool ComputeDivergence;
-  bool ComputeVorticity;
-  bool ComputeQCriterion;
-  bool StoreGradient;
-  bool RowOrdering;
+  bool ComputePointGradient = false;
+  bool ComputeDivergence = false;
+  bool ComputeVorticity = false;
+  bool ComputeQCriterion = false;
+  bool StoreGradient = true;
+  bool RowOrdering = true;
 
-  std::string GradientsName;
-  std::string DivergenceName;
-  std::string VorticityName;
-  std::string QCriterionName;
-};
-
-template <>
-class FilterTraits<Gradient>
-{
-public:
-  struct TypeListTagGradientInputs : vtkm::ListTagBase<vtkm::Float32,
-                                                       vtkm::Float64,
-                                                       vtkm::Vec<vtkm::Float32, 3>,
-                                                       vtkm::Vec<vtkm::Float64, 3>>
-  {
-  };
-
-  using InputFieldTypeList = TypeListTagGradientInputs;
+  std::string DivergenceName = "Divergence";
+  std::string GradientsName = "Gradients";
+  std::string QCriterionName = "QCriterion";
+  std::string VorticityName = "Vorticity";
 };
 }
 } // namespace vtkm::filter

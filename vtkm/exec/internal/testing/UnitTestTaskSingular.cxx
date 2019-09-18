@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/exec/internal/TaskSingular.h>
@@ -30,7 +20,6 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/testing/Testing.h>
-
 namespace
 {
 
@@ -62,6 +51,13 @@ struct MyVisitArrayPortal
 {
   using ValueType = vtkm::IdComponent;
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
+};
+
+struct MyThreadToOutputMapPortal
+{
+  using ValueType = vtkm::Id;
+  VTKM_EXEC_CONT
+  vtkm::Id Get(vtkm::Id index) const { return index; }
 };
 
 struct TestFetchTagInput
@@ -142,31 +138,33 @@ struct Fetch<TestFetchTagOutput,
 namespace
 {
 
-typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
+using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = vtkm::internal::FunctionInterface<TestControlSignature>;
 
-typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = vtkm::internal::FunctionInterface<TestExecutionSignature1>;
 
-typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
+using TestExecutionSignature2 = vtkm::exec::arg::BasicArg<2>(vtkm::exec::arg::BasicArg<1>);
 using TestExecutionInterface2 = vtkm::internal::FunctionInterface<TestExecutionSignature2>;
 
-typedef vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)>
-  ExecutionParameterInterface;
+using ExecutionParameterInterface =
+  vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)>;
 
 using InvocationType1 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    TestControlInterface,
                                                    TestExecutionInterface1,
                                                    1,
                                                    MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal>;
+                                                   MyVisitArrayPortal,
+                                                   MyThreadToOutputMapPortal>;
 
 using InvocationType2 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    TestControlInterface,
                                                    TestExecutionInterface2,
                                                    1,
                                                    MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal>;
+                                                   MyVisitArrayPortal,
+                                                   MyThreadToOutputMapPortal>;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase
@@ -180,17 +178,20 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 
@@ -205,17 +206,20 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 
@@ -312,7 +316,7 @@ void TestTaskSingular()
 
 } // anonymous namespace
 
-int UnitTestTaskSingular(int, char* [])
+int UnitTestTaskSingular(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestTaskSingular);
+  return vtkm::testing::Testing::Run(TestTaskSingular, argc, argv);
 }

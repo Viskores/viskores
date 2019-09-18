@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,24 +6,19 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleTransform_h
 #define vtk_m_cont_ArrayHandleTransform_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorInternal.h>
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
+
+#include <vtkm/internal/ArrayPortalHelpers.h>
+
+#include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 
 namespace vtkm
 {
@@ -98,16 +92,6 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
-  {
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
-    VTKM_ASSERT(false &&
-                "Cannot write to read-only transform array. (No inverse transform given.)");
-#endif
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   const PortalType& GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -126,6 +110,8 @@ template <typename ValueType_,
 class VTKM_ALWAYS_EXPORT ArrayPortalTransform
   : public ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType_>;
+
 public:
   using Superclass = ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>;
   using PortalType = PortalType_;
@@ -153,10 +139,11 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
-    return this->Portal.Set(index, this->InverseFunctor(value));
+    this->Portal.Set(index, this->InverseFunctor(value));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -178,33 +165,119 @@ namespace cont
 namespace internal
 {
 
+template <typename ProvidedFunctorType, typename FunctorIsExecContObject>
+struct TransformFunctorManagerImpl;
+
+template <typename ProvidedFunctorType>
+struct TransformFunctorManagerImpl<ProvidedFunctorType, std::false_type>
+{
+  VTKM_STATIC_ASSERT_MSG(!vtkm::cont::internal::IsExecutionObjectBase<ProvidedFunctorType>::value,
+                         "Must use an ExecutionAndControlObject instead of an ExecutionObject.");
+
+  ProvidedFunctorType Functor;
+  using FunctorType = ProvidedFunctorType;
+
+  TransformFunctorManagerImpl() = default;
+
+  VTKM_CONT
+  TransformFunctorManagerImpl(const ProvidedFunctorType& functor)
+    : Functor(functor)
+  {
+  }
+
+  VTKM_CONT
+  ProvidedFunctorType PrepareForControl() const { return this->Functor; }
+
+  template <typename Device>
+  VTKM_CONT ProvidedFunctorType PrepareForExecution(Device) const
+  {
+    return this->Functor;
+  }
+};
+
+template <typename ProvidedFunctorType>
+struct TransformFunctorManagerImpl<ProvidedFunctorType, std::true_type>
+{
+  VTKM_IS_EXECUTION_AND_CONTROL_OBJECT(ProvidedFunctorType);
+
+  ProvidedFunctorType Functor;
+  //  using FunctorType = decltype(std::declval<ProvidedFunctorType>().PrepareForControl());
+  using FunctorType = decltype(Functor.PrepareForControl());
+
+  TransformFunctorManagerImpl() = default;
+
+  VTKM_CONT
+  TransformFunctorManagerImpl(const ProvidedFunctorType& functor)
+    : Functor(functor)
+  {
+  }
+
+  VTKM_CONT
+  auto PrepareForControl() const -> decltype(this->Functor.PrepareForControl())
+  {
+    return this->Functor.PrepareForControl();
+  }
+
+  template <typename Device>
+  VTKM_CONT auto PrepareForExecution(Device device) const
+    -> decltype(this->Functor.PrepareForExecution(device))
+  {
+    return this->Functor.PrepareForExecution(device);
+  }
+};
+
+template <typename ProvidedFunctorType>
+struct TransformFunctorManager
+  : TransformFunctorManagerImpl<
+      ProvidedFunctorType,
+      typename vtkm::cont::internal::IsExecutionAndControlObjectBase<ProvidedFunctorType>::type>
+{
+  using Superclass = TransformFunctorManagerImpl<
+    ProvidedFunctorType,
+    typename vtkm::cont::internal::IsExecutionAndControlObjectBase<ProvidedFunctorType>::type>;
+  using FunctorType = typename Superclass::FunctorType;
+
+  VTKM_CONT TransformFunctorManager() = default;
+
+  VTKM_CONT TransformFunctorManager(const TransformFunctorManager&) = default;
+
+  VTKM_CONT TransformFunctorManager(const ProvidedFunctorType& functor)
+    : Superclass(functor)
+  {
+  }
+
+  template <typename ValueType>
+  using TransformedValueType = decltype(std::declval<FunctorType>()(ValueType{}));
+};
+
 template <typename ArrayHandleType,
           typename FunctorType,
           typename InverseFunctorType = NullFunctorType>
 struct VTKM_ALWAYS_EXPORT StorageTagTransform
 {
-  using ValueType = decltype(FunctorType{}(typename ArrayHandleType::ValueType{}));
+  using FunctorManager = TransformFunctorManager<FunctorType>;
+  using ValueType =
+    typename FunctorManager::template TransformedValueType<typename ArrayHandleType::ValueType>;
 };
 
 template <typename ArrayHandleType, typename FunctorType>
 class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
               StorageTagTransform<ArrayHandleType, FunctorType>>
 {
+  using FunctorManager = TransformFunctorManager<FunctorType>;
+
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
-
-  // This is meant to be invalid. Because Transform arrays are read only, you
-  // should only be able to use the const version.
-  struct PortalType
-  {
-    using ValueType = void*;
-    using IteratorType = void*;
-  };
 
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
                                                typename ArrayHandleType::PortalConstControl,
-                                               FunctorType>;
+                                               typename FunctorManager::FunctorType>;
+
+  // Note that this array is read only, so you really should only be getting the const
+  // version of the portal. If you actually try to write to this portal, you will
+  // get an error.
+  using PortalType = PortalConstType;
 
   VTKM_CONT
   Storage()
@@ -223,15 +296,16 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->Functor);
+    throw vtkm::cont::ErrorBadType(
+      "ArrayHandleTransform is read only. Cannot get writable portal.");
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor);
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
+    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -269,11 +343,11 @@ public:
   }
 
   VTKM_CONT
-  const FunctorType& GetFunctor() const { return this->Functor; }
+  const FunctorManager& GetFunctor() const { return this->Functor; }
 
 private:
   ArrayHandleType Array;
-  FunctorType Functor;
+  FunctorManager Functor;
   bool Valid;
 };
 
@@ -282,6 +356,9 @@ class Storage<
   typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType,
   StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
+  using FunctorManager = TransformFunctorManager<FunctorType>;
+  using InverseFunctorManager = TransformFunctorManager<InverseFunctorType>;
+
 public:
   using ValueType =
     typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType;
@@ -289,13 +366,13 @@ public:
   using PortalType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
                                                typename ArrayHandleType::PortalControl,
-                                               FunctorType,
-                                               InverseFunctorType>;
+                                               typename FunctorManager::FunctorType,
+                                               typename InverseFunctorManager::FunctorType>;
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
                                                typename ArrayHandleType::PortalConstControl,
-                                               FunctorType,
-                                               InverseFunctorType>;
+                                               typename FunctorManager::FunctorType,
+                                               typename InverseFunctorManager::FunctorType>;
 
   VTKM_CONT
   Storage()
@@ -318,15 +395,20 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->Functor, this->InverseFunctor);
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
+    return PortalType(this->Array.GetPortalControl(),
+                      this->Functor.PrepareForControl(),
+                      this->InverseFunctor.PrepareForControl());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(
-      this->Array.GetPortalConstControl(), this->Functor, this->InverseFunctor);
+    vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
+    return PortalConstType(this->Array.GetPortalConstControl(),
+                           this->Functor.PrepareForControl(),
+                           this->InverseFunctor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -361,15 +443,15 @@ public:
   }
 
   VTKM_CONT
-  const FunctorType& GetFunctor() const { return this->Functor; }
+  const FunctorManager& GetFunctor() const { return this->Functor; }
 
   VTKM_CONT
-  const InverseFunctorType& GetInverseFunctor() const { return this->InverseFunctor; }
+  const InverseFunctorManager& GetInverseFunctor() const { return this->InverseFunctor; }
 
 private:
   ArrayHandleType Array;
-  FunctorType Functor;
-  InverseFunctorType InverseFunctor;
+  FunctorManager Functor;
+  InverseFunctorManager InverseFunctor;
   bool Valid;
 };
 
@@ -379,6 +461,7 @@ class ArrayTransfer<typename StorageTagTransform<ArrayHandleType, FunctorType>::
                     Device>
 {
   using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType>;
+  using FunctorManager = TransformFunctorManager<FunctorType>;
 
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
@@ -392,7 +475,7 @@ public:
   using PortalConstExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-    FunctorType>;
+    typename FunctorManager::FunctorType>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -407,7 +490,8 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor);
+    return PortalConstExecution(this->Array.PrepareForInput(Device()),
+                                this->Functor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
@@ -443,7 +527,7 @@ public:
 
 private:
   ArrayHandleType Array;
-  FunctorType Functor;
+  FunctorManager Functor;
 };
 
 template <typename ArrayHandleType,
@@ -456,6 +540,8 @@ class ArrayTransfer<
   Device>
 {
   using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>;
+  using FunctorManager = TransformFunctorManager<FunctorType>;
+  using InverseFunctorManager = TransformFunctorManager<InverseFunctorType>;
 
 public:
   using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
@@ -467,13 +553,13 @@ public:
   using PortalExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
-    FunctorType,
-    InverseFunctorType>;
+    typename FunctorManager::FunctorType,
+    typename InverseFunctorManager::FunctorType>;
   using PortalConstExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-    FunctorType,
-    InverseFunctorType>;
+    typename FunctorManager::FunctorType,
+    typename InverseFunctorManager::FunctorType>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -489,22 +575,25 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(
-      this->Array.PrepareForInput(Device()), this->Functor, this->InverseFunctor);
+    return PortalConstExecution(this->Array.PrepareForInput(Device()),
+                                this->Functor.PrepareForExecution(Device()),
+                                this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
   {
-    return PortalExecution(
-      this->Array.PrepareForInPlace(Device()), this->Functor, this->InverseFunctor);
+    return PortalExecution(this->Array.PrepareForInPlace(Device()),
+                           this->Functor.PrepareForExecution(Device()),
+                           this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return PortalExecution(
-      this->Array.PrepareForOutput(numberOfValues, Device()), this->Functor, this->InverseFunctor);
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()),
+                           this->Functor.PrepareForExecution(Device()),
+                           this->InverseFunctor.PrepareForExecution(Device()));
   }
 
   VTKM_CONT
@@ -522,8 +611,8 @@ public:
 
 private:
   ArrayHandleType Array;
-  FunctorType Functor;
-  InverseFunctorType InverseFunctor;
+  FunctorManager Functor;
+  InverseFunctorManager InverseFunctor;
 };
 
 } // namespace internal
@@ -626,5 +715,113 @@ make_ArrayHandleTransform(HandleType handle, FunctorType functor, InverseFunctor
 }
 
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + "," + SerializableTypeString<InvFunctor>::Get() +
+      ">";
+    return name;
+  }
+};
+
+template <typename AH, typename Functor>
+struct SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Transform<" + SerializableTypeString<AH>::Get() + "," +
+      SerializableTypeString<Functor>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
+  vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename AH, typename Functor>
+struct Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleTransform<AH, Functor>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    vtkmdiy::load(bb, array);
+    Functor functor;
+    vtkmdiy::load(bb, functor);
+    obj = vtkm::cont::make_ArrayHandleTransform(array, functor);
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    vtkmdiy::save(bb, storage.GetArray());
+    vtkmdiy::save(bb, storage.GetFunctor());
+    vtkmdiy::save(bb, storage.GetInverseFunctor());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    vtkmdiy::load(bb, array);
+    Functor functor;
+    vtkmdiy::load(bb, functor);
+    InvFunctor invFunctor;
+    vtkmdiy::load(bb, invFunctor);
+    obj = vtkm::cont::make_ArrayHandleTransform(array, functor, invFunctor);
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct Serialization<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
+  vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
+  : Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleTransform_h

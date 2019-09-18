@@ -2,25 +2,13 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/internal/DispatcherBase.h>
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
@@ -29,20 +17,35 @@
 namespace
 {
 
-using Device = vtkm::cont::DeviceAdapterTagSerial;
-
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
-struct TestExecObject
+struct TestExecObjectIn
 {
   VTKM_EXEC_CONT
-  TestExecObject()
+  TestExecObjectIn()
     : Array(nullptr)
   {
   }
 
   VTKM_EXEC_CONT
-  TestExecObject(vtkm::Id* array)
+  TestExecObjectIn(const vtkm::Id* array)
+    : Array(array)
+  {
+  }
+
+  const vtkm::Id* Array;
+};
+
+struct TestExecObjectOut
+{
+  VTKM_EXEC_CONT
+  TestExecObjectOut()
+    : Array(nullptr)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  TestExecObjectOut(vtkm::Id* array)
     : Array(array)
   {
   }
@@ -50,18 +53,31 @@ struct TestExecObject
   vtkm::Id* Array;
 };
 
-struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
+template <typename Device>
+struct ExecutionObject
+{
+  vtkm::Id Value;
+};
+
+struct TestExecObjectType : vtkm::cont::ExecutionObjectBase
 {
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
   {
     f(*this, std::forward<Args>(args)...);
   }
+  template <typename Device>
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    ExecutionObject<Device> object;
+    object.Value = this->Value;
+    return object;
+  }
   vtkm::Id Value;
 };
 
 struct TestExecObjectTypeBad
-{ //this will fail as it doesn't inherit from vtkm::exec::ExecutionObjectBase
+{ //this will fail as it doesn't inherit from vtkm::cont::ExecutionObjectBase
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
   {
@@ -72,7 +88,10 @@ struct TestExecObjectTypeBad
 struct TestTypeCheckTag
 {
 };
-struct TestTransportTag
+struct TestTransportTagIn
+{
+};
+struct TestTransportTagOut
 {
 };
 struct TestFetchTagInput
@@ -92,25 +111,43 @@ namespace arg
 {
 
 template <>
-struct TypeCheck<TestTypeCheckTag, vtkm::Id*>
+struct TypeCheck<TestTypeCheckTag, std::vector<vtkm::Id>>
 {
   static constexpr bool value = true;
 };
 
-template <>
-struct Transport<TestTransportTag, vtkm::Id*, Device>
+template <typename Device>
+struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
 {
-  using ExecObjectType = TestExecObject;
+  using ExecObjectType = TestExecObjectIn;
 
   VTKM_CONT
-  ExecObjectType operator()(vtkm::Id* contData,
-                            vtkm::Id*,
+  ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
+                            const std::vector<vtkm::Id>&,
                             vtkm::Id inputRange,
                             vtkm::Id outputRange) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
-    return ExecObjectType(contData);
+    return ExecObjectType(contData.data());
+  }
+};
+
+template <typename Device>
+struct Transport<TestTransportTagOut, std::vector<vtkm::Id>, Device>
+{
+  using ExecObjectType = TestExecObjectOut;
+
+  VTKM_CONT
+  ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
+                            const std::vector<vtkm::Id>&,
+                            vtkm::Id inputRange,
+                            vtkm::Id outputRange) const
+  {
+    VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
+    VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
+    auto ptr = const_cast<vtkm::Id*>(contData.data());
+    return ExecObjectType(ptr);
   }
 };
 }
@@ -149,19 +186,19 @@ template <>
 struct Fetch<TestFetchTagInput,
              vtkm::exec::arg::AspectTagDefault,
              vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObject>
+             TestExecObjectIn>
 {
   using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
-                 const TestExecObject& execObject) const
+                 const TestExecObjectIn& execObject) const
   {
     return execObject.Array[indices.GetInputIndex()];
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic, const TestExecObject&, ValueType) const
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic, const TestExecObjectIn&, ValueType) const
   {
     // No-op
   }
@@ -171,12 +208,12 @@ template <>
 struct Fetch<TestFetchTagOutput,
              vtkm::exec::arg::AspectTagDefault,
              vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObject>
+             TestExecObjectOut>
 {
   using ValueType = vtkm::Id;
 
   VTKM_EXEC
-  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&) const
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObjectOut&) const
   {
     // No-op
     return ValueType();
@@ -184,7 +221,7 @@ struct Fetch<TestFetchTagOutput,
 
   VTKM_EXEC
   void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices,
-             const TestExecObject& execObject,
+             const TestExecObjectOut& execObject,
              ValueType value) const
   {
     execObject.Array[indices.GetOutputIndex()] = value;
@@ -205,13 +242,13 @@ public:
   struct TestIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = TestTypeCheckTag;
-    using TransportTag = TestTransportTag;
+    using TransportTag = TestTransportTagIn;
     using FetchTag = TestFetchTagInput;
   };
   struct TestOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = TestTypeCheckTag;
-    using TransportTag = TestTransportTag;
+    using TransportTag = TestTransportTagOut;
     using FetchTag = TestFetchTagOutput;
   };
 };
@@ -219,11 +256,11 @@ public:
 class TestWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef _3 ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = _3(_1, _2, WorkIndex);
 
-  VTKM_EXEC
-  vtkm::Id operator()(vtkm::Id value, TestExecObjectType execObject, vtkm::Id index) const
+  template <typename ExecObjectType>
+  VTKM_EXEC vtkm::Id operator()(vtkm::Id value, ExecObjectType execObject, vtkm::Id index) const
   {
     VTKM_TEST_ASSERT(value == TestValue(index, vtkm::Id()), "Got bad value in worklet.");
     VTKM_TEST_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE,
@@ -237,11 +274,14 @@ public:
 class TestErrorWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
-  VTKM_EXEC
-  void operator()(vtkm::Id, TestExecObjectType, vtkm::Id) const { this->RaiseError(ERROR_MESSAGE); }
+  template <typename ExecObjectType>
+  VTKM_EXEC void operator()(vtkm::Id, ExecObjectType, vtkm::Id) const
+  {
+    this->RaiseError(ERROR_MESSAGE);
+  }
 };
 
 template <typename WorkletType>
@@ -252,11 +292,13 @@ class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispat
   using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
                                                              WorkletType,
                                                              TestWorkletBase>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
   VTKM_CONT
-  TestDispatcher(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  TestDispatcher(const WorkletType& worklet = WorkletType(),
+                 const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
   {
   }
 
@@ -265,7 +307,7 @@ public:
   void DoInvoke(Invocation&& invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE, Device());
+    this->BasicInvoke(invocation, ARRAY_SIZE);
   }
 
 private:
@@ -276,25 +318,27 @@ void TestBasicInvoke()
 {
   std::cout << "Test basic invoke" << std::endl;
   std::cout << "  Set up data." << std::endl;
-  vtkm::Id inputArray[ARRAY_SIZE];
-  vtkm::Id outputArray[ARRAY_SIZE];
+  std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
+  std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
   TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  std::size_t i = 0;
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
   {
-    inputArray[index] = TestValue(index, vtkm::Id());
-    outputArray[index] = static_cast<vtkm::Id>(0xDEADDEAD);
+    inputArray[i] = TestValue(index, vtkm::Id());
+    outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
   }
 
   std::cout << "  Create and run dispatcher." << std::endl;
   TestDispatcher<TestWorklet> dispatcher;
-  dispatcher.Invoke(inputArray, execObject, outputArray);
+  dispatcher.Invoke(inputArray, execObject, &outputArray);
 
   std::cout << "  Check output of invoke." << std::endl;
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  i = 0;
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, i++)
   {
-    VTKM_TEST_ASSERT(outputArray[index] == TestValue(index, vtkm::Id()) + 1000,
+    VTKM_TEST_ASSERT(outputArray[i] == TestValue(index, vtkm::Id()) + 1000,
                      "Got bad value from testing.");
   }
 }
@@ -303,27 +347,29 @@ void TestInvokeWithError()
 {
   std::cout << "Test invoke with error raised" << std::endl;
   std::cout << "  Set up data." << std::endl;
-  vtkm::Id inputArray[ARRAY_SIZE];
-  vtkm::Id outputArray[ARRAY_SIZE];
+  std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
+  std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
   TestExecObjectType execObject;
   execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
 
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  std::size_t i = 0;
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++, ++i)
   {
-    inputArray[index] = TestValue(index, vtkm::Id());
-    outputArray[index] = static_cast<vtkm::Id>(0xDEADDEAD);
+    inputArray[i] = TestValue(index, vtkm::Id());
+    outputArray[i] = static_cast<vtkm::Id>(0xDEADDEAD);
   }
 
   try
   {
     std::cout << "  Create and run dispatcher that raises error." << std::endl;
     TestDispatcher<TestErrorWorklet> dispatcher;
-    dispatcher.Invoke(inputArray, execObject, outputArray);
+    dispatcher.Invoke(&inputArray, execObject, outputArray);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
   catch (vtkm::cont::ErrorExecution& error)
   {
     std::cout << "  Got expected exception." << std::endl;
+    std::cout << "  Exception message: " << error.GetMessage() << std::endl;
     VTKM_TEST_ASSERT(error.GetMessage() == ERROR_MESSAGE, "Got unexpected error message.");
   }
 }
@@ -332,8 +378,8 @@ void TestInvokeWithBadDynamicType()
 {
   std::cout << "Test invoke with bad type" << std::endl;
 
-  vtkm::Id inputArray[ARRAY_SIZE];
-  vtkm::Id outputArray[ARRAY_SIZE];
+  std::vector<vtkm::Id> inputArray(ARRAY_SIZE);
+  std::vector<vtkm::Id> outputArray(ARRAY_SIZE);
   TestExecObjectTypeBad execObject;
   TestDispatcher<TestWorklet> dispatcher;
 
@@ -361,7 +407,7 @@ void TestDispatcherBase()
 
 } // anonymous namespace
 
-int UnitTestDispatcherBase(int, char* [])
+int UnitTestDispatcherBase(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDispatcherBase);
+  return vtkm::cont::testing::Testing::Run(TestDispatcherBase, argc, argv);
 }

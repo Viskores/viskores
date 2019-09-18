@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/NDEntropy.h>
@@ -174,11 +164,11 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+    "fieldA", vtkm::cont::Field::Association::POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+    "fieldB", vtkm::cont::Field::Association::POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
+    "fieldC", vtkm::cont::Field::Association::POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -208,7 +198,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestNDEntropyFilter(int, char* [])
+int UnitTestNDEntropyFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

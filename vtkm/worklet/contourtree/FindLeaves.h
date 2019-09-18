@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -81,13 +71,13 @@ namespace contourtree
 class FindLeaves : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> superID,           // (input) super nodes
-                                WholeArrayIn<IdType> updegree,     // (input)
-                                WholeArrayIn<IdType> downdegree,   // (input)
-                                WholeArrayIn<IdType> joinArc,      // (input)
-                                WholeArrayIn<IdType> splitArc,     // (input)
-                                WholeArrayInOut<IdType> superarc); // (i/o)
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ControlSignature = void(FieldIn superID,           // (input) super nodes
+                                WholeArrayIn updegree,     // (input)
+                                WholeArrayIn downdegree,   // (input)
+                                WholeArrayIn joinArc,      // (input)
+                                WholeArrayIn splitArc,     // (input)
+                                WholeArrayInOut superarc); // (i/o)
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   // Constructor

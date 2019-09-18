@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_serial_internal_DeviceAdapterAlgorithmSerial_h
 #define vtk_m_cont_serial_internal_DeviceAdapterAlgorithmSerial_h
@@ -57,7 +47,7 @@ private:
   // back to a iterative casting approach. Since std::copy can only really
   // optimize same-type copies, this shouldn't affect performance.
   template <typename InIter, typename OutIter>
-  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
   {
     using OutputType = typename std::iterator_traits<OutIter>::value_type;
     while (src != srcEnd)
@@ -68,9 +58,8 @@ private:
     }
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename InIter, typename OutIter>
-  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
   {
     std::copy(src, srcEnd, dst);
   }
@@ -80,6 +69,8 @@ public:
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
@@ -103,6 +94,8 @@ public:
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     ::vtkm::NotZeroInitialized unary_predicate;
     CopyIf(input, stencil, output, unary_predicate);
   }
@@ -113,6 +106,8 @@ public:
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate predicate)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id inputSize = input.GetNumberOfValues();
     VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
 
@@ -142,6 +137,8 @@ public:
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
@@ -202,6 +199,8 @@ public:
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return Reduce(input, initialValue, vtkm::Add());
   }
 
@@ -210,6 +209,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     internal::WrappedBinaryOperator<U, BinaryFunctor> wrappedOp(binary_functor);
     auto inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
@@ -231,6 +232,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, VOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     auto keysPortalIn = keys.PrepareForInput(Device());
     auto valuesPortalIn = values.PrepareForInput(Device());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
@@ -286,6 +289,8 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedBinaryOp(binary_functor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
@@ -311,6 +316,8 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return ScanInclusive(input, output, vtkm::Sum());
   }
 
@@ -320,6 +327,8 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedBinaryOp(binaryFunctor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
@@ -358,6 +367,8 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return ScanExclusive(input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
@@ -369,6 +380,8 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id size)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::serial::internal::TaskTiling1D kernel(functor);
     ScheduleTask(kernel, size);
   }
@@ -376,6 +389,8 @@ public:
   template <class FunctorType>
   VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 size)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::exec::serial::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, size);
   }
@@ -391,6 +406,8 @@ private:
                                 vtkm::cont::ArrayHandle<I, StorageI>& index,
                                 vtkm::cont::ArrayHandle<Vout, StorageVout>& values_out)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id n = values.GetNumberOfValues();
     VTKM_ASSERT(n == index.GetNumberOfValues());
 
@@ -411,6 +428,8 @@ private:
                                         vtkm::cont::ArrayHandle<U, StorageU>& values,
                                         BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using the custom compare
@@ -424,6 +443,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     SortByKey(keys, values, std::less<T>());
   }
 
@@ -432,6 +453,8 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   const BinaryCompare& binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
     constexpr bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
     if (larger_than_64bits)
@@ -455,6 +478,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     Sort(values, std::less<T>());
   }
 
@@ -462,6 +487,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     auto arrayPortal = values.PrepareForInPlace(Device());
     vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
 
@@ -472,6 +499,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     Unique(values, std::equal_to<T>());
   }
 
@@ -479,6 +508,8 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     auto arrayPortal = values.PrepareForInPlace(Device());
     vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);

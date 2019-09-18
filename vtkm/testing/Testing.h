@@ -2,24 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_testing_Testing_h
 #define vtk_m_testing_Testing_h
 
+#include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
@@ -31,8 +22,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/Logging.h>
+
 #include <exception>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -51,21 +43,33 @@
 #endif
 #endif
 
-/// \def VTKM_TEST_ASSERT(condition, message)
+/// \def VTKM_STRINGIFY_FIRST(...)
+///
+/// A utility macro that takes 1 or more arguments and converts it into the C string version
+/// of the first argument.
+
+#define VTKM_STRINGIFY_FIRST(...) VTKM_EXPAND(VTK_M_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
+#define VTK_M_STRINGIFY_FIRST_IMPL(first, ...) #first
+#define VTKM_EXPAND(x) x
+
+/// \def VTKM_TEST_ASSERT(condition, messages..)
 ///
 /// Asserts a condition for a test to pass. A passing condition is when \a
 /// condition resolves to true. If \a condition is false, then the test is
-/// aborted and failure is returned.
+/// aborted and failure is returned. If one or more message arguments are
+/// given, they are printed out by concatinating them. If no messages are
+/// given, a generic message is given. In any case, the condition that failed
+/// is written out.
 
-#define VTKM_TEST_ASSERT(condition, message)                                                       \
-  ::vtkm::testing::Testing::Assert(condition, __FILE__, __LINE__, message, #condition)
+#define VTKM_TEST_ASSERT(...)                                                                      \
+  ::vtkm::testing::Testing::Assert(                                                                \
+    VTKM_STRINGIFY_FIRST(__VA_ARGS__), __FILE__, __LINE__, __VA_ARGS__)
 
-/// \def VTKM_TEST_FAIL(message)
+/// \def VTKM_TEST_FAIL(messages..)
 ///
-/// Causes a test to fail with the given \a message.
+/// Causes a test to fail with the given \a messages. At least one argument must be given.
 
-#define VTKM_TEST_FAIL(message)                                                                    \
-  throw ::vtkm::testing::Testing::TestFailure(__FILE__, __LINE__, message)
+#define VTKM_TEST_FAIL(...) ::vtkm::testing::Testing::TestFail(__FILE__, __LINE__, __VA_ARGS__)
 
 namespace vtkm
 {
@@ -96,6 +100,10 @@ VTK_M_BASIC_TYPE(vtkm::Int32);
 VTK_M_BASIC_TYPE(vtkm::UInt32);
 VTK_M_BASIC_TYPE(vtkm::Int64);
 VTK_M_BASIC_TYPE(vtkm::UInt64);
+VTK_M_BASIC_TYPE(char);
+
+VTK_M_BASIC_TYPE(vtkm::Bounds);
+VTK_M_BASIC_TYPE(vtkm::Range);
 
 #undef VTK_M_BASIC_TYPE
 
@@ -110,6 +118,17 @@ struct TypeName<vtkm::Vec<T, Size>>
   }
 };
 
+template <typename T, vtkm::IdComponent numRows, vtkm::IdComponent numCols>
+struct TypeName<vtkm::Matrix<T, numRows, numCols>>
+{
+  static std::string Name()
+  {
+    std::stringstream stream;
+    stream << "vtkm::Matrix< " << TypeName<T>::Name() << ", " << numRows << ", " << numCols << " >";
+    return stream.str();
+  }
+};
+
 template <typename T, typename U>
 struct TypeName<vtkm::Pair<T, U>>
 {
@@ -117,6 +136,17 @@ struct TypeName<vtkm::Pair<T, U>>
   {
     std::stringstream stream;
     stream << "vtkm::Pair< " << TypeName<T>::Name() << ", " << TypeName<U>::Name() << " >";
+    return stream.str();
+  }
+};
+
+template <typename T>
+struct TypeName<vtkm::Bitset<T>>
+{
+  static std::string Name()
+  {
+    std::stringstream stream;
+    stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
     return stream.str();
   }
 };
@@ -169,40 +199,67 @@ public:
   class TestFailure
   {
   public:
-    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, const std::string& message)
-      : File(file)
-      , Line(line)
-      , Message(message)
-    {
-    }
-
-    VTKM_CONT TestFailure(const std::string& file,
-                          vtkm::Id line,
-                          const std::string& message,
-                          const std::string& condition)
+    template <typename... Ts>
+    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, Ts&&... messages)
       : File(file)
       , Line(line)
     {
-      this->Message.append(message);
-      this->Message.append(" (");
-      this->Message.append(condition);
-      this->Message.append(")");
+      std::stringstream messageStream;
+      this->AppendMessages(messageStream, std::forward<Ts>(messages)...);
+      this->Message = messageStream.str();
     }
 
     VTKM_CONT const std::string& GetFile() const { return this->File; }
     VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
     VTKM_CONT const std::string& GetMessage() const { return this->Message; }
   private:
+    template <typename T1>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1)
+    {
+      messageStream << m1;
+    }
+    template <typename T1, typename T2>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1, T2&& m2)
+    {
+      messageStream << m1 << m2;
+    }
+    template <typename T1, typename T2, typename T3>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1, T2&& m2, T3&& m3)
+    {
+      messageStream << m1 << m2 << m3;
+    }
+    template <typename T1, typename T2, typename T3, typename T4>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream,
+                                  T1&& m1,
+                                  T2&& m2,
+                                  T3&& m3,
+                                  T4&& m4)
+    {
+      messageStream << m1 << m2 << m3 << m4;
+    }
+    template <typename T1, typename T2, typename T3, typename T4, typename... Ts>
+    VTKM_CONT void AppendMessages(std::stringstream& messageStream,
+                                  T1&& m1,
+                                  T2&& m2,
+                                  T3&& m3,
+                                  T4&& m4,
+                                  Ts&&... ms)
+    {
+      messageStream << m1 << m2 << m3 << m4;
+      this->AppendMessages(messageStream, std::forward<Ts>(ms)...);
+    }
+
     std::string File;
     vtkm::Id Line;
     std::string Message;
   };
 
-  static VTKM_CONT void Assert(bool condition,
+  template <typename... Ts>
+  static VTKM_CONT void Assert(const std::string& conditionString,
                                const std::string& file,
                                vtkm::Id line,
-                               const std::string& message,
-                               const std::string& conditionString)
+                               bool condition,
+                               Ts&&... messages)
   {
     if (condition)
     {
@@ -210,8 +267,22 @@ public:
     }
     else
     {
-      throw TestFailure(file, line, message, conditionString);
+      throw TestFailure(file, line, std::forward<Ts>(messages)..., " (", conditionString, ")");
     }
+  }
+
+  static VTKM_CONT void Assert(const std::string& conditionString,
+                               const std::string& file,
+                               vtkm::Id line,
+                               bool condition)
+  {
+    Assert(conditionString, file, line, condition, "Test assertion failed");
+  }
+
+  template <typename... Ts>
+  static VTKM_CONT void TestFail(const std::string& file, vtkm::Id line, Ts&&... messages)
+  {
+    throw TestFailure(file, line, std::forward<Ts>(messages)...);
   }
 
 #ifndef VTKM_TESTING_IN_CONT
@@ -243,8 +314,17 @@ public:
   /// \endcode
   ///
   template <class Func>
-  static VTKM_CONT int Run(Func function)
+  static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
+    if (argc == 0 || argv == nullptr)
+    {
+      vtkm::cont::InitLogging();
+    }
+    else
+    {
+      vtkm::cont::InitLogging(argc, argv);
+    }
+
     try
     {
       function();
@@ -297,7 +377,7 @@ public:
   }
 
   struct TypeListTagExemplarTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec<vtkm::Float64, 3>>
+    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>
   {
   };
 
@@ -331,210 +411,230 @@ public:
 }
 } // namespace vtkm::internal
 
-// Prototype declaration
-template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1,
-                                             VectorType2 vector2,
-                                             vtkm::Float64 tolerance = 0.00001);
-
 namespace detail
 {
 
-template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(VectorType1 vector1,
-                                                  VectorType2 vector2,
-                                                  vtkm::Float64 tolerance,
-                                                  vtkm::TypeTraitsVectorTag)
-{
-  // If you get a compiler error here, it means you are comparing a vector to
-  // a scalar, in which case the types are non-comparable.
-  VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<VectorType2>::DimensionalityTag,
-                                       vtkm::TypeTraitsScalarTag>::type::value == false),
-                         "Trying to compare a vector with a scalar.");
-
-  using Traits1 = vtkm::VecTraits<VectorType1>;
-  using Traits2 = vtkm::VecTraits<VectorType2>;
-
-  // If vectors have different number of components, then they cannot be equal.
-  if (Traits1::GetNumberOfComponents(vector1) != Traits2::GetNumberOfComponents(vector2))
-  {
-    return false;
-  }
-
-  for (vtkm::IdComponent component = 0; component < Traits1::GetNumberOfComponents(vector1);
-       component++)
-  {
-    bool componentEqual = test_equal(Traits1::GetComponent(vector1, component),
-                                     Traits2::GetComponent(vector2, component),
-                                     tolerance);
-    if (!componentEqual)
-    {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-template <typename MatrixType1, typename MatrixType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(MatrixType1 matrix1,
-                                                  MatrixType2 matrix2,
-                                                  vtkm::Float64 tolerance,
-                                                  vtkm::TypeTraitsMatrixTag)
-{
-  // For the purposes of comparison, treat matrices the same as vectors.
-  return test_equal_impl(matrix1, matrix2, tolerance, vtkm::TypeTraitsVectorTag());
-}
-
-template <typename ScalarType1, typename ScalarType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1,
-                                                  ScalarType2 scalar2,
-                                                  vtkm::Float64 tolerance,
-                                                  vtkm::TypeTraitsScalarTag)
-{
-  // If you get a compiler error here, it means you are comparing a scalar to
-  // a vector, in which case the types are non-comparable.
-  VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<ScalarType2>::DimensionalityTag,
-                                       vtkm::TypeTraitsScalarTag>::type::value),
-                         "Trying to compare a scalar with a vector.");
-
-  // Do all comparisons using 64-bit floats.
-  vtkm::Float64 value1 = vtkm::Float64(scalar1);
-  vtkm::Float64 value2 = vtkm::Float64(scalar2);
-
-  if (vtkm::Abs(value1 - value2) <= tolerance)
-  {
-    return true;
-  }
-
-  // We are using a ratio to compare the relative tolerance of two numbers.
-  // Using an ULP based comparison (comparing the bits as integers) might be
-  // a better way to go, but this has been working pretty well so far.
-  vtkm::Float64 ratio;
-  if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
-  {
-    ratio = value1 / value2;
-  }
-  else
-  {
-    // If we are here, it means that value2 is close to 0 but value1 is not.
-    // These cannot be within tolerance, so just return false.
-    return false;
-  }
-  if ((ratio > vtkm::Float64(1.0) - tolerance) && (ratio < vtkm::Float64(1.0) + tolerance))
-  {
-    // This component is OK. The condition is checked in this way to
-    // correctly handle non-finites that fail all comparisons. Thus, if a
-    // non-finite is encountered, this condition will fail and false will be
-    // returned.
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
-// Special cases of test equal where a scalar is compared with a Vec of size 1,
-// which we will allow.
-template <typename T>
-static inline VTKM_EXEC_CONT bool test_equal_impl(vtkm::Vec<T, 1> value1,
-                                                  T value2,
-                                                  vtkm::Float64 tolerance,
-                                                  vtkm::TypeTraitsVectorTag)
-{
-  return test_equal(value1[0], value2, tolerance);
-}
-template <typename T>
-static inline VTKM_EXEC_CONT bool test_equal_impl(T value1,
-                                                  vtkm::Vec<T, 1> value2,
-                                                  vtkm::Float64 tolerance,
-                                                  vtkm::TypeTraitsScalarTag)
-{
-  return test_equal(value1, value2[0], tolerance);
-}
+// Forward declaration
+template <typename T1, typename T2>
+struct TestEqualImpl;
 
 } // namespace detail
 
 /// Helper function to test two quanitites for equality accounting for slight
 /// variance due to floating point numerical inaccuracies.
 ///
-template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1,
-                                             VectorType2 vector2,
-                                             vtkm::Float64 tolerance /*= 0.00001*/)
+template <typename T1, typename T2>
+static inline VTKM_EXEC_CONT bool test_equal(T1 value1,
+                                             T2 value2,
+                                             vtkm::Float64 tolerance = 0.00001)
 {
-  return detail::test_equal_impl(
-    vector1, vector2, tolerance, typename vtkm::TypeTraits<VectorType1>::DimensionalityTag());
+  return detail::TestEqualImpl<T1, T2>()(value1, value2, tolerance);
 }
+
+namespace detail
+{
+
+template <typename T1, typename T2>
+struct TestEqualImpl
+{
+  VTKM_EXEC_CONT bool DoIt(T1 vector1,
+                           T2 vector2,
+                           vtkm::Float64 tolerance,
+                           vtkm::TypeTraitsVectorTag) const
+  {
+    // If you get a compiler error here, it means you are comparing a vector to
+    // a scalar, in which case the types are non-comparable.
+    VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
+                                         vtkm::TypeTraitsVectorTag>::type::value) ||
+                             (std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
+                                           vtkm::TypeTraitsMatrixTag>::type::value),
+                           "Trying to compare a vector with a scalar.");
+
+    using Traits1 = vtkm::VecTraits<T1>;
+    using Traits2 = vtkm::VecTraits<T2>;
+
+    // If vectors have different number of components, then they cannot be equal.
+    if (Traits1::GetNumberOfComponents(vector1) != Traits2::GetNumberOfComponents(vector2))
+    {
+      return false;
+    }
+
+    for (vtkm::IdComponent component = 0; component < Traits1::GetNumberOfComponents(vector1);
+         ++component)
+    {
+      bool componentEqual = test_equal(Traits1::GetComponent(vector1, component),
+                                       Traits2::GetComponent(vector2, component),
+                                       tolerance);
+      if (!componentEqual)
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  VTKM_EXEC_CONT bool DoIt(T1 matrix1,
+                           T2 matrix2,
+                           vtkm::Float64 tolerance,
+                           vtkm::TypeTraitsMatrixTag) const
+  {
+    // For the purposes of comparison, treat matrices the same as vectors.
+    return this->DoIt(matrix1, matrix2, tolerance, vtkm::TypeTraitsVectorTag());
+  }
+
+  VTKM_EXEC_CONT bool DoIt(T1 scalar1,
+                           T2 scalar2,
+                           vtkm::Float64 tolerance,
+                           vtkm::TypeTraitsScalarTag) const
+  {
+    // If you get a compiler error here, it means you are comparing a scalar to
+    // a vector, in which case the types are non-comparable.
+    VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
+                                         vtkm::TypeTraitsScalarTag>::type::value),
+                           "Trying to compare a scalar with a vector.");
+
+    // Do all comparisons using 64-bit floats.
+    vtkm::Float64 value1 = vtkm::Float64(scalar1);
+    vtkm::Float64 value2 = vtkm::Float64(scalar2);
+
+    if (vtkm::Abs(value1 - value2) <= tolerance)
+    {
+      return true;
+    }
+
+    // We are using a ratio to compare the relative tolerance of two numbers.
+    // Using an ULP based comparison (comparing the bits as integers) might be
+    // a better way to go, but this has been working pretty well so far.
+    vtkm::Float64 ratio;
+    if ((vtkm::Abs(value2) > tolerance) && (value2 != 0))
+    {
+      ratio = value1 / value2;
+    }
+    else
+    {
+      // If we are here, it means that value2 is close to 0 but value1 is not.
+      // These cannot be within tolerance, so just return false.
+      return false;
+    }
+    if ((ratio > vtkm::Float64(1.0) - tolerance) && (ratio < vtkm::Float64(1.0) + tolerance))
+    {
+      // This component is OK. The condition is checked in this way to
+      // correctly handle non-finites that fail all comparisons. Thus, if a
+      // non-finite is encountered, this condition will fail and false will be
+      // returned.
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  VTKM_EXEC_CONT bool operator()(T1 value1, T2 value2, vtkm::Float64 tolerance) const
+  {
+    return this->DoIt(
+      value1, value2, tolerance, typename vtkm::TypeTraits<T1>::DimensionalityTag());
+  }
+};
+
+// Special cases of test equal where a scalar is compared with a Vec of size 1,
+// which we will allow.
+template <typename T>
+struct TestEqualImpl<vtkm::Vec<T, 1>, T>
+{
+  VTKM_EXEC_CONT bool operator()(vtkm::Vec<T, 1> value1, T value2, vtkm::Float64 tolerance) const
+  {
+    return test_equal(value1[0], value2, tolerance);
+  }
+};
+template <typename T>
+struct TestEqualImpl<T, vtkm::Vec<T, 1>>
+{
+  VTKM_EXEC_CONT bool operator()(T value1, vtkm::Vec<T, 1> value2, vtkm::Float64 tolerance) const
+  {
+    return test_equal(value1, value2[0], tolerance);
+  }
+};
 
 /// Special implementation of test_equal for strings, which don't fit a model
 /// of fixed length vectors of numbers.
 ///
-static inline VTKM_CONT bool test_equal(const std::string& string1, const std::string& string2)
+template <>
+struct TestEqualImpl<std::string, std::string>
 {
-  return string1 == string2;
-}
+  VTKM_CONT bool operator()(const std::string& string1,
+                            const std::string& string2,
+                            vtkm::Float64 vtkmNotUsed(tolerance)) const
+  {
+    return string1 == string2;
+  }
+};
 
 /// Special implementation of test_equal for Pairs, which are a bit different
 /// than a vector of numbers of the same type.
 ///
 template <typename T1, typename T2, typename T3, typename T4>
-static inline VTKM_CONT bool test_equal(const vtkm::Pair<T1, T2>& pair1,
-                                        const vtkm::Pair<T3, T4>& pair2,
-                                        vtkm::Float64 tolerance = 0.0001)
+struct TestEqualImpl<vtkm::Pair<T1, T2>, vtkm::Pair<T3, T4>>
 {
-  return test_equal(pair1.first, pair2.first, tolerance) &&
-    test_equal(pair1.second, pair2.second, tolerance);
-}
+  VTKM_EXEC_CONT bool operator()(const vtkm::Pair<T1, T2>& pair1,
+                                 const vtkm::Pair<T3, T4>& pair2,
+                                 vtkm::Float64 tolerance) const
+  {
+    return test_equal(pair1.first, pair2.first, tolerance) &&
+      test_equal(pair1.second, pair2.second, tolerance);
+  }
+};
 
 /// Special implementation of test_equal for Ranges.
 ///
-static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Range& range1,
-                                             const vtkm::Range& range2,
-                                             vtkm::Float64 tolerance = 0.0001)
+template <>
+struct TestEqualImpl<vtkm::Range, vtkm::Range>
 {
-  return (test_equal(range1.Min, range2.Min, tolerance) &&
-          test_equal(range1.Max, range2.Max, tolerance));
-}
+  VTKM_EXEC_CONT bool operator()(const vtkm::Range& range1,
+                                 const vtkm::Range& range2,
+                                 vtkm::Float64 tolerance) const
+  {
+    return (test_equal(range1.Min, range2.Min, tolerance) &&
+            test_equal(range1.Max, range2.Max, tolerance));
+  }
+};
 
 /// Special implementation of test_equal for Bounds.
 ///
-static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Bounds& bounds1,
-                                             const vtkm::Bounds& bounds2,
-                                             vtkm::Float64 tolerance = 0.0001)
+template <>
+struct TestEqualImpl<vtkm::Bounds, vtkm::Bounds>
 {
-  return (test_equal(bounds1.X, bounds2.X, tolerance) &&
-          test_equal(bounds1.Y, bounds2.Y, tolerance) &&
-          test_equal(bounds1.Z, bounds2.Z, tolerance));
-}
+  VTKM_EXEC_CONT bool operator()(const vtkm::Bounds& bounds1,
+                                 const vtkm::Bounds& bounds2,
+                                 vtkm::Float64 tolerance) const
+  {
+    return (test_equal(bounds1.X, bounds2.X, tolerance) &&
+            test_equal(bounds1.Y, bounds2.Y, tolerance) &&
+            test_equal(bounds1.Z, bounds2.Z, tolerance));
+  }
+};
 
 /// Special implementation of test_equal for booleans.
 ///
-static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
+template <>
+struct TestEqualImpl<bool, bool>
 {
-  return bool1 == bool2;
-}
+  VTKM_EXEC_CONT bool operator()(bool bool1, bool bool2, vtkm::Float64 vtkmNotUsed(tolerance))
+  {
+    return bool1 == bool2;
+  }
+};
+
+} // namespace detail
+
+namespace detail
+{
 
 template <typename T>
-static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
-{
-  constexpr bool larger_than_2bytes = sizeof(T) > 2;
-  if (larger_than_2bytes)
-  {
-    return T(index * 100);
-  }
-  else
-  {
-    return T(index + 100);
-  }
-}
+struct TestValueImpl;
 
-template <typename T>
-static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsRealTag)
-{
-  return T(0.01 * static_cast<double>(index) + 1.001);
-}
+} // namespace detail
 
 /// Many tests involve getting and setting values in some index-based structure
 /// (like an array). These tests also often involve trying many types. The
@@ -544,32 +644,93 @@ static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsReal
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T)
 {
-  return TestValue(index, T(), typename vtkm::TypeTraits<T>::NumericTag());
+  return detail::TestValueImpl<T>()(index);
 }
+
+namespace detail
+{
+
+template <typename T>
+struct TestValueImpl
+{
+  VTKM_EXEC_CONT T DoIt(vtkm::Id index, vtkm::TypeTraitsIntegerTag) const
+  {
+    constexpr bool larger_than_2bytes = sizeof(T) > 2;
+    if (larger_than_2bytes)
+    {
+      return T(index * 100);
+    }
+    else
+    {
+      return T(index + 100);
+    }
+  }
+
+  VTKM_EXEC_CONT T DoIt(vtkm::Id index, vtkm::TypeTraitsRealTag) const
+  {
+    return T(0.01f * static_cast<float>(index) + 1.001f);
+  }
+
+  VTKM_EXEC_CONT T operator()(vtkm::Id index) const
+  {
+    return this->DoIt(index, typename vtkm::TypeTraits<T>::NumericTag());
+  }
+};
 
 template <typename T, vtkm::IdComponent N>
-static inline VTKM_EXEC_CONT vtkm::Vec<T, N> TestValue(vtkm::Id index, vtkm::Vec<T, N>)
+struct TestValueImpl<vtkm::Vec<T, N>>
 {
-  vtkm::Vec<T, N> value;
-  for (vtkm::IdComponent i = 0; i < N; i++)
+  VTKM_EXEC_CONT vtkm::Vec<T, N> operator()(vtkm::Id index) const
   {
-    value[i] = T(TestValue(index, T()) + T(i + 1));
+    vtkm::Vec<T, N> value;
+    for (vtkm::IdComponent i = 0; i < N; i++)
+    {
+      value[i] = TestValue(index * N + i, T());
+    }
+    return value;
   }
-  return value;
-}
+};
 
 template <typename U, typename V>
-static inline VTKM_EXEC_CONT vtkm::Pair<U, V> TestValue(vtkm::Id index, vtkm::Pair<U, V>)
+struct TestValueImpl<vtkm::Pair<U, V>>
 {
-  return vtkm::Pair<U, V>(TestValue(2 * index, U()), TestValue(2 * index + 1, V()));
-}
+  VTKM_EXEC_CONT vtkm::Pair<U, V> operator()(vtkm::Id index) const
+  {
+    return vtkm::Pair<U, V>(TestValue(2 * index, U()), TestValue(2 * index + 1, V()));
+  }
+};
 
-static inline VTKM_CONT std::string TestValue(vtkm::Id index, std::string)
+template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
+struct TestValueImpl<vtkm::Matrix<T, NumRow, NumCol>>
 {
-  std::stringstream stream;
-  stream << index;
-  return stream.str();
-}
+  VTKM_EXEC_CONT vtkm::Matrix<T, NumRow, NumCol> operator()(vtkm::Id index) const
+  {
+    vtkm::Matrix<T, NumRow, NumCol> value;
+    vtkm::Id runningIndex = index * NumRow * NumCol;
+    for (vtkm::IdComponent row = 0; row < NumRow; ++row)
+    {
+      for (vtkm::IdComponent col = 0; col < NumCol; ++col)
+      {
+        value(row, col) = TestValue(runningIndex, T());
+        ++runningIndex;
+      }
+    }
+    return value;
+  }
+};
+
+template <>
+struct TestValueImpl<std::string>
+{
+  VTKM_CONT std::string operator()(vtkm::Id index) const
+  {
+    std::stringstream stream;
+    stream << index;
+    return stream.str();
+  }
+};
+
+} // namespace detail
 
 /// Verifies that the contents of the given array portal match the values
 /// returned by vtkm::testing::TestValue.
@@ -627,52 +788,6 @@ static inline VTKM_CONT bool test_equal_portals(const PortalType1& portal1,
   }
 
   return true;
-}
-
-/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
-/// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
-/// of the stringified number.
-static inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
-{
-  std::string suffix = "bytes";
-
-  // Might truncate, but it really doesn't matter unless the precision arg
-  // is obscenely huge.
-  vtkm::Float64 bytesf = static_cast<vtkm::Float64>(bytes);
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "KiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "MiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "GiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "TiB";
-  }
-
-  if (bytesf >= 1024.)
-  {
-    bytesf /= 1024.;
-    suffix = "PiB"; // Dream big...
-  }
-
-  std::ostringstream out;
-  out << std::fixed << std::setprecision(prec) << bytesf << " " << suffix;
-  return out.str();
 }
 
 #endif //vtk_m_testing_Testing_h

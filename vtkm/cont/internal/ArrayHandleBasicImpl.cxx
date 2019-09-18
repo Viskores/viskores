@@ -2,37 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #define vtkm_cont_internal_ArrayHandleImpl_cxx
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
-
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
-#include <vtkm/cont/serial/internal/ExecutionArrayInterfaceBasicSerial.h>
-#ifdef VTKM_ENABLE_TBB
-#include <vtkm/cont/tbb/internal/ExecutionArrayInterfaceBasicTBB.h>
-#endif
-#ifdef VTKM_ENABLE_CUDA
-#include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
-#endif
 
 namespace vtkm
 {
@@ -256,36 +235,13 @@ bool ArrayHandleImpl::PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeO
 
   VTKM_ASSERT(this->ExecutionInterface == nullptr);
   VTKM_ASSERT(!this->ExecutionArrayValid);
-  switch (devId)
-  {
-#ifdef VTKM_ENABLE_TBB
-    case VTKM_DEVICE_ADAPTER_TBB:
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>(*this->ControlArray);
-      break;
-#endif
-
-//this doesn't need to be guarded as a .cu file as it is calling host methods
-//and not cuda code directly
-#ifdef VTKM_ENABLE_CUDA
-    case VTKM_DEVICE_ADAPTER_CUDA:
-
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>(*this->ControlArray);
-      break;
-#endif
-    default:
-      this->ExecutionInterface =
-        new ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>(*this->ControlArray);
-      break;
-  }
   return true;
 }
 
 DeviceAdapterId ArrayHandleImpl::GetDeviceAdapterId() const
 {
   return this->ExecutionArrayValid ? this->ExecutionInterface->GetDeviceId()
-                                   : VTKM_DEVICE_ADAPTER_UNDEFINED;
+                                   : DeviceAdapterTagUndefined{};
 }
 
 

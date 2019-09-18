@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -79,14 +69,14 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> binId,         // (input) bin Id
-                                WholeArrayIn<IdType> binCount, // (input) particles per bin
-                                WholeArrayIn<IdType> binX,     // (input) x index in bin
-                                WholeArrayIn<IdType> binY,     // (input) y index in bin
-                                WholeArrayIn<IdType> binZ,     // (input) z index in bin
-                                FieldInOut<TagType> bestPot,   // (output) best potential estimate
-                                FieldInOut<TagType> worstPot); // (output) worst potential estimate
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+  using ControlSignature = void(FieldIn binId,         // (input) bin Id
+                                WholeArrayIn binCount, // (input) particles per bin
+                                WholeArrayIn binX,     // (input) x index in bin
+                                WholeArrayIn binY,     // (input) y index in bin
+                                WholeArrayIn binZ,     // (input) z index in bin
+                                FieldInOut bestPot,    // (output) best potential estimate
+                                FieldInOut worstPot);  // (output) worst potential estimate
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
   vtkm::Id nBins; // Number of bins

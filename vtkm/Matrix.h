@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_Matrix_h
 #define vtk_m_Matrix_h
 
@@ -195,7 +183,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixMultiply(
   vtkm::Vec<T, NumRow> product;
   for (vtkm::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
   {
-    product[rowIndex] = vtkm::dot(vtkm::MatrixGetRow(leftFactor, rowIndex), rightFactor);
+    product[rowIndex] = vtkm::Dot(vtkm::MatrixGetRow(leftFactor, rowIndex), rightFactor);
   }
   return product;
 }
@@ -210,7 +198,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumCol> MatrixMultiply(
   vtkm::Vec<T, NumCol> product;
   for (vtkm::IdComponent colIndex = 0; colIndex < NumCol; colIndex++)
   {
-    product[colIndex] = vtkm::dot(leftFactor, vtkm::MatrixGetColumn(rightFactor, colIndex));
+    product[colIndex] = vtkm::Dot(leftFactor, vtkm::MatrixGetColumn(rightFactor, colIndex));
   }
   return product;
 }
@@ -535,6 +523,12 @@ struct TypeTraits<vtkm::Matrix<T, NumRow, NumCol>>
 {
   using NumericTag = typename TypeTraits<T>::NumericTag;
   using DimensionalityTag = vtkm::TypeTraitsMatrixTag;
+
+  VTKM_EXEC_CONT
+  static vtkm::Matrix<T, NumRow, NumCol> ZeroInitialization()
+  {
+    return vtkm::Matrix<T, NumRow, NumCol>(vtkm::TypeTraits<T>::ZeroInitialization());
+  }
 };
 
 /// A matrix has vector traits to implement component-wise operations.
@@ -547,6 +541,7 @@ private:
 
 public:
   using ComponentType = T;
+  using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = NumRow * NumCol;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
@@ -573,9 +568,16 @@ public:
   {
     GetComponent(matrix, component) = value;
   }
-};
 
-} // namespace vtkm
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Matrix<NewComponentType, NumRow, NumCol>;
+
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    vtkm::Matrix<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewComponentType>,
+                 NumRow,
+                 NumCol>;
+};
 
 //---------------------------------------------------------------------------
 // Basic comparison operators.
@@ -600,5 +602,24 @@ VTKM_EXEC_CONT bool operator!=(const vtkm::Matrix<T, NumRow, NumCol>& a,
 {
   return !(a == b);
 }
+
+/// Helper function for printing out matricies during testing
+///
+template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
+VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Matrix<T, NumRow, NumCol>& mat)
+{
+  stream << std::endl;
+  for (vtkm::IdComponent row = 0; row < NumRow; ++row)
+  {
+    stream << "| ";
+    for (vtkm::IdComponent col = 0; col < NumCol; ++col)
+    {
+      stream << mat(row, col) << "\t";
+    }
+    stream << "|" << std::endl;
+  }
+  return stream;
+}
+} // namespace vtkm
 
 #endif //vtk_m_Matrix_h

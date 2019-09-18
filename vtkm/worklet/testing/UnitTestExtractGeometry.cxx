@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/ExtractGeometry.h>
@@ -25,7 +15,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingExtractGeometry
 {
 public:
@@ -40,7 +29,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 2;
@@ -49,11 +38,11 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -72,11 +61,11 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
+    vtkm::Vec3f minPoint(0.5f, 0.0f, 0.0f);
+    vtkm::Vec3f maxPoint(2.0f, 2.0f, 2.0f);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -90,12 +79,11 @@ public:
                           vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
-                          extractOnlyBoundaryCells,
-                          DeviceAdapter());
+                          extractOnlyBoundaryCells);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
@@ -116,7 +104,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 5;
@@ -125,11 +113,11 @@ public:
 
     // Output data set permutation of with only extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -149,7 +137,7 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
     const int nCells = 5;
@@ -158,11 +146,11 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -181,11 +169,11 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0f, 1.0f, 1.0f);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
+    vtkm::Vec3f minPoint(1.0f, 1.0f, 1.0f);
+    vtkm::Vec3f maxPoint(3.0f, 3.0f, 3.0f);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -199,12 +187,11 @@ public:
                           vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
-                          extractOnlyBoundaryCells,
-                          DeviceAdapter());
+                          extractOnlyBoundaryCells);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -222,10 +209,10 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
+    vtkm::Vec3f center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
 
     bool extractInside = true;
@@ -240,12 +227,11 @@ public:
                           vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
                           extractInside,
                           extractBoundaryCells,
-                          extractOnlyBoundaryCells,
-                          DeviceAdapter());
+                          extractOnlyBoundaryCells);
 
     auto cellvar =
       dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -264,8 +250,7 @@ public:
   }
 };
 
-int UnitTestExtractGeometry(int, char* [])
+int UnitTestExtractGeometry(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingExtractGeometry<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingExtractGeometry(), argc, argv);
 }

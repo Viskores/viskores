@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ColorTable_h
 #define vtk_m_cont_ColorTable_h
@@ -27,7 +17,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ColorTableSamples.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <set>
 
@@ -42,6 +31,10 @@ class ColorTableBase;
 
 namespace cont
 {
+
+template <typename T>
+class VirtualObjectHandle;
+
 
 namespace detail
 {
@@ -108,24 +101,26 @@ class VTKM_CONT_EXPORT ColorTable
   std::shared_ptr<detail::ColorTableInternals> Impl;
 
 public:
-  // Note: these are in flux and will change soon.
   enum struct Preset
   {
     DEFAULT,
-    VIRIDIS,
     COOL_TO_WARM,
-    COOL_TO_WARN_EXTENDED,
-    COLD_AND_HOT,
+    COOL_TO_WARM_EXTENDED,
+    VIRIDIS,
     INFERNO,
+    PLASMA,
     BLACK_BODY_RADIATION,
-    SAMSEL_FIRE,
-    LINEAR_YGB,
-    BLACK_BLUE_AND_WHITE,
-    LINEAR_GREEN,
     X_RAY,
+    GREEN,
+    BLACK_BLUE_WHITE,
+    BLUE_TO_ORANGE,
+    GRAY_TO_RED,
+    COLD_AND_HOT,
+    BLUE_GREEN_ORANGE,
+    YELLOW_GRAY_BLUE,
+    RAINBOW_UNIFORM,
     JET,
-    RAINBOW_DESATURATED,
-    RAINBOW
+    RAINBOW_DESATURATED
   };
 
   /// \brief Construct a color table from a preset
@@ -145,20 +140,24 @@ public:
   /// Note: Names are case insensitive
   /// Currently supports the following color tables:
   ///
+  /// "Default"
   /// "Cool to Warm"
-  /// "Black-Body Radiation"
-  /// "Samsel Fire" [ known previously as "Black, Orange and White"]
+  /// "Cool to Warm Extended"
+  /// "Viridis"
   /// "Inferno"
-  /// "Linear YGB"
-  /// "Cold and Hot"
-  /// "Rainbow Desaturated"
-  /// "Cool to Warm (Extended)"
+  /// "Plasma"
+  /// "Black-Body Radiation"
   /// "X Ray"
-  /// "Black, Blue and White"
-  /// "Virdis"
-  /// "Linear Green"
+  /// "Green"
+  /// "Black - Blue - White"
+  /// "Blue to Orange"
+  /// "Gray to Red"
+  /// "Cold and Hot"
+  /// "Blue - Green - Orange"
+  /// "Yellow - Gray - Blue"
+  /// "Rainbow Uniform"
   /// "Jet"
-  /// "Rainbow"
+  /// "Rainbow Desaturated"
   ///
   explicit ColorTable(const std::string& name);
 
@@ -192,8 +191,21 @@ public:
              const vtkm::Vec<float, 4>& rgba2,
              ColorSpace space = ColorSpace::LAB);
 
+  /// Construct a color table with a list of colors and alphas. For this version you must also
+  /// specify a name.
+  ///
+  /// This constructor is mostly used for presets.
+  ColorTable(const std::string& name,
+             vtkm::cont::ColorSpace colorSpace,
+             const vtkm::Vec<double, 3>& nanColor,
+             const std::vector<double>& rgbPoints,
+             const std::vector<double>& alphaPoints = { 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0 });
+
 
   ~ColorTable();
+
+  const std::string& GetName() const;
+  void SetName(const std::string& name);
 
   bool LoadPreset(vtkm::cont::ColorTable::Preset preset);
 
@@ -202,7 +214,7 @@ public:
   /// This list will include all presets defined in vtkm::cont::ColorTable::Preset and could
   /// include extras as well.
   ///
-  std::set<std::string> GetPresets() const;
+  static std::set<std::string> GetPresets();
 
   /// Load a preset color table
   ///
@@ -213,20 +225,25 @@ public:
   /// Note: Names are case insensitive
   ///
   /// Currently supports the following color tables:
+  /// "Default"
   /// "Cool to Warm"
-  /// "Black-Body Radiation"
-  /// "Samsel Fire" [ known previously as "Black, Orange and White"]
+  /// "Cool to Warm Extended"
+  /// "Viridis"
   /// "Inferno"
-  /// "Linear YGB"
-  /// "Cold and Hot"
-  /// "Rainbow Desaturated"
-  /// "Cool to Warm (Extended)"
+  /// "Plasma"
+  /// "Black-Body Radiation"
   /// "X Ray"
-  /// "Black, Blue and White"
-  /// "Virdis"
-  /// "Linear Green"
+  /// "Green"
+  /// "Black - Blue - White"
+  /// "Blue to Orange"
+  /// "Gray to Red"
+  /// "Cold and Hot"
+  /// "Blue - Green - Orange"
+  /// "Yellow - Gray - Blue"
+  /// "Rainbow Uniform"
   /// "Jet"
-  /// "Rainbow"
+  /// "Rainbow Desaturated"
+  ///
   bool LoadPreset(const std::string& name);
 
   /// Make a deep copy of the current color table
@@ -455,27 +472,31 @@ public:
 
   /// Fill the Opacity table from a double pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, A1,
-  /// X2, A2, ..., Xn, An] where n is the number of nodes. The midpoint
-  /// of each node will be set to 0.5 and the sharpness to 0.0 (linear).
+  /// The double pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
+  /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
+  /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
+  /// interpolation of the alpha.
+  ///
   /// This will remove any existing opacity control points.
   ///
-  /// Note: n represents the length of the array, so ( n/2 == number of control points )
+  /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
-  /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
   bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* ptr);
 
   /// Fill the Opacity table from a float pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, A1,
-  /// X2, A2, ..., Xn, An] where n is the number of nodes. The midpoint
-  /// of each node will be set to 0.5 and the sharpness to 0.0 (linear).
+  /// The float pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
+  /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
+  /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
+  /// interpolation of the alpha.
+  ///
   /// This will remove any existing opacity control points.
   ///
-  /// Note: n represents the length of the array, so ( n/2 == number of control points )
+  /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
-  /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
   bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr);
 
@@ -492,14 +513,14 @@ public:
   /// vtkm::cont::ColorTableSamplesRGBA samples;
   /// vtkm::cont::ColorTable table("black-body radiation");
   /// table.Sample(256, samples);
-  /// vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+  /// vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
   /// table.Map(input, samples, colors);
   ///
   /// \endcode
   template <typename T, typename S>
-  bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-           const vtkm::cont::ColorTableSamplesRGBA& samples,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
+                  const vtkm::cont::ColorTableSamplesRGBA& samples,
+                  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Sample each value through an intermediate lookup/sample table to generate RGB colors
   ///
@@ -513,44 +534,44 @@ public:
   /// vtkm::cont::ColorTableSamplesRGB samples;
   /// vtkm::cont::ColorTable table("black-body radiation");
   /// table.Sample(256, samples);
-  /// vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+  /// vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
   /// table.Map(input, samples, colors);
   ///
   /// \endcode
   template <typename T, typename S>
-  bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-           const vtkm::cont::ColorTableSamplesRGB& samples,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbaOut) const;
+  inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
+                  const vtkm::cont::ColorTableSamplesRGB& samples,
+                  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector with a sample table to generate RGBA colors
   ///
   template <typename T, int N, typename S>
-  bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    const vtkm::cont::ColorTableSamplesRGBA& samples,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           const vtkm::cont::ColorTableSamplesRGBA& samples,
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector with a sample table to generate RGB colors
   ///
   template <typename T, int N, typename S>
-  bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    const vtkm::cont::ColorTableSamplesRGB& samples,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbaOut) const;
+  inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           const vtkm::cont::ColorTableSamplesRGB& samples,
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector with a sample table to generate RGBA colors
   ///
   template <typename T, int N, typename S>
-  bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::IdComponent comp,
-                    const vtkm::cont::ColorTableSamplesRGBA& samples,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::IdComponent comp,
+                           const vtkm::cont::ColorTableSamplesRGBA& samples,
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector with a sample table to generate RGB colors
   ///
   template <typename T, int N, typename S>
-  bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::IdComponent comp,
-                    const vtkm::cont::ColorTableSamplesRGB& samples,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+  inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::IdComponent comp,
+                           const vtkm::cont::ColorTableSamplesRGB& samples,
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
 
   /// \brief Interpolate each value through the color table to generate RGBA colors
@@ -560,8 +581,8 @@ public:
   ///
   /// Note: This is more costly than using Sample/Map with the generated intermediate lookup table
   template <typename T, typename S>
-  bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
+                  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Interpolate each value through the color table to generate RGB colors
   ///
@@ -570,34 +591,34 @@ public:
   ///
   /// Note: This is more costly than using Sample/Map with the generated intermediate lookup table
   template <typename T, typename S>
-  bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
-           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+  inline bool Map(const vtkm::cont::ArrayHandle<T, S>& values,
+                  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
   /// \brief Use magnitude of a vector to generate RGBA colors
   ///
   template <typename T, int N, typename S>
-  bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use magnitude of a vector to generate RGB colors
   ///
   template <typename T, int N, typename S>
-  bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+  inline bool MapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
   /// \brief Use a single component of a vector to generate RGBA colors
   ///
   template <typename T, int N, typename S>
-  bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::IdComponent comp,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& rgbaOut) const;
+  inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::IdComponent comp,
+                           vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const;
 
   /// \brief Use a single component of a vector to generate RGB colors
   ///
   template <typename T, int N, typename S>
-  bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
-                    vtkm::IdComponent comp,
-                    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut) const;
+  inline bool MapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
+                           vtkm::IdComponent comp,
+                           vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const;
 
 
   /// \brief generate RGB colors using regular spaced samples along the range.
@@ -605,73 +626,97 @@ public:
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  bool Sample(vtkm::Int32 numSamples,
-              vtkm::cont::ColorTableSamplesRGBA& samples,
-              double tolerance = 0.002) const;
+  inline bool Sample(vtkm::Int32 numSamples,
+                     vtkm::cont::ColorTableSamplesRGBA& samples,
+                     double tolerance = 0.002) const;
 
   /// \brief generate a sample lookup table using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  bool Sample(vtkm::Int32 numSamples,
-              vtkm::cont::ColorTableSamplesRGB& samples,
-              double tolerance = 0.002) const;
+  inline bool Sample(vtkm::Int32 numSamples,
+                     vtkm::cont::ColorTableSamplesRGB& samples,
+                     double tolerance = 0.002) const;
 
   /// \brief generate RGBA colors using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  bool Sample(vtkm::Int32 numSamples,
-              vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& colors,
-              double tolerance = 0.002) const;
+  inline bool Sample(vtkm::Int32 numSamples,
+                     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
+                     double tolerance = 0.002) const;
 
   /// \brief generate RGB colors using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
   /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is withing float space and the following are within a tolerance:
+  /// values when the range is within float space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  bool Sample(vtkm::Int32 numSamples,
-              vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& colors,
-              double tolerance = 0.002) const;
+  inline bool Sample(vtkm::Int32 numSamples,
+                     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
+                     double tolerance = 0.002) const;
 
 
-  /// \brief returns a virtual object handle of the exec color table
+  /// \brief returns a virtual object pointer of the exec color table
   ///
-  /// This object is only valid as long as the ColorTable is unmodified
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* GetHandleForExecution() const;
-
+  /// This pointer is only valid as long as the ColorTable is unmodified
+  inline const vtkm::exec::ColorTableBase* PrepareForExecution(
+    vtkm::cont::DeviceAdapterId deviceId) const;
 
   /// \brief returns the modified count for the virtual object handle of the exec color table
   ///
   /// The modified count allows consumers of a shared color table to keep track
   /// if the color table has been modified since the last time they used it.
   vtkm::Id GetModifiedCount() const;
+
+  struct TransferState
+  {
+    bool NeedsTransfer;
+    vtkm::exec::ColorTableBase* Portal;
+    const vtkm::cont::ArrayHandle<double>& ColorPosHandle;
+    const vtkm::cont::ArrayHandle<vtkm::Vec<float, 3>>& ColorRGBHandle;
+    const vtkm::cont::ArrayHandle<double>& OpacityPosHandle;
+    const vtkm::cont::ArrayHandle<float>& OpacityAlphaHandle;
+    const vtkm::cont::ArrayHandle<vtkm::Vec<float, 2>>& OpacityMidSharpHandle;
+  };
+
+private:
+  bool NeedToCreateExecutionColorTable() const;
+
+  //takes ownership of the pointer passed in
+  void UpdateExecutionColorTable(
+    vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>*) const;
+
+  ColorTable::TransferState GetExecutionDataForTransfer() const;
+
+  vtkm::exec::ColorTableBase* GetControlRepresentation() const;
+
+  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase> const* GetExecutionHandle() const;
 };
 }
 } //namespace vtkm::cont

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_gradient_PointGradient_h
@@ -41,15 +31,15 @@ struct PointGradientInType : vtkm::ListTagBase<T>
 };
 
 template <typename T>
-struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
+struct PointGradient : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn,
-                                WholeCellSetIn<Point, Cell>,
-                                WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<PointGradientInType<T>> inputField,
+  using ControlSignature = void(CellSetIn,
+                                WholeCellSetIn<Cell, Point>,
+                                WholeArrayIn pointCoordinates,
+                                WholeArrayIn inputField,
                                 GradientOutputs outputFields);
 
-  typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
   template <typename FromIndexType,
@@ -73,7 +63,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
     for (vtkm::IdComponent i = 0; i < numCells; ++i)
     {
       const vtkm::Id cellId = cellIds[i];
-      CellThreadIndices cellIndices(cellId, cellId, 0, geometry);
+      CellThreadIndices cellIndices(cellId, cellId, 0, cellId, geometry);
 
       const CellShapeTag cellShape = cellIndices.GetCellShape();
 
@@ -88,7 +78,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 
     if (numCells != 0)
     {
-      using BaseGradientType = typename vtkm::BaseComponent<ValueType>::Type;
+      using BaseGradientType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
       const BaseGradientType invNumCells =
         static_cast<BaseGradientType>(1.) / static_cast<BaseGradientType>(numCells);
 
@@ -110,7 +100,7 @@ private:
                                         const FieldInVecType& field,
                                         vtkm::Vec<OutValueType, 3>& gradient) const
   {
-    vtkm::Vec<vtkm::FloatDefault, 3> pCoords;
+    vtkm::Vec3f pCoords;
     vtkm::exec::ParametricCoordinatesPoint(
       wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
 
@@ -124,7 +114,7 @@ private:
     vtkm::Id pointId) const
   {
     vtkm::IdComponent result = 0;
-    const auto& topo = indices.GetIndicesFrom();
+    const auto& topo = indices.GetIndicesIncident();
     for (vtkm::IdComponent i = 0; i < topo.GetNumberOfComponents(); ++i)
     {
       if (topo[i] == pointId)

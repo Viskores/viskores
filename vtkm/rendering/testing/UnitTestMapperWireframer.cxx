@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
@@ -35,10 +25,10 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   vtkm::Float32 center = static_cast<vtkm::Float32>(-size) / 2.0f;
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id3(size, size, size),
-                                               vtkm::Vec<vtkm::Float32, 3>(center, center, center),
-                                               vtkm::Vec<vtkm::Float32, 3>(1.0f, 1.0f, 1.0f));
+                                               vtkm::Vec3f_32(center, center, center),
+                                               vtkm::Vec3f_32(1.0f, 1.0f, 1.0f));
   const char* fieldName = "pointvar";
-  vtkm::Id numValues = dataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+  vtkm::Id numValues = dataSet.GetNumberOfPoints();
   vtkm::cont::ArrayHandleCounting<vtkm::Float32> fieldValues(
     0.0f, 10.0f / static_cast<vtkm::Float32>(numValues), numValues);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarField;
@@ -52,7 +42,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
   const int nVerts = 5;
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   std::vector<CoordType> coords(nVerts);
   CoordType coordinates[nVerts] = { CoordType(0.f, 0.f, 0.f),
                                     CoordType(1.f, .5f, 0.f),
@@ -73,7 +63,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   pointVar.push_back(15);
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
+  vtkm::cont::CellSetSingleType<> cellSet;
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(8);
@@ -91,7 +81,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   connPortal.Set(7, 4);
 
   cellSet.Fill(nVerts, vtkm::CELL_SHAPE_LINE, 2, connectivity);
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointVar", pointVar);
   dsf.AddCellField(dataSet, "cellVar", cellVar);
@@ -101,11 +91,11 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperWireframer M;
-  typedef vtkm::rendering::CanvasRayTracer C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-  typedef vtkm::rendering::View1D V1;
+  using M = vtkm::rendering::MapperWireframer;
+  using C = vtkm::rendering::CanvasRayTracer;
+  using V3 = vtkm::rendering::View3D;
+  using V2 = vtkm::rendering::View2D;
+  using V1 = vtkm::rendering::View1D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("samsel fire");
@@ -139,7 +129,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperWireframer(int, char* [])
+int UnitTestMapperWireframer(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RenderTests);
+  return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

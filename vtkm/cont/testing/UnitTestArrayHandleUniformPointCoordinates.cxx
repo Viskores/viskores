@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -25,7 +15,7 @@
 namespace
 {
 
-using Vector3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Vector3 = vtkm::Vec3f;
 
 const vtkm::Id3 DIMENSIONS(16, 18, 5);
 const vtkm::Id NUM_POINTS = 1440;
@@ -76,7 +66,7 @@ void TestArrayHandleUniformPointCoordinates()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleUniformPointCoordinates(int, char* [])
+int UnitTestArrayHandleUniformPointCoordinates(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleUniformPointCoordinates);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleUniformPointCoordinates, argc, argv);
 }

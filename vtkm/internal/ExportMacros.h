@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_internal__ExportMacros_h
 #define vtk_m_internal__ExportMacros_h
@@ -27,18 +17,35 @@
   */
 
 #ifdef VTKM_CUDA
+
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__
+
+#ifdef VTKM_MSVC
+
 #if __CUDAVER__ >= 75000
-#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma nv_exec_check_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS __pragma(nv_exec_check_disable)
 #else
-#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS __pragma(hd_warning_disable)
 #endif
+
 #else
+
+#if __CUDAVER__ >= 75000
+#define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("nv_exec_check_disable")
+#else
+#define VTKM_SUPPRESS_EXEC_WARNINGS _Pragma("hd_warning_disable")
+#endif
+
+#endif
+
+#else // !VTKM_CUDA
+
 #define VTKM_EXEC
 #define VTKM_EXEC_CONT
 #define VTKM_SUPPRESS_EXEC_WARNINGS
-#endif
+
+#endif // !VTKM_CUDA
 
 #define VTKM_CONT
 
@@ -61,7 +68,9 @@
 //  by the visibility of both T and S.
 //
 // Solution:
-// The solution is fairly simple, but annoying. You need to mark
+// The solution is fairly simple, but annoying. You need to mark every single
+// header only class that is tempgit lated on non value types to be marked as
+// always exported ( or never pass fvisibility=hidden ).
 //
 // TL;DR:
 // This markup is used when we want to make sure:
@@ -82,10 +91,10 @@
 // just constexpr
 #if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 8)
 #define VTKM_STATIC_CONSTEXPR_ARRAY constexpr
-// cuda 8+ doesn't support static constexpr pointers/fixed size arrays
+// cuda 8-9 doesn't support static constexpr pointers/fixed size arrays
 // that exist inside methods or classes, so in those cases we gracefully
 // fall back to static const
-#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 8)
+#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 10)
 #define VTKM_STATIC_CONSTEXPR_ARRAY static const
 #else
 #define VTKM_STATIC_CONSTEXPR_ARRAY static constexpr

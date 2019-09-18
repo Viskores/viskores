@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
@@ -29,6 +19,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
   vtkm::exec::serial::internal::TaskTiling1D& functor,
   vtkm::Id size)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';
@@ -54,6 +46,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
   vtkm::exec::serial::internal::TaskTiling3D& functor,
   vtkm::Id3 size)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';

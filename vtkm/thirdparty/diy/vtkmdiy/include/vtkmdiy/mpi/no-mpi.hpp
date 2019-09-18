@@ -1,5 +1,5 @@
-#ifndef DIY_MPI_NO_MPI_HPP
-#define DIY_MPI_NO_MPI_HPP
+#ifndef VTKMDIY_MPI_NO_MPI_HPP
+#define VTKMDIY_MPI_NO_MPI_HPP
 
 #include <stdexcept> // std::runtime_error
 
@@ -22,17 +22,17 @@ static const int MPI_THREAD_MULTIPLE    = 3;
 /* define datatypes */
 using MPI_Datatype = size_t;
 
-#define DIY_NO_MPI_DATATYPE(cpp_type, mpi_type) \
+#define VTKM_DIY_NO_MPI_DATATYPE(cpp_type, mpi_type) \
   static const MPI_Datatype mpi_type = sizeof(cpp_type);
-DIY_NO_MPI_DATATYPE(char,                  MPI_BYTE);
-DIY_NO_MPI_DATATYPE(int,                   MPI_INT);
-DIY_NO_MPI_DATATYPE(unsigned,              MPI_UNSIGNED);
-DIY_NO_MPI_DATATYPE(long,                  MPI_LONG);
-DIY_NO_MPI_DATATYPE(unsigned long,         MPI_UNSIGNED_LONG);
-DIY_NO_MPI_DATATYPE(long long,             MPI_LONG_LONG_INT);
-DIY_NO_MPI_DATATYPE(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
-DIY_NO_MPI_DATATYPE(float,                 MPI_FLOAT);
-DIY_NO_MPI_DATATYPE(double,                MPI_DOUBLE);
+VTKM_DIY_NO_MPI_DATATYPE(char,                  MPI_BYTE);
+VTKM_DIY_NO_MPI_DATATYPE(int,                   MPI_INT);
+VTKM_DIY_NO_MPI_DATATYPE(unsigned,              MPI_UNSIGNED);
+VTKM_DIY_NO_MPI_DATATYPE(long,                  MPI_LONG);
+VTKM_DIY_NO_MPI_DATATYPE(unsigned long,         MPI_UNSIGNED_LONG);
+VTKM_DIY_NO_MPI_DATATYPE(long long,             MPI_LONG_LONG_INT);
+VTKM_DIY_NO_MPI_DATATYPE(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
+VTKM_DIY_NO_MPI_DATATYPE(float,                 MPI_FLOAT);
+VTKM_DIY_NO_MPI_DATATYPE(double,                MPI_DOUBLE);
 #endif
 
 /* status type */
@@ -48,8 +48,10 @@ struct MPI_Status
 /* define MPI_Request */
 using MPI_Request = int;
 
+#ifndef DIY_UNSUPPORTED_MPI_CALL
 #define DIY_UNSUPPORTED_MPI_CALL(name) \
-  throw std::runtime_error("`" #name "` not supported when DIY_NO_MPI is defined.");
+  throw std::runtime_error("`" #name "` not supported when VTKM_DIY_NO_MPI is defined.");
+#endif
 
 /* define operations */
 using MPI_Op = int;
@@ -74,3 +76,17 @@ static const int MPI_MODE_UNIQUE_OPEN     =  32;
 static const int MPI_MODE_EXCL            =  64;
 static const int MPI_MODE_APPEND          = 128;
 static const int MPI_MODE_SEQUENTIAL      = 256;
+
+/* define window type */
+using MPI_Win = int;
+
+/* window fence assertions */
+static const int MPI_MODE_NOSTORE       = 1;
+static const int MPI_MODE_NOPUT         = 2;
+static const int MPI_MODE_NOPRECEDE     = 4;
+static const int MPI_MODE_NOSUCCEED     = 8;
+static const int MPI_MODE_NOCHECK       = 16;
+
+/* window lock types */
+static const int MPI_LOCK_SHARED        = 1;
+static const int MPI_LOCK_EXCLUSIVE     = 2;

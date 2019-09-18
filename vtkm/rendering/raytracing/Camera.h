@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_Camera_h
 #define vtk_m_rendering_raytracing_Camera_h
@@ -37,8 +27,6 @@ class VTKM_RENDERING_EXPORT Camera
 
 private:
   struct PixelDataFunctor;
-  template <typename Precision>
-  struct CreateRaysFunctor;
   vtkm::rendering::CanvasRayTracer Canvas;
   vtkm::Int32 Height;
   vtkm::Int32 Width;
@@ -51,10 +39,10 @@ private:
   vtkm::Float32 Zoom;
   bool IsViewDirty;
 
-  vtkm::Vec<vtkm::Float32, 3> Look;
-  vtkm::Vec<vtkm::Float32, 3> Up;
-  vtkm::Vec<vtkm::Float32, 3> LookAt;
-  vtkm::Vec<vtkm::Float32, 3> Position;
+  vtkm::Vec3f_32 Look;
+  vtkm::Vec3f_32 Up;
+  vtkm::Vec3f_32 LookAt;
+  vtkm::Vec3f_32 Position;
   vtkm::rendering::Camera CameraView;
   vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjectionMat;
 
@@ -110,22 +98,22 @@ public:
   vtkm::Float32 GetFieldOfView() const;
 
   VTKM_CONT
-  void SetUp(const vtkm::Vec<vtkm::Float32, 3>& up);
+  void SetUp(const vtkm::Vec3f_32& up);
 
   VTKM_CONT
-  void SetPosition(const vtkm::Vec<vtkm::Float32, 3>& position);
+  void SetPosition(const vtkm::Vec3f_32& position);
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetPosition() const;
+  vtkm::Vec3f_32 GetPosition() const;
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetUp() const;
+  vtkm::Vec3f_32 GetUp() const;
 
   VTKM_CONT
-  void SetLookAt(const vtkm::Vec<vtkm::Float32, 3>& lookAt);
+  void SetLookAt(const vtkm::Vec3f_32& lookAt);
 
   VTKM_CONT
-  vtkm::Vec<vtkm::Float32, 3> GetLookAt() const;
+  vtkm::Vec3f_32 GetLookAt() const;
 
   VTKM_CONT
   void ResetIsViewDirty();
@@ -134,35 +122,33 @@ public:
   bool GetIsViewDirty() const;
 
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float32>& rays, const vtkm::cont::CoordinateSystem& coords);
+  void CreateRays(Ray<vtkm::Float32>& rays, vtkm::Bounds bounds);
+
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float64>& rays, const vtkm::cont::CoordinateSystem& coords);
+  void CreateRays(Ray<vtkm::Float64>& rays, vtkm::Bounds bounds);
 
   VTKM_CONT
   void GetPixelData(const vtkm::cont::CoordinateSystem& coords,
                     vtkm::Int32& activePixels,
                     vtkm::Float32& aveRayDistance);
 
-  template <typename Precision, typename DeviceAdapter>
-  VTKM_CONT void CreateRaysOnDevice(Ray<Precision>& rays,
-                                    DeviceAdapter,
-                                    const vtkm::Bounds boundingBox);
+  template <typename Precision>
+  VTKM_CONT void CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox);
 
-  void CreateDebugRay(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<vtkm::Float32>& rays);
+  void CreateDebugRay(vtkm::Vec2i_32 pixel, Ray<vtkm::Float32>& rays);
 
-  void CreateDebugRay(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<vtkm::Float64>& rays);
+  void CreateDebugRay(vtkm::Vec2i_32 pixel, Ray<vtkm::Float64>& rays);
 
   bool operator==(const Camera& other) const;
 
 private:
   template <typename Precision>
-  void CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& rays);
+  void CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays);
   VTKM_CONT
   void FindSubset(const vtkm::Bounds& bounds);
 
-  template <typename DeviceAdapter, typename Precision>
+  template <typename Precision>
   VTKM_CONT void UpdateDimensions(Ray<Precision>& rays,
-                                  DeviceAdapter,
                                   const vtkm::Bounds& boundingBox,
                                   bool ortho2D);
 

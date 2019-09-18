@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_Worklets_h
 #define vtk_m_rendering_raytracing_Worklets_h
@@ -40,8 +30,8 @@ public:
     : Value(value)
   {
   }
-  typedef void ControlSignature(FieldOut<>);
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldOut);
+  using ExecutionSignature = void(_1);
   VTKM_EXEC
   void operator()(T& outValue) const { outValue = Value; }
 }; //class MemSet
@@ -57,8 +47,8 @@ public:
     : Offset(offset)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC inline void operator()(const FloatType& inValue, FloatType& outValue) const
   {
@@ -79,8 +69,8 @@ public:
     , MaskValue(mask)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldInOut<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn, FieldInOut, FieldIn);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename MaskType>
   VTKM_EXEC inline void operator()(const FloatType& inValue,
@@ -103,8 +93,8 @@ public:
     : Value(value)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename O>
   VTKM_EXEC void operator()(const T& inValue, O& outValue) const
@@ -127,8 +117,8 @@ public:
     : Values(values)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename O>
   VTKM_EXEC void operator()(const T& inValue, O& outValue) const
@@ -144,7 +134,7 @@ public:
     else
       outValue = static_cast<O>(0);
   }
-}; //class doube mask
+}; //class double mask
 
 struct MaxValue
 {

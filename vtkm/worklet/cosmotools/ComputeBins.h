@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -79,11 +69,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<TagType> xLoc,   // (input) x location in halo
-                                FieldIn<TagType> yLoc,   // (input) y location in halo
-                                FieldIn<TagType> zLoc,   // (input) z location in halo
-                                FieldOut<IdType> binId); // (output) bin Id
-  typedef _4 ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn xLoc,    // (input) x location in halo
+                                FieldIn yLoc,    // (input) y location in halo
+                                FieldIn zLoc,    // (input) z location in halo
+                                FieldOut binId); // (output) bin Id
+  using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 
   T xMin, xMax, yMin, yMax, zMin, zMax;

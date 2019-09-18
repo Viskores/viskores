@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
@@ -26,6 +14,7 @@
 #include <vtkm/worklet/Keys.h>
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -45,18 +34,18 @@ namespace
     }                                                                                              \
   } while (false)
 
-static constexpr vtkm::Id ARRAY_SIZE = 1033;
-static constexpr vtkm::IdComponent GROUP_SIZE = 10;
-static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
+#define ARRAY_SIZE 1033
+#define GROUP_SIZE 10
+#define NUM_UNIQUE (vtkm::Id)(ARRAY_SIZE / GROUP_SIZE)
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn keys,
-                                ValuesIn<> keyMirror,
-                                ValuesIn<> indexValues,
-                                ValuesInOut<> valuesToModify,
-                                ValuesOut<> writeKey);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
+  using ControlSignature = void(KeysIn keys,
+                                ValuesIn keyMirror,
+                                ValuesIn indexValues,
+                                ValuesInOut valuesToModify,
+                                ValuesOut writeKey);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   using InputDomain = _1;
 
   template <typename T,
@@ -98,11 +87,11 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 
 struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn,
-                                ReducedValuesOut<> extractKeys,
-                                ReducedValuesIn<> indexReference,
-                                ReducedValuesInOut<> copyKeyPair);
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ControlSignature = void(KeysIn,
+                                ReducedValuesOut extractKeys,
+                                ReducedValuesIn indexReference,
+                                ReducedValuesInOut copyKeyPair);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
   template <typename T>
   VTKM_EXEC void operator()(const T& key,
@@ -136,9 +125,9 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::ArrayCopy(keyArray, sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::cont::ArrayCopy(keyArray, sortedKeys);
 
-  vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::Keys<KeyType> keys(sortedKeys);
 
   vtkm::cont::ArrayHandle<KeyType> valuesToModify;
   valuesToModify.Allocate(ARRAY_SIZE);
@@ -185,11 +174,9 @@ void TryKeyType(KeyType)
   CheckPortal(keyPairOut.GetPortalConstControl());
 }
 
-void TestReduceByKey()
+void TestReduceByKey(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
-            << std::endl;
+  std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   std::cout << "Testing vtkm::Id keys." << std::endl;
   TryKeyType(vtkm::Id());
@@ -206,7 +193,7 @@ void TestReduceByKey()
 
 } // anonymous namespace
 
-int UnitTestWorkletReduceByKey(int, char* [])
+int UnitTestWorkletReduceByKey(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestReduceByKey);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestReduceByKey, argc, argv);
 }

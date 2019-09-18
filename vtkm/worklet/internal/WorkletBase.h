@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_internal_WorkletBase_h
 #define vtk_m_worklet_internal_WorkletBase_h
@@ -36,6 +26,7 @@
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagAtomicArray.h>
+#include <vtkm/cont/arg/TransportTagBitField.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
@@ -43,9 +34,11 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
+#include <vtkm/cont/arg/TypeCheckTagBitField.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
+#include <vtkm/worklet/MaskNone.h>
 #include <vtkm/worklet/ScatterIdentity.h>
 
 namespace vtkm
@@ -55,68 +48,6 @@ namespace placeholders
 
 template <int ControlSignatureIndex>
 struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex>
-{
-};
-
-/// Basic execution argument tags
-struct _1 : Arg<1>
-{
-};
-struct _2 : Arg<2>
-{
-};
-struct _3 : Arg<3>
-{
-};
-struct _4 : Arg<4>
-{
-};
-struct _5 : Arg<5>
-{
-};
-struct _6 : Arg<6>
-{
-};
-struct _7 : Arg<7>
-{
-};
-struct _8 : Arg<8>
-{
-};
-struct _9 : Arg<9>
-{
-};
-struct _10 : Arg<10>
-{
-};
-struct _11 : Arg<11>
-{
-};
-struct _12 : Arg<12>
-{
-};
-struct _13 : Arg<13>
-{
-};
-struct _14 : Arg<14>
-{
-};
-struct _15 : Arg<15>
-{
-};
-struct _16 : Arg<16>
-{
-};
-struct _17 : Arg<17>
-{
-};
-struct _18 : Arg<18>
-{
-};
-struct _19 : Arg<19>
-{
-};
-struct _20 : Arg<20>
 {
 };
 }
@@ -130,29 +61,29 @@ namespace internal
 /// operator() const is added to implement an algorithm in VTK-m. Different
 /// worklets have different calling semantics.
 ///
-class WorkletBase : public vtkm::exec::FunctorBase
+class VTKM_ALWAYS_EXPORT WorkletBase : public vtkm::exec::FunctorBase
 {
 public:
-  using _1 = vtkm::placeholders::_1;
-  using _2 = vtkm::placeholders::_2;
-  using _3 = vtkm::placeholders::_3;
-  using _4 = vtkm::placeholders::_4;
-  using _5 = vtkm::placeholders::_5;
-  using _6 = vtkm::placeholders::_6;
-  using _7 = vtkm::placeholders::_7;
-  using _8 = vtkm::placeholders::_8;
-  using _9 = vtkm::placeholders::_9;
-  using _10 = vtkm::placeholders::_10;
-  using _11 = vtkm::placeholders::_11;
-  using _12 = vtkm::placeholders::_12;
-  using _13 = vtkm::placeholders::_13;
-  using _14 = vtkm::placeholders::_14;
-  using _15 = vtkm::placeholders::_15;
-  using _16 = vtkm::placeholders::_16;
-  using _17 = vtkm::placeholders::_17;
-  using _18 = vtkm::placeholders::_18;
-  using _19 = vtkm::placeholders::_19;
-  using _20 = vtkm::placeholders::_20;
+  using _1 = vtkm::placeholders::Arg<1>;
+  using _2 = vtkm::placeholders::Arg<2>;
+  using _3 = vtkm::placeholders::Arg<3>;
+  using _4 = vtkm::placeholders::Arg<4>;
+  using _5 = vtkm::placeholders::Arg<5>;
+  using _6 = vtkm::placeholders::Arg<6>;
+  using _7 = vtkm::placeholders::Arg<7>;
+  using _8 = vtkm::placeholders::Arg<8>;
+  using _9 = vtkm::placeholders::Arg<9>;
+  using _10 = vtkm::placeholders::Arg<10>;
+  using _11 = vtkm::placeholders::Arg<11>;
+  using _12 = vtkm::placeholders::Arg<12>;
+  using _13 = vtkm::placeholders::Arg<13>;
+  using _14 = vtkm::placeholders::Arg<14>;
+  using _15 = vtkm::placeholders::Arg<15>;
+  using _16 = vtkm::placeholders::Arg<16>;
+  using _17 = vtkm::placeholders::Arg<17>;
+  using _18 = vtkm::placeholders::Arg<18>;
+  using _19 = vtkm::placeholders::Arg<19>;
+  using _20 = vtkm::placeholders::Arg<20>;
 
   /// \c ExecutionSignature tag for getting the work index.
   ///
@@ -174,6 +105,15 @@ public:
   ///
   using VisitIndex = vtkm::exec::arg::VisitIndex;
 
+  /// \c ExecutionSignature tag for getting the device adapter tag.
+  ///
+  struct Device : vtkm::exec::arg::ExecutionSignatureTagBase
+  {
+    // INDEX 0 (which is an invalid parameter index) is reserved to mean the device adapter tag.
+    static constexpr vtkm::IdComponent INDEX = 0;
+    using AspectTag = vtkm::exec::arg::AspectTagDefault;
+  };
+
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -191,101 +131,10 @@ public:
   /// identity scatter (1-to-1 input to output).
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
-  /// In addition to defining the scatter type, the worklet must produce the
-  /// scatter. The default ScatterIdentity has no state, so just return an
-  /// instance.
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
-
-  /// \brief A type list containing the type vtkm::Id.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using IdType = vtkm::TypeListTagId;
-
-  /// \brief A type list containing the type vtkm::Id2.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Id2Type = vtkm::TypeListTagId2;
-
-  /// \brief A type list containing the type vtkm::Id3.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Id3Type = vtkm::TypeListTagId3;
-
-  /// \brief A type list containing the type vtkm::IdComponent.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using IdComponentType = vtkm::TypeListTagIdComponent;
-
-  /// \brief A list of types commonly used for indexing.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Index = vtkm::TypeListTagIndex;
-
-  /// \brief A list of types commonly used for scalar fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Scalar = vtkm::TypeListTagFieldScalar;
-
-  /// \brief A list of all basic types used for scalar fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using ScalarAll = vtkm::TypeListTagScalarAll;
-
-  /// \brief A list of types commonly used for vector fields of 2 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec2 = vtkm::TypeListTagFieldVec2;
-
-  /// \brief A list of types commonly used for vector fields of 3 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec3 = vtkm::TypeListTagFieldVec3;
-
-  /// \brief A list of types commonly used for vector fields of 4 components.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using Vec4 = vtkm::TypeListTagFieldVec4;
-
-  /// \brief A list of all basic types used for vector fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using VecAll = vtkm::TypeListTagVecAll;
-
-  /// \brief A list of types (scalar and vector) commonly used in fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using FieldCommon = vtkm::TypeListTagField;
-
-  /// \brief A list of vector types commonly used in fields.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using VecCommon = vtkm::TypeListTagVecCommon;
-
-  /// \brief A list of generally common types.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using CommonTypes = vtkm::TypeListTagCommon;
-
-  /// \brief A list of all basic types.
-  ///
-  /// This is a convenience type to use as template arguments to \c
-  /// ControlSignature tags to specify the types of worklet arguments.
-  using AllTypes = vtkm::TypeListTagAll;
+  /// All worklets must define their mask operation. The mask defines which
+  /// outputs are generated. The default mask is the none mask, which generates
+  /// everything in the output domain.
+  using MaskType = vtkm::worklet::MaskNone;
 
   /// \c ControlSignature tag for whole input arrays.
   ///
@@ -297,10 +146,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -316,10 +164,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -336,10 +183,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -356,13 +202,42 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template <typename TypeList = AllTypes>
   struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagAtomicArray;
     using TransportTag = vtkm::cont::arg::TransportTagAtomicArray;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
+
+  /// \c ControlSignature tags for whole BitFields.
+  ///
+  /// When a BitField is passed in to a worklet expecting this ControlSignature
+  /// type, the appropriate BitPortal is generated and given to the worklet's
+  /// execution.
+  ///
+  /// Be aware that this data structure is especially prone to race conditions,
+  /// so be sure to use the appropriate atomic methods when necessary.
+  /// @{
+  ///
+  struct BitFieldIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldIn;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  struct BitFieldInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagBitField;
+    using TransportTag = vtkm::cont::arg::TransportTagBitFieldInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
+  };
+  /// @}
 
   /// \c ControlSignature tag for whole input topology.
   ///
@@ -372,13 +247,15 @@ public:
   /// operator argument with one of the default args. This can be used to
   /// global lookup for arbitrary topology information
 
-  using Cell = vtkm::TopologyElementTagCell;
   using Point = vtkm::TopologyElementTagPoint;
-  template <typename FromType = Point, typename ToType = Cell>
+  using Cell = vtkm::TopologyElementTagCell;
+  using Edge = vtkm::TopologyElementTagEdge;
+  using Face = vtkm::TopologyElementTagFace;
+  template <typename VisitTopology = Cell, typename IncidentTopology = Point>
   struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
-    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>;
     using FetchTag = vtkm::exec::arg::FetchTagWholeCellSetIn;
   };
 
@@ -391,16 +268,19 @@ public:
   template <typename T,
             typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
     const T& globalThreadIndexOffset = 0) const
   {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
   }
 };
 }

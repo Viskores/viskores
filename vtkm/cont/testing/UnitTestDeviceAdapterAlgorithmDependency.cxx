@@ -2,28 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 // This tests a previous problem where code templated on the device adapter and
 // used one of the device adapter algorithms (for example, the dispatcher) had
 // to be declared after any device adapter it was ever used with.
-
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
-
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -54,7 +41,7 @@ void CheckPostDefinedDeviceAdapter()
 
 } // anonymous namespace
 
-int UnitTestDeviceAdapterAlgorithmDependency(int, char* [])
+int UnitTestDeviceAdapterAlgorithmDependency(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(CheckPostDefinedDeviceAdapter);
+  return vtkm::cont::testing::Testing::Run(CheckPostDefinedDeviceAdapter, argc, argv);
 }

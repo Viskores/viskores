@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
@@ -25,7 +15,7 @@
 namespace
 {
 
-using Vec3 = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Vec3 = vtkm::Vec3f;
 
 static const Vec3 g_Origin = Vec3(1.0f, 2.0f, 3.0f);
 static const Vec3 g_Spacing = Vec3(4.0f, 5.0f, 6.0f);
@@ -100,11 +90,11 @@ void TryVecAxisAlignedPointCoordinates(
   CheckCoordsValues(coords);
 
   std::cout << "Check CopyInto." << std::endl;
-  vtkm::Vec<vtkm::Vec<vtkm::FloatDefault, 3>, VecCoordsType::NUM_COMPONENTS> copy1;
+  vtkm::Vec<vtkm::Vec3f, VecCoordsType::NUM_COMPONENTS> copy1;
   coords.CopyInto(copy1);
   CheckCoordsValues(copy1);
 
-  vtkm::Vec<vtkm::Vec<vtkm::FloatDefault, 3>, VecCoordsType::NUM_COMPONENTS> copy2;
+  vtkm::Vec<vtkm::Vec3f, VecCoordsType::NUM_COMPONENTS> copy2;
   VTraits::CopyInto(coords, copy2);
   CheckCoordsValues(copy2);
 
@@ -145,7 +135,7 @@ void TestVecAxisAlignedPointCoordinates()
 
 } // anonymous namespace
 
-int UnitTestVecAxisAlignedPointCoordinates(int, char* [])
+int UnitTestVecAxisAlignedPointCoordinates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestVecAxisAlignedPointCoordinates);
+  return vtkm::testing::Testing::Run(TestVecAxisAlignedPointCoordinates, argc, argv);
 }

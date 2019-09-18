@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_interop_cuda_internal_TransferToOpenGL_h
 #define vtkm_interop_cuda_internal_TransferToOpenGL_h
@@ -24,11 +14,11 @@
 #include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
-#include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 
 #include <vtkm/interop/internal/TransferToOpenGL.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
@@ -157,7 +147,7 @@ public:
   }
 
   template <typename StorageTag>
-  VTKM_CONT void Transfer(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
+  VTKM_CONT void Transfer(const vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
     //make a buffer for the handle if the user has forgotten too
     if (!glIsBuffer(*this->State.GetHandle()))
@@ -192,19 +182,10 @@ public:
     this->Resource->Map();
 
     ValueType* beginPointer = this->Resource->GetMappedPoiner<ValueType>(size);
+    auto deviceMemory = vtkm::cont::make_ArrayHandle(beginPointer, size);
 
-    //get the device pointers
-    auto portal = handle.PrepareForInput(DeviceAdapterTag());
-
-    //Copy the data into memory that opengl owns, since we can't
-    //give memory from cuda to opengl
-
-    //Perhaps a direct call to thrust copy should be wrapped in a vtkm
-    //compatble function
-    ::thrust::copy(ThrustCudaPolicyPerThread,
-                   vtkm::cont::cuda::internal::IteratorBegin(portal),
-                   vtkm::cont::cuda::internal::IteratorEnd(portal),
-                   thrust::cuda::pointer<ValueType>(beginPointer));
+    //Do a device to device memory copy
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(handle, deviceMemory);
 
     //unmap the resource
     this->Resource->UnMap();

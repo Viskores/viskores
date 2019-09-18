@@ -2,30 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_rendering_Texture2D_h
 #define vtk_m_rendering_Texture2D_h
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -50,7 +38,7 @@ class Texture2D
 public:
   using TextureDataHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using ColorType = vtkm::Vec<vtkm::Float32, NumComponents>;
-  template <typename DeviceTag>
+
   class Texture2DSampler;
 
 #define UV_BOUNDS_CHECK(u, v, NoneType)                                                            \
@@ -77,7 +65,7 @@ public:
     // We do not know the lifetime of the underlying data source of input `data`. Since it might
     // be from a shallow copy of the data source, we make a deep copy of the input data and keep
     // it's portal. The copy operation is very fast.
-    vtkm::cont::ArrayCopy(data, Data);
+    vtkm::cont::Algorithm::Copy(data, Data);
   }
 
   VTKM_CONT
@@ -95,35 +83,34 @@ public:
   VTKM_CONT
   void SetWrapMode(TextureWrapMode wrapMode) { this->WrapMode = wrapMode; }
 
-  template <typename DeviceTag>
-  VTKM_CONT Texture2DSampler<DeviceTag> GetExecObject() const
+  VTKM_CONT Texture2DSampler GetExecObjectFactory() const
   {
-    return Texture2DSampler<DeviceTag>(Width, Height, Data, FilterMode, WrapMode);
+    return Texture2DSampler(Width, Height, Data, FilterMode, WrapMode);
   }
 
-  template <typename DeviceTag>
-  class Texture2DSampler : public vtkm::exec::ExecutionObjectBase
+  template <typename Device>
+  class Texture2DSamplerExecutionObject
   {
   public:
     using TextureExecPortal =
-      typename TextureDataHandle::template ExecutionTypes<DeviceTag>::PortalConst;
+      typename TextureDataHandle::template ExecutionTypes<Device>::PortalConst;
 
     VTKM_CONT
-    Texture2DSampler()
+    Texture2DSamplerExecutionObject()
       : Width(0)
       , Height(0)
     {
     }
 
     VTKM_CONT
-    Texture2DSampler(vtkm::Id width,
-                     vtkm::Id height,
-                     const TextureDataHandle& data,
-                     TextureFilterMode filterMode,
-                     TextureWrapMode wrapMode)
+    Texture2DSamplerExecutionObject(vtkm::Id width,
+                                    vtkm::Id height,
+                                    const TextureDataHandle& data,
+                                    TextureFilterMode filterMode,
+                                    TextureWrapMode wrapMode)
       : Width(width)
       , Height(height)
-      , Data(data.PrepareForInput(DeviceTag()))
+      , Data(data.PrepareForInput(Device()))
       , FilterMode(filterMode)
       , WrapMode(wrapMode)
     {
@@ -151,16 +138,16 @@ public:
     VTKM_EXEC
     inline ColorType GetNearestNeighbourFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
-      vtkm::Id x = static_cast<vtkm::Id>(vtkm::Round(u * (Width - 1)));
-      vtkm::Id y = static_cast<vtkm::Id>(vtkm::Round(v * (Height - 1)));
+      vtkm::Id x = static_cast<vtkm::Id>(vtkm::Round(u * static_cast<vtkm::Float32>(Width - 1)));
+      vtkm::Id y = static_cast<vtkm::Id>(vtkm::Round(v * static_cast<vtkm::Float32>(Height - 1)));
       return GetColorAtCoords(x, y);
     }
 
     VTKM_EXEC
     inline ColorType GetLinearFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
-      u = u * Width - 0.5f;
-      v = v * Height - 0.5f;
+      u = u * static_cast<vtkm::Float32>(Width) - 0.5f;
+      v = v * static_cast<vtkm::Float32>(Height) - 0.5f;
       vtkm::Id x = static_cast<vtkm::Id>(vtkm::Floor(u));
       vtkm::Id y = static_cast<vtkm::Id>(vtkm::Floor(v));
       vtkm::Float32 uRatio = u - static_cast<vtkm::Float32>(x);
@@ -191,21 +178,62 @@ public:
     VTKM_EXEC
     inline void GetNextCoords(vtkm::Id x, vtkm::Id y, vtkm::Id& xn, vtkm::Id& yn) const
     {
-      if (WrapMode == TextureWrapMode::Clamp)
+      switch (WrapMode)
       {
-        xn = (x + 1) < Width ? (x + 1) : x;
-        yn = (y + 1) < Height ? (y + 1) : y;
-      }
-      else if (WrapMode == TextureWrapMode::Repeat)
-      {
-        xn = (x + 1) % Width;
-        yn = (y + 1) % Height;
+        case TextureWrapMode::Clamp:
+          xn = (x + 1) < Width ? (x + 1) : x;
+          yn = (y + 1) < Height ? (y + 1) : y;
+          break;
+        case TextureWrapMode::Repeat:
+        default:
+          xn = (x + 1) % Width;
+          yn = (y + 1) % Height;
+          break;
       }
     }
 
     vtkm::Id Width;
     vtkm::Id Height;
     TextureExecPortal Data;
+    TextureFilterMode FilterMode;
+    TextureWrapMode WrapMode;
+  };
+
+  class Texture2DSampler : public vtkm::cont::ExecutionObjectBase
+  {
+  public:
+    VTKM_CONT
+    Texture2DSampler()
+      : Width(0)
+      , Height(0)
+    {
+    }
+
+    VTKM_CONT
+    Texture2DSampler(vtkm::Id width,
+                     vtkm::Id height,
+                     const TextureDataHandle& data,
+                     TextureFilterMode filterMode,
+                     TextureWrapMode wrapMode)
+      : Width(width)
+      , Height(height)
+      , Data(data)
+      , FilterMode(filterMode)
+      , WrapMode(wrapMode)
+    {
+    }
+
+    template <typename Device>
+    VTKM_CONT Texture2DSamplerExecutionObject<Device> PrepareForExecution(Device) const
+    {
+      return Texture2DSamplerExecutionObject<Device>(
+        this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode);
+    }
+
+  private:
+    vtkm::Id Width;
+    vtkm::Id Height;
+    TextureDataHandle Data;
     TextureFilterMode FilterMode;
     TextureWrapMode WrapMode;
   }; // class Texture2DSampler

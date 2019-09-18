@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_testing_TestingMath_h
 #define vtk_m_testing_TestingMath_h
 
@@ -31,7 +19,7 @@
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <limits>
 
 #define VTKM_MATH_ASSERT(condition, message)                                                       \
   if (!(condition))                                                                                \
@@ -140,6 +128,9 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   {
     //    std::cout << "Testing Pi" << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Pi(), 3.14159265), "Pi not correct.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Pif(), 3.14159265f), "Pif not correct.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Pi<vtkm::Float64>(), 3.14159265),
+                     "Pi template function not correct.");
   }
 
   VTKM_EXEC
@@ -759,6 +750,76 @@ struct TypeListTagAbs
 };
 
 //-----------------------------------------------------------------------------
+static constexpr vtkm::Id BitOpSamples = 1024 * 1024;
+
+template <typename T>
+struct BitOpTests : public vtkm::exec::FunctorBase
+{
+  static constexpr T MaxT = std::numeric_limits<T>::max();
+  static constexpr T Offset = MaxT / BitOpSamples;
+
+  VTKM_EXEC void operator()(vtkm::Id i) const
+  {
+    const T idx = static_cast<T>(i);
+    const T word = idx * this->Offset;
+
+    TestWord(word - idx);
+    TestWord(word);
+    TestWord(word + idx);
+  }
+
+  VTKM_EXEC void TestWord(T word) const
+  {
+    VTKM_MATH_ASSERT(test_equal(vtkm::CountSetBits(word), this->DumbCountBits(word)),
+                     "CountBits returned wrong value.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
+                     "FindFirstSetBit returned wrong value.")
+  }
+
+  VTKM_EXEC vtkm::Int32 DumbCountBits(T word) const
+  {
+    vtkm::Int32 bits = 0;
+    while (word)
+    {
+      if (word & 0x1)
+      {
+        ++bits;
+      }
+      word >>= 1;
+    }
+    return bits;
+  }
+
+  VTKM_EXEC vtkm::Int32 DumbFindFirstSetBit(T word) const
+  {
+    if (word == 0)
+    {
+      return 0;
+    }
+
+    vtkm::Int32 bit = 1;
+    while ((word & 0x1) == 0)
+    {
+      word >>= 1;
+      ++bit;
+    }
+    return bit;
+  }
+};
+
+template <typename Device>
+struct TryBitOpTests
+{
+  template <typename T>
+  void operator()(const T&) const
+  {
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(BitOpTests<T>(), BitOpSamples);
+  }
+};
+
+using TypeListTagBitOp = vtkm::ListTagBase<vtkm::UInt32, vtkm::UInt64>;
+
+//-----------------------------------------------------------------------------
 template <typename Device>
 void RunMathTests()
 {
@@ -770,6 +831,8 @@ void RunMathTests()
   vtkm::testing::Testing::TryTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
   vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(), TypeListTagAbs());
+  std::cout << "Test all bit operations" << std::endl;
+  vtkm::testing::Testing::TryTypes(TryBitOpTests<Device>(), TypeListTagBitOp());
 }
 
 } // namespace UnitTestMathNamespace

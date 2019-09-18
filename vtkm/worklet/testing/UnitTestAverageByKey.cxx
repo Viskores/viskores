@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/worklet/AverageByKey.h>
 
@@ -76,23 +64,20 @@ void TryKeyType(KeyType)
 
   // Create Keys object
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::ArrayCopy(keysArray, sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::cont::ArrayCopy(keysArray, sortedKeys);
+  vtkm::worklet::Keys<KeyType> keys(sortedKeys);
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
   // Create values array
   vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault> valuesArray(0.0f, 1.0f, ARRAY_SIZE);
 
   std::cout << "  Try average with Keys object" << std::endl;
-  CheckAverageByKey(
-    keys.GetUniqueKeys(),
-    vtkm::worklet::AverageByKey::Run(keys, valuesArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+  CheckAverageByKey(keys.GetUniqueKeys(), vtkm::worklet::AverageByKey::Run(keys, valuesArray));
 
   std::cout << "  Try average with device adapter's reduce by keys" << std::endl;
   vtkm::cont::ArrayHandle<KeyType> outputKeys;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputValues;
-  vtkm::worklet::AverageByKey::Run(
-    keysArray, valuesArray, outputKeys, outputValues, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::AverageByKey::Run(keysArray, valuesArray, outputKeys, outputValues);
   CheckAverageByKey(outputKeys, outputValues);
 }
 
@@ -107,7 +92,7 @@ void DoTest()
 
 } // anonymous namespace
 
-int UnitTestAverageByKey(int, char* [])
+int UnitTestAverageByKey(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoTest);
+  return vtkm::cont::testing::Testing::Run(DoTest, argc, argv);
 }

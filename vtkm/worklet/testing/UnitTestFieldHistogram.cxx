@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/FieldHistogram.h>
@@ -228,33 +218,32 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_poisson", vtkm::cont::Field::ASSOC_POINTS, poisson, nVerts, vtkm::CopyFlag::On));
+    "p_poisson", vtkm::cont::Field::Association::POINTS, poisson, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_normal", vtkm::cont::Field::ASSOC_POINTS, normal, nVerts, vtkm::CopyFlag::On));
+    "p_normal", vtkm::cont::Field::Association::POINTS, normal, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_chiSquare", vtkm::cont::Field::ASSOC_POINTS, chiSquare, nVerts, vtkm::CopyFlag::On));
+    "p_chiSquare", vtkm::cont::Field::Association::POINTS, chiSquare, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "p_uniform", vtkm::cont::Field::ASSOC_POINTS, uniform, nVerts, vtkm::CopyFlag::On));
+    "p_uniform", vtkm::cont::Field::Association::POINTS, uniform, nVerts, vtkm::CopyFlag::On));
 
   // Set cell scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells, vtkm::CopyFlag::On));
+    "c_poisson", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells, vtkm::CopyFlag::On));
+    "c_normal", vtkm::cont::Field::Association::CELL_SET, normal, nCells, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field("c_chiSquare",
-                                          vtkm::cont::Field::ASSOC_CELL_SET,
-                                          "cells",
+                                          vtkm::cont::Field::Association::CELL_SET,
                                           chiSquare,
                                           nCells,
                                           vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells, vtkm::CopyFlag::On));
+    "c_uniform", vtkm::cont::Field::Association::CELL_SET, poisson, nCells, vtkm::CopyFlag::On));
 
-  vtkm::cont::CellSetStructured<dimension> cellSet("cells");
+  vtkm::cont::CellSetStructured<dimension> cellSet;
 
   //Set regular structure
   cellSet.SetPointDimensions(vtkm::make_Vec(xVerts, yVerts));
-  dataSet.AddCellSet(cellSet);
+  dataSet.SetCellSet(cellSet);
 
   return dataSet;
 }
@@ -311,24 +300,24 @@ void TestFieldHistogram()
 
   vtkm::worklet::FieldHistogram histogram;
   // Run data
-  histogram.Run(p_poisson, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_poisson, numberOfBins, range, delta, bins);
   std::cout << "Poisson distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_normal, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_normal, numberOfBins, range, delta, bins);
   std::cout << "Normal distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_chiSquare, numberOfBins, range, delta, bins);
   std::cout << "Chi Square distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 
-  histogram.Run(p_uniform, numberOfBins, range, delta, bins, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  histogram.Run(p_uniform, numberOfBins, range, delta, bins);
   std::cout << "Uniform distributed POINT data:" << std::endl;
   PrintHistogram(bins, numberOfBins, range, delta);
 } // TestFieldHistogram
 
-int UnitTestFieldHistogram(int, char* [])
+int UnitTestFieldHistogram(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldHistogram);
+  return vtkm::cont::testing::Testing::Run(TestFieldHistogram, argc, argv);
 }

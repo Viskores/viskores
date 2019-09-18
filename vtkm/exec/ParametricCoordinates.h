@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_ParametricCoordinates_h
 #define vtk_m_exec_ParametricCoordinates_h
@@ -71,6 +61,26 @@ static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPo
 {
   (void)numPoints; // Silence compiler warnings.
   VTKM_ASSERT(numPoints == 2);
+  pcoords[0] = 0.5;
+  pcoords[1] = 0;
+  pcoords[2] = 0;
+}
+
+template <typename ParametricCoordType>
+static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPoints,
+                                                         vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                                         vtkm::CellShapeTagPolyLine,
+                                                         const vtkm::exec::FunctorBase& worklet)
+{
+  switch (numPoints)
+  {
+    case 1:
+      ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagVertex(), worklet);
+      return;
+    case 2:
+      ParametricCoordinatesCenter(numPoints, pcoords, vtkm::CellShapeTagLine(), worklet);
+      return;
+  }
   pcoords[0] = 0.5;
   pcoords[1] = 0;
   pcoords[2] = 0;
@@ -205,12 +215,12 @@ static inline VTKM_EXEC void ParametricCoordinatesCenter(vtkm::IdComponent numPo
 /// of points.
 ///
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> ParametricCoordinatesCenter(
+static inline VTKM_EXEC vtkm::Vec3f ParametricCoordinatesCenter(
   vtkm::IdComponent numPoints,
   CellShapeTag shape,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+  vtkm::Vec3f pcoords;
   ParametricCoordinatesCenter(numPoints, pcoords, shape, worklet);
   return pcoords;
 }
@@ -255,6 +265,29 @@ static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoi
   VTKM_ASSUME((pointIndex >= 0) && (pointIndex < 2));
 
   pcoords[0] = static_cast<ParametricCoordType>(pointIndex);
+  pcoords[1] = 0;
+  pcoords[2] = 0;
+}
+
+template <typename ParametricCoordType>
+static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoints,
+                                                        vtkm::IdComponent pointIndex,
+                                                        vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                                        vtkm::CellShapeTagPolyLine,
+                                                        const vtkm::exec::FunctorBase& functor)
+{
+  switch (numPoints)
+  {
+    case 1:
+      ParametricCoordinatesPoint(
+        numPoints, pointIndex, pcoords, vtkm::CellShapeTagVertex(), functor);
+      return;
+    case 2:
+      ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, vtkm::CellShapeTagLine(), functor);
+      return;
+  }
+  pcoords[0] =
+    static_cast<ParametricCoordType>(pointIndex) / static_cast<ParametricCoordType>(numPoints - 1);
   pcoords[1] = 0;
   pcoords[2] = 0;
 }
@@ -564,13 +597,13 @@ static inline VTKM_EXEC void ParametricCoordinatesPoint(vtkm::IdComponent numPoi
 /// the given number of points.
 ///
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> ParametricCoordinatesPoint(
+static inline VTKM_EXEC vtkm::Vec3f ParametricCoordinatesPoint(
   vtkm::IdComponent numPoints,
   vtkm::IdComponent pointIndex,
   CellShapeTag shape,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+  vtkm::Vec3f pcoords;
   ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, shape, worklet);
   return pcoords;
 }
@@ -628,20 +661,89 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // Because this is a line, there is only one valid parametric coordinate. Let
   // vec be the vector from the first point to the second point
   // (pointWCoords[1] - pointWCoords[0]), which is the direction of the line.
-  // dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of
+  // Dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of
   // wcoords on the line and represents the distance between the orthoginal
   // projection and pointWCoords[0]. The parametric coordinate is the fraction
   // of this over the length of the segment, which is mag(vec). Thus, the
-  // parametric coordinate is dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
+  // parametric coordinate is Dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
 
   using Vector3 = typename WorldCoordVector::ComponentType;
   using T = typename Vector3::ComponentType;
 
   Vector3 vec = pointWCoords[1] - pointWCoords[0];
-  T numerator = vtkm::dot(vec, wcoords - pointWCoords[0]);
+  T numerator = vtkm::Dot(vec, wcoords - pointWCoords[0]);
   T denominator = vtkm::MagnitudeSquared(vec);
 
   return Vector3(numerator / denominator, 0, 0);
+}
+
+template <typename WorldCoordVector>
+static inline VTKM_EXEC typename WorldCoordVector::ComponentType
+WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
+                                        const typename WorldCoordVector::ComponentType& wcoords,
+                                        vtkm::CellShapeTagPolyLine,
+                                        bool& success,
+                                        const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
+  VTKM_ASSERT(pointWCoords.GetNumberOfComponents() >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return WorldCoordinatesToParametricCoordinates(
+        pointWCoords, wcoords, vtkm::CellShapeTagVertex(), success, worklet);
+    case 2:
+      return WorldCoordinatesToParametricCoordinates(
+        pointWCoords, wcoords, vtkm::CellShapeTagLine(), success, worklet);
+  }
+
+  using Vector3 = typename WorldCoordVector::ComponentType;
+  using T = typename Vector3::ComponentType;
+
+  //Find the closest vertex to the point.
+  vtkm::IdComponent idx = 0;
+  Vector3 vec = pointWCoords[0] - wcoords;
+  T minDistSq = vtkm::Dot(vec, vec);
+  for (vtkm::IdComponent i = 1; i < numPoints; i++)
+  {
+    vec = pointWCoords[i] - wcoords;
+    T d = vtkm::Dot(vec, vec);
+
+    if (d < minDistSq)
+    {
+      idx = i;
+      minDistSq = d;
+    }
+  }
+
+  //Find the right segment, and the parameterization along that segment.
+  //Closest to 0, so segment is (0,1)
+  if (idx == 0)
+    idx = 1;
+
+  //Find the pt projection onto the line segment at points idx and idx-1.
+  vec = pointWCoords[idx] - pointWCoords[idx - 1];
+  T numerator = vtkm::Dot(vec, wcoords - pointWCoords[idx - 1]);
+  T denominator = vtkm::MagnitudeSquared(vec);
+  T segmentParam = numerator / denominator;
+
+  //The point is on the OTHER side of idx. If there is a next segment reparam onto it.
+  if (segmentParam > 1 && idx < numPoints - 1)
+  {
+    idx = idx + 1;
+    vec = pointWCoords[idx] - pointWCoords[idx - 1];
+    numerator = vtkm::Dot(vec, wcoords - pointWCoords[idx - 1]);
+    denominator = vtkm::MagnitudeSquared(vec);
+    segmentParam = numerator / denominator;
+  }
+
+  //Segment param is [0,1] on that segment.
+  //Map that onto the param for the entire segment.
+  T dParam = static_cast<T>(1) / static_cast<T>(numPoints - 1);
+  T polyLineParam = static_cast<T>(idx - 1) * dParam + segmentParam * dParam;
+
+  return Vector3(polyLineParam, 0, 0);
 }
 
 template <typename WorldCoordVector>
@@ -753,9 +855,9 @@ WorldCoordinatesToParametricCoordinatesQuad(const WorldCoordVector& pointWCoords
 }
 } // namespace detail
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
+static inline VTKM_EXEC vtkm::Vec3f WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<2>& pointWCoords,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
+  const vtkm::Vec3f& wcoords,
   vtkm::CellShapeTagQuad,
   bool& success,
   const FunctorBase&)
@@ -848,8 +950,8 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   {
     WCoordType vecInPlane = pointWCoords[firstPointIndex] - wcoordCenter;
     WCoordType planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
-    typename WCoordType::ComponentType planeOffset = vtkm::dot(planeNormal, wcoordCenter);
-    if (vtkm::dot(planeNormal, wcoords) < planeOffset)
+    typename WCoordType::ComponentType planeOffset = vtkm::Dot(planeNormal, wcoordCenter);
+    if (vtkm::Dot(planeNormal, wcoords) < planeOffset)
     {
       // wcoords on wrong side of plane, thus outside of triangle
       continue;
@@ -858,8 +960,8 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
     secondPointIndex = firstPointIndex + 1;
     vecInPlane = pointWCoords[secondPointIndex] - wcoordCenter;
     planeNormal = vtkm::Cross(polygonNormal, vecInPlane);
-    planeOffset = vtkm::dot(planeNormal, wcoordCenter);
-    if (vtkm::dot(planeNormal, wcoords) > planeOffset)
+    planeOffset = vtkm::Dot(planeNormal, wcoordCenter);
+    if (vtkm::Dot(planeNormal, wcoords) > planeOffset)
     {
       // wcoords on wrong side of plane, thus outside of triangle
       continue;
@@ -931,7 +1033,7 @@ WorldCoordinatesToParametricCoordinatesTetra(
   // from p0 to the adjacent point (which is itself the parametric coordinate
   // we are after), we get the following definition for the intersection.
   //
-  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  // d = Dot((wcoords - p0), planeNormal)/Dot((p1-p0), planeNormal)
   //
 
   const auto vec0 = pointWCoords[1] - pointWCoords[0];
@@ -941,13 +1043,13 @@ WorldCoordinatesToParametricCoordinatesTetra(
 
   typename WorldCoordVector::ComponentType pcoords;
   auto planeNormal = vtkm::Cross(vec1, vec2);
-  pcoords[0] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec0, planeNormal);
+  pcoords[0] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec0, planeNormal);
 
   planeNormal = vtkm::Cross(vec0, vec2);
-  pcoords[1] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec1, planeNormal);
+  pcoords[1] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec1, planeNormal);
 
   planeNormal = vtkm::Cross(vec0, vec1);
-  pcoords[2] = vtkm::dot(coordVec, planeNormal) / vtkm::dot(vec2, planeNormal);
+  pcoords[2] = vtkm::Dot(coordVec, planeNormal) / vtkm::Dot(vec2, planeNormal);
 
   return pcoords;
 }
@@ -1039,9 +1141,9 @@ WorldCoordinatesToParametricCoordinates3D(const WorldCoordVector& pointWCoords,
 }
 } // detail
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
+static inline VTKM_EXEC vtkm::Vec3f WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<3>& pointWCoords,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
+  const vtkm::Vec3f& wcoords,
   vtkm::CellShapeTagHexahedron,
   bool& success,
   const FunctorBase&)

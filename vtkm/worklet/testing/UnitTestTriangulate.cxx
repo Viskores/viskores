@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -28,7 +18,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingTriangulate
 {
 public:
@@ -41,16 +30,16 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
 
     // Convert uniform quadrilaterals to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet);
 
     // Create the output dataset and assign the input coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     // Two triangles are created for every quad cell
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 2),
@@ -66,17 +55,17 @@ public:
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();
     CellSetType cellSet;
-    dataSet.GetCellSet(0).CopyTo(cellSet);
+    dataSet.GetCellSet().CopyTo(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
 
     // Convert explicit cells to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet);
 
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
-    outDataSet.AddCellSet(outCellSet);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 14),
                      "Wrong result for Triangulate filter");
@@ -89,7 +78,7 @@ public:
   }
 };
 
-int UnitTestTriangulate(int, char* [])
+int UnitTestTriangulate(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingTriangulate<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingTriangulate(), argc, argv);
 }

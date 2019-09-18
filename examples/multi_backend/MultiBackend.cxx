@@ -2,133 +2,102 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
+
 #include <iostream>
+#include <thread>
 
-#include <vtkm/Math.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/RuntimeDeviceInformation.h>
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include "IOGenerator.h"
+#include "MultiDeviceGradient.h"
+#include "TaskQueue.h"
 
-#include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+//This demo shows off using vtk-m in multiple threads in two different ways.
+//
+//At a high level we have 2 primary threads, an IO thread and a Worker thread
+//The IO thread will generate all data using the vtk-m serial device, and
+//will post this data to a worker queue as a vtk-m partitioned dataset.
+//The Worker thread will pull down these vtk-m data and run a
+//vtk-m filter on the partitions.
+//The vtk-m filter it runs will itself have a worker pool which it will
+//distribute work too. The number of workers is based on what device adapters
+//are enabled but uses the following logic:
+// -  If TBB is enabled construct a single TBB worker
+// -  If CUDA is enabled construct 4 workers for each GPU on the machine
+//
+//Unfortunately due to some thread unsafe logic in VTK-m it is currently not
+//possible to have CUDA and TBB workers at the same time. So the class will
+//choose CUDA over TBB when possible.
+//Once the thread unsafe logic is fixed a machine that has a single CPU
+//and single GPU we should expect that we will have 2 primary 'main loop'
+//threads, and 5 threads for heavy 'task' work.
 
-using FloatVec3 = vtkm::Vec<vtkm::Float32, 3>;
-using Uint8Vec4 = vtkm::Vec<vtkm::UInt8, 4>;
-
-struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
+void partition_processing(TaskQueue<vtkm::cont::PartitionedDataSet>& queue);
+int main(int argc, char** argv)
 {
-  vtkm::Float32 t;
-  GenerateSurfaceWorklet(vtkm::Float32 st)
-    : t(st)
-  {
-  }
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  //Step 1. Construct the two primary 'main loops'. The threads
+  //share a queue object so we need to explicitly pass it
+  //by reference (the std::ref call)
+  TaskQueue<vtkm::cont::PartitionedDataSet> queue;
+  std::thread io(io_generator, std::ref(queue), 6);
+  std::thread worker(partition_processing, std::ref(queue));
 
-  template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& input,
-                            vtkm::Vec<T, 3>& output,
-                            vtkm::Vec<vtkm::UInt8, 4>& color) const
-  {
-    output[0] = input[0];
-    output[1] = 0.25f * vtkm::Sin(input[0] * 10.f + t) * vtkm::Cos(input[2] * 10.f + t);
-    output[2] = input[2];
-
-    color[0] = 0;
-    color[1] = static_cast<vtkm::UInt8>(160 + (96 * vtkm::Sin(input[0] * 10.f + t)));
-    color[2] = static_cast<vtkm::UInt8>(160 + (96 * vtkm::Cos(input[2] * 5.f + t)));
-    color[3] = 255;
-  }
-};
-
-struct RunGenerateSurfaceWorklet
-{
-  template <typename DeviceAdapterTag>
-  bool operator()(DeviceAdapterTag) const
-  {
-    //At this point we know we have runtime support
-    using DeviceTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
-
-    using DispatcherType =
-      vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet, DeviceAdapterTag>;
-
-    std::cout << "Running a worklet on device adapter: " << DeviceTraits::GetName() << std::endl;
-
-    GenerateSurfaceWorklet worklet(0.05f);
-    DispatcherType(worklet).Invoke(this->In, this->Out, this->Color);
-
-    return true;
-  }
-
-  vtkm::cont::ArrayHandle<FloatVec3> In;
-  vtkm::cont::ArrayHandle<FloatVec3> Out;
-  vtkm::cont::ArrayHandle<Uint8Vec4> Color;
-};
-
-template <typename T>
-std::vector<vtkm::Vec<T, 3>> make_testData(int size)
-{
-  std::vector<vtkm::Vec<T, 3>> data;
-  data.reserve(static_cast<std::size_t>(size * size));
-  for (int i = 0; i < size; ++i)
-  {
-    for (int j = 0; j < size; ++j)
-    {
-      data.push_back(vtkm::Vec<T, 3>(
-        2.f * static_cast<T>(i / size) - 1.f, 0.f, 2.f * static_cast<T>(j / size) - 1.f));
-    }
-  }
-  return data;
+  //Step N. Wait for the work to finish
+  io.join();
+  worker.join();
+  return 0;
 }
 
-//This is the list of devices to compile in support for. The order of the
-//devices determines the runtime preference.
-struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                        vtkm::cont::DeviceAdapterTagTBB,
-                                        vtkm::cont::DeviceAdapterTagSerial>
+//=================================================================
+void partition_processing(TaskQueue<vtkm::cont::PartitionedDataSet>& queue)
 {
-};
+  //Step 1. Construct the gradient filter outside the work loop
+  //so that we can reuse the thread pool it constructs
+  MultiDeviceGradient gradient;
+  gradient.SetComputePointGradient(true);
+  while (queue.hasTasks())
+  {
+    //Step 2. grab the next partition skipping any that are empty
+    //as empty ones can be returned when the queue is about
+    //to say it has no work
+    vtkm::cont::PartitionedDataSet pds = queue.pop();
+    if (pds.GetNumberOfPartitions() == 0)
+    {
+      continue;
+    }
 
-int main(int, char**)
-{
-  std::vector<FloatVec3> data = make_testData<vtkm::Float32>(1024);
+    //Step 3. Get the first field name from the partition
+    std::string fieldName = pds.GetPartition(0).GetField(0).GetName();
 
-  //make array handles for the data
+    //Step 4. Run a multi device gradient
+    gradient.SetActiveField(fieldName);
+    vtkm::cont::PartitionedDataSet result = gradient.Execute(pds);
+    std::cout << "finished processing a partitioned dataset" << std::endl;
 
-  // TryExecutes takes a functor and a list of devices. It then tries to run
-  // the functor for each device (in the order given in the list) until the
-  // execution succeeds. This allows you to compile in support for multiple
-  // devices which have runtime requirements ( GPU / HW Accelerator ) and
-  // correctly choose the best device at runtime.
-  //
-  // The functor parentheses operator should take exactly one argument, which is
-  // the DeviceAdapterTag to use. The functor should return true if the execution
-  // succeeds.
-  //
-  // This function also optionally takes a vtkm::cont::RuntimeDeviceTracker, which
-  // will monitor for certain failures across calls to TryExecute and skip trying
-  // devices with a history of failure.
-  RunGenerateSurfaceWorklet task;
-  task.In = vtkm::cont::make_ArrayHandle(data);
-  vtkm::cont::TryExecute(task, DevicesToTry());
+    //Step 5. Verify each partition has a "Gradients" field
+    for (auto&& partition : result)
+    {
+      // std::cout << std::endl << std::endl << std::endl;
+      // std::cout << "partition: " << std::endl;
+      // partition.PrintSummary(std::cout);
+      if (!partition.HasField("Gradients", vtkm::cont::Field::Association::POINTS))
+      {
+        std::cerr << "Gradient filter failed!" << std::endl;
+        std::cerr << "Missing Gradient field on output partition." << std::endl;
+        break;
+      }
+    }
+  }
+
+  std::cout << "partition_processing finished" << std::endl;
 }

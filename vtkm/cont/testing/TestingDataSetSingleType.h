@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_testing_TestingDataSetSingleType_h
@@ -68,7 +58,7 @@ private:
 
   static inline vtkm::cont::DataSet make_SingleTypeDataSet()
   {
-    using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+    using CoordType = vtkm::Vec3f_32;
     std::vector<CoordType> coordinates;
     coordinates.push_back(CoordType(0, 0, 0));
     coordinates.push_back(CoordType(1, 0, 0));
@@ -110,15 +100,15 @@ private:
 
     //verify that we can get a CellSetSingleType from a dataset
     vtkm::cont::CellSetSingleType<> cellset;
-    dataSet.GetCellSet(0).CopyTo(cellset);
+    dataSet.GetCellSet().CopyTo(cellset);
 
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =
-      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numIndicesPointToCell =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::Id> connPointToCell =
-      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
     VTKM_TEST_ASSERT(shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
     VTKM_TEST_ASSERT(numIndicesPointToCell.GetNumberOfValues() == 3, "Wrong number of indices");
@@ -127,11 +117,11 @@ private:
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint =
-      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> connCellToPoint =
-      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     VTKM_TEST_ASSERT(shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
     VTKM_TEST_ASSERT(numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");
@@ -139,7 +129,8 @@ private:
 
     //run a basic for-each topology algorithm on this
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage, DeviceAdapterTag> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
+    dispatcher.SetDevice(DeviceAdapterTag());
     dispatcher.Invoke(cellset, dataSet.GetField("pointvar"), result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };
@@ -156,7 +147,10 @@ private:
   };
 
 public:
-  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
+  static VTKM_CONT int Run(int argc, char* argv[])
+  {
+    return vtkm::cont::testing::Testing::Run(TestAll(), argc, argv);
+  }
 };
 }
 }

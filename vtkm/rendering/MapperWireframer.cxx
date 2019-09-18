@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/Assert.h>
@@ -47,9 +37,9 @@ public:
   VTKM_CONT
   CreateConnectivity() {}
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn, WholeArrayOut);
 
-  typedef void ExecutionSignature(_1, _2);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename ConnPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& i, ConnPortalType& connPortal) const
@@ -58,21 +48,6 @@ public:
     connPortal.Set(i * 2 + 1, i + 1);
   }
 }; // conn
-
-struct ConnFunctor
-{
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device,
-                            vtkm::cont::ArrayHandleCounting<vtkm::Id>& iter,
-                            vtkm::cont::ArrayHandle<vtkm::Id>& conn)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<CreateConnectivity, Device>(CreateConnectivity())
-      .Invoke(iter, conn);
-    return true;
-  }
-};
 
 class Convert1DCoordinates : public vtkm::worklet::WorkletMapField
 {
@@ -88,16 +63,13 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<vtkm::TypeListTagScalarAll>,
-                                FieldOut<>,
-                                FieldOut<>);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, FieldOut);
 
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
+  VTKM_EXEC void operator()(const vtkm::Vec3f_32& inCoord,
                             const ScalarType& scalar,
-                            vtkm::Vec<vtkm::Float32, 3>& outCoord,
+                            vtkm::Vec3f_32& outCoord,
                             vtkm::Float32& fieldOut) const
   {
     //
@@ -105,7 +77,7 @@ public:
     // where only the x coord matters. It creates a y based on
     // the scalar values and connects all the points with lines.
     // So, we need to convert it back to something that can
-    // actuall be rendered.
+    // actually be rendered.
     //
     outCoord[0] = inCoord[0];
     outCoord[1] = static_cast<vtkm::Float32>(scalar);
@@ -123,34 +95,14 @@ public:
   }
 }; // convert coords
 
-struct ConvertFunctor
-{
-
-  template <typename Device, typename CoordType, typename ScalarType>
-  VTKM_CONT bool operator()(Device,
-                            CoordType coords,
-                            ScalarType scalars,
-                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>& outCoords,
-                            vtkm::cont::ArrayHandle<vtkm::Float32>& outScalars,
-                            bool logY,
-                            bool logX)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, Device>(
-      Convert1DCoordinates(logY, logX))
-      .Invoke(coords, scalars, outCoords, outScalars);
-    return true;
-  }
-};
-
 #if defined(VTKM_MSVC)
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
 #endif
-struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesCounter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> numEdges);
-  typedef _2 ExecutionSignature(CellShape shape, PointCount numPoints);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell numEdges);
+  using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -168,21 +120,19 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
   }
 }; // struct EdgesCounter
 
-struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
+struct EdgesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> edgeIndices);
-  typedef void ExecutionSignature(CellShape, PointIndices, VisitIndex, _2);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell edgeIndices);
+  using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterCounting;
 
   VTKM_CONT
-  template <typename CountArrayType, typename DeviceTag>
-  EdgesExtracter(const CountArrayType& counts, DeviceTag device)
-    : Scatter(counts, device)
+  template <typename CountArrayType>
+  static ScatterType MakeScatter(const CountArrayType& counts)
   {
+    return ScatterType(counts);
   }
-
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
   VTKM_EXEC void operator()(CellShapeTag shape,
@@ -209,42 +159,11 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     edgeIndices[0] = p1 < p2 ? p1 : p2;
     edgeIndices[1] = p1 < p2 ? p2 : p1;
   }
-
-private:
-  ScatterType Scatter;
 }; // struct EdgesExtracter
 
 #if defined(VTKM_MSVC)
 #pragma warning(pop)
 #endif
-
-struct ExtractUniqueEdges
-{
-  vtkm::cont::DynamicCellSet CellSet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> EdgeIndices;
-
-  VTKM_CONT
-  ExtractUniqueEdges(const vtkm::cont::DynamicCellSet& cellSet)
-    : CellSet(cellSet)
-  {
-  }
-
-  template <typename DeviceTag>
-  VTKM_CONT bool operator()(DeviceTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
-
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
-    vtkm::worklet::DispatcherMapTopology<EdgesCounter, DeviceTag>().Invoke(CellSet, counts);
-    EdgesExtracter extractWorklet(counts, DeviceTag());
-    vtkm::worklet::DispatcherMapTopology<EdgesExtracter, DeviceTag> extractDispatcher(
-      extractWorklet);
-    extractDispatcher.Invoke(CellSet, EdgeIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Sort<vtkm::Id2>(EdgeIndices);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
-    return true;
-  }
-}; // struct ExtractUniqueEdges
 } // namespace
 
 struct MapperWireframer::InternalsType
@@ -334,37 +253,36 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   if (is1D)
   {
 
-    bool isSupportedField = inScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    const bool isSupportedField = inScalarField.IsFieldPoint();
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(
         "WireFramer: field must be associated with points for 1D cell set");
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> newCoords;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> newCoords;
     vtkm::cont::ArrayHandle<vtkm::Float32> newScalars;
     //
     // Convert the cell set into something we can draw
     //
-    vtkm::cont::TryExecute(ConvertFunctor(),
-                           coords.GetData(),
-                           inScalarField.GetData(),
-                           newCoords,
-                           newScalars,
-                           this->LogarithmY,
-                           this->LogarithmX);
+    vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
+      Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
+      .Invoke(coords.GetData(),
+              inScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+              newCoords,
+              newScalars);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
-    actualField =
-      vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+    actualField = vtkm::cont::Field(
+      inScalarField.GetName(), vtkm::cont::Field::Association::POINTS, newScalars);
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> iter =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), numCells);
     conn.Allocate(numCells * 2);
-    vtkm::cont::TryExecute(ConnFunctor(), iter, conn);
+    vtkm::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity()).Invoke(iter, conn);
 
-    vtkm::cont::CellSetSingleType<> newCellSet("cells");
+    vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
     cellSet = vtkm::cont::DynamicCellSet(newCellSet);
   }
@@ -385,7 +303,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(actualCoords);
-    dataSet.AddCellSet(inCellSet);
+    dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
@@ -396,9 +314,14 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   }
 
   // Extract unique edges from the cell set.
-  ExtractUniqueEdges extracter(cellSet);
-  vtkm::cont::TryExecute(extracter);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = extracter.EdgeIndices;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
+  vtkm::cont::ArrayHandle<vtkm::Id2> edgeIndices;
+  vtkm::worklet::DispatcherMapTopology<EdgesCounter>().Invoke(cellSet, counts);
+  vtkm::worklet::DispatcherMapTopology<EdgesExtracter> extractDispatcher(
+    EdgesExtracter::MakeScatter(counts));
+  extractDispatcher.Invoke(cellSet, edgeIndices);
+  vtkm::cont::Algorithm::template Sort<vtkm::Id2>(edgeIndices);
+  vtkm::cont::Algorithm::template Unique<vtkm::Id2>(edgeIndices);
 
   Wireframer renderer(
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);

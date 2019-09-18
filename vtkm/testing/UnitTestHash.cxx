@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/Hash.h>
@@ -74,14 +64,14 @@ static void TestHash()
   DoHashTest(vtkm::Id2());
   DoHashTest(vtkm::Id3());
   DoHashTest(vtkm::Vec<vtkm::Id, 10>());
-  DoHashTest(vtkm::Vec<vtkm::IdComponent, 2>());
-  DoHashTest(vtkm::Vec<vtkm::IdComponent, 3>());
+  DoHashTest(vtkm::IdComponent2());
+  DoHashTest(vtkm::IdComponent3());
   DoHashTest(vtkm::Vec<vtkm::IdComponent, 10>());
 }
 
 } // anonymous namespace
 
-int UnitTestHash(int, char* [])
+int UnitTestHash(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestHash);
+  return vtkm::testing::Testing::Run(TestHash, argc, argv);
 }

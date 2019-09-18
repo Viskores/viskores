@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/CanvasGL.h>
@@ -28,6 +18,8 @@
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
+
+#include <vtkm/cont/ColorTable.hxx>
 
 namespace vtkm
 {
@@ -171,10 +163,10 @@ void CanvasGL::RefreshDepthBuffer() const
                const_cast<vtkm::Float32*>(this->GetDepthBuffer().GetStorage().GetArray()));
 }
 
-void CanvasGL::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                              const vtkm::Vec<vtkm::Float64, 2>& point1,
-                              const vtkm::Vec<vtkm::Float64, 2>& point2,
-                              const vtkm::Vec<vtkm::Float64, 2>& point3,
+void CanvasGL::AddColorSwatch(const vtkm::Vec2f_64& point0,
+                              const vtkm::Vec2f_64& point1,
+                              const vtkm::Vec2f_64& point2,
+                              const vtkm::Vec2f_64& point3,
                               const vtkm::rendering::Color& color) const
 {
   glDisable(GL_DEPTH_TEST);
@@ -192,8 +184,8 @@ void CanvasGL::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
   glEnd();
 }
 
-void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                       const vtkm::Vec<vtkm::Float64, 2>& point1,
+void CanvasGL::AddLine(const vtkm::Vec2f_64& point0,
+                       const vtkm::Vec2f_64& point1,
                        vtkm::Float32 linewidth,
                        const vtkm::rendering::Color& color) const
 {
@@ -215,7 +207,7 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
 {
   const int n = 256;
   //map through the color table for our 256 + 1 points as the first step
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+  vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
   colorTable.Sample(n + 1, colors);
 
   vtkm::Float32 startX = static_cast<vtkm::Float32>(bounds.X.Min);
@@ -264,11 +256,11 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
   glEnd();
 }
 
-void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+void CanvasGL::AddText(const vtkm::Vec2f_32& position,
                        vtkm::Float32 scale,
                        vtkm::Float32 angle,
                        vtkm::Float32 windowAspect,
-                       const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                       const vtkm::Vec2f_32& anchor,
                        const vtkm::rendering::Color& color,
                        const std::string& text) const
 {
@@ -287,7 +279,7 @@ vtkm::rendering::WorldAnnotator* CanvasGL::CreateWorldAnnotator() const
 }
 
 void CanvasGL::RenderText(vtkm::Float32 scale,
-                          const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                          const vtkm::Vec2f_32& anchor,
                           const std::string& text) const
 {
   if (!this->FontTexture.Valid())

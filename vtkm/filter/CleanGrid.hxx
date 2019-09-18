@@ -2,21 +2,13 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
+
+#include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
@@ -30,96 +22,171 @@ namespace filter
 
 inline VTKM_CONT CleanGrid::CleanGrid()
   : CompactPointFields(true)
+  , MergePoints(true)
+  , Tolerance(1.0e-6)
+  , ToleranceIsAbsolute(false)
+  , RemoveDegenerateCells(true)
+  , FastMerge(true)
 {
 }
 
-template <typename Policy, typename Device>
+template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                          vtkm::filter::PolicyBase<Policy> policy,
-                                                          Device)
+                                                          vtkm::filter::PolicyBase<Policy> policy)
 {
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
   using CellSetType = vtkm::cont::CellSetExplicit<>;
-  using VecId = std::vector<CellSetType>::size_type;
+  using VecId = std::size_t;
 
-  VecId numCellSets = static_cast<VecId>(inData.GetNumberOfCellSets());
+  VecId activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
 
-  std::vector<CellSetType> outputCellSets(numCellSets);
-
+  CellSetType outputCellSet;
   // Do a deep copy of the cells to new CellSetExplicit structures
-  for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
+  const vtkm::cont::DynamicCellSet& inCellSet = inData.GetCellSet();
+  if (inCellSet.IsType<CellSetType>())
   {
-    vtkm::cont::DynamicCellSet inCellSet =
-      inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
+    // Is expected type, do a shallow copy
+    outputCellSet = inCellSet.Cast<CellSetType>();
+  }
+  else
+  { // Clean the grid
+    auto deducedCellSet = vtkm::filter::ApplyPolicyCellSet(inCellSet, policy);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
 
-    vtkm::worklet::CellDeepCopy::Run(
-      vtkm::filter::ApplyPolicy(inCellSet, policy), outputCellSets[cellSetIndex], Device());
+    this->Invoke(worklet::CellDeepCopy::CountCellPoints{}, deducedCellSet, numIndices);
+
+    vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
+    vtkm::cont::ArrayHandle<vtkm::Id> offsets;
+    vtkm::Id connectivitySize;
+    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
+    numIndices.ReleaseResourcesExecution();
+
+    vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+    connectivity.Allocate(connectivitySize);
+
+    this->Invoke(worklet::CellDeepCopy::PassCellStructure{},
+                 deducedCellSet,
+                 shapes,
+                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+    shapes.ReleaseResourcesExecution();
+    offsets.ReleaseResourcesExecution();
+    connectivity.ReleaseResourcesExecution();
+
+    outputCellSet.Fill(
+      deducedCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
+
+    //Release the input grid from the execution space
+    deducedCellSet.ReleaseResourcesExecution();
+  }
+
+
+  VecId numCoordSystems = static_cast<VecId>(inData.GetNumberOfCoordinateSystems());
+  std::vector<vtkm::cont::CoordinateSystem> outputCoordinateSystems(numCoordSystems);
+
+  // Start with a shallow copy of the coordinate systems
+  for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
+  {
+    outputCoordinateSystems[coordSystemIndex] =
+      inData.GetCoordinateSystem(static_cast<vtkm::IdComponent>(coordSystemIndex));
   }
 
   // Optionally adjust the cell set indices to remove all unused points
   if (this->GetCompactPointFields())
   {
-    this->PointCompactor.FindPointsStart(Device());
-    for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
-    {
-      this->PointCompactor.FindPoints(outputCellSets[cellSetIndex], Device());
-    }
-    this->PointCompactor.FindPointsEnd(Device());
+    this->PointCompactor.FindPointsStart();
+    this->PointCompactor.FindPoints(outputCellSet);
+    this->PointCompactor.FindPointsEnd();
 
-    for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
+    outputCellSet = this->PointCompactor.MapCellSet(outputCellSet);
+
+    for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
     {
-      outputCellSets[cellSetIndex] =
-        this->PointCompactor.MapCellSet(outputCellSets[cellSetIndex], Device());
+      outputCoordinateSystems[coordSystemIndex] =
+        vtkm::cont::CoordinateSystem(outputCoordinateSystems[coordSystemIndex].GetName(),
+                                     this->PointCompactor.MapPointFieldDeep(
+                                       outputCoordinateSystems[coordSystemIndex].GetData()));
     }
+  }
+
+  // Optionally find and merge coincident points
+  if (this->GetMergePoints())
+  {
+    vtkm::cont::CoordinateSystem activeCoordSystem = outputCoordinateSystems[activeCoordIndex];
+    vtkm::Bounds bounds = activeCoordSystem.GetBounds();
+
+    vtkm::Float64 delta = this->GetTolerance();
+    if (!this->GetToleranceIsAbsolute())
+    {
+      delta *=
+        vtkm::Magnitude(vtkm::make_Vec(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length()));
+    }
+
+    auto coordArray = activeCoordSystem.GetData();
+    this->PointMerger.Run(delta, this->GetFastMerge(), bounds, coordArray);
+    activeCoordSystem = vtkm::cont::CoordinateSystem(activeCoordSystem.GetName(), coordArray);
+
+    for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
+    {
+      if (coordSystemIndex == activeCoordIndex)
+      {
+        outputCoordinateSystems[coordSystemIndex] = activeCoordSystem;
+      }
+      else
+      {
+        outputCoordinateSystems[coordSystemIndex] = vtkm::cont::CoordinateSystem(
+          outputCoordinateSystems[coordSystemIndex].GetName(),
+          this->PointMerger.MapPointField(outputCoordinateSystems[coordSystemIndex].GetData()));
+      }
+    }
+
+    outputCellSet = this->PointMerger.MapCellSet(outputCellSet);
+  }
+
+  // Optionally remove degenerate cells
+  if (this->GetRemoveDegenerateCells())
+  {
+    outputCellSet = this->CellCompactor.Run(outputCellSet);
   }
 
   // Construct resulting data set with new cell sets
   vtkm::cont::DataSet outData;
-  for (VecId cellSetIndex = 0; cellSetIndex < numCellSets; cellSetIndex++)
-  {
-    outData.AddCellSet(outputCellSets[cellSetIndex]);
-  }
+  outData.SetCellSet(outputCellSet);
 
   // Pass the coordinate systems
-  // TODO: This is very awkward. First of all, there is no support for dealing
-  // with coordinate systems at all. That is fine if you are computing a new
-  // coordinate system, but a pain if you are deriving the coordinate system
-  // array. Second, why is it that coordinate systems are automtically mapped
-  // but other fields are not? Why shouldn't the Execute of a filter also set
-  // up all the fields of the output data set?
-  for (vtkm::IdComponent coordSystemIndex = 0;
-       coordSystemIndex < inData.GetNumberOfCoordinateSystems();
-       coordSystemIndex++)
+  for (VecId coordSystemIndex = 0; coordSystemIndex < numCoordSystems; ++coordSystemIndex)
   {
-    vtkm::cont::CoordinateSystem coordSystem = inData.GetCoordinateSystem(coordSystemIndex);
-
-    if (this->GetCompactPointFields())
-    {
-      auto outArray = this->MapPointField(coordSystem.GetData(), Device());
-      outData.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordSystem.GetName(), outArray));
-    }
-    else
-    {
-      outData.AddCoordinateSystem(coordSystem);
-    }
+    outData.AddCoordinateSystem(outputCoordinateSystems[coordSystemIndex]);
   }
 
   return outData;
 }
 
-template <typename ValueType, typename Storage, typename Policy, typename Device>
+template <typename ValueType, typename Storage, typename Policy>
 inline VTKM_CONT bool CleanGrid::DoMapField(
   vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<Policy>,
-  Device)
+  vtkm::filter::PolicyBase<Policy>)
 {
-  if (this->GetCompactPointFields() && fieldMeta.IsPointField())
+  if (fieldMeta.IsPointField() && (this->GetCompactPointFields() || this->GetMergePoints()))
   {
-    vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input, Device());
+    vtkm::cont::ArrayHandle<ValueType> compactedArray;
+    if (this->GetCompactPointFields())
+    {
+      compactedArray = this->PointCompactor.MapPointFieldDeep(input);
+      if (this->GetMergePoints())
+      {
+        compactedArray = this->PointMerger.MapPointField(compactedArray);
+      }
+    }
+    else if (this->GetMergePoints())
+    {
+      compactedArray = this->PointMerger.MapPointField(input);
+    }
     result.AddField(fieldMeta.AsField(compactedArray));
+  }
+  else if (fieldMeta.IsCellField() && this->GetRemoveDegenerateCells())
+  {
+    result.AddField(fieldMeta.AsField(this->CellCompactor.ProcessCellField(input)));
   }
   else
   {
@@ -127,16 +194,6 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
   }
 
   return true;
-}
-
-template <typename ValueType, typename Storage, typename Device>
-inline VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CleanGrid::MapPointField(
-  const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
-  Device) const
-{
-  VTKM_ASSERT(this->GetCompactPointFields());
-
-  return this->PointCompactor.MapPointFieldDeep(inArray, Device());
 }
 }
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_testing_TestingArrayHandleVirtualCoordinates_h
 #define vtk_m_cont_testing_TestingArrayHandleVirtualCoordinates_h
@@ -39,8 +29,8 @@ namespace
 
 struct CopyWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<FieldCommon> in, FieldOut<FieldCommon> out);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn in, FieldOut out);
+  using ExecutionSignature = _2(_1);
 
   template <typename T>
   VTKM_EXEC T operator()(const T& in) const
@@ -48,6 +38,32 @@ struct CopyWorklet : public vtkm::worklet::WorkletMapField
     return in;
   }
 };
+
+// A dummy worklet
+struct DoubleWorklet : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn in);
+  typedef void ExecutionSignature(_1);
+  using InputDomain = _1;
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& in) const
+  {
+    in = in * 2;
+  }
+};
+
+template <typename T, typename S>
+inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
+                              vtkm::cont::ArrayHandle<T>& out)
+{
+  vtkm::worklet::DispatcherMapField<CopyWorklet>().Invoke(
+    vtkm::cont::ArrayHandleVirtualCoordinates(in), vtkm::cont::ArrayHandleVirtualCoordinates(out));
+
+  VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
+                   "Input and output portals don't match");
+}
+
 
 } // anonymous namespace
 
@@ -60,21 +76,11 @@ private:
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
-  template <typename T, typename InStorageTag, typename OutStorageTag>
-  static void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, InStorageTag>& in,
-                                vtkm::cont::ArrayHandle<T, OutStorageTag>& out)
-  {
-    vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
-      vtkm::cont::ArrayHandleVirtualCoordinates(in),
-      vtkm::cont::ArrayHandleVirtualCoordinates(out));
 
-    VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
-                     "Input and output portals don't match");
-  }
 
   static void TestAll()
   {
-    using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
+    using PointType = vtkm::Vec3f;
     static constexpr vtkm::Id length = 64;
 
     vtkm::cont::ArrayHandle<PointType> out;
@@ -89,7 +95,8 @@ private:
     TestVirtualAccess(a1, out);
 
     std::cout << "Testing ArrayHandleUniformPointCoordinates as input\n";
-    TestVirtualAccess(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4)), out);
+    auto t = vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4));
+    TestVirtualAccess(t, out);
 
     std::cout << "Testing ArrayHandleCartesianProduct as input\n";
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> c1, c2, c3;
@@ -104,10 +111,31 @@ private:
       c3.GetPortalControl().Set(i, p[2]);
     }
     TestVirtualAccess(vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out);
+
+    std::cout << "Testing resources releasing on ArrayHandleVirtualCoordinates\n";
+    vtkm::cont::ArrayHandleVirtualCoordinates virtualC =
+      vtkm::cont::ArrayHandleVirtualCoordinates(a1);
+    vtkm::worklet::DispatcherMapField<DoubleWorklet>().Invoke(a1);
+    virtualC.ReleaseResourcesExecution();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == length,
+                     "ReleaseResourcesExecution"
+                     " should not change the number of values on the Arrayhandle");
+    VTKM_TEST_ASSERT(
+      virtualC.GetNumberOfValues() == length,
+      "ReleaseResources"
+      " should set the number of values on the ArrayHandleVirtualCoordinates to be 0");
+    virtualC.ReleaseResources();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 0,
+                     "ReleaseResources"
+                     " should set the number of values on the Arrayhandle to be 0");
   }
 
 public:
-  static int Run() { return vtkm::cont::testing::Testing::Run(TestAll); }
+  static int Run(int argc, char* argv[])
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
+    return vtkm::cont::testing::Testing::Run(TestAll, argc, argv);
+  }
 };
 }
 }

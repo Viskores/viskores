@@ -1,7 +1,7 @@
-#ifndef DIY_MPI_HPP
-#define DIY_MPI_HPP
+#ifndef VTKMDIY_MPI_HPP
+#define VTKMDIY_MPI_HPP
 
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
 #include <mpi.h>
 #else
 #include "mpi/no-mpi.hpp"
@@ -16,6 +16,7 @@
 #include "mpi/communicator.hpp"
 #include "mpi/collectives.hpp"
 #include "mpi/io.hpp"
+#include "mpi/window.hpp"
 
 namespace diy
 {
@@ -40,7 +41,7 @@ struct environment
 diy::mpi::environment::
 environment(int threading)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   int argc = 0; char** argv;
   MPI_Init_thread(&argc, &argv, threading, &provided_threading);
 #else
@@ -51,7 +52,7 @@ environment(int threading)
 diy::mpi::environment::
 environment(int argc, char* argv[], int threading)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   MPI_Init_thread(&argc, &argv, threading, &provided_threading);
 #else
   (void) argc; (void) argv;
@@ -62,7 +63,7 @@ environment(int argc, char* argv[], int threading)
 diy::mpi::environment::
 ~environment()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   MPI_Finalize();
 #endif
 }

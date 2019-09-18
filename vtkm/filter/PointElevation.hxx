@@ -2,24 +2,11 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#include <vtkm/filter/internal/CreateResult.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm
 {
@@ -54,27 +41,20 @@ inline VTKM_CONT void PointElevation::SetRange(vtkm::Float64 low, vtkm::Float64 
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet PointElevation::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::PointElevation, DeviceAdapter> dispatcher(
-    this->Worklet);
 
   //todo, we need to use the policy to determine the valid conversions
   //that the dispatcher should do
-  dispatcher.Invoke(field, outArray);
+  this->Invoke(this->Worklet, field, outArray);
 
-  return internal::CreateResult(inDataSet,
-                                outArray,
-                                this->GetOutputFieldName(),
-                                fieldMetadata.GetAssociation(),
-                                fieldMetadata.GetCellSetName());
+  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
 }
 }
 } // namespace vtkm::filter

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/View3D.h>
@@ -90,8 +80,8 @@ void View3D::RenderWorldAnnotations()
   this->BoxAnnotation.SetExtents(this->GetScene().GetSpatialBounds());
   this->BoxAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator());
 
-  vtkm::Vec<vtkm::Float32, 3> lookAt = this->GetCamera().GetLookAt();
-  vtkm::Vec<vtkm::Float32, 3> position = this->GetCamera().GetPosition();
+  vtkm::Vec3f_32 lookAt = this->GetCamera().GetLookAt();
+  vtkm::Vec3f_32 position = this->GetCamera().GetPosition();
   bool xtest = lookAt[0] > position[0];
   bool ytest = lookAt[1] > position[1];
   bool ztest = lookAt[2] > position[2];

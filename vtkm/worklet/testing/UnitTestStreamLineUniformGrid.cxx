@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -33,7 +23,7 @@ namespace
 template <typename T>
 VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
 {
-  T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));
+  T magnitude = static_cast<T>(sqrt(vtkm::Dot(v, v)));
   T zero = static_cast<T>(0.0);
   T one = static_cast<T>(1.0);
   if (magnitude == zero)
@@ -113,8 +103,6 @@ void TestStreamLineUniformGrid()
 {
   std::cout << "Testing StreamLineUniformGrid Filter" << std::endl;
 
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   // Parameters for streamlines
   vtkm::Id numSeeds = 5;
   vtkm::Id maxSteps = 50;
@@ -126,36 +114,37 @@ void TestStreamLineUniformGrid()
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
+  std::vector<vtkm::Vec3f_32> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     vtkm::Float32 x = data[i];
     vtkm::Float32 y = data[++i];
     vtkm::Float32 z = data[++i];
-    vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
+    vtkm::Vec3f_32 vecData(x, y, z);
     field.push_back(Normalize(vecData));
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> fieldArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
-  inDataSet.AddField(vtkm::cont::Field("vecData", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  inDataSet.AddField(
+    vtkm::cont::Field("vecData", vtkm::cont::Field::Association::POINTS, fieldArray));
 
-  vtkm::cont::CellSetStructured<3> inCellSet("cells");
+  vtkm::cont::CellSetStructured<3> inCellSet;
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
-  inDataSet.AddCellSet(inCellSet);
+  inDataSet.SetCellSet(inCellSet);
 
   // Create and run the filter
-  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter> streamLineFilter;
-  vtkm::cont::DataSet outDataSet =
-    streamLineFilter.Run(inDataSet, vtkm::worklet::internal::BOTH, numSeeds, maxSteps, timeStep);
+  vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32> streamLines;
+  auto outDataSet =
+    streamLines.Run(inDataSet, vtkm::worklet::streamline::BOTH, numSeeds, maxSteps, timeStep);
 
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  outDataSet.GetCellSet().CopyTo(outCellSet);
   auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
@@ -167,7 +156,7 @@ void TestStreamLineUniformGrid()
                    "Wrong number of cells for stream lines");
 }
 
-int UnitTestStreamLineUniformGrid(int, char* [])
+int UnitTestStreamLineUniformGrid(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamLineUniformGrid);
+  return vtkm::cont::testing::Testing::Run(TestStreamLineUniformGrid, argc, argv);
 }

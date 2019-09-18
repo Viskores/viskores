@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,21 +6,11 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_worklet_RemoveUnusedPoints_h
 #define vtk_m_worklet_RemoveUnusedPoints_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -51,8 +40,8 @@ public:
   ///
   struct GeneratePointMask : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> pointIndices, WholeArrayInOut<> pointMask);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn pointIndices, WholeArrayInOut pointMask);
+    using ExecutionSignature = void(_1, _2);
 
     template <typename PointMaskPortalType>
     VTKM_EXEC void operator()(vtkm::Id pointIndex, const PointMaskPortalType& pointMask) const
@@ -68,10 +57,8 @@ public:
   ///
   struct TransformPointIndices : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<IdType> pointIndex,
-                                  WholeArrayIn<IdType> indexMap,
-                                  FieldOut<IdType> mappedPoints);
-    typedef _3 ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn pointIndex, WholeArrayIn indexMap, FieldOut mappedPoints);
+    using ExecutionSignature = _3(_1, _2);
 
     template <typename IndexMapPortalType>
     VTKM_EXEC vtkm::Id operator()(vtkm::Id pointIndex, const IndexMapPortalType& indexPortal) const
@@ -87,26 +74,20 @@ public:
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename Device>
+            typename OffsetsStorage>
   VTKM_CONT RemoveUnusedPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
                                                                  NumIndicesStorage,
                                                                  ConnectivityStorage,
-                                                                 OffsetsStorage>& inCellSet,
-                               Device)
+                                                                 OffsetsStorage>& inCellSet)
   {
-    this->FindPointsStart(Device());
-    this->FindPoints(inCellSet, Device());
-    this->FindPointsEnd(Device());
+    this->FindPointsStart();
+    this->FindPoints(inCellSet);
+    this->FindPointsEnd();
   }
 
   /// Get this class ready for identifying the points used by cell sets.
   ///
-  template <typename Device>
-  VTKM_CONT void FindPointsStart(Device)
-  {
-    this->MaskArray.ReleaseResources();
-  }
+  VTKM_CONT void FindPointsStart() { this->MaskArray.ReleaseResources(); }
 
   /// Analyze the given cell set to find all points that are used. Unused
   /// points are those that are not found in any cell sets passed to this
@@ -115,53 +96,47 @@ public:
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename Device>
+            typename OffsetsStorage>
   VTKM_CONT void FindPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
                                                               NumIndicesStorage,
                                                               ConnectivityStorage,
-                                                              OffsetsStorage>& inCellSet,
-                            Device)
+                                                              OffsetsStorage>& inCellSet)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
     if (this->MaskArray.GetNumberOfValues() < 1)
     {
       // Initialize mask array to 0.
-      Algorithm::Copy(
+      vtkm::cont::ArrayCopy(
         vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, inCellSet.GetNumberOfPoints()),
         this->MaskArray);
     }
     VTKM_ASSERT(this->MaskArray.GetNumberOfValues() == inCellSet.GetNumberOfPoints());
 
-    vtkm::worklet::DispatcherMapField<GeneratePointMask, Device> dispatcher;
-    dispatcher.Invoke(inCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
-                                                     vtkm::TopologyElementTagCell()),
+    vtkm::worklet::DispatcherMapField<GeneratePointMask> dispatcher;
+    dispatcher.Invoke(inCellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                     vtkm::TopologyElementTagPoint()),
                       this->MaskArray);
   }
 
   /// Compile the information collected from calls to \c FindPointsInCellSet to
   /// ready this class for mapping cell sets and fields.
   ///
-  template <typename Device>
-  VTKM_CONT void FindPointsEnd(Device)
+  VTKM_CONT void FindPointsEnd()
   {
-    this->PointScatter.reset(new vtkm::worklet::ScatterCounting(this->MaskArray, Device(), true));
+    this->PointScatter.reset(new vtkm::worklet::ScatterCounting(this->MaskArray, true));
 
     this->MaskArray.ReleaseResources();
   }
 
   /// \brief Map cell indices
   ///
-  /// Given a cell set (typically the same one passed to the constructor) and
+  /// Given a cell set (typically the same one passed to the constructor)
   /// returns a new cell set with cell points transformed to use the indices of
   /// the new reduced point arrays.
   ///
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
-            typename OffsetsStorage,
-            typename Device>
+            typename OffsetsStorage>
   VTKM_CONT vtkm::cont::CellSetExplicit<ShapeStorage,
                                         NumIndicesStorage,
                                         VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
@@ -169,32 +144,63 @@ public:
   MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
                                                NumIndicesStorage,
                                                ConnectivityStorage,
-                                               OffsetsStorage>& inCellSet,
-             Device) const
+                                               OffsetsStorage>& inCellSet) const
   {
-    using FromTopology = vtkm::TopologyElementTagPoint;
-    using ToTopology = vtkm::TopologyElementTagCell;
+    VTKM_ASSERT(this->PointScatter);
+
+    return MapCellSet(inCellSet,
+                      this->PointScatter->GetInputToOutputMap(),
+                      this->PointScatter->GetOutputToInputMap().GetNumberOfValues());
+  }
+
+  /// \brief Map cell indices
+  ///
+  /// Given a cell set (typically the same one passed to the constructor) and
+  /// an array that maps point indices from an old set of indices to a new set,
+  /// returns a new cell set with cell points transformed to use the indices of
+  /// the new reduced point arrays.
+  ///
+  /// This helper method can be used by external items that do similar operations
+  /// that remove points or otherwise rearange points in a cell set. If points
+  /// were removed by calling \c FindPoints, then you should use the other form
+  /// of \c MapCellSet.
+  ///
+  template <typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename MapStorage>
+  VTKM_CONT static vtkm::cont::CellSetExplicit<ShapeStorage,
+                                               NumIndicesStorage,
+                                               VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
+                                               OffsetsStorage>
+  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
+                                               NumIndicesStorage,
+                                               ConnectivityStorage,
+                                               OffsetsStorage>& inCellSet,
+             const vtkm::cont::ArrayHandle<vtkm::Id, MapStorage>& inputToOutputPointMap,
+             vtkm::Id numberOfPoints)
+  {
+    using VisitTopology = vtkm::TopologyElementTagCell;
+    using IncidentTopology = vtkm::TopologyElementTagPoint;
 
     using NewConnectivityStorage = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG;
 
-    VTKM_ASSERT(this->PointScatter);
-
     vtkm::cont::ArrayHandle<vtkm::Id, NewConnectivityStorage> newConnectivityArray;
 
-    vtkm::worklet::DispatcherMapField<TransformPointIndices, Device> dispatcher;
-    dispatcher.Invoke(inCellSet.GetConnectivityArray(FromTopology(), ToTopology()),
-                      this->PointScatter->GetInputToOutputMap(),
+    vtkm::worklet::DispatcherMapField<TransformPointIndices> dispatcher;
+    dispatcher.Invoke(inCellSet.GetConnectivityArray(VisitTopology(), IncidentTopology()),
+                      inputToOutputPointMap,
                       newConnectivityArray);
 
-    vtkm::Id numberOfPoints = this->PointScatter->GetOutputToInputMap().GetNumberOfValues();
     vtkm::cont::
       CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
-        outCellSet(inCellSet.GetName());
+        outCellSet;
     outCellSet.Fill(numberOfPoints,
-                    inCellSet.GetShapesArray(FromTopology(), ToTopology()),
-                    inCellSet.GetNumIndicesArray(FromTopology(), ToTopology()),
+                    inCellSet.GetShapesArray(VisitTopology(), IncidentTopology()),
+                    inCellSet.GetNumIndicesArray(VisitTopology(), IncidentTopology()),
                     newConnectivityArray,
-                    inCellSet.GetIndexOffsetArray(FromTopology(), ToTopology()));
+                    inCellSet.GetIndexOffsetArray(VisitTopology(), IncidentTopology()));
 
     return outCellSet;
   }
@@ -227,18 +233,13 @@ public:
   /// This version of point mapping performs a deep copy into the destination
   /// array provided.
   ///
-  template <typename InArrayHandle, typename OutArrayHandle, typename Device>
-  VTKM_CONT void MapPointFieldDeep(const InArrayHandle& inArray,
-                                   OutArrayHandle& outArray,
-                                   Device) const
+  template <typename InArrayHandle, typename OutArrayHandle>
+  VTKM_CONT void MapPointFieldDeep(const InArrayHandle& inArray, OutArrayHandle& outArray) const
   {
     VTKM_IS_ARRAY_HANDLE(InArrayHandle);
     VTKM_IS_ARRAY_HANDLE(OutArrayHandle);
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
-    Algorithm::Copy(this->MapPointFieldShallow(inArray), outArray);
+    vtkm::cont::ArrayCopy(this->MapPointFieldShallow(inArray), outArray);
   }
 
   /// \brief Maps a point field from the original points to the new reduced points
@@ -250,16 +251,14 @@ public:
   /// This version of point mapping performs a deep copy into an array that is
   /// returned.
   ///
-  template <typename InArrayHandle, typename Device>
+  template <typename InArrayHandle>
   vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointFieldDeep(
-    const InArrayHandle& inArray,
-    Device) const
+    const InArrayHandle& inArray) const
   {
     VTKM_IS_ARRAY_HANDLE(InArrayHandle);
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> outArray;
-    this->MapPointFieldDeep(inArray, outArray, Device());
+    this->MapPointFieldDeep(inArray, outArray);
 
     return outArray;
   }

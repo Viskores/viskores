@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_CellFace_h
 #define vtk_m_exec_CellFace_h
@@ -48,7 +38,7 @@ public:
       0, //  1: CELL_SHAPE_VERTEX
       0, //  2: Unused
       0, //  3: CELL_SHAPE_LINE
-      0, //  4: Unused
+      0, //  4: CELL_SHAPE_POLY_LINE
       0, //  5: CELL_SHAPE_TRIANGLE
       0, //  6: Unused
       0, //  7: CELL_SHAPE_POLYGON
@@ -72,7 +62,7 @@ public:
         { -1, -1, -1, -1, -1, -1 }, //  1: CELL_SHAPE_VERTEX
         { -1, -1, -1, -1, -1, -1 }, //  2: Unused
         { -1, -1, -1, -1, -1, -1 }, //  3: CELL_SHAPE_LINE
-        { -1, -1, -1, -1, -1, -1 }, //  4: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  4: CELL_SHAPE_POLY_LINE
         { -1, -1, -1, -1, -1, -1 }, //  5: CELL_SHAPE_TRIANGLE
         { -1, -1, -1, -1, -1, -1 }, //  6: Unused
         { -1, -1, -1, -1, -1, -1 }, //  7: CELL_SHAPE_POLYGON
@@ -108,7 +98,7 @@ public:
       //  3: CELL_SHAPE_LINE
       { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
         { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
-      //  4: Unused
+      //  4: CELL_SHAPE_POLY_LINE
       { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
         { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
       //  5: CELL_SHAPE_TRIANGLE

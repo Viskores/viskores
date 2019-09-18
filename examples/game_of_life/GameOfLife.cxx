@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Must be included before any other GL includes:
 #include <GL/glew.h>
@@ -31,12 +21,12 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/interop/TransferToOpenGL.h>
 
 #include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/TryExecute.h>
@@ -61,43 +51,35 @@
 
 #include "LoadShaders.h"
 
-//This is the list of devices to compile in support for. The order of the
-//devices determines the runtime preference.
-struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                        vtkm::cont::DeviceAdapterTagTBB,
-                                        vtkm::cont::DeviceAdapterTagSerial>
-{
-};
-
 struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
 {
-  using DeviceAdapterList = DevicesToTry;
+  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec4ui_8>;
 };
 
-struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
+struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
 {
   using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 
-  typedef void ControlSignature(CellSetIn,
-                                FieldInNeighborhood<> prevstate,
-                                FieldOut<> state,
-                                FieldOut<> color);
+  using ControlSignature = void(CellSetIn,
+                                FieldInNeighborhood prevstate,
+                                FieldOut state,
+                                FieldOut color);
 
-  typedef void ExecutionSignature(_2, _3, _4);
+  using ExecutionSignature = void(_2, _3, _4);
 
   template <typename NeighIn>
   VTKM_EXEC void operator()(const NeighIn& prevstate,
                             vtkm::UInt8& state,
-                            vtkm::Vec<vtkm::UInt8, 4>& color) const
+                            vtkm::Vec4ui_8& color) const
   {
     // Any live cell with fewer than two live neighbors dies, as if caused by under-population.
     // Any live cell with two or three live neighbors lives on to the next generation.
     // Any live cell with more than three live neighbors dies, as if by overcrowding.
     // Any dead cell with exactly three live neighbors becomes a live cell, as if by reproduction.
-    vtkm::UInt8 current = prevstate.Get(0, 0, 0);
-    vtkm::UInt8 count = prevstate.Get(-1, -1, 0) + prevstate.Get(-1, 0, 0) +
-      prevstate.Get(-1, 1, 0) + prevstate.Get(0, -1, 0) + prevstate.Get(0, 1, 0) +
-      prevstate.Get(1, -1, 0) + prevstate.Get(1, 0, 0) + prevstate.Get(1, 1, 0);
+    auto current = prevstate.Get(0, 0, 0);
+    auto count = prevstate.Get(-1, -1, 0) + prevstate.Get(-1, 0, 0) + prevstate.Get(-1, 1, 0) +
+      prevstate.Get(0, -1, 0) + prevstate.Get(0, 1, 0) + prevstate.Get(1, -1, 0) +
+      prevstate.Get(1, 0, 0) + prevstate.Get(1, 1, 0);
 
     if (current == 1 && (count == 2 || count == 3))
     {
@@ -113,8 +95,8 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
     }
 
     color[0] = 0;
-    color[1] = state * (100 + (count * 32));
-    color[2] = (state && !current) ? (100 + (count * 32)) : 0;
+    color[1] = static_cast<vtkm::UInt8>(state * (100 + (count * 32)));
+    color[2] = (state && !current) ? static_cast<vtkm::UInt8>(100 + (count * 32)) : 0;
     color[3] = 255; //alpha channel
   }
 };
@@ -122,59 +104,40 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 
 class GameOfLife : public vtkm::filter::FilterDataSet<GameOfLife>
 {
-  bool PrintedDeviceMsg = false;
-
 public:
-  template <typename Policy, typename Device>
+  template <typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          vtkm::filter::PolicyBase<Policy> policy,
-                                          Device)
+                                          vtkm::filter::PolicyBase<Policy> policy)
 
   {
-    if (!this->PrintedDeviceMsg)
-    {
-      using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<Device>;
-      std::cout << "Running GameOfLife filter on device adapter: " << DeviceAdapterTraits::GetName()
-                << std::endl;
-      this->PrintedDeviceMsg = true;
-    }
-
-    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<UpdateLifeState, Device>;
-
-
     vtkm::cont::ArrayHandle<vtkm::UInt8> state;
     vtkm::cont::ArrayHandle<vtkm::UInt8> prevstate;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+    const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
     //get the previous state of the game
-    input.GetField("state", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(prevstate);
+    input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
-    DispatcherType().Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
+    this->Invoke(
+      UpdateLifeState{}, vtkm::filter::ApplyPolicyCellSet(cells, policy), prevstate, state, colors);
 
     //save the results
     vtkm::cont::DataSet output;
-    output.AddCellSet(input.GetCellSet(this->GetActiveCellSetIndex()));
-    output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+    output.CopyStructure(input);
 
-    vtkm::cont::Field colorField("colors", vtkm::cont::Field::ASSOC_POINTS, colors);
-    output.AddField(colorField);
-
-    vtkm::cont::Field stateField("state", vtkm::cont::Field::ASSOC_POINTS, state);
-    output.AddField(stateField);
-
+    output.AddField(vtkm::cont::make_FieldPoint("colors", colors));
+    output.AddField(vtkm::cont::make_FieldPoint("state", state));
     return output;
   }
 
-  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet&,
                             const vtkm::cont::ArrayHandle<T, StorageType>&,
                             const vtkm::filter::FieldMetadata&,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                            DeviceAdapter)
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
   {
     return false;
   }
@@ -193,7 +156,7 @@ struct UploadData
   template <typename DeviceAdapterTag>
   bool operator()(DeviceAdapterTag device)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colors;
+    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     this->Colors.GetData().CopyTo(colors);
     vtkm::interop::TransferToOpenGL(colors, *this->ColorState, device);
     return true;
@@ -232,16 +195,17 @@ struct RenderGameOfLife
     vtkm::Vec<float, 3> spacing(0.0075f, 0.0075f, 0.0f);
 
     vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions, origin, spacing);
-    vtkm::interop::TransferToOpenGL(coords, this->VBOState, vtkm::cont::DeviceAdapterTagSerial());
+    vtkm::interop::TransferToOpenGL(coords, this->VBOState);
   }
 
   void render(vtkm::cont::DataSet& data)
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Int32 arraySize = (vtkm::Int32)data.GetNumberOfPoints();
 
-    UploadData task(&this->ColorState, data.GetField("colors", vtkm::cont::Field::ASSOC_POINTS));
-    vtkm::cont::TryExecute(task, DevicesToTry());
+    UploadData task(&this->ColorState,
+                    data.GetField("colors", vtkm::cont::Field::Association::POINTS));
+    vtkm::cont::TryExecute(task);
 
     vtkm::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
                               0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
@@ -267,7 +231,7 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer<vtkm::cont::DeviceAdapterTagSerial> gTimer;
+vtkm::cont::Timer gTimer;
 vtkm::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;
@@ -332,6 +296,10 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 
 int main(int argc, char** argv)
 {
+  auto opts =
+    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
+  vtkm::cont::Initialize(argc, argv, opts);
+
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
 
@@ -367,7 +335,8 @@ int main(int argc, char** argv)
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
 
-  auto stateField = vtkm::cont::make_Field("state", vtkm::cont::Field::ASSOC_POINTS, input_state);
+  auto stateField =
+    vtkm::cont::make_Field("state", vtkm::cont::Field::Association::POINTS, input_state);
   data.AddField(stateField);
 
   GameOfLife filter;
@@ -377,6 +346,7 @@ int main(int argc, char** argv)
   gFilter = &filter;
   gRenderer = &renderer;
 
+  gTimer.Start();
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 

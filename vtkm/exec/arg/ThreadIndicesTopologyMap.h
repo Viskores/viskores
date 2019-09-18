@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_arg_ThreadIndicesTopologyMap_h
 #define vtk_m_exec_arg_ThreadIndicesTopologyMap_h
@@ -31,129 +21,6 @@ namespace exec
 {
 namespace arg
 {
-
-namespace detail
-{
-
-/// Most cell shape tags have a default constructor, but the generic cell shape
-/// tag does not to prevent accidentally losing the Id, which, unlike the other
-/// cell shapes, can vary.
-///
-template <typename CellShapeTag>
-struct CellShapeInitializer
-{
-  VTKM_EXEC_CONT
-  static CellShapeTag GetDefault() { return CellShapeTag(); }
-};
-
-template <>
-struct CellShapeInitializer<vtkm::CellShapeTagGeneric>
-{
-  VTKM_EXEC_CONT
-  static vtkm::CellShapeTagGeneric GetDefault()
-  {
-    return vtkm::CellShapeTagGeneric(vtkm::CELL_SHAPE_EMPTY);
-  }
-};
-
-} // namespace detail
-
-/// \brief Container for thread indices in a topology map
-///
-/// This specialization of \c ThreadIndices adds extra indices that deal with
-/// topology maps. In particular, it saves the indices used to map the "from"
-/// elements in the map. The input and output indices from the superclass are
-/// considered to be indexing the "to" elements.
-///
-/// This class is templated on the type that stores the connectivity (such
-/// as \c ConnectivityExplicit or \c ConnectivityStructured).
-///
-template <typename ConnectivityType>
-class ThreadIndicesTopologyMap : public vtkm::exec::arg::ThreadIndicesBasic
-{
-  using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
-
-public:
-  using IndicesFromType = typename ConnectivityType::IndicesType;
-  using CellShapeTag = typename ConnectivityType::CellShapeTag;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
-                                     const ConnectivityType& connectivity,
-                                     vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex,
-                 outToIn.Get(threadIndex),
-                 visit.Get(threadIndex),
-                 globalThreadIndexOffset)
-    , CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
-  {
-    // The connectivity is stored in the invocation parameter at the given
-    // input domain index. If this class is being used correctly, the type
-    // of the domain will match the connectivity type used here. If there is
-    // a compile error here about a type mismatch, chances are a worklet has
-    // set its input domain incorrectly.
-    this->IndicesFrom = connectivity.GetIndices(this->GetInputIndex());
-    this->CellShape = connectivity.GetCellShape(this->GetInputIndex());
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id inIndex,
-                           vtkm::IdComponent visitIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset)
-    , CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
-  {
-    // The connectivity is stored in the invocation parameter at the given
-    // input domain index. If this class is being used correctly, the type
-    // of the domain will match the connectivity type used here. If there is
-    // a compile error here about a type mismatch, chances are a worklet has
-    // set its input domain incorrectly.
-    this->IndicesFrom = connectivity.GetIndices(this->GetInputIndex());
-    this->CellShape = connectivity.GetCellShape(this->GetInputIndex());
-  }
-
-  /// \brief The input indices of the "from" elements.
-  ///
-  /// A topology map has "from" and "to" elements (for example from points to
-  /// cells). For each worklet invocation, there is exactly one "to" element,
-  /// but can be several "from" element. This method returns a Vec-like object
-  /// containing the indices to the "from" elements.
-  ///
-  VTKM_EXEC
-  const IndicesFromType& GetIndicesFrom() const { return this->IndicesFrom; }
-
-  /// \brief The input indices of the "from" elements in pointer form.
-  ///
-  /// Returns the same object as GetIndicesFrom except that it returns a
-  /// pointer to the internally held object rather than a reference or copy.
-  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
-  /// best not to have a bunch a copies. Thus, you can pass around a pointer
-  /// instead. However, care should be taken to make sure that this object does
-  /// not go out of scope, at which time the returned pointer becomes invalid.
-  ///
-  VTKM_EXEC
-  const IndicesFromType* GetIndicesFromPointer() const { return &this->IndicesFrom; }
-
-  /// \brief The shape of the input cell.
-  ///
-  /// In topology maps that map from points to something, the indices make up
-  /// the structure of a cell. Although the shape tag is not technically and
-  /// index, it defines the meaning of the indices, so we put it here. (That
-  /// and this class is the only convenient place to store it.)
-  ///
-  VTKM_EXEC
-  CellShapeTag GetCellShape() const { return this->CellShape; }
-
-private:
-  IndicesFromType IndicesFrom;
-  CellShapeTag CellShape;
-};
 
 namespace detail
 {
@@ -202,73 +69,139 @@ static inline VTKM_EXEC vtkm::Id2 Deflate(const vtkm::Id3& index, vtkm::Id2)
 
 } // namespace detail
 
-// Specialization for structured connectivity types.
-template <typename FromTopology, typename ToTopology, vtkm::IdComponent Dimension>
-class ThreadIndicesTopologyMap<
-  vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>
+
+/// \brief Container for thread indices in a topology map
+///
+/// This specialization of \c ThreadIndices adds extra indices that deal with
+/// topology maps. In particular, it saves the incident element indices. The
+/// input and output indices from the superclass are considered to be indexing
+/// the visited elements.
+///
+/// This class is templated on the type that stores the connectivity (such
+/// as \c ConnectivityExplicit or \c ConnectivityStructured).
+///
+template <typename ConnectivityType>
+class ThreadIndicesTopologyMap : public vtkm::exec::arg::ThreadIndicesBasic
 {
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
+  using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
 
 public:
-  using IndicesFromType = typename ConnectivityType::IndicesType;
+  using IndicesIncidentType = typename ConnectivityType::IndicesType;
+  using CellShapeTag = typename ConnectivityType::CellShapeTag;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                                     vtkm::Id inputIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outputIndex,
+                                     const ConnectivityType& connectivity,
+                                     vtkm::Id globalThreadIndexOffset = 0)
+    : Superclass(threadIndex, inputIndex, visitIndex, outputIndex, globalThreadIndexOffset)
+    // The connectivity is stored in the invocation parameter at the given
+    // input domain index. If this class is being used correctly, the type
+    // of the domain will match the connectivity type used here. If there is
+    // a compile error here about a type mismatch, chances are a worklet has
+    // set its input domain incorrectly.
+    , IndicesIncident(connectivity.GetIndices(inputIndex))
+    , CellShape(connectivity.GetCellShape(inputIndex))
+  {
+  }
+
+  /// \brief The indices of the incident elements.
+  ///
+  /// A topology map has "visited" and "incident" elements (e.g. points, cells,
+  /// etc). For each worklet invocation, there is exactly one visited element,
+  /// but there can be several incident elements. This method returns a Vec-like
+  /// object containing the indices to the incident elements.
+  ///
+  VTKM_EXEC
+  const IndicesIncidentType& GetIndicesIncident() const { return this->IndicesIncident; }
+
+  /// \brief The input indices of the incident elements in pointer form.
+  ///
+  /// Returns the same object as GetIndicesIncident except that it returns a
+  /// pointer to the internally held object rather than a reference or copy.
+  /// Since the from indices can be a sizeable Vec (8 entries is common), it is
+  /// best not to have a bunch a copies. Thus, you can pass around a pointer
+  /// instead. However, care should be taken to make sure that this object does
+  /// not go out of scope, at which time the returned pointer becomes invalid.
+  ///
+  VTKM_EXEC
+  const IndicesIncidentType* GetIndicesIncidentPointer() const { return &this->IndicesIncident; }
+
+  /// \brief The shape of the input cell.
+  ///
+  /// In topology maps that map from points to something, the indices make up
+  /// the structure of a cell. Although the shape tag is not technically and
+  /// index, it defines the meaning of the indices, so we put it here. (That
+  /// and this class is the only convenient place to store it.)
+  ///
+  VTKM_EXEC
+  CellShapeTag GetCellShape() const { return this->CellShape; }
+
+private:
+  IndicesIncidentType IndicesIncident;
+  CellShapeTag CellShape;
+};
+
+// Specialization for structured connectivity types.
+template <typename VisitTopology, typename IncidentTopology, vtkm::IdComponent Dimension>
+class ThreadIndicesTopologyMap<
+  vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>>
+{
+  using ConnectivityType =
+    vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
+
+public:
+  using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
+                                     vtkm::Id inIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outIndex,
                                      const ConnectivityType& connectivity,
                                      vtkm::Id globalThreadIndexOffset = 0)
   {
-
-    this->InputIndex = outToIn.Get(threadIndex);
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visit.Get(threadIndex);
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inIndex;
+    this->VisitIndex = visitIndex;
+    this->OutputIndex = outIndex;
     this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
-    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
-                                     const OutToInArrayType&,
-                                     const VisitArrayType& visit,
                                      const ConnectivityType& connectivity,
                                      const vtkm::Id globalThreadIndexOffset = 0)
   {
     // We currently only support multidimensional indices on one-to-one input-
     // to-output mappings. (We don't have a use case otherwise.)
-    // that is why the OutToInArrayType is ignored
+    // That is why we treat teh threadIndex as also the inputIndex and outputIndex
     const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
     const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
 
+    this->ThreadIndex = index;
     this->InputIndex = index;
     this->OutputIndex = index;
-    this->VisitIndex = visit.Get(index);
+    this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
-    this->IndicesFrom = connectivity.GetIndices(logicalIndex);
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
   VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id vtkmNotUsed(inIndex),
-                           vtkm::IdComponent visitIndex,
-                           const ConnectivityType& connectivity,
-                           vtkm::Id globalThreadIndexOffset = 0)
-  {
-    this->InputIndex = threadIndex;
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visitIndex;
-    this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
-    this->IndicesFrom = connectivity.GetIndices(this->LogicalIndex);
-    this->CellShape = connectivity.GetCellShape(this->InputIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
-  }
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -315,19 +248,19 @@ public:
   VTKM_EXEC
   vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
 
-  /// \brief The input indices of the "from" elements.
+  /// \brief The indices of the incident elements.
   ///
-  /// A topology map has "from" and "to" elements (for example from points to
-  /// cells). For each worklet invocation, there is exactly one "to" element,
-  /// but can be several "from" element. This method returns a Vec-like object
-  /// containing the indices to the "from" elements.
+  /// A topology map has "visited" and "incident" elements (e.g. points, cells,
+  /// etc). For each worklet invocation, there is exactly one visited element,
+  /// but there can be several incident elements. This method returns a
+  /// Vec-like object containing the indices to the incident elements.
   ///
   VTKM_EXEC
-  const IndicesFromType& GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesIncidentType& GetIndicesIncident() const { return this->IndicesIncident; }
 
-  /// \brief The input indices of the "from" elements in pointer form.
+  /// \brief The input indices of the incident elements in pointer form.
   ///
-  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// Returns the same object as GetIndicesIncident except that it returns a
   /// pointer to the internally held object rather than a reference or copy.
   /// Since the from indices can be a sizeable Vec (8 entries is common), it is
   /// best not to have a bunch a copies. Thus, you can pass around a pointer
@@ -335,7 +268,7 @@ public:
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
   VTKM_EXEC
-  const IndicesFromType* GetIndicesFromPointer() const { return &this->IndicesFrom; }
+  const IndicesIncidentType* GetIndicesIncidentPointer() const { return &this->IndicesIncident; }
 
   /// \brief The shape of the input cell.
   ///
@@ -348,72 +281,64 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
-  vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
+  vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
-  IndicesFromType IndicesFrom;
+  IndicesIncidentType IndicesIncident;
   CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
 
 // Specialization for permuted structured connectivity types.
 template <typename PermutationPortal, vtkm::IdComponent Dimension>
-class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermutedPointToCell<
+class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
   PermutationPortal,
   vtkm::exec::
-    ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, Dimension>>>
+    ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, Dimension>>>
 {
-  using PermutedConnectivityType = vtkm::exec::ConnectivityPermutedPointToCell<
+  using PermutedConnectivityType = vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        Dimension>>;
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                              vtkm::TopologyElementTagCell,
+  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                                              vtkm::TopologyElementTagPoint,
                                                               Dimension>;
 
 public:
-  using IndicesFromType = typename ConnectivityType::IndicesType;
+  using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
-  template <typename OutToInArrayType, typename VisitArrayType>
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                                     const OutToInArrayType& outToIn,
-                                     const VisitArrayType& visit,
+                                     vtkm::Id inputIndex,
+                                     vtkm::IdComponent visitIndex,
+                                     vtkm::Id outputIndex,
                                      const PermutedConnectivityType& permutation,
                                      vtkm::Id globalThreadIndexOffset = 0)
   {
-    this->InputIndex = outToIn.Get(threadIndex);
-    this->OutputIndex = threadIndex;
-    this->VisitIndex = visit.Get(threadIndex);
-
-    const vtkm::Id permutedIndex = permutation.Portal.Get(this->InputIndex);
-    this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
-    this->IndicesFrom = permutation.Connectivity.GetIndices(this->LogicalIndex);
-    this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
-                           vtkm::Id vtkmNotUsed(inIndex),
-                           vtkm::IdComponent visitIndex,
-                           const PermutedConnectivityType& permutation,
-                           vtkm::Id globalThreadIndexOffset = 0)
-  {
-    this->InputIndex = threadIndex;
-    this->OutputIndex = threadIndex;
+    this->ThreadIndex = threadIndex;
+    this->InputIndex = inputIndex;
     this->VisitIndex = visitIndex;
+    this->OutputIndex = outputIndex;
 
     const vtkm::Id permutedIndex = permutation.Portal.Get(this->InputIndex);
     this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
-    this->IndicesFrom = permutation.Connectivity.GetIndices(this->LogicalIndex);
+    this->IndicesIncident = permutation.Connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///
@@ -460,19 +385,19 @@ public:
   VTKM_EXEC
   vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
 
-  /// \brief The input indices of the "from" elements.
+  /// \brief The indices of the incident elements.
   ///
-  /// A topology map has "from" and "to" elements (for example from points to
-  /// cells). For each worklet invocation, there is exactly one "to" element,
-  /// but can be several "from" element. This method returns a Vec-like object
-  /// containing the indices to the "from" elements.
+  /// A topology map has "visited" and "incident" elements (e.g. points, cells,
+  /// etc). For each worklet invocation, there is exactly one visited element,
+  /// but there can be several incident elements. This method returns a
+  /// Vec-like object containing the indices to the incident elements.
   ///
   VTKM_EXEC
-  const IndicesFromType& GetIndicesFrom() const { return this->IndicesFrom; }
+  const IndicesIncidentType& GetIndicesIncident() const { return this->IndicesIncident; }
 
-  /// \brief The input indices of the "from" elements in pointer form.
+  /// \brief The input indices of the incident elements in pointer form.
   ///
-  /// Returns the same object as GetIndicesFrom except that it returns a
+  /// Returns the same object as GetIndicesIncident except that it returns a
   /// pointer to the internally held object rather than a reference or copy.
   /// Since the from indices can be a sizeable Vec (8 entries is common), it is
   /// best not to have a bunch a copies. Thus, you can pass around a pointer
@@ -480,7 +405,7 @@ public:
   /// not go out of scope, at which time the returned pointer becomes invalid.
   ///
   VTKM_EXEC
-  const IndicesFromType* GetIndicesFromPointer() const { return &this->IndicesFrom; }
+  const IndicesIncidentType* GetIndicesIncidentPointer() const { return &this->IndicesIncident; }
 
   /// \brief The shape of the input cell.
   ///
@@ -493,11 +418,12 @@ public:
   CellShapeTag GetCellShape() const { return this->CellShape; }
 
 private:
+  vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
-  vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
+  vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
-  IndicesFromType IndicesFrom;
+  IndicesIncidentType IndicesIncident;
   CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };

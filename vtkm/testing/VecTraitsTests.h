@@ -2,26 +2,30 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtkm_testing_VecTraitsTest_h
 #define vtkm_testing_VecTraitsTest_h
 
+//GCC 4+ when running the test code have false positive warnings
+//about uninitialized vtkm::VecC<> when filled by VecTraits<T>::CopyInto.
+//The testing code already verifies that CopyInto works by verifying the
+//results, so we are going to suppress `-Wmaybe-uninitialized` for this
+//file
+//This block has to go before we include any vtkm file that brings in
+//<vtkm/Types.h> otherwise the warning suppression will not work
+#include <vtkm/internal/Configure.h>
+#if (defined(VTKM_GCC) && __GNUC__ >= 4)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif // gcc  4+
+
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/testing/Testing.h>
@@ -135,7 +139,7 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
   VTKM_TEST_ASSERT(test_equal(vectorCopy, inVector), "CopyInto does not work.");
 
   {
-    auto expected = vtkm::dot(vectorCopy, vectorCopy);
+    auto expected = vtkm::Dot(vectorCopy, vectorCopy);
     decltype(expected) result = 0;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
@@ -151,6 +155,40 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
 
   TestVecTypeWritableImpl<NUM_COMPONENTS, NonConstT>(
     inVector, vectorCopy, outVector, typename VecIsWritable<NonConstT>::type());
+
+  // Compiler checks for base component types
+  using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::TypeTraits<BaseComponentType>::DimensionalityTag,
+                                   vtkm::TypeTraitsScalarTag>::value));
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::VecTraits<ComponentType>::BaseComponentType,
+                                   BaseComponentType>::value));
+
+  // Compiler checks for replacing component types
+  using ReplaceWithVecComponent =
+    typename vtkm::VecTraits<T>::template ReplaceComponentType<vtkm::Vec<char, 2>>;
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsVectorTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::ComponentType,
+                  vtkm::Vec<char, 2>>::value) ||
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsScalarTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::ComponentType, char>::value));
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::VecTraits<ReplaceWithVecComponent>::BaseComponentType,
+                  char>::value));
+  using ReplaceBaseComponent =
+    typename vtkm::VecTraits<ReplaceWithVecComponent>::template ReplaceBaseComponentType<short>;
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsVectorTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::ComponentType,
+                  vtkm::Vec<short, 2>>::value) ||
+    (std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
+                  vtkm::TypeTraitsScalarTag>::value &&
+     std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::ComponentType, short>::value));
+  VTKM_STATIC_ASSERT((
+    std::is_same<typename vtkm::VecTraits<ReplaceBaseComponent>::BaseComponentType, short>::value));
 }
 
 inline void CheckVecComponentsTag(vtkm::VecTraitsTagMultipleComponents)
@@ -204,5 +242,9 @@ inline void TestScalarComponentsTag()
 }
 }
 } // namespace vtkm::testing
+
+#if (defined(VTKM_GCC) && __GNUC__ > 4 && __GNUC__ < 7)
+#pragma GCC diagnostic pop
+#endif // gcc  5 or 6
 
 #endif //vtkm_testing_VecTraitsTest_h

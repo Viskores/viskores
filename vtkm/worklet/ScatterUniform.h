@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,24 +6,14 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_worklet_ScatterUniform_h
 #define vtk_m_worklet_ScatterUniform_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 namespace vtkm
 {
@@ -34,35 +23,21 @@ namespace worklet
 namespace detail
 {
 
+template <vtkm::IdComponent Modulus>
 struct FunctorModulus
 {
-  vtkm::IdComponent Modulus;
-
-  VTKM_EXEC_CONT
-  FunctorModulus(vtkm::IdComponent modulus = 1)
-    : Modulus(modulus)
-  {
-  }
-
   VTKM_EXEC_CONT
   vtkm::IdComponent operator()(vtkm::Id index) const
   {
-    return static_cast<vtkm::IdComponent>(index % this->Modulus);
+    return static_cast<vtkm::IdComponent>(index % Modulus);
   }
 };
 
+template <vtkm::IdComponent Divisor>
 struct FunctorDiv
 {
-  vtkm::Id Divisor;
-
   VTKM_EXEC_CONT
-  FunctorDiv(vtkm::Id divisor = 1)
-    : Divisor(divisor)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id index) const { return index / this->Divisor; }
+  vtkm::Id operator()(vtkm::Id index) const { return index / Divisor; }
 };
 }
 
@@ -74,43 +49,36 @@ struct FunctorDiv
 /// elements associated with it where N is the same for every input. The output
 /// elements are grouped by the input associated.
 ///
-struct ScatterUniform
+template <vtkm::IdComponent NumOutputsPerInput>
+struct ScatterUniform : internal::ScatterBase
 {
-  VTKM_CONT
-  ScatterUniform(vtkm::IdComponent numOutputsPerInput)
-    : NumOutputsPerInput(numOutputsPerInput)
-  {
-  }
+  VTKM_CONT ScatterUniform() = default;
 
   VTKM_CONT
-  vtkm::Id GetOutputRange(vtkm::Id inputRange) const
-  {
-    return inputRange * this->NumOutputsPerInput;
-  }
+  vtkm::Id GetOutputRange(vtkm::Id inputRange) const { return inputRange * NumOutputsPerInput; }
   VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id3 inputRange) const
   {
     return this->GetOutputRange(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
-  using OutputToInputMapType = vtkm::cont::ArrayHandleImplicit<detail::FunctorDiv>;
+  using OutputToInputMapType =
+    vtkm::cont::ArrayHandleImplicit<detail::FunctorDiv<NumOutputsPerInput>>;
   template <typename RangeType>
   VTKM_CONT OutputToInputMapType GetOutputToInputMap(RangeType inputRange) const
   {
-    return OutputToInputMapType(detail::FunctorDiv(this->NumOutputsPerInput),
+    return OutputToInputMapType(detail::FunctorDiv<NumOutputsPerInput>(),
                                 this->GetOutputRange(inputRange));
   }
 
-  using VisitArrayType = vtkm::cont::ArrayHandleImplicit<detail::FunctorModulus>;
+  using VisitArrayType =
+    vtkm::cont::ArrayHandleImplicit<detail::FunctorModulus<NumOutputsPerInput>>;
   template <typename RangeType>
   VTKM_CONT VisitArrayType GetVisitArray(RangeType inputRange) const
   {
-    return VisitArrayType(detail::FunctorModulus(this->NumOutputsPerInput),
+    return VisitArrayType(detail::FunctorModulus<NumOutputsPerInput>(),
                           this->GetOutputRange(inputRange));
   }
-
-private:
-  vtkm::IdComponent NumOutputsPerInput;
 };
 }
 } // namespace vtkm::worklet

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleCartesianProduct_h
 #define vtk_m_cont_ArrayHandleCartesianProduct_h
@@ -46,6 +36,14 @@ public:
   using PortalTypeFirst = PortalTypeFirst_;
   using PortalTypeSecond = PortalTypeSecond_;
   using PortalTypeThird = PortalTypeThird_;
+
+  using set_supported_p1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst>;
+  using set_supported_p2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond>;
+  using set_supported_p3 = vtkm::internal::PortalSupportsSets<PortalTypeThird>;
+
+  using Writable = std::integral_constant<bool,
+                                          set_supported_p1::value && set_supported_p2::value &&
+                                            set_supported_p3::value>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -107,9 +105,11 @@ public:
       this->PortalFirst.Get(i1), this->PortalSecond.Get(i2), this->PortalThird.Get(i3));
   }
 
+
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());
@@ -181,15 +181,16 @@ struct ArrayHandleCartesianProductTraits
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+class Storage<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
+              StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
 {
   VTKM_IS_ARRAY_HANDLE(FirstHandleType);
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
   VTKM_IS_ARRAY_HANDLE(ThirdHandleType);
 
 public:
-  using ValueType = T;
+  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
 
   using PortalType =
     vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
@@ -277,21 +278,22 @@ private:
   ThirdHandleType ThirdArray;
 };
 
-template <typename T,
-          typename FirstHandleType,
+template <typename FirstHandleType,
           typename SecondHandleType,
           typename ThirdHandleType,
           typename Device>
-class ArrayTransfer<T,
+class ArrayTransfer<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
                     StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
                     Device>
 {
+public:
+  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
+
+private:
   using StorageTag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  using ValueType = T;
-
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -427,5 +429,77 @@ VTKM_CONT
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH1, typename AH2, typename AH3>
+struct SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_CartesianProduct<" + SerializableTypeString<AH1>::Get() + "," +
+      SerializableTypeString<AH2>::Get() + "," + SerializableTypeString<AH3>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH1, typename AH2, typename AH3>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
+                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename AH1, typename AH2, typename AH3>
+struct Serialization<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+private:
+  using Type = typename vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    vtkmdiy::save(bb, storage.GetFirstArray());
+    vtkmdiy::save(bb, storage.GetSecondArray());
+    vtkmdiy::save(bb, storage.GetThirdArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH1 array1;
+    AH2 array2;
+    AH3 array3;
+
+    vtkmdiy::load(bb, array1);
+    vtkmdiy::load(bb, array2);
+    vtkmdiy::load(bb, array3);
+
+    obj = vtkm::cont::make_ArrayHandleCartesianProduct(array1, array2, array3);
+  }
+};
+
+template <typename AH1, typename AH2, typename AH3>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
+                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
+  : Serialization<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+{
+};
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleCartesianProduct_h

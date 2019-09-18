@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,21 +6,10 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/ExplicitTestData.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -31,7 +19,7 @@
 namespace DataSetBuilderExplicitNamespace
 {
 
-using DFA = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+using DFA = vtkm::cont::Algorithm;
 
 template <typename T>
 vtkm::Bounds ComputeBounds(std::size_t numPoints, const T* coords)
@@ -52,26 +40,24 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
                      const vtkm::Bounds& bounds)
 {
   //Verify basics..
-  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Wrong number of cell sets.");
   VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
   VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
-  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
-                   "Wrong number of coordinates.");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells, "Wrong number of cells.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    ds.GetCellField("cellvar");
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    ds.GetPointField("pointvar");
   }
   catch (...)
   {
@@ -277,8 +263,8 @@ void TestDataSetBuilderExplicit()
 
 } // namespace DataSetBuilderExplicitNamespace
 
-int UnitTestDataSetBuilderExplicit(int, char* [])
+int UnitTestDataSetBuilderExplicit(int argc, char* argv[])
 {
   using namespace DataSetBuilderExplicitNamespace;
-  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderExplicit);
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderExplicit, argc, argv);
 }

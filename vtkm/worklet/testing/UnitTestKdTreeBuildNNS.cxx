@@ -2,29 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <random>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/worklet/KdTree3D.h>
 
 namespace
 {
 
-using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+using Algorithm = vtkm::cont::Algorithm;
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
@@ -53,11 +44,11 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
 class NearestNeighborSearchBruteForce3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> qcIn,
-                                WholeArrayIn<> treeCoordiIn,
-                                FieldOut<> nnIdOut,
-                                FieldOut<> nnDisOut);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ControlSignature = void(FieldIn qcIn,
+                                WholeArrayIn treeCoordiIn,
+                                FieldOut nnIdOut,
+                                FieldOut nnDisOut);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   VTKM_CONT
   NearestNeighborSearchBruteForce3DWorklet() {}
@@ -74,14 +65,14 @@ public:
   }
 };
 
-void TestKdTreeBuildNNS()
+void TestKdTreeBuildNNS(vtkm::cont::DeviceAdapterId deviceId)
 {
   vtkm::Int32 nTrainingPoints = 1000;
   vtkm::Int32 nTestingPoint = 1000;
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
+  std::vector<vtkm::Vec3f_32> coordi;
 
-  ///// randomly genarate training points/////
+  ///// randomly generate training points/////
   std::default_random_engine dre;
   std::uniform_real_distribution<vtkm::Float32> dr(0.0f, 10.0f);
 
@@ -95,11 +86,11 @@ void TestKdTreeBuildNNS()
 
   // Run data
   vtkm::worklet::KdTree3D kdtree3d;
-  kdtree3d.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Build(coordi_Handle);
 
   //Nearest Neighbor worklet Testing
   /// randomly generate testing points /////
-  std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
+  std::vector<vtkm::Vec3f_32> qcVec;
   for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
   {
     qcVec.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));
@@ -111,8 +102,7 @@ void TestKdTreeBuildNNS()
   vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-  kdtree3d.Run(
-    coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Run(coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, deviceId);
 
   vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
@@ -140,7 +130,7 @@ void TestKdTreeBuildNNS()
 
 } // anonymous namespace
 
-int UnitTestKdTreeBuildNNS(int, char* [])
+int UnitTestKdTreeBuildNNS(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestKdTreeBuildNNS);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestKdTreeBuildNNS, argc, argv);
 }

@@ -2,23 +2,13 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-#ifndef vtk_m_worklet_WorkletPointNeigborhood_h
-#define vtk_m_worklet_WorkletPointNeigborhood_h
+#ifndef vtk_m_worklet_WorkletPointNeighborhood_h
+#define vtk_m_worklet_WorkletPointNeighborhood_h
 
 /// \brief Worklet for volume algorithms that require a neighborhood
 ///
@@ -39,12 +29,12 @@
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSetStructured.h>
 
+#include <vtkm/exec/arg/Boundary.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagArrayNeighborhoodIn.h>
 #include <vtkm/exec/arg/FetchTagCellSetIn.h>
-#include <vtkm/exec/arg/OnBoundary.h>
 #include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
@@ -54,6 +44,10 @@ namespace vtkm
 {
 namespace worklet
 {
+
+template <typename WorkletType>
+class DispatcherPointNeighborhood;
+
 
 /// \brief Clamps boundary values to the nearest valid i,j,k value
 ///
@@ -80,27 +74,24 @@ struct BoundaryClamp
 class WorkletPointNeighborhoodBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  /// \brief The \c ExecutionSignature tag to get if you the current iteration is on a boundary.
+  template <typename Worklet>
+  using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
+
+  /// \brief The \c ExecutionSignature tag to query if the current iteration is inside the boundary.
   ///
-  /// A \c WorkletPointNeighborhood operates by iterating over all points using
-  /// a defined neighborhood. This \c ExecutionSignature tag provides different
-  /// types when you are on or off a boundary, allowing for separate code paths
-  /// just for handling boundaries.
+  /// A \c WorkletPointNeighborhood operates by iterating over all points using a defined
+  /// neighborhood. This \c ExecutionSignature tag provides a \c BoundaryState object that allows
+  /// you to query whether the neighborhood of the current iteration is completely inside the
+  /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
+  /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
+  /// this case the values returned will depend on the boundary behavior.
   ///
-  /// This is important as when you are on a boundary the neighboordhood will
-  /// contain empty values for a certain subset of values
-  struct OnBoundary : vtkm::exec::arg::OnBoundary
+  struct Boundary : vtkm::exec::arg::Boundary
   {
   };
 
   /// All worklets must define their scatter operation.
   using ScatterType = vtkm::worklet::ScatterIdentity;
-
-  /// In addition to defining the scatter type, the worklet must produce the
-  /// scatter. The default vtkm::worklet::ScatterIdentity  has no state,
-  /// so just return an instance.
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
 
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
@@ -118,10 +109,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -131,10 +121,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -144,10 +133,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
@@ -157,18 +145,15 @@ public:
   struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSetStructured;
-    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<vtkm::TopologyElementTagCell,
-                                                                vtkm::TopologyElementTagPoint>;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<vtkm::TopologyElementTagPoint,
+                                                                vtkm::TopologyElementTagCell>;
     using FetchTag = vtkm::exec::arg::FetchTagCellSetIn;
   };
 };
 
-template <int Neighborhood_>
 class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
 {
 public:
-  static constexpr vtkm::IdComponent Neighborhood = Neighborhood_;
-
   /// \brief A control signature tag for neighborhood input values.
   ///
   /// A \c WorkletPointNeighborhood operates allowing access to a adjacent point
@@ -180,39 +165,63 @@ public:
   /// This tag specifies an \c ArrayHandle object that holds the values. It is
   /// an input array with entries for each point.
   ///
-  template <typename TypeList = AllTypes>
   struct FieldInNeighborhood : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
-    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn<Neighborhood>;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn;
   };
 
   /// Point neighborhood worklets use the related thread indices class.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T,
-            typename IndexType,
-            typename OutToInArrayType,
+  template <typename OutToInArrayType,
             typename VisitArrayType,
+            typename ThreadToOutArrayType,
             vtkm::IdComponent Dimension>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood> GetThreadIndices(
-    const IndexType& threadIndex,
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
+    vtkm::Id threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
-    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                             vtkm::TopologyElementTagPoint,
+    const ThreadToOutArrayType& threadToOut,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
                                              Dimension>& inputDomain, //this should be explicitly
-    const T& globalThreadIndexOffset = 0) const
+    vtkm::Id globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood<Neighborhood>(
-      threadIndex, outToIn, visit, inputDomain, globalThreadIndexOffset);
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex);
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex,
+                                                           outToIn.Get(outIndex),
+                                                           visit.Get(outIndex),
+                                                           outIndex,
+                                                           inputDomain,
+                                                           globalThreadIndexOffset);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename OutToInArrayType,
+            typename VisitArrayType,
+            typename ThreadToOutArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
+    const vtkm::Id3& threadIndex,
+    const OutToInArrayType& vtkmNotUsed(outToIn),
+    const VisitArrayType& vtkmNotUsed(visit),
+    const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
+    const InputDomainType& connectivity,
+    vtkm::Id globalThreadIndexOffset = 0) const
+  {
+    using ScatterCheck = std::is_same<ScatterType, vtkm::worklet::ScatterIdentity>;
+    VTKM_STATIC_ASSERT_MSG(ScatterCheck::value,
+                           "Scheduling on 3D topologies only works with default ScatterIdentity.");
+    using MaskCheck = std::is_same<MaskType, vtkm::worklet::MaskNone>;
+    VTKM_STATIC_ASSERT_MSG(MaskCheck::value,
+                           "Scheduling on 3D topologies only works with default MaskNone.");
+
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+      threadIndex, connectivity, globalThreadIndexOffset);
   }
 };
-
-
-using WorkletPointNeighborhood3x3x3 = WorkletPointNeighborhood<1>;
-using WorkletPointNeighborhood5x5x5 = WorkletPointNeighborhood<2>;
 }
 }
 

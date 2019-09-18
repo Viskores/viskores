@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_cont_ArrayHandleIndex_h
 #define vtk_m_cont_ArrayHandleIndex_h
 
@@ -60,5 +48,48 @@ public:
 };
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <>
+struct SerializableTypeString<vtkm::cont::detail::IndexFunctor>
+{
+  static VTKM_CONT const std::string Get() { return "AH_IndexFunctor"; }
+};
+
+template <>
+struct SerializableTypeString<vtkm::cont::ArrayHandleIndex>
+  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <>
+struct Serialization<vtkm::cont::detail::IndexFunctor>
+{
+  static VTKM_CONT void save(BinaryBuffer&, const vtkm::cont::detail::IndexFunctor&) {}
+
+  static VTKM_CONT void load(BinaryBuffer&, vtkm::cont::detail::IndexFunctor&) {}
+};
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandleIndex>
+  : Serialization<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+{
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleIndex_h

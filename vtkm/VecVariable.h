@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_VecVariable_h
 #define vtk_m_VecVariable_h
@@ -60,10 +50,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
+  inline vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
 
   template <vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
+  VTKM_EXEC_CONT inline void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
@@ -73,10 +63,13 @@ public:
   }
 
   VTKM_EXEC_CONT
-  const ComponentType& operator[](vtkm::IdComponent index) const { return this->Data[index]; }
+  inline const ComponentType& operator[](vtkm::IdComponent index) const
+  {
+    return this->Data[index];
+  }
 
   VTKM_EXEC_CONT
-  ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
+  inline ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
 
   VTKM_EXEC_CONT
   void Append(ComponentType value)
@@ -110,6 +103,7 @@ struct VecTraits<vtkm::VecVariable<T, MaxSize>>
   using VecType = vtkm::VecVariable<T, MaxSize>;
 
   using ComponentType = typename VecType::ComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 
@@ -137,6 +131,14 @@ struct VecTraits<vtkm::VecVariable<T, MaxSize>>
   {
     vector[componentIndex] = value;
   }
+
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::VecVariable<NewComponentType, MaxSize>;
+
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::VecVariable<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+    MaxSize>;
 
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)

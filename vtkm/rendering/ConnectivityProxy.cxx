@@ -2,27 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-#include <cstdlib>
-#include <typeinfo>
+
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
+#include <vtkm/rendering/raytracing/ConnectivityTracer.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
 
@@ -34,10 +23,10 @@ namespace rendering
 struct ConnectivityProxy::InternalsType
 {
 protected:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMapType;
-  typedef vtkm::rendering::raytracing::ConnectivityBase BaseType;
+  using ColorMapType = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+  using TracerType = vtkm::rendering::raytracing::ConnectivityTracer;
 
-  BaseType* Tracer;
+  TracerType Tracer;
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
   vtkm::cont::DynamicCellSet Cells;
@@ -48,29 +37,6 @@ protected:
   vtkm::cont::DataSet Dataset;
   vtkm::Range ScalarRange;
   bool CompositeBackground;
-
-  struct BoundsFunctor
-  {
-    vtkm::rendering::ConnectivityProxy::InternalsType* Internals;
-    const vtkm::cont::CoordinateSystem& Coordinates;
-
-    VTKM_CONT
-    BoundsFunctor(vtkm::rendering::ConnectivityProxy::InternalsType* self,
-                  const vtkm::cont::CoordinateSystem& coordinates)
-      : Internals(self)
-      , Coordinates(coordinates)
-    {
-    }
-
-    template <typename Device>
-    VTKM_CONT bool operator()(Device)
-    {
-      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-      Internals->SpatialBounds = Internals->Coords.GetBounds();
-      return true;
-    }
-  };
 
 public:
   InternalsType(vtkm::cont::DataSet& dataSet)
@@ -88,11 +54,12 @@ public:
     {
       this->SetScalarField(Dataset.GetField(0).GetName());
     }
-
-    Tracer = raytracing::ConnectivityTracerFactory::CreateTracer(Cells, Coords);
   }
 
-  ~InternalsType() { delete Tracer; }
+  ~InternalsType() {}
+
+  VTKM_CONT
+  void SetUnitScalar(vtkm::Float32 unitScalar) { Tracer.SetUnitScalar(unitScalar); }
 
   void SetSampleDistance(const vtkm::Float32& distance)
   {
@@ -101,7 +68,7 @@ public:
       std::cout << "Volume Tracer Error: must set volume mode before setting sample dist\n";
       return;
     }
-    Tracer->SetSampleDistance(distance);
+    Tracer.SetSampleDistance(distance);
   }
 
   VTKM_CONT
@@ -119,13 +86,16 @@ public:
   }
 
   VTKM_CONT
-  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap)
+  void SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colormap)
   {
-    Tracer->SetColorMap(colormap);
+    Tracer.SetColorMap(colormap);
   }
 
   VTKM_CONT
   void SetCompositeBackground(bool on) { CompositeBackground = on; }
+
+  VTKM_CONT
+  void SetDebugPrints(bool on) { Tracer.SetDebugOn(on); }
 
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
@@ -142,7 +112,12 @@ public:
   vtkm::Bounds GetSpatialBounds() const { return SpatialBounds; }
 
   VTKM_CONT
-  vtkm::Range GetScalarRange() const { return ScalarRange; }
+  vtkm::Range GetScalarFieldRange()
+  {
+    const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
+    ScalarRange = range.GetPortalConstControl().Get(0);
+    return ScalarRange;
+  }
 
   VTKM_CONT
   void SetScalarRange(const vtkm::Range& range) { ScalarRange = range; }
@@ -153,15 +128,18 @@ public:
 
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
-      Tracer->SetEnergyData(
-        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
     }
 
-    Tracer->Trace(rays);
+    Tracer.FullTrace(rays);
   }
 
   VTKM_CONT
@@ -169,14 +147,57 @@ public:
   {
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
-      Tracer->SetEnergyData(
-        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
     }
-    Tracer->Trace(rays);
+
+    Tracer.FullTrace(rays);
+  }
+
+  VTKM_CONT
+  PartialVector64 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays)
+  {
+
+    if (Mode == VOLUME_MODE)
+    {
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+    }
+    else
+    {
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
+    }
+
+    return Tracer.PartialTrace(rays);
+  }
+
+  VTKM_CONT
+  PartialVector32 PartialTrace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
+  {
+    if (Mode == VOLUME_MODE)
+    {
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+    }
+    else
+    {
+      Tracer.SetEnergyData(this->ScalarField,
+                           rays.Buffers.at(0).GetNumChannels(),
+                           this->Cells,
+                           this->Coords,
+                           this->EmissionField);
+    }
+
+    return Tracer.PartialTrace(rays);
   }
 
   VTKM_CONT
@@ -191,20 +212,20 @@ public:
     vtkm::rendering::raytracing::Camera rayCamera;
     rayCamera.SetParameters(camera, *canvas);
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
-    rayCamera.CreateRays(rays, this->Coords);
+    rayCamera.CreateRays(rays, this->Coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (Mode == VOLUME_MODE)
     {
-      Tracer->SetVolumeData(this->ScalarField, this->ScalarRange);
+      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
     }
     else
     {
       throw vtkm::cont::ErrorBadValue("ENERGY MODE Not implemented for this use case\n");
     }
 
-    Tracer->Trace(rays);
+    Tracer.FullTrace(rays);
 
     canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
     if (CompositeBackground)
@@ -228,7 +249,7 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
 {
   vtkm::cont::DataSet dataset;
 
-  dataset.AddCellSet(cellset);
+  dataset.SetCellSet(cellset);
   dataset.AddCoordinateSystem(coords);
   dataset.AddField(scalarField);
 
@@ -264,7 +285,7 @@ void ConnectivityProxy::SetScalarField(const std::string& fieldName)
 }
 
 VTKM_CONT
-void ConnectivityProxy::SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colormap)
+void ConnectivityProxy::SetColorMap(vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colormap)
 {
   Internals->SetColorMap(colormap);
 }
@@ -282,9 +303,9 @@ vtkm::Bounds ConnectivityProxy::GetSpatialBounds()
 }
 
 VTKM_CONT
-vtkm::Range ConnectivityProxy::GetScalarRange()
+vtkm::Range ConnectivityProxy::GetScalarFieldRange()
 {
-  return Internals->GetScalarRange();
+  return Internals->GetScalarFieldRange();
 }
 
 VTKM_CONT
@@ -318,6 +339,27 @@ void ConnectivityProxy::Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& r
 }
 
 VTKM_CONT
+PartialVector32 ConnectivityProxy::PartialTrace(
+  vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
+{
+  raytracing::Logger* logger = raytracing::Logger::GetInstance();
+  logger->OpenLogEntry("connectivity_trace_32");
+  if (Internals->GetRenderMode() == VOLUME_MODE)
+  {
+    logger->AddLogData("volume_mode", "true");
+  }
+  else
+  {
+    logger->AddLogData("volume_mode", "false");
+  }
+
+  PartialVector32 res = Internals->PartialTrace(rays);
+
+  logger->CloseLogEntry(-1.0);
+  return res;
+}
+
+VTKM_CONT
 void ConnectivityProxy::Trace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays)
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
@@ -337,6 +379,27 @@ void ConnectivityProxy::Trace(vtkm::rendering::raytracing::Ray<vtkm::Float32>& r
 }
 
 VTKM_CONT
+PartialVector64 ConnectivityProxy::PartialTrace(
+  vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays)
+{
+  raytracing::Logger* logger = raytracing::Logger::GetInstance();
+  logger->OpenLogEntry("connectivity_trace_64");
+  if (Internals->GetRenderMode() == VOLUME_MODE)
+  {
+    logger->AddLogData("volume_mode", "true");
+  }
+  else
+  {
+    logger->AddLogData("volume_mode", "false");
+  }
+
+  PartialVector64 res = Internals->PartialTrace(rays);
+
+  logger->CloseLogEntry(-1.0);
+  return res;
+}
+
+VTKM_CONT
 void ConnectivityProxy::Trace(const vtkm::rendering::Camera& camera,
                               vtkm::rendering::CanvasRayTracer* canvas)
 {
@@ -347,6 +410,18 @@ void ConnectivityProxy::Trace(const vtkm::rendering::Camera& camera,
   Internals->Trace(camera, canvas);
 
   logger->CloseLogEntry(-1.0);
+}
+
+VTKM_CONT
+void ConnectivityProxy::SetDebugPrints(bool on)
+{
+  Internals->SetDebugPrints(on);
+}
+
+VTKM_CONT
+void ConnectivityProxy::SetUnitScalar(vtkm::Float32 unitScalar)
+{
+  Internals->SetUnitScalar(unitScalar);
 }
 }
 } // namespace vtkm::rendering

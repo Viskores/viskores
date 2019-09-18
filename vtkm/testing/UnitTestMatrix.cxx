@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/Matrix.h>
 
@@ -145,7 +133,7 @@ struct MatrixTest
     {
       vtkm::Vec<T, NUM_COLS> leftVector = vtkm::MatrixGetRow(leftFactor, row);
       vtkm::Vec<T, NUM_COLS> rightVector = vtkm::MatrixGetColumn(rightFactor, col);
-      VTKM_TEST_ASSERT(test_equal(product(row, col), vtkm::dot(leftVector, rightVector)),
+      VTKM_TEST_ASSERT(test_equal(product(row, col), vtkm::Dot(leftVector, rightVector)),
                        "Matrix multiple wrong.");
     }
 
@@ -617,7 +605,7 @@ void TestMatrices()
 
 } // anonymous namespace
 
-int UnitTestMatrix(int, char* [])
+int UnitTestMatrix(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestMatrices);
+  return vtkm::testing::Testing::Run(TestMatrices, argc, argv);
 }

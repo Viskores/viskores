@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_Ray_h
 #define vtk_m_rendering_raytracing_Ray_h
@@ -54,25 +44,28 @@ protected:
 public:
   // composite vectors to hold array handles
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
       Intersection;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Normal;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Normal;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Origin;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Origin;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Dir;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Dir;
 
   vtkm::cont::ArrayHandle<Precision> IntersectionX; //ray Intersection
   vtkm::cont::ArrayHandle<Precision> IntersectionY;
@@ -113,21 +106,11 @@ public:
   {
     IntersectionDataEnabled = false;
     NumRays = 0;
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-    Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
-      IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
-
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
-
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
+    Intersection =
+      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
 
     ChannelBuffer<Precision> buffer;
     buffer.Resize(NumRays);
@@ -135,6 +118,20 @@ public:
     DebugWidth = -1;
     DebugHeight = -1;
   }
+
+
+  struct EnableIntersectionDataFunctor
+  {
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->EnableIntersectionData(Device());
+      return true;
+    }
+  };
+
+  void EnableIntersectionData() { vtkm::cont::TryExecute(EnableIntersectionDataFunctor(), this); }
 
   template <typename Device>
   void EnableIntersectionData(Device)
@@ -192,11 +189,18 @@ public:
     this->Resize(size, Device());
   }
 
-
-  VTKM_CONT void Resize(const vtkm::Int32 size)
+  struct ResizeFunctor
   {
-    this->Resize(size, vtkm::cont::DeviceAdapterTagSerial());
-  }
+    template <typename Device>
+    VTKM_CONT bool operator()(Device, Ray<Precision>* self, const vtkm::Int32 size)
+    {
+      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+      self->Resize(size, Device());
+      return true;
+    }
+  };
+
+  VTKM_CONT void Resize(const vtkm::Int32 size) { vtkm::cont::TryExecute(ResizeFunctor(), size); }
 
   template <typename Device>
   VTKM_CONT void Resize(const vtkm::Int32 size, Device)
@@ -236,23 +240,11 @@ public:
     HitIdx.PrepareForOutput(NumRays, Device());
     PixelIdx.PrepareForOutput(NumRays, Device());
 
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
-    Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
-      IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
-
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
-
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
-
+    Intersection =
+      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
 
     const size_t numBuffers = this->Buffers.size();
     for (size_t i = 0; i < numBuffers; ++i)

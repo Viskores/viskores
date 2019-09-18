@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/MaskPoints.h>
@@ -35,7 +25,6 @@ namespace
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingMaskPoints
 {
 public:
@@ -54,8 +43,8 @@ public:
     // Output dataset gets new cell set of points that pass subsampling
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 2, DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 2);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 12), "Wrong result for MaskPoints");
   }
@@ -75,8 +64,8 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 5, DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 5);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 25), "Wrong result for MaskPoints");
   }
@@ -96,8 +85,8 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::MaskPoints maskPoints;
     OutCellSetType outCellSet;
-    outCellSet = maskPoints.Run(dataset.GetCellSet(0), 3, DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = maskPoints.Run(dataset.GetCellSet(), 3);
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3), "Wrong result for MaskPoints");
   }
@@ -111,7 +100,7 @@ public:
 };
 }
 
-int UnitTestMaskPoints(int, char* [])
+int UnitTestMaskPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingMaskPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingMaskPoints(), argc, argv);
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_Gradient_h
@@ -45,7 +35,7 @@ namespace gradient
 {
 
 //-----------------------------------------------------------------------------
-template <typename CoordinateSystem, typename T, typename S, typename Device>
+template <typename CoordinateSystem, typename T, typename S>
 struct DeducedPointGrad
 {
   DeducedPointGrad(const CoordinateSystem& coords,
@@ -60,7 +50,7 @@ struct DeducedPointGrad
   template <typename CellSetType>
   void operator()(const CellSetType& cellset) const
   {
-    vtkm::worklet::DispatcherMapTopology<PointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<PointGradient<T>> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
                       *this->Points,
@@ -70,7 +60,7 @@ struct DeducedPointGrad
 
   void operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -81,7 +71,7 @@ struct DeducedPointGrad
   void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>,
                                                        PermIterType>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -90,7 +80,7 @@ struct DeducedPointGrad
 
   void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -101,7 +91,7 @@ struct DeducedPointGrad
   void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>,
                                                        PermIterType>& cellset) const
   {
-    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
@@ -114,22 +104,22 @@ struct DeducedPointGrad
   GradientOutputFields<T>* Result;
 
 private:
-  void operator=(const DeducedPointGrad<CoordinateSystem, T, S, Device>&) = delete;
+  void operator=(const DeducedPointGrad<CoordinateSystem, T, S>&) = delete;
 };
 
 } //namespace gradient
 
 template <typename T>
-struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
+struct GradientOutputFields : public vtkm::cont::ExecutionObjectBase
 {
 
   using ValueType = T;
-  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+  using BaseTType = typename vtkm::VecTraits<T>::BaseComponentType;
 
   template <typename DeviceAdapter>
   struct ExecutionTypes
   {
-    using Portal = vtkm::exec::GradientOutput<T, DeviceAdapter>;
+    using Portal = vtkm::exec::GradientOutput<T>;
   };
 
   GradientOutputFields()
@@ -181,18 +171,17 @@ struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
   bool GetComputeGradient() const { return StoreGradient; }
 
   //todo fix this for scalar
-  template <typename DeviceAdapter>
-  vtkm::exec::GradientOutput<T, DeviceAdapter> PrepareForOutput(vtkm::Id size, DeviceAdapter)
+  vtkm::exec::GradientOutput<T> PrepareForOutput(vtkm::Id size)
   {
-    vtkm::exec::GradientOutput<T, DeviceAdapter> portal(this->StoreGradient,
-                                                        this->ComputeDivergence,
-                                                        this->ComputeVorticity,
-                                                        this->ComputeQCriterion,
-                                                        this->Gradient,
-                                                        this->Divergence,
-                                                        this->Vorticity,
-                                                        this->QCriterion,
-                                                        size);
+    vtkm::exec::GradientOutput<T> portal(this->StoreGradient,
+                                         this->ComputeDivergence,
+                                         this->ComputeVorticity,
+                                         this->ComputeQCriterion,
+                                         this->Gradient,
+                                         this->Divergence,
+                                         this->Vorticity,
+                                         this->QCriterion,
+                                         size);
     return portal;
   }
 
@@ -210,36 +199,25 @@ private:
 class PointGradient
 {
 public:
-  template <typename CellSetType,
-            typename CoordinateSystem,
-            typename T,
-            typename S,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                const CoordinateSystem& coords,
-                                               const vtkm::cont::ArrayHandle<T, S>& field,
-                                               DeviceAdapter device)
+                                               const vtkm::cont::ArrayHandle<T, S>& field)
   {
     vtkm::worklet::GradientOutputFields<T> extraOutput(true, false, false, false);
-    return this->Run(cells, coords, field, extraOutput, device);
+    return this->Run(cells, coords, field, extraOutput);
   }
 
-  template <typename CellSetType,
-            typename CoordinateSystem,
-            typename T,
-            typename S,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                const CoordinateSystem& coords,
                                                const vtkm::cont::ArrayHandle<T, S>& field,
-                                               GradientOutputFields<T>& extraOutput,
-                                               DeviceAdapter)
+                                               GradientOutputFields<T>& extraOutput)
   {
     //we are using cast and call here as we pass the cells twice to the invoke
     //and want the type resolved once before hand instead of twice
     //by the dispatcher ( that will cost more in time and binary size )
-    gradient::DeducedPointGrad<CoordinateSystem, T, S, DeviceAdapter> func(
-      coords, field, &extraOutput);
+    gradient::DeducedPointGrad<CoordinateSystem, T, S> func(coords, field, &extraOutput);
     vtkm::cont::CastAndCall(cells, func);
     return extraOutput.Gradient;
   }
@@ -248,37 +226,26 @@ public:
 class CellGradient
 {
 public:
-  template <typename CellSetType,
-            typename CoordinateSystem,
-            typename T,
-            typename S,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                const CoordinateSystem& coords,
-                                               const vtkm::cont::ArrayHandle<T, S>& field,
-                                               DeviceAdapter device)
+                                               const vtkm::cont::ArrayHandle<T, S>& field)
   {
     vtkm::worklet::GradientOutputFields<T> extra(true, false, false, false);
-    return this->Run(cells, coords, field, extra, device);
+    return this->Run(cells, coords, field, extra);
   }
 
-  template <typename CellSetType,
-            typename CoordinateSystem,
-            typename T,
-            typename S,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
                                                const CoordinateSystem& coords,
                                                const vtkm::cont::ArrayHandle<T, S>& field,
-                                               GradientOutputFields<T>& extraOutput,
-                                               DeviceAdapter)
+                                               GradientOutputFields<T>& extraOutput)
   {
     using DispatcherType =
-      vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>, DeviceAdapter>;
+      vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>>;
 
     vtkm::worklet::gradient::CellGradient<T> worklet;
     DispatcherType dispatcher(worklet);
-
 
     dispatcher.Invoke(cells, coords, field, extraOutput);
     return extraOutput.Gradient;

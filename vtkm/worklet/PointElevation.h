@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_PointElevation_h
@@ -43,8 +33,8 @@ VTKM_EXEC T clamp(const T& val, const T& min, const T& max)
 class PointElevation : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = _2(_1);
 
   VTKM_CONT
   PointElevation()
@@ -56,10 +46,10 @@ public:
   }
 
   VTKM_CONT
-  void SetLowPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->LowPoint = point; }
+  void SetLowPoint(const vtkm::Vec3f_64& point) { this->LowPoint = point; }
 
   VTKM_CONT
-  void SetHighPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->HighPoint = point; }
+  void SetHighPoint(const vtkm::Vec3f_64& point) { this->HighPoint = point; }
 
   VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high)
@@ -69,12 +59,12 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64, 3>& vec) const
+  vtkm::Float64 operator()(const vtkm::Vec3f_64& vec) const
   {
-    vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
-    vtkm::Float64 lengthSqr = vtkm::dot(direction, direction);
+    vtkm::Vec3f_64 direction = this->HighPoint - this->LowPoint;
+    vtkm::Float64 lengthSqr = vtkm::Dot(direction, direction);
     vtkm::Float64 rangeLength = this->RangeHigh - this->RangeLow;
-    vtkm::Float64 s = vtkm::dot(vec - this->LowPoint, direction) / lengthSqr;
+    vtkm::Float64 s = vtkm::Dot(vec - this->LowPoint, direction) / lengthSqr;
     s = internal::clamp(s, 0.0, 1.0);
     return this->RangeLow + (s * rangeLength);
   }
@@ -88,7 +78,7 @@ public:
   }
 
 private:
-  vtkm::Vec<vtkm::Float64, 3> LowPoint, HighPoint;
+  vtkm::Vec3f_64 LowPoint, HighPoint;
   vtkm::Float64 RangeLow, RangeHigh;
 };
 }

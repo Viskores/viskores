@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_CellEdge_h
 #define vtk_m_exec_CellEdge_h
@@ -49,7 +39,7 @@ public:
       0,  //  1: CELL_SHAPE_VERTEX
       0,  //  2: Unused
       0,  //  3: CELL_SHAPE_LINE
-      0,  //  4: Unused
+      0,  //  4: CELL_SHAPE_POLY_LINE
       3,  //  5: CELL_SHAPE_TRIANGLE
       0,  //  6: Unused
       -1, //  7: CELL_SHAPE_POLYGON  ---special case---
@@ -83,7 +73,7 @@ public:
         //  3: CELL_SHAPE_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
-        //  4: Unused
+        //  4: CELL_SHAPE_POLY_LINE
         { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
           { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
         //  5: CELL_SHAPE_TRIANGLE
@@ -143,6 +133,15 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponen
   return numPoints;
 }
 
+static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponent numPoints,
+                                                                vtkm::CellShapeTagPolyLine,
+                                                                const vtkm::exec::FunctorBase&)
+{
+  (void)numPoints; // Silence compiler warnings.
+  VTKM_ASSUME(numPoints > 0);
+  return detail::CellEdgeTables{}.NumEdges(vtkm::CELL_SHAPE_POLY_LINE);
+}
+
 static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
   vtkm::IdComponent numPoints,
   vtkm::CellShapeTagGeneric shape,
@@ -151,6 +150,10 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
   if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
   {
     return CellEdgeNumberOfEdges(numPoints, vtkm::CellShapeTagPolygon(), worklet);
+  }
+  else if (shape.Id == vtkm::CELL_SHAPE_POLY_LINE)
+  {
+    return CellEdgeNumberOfEdges(numPoints, vtkm::CellShapeTagPolyLine(), worklet);
   }
   else
   {

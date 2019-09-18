@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/NDHistogram.h>
@@ -57,11 +47,11 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+    "fieldA", vtkm::cont::Field::Association::POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+    "fieldB", vtkm::cont::Field::Association::POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
+    "fieldC", vtkm::cont::Field::Association::POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -80,7 +70,7 @@ void RunTest()
   //The first "fieldNames.size()"" fields are the binId arrays for inputs field
   //And their order and field names are the same as the order and name in fieldNames
   //The name of last fields in the dataset is "Frequency"
-  //This field contains the all freqncys of the N-Dims histogram
+  //This field contains all the frequencies of the N-Dims histogram
   //The result histogram is stored in sparse representation
   //(Do not store and return zero frequency bins)
   //All fields in return dataset must have the same length
@@ -101,7 +91,7 @@ void RunTest()
                           1, 1, 4, 11, 4, 1, 1, 3, 3, 1, 1,  1, 1, 1, 2, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = outputData.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Id nonSparseBins = outputData.GetField(0).GetNumberOfValues();
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins, "Incorrect ND-histogram Filter results");
 
   vtkm::cont::ArrayHandle<vtkm::Id> binId0;
@@ -125,7 +115,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestNDHistogramFilter(int, char* [])
+int UnitTestNDHistogramFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunTest);
+  return vtkm::cont::testing::Testing::Run(RunTest, argc, argv);
 }

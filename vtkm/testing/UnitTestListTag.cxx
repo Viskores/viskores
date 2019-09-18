@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/ListTag.h>
@@ -64,6 +54,18 @@ struct TestListTagCrossProduct : vtkm::ListCrossProduct<TestListTag3, TestListTa
 };
 
 struct TestListTagUniversal : vtkm::ListTagUniversal
+{
+};
+
+struct TestListTagAppend : vtkm::ListTagAppend<TestListTag3, TestClass<34>>
+{
+};
+
+struct TestListTagAppendUnique1 : vtkm::ListTagAppendUnique<TestListTag3, TestClass<32>>
+{
+};
+
+struct TestListTagAppendUnique2 : vtkm::ListTagAppendUnique<TestListTagAppendUnique1, TestClass<34>>
 {
 };
 
@@ -118,7 +120,8 @@ void CheckContains(TestClass<N>, ListTag, const std::vector<int>& contents)
 {
   //Use intersect to verify at compile time that ListTag contains TestClass<N>
   using intersectWith = vtkm::ListTagBase<TestClass<N>>;
-  using intersectResult = typename vtkm::ListTagIntersect<intersectWith, ListTag>::list;
+  using intersectResult =
+    vtkm::internal::ListTagAsBrigandList<vtkm::ListTagIntersect<intersectWith, ListTag>>;
   constexpr bool intersectContains = (brigand::size<intersectResult>::value != 0);
 
   bool listContains = vtkm::ListContains<ListTag, TestClass<N>>::value;
@@ -133,8 +136,8 @@ void CheckContains(TestClass<N>, TestListTagUniversal, const std::vector<int>&)
 {
   //Use intersect to verify at compile time that ListTag contains TestClass<N>
   using intersectWith = vtkm::ListTagBase<TestClass<N>>;
-  using intersectResult =
-    typename vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>::list;
+  using intersectResult = vtkm::internal::ListTagAsBrigandList<
+    vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>>;
   constexpr bool intersectContains = (brigand::size<intersectResult>::value != 0);
   constexpr bool listContains = vtkm::ListContains<TestListTagUniversal, TestClass<N>>::value;
 
@@ -145,6 +148,8 @@ template <vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Vec<int, N>& expected, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
+
+  VTKM_STATIC_ASSERT(vtkm::ListSize<ListTag>::value == N);
 
   std::cout << "    Try mutable for each" << std::endl;
   MutableFunctor<int> functor;
@@ -239,6 +244,15 @@ void TestLists()
   TryList(vtkm::Vec<std::pair<int, int>, 3>({ 31, 11 }, { 32, 11 }, { 33, 11 }),
           TestListTagCrossProduct());
 
+  std::cout << "ListTagAppend" << std::endl;
+  TryList(vtkm::Vec<int, 4>(31, 32, 33, 34), TestListTagAppend());
+
+  std::cout << "ListTagAppendUnique1" << std::endl;
+  TryList(vtkm::Vec<int, 3>(31, 32, 33), TestListTagAppendUnique1());
+
+  std::cout << "ListTagAppendUnique2" << std::endl;
+  TryList(vtkm::Vec<int, 4>(31, 32, 33, 34), TestListTagAppendUnique2());
+
 
 
   std::cout << "ListTagUniversal" << std::endl;
@@ -247,7 +261,7 @@ void TestLists()
 
 } // anonymous namespace
 
-int UnitTestListTag(int, char* [])
+int UnitTestListTag(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestLists);
+  return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }

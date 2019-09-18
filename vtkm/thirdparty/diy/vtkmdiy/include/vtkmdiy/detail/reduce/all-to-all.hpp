@@ -1,5 +1,5 @@
-#ifndef DIY_DETAIL_ALL_TO_ALL_HPP
-#define DIY_DETAIL_ALL_TO_ALL_HPP
+#ifndef VTKMDIY_DETAIL_ALL_TO_ALL_HPP
+#define VTKMDIY_DETAIL_ALL_TO_ALL_HPP
 
 #include "../block_traits.hpp"
 

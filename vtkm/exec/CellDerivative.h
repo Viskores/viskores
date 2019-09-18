@@ -2,30 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_Derivative_h
 #define vtk_m_exec_Derivative_h
 
 #include <vtkm/Assert.h>
-#include <vtkm/BaseComponent.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
+#include <vtkm/VecTraits.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellInterpolate.h>
@@ -181,26 +171,26 @@ ParametricDerivative(const FieldVecType &field,
 namespace detail
 {
 
-template <typename FieldVecType,
+template <typename FieldType,
+          int NumPoints,
           typename WorldCoordType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3DCell(
-  const FieldVecType& field,
+VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<FieldType, NumPoints>& field,
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  CellShapeTag)
+  CellShapeTag tag)
 {
-  using FieldType = typename FieldVecType::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType, 3, 3> jacobianTranspose;
-  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, CellShapeTag());
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, tag);
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
-  GradientType parametricDerivative = ParametricDerivative(field, pcoords, CellShapeTag());
+  GradientType parametricDerivative = ParametricDerivative(field, pcoords, tag);
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -221,11 +211,49 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3D
   return vtkm::SolveLinearSystem(jacobianTranspose, parametricDerivative, valid);
 }
 
+template <typename T,
+          int N,
+          int NumPoints,
+          typename WorldCoordType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::Vec<vtkm::Vec<T, N>, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<vtkm::Vec<T, N>, NumPoints>& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag tag)
+{
+  //We have been given a vector field so we need to solve for each
+  //component of the vector. For explanation of the logic used see the
+  //scalar version of CellDerivativeFor3DCell.
+  vtkm::Matrix<T, 3, 3> perComponentJacobianTranspose;
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, perComponentJacobianTranspose, tag);
+  perComponentJacobianTranspose = vtkm::MatrixTranspose(perComponentJacobianTranspose);
+
+  bool valid; // Ignored.
+  vtkm::Vec<vtkm::Vec<T, N>, 3> result(vtkm::Vec<T, N>(0.0f));
+  vtkm::Vec<T, NumPoints> perPoint;
+  for (vtkm::IdComponent i = 0; i < N; ++i)
+  {
+    for (vtkm::IdComponent c = 0; c < NumPoints; ++c)
+    {
+      perPoint[c] = field[c][i];
+    }
+    vtkm::Vec<T, 3> p = ParametricDerivative(perPoint, pcoords, tag);
+    vtkm::Vec<T, 3> grad = vtkm::SolveLinearSystem(perComponentJacobianTranspose, p, valid);
+
+    result[0][i] += grad[0];
+    result[1][i] += grad[1];
+    result[2][i] += grad[2];
+  }
+  return result;
+}
+
 template <typename FieldType, typename LUType, typename ParametricCoordType, typename CellShapeTag>
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -246,7 +274,7 @@ template <typename FieldType, typename LUType, typename ParametricCoordType, typ
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -287,7 +315,7 @@ template <typename FieldType, typename LUType, typename ParametricCoordType, typ
 VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   const vtkm::Vec<FieldType, 4>& field,
   const vtkm::Matrix<LUType, 2, 2>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 2>& LUPermutation,
+  const vtkm::IdComponent2& LUPermutation,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   const vtkm::exec::internal::Space2D<LUType>& space,
   CellShapeTag,
@@ -313,7 +341,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor2D
   CellShapeTag)
 {
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseFieldType = typename BaseComponent<FieldType>::Type;
+  using BaseFieldType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.
@@ -354,7 +382,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor2D
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 2> permutation;
+  vtkm::IdComponent2 permutation;
   BaseFieldType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(jacobianTranspose, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. jacobianTranspose is now the
@@ -495,7 +523,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 2);
 
   using FieldType = typename FieldVecType::ComponentType;
-  using BaseComponentType = typename BaseComponent<FieldType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
 
   FieldType deltaField(field[1] - field[0]);
   vtkm::Vec<BaseComponentType, 3> vec(wCoords[1] - wCoords[0]);
@@ -518,7 +546,81 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 
   using T = typename FieldVecType::ComponentType;
 
-  return vtkm::Vec<T, 3>((field[1] - field[0]) / wCoords.GetSpacing()[0], T(0), T(0));
+  return vtkm::Vec<T, 3>(
+    static_cast<T>((field[1] - field[0]) / wCoords.GetSpacing()[0]), T(0), T(0));
+}
+
+template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+  VTKM_ASSERT(numPoints == wCoords.GetNumberOfComponents());
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  using FieldType = typename FieldVecType::ComponentType;
+  using BaseComponentType = typename vtkm::VecTraits<FieldType>::BaseComponentType;
+
+  ParametricCoordType dt;
+  dt = static_cast<ParametricCoordType>(1) / static_cast<ParametricCoordType>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(vtkm::Ceil(pcoords[0] / dt));
+  if (idx == 0)
+    idx = 1;
+  if (idx > numPoints - 1)
+    idx = numPoints - 1;
+
+  FieldType deltaField(field[idx] - field[idx - 1]);
+  vtkm::Vec<BaseComponentType, 3> vec(wCoords[idx] - wCoords[idx - 1]);
+
+  return detail::CellDerivativeLineImpl(deltaField,
+                                        vec,
+                                        vtkm::MagnitudeSquared(vec),
+                                        typename vtkm::TypeTraits<FieldType>::DimensionalityTag());
+}
+
+template <typename FieldVecType, typename ParametricCoordType>
+VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
+  const FieldVecType& field,
+  const vtkm::VecAxisAlignedPointCoordinates<1>& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolyLine,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::IdComponent numPoints = field.GetNumberOfComponents();
+  VTKM_ASSERT(numPoints >= 1);
+
+  switch (numPoints)
+  {
+    case 1:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagVertex(), worklet);
+    case 2:
+      return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
+  }
+
+  ParametricCoordType dt;
+  dt = static_cast<ParametricCoordType>(1) / static_cast<ParametricCoordType>(numPoints - 1);
+  vtkm::IdComponent idx = static_cast<vtkm::IdComponent>(vtkm::Ceil(pcoords[0] / dt));
+  if (idx == 0)
+    idx = 1;
+  if (idx > numPoints - 1)
+    idx = numPoints - 1;
+
+  using T = typename FieldVecType::ComponentType;
+
+  return vtkm::Vec<T, 3>(
+    static_cast<T>((field[idx] - field[idx - 1]) / wCoords.GetSpacing()[0]), T(0), T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -529,7 +631,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsScalarTag)
 {
   // Finish solving linear equation. See TriangleDerivative implementation
@@ -543,7 +645,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsVectorTag)
 {
   using FieldTraits = vtkm::VecTraits<ValueType>;
@@ -577,7 +679,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   const vtkm::Vec<ValueType, 3>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsMatrixTag)
 {
   return TriangleDerivativeFinish(
@@ -588,7 +690,7 @@ template <typename ValueType, typename WCoordType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 3>& field,
                                                      const vtkm::Vec<WCoordType, 3>& wCoords)
 {
-  using BaseComponentType = typename BaseComponent<ValueType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
 
   // The scalar values of the three points in a triangle completely specify a
   // linear field (with constant gradient) assuming the field is constant in
@@ -596,19 +698,19 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(n, g)             = 0
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(n, g)             = 0
   //
   // Where the p's are point coordinates and n is the normal vector. But we
   // don't really care about s_origin. We just want to find the gradient g.
   // With some simple elimination we, we can get rid of s_origin and be left
   // with 3 equations and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(n, g)     = 0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(n, g)     = 0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,
@@ -636,7 +738,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 3> permutation;
+  vtkm::IdComponent3 permutation;
   BaseComponentType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. A is now the LU factorization.
@@ -667,83 +769,86 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   return detail::TriangleDerivative(field, wpoints);
 }
 
-//-----------------------------------------------------------------------------
-template <typename ParametricCoordType>
-VTKM_EXEC void PolygonComputeIndices(const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-                                     vtkm::IdComponent numPoints,
-                                     vtkm::IdComponent& firstPointIndex,
-                                     vtkm::IdComponent& secondPointIndex)
+namespace detail
 {
-  ParametricCoordType angle;
-  if ((vtkm::Abs(pcoords[0] - 0.5f) < 4 * vtkm::Epsilon<ParametricCoordType>()) &&
-      (vtkm::Abs(pcoords[1] - 0.5f) < 4 * vtkm::Epsilon<ParametricCoordType>()))
+
+//-----------------------------------------------------------------------------
+template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
+VTKM_EXEC void PolygonSubTriangle(const FieldVecType& inField,
+                                  const WorldCoordType& inWCoords,
+                                  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+                                  vtkm::Vec<typename FieldVecType::ComponentType, 3>& outField,
+                                  vtkm::Vec<typename WorldCoordType::ComponentType, 3>& outWCoords,
+                                  const vtkm::exec::FunctorBase& worklet)
+{
+  // To find the gradient in a polygon (of 5 or more points), we will extract a small triangle near
+  // the desired parameteric coordinates (pcoords). We return the field values (outField) and world
+  // coordinates (outWCoords) for this triangle, which is all that is needed to find the gradient
+  // in a triangle.
+  //
+  // The trangle will be "pointing" away from the center of the polygon, and pcoords will be placed
+  // at the apex of the triangle. This is because if pcoords is at or near the edge of the polygon,
+  // we do not want to push any of the points over the edge, and it is not trivial to determine
+  // exactly where the edge of the polygon is.
+
+  // First point is right at pcoords
+  outField[0] = vtkm::exec::CellInterpolate(inField, pcoords, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[0] =
+    vtkm::exec::CellInterpolate(inWCoords, pcoords, vtkm::CellShapeTagPolygon{}, worklet);
+
+  // Find the unit vector pointing from the center of the polygon to pcoords
+  vtkm::Vec<ParametricCoordType, 2> radialVector = { pcoords[0] - 0.5f, pcoords[1] - 0.5f };
+  ParametricCoordType magnitudeSquared = vtkm::MagnitudeSquared(radialVector);
+  if (magnitudeSquared > 8 * vtkm::Epsilon<ParametricCoordType>())
   {
-    angle = 0;
+    radialVector = vtkm::RSqrt(magnitudeSquared) * radialVector;
   }
   else
   {
-    angle = vtkm::ATan2(pcoords[1] - 0.5f, pcoords[0] - 0.5f);
-    if (angle < 0)
-    {
-      angle += static_cast<ParametricCoordType>(2 * vtkm::Pi());
-    }
+    // pcoords is in the center of the polygon. Just point in an arbitrary direction
+    radialVector = { 1.0, 0.0 };
   }
 
-  const ParametricCoordType deltaAngle =
-    static_cast<ParametricCoordType>(2 * vtkm::Pi() / numPoints);
-  firstPointIndex = static_cast<vtkm::IdComponent>(vtkm::Floor(angle / deltaAngle));
-  secondPointIndex = firstPointIndex + 1;
-  if (secondPointIndex == numPoints)
-  {
-    secondPointIndex = 0;
-  }
+  // We want the two points away from pcoords to be back toward the center but moved at 45 degrees
+  // off the radius. Simple geometry shows us that the (not quite unit) vectors of those two
+  // directions are (-radialVector[1] - radialVector[0], radialVector[0] - radialVector[1]) and
+  // (radialVector[1] - radialVector[0], -radialVector[0] - radialVector[1]).
+  //
+  //  *\ (-radialVector[1], radialVector[0])                                           //
+  //  |  \                                                                             //
+  //  |    \ (-radialVector[1] - radialVector[0], radialVector[0] - radialVector[1])   //
+  //  |      \                                                                         //
+  //  +-------* radialVector                                                           //
+  //  |      /                                                                         //
+  //  |    / (radialVector[1] - radialVector[0], -radialVector[0] - radialVector[1])   //
+  //  |  /                                                                             //
+  //  */ (radialVector[1], -radialVector[0])                                           //
+
+  // This scaling value is somewhat arbitrary. It is small enough to be "close" to the selected
+  // point and small enough to be guaranteed to be inside the polygon, but large enough to to
+  // get an accurate gradient.
+  static constexpr ParametricCoordType scale = 0.05f;
+
+  vtkm::Vec<ParametricCoordType, 3> backPcoord = {
+    pcoords[0] + scale * (-radialVector[1] - radialVector[0]),
+    pcoords[1] + scale * (radialVector[0] - radialVector[1]),
+    0
+  };
+  outField[1] =
+    vtkm::exec::CellInterpolate(inField, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[1] =
+    vtkm::exec::CellInterpolate(inWCoords, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+
+  backPcoord = { pcoords[0] + scale * (radialVector[1] - radialVector[0]),
+                 pcoords[1] + scale * (-radialVector[0] - radialVector[1]),
+                 0 };
+  outField[2] =
+    vtkm::exec::CellInterpolate(inField, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
+  outWCoords[2] =
+    vtkm::exec::CellInterpolate(inWCoords, backPcoord, vtkm::CellShapeTagPolygon{}, worklet);
 }
 
-//-----------------------------------------------------------------------------
-template <typename FieldVecType, typename WorldCoordType>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> PolygonDerivative(
-  const FieldVecType& field,
-  const WorldCoordType& wCoords,
-  vtkm::IdComponent numPoints,
-  vtkm::IdComponent firstPointIndex,
-  vtkm::IdComponent secondPointIndex)
-{
-  // If we are here, then there are 5 or more points on this polygon.
-
-  // Arrange the points such that they are on the circle circumscribed in the
-  // unit square from 0 to 1. That is, the point are on the circle centered at
-  // coordinate 0.5,0.5 with radius 0.5. The polygon is divided into regions
-  // defined by they triangle fan formed by the points around the center. This
-  // is C0 continuous but not necessarily C1 continuous. It is also possible to
-  // have a non 1 to 1 mapping between parametric coordinates world coordinates
-  // if the polygon is not planar or convex.
-
-  using FieldType = typename FieldVecType::ComponentType;
-  using WCoordType = typename WorldCoordType::ComponentType;
-
-  // Find the interpolation for the center point.
-  FieldType fieldCenter = field[0];
-  WCoordType wcoordCenter = wCoords[0];
-  for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; pointIndex++)
-  {
-    fieldCenter = fieldCenter + field[pointIndex];
-    wcoordCenter = wcoordCenter + wCoords[pointIndex];
-  }
-  fieldCenter = fieldCenter * FieldType(1.0f / static_cast<float>(numPoints));
-  wcoordCenter = wcoordCenter * WCoordType(1.0f / static_cast<float>(numPoints));
-
-  // Set up parameters for triangle that pcoords is in
-  vtkm::Vec<FieldType, 3> triangleField(
-    fieldCenter, field[firstPointIndex], field[secondPointIndex]);
-
-  vtkm::Vec<WCoordType, 3> triangleWCoords(
-    wcoordCenter, wCoords[firstPointIndex], wCoords[secondPointIndex]);
-
-  // Now use the triangle derivative. pcoords is actually invalid for the
-  // triangle, but that does not matter as the derivative for a triangle does
-  // not depend on it.
-  return detail::TriangleDerivative(triangleField, triangleWCoords);
-}
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
@@ -771,9 +876,10 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagQuad(), worklet);
   }
 
-  vtkm::IdComponent firstPointIndex, secondPointIndex;
-  PolygonComputeIndices(pcoords, numPoints, firstPointIndex, secondPointIndex);
-  return PolygonDerivative(field, wCoords, numPoints, firstPointIndex, secondPointIndex);
+  vtkm::Vec<typename FieldVecType::ComponentType, 3> triangleField;
+  vtkm::Vec<typename WorldCoordType::ComponentType, 3> triangleWCoords;
+  detail::PolygonSubTriangle(field, wCoords, pcoords, triangleField, triangleWCoords, worklet);
+  return detail::TriangleDerivative(triangleField, triangleWCoords);
 }
 
 //-----------------------------------------------------------------------------
@@ -811,7 +917,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   using T = typename FieldVecType::ComponentType;
   using VecT = vtkm::Vec<T, 2>;
 
-  VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]));
+  VecT pc(static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[0]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[1]));
   VecT rc = VecT(T(1)) - pc;
 
   VecT sum = field[0] * VecT(-rc[1], -rc[0]);
@@ -819,7 +926,9 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   sum = sum + field[2] * VecT(pc[1], pc[0]);
   sum = sum + field[3] * VecT(-pc[1], rc[0]);
 
-  return vtkm::Vec<T, 3>(sum[0] / wCoords.GetSpacing()[0], sum[1] / wCoords.GetSpacing()[1], T(0));
+  return vtkm::Vec<T, 3>(static_cast<T>(sum[0] / wCoords.GetSpacing()[0]),
+                         static_cast<T>(sum[1] / wCoords.GetSpacing()[1]),
+                         T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -830,7 +939,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsScalarTag)
 {
   // Finish solving linear equation. See TriangleDerivative implementation
@@ -844,7 +953,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsVectorTag)
 {
   using FieldTraits = vtkm::VecTraits<ValueType>;
@@ -879,7 +988,7 @@ template <typename ValueType, typename LUType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   const vtkm::Vec<ValueType, 4>& field,
   const vtkm::Matrix<LUType, 3, 3>& LUFactorization,
-  const vtkm::Vec<vtkm::IdComponent, 3>& LUPermutation,
+  const vtkm::IdComponent3& LUPermutation,
   vtkm::TypeTraitsMatrixTag)
 {
   return TetraDerivativeFinish(field, LUFactorization, LUPermutation, vtkm::TypeTraitsVectorTag());
@@ -889,26 +998,26 @@ template <typename ValueType, typename WorldCoordType>
 VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>& field,
                                                   const vtkm::Vec<WorldCoordType, 4>& wCoords)
 {
-  using BaseComponentType = typename BaseComponent<ValueType>::Type;
+  using BaseComponentType = typename vtkm::VecTraits<ValueType>::BaseComponentType;
 
   // The scalar values of the four points in a tetrahedron completely specify a
   // linear field (with constant gradient). The field, defined by the 3-vector
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(p3, g) + s_origin = s3
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(p3, g) + s_origin = s3
   //
   // Where the p's are point coordinates. But we don't really care about
   // s_origin. We just want to find the gradient g. With some simple
   // elimination we, we can get rid of s_origin and be left with 3 equations
   // and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(p3-p0, g) = s3 - s0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(p3-p0, g) = s3 - s0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,
@@ -936,7 +1045,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>&
   // field, the factorization can be reused for each component of the vector
   // field. Thus, we are going to call the internals of SolveLinearSystem
   // ourselves to do the factorization and then apply it to all components.
-  vtkm::Vec<vtkm::IdComponent, 3> permutation;
+  vtkm::IdComponent3 permutation;
   BaseComponentType inversionParity; // Unused
   vtkm::detail::MatrixLUPFactor(A, permutation, inversionParity, valid);
   // MatrixLUPFactor does in place factorization. A is now the LU factorization.
@@ -1002,7 +1111,9 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   using T = typename FieldVecType::ComponentType;
   using VecT = vtkm::Vec<T, 3>;
 
-  VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]), static_cast<T>(pcoords[2]));
+  VecT pc(static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[0]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[1]),
+          static_cast<typename vtkm::VecTraits<T>::ComponentType>(pcoords[2]));
   VecT rc = VecT(T(1)) - pc;
 
   VecT sum = field[0] * VecT(-rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);
@@ -1057,6 +1168,27 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   inputField.CopyInto(field);
   vtkm::Vec<WCoordType, 5> wpoints;
   wCoords.CopyInto(wpoints);
+
+  if (pcoords[2] > static_cast<ParametricCoordType>(0.999))
+  {
+    // If we are at the apex of the pyramid we need to do something special.
+    // As we approach the apex, the derivatives of the parametric shape
+    // functions in x and y go to 0 while the inverse of the Jacobian
+    // also goes to 0.  This results in 0/0 but using l'Hopital's rule
+    // we could actually compute the value of the limit, if we had a
+    // functional expression to compute the gradient.  We're on a computer
+    // so we don't but we can cheat and do a linear extrapolation of the
+    // derivatives which really ends up as the same thing.
+    using PCoordType = vtkm::Vec<ParametricCoordType, 3>;
+    using ReturnType = vtkm::Vec<ValueType, 3>;
+    PCoordType pcoords1(0.5f, 0.5f, (2 * 0.998f) - pcoords[2]);
+    ReturnType derivative1 =
+      detail::CellDerivativeFor3DCell(field, wpoints, pcoords1, vtkm::CellShapeTagPyramid{});
+    PCoordType pcoords2(0.5f, 0.5f, 0.998f);
+    ReturnType derivative2 =
+      detail::CellDerivativeFor3DCell(field, wpoints, pcoords2, vtkm::CellShapeTagPyramid{});
+    return (ValueType(2) * derivative2) - derivative1;
+  }
 
   return detail::CellDerivativeFor3DCell(field, wpoints, pcoords, vtkm::CellShapeTagPyramid());
 }

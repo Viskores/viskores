@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_Bounds_h
@@ -118,9 +108,9 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::Vec<vtkm::Float64, 3> Center() const
+  vtkm::Vec3f_64 Center() const
   {
-    return vtkm::Vec<vtkm::Float64, 3>(this->X.Center(), this->Y.Center(), this->Z.Center());
+    return vtkm::Vec3f_64(this->X.Center(), this->Y.Center(), this->Z.Center());
   }
 
   /// \b Expand bounds to include a point.
@@ -180,13 +170,13 @@ struct Bounds
   }
 };
 
-} // namespace vtkm
-
 /// Helper function for printing bounds during testing
 ///
 static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Bounds& bounds)
 {
   return stream << "{ X:" << bounds.X << ", Y:" << bounds.Y << ", Z:" << bounds.Z << " }";
 }
+
+} // namespace vtkm
 
 #endif //vtk_m_Bounds_h

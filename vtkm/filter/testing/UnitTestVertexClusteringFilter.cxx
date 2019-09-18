@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -61,9 +51,9 @@ void TestVertexClustering()
   {
     using CellSetType = vtkm::cont::CellSetSingleType<>;
     CellSetType cellSet;
-    output.GetCellSet(0).CopyTo(cellSet);
+    output.GetCellSet().CopyTo(cellSet);
     auto cellArray =
-      cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+      cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
     std::cerr << "output_pointId[] = ";
     vtkm::cont::printSummary_ArrayHandle(cellArray, std::cerr, true);
@@ -79,7 +69,7 @@ void TestVertexClustering()
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
   vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);
 
-  using PointType = vtkm::Vec<vtkm::Float64, 3>;
+  using PointType = vtkm::Vec3f_64;
   auto pointArray = output.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
@@ -109,7 +99,7 @@ void TestVertexClustering()
   }
 }
 
-int UnitTestVertexClusteringFilter(int, char* [])
+int UnitTestVertexClusteringFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestVertexClustering);
+  return vtkm::cont::testing::Testing::Run(TestVertexClustering, argc, argv);
 }

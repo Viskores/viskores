@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
@@ -63,23 +53,22 @@ void TransportWholeCellSetIn(Device)
 {
   //build a fake cell set
   const int nVerts = 5;
-  vtkm::cont::CellSetExplicit<> contObject("cells");
+  vtkm::cont::CellSetExplicit<> contObject;
   contObject.PrepareToAddCells(2, 7);
   contObject.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0, 1, 2));
   contObject.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(2, 1, 3, 4));
   contObject.CompleteAddingCells(nVerts);
 
-  using FromType = vtkm::TopologyElementTagPoint;
-  using ToType = vtkm::TopologyElementTagCell;
+  using IncidentTopology = vtkm::TopologyElementTagPoint;
+  using VisitTopology = vtkm::TopologyElementTagCell;
 
-  using ExecObjectType =
-    typename vtkm::cont::CellSetExplicit<>::template ExecutionTypes<Device,
-                                                                    FromType,
-                                                                    ToType>::ExecObjectType;
+  using ExecObjectType = typename vtkm::cont::CellSetExplicit<>::
+    template ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType;
 
-  vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>,
-                             vtkm::cont::CellSetExplicit<>,
-                             Device>
+  vtkm::cont::arg::Transport<
+    vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>,
+    vtkm::cont::CellSetExplicit<>,
+    Device>
     transport;
 
   TestKernel<ExecObjectType> kernel;
@@ -96,7 +85,7 @@ void UnitTestCellSetIn()
 
 } // Anonymous namespace
 
-int UnitTestTransportCellSetIn(int, char* [])
+int UnitTestTransportCellSetIn(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn);
+  return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn, argc, argv);
 }

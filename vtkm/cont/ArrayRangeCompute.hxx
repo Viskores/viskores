@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayRangeCompute_hxx
 #define vtk_m_cont_ArrayRangeCompute_hxx
@@ -55,7 +45,7 @@ struct ArrayRangeComputeFunctor
 template <typename T, typename S>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
   const vtkm::cont::ArrayHandle<T, S>& input,
-  vtkm::cont::RuntimeDeviceTracker& tracker)
+  vtkm::cont::DeviceAdapterId device)
 {
   using VecTraits = vtkm::VecTraits<T>;
   using CT = typename VecTraits::ComponentType;
@@ -81,8 +71,8 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
     initial[0] = T(std::numeric_limits<CT>::max());
     initial[1] = T(std::numeric_limits<CT>::lowest());
 
-    const bool rangeComputed =
-      vtkm::cont::TryExecute(detail::ArrayRangeComputeFunctor{}, tracker, input, initial, result);
+    const bool rangeComputed = vtkm::cont::TryExecuteOnDevice(
+      device, detail::ArrayRangeComputeFunctor{}, input, initial, result);
     if (!rangeComputed)
     {
       ThrowArrayRangeComputeFailed();
@@ -103,13 +93,52 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 } // namespace detail
 
-template <typename ArrayHandleType>
+
+VTKM_CONT
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const ArrayHandleType& input,
-  vtkm::cont::RuntimeDeviceTracker tracker)
+  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
+  vtkm::cont::DeviceAdapterId device)
+{
+  using UniformHandleType = ArrayHandleUniformPointCoordinates;
+  using RectilinearHandleType =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+
+  if (input.IsType<UniformHandleType>())
+  {
+    using T = typename UniformHandleType::ValueType;
+    using S = typename UniformHandleType::StorageTag;
+    const vtkm::cont::internal::detail::StorageVirtual* storage =
+      input.GetStorage().GetStorageVirtual();
+    const auto* castStorage =
+      storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+
+    return ArrayRangeCompute(castStorage->GetHandle(), device);
+  }
+  else if (input.IsType<RectilinearHandleType>())
+  {
+    using T = typename RectilinearHandleType::ValueType;
+    using S = typename RectilinearHandleType::StorageTag;
+    const vtkm::cont::internal::detail::StorageVirtual* storage =
+      input.GetStorage().GetStorageVirtual();
+    const auto* castStorage =
+      storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>();
+
+    return ArrayRangeCompute(castStorage->GetHandle(), device);
+  }
+  else
+  {
+    return detail::ArrayRangeComputeImpl(input, device);
+  }
+}
+
+template <typename ArrayHandleType>
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const ArrayHandleType& input,
+                                                              vtkm::cont::DeviceAdapterId device)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-  return detail::ArrayRangeComputeImpl(input, tracker);
+  return detail::ArrayRangeComputeImpl(input, device);
 }
 }
 } // namespace vtkm::cont

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_VecTraits_h
 #define vtk_m_VecTraits_h
@@ -67,18 +57,27 @@ struct VecTraitsMultipleComponentChooser<1>
   using Type = vtkm::VecTraitsTagSingleComponent;
 };
 
-} // namespace detail
+} // namespace internal
 
 /// The VecTraits class gives several static members that define how
 /// to use a given type as a vector.
 ///
 template <class VecType>
-struct VecTraits
-#ifdef VTKM_DOXYGEN_ONLY
+struct VTKM_NEVER_EXPORT VecTraits
 {
-  /// Type of the components in the vector.
+#ifdef VTKM_DOXYGEN_ONLY
+  /// \brief Type of the components in the vector.
+  ///
+  /// If the type is really a scalar, then the component type is the same as the scalar type.
   ///
   using ComponentType = typename VecType::ComponentType;
+
+  /// \brief Base component type in the vector.
+  ///
+  /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
+  /// returns the base scalar type at the end of the composition (T in this example).
+  ///
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
 
   /// \brief Number of components in the vector.
   ///
@@ -121,31 +120,106 @@ struct VecTraits
                                           vtkm::IdComponent component,
                                           ComponentType value);
 
+  /// \brief Get a vector of the same type but with a different component.
+  ///
+  /// This type resolves to another vector with a different component type. For example,
+  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// is vtkm::Vec<T2, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceComponentType = VecTemplate<NewComponentType, N>;
+
+  /// \brief Get a vector of the same type but with a different base component.
+  ///
+  /// This type resolves to another vector with a different base component type. The replacement
+  /// is recursive for nested types. For example,
+  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = VecTemplate<
+    typename VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+    N>;
+
   /// Copies the components in the given vector into a given Vec object.
   ///
   template <vktm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest);
-};
-#else  // VTKM_DOXYGEN_ONLY
-  ;
 #endif // VTKM_DOXYGEN_ONLY
+};
+
+namespace detail
+{
+
+template <typename T>
+struct HasVecTraitsImpl
+{
+  template <typename A, typename S = typename vtkm::VecTraits<A>::ComponentType>
+  static std::true_type Test(A*);
+
+  static std::false_type Test(...);
+
+  using Type = decltype(Test(std::declval<T*>()));
+};
+
+} // namespace detail
+
+/// \brief Determines whether the given type has VecTraits defined.
+///
+/// If the given type T has a valid VecTraits class, then HasVecTraits<T> will be set to
+/// std::true_type. Otherwise it will be set to std::false_type. For example,
+/// HasVecTraits<vtkm::Id> is the same as std::true_type whereas HasVecTraits<void *> is the same
+/// as std::false_type. This is useful to block the definition of methods using VecTraits when
+/// VecTraits are not defined.
+///
+template <typename T>
+using HasVecTraits = typename detail::HasVecTraitsImpl<T>::Type;
 
 // This partial specialization allows you to define a non-const version of
 // VecTraits and have it still work for const version.
 //
 template <typename T>
-struct VecTraits<const T> : VecTraits<T>
+struct VTKM_NEVER_EXPORT VecTraits<const T> : VecTraits<T>
 {
 };
 
+#if defined(VTKM_GCC) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 8)
+namespace detail
+{
+
+template <typename NewT, vtkm::IdComponent Size>
+struct VecReplaceComponentTypeGCC48
+{
+  using type = vtkm::Vec<NewT, Size>;
+};
+
+template <typename T, vtkm::IdComponent Size, typename NewT>
+struct VecReplaceBaseComponentTypeGCC48
+{
+  using type =
+    vtkm::Vec<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewT>, Size>;
+};
+
+} // namespace detail
+#endif // GCC Version 4.8
+
 template <typename T, vtkm::IdComponent Size>
-struct VecTraits<vtkm::Vec<T, Size>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 {
   using VecType = vtkm::Vec<T, Size>;
 
-  /// Type of the components in the vector.
+  /// \brief Type of the components in the vector.
+  ///
+  /// If the type is really a scalar, then the component type is the same as the scalar type.
   ///
   using ComponentType = typename VecType::ComponentType;
+
+  /// \brief Base component type in the vector.
+  ///
+  /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
+  /// returns the base scalar type at the end of the composition (T in this example).
+  ///
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
 
   /// Number of components in the vector.
   ///
@@ -193,6 +267,43 @@ struct VecTraits<vtkm::Vec<T, Size>>
     vector[component] = value;
   }
 
+/// \brief Get a vector of the same type but with a different component.
+///
+/// This type resolves to another vector with a different component type. For example,
+/// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
+/// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+/// is vtkm::Vec<T2, N>.
+///@{
+#if defined(VTKM_GCC) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 8)
+  // Silly workaround for bug in GCC 4.8
+  template <typename NewComponentType>
+  using ReplaceComponentType =
+    typename detail::VecReplaceComponentTypeGCC48<NewComponentType, Size>::type;
+#else // !GCC 4.8
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::Vec<NewComponentType, Size>;
+#endif
+///@}
+
+/// \brief Get a vector of the same type but with a different base component.
+///
+/// This type resolves to another vector with a different base component type. The replacement
+/// is recursive for nested types. For example,
+/// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+///@{
+#if defined(VTKM_GCC) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 8)
+  // Silly workaround for bug in GCC 4.8
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    typename detail::VecReplaceBaseComponentTypeGCC48<T, Size, NewComponentType>::type;
+#else // !GCC 4.8
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::Vec<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+    Size>;
+#endif
+  ///@}
+
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///
   template <vtkm::IdComponent destSize>
@@ -203,13 +314,22 @@ struct VecTraits<vtkm::Vec<T, Size>>
 };
 
 template <typename T>
-struct VecTraits<vtkm::VecC<T>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecC<T>>
 {
   using VecType = vtkm::VecC<T>;
 
-  /// Type of the components in the vector.
+  /// \brief Type of the components in the vector.
+  ///
+  /// If the type is really a scalar, then the component type is the same as the scalar type.
   ///
   using ComponentType = typename VecType::ComponentType;
+
+  /// \brief Base component type in the vector.
+  ///
+  /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
+  /// returns the base scalar type at the end of the composition (T in this example).
+  ///
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
 
   /// Number of components in the given vector.
   ///
@@ -258,6 +378,26 @@ struct VecTraits<vtkm::VecC<T>>
     vector[component] = value;
   }
 
+  /// \brief Get a vector of the same type but with a different component.
+  ///
+  /// This type resolves to another vector with a different component type. For example,
+  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// is vtkm::Vec<T2, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::VecC<NewComponentType>;
+
+  /// \brief Get a vector of the same type but with a different base component.
+  ///
+  /// This type resolves to another vector with a different base component type. The replacement
+  /// is recursive for nested types. For example,
+  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::VecC<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
+
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///
   template <vtkm::IdComponent destSize>
@@ -268,13 +408,22 @@ struct VecTraits<vtkm::VecC<T>>
 };
 
 template <typename T>
-struct VecTraits<vtkm::VecCConst<T>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::VecCConst<T>>
 {
   using VecType = vtkm::VecCConst<T>;
 
-  /// Type of the components in the vector.
+  /// \brief Type of the components in the vector.
+  ///
+  /// If the type is really a scalar, then the component type is the same as the scalar type.
   ///
   using ComponentType = typename VecType::ComponentType;
+
+  /// \brief Base component type in the vector.
+  ///
+  /// Similar to ComponentType except that for nested vectors (e.g. Vec<Vec<T, M>, N>), it
+  /// returns the base scalar type at the end of the composition (T in this example).
+  ///
+  using BaseComponentType = typename vtkm::VecTraits<ComponentType>::BaseComponentType;
 
   /// Number of components in the given vector.
   ///
@@ -318,6 +467,26 @@ struct VecTraits<vtkm::VecCConst<T>>
     vector[component] = value;
   }
 
+  /// \brief Get a vector of the same type but with a different component.
+  ///
+  /// This type resolves to another vector with a different component type. For example,
+  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
+  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+  /// is vtkm::Vec<T2, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceComponentType = vtkm::VecCConst<NewComponentType>;
+
+  /// \brief Get a vector of the same type but with a different base component.
+  ///
+  /// This type resolves to another vector with a different base component type. The replacement
+  /// is recursive for nested types. For example,
+  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+  ///
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = vtkm::VecCConst<
+    typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
+
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///
   template <vtkm::IdComponent destSize>
@@ -332,9 +501,10 @@ namespace internal
 /// Used for overriding VecTraits for basic scalar types.
 ///
 template <typename ScalarType>
-struct VecTraitsBasic
+struct VTKM_NEVER_EXPORT VecTraitsBasic
 {
   using ComponentType = ScalarType;
+  using BaseComponentType = ScalarType;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
@@ -357,6 +527,12 @@ struct VecTraitsBasic
     vector = value;
   }
 
+  template <typename NewComponentType>
+  using ReplaceComponentType = NewComponentType;
+
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType = NewComponentType;
+
   template <vtkm::IdComponent destSize>
   VTKM_EXEC_CONT static void CopyInto(const ScalarType& src, vtkm::Vec<ScalarType, destSize>& dest)
   {
@@ -373,7 +549,8 @@ struct VecTraitsBasic
 /// component. Thus we treat a pair as a "scalar" unit.
 ///
 template <typename T, typename U>
-struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm::Pair<T, U>>
+struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
+  : public vtkm::internal::VecTraitsBasic<vtkm::Pair<T, U>>
 {
 };
 
@@ -383,7 +560,7 @@ struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm:
   namespace vtkm                                                                                   \
   {                                                                                                \
   template <>                                                                                      \
-  struct VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>                             \
+  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>           \
   {                                                                                                \
   };                                                                                               \
   }
@@ -393,6 +570,7 @@ struct VecTraits<vtkm::Pair<T, U>> : public vtkm::internal::VecTraitsBasic<vtkm:
 VTKM_BASIC_TYPE_VECTOR(float)
 VTKM_BASIC_TYPE_VECTOR(double)
 
+VTKM_BASIC_TYPE_VECTOR(bool)
 VTKM_BASIC_TYPE_VECTOR(char)
 VTKM_BASIC_TYPE_VECTOR(signed char)
 VTKM_BASIC_TYPE_VECTOR(unsigned char)

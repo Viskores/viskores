@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,23 +6,12 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
-template <typename DeviceAdapter>
+
 class TestInnerJoin
 {
 public:
@@ -50,7 +38,7 @@ public:
 
   void TestTwoArrays() const
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Algorithm = vtkm::cont::Algorithm;
 
     std::vector<vtkm::Id> A = { 8, 3, 6, 8, 9, 5, 12, 10, 14 };
     std::vector<vtkm::Id> B = { 7, 11, 9, 8, 5, 1, 0, 5 };
@@ -67,7 +55,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> outA;
     vtkm::cont::ArrayHandle<vtkm::Id> outB;
 
-    InnerJoin<DeviceAdapter>().Run(A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
+    vtkm::worklet::connectivity::InnerJoin().Run(A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
 
     vtkm::Id expectedIndex[] = { 5, 5, 8, 8, 9 };
     VTKM_TEST_ASSERT(TestArrayHandle(joinedIndex, expectedIndex, 5), "Wrong joined keys");
@@ -82,7 +70,7 @@ public:
   void operator()() const { this->TestTwoArrays(); }
 };
 
-int UnitTestInnerJoin(int, char* [])
+int UnitTestInnerJoin(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestInnerJoin<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestInnerJoin(), argc, argv);
 }

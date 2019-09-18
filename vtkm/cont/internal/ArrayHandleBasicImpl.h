@@ -2,26 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
-
-#include <vtkm/cont/ArrayHandle.h>
 
 #ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_h
 #define vtk_m_cont_internal_ArrayHandleBasicImpl_h
+
+#include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/cont/StorageBasic.h>
 
@@ -57,25 +47,27 @@ struct ExecutionPortalFactoryBasic
 #ifndef VTKM_DOXYGEN_ONLY
   ;
 #else  // VTKM_DOXYGEN_ONLY
+{
   /// The portal type.
   using PortalType = SomePortalType;
 
-/// The cont portal type.
-using ConstPortalType = SomePortalType;
+  /// The cont portal type.
+  using ConstPortalType = SomePortalType;
 
-/// Create a portal to access the execution data from @a start to @a end.
-VTKM_CONT
-static PortalType CreatePortal(ValueType* start, ValueType* end);
+  /// Create a portal to access the execution data from @a start to @a end.
+  VTKM_CONT
+  static PortalType CreatePortal(ValueType* start, ValueType* end);
 
-/// Create a const portal to access the execution data from @a start to @a end.
-VTKM_CONT
-static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end);
+  /// Create a const portal to access the execution data from @a start to @a end.
+  VTKM_CONT
+  static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end);
+};
 #endif // VTKM_DOXYGEN_ONLY
 
 /// Typeless interface for interacting with a execution memory buffer when using basic storage.
 struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
 {
-  VTKM_CONT ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage);
+  VTKM_CONT explicit ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage);
   VTKM_CONT virtual ~ExecutionArrayInterfaceBasicBase();
 
   VTKM_CONT
@@ -233,21 +225,22 @@ public:
   template <typename DeviceTag>
   struct ExecutionTypes
   {
+    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
     using Portal = typename PortalFactory<DeviceTag>::PortalType;
     using PortalConst = typename PortalFactory<DeviceTag>::PortalConstType;
   };
 
   VTKM_CONT ArrayHandle();
   VTKM_CONT ArrayHandle(const Thisclass& src);
-  VTKM_CONT ArrayHandle(Thisclass&& src);
+  VTKM_CONT ArrayHandle(Thisclass&& src) noexcept;
 
-  VTKM_CONT ArrayHandle(const StorageType& storage);
-  VTKM_CONT ArrayHandle(StorageType&& storage);
+  VTKM_CONT ArrayHandle(const StorageType& storage) noexcept;
+  VTKM_CONT ArrayHandle(StorageType&& storage) noexcept;
 
   VTKM_CONT ~ArrayHandle();
 
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
-  VTKM_CONT Thisclass& operator=(Thisclass&& src);
+  VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
   VTKM_CONT bool operator==(const Thisclass& rhs) const;
   VTKM_CONT bool operator!=(const Thisclass& rhs) const;
@@ -302,6 +295,8 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT
 #endif
 #endif
 
+#ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_hxx
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.hxx>
+#endif
 
 #endif // vtk_m_cont_internal_ArrayHandleBasicImpl_h

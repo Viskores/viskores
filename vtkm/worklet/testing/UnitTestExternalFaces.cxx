@@ -2,27 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/cont/internal/DeviceAdapterError.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -36,30 +24,22 @@
 namespace
 {
 
-// For this test, we want using the default device adapter to be an error
-// to make sure that all the code is using the device adapter we specify.
-using MyDeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-#undef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
-
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
-  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet(0);
+  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet();
 
-  vtkm::cont::CellSetExplicit<> outCellSet("cells");
+  vtkm::cont::CellSetExplicit<> outCellSet;
 
   //Run the External Faces worklet
   if (inCellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
     vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetStructured<3>>(),
                                        inDataSet.GetCoordinateSystem(),
-                                       outCellSet,
-                                       MyDeviceAdapter());
+                                       outCellSet);
   }
   else
   {
-    vtkm::worklet::ExternalFaces().Run(
-      inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet, MyDeviceAdapter());
+    vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet);
   }
 
   vtkm::cont::DataSet outDataSet;
@@ -68,7 +48,7 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
     outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(i));
   }
 
-  outDataSet.AddCellSet(outCellSet);
+  outDataSet.SetCellSet(outCellSet);
 
   return outDataSet;
 }
@@ -79,7 +59,7 @@ void TestExternalFaces1()
 
   //--------------Construct a VTK-m Test Dataset----------------
   const int nVerts = 8; //A cube that is tetrahedralized
-  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  using CoordType = vtkm::Vec3f_32;
   vtkm::cont::ArrayHandle<CoordType> coordinates;
   coordinates.Allocate(nVerts);
   coordinates.GetPortalControl().Set(0, CoordType(0.0f, 0.0f, 0.0f));
@@ -118,7 +98,7 @@ void TestExternalFaces1()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(ds);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet(0).CopyTo(new_cs);
+  new_ds.GetCellSet().CopyTo(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 
@@ -149,7 +129,7 @@ void TestExternalFaces2()
 
   vtkm::cont::DataSet outDataSet = RunExternalFaces(inDataSet);
   vtkm::cont::CellSetExplicit<> outCellSet;
-  outDataSet.GetCellSet(0).CopyTo(outCellSet);
+  outDataSet.GetCellSet().CopyTo(outCellSet);
 
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == NUM_FACES, "Got wrong number of faces.");
 
@@ -192,7 +172,7 @@ void TestExternalFaces3()
   //Run the External Faces worklet
   vtkm::cont::DataSet new_ds = RunExternalFaces(dataSet);
   vtkm::cont::CellSetExplicit<> new_cs;
-  new_ds.GetCellSet(0).CopyTo(new_cs);
+  new_ds.GetCellSet().CopyTo(new_cs);
 
   vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
 
@@ -209,7 +189,7 @@ void TestExternalFaces()
 }
 }
 
-int UnitTestExternalFaces(int, char* [])
+int UnitTestExternalFaces(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestExternalFaces);
+  return vtkm::cont::testing::Testing::Run(TestExternalFaces, argc, argv);
 }

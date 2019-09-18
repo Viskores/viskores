@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_io_reader_VTKPolyDataReader_h
 #define vtk_m_io_reader_VTKPolyDataReader_h
@@ -24,7 +14,7 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
-#include "iterator"
+#include <iterator>
 
 namespace vtkm
 {
@@ -49,15 +39,13 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
   vtkm::cont::ArrayHandle<T> out;
   out.Allocate(size);
 
-  using IteratorType = typename vtkm::cont::ArrayPortalToIterators<
-    typename vtkm::cont::ArrayHandle<T>::PortalControl>::IteratorType;
-  IteratorType outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
+  auto outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
   for (std::size_t i = 0; i < arrays.size(); ++i)
   {
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
               vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
               outp);
-    using DifferenceType = typename std::iterator_traits<IteratorType>::difference_type;
+    using DifferenceType = typename std::iterator_traits<decltype(outp)>::difference_type;
     std::advance(outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
   }
 
@@ -90,8 +78,7 @@ private:
     this->DataFile->Stream >> tag;
     if (tag == "FIELD")
     {
-      std::string name;
-      this->ReadFields(name);
+      this->ReadGlobalFields();
       this->DataFile->Stream >> tag;
     }
 
@@ -99,7 +86,7 @@ private:
     internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
-    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Id numPoints = this->DataSet.GetNumberOfPoints();
 
     // Read the cellset
     std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> connectivityArrays;
@@ -158,18 +145,18 @@ private:
 
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
-      vtkm::cont::CellSetSingleType<> cellSet("cells");
+      vtkm::cont::CellSetSingleType<> cellSet;
       cellSet.Fill(numPoints,
                    shapes.GetPortalConstControl().Get(0),
                    numIndices.GetPortalConstControl().Get(0),
                    connectivity);
-      this->DataSet.AddCellSet(cellSet);
+      this->DataSet.SetCellSet(cellSet);
     }
     else
     {
-      vtkm::cont::CellSetExplicit<> cellSet("cells");
+      vtkm::cont::CellSetExplicit<> cellSet;
       cellSet.Fill(numPoints, shapes, numIndices, connectivity);
-      this->DataSet.AddCellSet(cellSet);
+      this->DataSet.SetCellSet(cellSet);
     }
 
     // Read points and cell attributes

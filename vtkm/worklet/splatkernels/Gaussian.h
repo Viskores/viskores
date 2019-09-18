@@ -2,25 +2,15 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef VTKM_KERNEL_GAUSSIAN_H
 #define VTKM_KERNEL_GAUSSIAN_H
 
-#include "KernelBase.h"
+#include <vtkm/worklet/splatkernels/KernelBase.h>
 
 //
 // Gaussian kernel.
@@ -51,7 +41,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
     maxRadius_ = 5.0 * smoothingLength;
     maxRadius2_ = maxRadius_ * maxRadius_;
     //
-    norm_ = 1.0 / pow(M_PI, static_cast<double>(Dimensions) / 2.0);
+    norm_ = 1.0 / vtkm::Pow(M_PI, static_cast<double>(Dimensions) / 2.0);
     scale_W_ = norm_ * PowerExpansion<Dimensions>(Hinverse_);
     scale_GradW_ = -2.0 * PowerExpansion<Dimensions + 1>(Hinverse_) / norm_;
   }
@@ -71,7 +61,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
       // compute r/h
       double normedDist = distance * Hinverse_;
       // compute w(h)
-      return scale_W_ * exp(-normedDist * normedDist);
+      return scale_W_ * vtkm::Exp(-normedDist * normedDist);
     }
     return 0.0;
   }
@@ -86,7 +76,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
       // compute (r/h)^2
       double normedDist = distance2 * Hinverse2_;
       // compute w(h)
-      return scale_W_ * exp(-normedDist);
+      return scale_W_ * vtkm::Exp(-normedDist);
     }
     return 0.0;
   }
@@ -102,7 +92,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
       double scale_W = norm_ * PowerExpansion<Dimensions>(Hinverse);
       double Q = distance * Hinverse;
 
-      return scale_W * exp(-Q * Q);
+      return scale_W * vtkm::Exp(-Q * Q);
     }
     return 0;
   }
@@ -118,7 +108,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
       double scale_W = norm_ * PowerExpansion<Dimensions>(Hinverse);
       double Q = distance2 * Hinverse * Hinverse;
 
-      return scale_W * exp(-Q);
+      return scale_W * vtkm::Exp(-Q);
     }
     return 0;
   }
@@ -132,7 +122,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
     double Q = distance * Hinverse_;
     if (Q != 0.0)
     {
-      return scale_GradW_ * exp(-Q * Q) * pos;
+      return scale_GradW_ * vtkm::Exp(-Q * Q) * pos;
     }
     else
     {
@@ -148,13 +138,13 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
   {
     double Hinverse = 1.0 / h;
     double scale_GradW = -2.0 * PowerExpansion<Dimensions + 1>(Hinverse) /
-      pow(M_PI, static_cast<double>(Dimensions) / 2.0);
+      vtkm::Pow(M_PI, static_cast<double>(Dimensions) / 2.0);
     double Q = distance * Hinverse;
 
     //!!! check this due to the fitting offset
     if (distance != 0.0)
     {
-      return scale_GradW * exp(-Q * Q) * pos;
+      return scale_GradW * vtkm::Exp(-Q * Q) * pos;
     }
     else
     {

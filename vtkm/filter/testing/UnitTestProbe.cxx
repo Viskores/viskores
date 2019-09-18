@@ -2,23 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/filter/Probe.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -54,36 +45,23 @@ vtkm::cont::DataSet MakeGeometryDataSet()
   return geometry;
 }
 
-struct ConvertImpl
-{
-  template <typename DeviceAdapter>
-  bool operator()(DeviceAdapter device,
-                  const vtkm::cont::DataSet& uds,
-                  vtkm::cont::DataSet& eds) const
-  {
-    vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
-    vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs, device);
-    eds.AddCellSet(cs);
-
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> points;
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(uds.GetCoordinateSystem().GetData(),
-                                                            points);
-    eds.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
-
-    for (vtkm::IdComponent i = 0; i < uds.GetNumberOfFields(); ++i)
-    {
-      eds.AddField(uds.GetField(i));
-    }
-
-    return true;
-  }
-};
-
 vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds)
 {
   vtkm::cont::DataSet eds;
-  vtkm::cont::TryExecute(ConvertImpl(), uds, eds);
+  vtkm::cont::CellSetExplicit<> cs;
+  vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
+  eds.SetCellSet(cs);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> points;
+  vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);
+  eds.AddCoordinateSystem(
+    vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
+
+  for (vtkm::IdComponent i = 0; i < uds.GetNumberOfFields(); ++i)
+  {
+    eds.AddField(uds.GetField(i));
+  }
+
   return eds;
 }
 
@@ -166,13 +144,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
@@ -188,13 +166,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
@@ -210,13 +188,13 @@ private:
     probe.SetFieldsToPass({ "pointdata", "celldata" });
     auto output = probe.Execute(input);
 
-    TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("pointdata").GetData()),
                     GetExpectedPointData());
-    TestResultArray(output.GetField("celldata").GetData().template Cast<FieldArrayType>(),
+    TestResultArray(vtkm::cont::Cast<FieldArrayType>(output.GetField("celldata").GetData()),
                     GetExpectedCellData());
-    TestResultArray(output.GetPointField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetPointField("HIDDEN").GetData()),
                     GetExpectedHiddenPoints());
-    TestResultArray(output.GetCellField("HIDDEN").GetData().template Cast<HiddenArrayType>(),
+    TestResultArray(vtkm::cont::Cast<HiddenArrayType>(output.GetCellField("HIDDEN").GetData()),
                     GetExpectedHiddenCells());
   }
 
@@ -231,7 +209,7 @@ public:
 
 } // anonymous namespace
 
-int UnitTestProbe(int, char* [])
+int UnitTestProbe(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestProbe::Run);
+  return vtkm::cont::testing::Testing::Run(TestProbe::Run, argc, argv);
 }

@@ -2,24 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_ComputeNDHistogram_h
 #define vtk_m_worklet_ComputeNDHistogram_h
+
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -54,8 +47,8 @@ template <typename FieldType>
 class SetHistogramBin : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> value, FieldIn<> binIndexIn, FieldOut<> binIndexOut);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn value, FieldIn binIndexIn, FieldOut binIndexOut);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   vtkm::Id numberOfBins;
@@ -84,7 +77,6 @@ public:
   }
 };
 
-template <typename DeviceAdapter>
 class ComputeBins
 {
 public:
@@ -103,16 +95,14 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
-    const vtkm::Vec<T, 2> initValue(field.GetPortalConstControl().Get(0));
-    vtkm::Vec<T, 2> minMax = Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
+    const vtkm::Vec<T, 2> initValue(vtkm::cont::ArrayGetValue(0, field));
+    vtkm::Vec<T, 2> minMax = vtkm::cont::Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
     MinMax.Min = static_cast<vtkm::Float64>(minMax[0]);
     MinMax.Max = static_cast<vtkm::Float64>(minMax[1]);
     BinDelta = compute_delta(MinMax.Min, MinMax.Max, NumOfBins);
 
     SetHistogramBin<T> binWorklet(NumOfBins, MinMax.Min, BinDelta);
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetHistogramBin<T>, DeviceAdapter>
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::histogram::SetHistogramBin<T>>
       setHistogramBinDispatcher(binWorklet);
     setHistogramBinDispatcher.Invoke(field, Bin1DIdx, Bin1DIdx);
   }
@@ -128,10 +118,10 @@ private:
 class ConvertHistBinToND : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> bin1DIndexIn,
-                                FieldOut<> bin1DIndexOut,
-                                FieldOut<> oneVariableIndexOut);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn bin1DIndexIn,
+                                FieldOut bin1DIndexOut,
+                                FieldOut oneVariableIndexOut);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   vtkm::Id numberOfBins;

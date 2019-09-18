@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_arg_FetchTagArrayTopologyMapIn_h
 #define vtk_m_exec_arg_FetchTagArrayTopologyMapIn_h
@@ -66,9 +56,9 @@ struct FetchArrayTopologyMapInImplementation
 {
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  // ThreadIndicesTopologyMap has special "from" indices that are stored in a
-  // Vec-like object.
-  using IndexVecType = typename ThreadIndicesType::IndicesFromType;
+  // ThreadIndicesTopologyMap has special incident element indices that are
+  // stored in a Vec-like object.
+  using IndexVecType = typename ThreadIndicesType::IndicesIncidentType;
 
   // The FieldExecObjectType is expected to behave like an ArrayPortal.
   using PortalType = FieldExecObjectType;
@@ -83,62 +73,71 @@ struct FetchArrayTopologyMapInImplementation
     // pointer that will stay around during the time the Vec is valid. Thus, we
     // should make sure that indices is a reference that goes up the stack at
     // least as far as the returned VecFromPortalPermute is used.
-    return ValueType(indices.GetIndicesFromPointer(), field);
+    return ValueType(indices.GetIndicesIncidentPointer(), field);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  static ValueType Load(const ThreadIndicesType& indices, const FieldExecObjectType* const field)
+  {
+    // It is important that we give the VecFromPortalPermute (ValueType) a
+    // pointer that will stay around during the time the Vec is valid. Thus, we
+    // should make sure that indices is a reference that goes up the stack at
+    // least as far as the returned VecFromPortalPermute is used.
+    return ValueType(indices.GetIndicesIncidentPointer(), field);
   }
 };
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
   const vtkm::Vec<vtkm::Id, 1>& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
+  vtkm::Vec3f offsetOrigin(
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]), origin[1], origin[2]);
   return vtkm::VecAxisAlignedPointCoordinates<1>(offsetOrigin, spacing);
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
   vtkm::Id logicalId)
 {
   return make_VecAxisAlignedPointCoordinates(origin, spacing, vtkm::Vec<vtkm::Id, 1>(logicalId));
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<2> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-  const vtkm::Vec<vtkm::Id, 2>& logicalId)
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
+  const vtkm::Id2& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
-    origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
-    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
-    origin[2]);
+  vtkm::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
+                           origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
+                           origin[2]);
   return vtkm::VecAxisAlignedPointCoordinates<2>(offsetOrigin, spacing);
 }
 
 static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<3> make_VecAxisAlignedPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
-  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-  const vtkm::Vec<vtkm::Id, 3>& logicalId)
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing,
+  const vtkm::Id3& logicalId)
 {
-  vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
-    origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
-    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
-    origin[2] + spacing[2] * static_cast<vtkm::FloatDefault>(logicalId[2]));
+  vtkm::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
+                           origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
+                           origin[2] + spacing[2] * static_cast<vtkm::FloatDefault>(logicalId[2]));
   return vtkm::VecAxisAlignedPointCoordinates<3>(offsetOrigin, spacing);
 }
 
 template <vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                     vtkm::TopologyElementTagCell,
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                     vtkm::TopologyElementTagPoint,
                                      NumDimensions>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                              vtkm::TopologyElementTagCell,
+  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                                              vtkm::TopologyElementTagPoint,
                                                               NumDimensions>;
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
@@ -158,18 +157,18 @@ struct FetchArrayTopologyMapInImplementation<
 
 template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityPermutedPointToCell<
+  vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        NumDimensions>>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  using ConnectivityType = vtkm::exec::ConnectivityPermutedPointToCell<
+  using ConnectivityType = vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
                                        NumDimensions>>;
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 

@@ -2,36 +2,25 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
+#include <vtkm/cont/internal/DynamicTransform.h>
 
-#include "vtkm/cont/internal/DynamicTransform.h"
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
-#include "vtkm/cont/ArrayHandle.h"
-#include "vtkm/cont/DynamicArrayHandle.h"
-#include "vtkm/cont/DynamicCellSet.h"
+#include <vtkm/internal/FunctionInterface.h>
 
-#include "vtkm/internal/FunctionInterface.h"
-
-#include "vtkm/cont/testing/Testing.h"
+#include <vtkm/cont/testing/Testing.h>
 
 namespace vtkm
 {
 
-// DynamicArrayHandle requires its value type to have a defined VecTraits
+// VariantArrayHandle requires its value type to have a defined VecTraits
 // class. One of the tests is to use an "unusual" array of std::string
 // (which is pretty pointless but might tease out some assumptions).
 // Make an implementation here. Because I am lazy, this is only a partial
@@ -39,6 +28,7 @@ namespace vtkm
 template <>
 struct VecTraits<std::string>
 {
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
 };
@@ -70,10 +60,15 @@ struct ScalarFunctor
 
 struct ArrayHandleScalarFunctor
 {
-  template <typename T>
-  void operator()(const vtkm::cont::ArrayHandle<T>&) const
+  template <typename ArrayType>
+  void operator()(const ArrayType&) const
   {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
+  }
+  void operator()(const vtkm::cont::ArrayHandleVirtual<vtkm::FloatDefault>&) const
+  {
+    std::cout << "    In ArrayHandleVirtual<Scalar> functor." << std::endl;
+    g_FunctionCalls++;
   }
   void operator()(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>&) const
   {
@@ -84,9 +79,9 @@ struct ArrayHandleScalarFunctor
 
 struct ArrayHandleStringFunctor
 {
-  void operator()(const vtkm::cont::ArrayHandle<std::string>&) const
+  void operator()(const vtkm::cont::ArrayHandleVirtual<std::string>&) const
   {
-    std::cout << "    In ArrayHandle<string> functor." << std::endl;
+    std::cout << "    In ArrayHandleVirtual<string> functor." << std::endl;
     g_FunctionCalls++;
   }
 };
@@ -121,6 +116,16 @@ struct FunctionInterfaceFunctor
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
     g_FunctionCalls++;
   }
+
+  void operator()(
+    const vtkm::internal::FunctionInterface<void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                 vtkm::cont::ArrayHandleVirtual<vtkm::FloatDefault>,
+                                                 vtkm::cont::ArrayHandleVirtual<std::string>,
+                                                 vtkm::cont::CellSetStructured<3>)>&) const
+  {
+    std::cout << "    In FunctionInterface<...> functor." << std::endl;
+    g_FunctionCalls++;
+  }
 };
 
 void TestBasicTransform()
@@ -138,13 +143,13 @@ void TestBasicTransform()
   TRY_TRANSFORM(transform(concreteArray, ArrayHandleScalarFunctor(), indexTag));
 
   std::cout << "  Trying scalar dynamic array." << std::endl;
-  vtkm::cont::DynamicArrayHandle dynamicArray = concreteArray;
+  vtkm::cont::VariantArrayHandle dynamicArray = concreteArray;
   TRY_TRANSFORM(transform(dynamicArray, ArrayHandleScalarFunctor(), indexTag));
 
   std::cout << "  Trying with unusual (string) dynamic array." << std::endl;
   dynamicArray = vtkm::cont::ArrayHandle<std::string>();
-  TRY_TRANSFORM(transform(
-    dynamicArray.ResetTypeList(TypeListTagString()), ArrayHandleStringFunctor(), indexTag));
+  TRY_TRANSFORM(
+    transform(dynamicArray.ResetTypes(TypeListTagString()), ArrayHandleStringFunctor(), indexTag));
 
   std::cout << "  Trying with structured cell set." << std::endl;
   vtkm::cont::CellSetStructured<3> concreteCellSet;
@@ -171,8 +176,8 @@ void TestFunctionTransform()
   TRY_TRANSFORM(
     vtkm::internal::make_FunctionInterface<void>(
       scalarArray,
-      vtkm::cont::DynamicArrayHandle(scalarArray),
-      vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
+      vtkm::cont::VariantArrayHandle(scalarArray),
+      vtkm::cont::VariantArrayHandle(stringArray).ResetTypes(TypeListTagString()),
       vtkm::cont::DynamicCellSet(structuredCellSet))
       .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(), FunctionInterfaceFunctor()));
 }
@@ -185,7 +190,7 @@ void TestDynamicTransform()
 
 } // anonymous namespace
 
-int UnitTestDynamicTransform(int, char* [])
+int UnitTestDynamicTransform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestDynamicTransform);
+  return vtkm::cont::testing::Testing::Run(TestDynamicTransform, argc, argv);
 }

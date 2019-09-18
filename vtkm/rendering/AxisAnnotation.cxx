@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/rendering/AxisAnnotation.h>
@@ -72,7 +62,7 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range& range,
     pow10 = pow10 - 1.;
   }
 
-  vtkm::Float64 fxt = pow(10., ffix(pow10));
+  vtkm::Float64 fxt = vtkm::Pow(10., ffix(pow10));
 
   // Find the number of integral points in the interval.
   int numTicks = int(ffix(length / fxt) + 1);
@@ -169,8 +159,8 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
     return;
   }
 
-  vtkm::Float64 first_log = ceil(sortedRange.Min);
-  vtkm::Float64 last_log = floor(sortedRange.Max);
+  vtkm::Float64 first_log = vtkm::Ceil(sortedRange.Min);
+  vtkm::Float64 last_log = vtkm::Floor(sortedRange.Max);
 
   if (last_log <= first_log)
   {
@@ -188,7 +178,7 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
   for (vtkm::Int32 i = vtkm::Int32(first_log); i <= last_log; i += step)
   {
     vtkm::Float64 logpos = i;
-    vtkm::Float64 pos = pow(10, logpos);
+    vtkm::Float64 pos = vtkm::Pow(10, logpos);
     if (minor)
     {
       // If we're showing major tickmarks for every power of 10,
@@ -202,7 +192,7 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
         for (vtkm::Int32 j = 1; j < 10; ++j)
         {
           vtkm::Float64 minor_pos = vtkm::Float64(j) * vtkm::Float64(pos);
-          vtkm::Float64 minor_logpos = log10(minor_pos);
+          vtkm::Float64 minor_logpos = vtkm::Log10(minor_pos);
           if (minor_logpos < sortedRange.Min || minor_logpos > sortedRange.Max)
           {
             continue;
@@ -217,7 +207,7 @@ void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
         for (vtkm::Int32 j = 1; j < step; ++j)
         {
           vtkm::Float64 minor_logpos = logpos + j;
-          vtkm::Float64 minor_pos = pow(10., minor_logpos);
+          vtkm::Float64 minor_pos = vtkm::Pow(10., minor_logpos);
           if (minor_logpos < sortedRange.Min || minor_logpos > sortedRange.Max)
           {
             continue;

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_RayTracingTypeDefs_h
 #define vtk_m_rendering_raytracing_RayTracingTypeDefs_h
@@ -28,7 +18,8 @@
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
 {
@@ -88,27 +79,58 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagTBB>(vtkm::cont::
 }
 
 template <>
+inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP)
+{
+  return "openmp";
+}
+
+template <>
 inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda)
 {
   return "cuda";
 }
 
-typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorBuffer4f;
-typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> ColorBuffer4b;
+struct DeviceStringFunctor
+{
+  std::string result;
+  DeviceStringFunctor()
+    : result("")
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    result = GetDeviceString(Device());
+    return true;
+  }
+};
+
+inline std::string GetDeviceString()
+{
+  DeviceStringFunctor functor;
+  vtkm::cont::TryExecute(functor);
+  return functor.result;
+}
+
+using ColorBuffer4f = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>;
 
 //Defining types supported by the rendering
 
 //vec3s
-typedef vtkm::Vec<vtkm::Float32, 3> Vec3F;
-typedef vtkm::Vec<vtkm::Float64, 3> Vec3D;
+using Vec3F = vtkm::Vec3f_32;
+using Vec3D = vtkm::Vec3f_64;
 struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
 {
 };
 
 // Scalars Types
-typedef vtkm::Float32 ScalarF;
-typedef vtkm::Float64 ScalarD;
+using ScalarF = vtkm::Float32;
+using ScalarD = vtkm::Float64;
 
 struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
 {
@@ -117,73 +139,6 @@ struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
 struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
 {
 };
-
-//Restrict Coordinate types to explicit for volume renderer
-namespace detail
-{
-
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>>::type
-  ArrayHandleCompositeVectorFloat32_3Default;
-
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>>::type
-  ArrayHandleCompositeVectorFloat64_3Default;
-
-struct StructuredStorageListTagCoordinateSystem
-  : vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                      vtkm::cont::ArrayHandleCartesianProduct<
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
-{
-};
-/*
- * This would be for support of curvilinear meshes
-struct StructuredStorageListTagCoordinateSystem
-    : vtkm::ListTagJoin<
-        VTKM_DEFAULT_STORAGE_LIST_TAG,
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                      vtkm::cont::ArrayHandleCartesianProduct<
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                          vtkm::cont::ArrayHandle<vtkm::FloatDefault> >::StorageTag > >
-{ };*/
-} // namespace detail
-
-
-/*
- * This is a less restrictive type list for Explicit meshes
-struct ExplicitCoordinatesType : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>,
-                                                   vtkm::Vec<vtkm::Float64,3> > {};
-
-
-struct StorageListTagExplicitCoordinateSystem
-    : vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
-                        detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-                        detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag >{ };
-*/
-//Super restrictive
-
-struct ExplicitCoordinatesType
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
-{
-};
-struct StorageListTagExplicitCoordinateSystem : vtkm::ListTagBase<vtkm::cont::StorageTagBasic>
-{
-};
-
-
-typedef detail::StructuredStorageListTagCoordinateSystem StructuredStorage;
-
-typedef vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType, StructuredStorage>
-  DynamicArrayHandleStructuredCoordinateSystem;
-
-typedef vtkm::cont::DynamicArrayHandleBase<ExplicitCoordinatesType,
-                                           StorageListTagExplicitCoordinateSystem>
-  DynamicArrayHandleExplicitCoordinateSystem;
 }
 }
 } //namespace vtkm::rendering::raytracing

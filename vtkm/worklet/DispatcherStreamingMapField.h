@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_Dispatcher_Streaming_MapField_h
 #define vtk_m_worklet_Dispatcher_Streaming_MapField_h
@@ -33,7 +23,22 @@ namespace worklet
 namespace detail
 {
 
-template <typename ControlInterface, typename Device>
+struct DispatcherStreamingTryExecuteFunctor
+{
+  template <typename Device, typename DispatcherBaseType, typename Invocation, typename RangeType>
+  VTKM_CONT bool operator()(Device device,
+                            const DispatcherBaseType* self,
+                            Invocation& invocation,
+                            const RangeType& dimensions,
+                            const RangeType& globalIndexOffset)
+  {
+    self->InvokeTransportParameters(
+      invocation, dimensions, globalIndexOffset, self->Scatter.GetOutputRange(dimensions), device);
+    return true;
+  }
+};
+
+template <typename ControlInterface>
 struct DispatcherStreamingMapFieldTransformFunctor
 {
   vtkm::Id BlockIndex;
@@ -116,7 +121,7 @@ struct DispatcherStreamingMapFieldTransformFunctor
   }
 };
 
-template <typename ControlInterface, typename Device>
+template <typename ControlInterface>
 struct DispatcherStreamingMapFieldTransferFunctor
 {
   VTKM_CONT
@@ -163,21 +168,23 @@ struct DispatcherStreamingMapFieldTransferFunctor
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapField.
 ///
-template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType>
 class DispatcherStreamingMapField
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::WorkletMapField>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
+    vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType>,
                                             WorkletType,
                                             vtkm::worklet::WorkletMapField>;
+  using ScatterType = typename Superclass::ScatterType;
+  using MaskType = typename WorkletType::MaskType;
 
 public:
-  VTKM_CONT
-  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  template <typename... T>
+  VTKM_CONT DispatcherStreamingMapField(T&&... args)
+    : Superclass(std::forward<T>(args)...)
     , NumberOfBlocks(1)
   {
   }
@@ -185,21 +192,27 @@ public:
   VTKM_CONT
   void SetNumberOfBlocks(vtkm::Id numberOfBlocks) { NumberOfBlocks = numberOfBlocks; }
 
-  template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+  friend struct detail::DispatcherStreamingTryExecuteFunctor;
+
+  template <typename Invocation>
+  VTKM_CONT void BasicInvoke(Invocation& invocation,
                              vtkm::Id numInstances,
-                             vtkm::Id globalIndexOffset,
-                             DeviceAdapter device) const
+                             vtkm::Id globalIndexOffset) const
   {
-    this->InvokeTransportParameters(invocation,
-                                    numInstances,
-                                    globalIndexOffset,
-                                    this->Worklet.GetScatter().GetOutputRange(numInstances),
-                                    device);
+    bool success = vtkm::cont::TryExecuteOnDevice(this->GetDevice(),
+                                                  detail::DispatcherStreamingTryExecuteFunctor(),
+                                                  this,
+                                                  invocation,
+                                                  numInstances,
+                                                  globalIndexOffset);
+    if (!success)
+    {
+      throw vtkm::cont::ErrorExecution("Failed to execute worklet on any device.");
+    }
   }
 
   template <typename Invocation>
-  VTKM_CONT void DoInvoke(const Invocation& invocation) const
+  VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
@@ -209,20 +222,18 @@ public:
     const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // For a DispatcherStreamingMapField, the inputDomain must be an ArrayHandle (or
-    // a DynamicArrayHandle that gets cast to one). The size of the domain
+    // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id fullSize = inputDomain.GetNumberOfValues();
+    vtkm::Id fullSize = internal::scheduling_range(inputDomain);
     vtkm::Id blockSize = fullSize / NumberOfBlocks;
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
 
     using TransformFunctorType =
-      detail::DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface,
-                                                          Device>;
+      detail::DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface>;
     using TransferFunctorType =
-      detail::DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface,
-                                                         Device>;
+      detail::DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface>;
 
     for (vtkm::Id block = 0; block < NumberOfBlocks; block++)
     {
@@ -241,11 +252,11 @@ public:
       using ChangedType = typename Invocation::template ChangeParametersType<ReportedType>::type;
       ChangedType changedParams = invocation.ChangeParameters(newParams);
 
-      this->BasicInvoke(changedParams, numberOfInstances, globalIndexOffset, Device());
+      this->BasicInvoke(changedParams, numberOfInstances, globalIndexOffset);
 
       // Loop over parameters again to sync results for this block into control array
       using ParameterInterfaceType2 = typename ChangedType::ParameterInterface;
-      const ParameterInterfaceType2& parameters2 = changedParams.Parameters;
+      ParameterInterfaceType2& parameters2 = changedParams.Parameters;
       parameters2.StaticTransformCont(TransferFunctorType());
     }
   }
@@ -255,14 +266,14 @@ private:
             typename InputRangeType,
             typename OutputRangeType,
             typename DeviceAdapter>
-  VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
+  VTKM_CONT void InvokeTransportParameters(Invocation& invocation,
                                            const InputRangeType& inputRange,
                                            const InputRangeType& globalIndexOffset,
                                            const OutputRangeType& outputRange,
                                            DeviceAdapter device) const
   {
     using ParameterInterfaceType = typename Invocation::ParameterInterface;
-    const ParameterInterfaceType& parameters = invocation.Parameters;
+    ParameterInterfaceType& parameters = invocation.Parameters;
 
     using TransportFunctorType = vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
       typename Invocation::ControlInterface,
@@ -275,16 +286,20 @@ private:
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
-    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
-      this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
-    typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Worklet.GetScatter().GetVisitArray(inputRange);
+    typename ScatterType::OutputToInputMapType outputToInputMap =
+      this->Scatter.GetOutputToInputMap(inputRange);
+    typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
+
+    // Get the arrays used for masking output elements.
+    typename MaskType::ThreadToOutputMapType threadToOutputMap =
+      this->Mask.GetThreadToOutputMap(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device)),
+                           .ChangeVisitArray(visitArray.PrepareForInput(device))
+                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
                          outputRange,
                          globalIndexOffset,
                          device);

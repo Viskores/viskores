@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_Pair_h
@@ -73,10 +63,31 @@ struct Pair
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  Pair(FirstType&& firstSrc,
+       SecondType&& secondSrc) noexcept(noexcept(FirstType{ std::declval<FirstType&&>() },
+                                                 SecondType{ std::declval<SecondType&&>() }))
+    : first(std::move(firstSrc))
+    , second(std::move(secondSrc))
+  {
+  }
+
+  Pair(const Pair&) = default;
+  Pair(Pair&&) = default;
+
   template <typename U1, typename U2>
   VTKM_EXEC_CONT Pair(const vtkm::Pair<U1, U2>& src)
     : first(src.first)
     , second(src.second)
+  {
+  }
+
+  template <typename U1, typename U2>
+  VTKM_EXEC_CONT Pair(vtkm::Pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
+                                                                  U2{ std::declval<U2&&>() }))
+    : first(std::move(src.first))
+    , second(std::move(src.second))
   {
   }
 
@@ -87,8 +98,17 @@ struct Pair
   {
   }
 
+  template <typename U1, typename U2>
+  VTKM_EXEC_CONT Pair(std::pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
+                                                                 U2{ std::declval<U2&&>() }))
+    : first(std::move(src.first))
+    , second(std::move(src.second))
+  {
+  }
+
   vtkm::Pair<FirstType, SecondType>& operator=(const vtkm::Pair<FirstType, SecondType>& src) =
     default;
+  vtkm::Pair<FirstType, SecondType>& operator=(vtkm::Pair<FirstType, SecondType>&& src) = default;
 
   VTKM_EXEC_CONT
   bool operator==(const vtkm::Pair<FirstType, SecondType>& other) const
@@ -141,9 +161,15 @@ VTKM_EXEC_CONT vtkm::Pair<T, U> operator+(const vtkm::Pair<T, U>& a, const vtkm:
 }
 
 template <typename T1, typename T2>
-VTKM_EXEC_CONT vtkm::Pair<T1, T2> make_Pair(const T1& firstSrc, const T2& secondSrc)
+VTKM_EXEC_CONT vtkm::Pair<typename std::decay<T1>::type, typename std::decay<T2>::type> make_Pair(
+  T1&& v1,
+  T2&& v2)
 {
-  return vtkm::Pair<T1, T2>(firstSrc, secondSrc);
+  using DT1 = typename std::decay<T1>::type;
+  using DT2 = typename std::decay<T2>::type;
+  using PairT = vtkm::Pair<DT1, DT2>;
+
+  return PairT(std::forward<T1>(v1), std::forward<T2>(v2));
 }
 
 } // namespace vtkm

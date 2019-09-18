@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_CoordinateSystem_h
 #define vtk_m_cont_CoordinateSystem_h
@@ -24,6 +14,7 @@
 
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm
@@ -33,17 +24,19 @@ namespace cont
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
+  using CoordinatesTypeList =
+    vtkm::ListTagBase<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
 
 public:
   VTKM_CONT
   CoordinateSystem();
 
   VTKM_CONT CoordinateSystem(std::string name,
-                             const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& data);
+                             const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& data);
 
-  template <typename TypeList, typename StorageList>
+  template <typename TypeList>
   VTKM_CONT CoordinateSystem(std::string name,
-                             const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& data);
+                             const vtkm::cont::VariantArrayHandleBase<TypeList>& data);
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data);
@@ -51,37 +44,63 @@ public:
   /// This constructor of coordinate system sets up a regular grid of points.
   ///
   VTKM_CONT
-  CoordinateSystem(
-    std::string name,
-    vtkm::Id3 dimensions,
-    vtkm::Vec<vtkm::FloatDefault, 3> origin = vtkm::Vec<vtkm::FloatDefault, 3>(0.0f, 0.0f, 0.0f),
-    vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f));
+  CoordinateSystem(std::string name,
+                   vtkm::Id3 dimensions,
+                   vtkm::Vec3f origin = vtkm::Vec3f(0.0f, 0.0f, 0.0f),
+                   vtkm::Vec3f spacing = vtkm::Vec3f(1.0f, 1.0f, 1.0f));
 
   VTKM_CONT
-  CoordinateSystem& operator=(const vtkm::cont::CoordinateSystem& src) = default;
+  vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
 
   VTKM_CONT
   vtkm::cont::ArrayHandleVirtualCoordinates GetData() const;
 
-  VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& newdata);
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& newdata);
 
-  template <typename T, typename StorageTag>
-  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata);
-
-  VTKM_CONT
-  template <typename TypeList, typename StorageList>
-  void SetData(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& newdata);
+  template <typename T, typename Storage>
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, Storage>& newdata);
 
   VTKM_CONT
-  void GetRange(vtkm::Range* range) const;
+  template <typename TypeList>
+  void SetData(const vtkm::cont::VariantArrayHandleBase<TypeList>& newdata);
 
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
+  void GetRange(vtkm::Range* range) const
+  {
+    this->Superclass::GetRange(range, CoordinatesTypeList());
+  }
 
   VTKM_CONT
-  vtkm::Bounds GetBounds() const;
+  vtkm::Vec<vtkm::Range, 3> GetRange() const
+  {
+    vtkm::Vec<vtkm::Range, 3> range;
+    this->GetRange(&range[0]);
+    return range;
+  }
 
-  virtual void PrintSummary(std::ostream& out) const;
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<vtkm::Range> GetRangeAsArrayHandle() const
+  {
+    return this->Superclass::GetRange(CoordinatesTypeList());
+  }
+
+  VTKM_CONT
+  vtkm::Bounds GetBounds() const
+  {
+    vtkm::Range ranges[3];
+    this->GetRange(ranges);
+    return vtkm::Bounds(ranges[0], ranges[1], ranges[2]);
+  }
+
+  virtual void PrintSummary(std::ostream& out) const override;
+
+  /// Releases any resources being used in the execution environment (that are
+  /// not being shared by the control environment).
+  VTKM_CONT void ReleaseResourcesExecution() override
+  {
+    this->Superclass::ReleaseResourcesExecution();
+    this->GetData().ReleaseResourcesExecution();
+  }
 };
 
 template <typename Functor, typename... Args>
@@ -120,5 +139,33 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 } // namespace internal
 } // namespace cont
 } // namespace vtkm
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace mangled_diy_namespace
+{
+
+template <>
+struct Serialization<vtkm::cont::CoordinateSystem>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::CoordinateSystem& cs)
+  {
+    vtkmdiy::save(bb, cs.GetName());
+    vtkmdiy::save(bb, cs.GetData());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::CoordinateSystem& cs)
+  {
+    std::string name;
+    vtkmdiy::load(bb, name);
+    vtkm::cont::ArrayHandleVirtualCoordinates array;
+    vtkmdiy::load(bb, array);
+    cs = vtkm::cont::CoordinateSystem(name, array);
+  }
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_CoordinateSystem_h

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -128,12 +118,12 @@ void TryRangeComputeDS(const ValueType& min, const ValueType& max)
 }
 
 template <typename ValueType>
-void TryRangeComputeMB(const ValueType& min, const ValueType& max)
+void TryRangeComputePDS(const ValueType& min, const ValueType& max)
 {
-  std::cout << "Trying type (multiblock): " << vtkm::testing::TypeName<ValueType>::Name()
+  std::cout << "Trying type (PartitionedDataSet): " << vtkm::testing::TypeName<ValueType>::Name()
             << std::endl;
 
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet mb;
   for (int cc = 0; cc < 5; cc++)
   {
     // let's create a dummy dataset with a bunch of fields.
@@ -142,7 +132,7 @@ void TryRangeComputeMB(const ValueType& min, const ValueType& max)
       dataset,
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
-    mb.AddBlock(dataset);
+    mb.AppendPartition(dataset);
   }
 
   vtkm::cont::ArrayHandle<vtkm::Range> ranges = vtkm::cont::FieldRangeCompute(mb, "pointvar");
@@ -156,15 +146,15 @@ static void TestFieldRangeCompute()
 
   TryRangeComputeDS<vtkm::Float64>(0, 1000);
   TryRangeComputeDS<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeDS<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
-  TryRangeComputeMB<vtkm::Float64>(0, 1000);
-  TryRangeComputeMB<vtkm::Int32>(-1024, 1024);
-  TryRangeComputeMB<vtkm::Vec<vtkm::Float32, 3>>(vtkm::make_Vec(1024, 0, -1024),
-                                                 vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputeDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                    vtkm::make_Vec(2048, 2048, 2048));
+  TryRangeComputePDS<vtkm::Float64>(0, 1000);
+  TryRangeComputePDS<vtkm::Int32>(-1024, 1024);
+  TryRangeComputePDS<vtkm::Vec3f_32>(vtkm::make_Vec(1024, 0, -1024),
+                                     vtkm::make_Vec(2048, 2048, 2048));
 };
 
-int UnitTestFieldRangeCompute(int, char* [])
+int UnitTestFieldRangeCompute(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestFieldRangeCompute);
+  return vtkm::cont::testing::Testing::Run(TestFieldRangeCompute, argc, argv);
 }

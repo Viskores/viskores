@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_Error_h
 #define vtk_m_cont_Error_h
@@ -26,6 +16,8 @@
 
 #include <exception>
 #include <string>
+
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/internal/ExportMacros.h>
 
@@ -45,6 +37,7 @@ public:
 #ifndef GetMessage
   const std::string& GetMessage() const { return this->Message; }
 #endif
+  const std::string& GetStackTrace() const { return this->StackTrace; }
 
 //GetMessage is a macro defined by <windows.h> to redirrect to
 //GetMessageA or W depending on if you are using ansi or unicode.
@@ -55,7 +48,7 @@ public:
 #endif
 
   // For std::exception compatibility:
-  const char* what() const noexcept override { return this->Message.c_str(); }
+  const char* what() const noexcept override { return this->What.c_str(); }
 
   /// Returns true if this exception is device independent. For exceptions that
   /// are not device independent, `vtkm::TryExecute`, for example, may try
@@ -66,6 +59,8 @@ protected:
   Error() {}
   Error(const std::string& message, bool is_device_independent = false)
     : Message(message)
+    , StackTrace(vtkm::cont::GetStackTrace(1))
+    , What(Message + "\n" + StackTrace)
     , IsDeviceIndependent(is_device_independent)
   {
   }
@@ -74,6 +69,8 @@ protected:
 
 private:
   std::string Message;
+  std::string StackTrace;
+  std::string What;
   bool IsDeviceIndependent;
 };
 

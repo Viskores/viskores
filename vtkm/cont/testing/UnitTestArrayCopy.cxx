@@ -2,23 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 
 #include <vtkm/TypeTraits.h>
@@ -30,28 +21,62 @@ namespace
 
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
-template <typename PortalType>
-void TestValues(const PortalType& portal)
+template <typename RefPortalType, typename TestPortalType>
+void TestValues(const RefPortalType& refPortal, const TestPortalType& testPortal)
 {
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE, "Wrong array size.");
+  const vtkm::Id arraySize = refPortal.GetNumberOfValues();
+  VTKM_TEST_ASSERT(arraySize == testPortal.GetNumberOfValues(), "Wrong array size.");
 
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+  for (vtkm::Id index = 0; index < arraySize; ++index)
   {
-    VTKM_TEST_ASSERT(test_equal(portal.Get(index), index), "Got bad value.");
+    VTKM_TEST_ASSERT(test_equal(refPortal.Get(index), testPortal.Get(index)), "Got bad value.");
   }
 }
 
 template <typename ValueType>
 void TryCopy()
 {
-  std::cout << "Trying type: " << vtkm::testing::TypeName<ValueType>::Name() << std::endl;
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             "Trying type: " << vtkm::testing::TypeName<ValueType>::Name());
 
-  vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
-  vtkm::cont::ArrayHandle<ValueType> output;
+  { // implicit -> basic
+    vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+  }
 
-  vtkm::cont::ArrayCopy(input, output);
+  { // basic -> basic
+    vtkm::cont::ArrayHandleIndex source(ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<vtkm::Id> input;
+    vtkm::cont::ArrayCopy(source, input);
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+  }
 
-  TestValues(output.GetPortalConstControl());
+  { // implicit -> implicit (index)
+    vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
+    vtkm::cont::ArrayHandleIndex output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+  }
+
+  { // implicit -> implicit (constant)
+    vtkm::cont::ArrayHandleConstant<int> input(41, ARRAY_SIZE);
+    vtkm::cont::ArrayHandleConstant<int> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+  }
+
+  { // implicit -> implicit (base->derived, constant)
+    vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<int>> input{
+      vtkm::cont::detail::ConstantFunctor<int>(41), ARRAY_SIZE
+    };
+    vtkm::cont::ArrayHandleConstant<int> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+  }
 }
 
 void TestArrayCopy()
@@ -63,7 +88,7 @@ void TestArrayCopy()
 
 } // anonymous namespace
 
-int UnitTestArrayCopy(int, char* [])
+int UnitTestArrayCopy(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayCopy);
+  return vtkm::cont::testing::Testing::Run(TestArrayCopy, argc, argv);
 }

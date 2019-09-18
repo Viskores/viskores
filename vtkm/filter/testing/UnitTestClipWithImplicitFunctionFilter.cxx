@@ -2,32 +2,21 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
@@ -58,7 +47,7 @@ void TestClipStructured()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -67,16 +56,14 @@ void TestClipStructured()
 
   vtkm::cont::DataSet outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 12,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -97,7 +84,7 @@ void TestClipStructuredInverted()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
-  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
   vtkm::filter::ClipWithImplicitFunction clip;
@@ -106,16 +93,13 @@ void TestClipStructuredInverted()
   clip.SetInvertClip(invert);
   clip.SetFieldsToPass("scalars");
   auto outputData = clip.Execute(ds);
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
-  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
                    "Wrong number of cells in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::VariantArrayHandle temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -139,7 +123,7 @@ void TestClip()
 
 } // anonymous namespace
 
-int UnitTestClipWithImplicitFunctionFilter(int, char* [])
+int UnitTestClipWithImplicitFunctionFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestClip);
+  return vtkm::cont::testing::Testing::Run(TestClip, argc, argv);
 }

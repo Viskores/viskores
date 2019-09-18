@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/CellSetExplicit.h>
 
@@ -26,6 +16,9 @@
 
 namespace
 {
+
+using CellTag = vtkm::TopologyElementTagCell;
+using PointTag = vtkm::TopologyElementTagPoint;
 
 const vtkm::Id numberOfPoints = 11;
 
@@ -72,10 +65,10 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
   return cs;
 }
 
-struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
+struct WorkletPointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<IdType> numPoints);
-  typedef void ExecutionSignature(PointIndices, _2);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell numPoints);
+  using ExecutionSignature = void(PointIndices, _2);
   using InputDomain = _1;
 
   template <typename PointIndicesType>
@@ -85,10 +78,10 @@ struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct WorkletCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn cellset, FieldOutPoint<IdType> numCells);
-  typedef void ExecutionSignature(CellIndices, _2);
+  using ControlSignature = void(CellSetIn cellset, FieldOutPoint numCells);
+  using ExecutionSignature = void(CellIndices, _2);
   using InputDomain = _1;
 
   template <typename CellIndicesType>
@@ -153,11 +146,43 @@ void TestCellSetExplicit()
   {
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result");
   }
+
+  std::cout << "----------------------------------------------------\n";
+  std::cout << "General Testing: \n";
+
+  std::cout << "\tTesting resource releasing in CellSetExplicit\n";
+  cellset.ReleaseResourcesExecution();
+  VTKM_TEST_ASSERT(cellset.GetNumberOfCells() == ArrayLength(g_numIndices) / 2,
+                   "release execution resources should not change the number of cells");
+  VTKM_TEST_ASSERT(cellset.GetNumberOfPoints() == ArrayLength(expected2),
+                   "release execution resources should not change the number of points");
+
+  std::cout << "\tTesting CellToPoint table caching\n";
+  cellset = MakeTestCellSet2();
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(CellTag{}, PointTag{})),
+                   "PointToCell table missing.");
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(PointTag{}, CellTag{})),
+                   "CellToPoint table exists before PrepareForInput.");
+
+  // Test a raw PrepareForInput call:
+  cellset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, PointTag{}, CellTag{});
+
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
+                   "CellToPoint table missing after PrepareForInput.");
+
+  cellset.ResetConnectivity(PointTag{}, CellTag{});
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(!cellset.HasConnectivity(PointTag{}, CellTag{})),
+                   "CellToPoint table exists after resetting.");
+
+  // Test a PrepareForInput wrapped inside a dispatch (See #268)
+  vtkm::worklet::DispatcherMapTopology<WorkletCellToPoint>().Invoke(cellset, result);
+  VTKM_TEST_ASSERT(VTKM_PASS_COMMAS(cellset.HasConnectivity(PointTag{}, CellTag{})),
+                   "CellToPoint table missing after CellToPoint worklet exec.");
 }
 
 } // anonymous namespace
 
-int UnitTestCellSetExplicit(int, char* [])
+int UnitTestCellSetExplicit(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit);
+  return vtkm::cont::testing::Testing::Run(TestCellSetExplicit, argc, argv);
 }

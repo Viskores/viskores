@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_hxx
@@ -40,19 +30,19 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass& src)
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(storage))
 {
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage) noexcept
   : Internals(new internal::ArrayHandleImpl(std::move(storage)))
 {
 }
@@ -70,7 +60,8 @@ ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(cons
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>& ArrayHandle<T, StorageTagBasic>::operator=(
+  Thisclass&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;
@@ -234,10 +225,15 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
 
 template <typename T>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
+void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag device) const
 {
-  DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  this->Internals->PrepareForDevice(devId, sizeof(T));
+  bool needToRealloc = this->Internals->PrepareForDevice(device, sizeof(T));
+  if (needToRealloc)
+  {
+    this->Internals->ExecutionInterface =
+      new internal::ExecutionArrayInterfaceBasic<DeviceAdapterTag>(
+        *(this->Internals->ControlArray));
+  }
 }
 
 template <typename T>

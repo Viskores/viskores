@@ -2,23 +2,14 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/worklet/Probe.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
@@ -47,19 +38,16 @@ vtkm::cont::DataSet MakeGeometryDataSet()
   return geometry;
 }
 
-template <typename DeviceAdapter>
-vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds,
-                                                    DeviceAdapter device)
+vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& uds)
 {
   vtkm::cont::DataSet eds;
 
-  vtkm::cont::CellSetExplicit<> cs(uds.GetCellSet().GetName());
-  vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs, device);
-  eds.AddCellSet(cs);
+  vtkm::cont::CellSetExplicit<> cs;
+  vtkm::worklet::CellDeepCopy::Run(uds.GetCellSet(), cs);
+  eds.SetCellSet(cs);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> points;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(uds.GetCoordinateSystem().GetData(),
-                                                          points);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> points;
+  vtkm::cont::ArrayCopy(uds.GetCoordinateSystem().GetData(), points);
   eds.AddCoordinateSystem(
     vtkm::cont::CoordinateSystem(uds.GetCoordinateSystem().GetName(), points));
 
@@ -132,7 +120,6 @@ void TestResultArray(const vtkm::cont::ArrayHandle<T>& result, const std::vector
   }
 }
 
-template <typename DeviceAdapter>
 class TestProbe
 {
 private:
@@ -142,21 +129,16 @@ private:
   {
     std::cout << "Testing Probe Explicit to Uniform:\n";
 
-    auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet(), DeviceAdapter());
+    auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet());
     auto geometry = MakeGeometryDataSet();
 
     vtkm::worklet::Probe probe;
-    probe.Run(input.GetCellSet(),
-              input.GetCoordinateSystem(),
-              geometry.GetCoordinateSystem(),
-              DeviceAdapter());
+    probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(
-      input.GetField("pointdata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
-    auto cf = probe.ProcessCellField(
-      input.GetField("celldata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
-    auto hp = probe.GetHiddenPointsField(DeviceAdapter());
-    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet(), DeviceAdapter());
+    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
+    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
+    auto hp = probe.GetHiddenPointsField();
+    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
 
     TestResultArray(pf, GetExpectedPointData());
     TestResultArray(cf, GetExpectedCellData());
@@ -169,21 +151,16 @@ private:
     std::cout << "Testing Probe Uniform to Explicit:\n";
 
     auto input = MakeInputDataSet();
-    auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet(), DeviceAdapter());
+    auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet());
 
     vtkm::worklet::Probe probe;
-    probe.Run(input.GetCellSet(),
-              input.GetCoordinateSystem(),
-              geometry.GetCoordinateSystem(),
-              DeviceAdapter());
+    probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(
-      input.GetField("pointdata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
-    auto cf = probe.ProcessCellField(
-      input.GetField("celldata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
+    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
+    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
 
-    auto hp = probe.GetHiddenPointsField(DeviceAdapter());
-    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet(), DeviceAdapter());
+    auto hp = probe.GetHiddenPointsField();
+    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
 
     TestResultArray(pf, GetExpectedPointData());
     TestResultArray(cf, GetExpectedCellData());
@@ -195,22 +172,17 @@ private:
   {
     std::cout << "Testing Probe Explicit to Explicit:\n";
 
-    auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet(), DeviceAdapter());
-    auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet(), DeviceAdapter());
+    auto input = ConvertDataSetUniformToExplicit(MakeInputDataSet());
+    auto geometry = ConvertDataSetUniformToExplicit(MakeGeometryDataSet());
 
     vtkm::worklet::Probe probe;
-    probe.Run(input.GetCellSet(),
-              input.GetCoordinateSystem(),
-              geometry.GetCoordinateSystem(),
-              DeviceAdapter());
+    probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf = probe.ProcessPointField(
-      input.GetField("pointdata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
-    auto cf = probe.ProcessCellField(
-      input.GetField("celldata").GetData().template Cast<FieldArrayType>(), DeviceAdapter());
+    auto pf = probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>());
+    auto cf = probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>());
 
-    auto hp = probe.GetHiddenPointsField(DeviceAdapter());
-    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet(), DeviceAdapter());
+    auto hp = probe.GetHiddenPointsField();
+    auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
 
     TestResultArray(pf, GetExpectedPointData());
     TestResultArray(cf, GetExpectedCellData());
@@ -229,7 +201,7 @@ public:
 
 } // anonymous namespace
 
-int UnitTestProbe(int, char* [])
+int UnitTestProbe(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestProbe<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run);
+  return vtkm::cont::testing::Testing::Run(TestProbe::Run, argc, argv);
 }

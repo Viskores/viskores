@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,28 +6,16 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 
-template <typename DeviceAdapter>
 class TestCellSetDualGraph
 {
-public:
+private:
   template <typename T, typename Storage>
   bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
                        const T* expected,
@@ -50,6 +37,7 @@ public:
     return true;
   }
 
+public:
   void TestTriangleMesh() const
   {
     std::vector<vtkm::Id> connectivity = { 0, 2, 4, 1, 3, 5, 2, 6, 4, 5, 3, 7, 2, 9, 6, 4, 6, 8 };
@@ -61,7 +49,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
 
-    CellSetDualGraph<DeviceAdapter>().Run(
+    vtkm::worklet::connectivity::CellSetDualGraph().Run(
       cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
 
     vtkm::Id expectedNumIndices[] = { 1, 1, 3, 1, 1, 1 };
@@ -82,7 +70,7 @@ public:
   void operator()() const { this->TestTriangleMesh(); }
 };
 
-int UnitTestCellSetDualGraph(int, char* [])
+int UnitTestCellSetDualGraph(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetDualGraph<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestCellSetDualGraph(), argc, argv);
 }

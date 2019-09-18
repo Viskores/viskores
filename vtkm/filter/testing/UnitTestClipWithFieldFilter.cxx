@@ -2,32 +2,21 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/filter/ClipWithField.h>
 
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
 
-using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
+using Coord3D = vtkm::Vec3f;
 
 vtkm::cont::DataSet MakeTestDatasetExplicit()
 {
@@ -69,18 +58,16 @@ void TestClipExplicit()
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
   clip.SetActiveField("scalars");
-  clip.SetFieldsToPass("scalars", vtkm::cont::Field::ASSOC_POINTS);
+  clip.SetFieldsToPass("scalars", vtkm::cont::Field::Association::POINTS);
 
   const vtkm::cont::DataSet outputData = clip.Execute(ds);
 
-  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
-                   "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
 
-  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  auto temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
 
@@ -92,14 +79,35 @@ void TestClipExplicit()
   }
 }
 
+// Adding for testing cases like Bug #329
+// Other tests cover the specific cases of clipping, this test
+// is to execute the clipping filter for a larger dataset.
+// In this case the output is not verified against a sample.
+void TestClipVolume()
+{
+  std::cout << "Testing Clip Filter on volumetric data" << std::endl;
+
+  vtkm::Id3 dims(10, 10, 10);
+  vtkm::cont::testing::MakeTestDataSet maker;
+  vtkm::cont::DataSet ds = maker.Make3DUniformDataSet3(dims);
+
+  vtkm::filter::ClipWithField clip;
+  clip.SetClipValue(0.0);
+  clip.SetActiveField("pointvar");
+  clip.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::POINTS);
+
+  const vtkm::cont::DataSet outputData = clip.Execute(ds);
+}
+
 void TestClip()
 {
   //todo: add more clip tests
   TestClipExplicit();
+  TestClipVolume();
 }
 }
 
-int UnitTestClipWithFieldFilter(int, char* [])
+int UnitTestClipWithFieldFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestClip);
+  return vtkm::cont::testing::Testing::Run(TestClip, argc, argv);
 }

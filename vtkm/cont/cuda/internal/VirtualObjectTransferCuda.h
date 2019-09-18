@@ -2,26 +2,17 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h
 #define vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
@@ -34,6 +25,11 @@ namespace internal
 
 namespace detail
 {
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 
 template <typename VirtualDerivedType>
 __global__ void ConstructVirtualObjectKernel(VirtualDerivedType* deviceObject,
@@ -55,6 +51,10 @@ __global__ void DeleteVirtualObjectKernel(VirtualDerivedType* deviceObject)
 {
   deviceObject->~VirtualDerivedType();
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif
 
 } // detail
 
@@ -95,7 +95,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
-      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(deviceTarget,
+                                                              sizeof(VirtualDerivedType));
     }
     else if (updateData)
     {
@@ -115,7 +116,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
-      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(deviceTarget,
+                                                              sizeof(VirtualDerivedType));
     }
     else
     {
@@ -130,7 +132,8 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
     if (this->ExecutionObject != nullptr)
     {
       detail::DeleteVirtualObjectKernel<<<1, 1, 0, cudaStreamPerThread>>>(this->ExecutionObject);
-      VTKM_CUDA_CALL(cudaFree(this->ExecutionObject));
+      vtkm::cont::cuda::internal::CudaAllocator::FreeDeferred(this->ExecutionObject,
+                                                              sizeof(VirtualDerivedType));
       this->ExecutionObject = nullptr;
     }
   }

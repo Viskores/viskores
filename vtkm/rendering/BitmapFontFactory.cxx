@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #include <vtkm/rendering/BitmapFontFactory.h>
 
@@ -31,7 +19,7 @@ namespace rendering
 // Arrays for Liberation Sans 2.0,
 // available under the OFL (SIL Open Font License)
 
-static const int Liberation2Sans_charmetrics[][8] = {
+static constexpr int Liberation2Sans_charmetrics[][8] = {
   { 32, -16, 14, 1, 84, 32, 28, 31 },      { 33, -7, 91, 34, 7, 44, 105, 29 },
   { 34, -12, 91, 79, 7, 64, 52, 40 },      { 35, -16, 91, 144, 7, 94, 105, 62 },
   { 36, -15, 97, 239, 1, 92, 119, 62 },    { 37, -12, 92, 332, 6, 124, 107, 100 },
@@ -82,7 +70,7 @@ static const int Liberation2Sans_charmetrics[][8] = {
   { 126, -11, 58, 923, 913, 87, 42, 65 },
 };
 
-static const char* Liberation2Sans_charids[] = {
+static const std::string Liberation2Sans_charids[] = {
   " ", "!", "\"", "#",  "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2",
   "3", "4", "5",  "6",  "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E",
   "F", "G", "H",  "I",  "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X",
@@ -90,7 +78,7 @@ static const char* Liberation2Sans_charids[] = {
   "l", "m", "n",  "o",  "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}", "~"
 };
 
-static const unsigned char Liberation2Sans_rawimage[] = {
+static constexpr unsigned char Liberation2Sans_rawimage[] = {
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
   0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x04, 0x00, 0x08, 0x06, 0x00, 0x00, 0x00, 0x7f, 0x1d, 0x2b,
   0x83, 0x00, 0x00, 0x00, 0x04, 0x73, 0x42, 0x49, 0x54, 0x08, 0x08, 0x08, 0x08, 0x7c, 0x08, 0x64,
@@ -5992,11 +5980,14 @@ vtkm::rendering::BitmapFont BitmapFontFactory::CreateLiberation2Sans()
   font.RawImageFileData.insert(font.RawImageFileData.begin(),
                                Liberation2Sans_rawimage,
                                Liberation2Sans_rawimage + Liberation2Sans_imagelength);
-  for (int i = 0; i < 95; i++)
+
+  int i = 0;
+  font.Chars.resize(95);
+  for (auto&& character : font.Chars)
   {
-    font.Chars.push_back(
-      BitmapFont::Character(Liberation2Sans_charids[i], Liberation2Sans_charmetrics[i]));
+    character = BitmapFont::Character(Liberation2Sans_charids[i], Liberation2Sans_charmetrics[i]);
     font.ShortMap[Liberation2Sans_charmetrics[i][0]] = i;
+    ++i;
   }
 
   // Character

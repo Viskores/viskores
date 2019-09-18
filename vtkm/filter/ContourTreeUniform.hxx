@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -65,7 +55,6 @@
 //  (LDAV), October 2016, Baltimore, Maryland.
 
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/internal/CreateResult.h>
 
 #include <vtkm/worklet/ContourTreeUniform.h>
 
@@ -76,30 +65,28 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 ContourTreeMesh2D::ContourTreeMesh2D()
+  : vtkm::filter::FilterCell<ContourTreeMesh2D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (fieldMeta.IsPointField() == false)
   {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    throw vtkm::cont::ErrorFilterExecution("ContourTreeMesh2D expects point field input.");
   }
 
   // Collect sizing information from the dataset
+  const auto& dynamicCellSet = input.GetCellSet();
   vtkm::cont::CellSetStructured<2> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
-
-  // How should policy be used?
-  vtkm::filter::ApplyPolicy(cellSet, policy);
+  dynamicCellSet.CopyTo(cellSet);
 
   vtkm::Id2 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];
@@ -108,28 +95,24 @@ vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
 
   vtkm::worklet::ContourTreeMesh2D worklet;
-  worklet.Run(field, nRows, nCols, saddlePeak, device);
+  worklet.Run(field, nRows, nCols, saddlePeak);
 
-  return internal::CreateResult(input,
-                                saddlePeak,
-                                this->GetOutputFieldName(),
-                                fieldMeta.GetAssociation(),
-                                fieldMeta.GetCellSetName());
+  return CreateResultFieldCell(input, saddlePeak, this->GetOutputFieldName());
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
+  : vtkm::filter::FilterCell<ContourTreeMesh3D>()
 {
   this->SetOutputFieldName("saddlePeak");
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy>
 vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -138,10 +121,7 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 
   // Collect sizing information from the dataset
   vtkm::cont::CellSetStructured<3> cellSet;
-  input.GetCellSet(0).CopyTo(cellSet);
-
-  // How should policy be used?
-  vtkm::filter::ApplyPolicy(cellSet, policy);
+  input.GetCellSet().CopyTo(cellSet);
 
   vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
   vtkm::Id nRows = pointDimensions[0];
@@ -151,13 +131,9 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
 
   vtkm::worklet::ContourTreeMesh3D worklet;
-  worklet.Run(field, nRows, nCols, nSlices, saddlePeak, device);
+  worklet.Run(field, nRows, nCols, nSlices, saddlePeak);
 
-  return internal::CreateResult(input,
-                                saddlePeak,
-                                this->GetOutputFieldName(),
-                                fieldMeta.GetAssociation(),
-                                fieldMeta.GetCellSetName());
+  return CreateResult(input, saddlePeak, this->GetOutputFieldName(), fieldMeta);
 }
 }
 } // namespace vtkm::filter

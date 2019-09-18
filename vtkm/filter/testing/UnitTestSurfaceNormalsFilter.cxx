@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/filter/SurfaceNormals.h>
 
@@ -27,14 +17,13 @@ namespace
 
 void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  ds.GetField("Normals", vtkm::cont::Field::ASSOC_CELL_SET).GetData().CopyTo(normals);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
+  ds.GetCellField("Normals").GetData().CopyTo(normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
-    { 0.000f, -0.707f, -0.707f }, { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
-    { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f },
+                              { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
+                              { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
+                              { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
 
   auto portal = normals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
@@ -47,15 +36,13 @@ void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 
 void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  ds.GetField("Normals", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(normals);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
+  ds.GetPointField("Normals").GetData().CopyTo(normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
-    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
-    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
-    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
-    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
-  };
+  vtkm::Vec3f expected[8] = { { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+                              { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+                              { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+                              { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
 
   auto portal = normals.GetPortalConstControl();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
@@ -75,23 +62,20 @@ void TestSurfaceNormals()
 
   std::cout << "testing default output (generate only point normals):\n";
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
-                   "Point normals missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("Normals"), "Point normals missing.");
 
   std::cout << "generate only cell normals:\n";
   filter.SetGenerateCellNormals(true);
   filter.SetGeneratePointNormals(false);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
-                   "Cell normals missing.");
+  VTKM_TEST_ASSERT(result.HasCellField("Normals"), "Cell normals missing.");
 
   std::cout << "generate both cell and point normals:\n";
   filter.SetGeneratePointNormals(true);
+  filter.SetAutoOrientNormals(true);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
-                   "Point normals missing.");
-  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
-                   "Cell normals missing.");
+  VTKM_TEST_ASSERT(result.HasPointField("Normals"), "Point normals missing.");
+  VTKM_TEST_ASSERT(result.HasCellField("Normals"), "Cell normals missing.");
 
   std::cout << "test result values:\n";
   VerifyPointNormalValues(result);
@@ -101,7 +85,7 @@ void TestSurfaceNormals()
 } // anonymous namespace
 
 
-int UnitTestSurfaceNormalsFilter(int, char* [])
+int UnitTestSurfaceNormalsFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals, argc, argv);
 }

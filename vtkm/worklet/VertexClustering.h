@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
@@ -24,6 +14,7 @@
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -31,8 +22,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/Logging.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -61,8 +51,8 @@ namespace internal
 /// in a cluster.
 struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
-  typedef _3 ExecutionSignature(_2);
+  using ControlSignature = void(KeysIn clusterIds, ValuesIn points, ReducedValuesOut repPoints);
+  using ExecutionSignature = _3(_2);
   using InputDomain = _1;
 
   template <typename PointsInVecType>
@@ -80,55 +70,51 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 
   struct RunTrampoline
   {
-    template <typename InputPointsArrayType, typename KeyType, typename DeviceAdapterTag>
+    template <typename InputPointsArrayType, typename KeyType>
     VTKM_CONT void operator()(const InputPointsArrayType& points,
                               const vtkm::worklet::Keys<KeyType>& keys,
-                              vtkm::cont::DynamicArrayHandle& output,
-                              DeviceAdapterTag) const
+                              vtkm::cont::VariantArrayHandle& output) const
     {
 
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
-      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint, DeviceAdapterTag> dispatcher;
+      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint> dispatcher;
       dispatcher.Invoke(keys, points, out);
 
       output = out;
     }
   };
 
-  template <typename KeyType, typename InputDynamicPointsArrayType, typename DeviceAdapterTag>
-  VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
+  template <typename KeyType, typename InputDynamicPointsArrayType>
+  VTKM_CONT static vtkm::cont::VariantArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
-    const InputDynamicPointsArrayType& inputPoints,
-    DeviceAdapterTag tag)
+    const InputDynamicPointsArrayType& inputPoints)
   {
-    vtkm::cont::DynamicArrayHandle output;
+    vtkm::cont::VariantArrayHandle output;
     RunTrampoline trampoline;
-    vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output, tag);
+    vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output);
     return output;
   }
 };
 
-template <typename ValueType, typename StorageType, typename IndexArrayType, typename DeviceAdapter>
+template <typename ValueType, typename StorageType, typename IndexArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<ValueType> ConcretePermutationArray(
   const IndexArrayType& indices,
-  const vtkm::cont::ArrayHandle<ValueType, StorageType>& values,
-  DeviceAdapter)
+  const vtkm::cont::ArrayHandle<ValueType, StorageType>& values)
 {
   vtkm::cont::ArrayHandle<ValueType> result;
   auto tmp = vtkm::cont::make_ArrayHandlePermutation(indices, values);
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(tmp, result);
+  vtkm::cont::ArrayCopy(tmp, result);
   return result;
 }
 
-template <typename T, vtkm::IdComponent N, typename DeviceAdapter>
-vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other,
-                                       DeviceAdapter)
+template <typename T, vtkm::IdComponent N>
+vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other)
 {
   const T* vmem = reinterpret_cast<const T*>(&*other.GetPortalConstControl().GetIteratorBegin());
   vtkm::cont::ArrayHandle<T> mem =
     vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
   vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::ArrayCopy(mem, result, DeviceAdapter());
+  vtkm::cont::ArrayCopy(mem, result);
   return result;
 }
 
@@ -141,10 +127,10 @@ struct VertexClustering
 
   struct GridInfo
   {
-    vtkm::Vec<vtkm::Id, 3> dim;
-    vtkm::Vec<vtkm::Float64, 3> origin;
-    vtkm::Vec<vtkm::Float64, 3> bin_size;
-    vtkm::Vec<vtkm::Float64, 3> inv_bin_size;
+    vtkm::Id3 dim;
+    vtkm::Vec3f_64 origin;
+    vtkm::Vec3f_64 bin_size;
+    vtkm::Vec3f_64 inv_bin_size;
   };
 
   // input: points  output: cid of the points
@@ -154,8 +140,8 @@ struct VertexClustering
     GridInfo Grid;
 
   public:
-    typedef void ControlSignature(FieldIn<Vec3>, FieldOut<IdType>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     MapPointsWorklet(const GridInfo& grid)
@@ -189,13 +175,13 @@ struct VertexClustering
     }
   };
 
-  class MapCellsWorklet : public vtkm::worklet::WorkletMapPointToCell
+  class MapCellsWorklet : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<IdType> pointClusterIds,
-                                  FieldOutCell<Id3Type> cellClusterIds);
-    typedef void ExecutionSignature(_2, _3);
+    using ControlSignature = void(CellSetIn cellset,
+                                  FieldInPoint pointClusterIds,
+                                  FieldOutCell cellClusterIds);
+    using ExecutionSignature = void(_2, _3);
 
     VTKM_CONT
     MapCellsWorklet() {}
@@ -215,8 +201,8 @@ struct VertexClustering
   class IndexingWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType>, WholeArrayOut<IdType>);
-    typedef void ExecutionSignature(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
+    using ControlSignature = void(FieldIn, WholeArrayOut);
+    using ExecutionSignature = void(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
 
     template <typename OutPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& counter,
@@ -241,8 +227,8 @@ struct VertexClustering
     }
 
   public:
-    typedef void ControlSignature(FieldIn<Id3Type>, FieldOut<Id3Type>, WholeArrayIn<IdType>);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     Cid2PointIdWorklet(vtkm::Id nPoints)
@@ -289,8 +275,8 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    typedef void ControlSignature(FieldIn<Id3Type>, FieldOut<TypeInt64>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     Cid3HashWorklet(vtkm::Id nPoints)
@@ -312,8 +298,8 @@ struct VertexClustering
     vtkm::Int64 NPoints;
 
   public:
-    typedef void ControlSignature(FieldIn<TypeInt64>, FieldOut<Id3Type>);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     Cid3UnhashWorklet(vtkm::Id nPoints)
@@ -335,15 +321,14 @@ public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   ///
-  template <typename DynamicCellSetType,
-            typename DynamicCoordinateHandleType,
-            typename DeviceAdapter>
+  template <typename DynamicCellSetType, typename DynamicCoordinateHandleType>
   vtkm::cont::DataSet Run(const DynamicCellSetType& cellSet,
                           const DynamicCoordinateHandleType& coordinates,
                           const vtkm::Bounds& bounds,
-                          const vtkm::Id3& nDivisions,
-                          DeviceAdapter)
+                          const vtkm::Id3& nDivisions)
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "VertexClustering Worklet");
+
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
@@ -362,8 +347,10 @@ public:
     }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::cont::Timer<> totalTimer;
-    vtkm::cont::Timer<> timer;
+    vtkm::cont::Timer totalTimer;
+    totalTimer.Start();
+    vtkm::cont::Timer timer;
+    timer.Start();
 #endif
 
     //////////////////////////////////////////////
@@ -374,20 +361,21 @@ public:
     /// map points
     vtkm::cont::ArrayHandle<vtkm::Id> pointCidArray;
 
-    vtkm::worklet::DispatcherMapField<MapPointsWorklet, DeviceAdapter>(MapPointsWorklet(gridInfo))
-      .Invoke(coordinates, pointCidArray);
+    vtkm::worklet::DispatcherMapField<MapPointsWorklet> mapPointsDispatcher(
+      (MapPointsWorklet(gridInfo)));
+    mapPointsDispatcher.Invoke(coordinates, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    timer.stop();
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// pass 2 : Choose a representative point from each cluster for the output:
-    vtkm::cont::DynamicArrayHandle repPointArray;
+    vtkm::cont::VariantArrayHandle repPointArray;
     {
       vtkm::worklet::Keys<vtkm::Id> keys;
-      keys.BuildArrays(
-        pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable, DeviceAdapter());
+      keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
@@ -396,7 +384,7 @@ public:
 
       // Compute representative points from each cluster (may not match the
       // PointIdMap indexing)
-      repPointArray = internal::SelectRepresentativePoint::Run(keys, coordinates, DeviceAdapter());
+      repPointArray = internal::SelectRepresentativePoint::Run(keys, coordinates);
     }
 
     auto repPointCidArray =
@@ -404,7 +392,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -415,21 +403,20 @@ public:
     /// of the cell vertices
     vtkm::cont::ArrayHandle<vtkm::Id3> cid3Array;
 
-    vtkm::worklet::DispatcherMapTopology<MapCellsWorklet, DeviceAdapter>(MapCellsWorklet())
-      .Invoke(cellSet, pointCidArray, cid3Array);
+    vtkm::worklet::DispatcherMapTopology<MapCellsWorklet> mapCellsDispatcher;
+    mapCellsDispatcher.Invoke(cellSet, pointCidArray, cid3Array);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
+    timer.Start();
 #endif
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
-    cidIndexArray.PrepareForOutput(gridInfo.dim[0] * gridInfo.dim[1] * gridInfo.dim[2],
-                                   DeviceAdapter());
+    cidIndexArray.Allocate(gridInfo.dim[0] * gridInfo.dim[1] * gridInfo.dim[2]);
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(repPointCidArray,
-                                                                               cidIndexArray);
+    vtkm::worklet::DispatcherMapField<IndexingWorklet> indexingDispatcher;
+    indexingDispatcher.Invoke(repPointCidArray, cidIndexArray);
 
     pointCidArray.ReleaseResources();
     repPointCidArray.ReleaseResources();
@@ -443,9 +430,9 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id3> pointId3Array;
 
-    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet, DeviceAdapter>(
-      Cid2PointIdWorklet(nPoints))
-      .Invoke(cid3Array, pointId3Array, cidIndexArray);
+    vtkm::worklet::DispatcherMapField<Cid2PointIdWorklet> cid2PointIdDispatcher(
+      (Cid2PointIdWorklet(nPoints)));
+    cid2PointIdDispatcher.Invoke(cid3Array, pointId3Array, cidIndexArray);
 
     cid3Array.ReleaseResources();
     cidIndexArray.ReleaseResources();
@@ -457,56 +444,57 @@ public:
       /// Create hashed array
       vtkm::cont::ArrayHandle<vtkm::Int64> pointId3HashArray;
 
-      vtkm::worklet::DispatcherMapField<Cid3HashWorklet, DeviceAdapter>(Cid3HashWorklet(nPoints))
-        .Invoke(pointId3Array, pointId3HashArray);
+      vtkm::worklet::DispatcherMapField<Cid3HashWorklet> cid3HashDispatcher(
+        (Cid3HashWorklet(nPoints)));
+      cid3HashDispatcher.Invoke(pointId3Array, pointId3HashArray);
 
       pointId3Array.ReleaseResources();
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
-      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3HashArray);
-      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3HashArray, this->CellIdMap);
+      this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3HashArray);
+      vtkm::worklet::StableSortIndices::Unique(pointId3HashArray, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
       auto tmpPerm = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, pointId3HashArray);
 
       // decode
-      vtkm::worklet::DispatcherMapField<Cid3UnhashWorklet, DeviceAdapter>(
-        Cid3UnhashWorklet(nPoints))
-        .Invoke(tmpPerm, pointId3Array);
+      vtkm::worklet::DispatcherMapField<Cid3UnhashWorklet> cid3UnhashDispatcher(
+        (Cid3UnhashWorklet(nPoints)));
+      cid3UnhashDispatcher.Invoke(tmpPerm, pointId3Array);
     }
     else
     {
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
-      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3Array);
-      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3Array, this->CellIdMap);
+      this->CellIdMap = vtkm::worklet::StableSortIndices::Sort(pointId3Array);
+      vtkm::worklet::StableSortIndices::Unique(pointId3Array, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
-      timer.Reset();
+      timer.Start();
 #endif
 
       // Permute the connectivity array into a basic array handle. Use a
       // temporary array handle to avoid memory aliasing.
       {
         vtkm::cont::ArrayHandle<vtkm::Id3> tmp;
-        tmp = internal::ConcretePermutationArray(this->CellIdMap, pointId3Array, DeviceAdapter());
+        tmp = internal::ConcretePermutationArray(this->CellIdMap, pointId3Array);
         pointId3Array = tmp;
       }
     }
@@ -524,12 +512,12 @@ public:
     vtkm::cont::DataSet output;
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
-    vtkm::cont::CellSetSingleType<> triangles("cells");
+    vtkm::cont::CellSetSingleType<> triangles;
     triangles.Fill(repPointArray.GetNumberOfValues(),
                    vtkm::CellShapeTagTriangle::Id,
                    3,
-                   internal::copyFromVec(pointId3Array, DeviceAdapter()));
-    output.AddCellSet(triangles);
+                   internal::copyFromVec(pointId3Array));
+    output.SetCellSet(triangles);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Wrap-up (s): " << timer.GetElapsedTime() << std::endl;
@@ -542,20 +530,18 @@ public:
     return output;
   }
 
-  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  template <typename ValueType, typename StorageType>
   vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
-    const DeviceAdapter&) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
   {
-    return internal::ConcretePermutationArray(this->PointIdMap, input, DeviceAdapter());
+    return internal::ConcretePermutationArray(this->PointIdMap, input);
   }
 
-  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  template <typename ValueType, typename StorageType>
   vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
-    const DeviceAdapter&) const
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input) const
   {
-    return internal::ConcretePermutationArray(this->CellIdMap, input, DeviceAdapter());
+    return internal::ConcretePermutationArray(this->CellIdMap, input);
   }
 
 private:

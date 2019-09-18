@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_internal_TriangulateTables_h
 #define vtk_m_worklet_internal_TriangulateTables_h
@@ -23,7 +13,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -88,12 +78,11 @@ static vtkm::IdComponent TriangleIndexData[] = {
   3
 };
 
-template <typename Device>
-class TriangulateTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
+template <typename DeviceAdapter>
+class TriangulateTablesExecutionObject
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
-
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TriangulateTablesExecutionObject() {}
@@ -102,9 +91,9 @@ public:
   TriangulateTablesExecutionObject(const TriangulateArrayHandle& counts,
                                    const TriangulateArrayHandle& offsets,
                                    const TriangulateArrayHandle& indices)
-    : Counts(counts.PrepareForInput(Device()))
-    , Offsets(offsets.PrepareForInput(Device()))
-    , Indices(indices.PrepareForInput(Device()))
+    : Counts(counts.PrepareForInput(DeviceAdapter()))
+    , Offsets(offsets.PrepareForInput(DeviceAdapter()))
+    , Indices(indices.PrepareForInput(DeviceAdapter()))
   {
   }
 
@@ -122,10 +111,9 @@ public:
   }
 
   template <typename CellShape>
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 3> GetIndices(CellShape shape,
-                                                       vtkm::IdComponent triangleIndex) const
+  VTKM_EXEC vtkm::IdComponent3 GetIndices(CellShape shape, vtkm::IdComponent triangleIndex) const
   {
-    vtkm::Vec<vtkm::IdComponent, 3> triIndices;
+    vtkm::IdComponent3 triIndices;
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {
       triIndices[0] = 0;
@@ -148,6 +136,42 @@ private:
   PortalType Indices;
 };
 
+class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  template <typename Device>
+  VTKM_CONT TriangulateTablesExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    if (BasicImpl)
+    {
+      return TriangulateTablesExecutionObject<Device>();
+    }
+    return TriangulateTablesExecutionObject<Device>(this->Counts, this->Offsets, this->Indices);
+  }
+  VTKM_CONT
+  TriangulateTablesExecutionObjectFactory()
+    : BasicImpl(true)
+  {
+  }
+
+  VTKM_CONT
+  TriangulateTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
+                                          const TriangulateArrayHandle& offsets,
+                                          const TriangulateArrayHandle& indices)
+    : BasicImpl(false)
+    , Counts(counts)
+    , Offsets(offsets)
+    , Indices(indices)
+  {
+  }
+
+private:
+  bool BasicImpl;
+  TriangulateArrayHandle Counts;
+  TriangulateArrayHandle Offsets;
+  TriangulateArrayHandle Indices;
+};
+
 class TriangulateTables
 {
 public:
@@ -161,10 +185,9 @@ public:
   {
   }
 
-  template <typename Device>
-  vtkm::worklet::internal::TriangulateTablesExecutionObject<Device> PrepareForInput(Device) const
+  vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory PrepareForInput() const
   {
-    return vtkm::worklet::internal::TriangulateTablesExecutionObject<Device>(
+    return vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory(
       this->Counts, this->Offsets, this->Indices);
   }
 
@@ -261,12 +284,16 @@ static vtkm::IdComponent TetrahedronIndexData[] = {
   4
 };
 
-template <typename Device>
-class TetrahedralizeTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
+template <typename DeviceAdapter>
+class TetrahedralizeTablesExecutionObject
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
-
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
+  template <typename Device>
+  VTKM_CONT TetrahedralizeTablesExecutionObject PrepareForExecution(Device) const
+  {
+    return *this;
+  }
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TetrahedralizeTablesExecutionObject() {}
@@ -275,9 +302,9 @@ public:
   TetrahedralizeTablesExecutionObject(const TriangulateArrayHandle& counts,
                                       const TriangulateArrayHandle& offsets,
                                       const TriangulateArrayHandle& indices)
-    : Counts(counts.PrepareForInput(Device()))
-    , Offsets(offsets.PrepareForInput(Device()))
-    , Indices(indices.PrepareForInput(Device()))
+    : Counts(counts.PrepareForInput(DeviceAdapter()))
+    , Offsets(offsets.PrepareForInput(DeviceAdapter()))
+    , Indices(indices.PrepareForInput(DeviceAdapter()))
   {
   }
 
@@ -288,10 +315,9 @@ public:
   }
 
   template <typename CellShape>
-  VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 4> GetIndices(CellShape shape,
-                                                       vtkm::IdComponent tetrahedronIndex) const
+  VTKM_EXEC vtkm::IdComponent4 GetIndices(CellShape shape, vtkm::IdComponent tetrahedronIndex) const
   {
-    vtkm::Vec<vtkm::IdComponent, 4> tetIndices;
+    vtkm::IdComponent4 tetIndices;
     vtkm::IdComponent offset = 4 * (this->Offsets.Get(shape.Id) + tetrahedronIndex);
     tetIndices[0] = this->Indices.Get(offset + 0);
     tetIndices[1] = this->Indices.Get(offset + 1);
@@ -304,6 +330,43 @@ private:
   PortalType Counts;
   PortalType Offsets;
   PortalType Indices;
+};
+
+class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  template <typename Device>
+  VTKM_CONT TetrahedralizeTablesExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    if (BasicImpl)
+    {
+      return TetrahedralizeTablesExecutionObject<Device>();
+    }
+    return TetrahedralizeTablesExecutionObject<Device>(this->Counts, this->Offsets, this->Indices);
+  }
+
+  VTKM_CONT
+  TetrahedralizeTablesExecutionObjectFactory()
+    : BasicImpl(true)
+  {
+  }
+
+  VTKM_CONT
+  TetrahedralizeTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
+                                             const TriangulateArrayHandle& offsets,
+                                             const TriangulateArrayHandle& indices)
+    : BasicImpl(false)
+    , Counts(counts)
+    , Offsets(offsets)
+    , Indices(indices)
+  {
+  }
+
+private:
+  bool BasicImpl;
+  TriangulateArrayHandle Counts;
+  TriangulateArrayHandle Offsets;
+  TriangulateArrayHandle Indices;
 };
 
 class TetrahedralizeTables
@@ -320,10 +383,9 @@ public:
   {
   }
 
-  template <typename Device>
-  vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<Device> PrepareForInput(Device) const
+  vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory PrepareForInput() const
   {
-    return vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<Device>(
+    return vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory(
       this->Counts, this->Offsets, this->Indices);
   }
 

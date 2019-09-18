@@ -2,26 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #include <vtkm/cont/CellSetPermutation.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -30,10 +20,10 @@
 namespace
 {
 
-struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
+struct WorkletPointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<IdType> numPoints);
-  typedef void ExecutionSignature(PointIndices, _2);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell numPoints);
+  using ExecutionSignature = void(PointIndices, _2);
   using InputDomain = _1;
 
   template <typename PointIndicesType>
@@ -43,10 +33,10 @@ struct WorkletPointToCell : public vtkm::worklet::WorkletMapPointToCell
   }
 };
 
-struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct WorkletCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn cellset, FieldOutPoint<IdType> numCells);
-  typedef void ExecutionSignature(CellIndices, _2);
+  using ControlSignature = void(CellSetIn cellset, FieldOutPoint numCells);
+  using ExecutionSignature = void(CellIndices, _2);
   using InputDomain = _1;
 
   template <typename CellIndicesType>
@@ -56,12 +46,10 @@ struct WorkletCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
   }
 };
 
-struct CellsOfPoint : public vtkm::worklet::WorkletMapCellToPoint
+struct CellsOfPoint : public vtkm::worklet::WorkletVisitPointsWithCells
 {
-  typedef void ControlSignature(CellSetIn cellset,
-                                FieldInPoint<IdType> offset,
-                                WholeArrayOut<IdType> cellIds);
-  typedef void ExecutionSignature(CellIndices, _2, _3);
+  using ControlSignature = void(CellSetIn cellset, FieldInPoint offset, WholeArrayOut cellIds);
+  using ExecutionSignature = void(CellIndices, _2, _3);
   using InputDomain = _1;
 
   template <typename CellIndicesType, typename CellIdsPortal>
@@ -86,9 +74,7 @@ std::vector<vtkm::Id> ComputeCellToPointExpected(const CellSetType& cellset,
   std::cout << "\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> indexOffsets;
-  vtkm::Id connectivityLength =
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::ScanExclusive(
-      numIndices, indexOffsets);
+  vtkm::Id connectivityLength = vtkm::cont::Algorithm::ScanExclusive(numIndices, indexOffsets);
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(connectivityLength);
@@ -151,6 +137,12 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected[static_cast<std::size_t>(i)],
                      "incorrect result");
   }
+  std::cout << "Testing resource releasing in CellSetPermutation:\n";
+  cs.ReleaseResourcesExecution();
+  VTKM_TEST_ASSERT(cs.GetNumberOfCells() == cellset.GetNumberOfCells() / 2,
+                   "release execution resources should not change the number of cells");
+  VTKM_TEST_ASSERT(cs.GetNumberOfPoints() == cellset.GetNumberOfPoints(),
+                   "release execution resources should not change the number of points");
 
   return cs;
 }
@@ -189,7 +181,7 @@ void TestCellSetPermutation()
 
 } // anonymous namespace
 
-int UnitTestCellSetPermutation(int, char* [])
+int UnitTestCellSetPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation);
+  return vtkm::cont::testing::Testing::Run(TestCellSetPermutation, argc, argv);
 }

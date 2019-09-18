@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <math.h>
@@ -23,13 +13,14 @@
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Logger.h>
@@ -37,7 +28,6 @@
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #define AABB_EPSILON 0.00001f
@@ -49,38 +39,33 @@ namespace raytracing
 {
 namespace detail
 {
+
 class LinearBVHBuilder
 {
 public:
   class CountingIterator;
-  class FindAABBs;
 
-  template <typename Device>
   class GatherFloat32;
 
   template <typename Device>
   class GatherVecCast;
 
+  class CreateLeafs;
+
   class BVHData;
 
-  template <typename Device>
   class PropagateAABBs;
 
-  template <typename Device>
   class TreeBuilder;
 
   VTKM_CONT
   LinearBVHBuilder() {}
 
-  template <typename Device>
-  VTKM_CONT void SortAABBS(
-    BVHData& bvh,
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangleIndices,
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>& outputTriangleIndices,
-    Device vtkmNotUsed(device));
+  VTKM_CONT void SortAABBS(BVHData& bvh, bool);
 
-  template <typename Device>
-  VTKM_CONT void RunOnDevice(LinearBVH& linearBVH, Device device);
+  VTKM_CONT void BuildHierarchy(BVHData& bvh);
+
+  VTKM_CONT void Build(LinearBVH& linearBVH);
 }; // class LinearBVHBuilder
 
 class LinearBVHBuilder::CountingIterator : public vtkm::worklet::WorkletMapField
@@ -88,112 +73,59 @@ class LinearBVHBuilder::CountingIterator : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountingIterator() {}
-  typedef void ControlSignature(FieldOut<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
+  using ControlSignature = void(FieldOut);
+  using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& index, vtkm::Id& outId) const { outId = index; }
 }; //class countingIterator
 
-class LinearBVHBuilder::FindAABBs : public vtkm::worklet::WorkletMapField
-{
-public:
-  VTKM_CONT
-  FindAABBs() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                WholeArrayIn<Vec3RenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
-  template <typename PointPortalType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
-                            vtkm::Float32& xmin,
-                            vtkm::Float32& ymin,
-                            vtkm::Float32& zmin,
-                            vtkm::Float32& xmax,
-                            vtkm::Float32& ymax,
-                            vtkm::Float32& zmax,
-                            const PointPortalType& points) const
-  {
-    // cast to Float32
-    vtkm::Vec<vtkm::Float32, 3> point;
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[1]));
-    xmin = point[0];
-    ymin = point[1];
-    zmin = point[2];
-    xmax = xmin;
-    ymax = ymin;
-    zmax = zmin;
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[2]));
-    xmin = vtkm::Min(xmin, point[0]);
-    ymin = vtkm::Min(ymin, point[1]);
-    zmin = vtkm::Min(zmin, point[2]);
-    xmax = vtkm::Max(xmax, point[0]);
-    ymax = vtkm::Max(ymax, point[1]);
-    zmax = vtkm::Max(zmax, point[2]);
-    point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[3]));
-    xmin = vtkm::Min(xmin, point[0]);
-    ymin = vtkm::Min(ymin, point[1]);
-    zmin = vtkm::Min(zmin, point[2]);
-    xmax = vtkm::Max(xmax, point[0]);
-    ymax = vtkm::Max(ymax, point[1]);
-    zmax = vtkm::Max(zmax, point[2]);
-
-
-    vtkm::Float32 xEpsilon, yEpsilon, zEpsilon;
-    const vtkm::Float32 minEpsilon = 1e-6f;
-    xEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (xmax - xmin));
-    yEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (ymax - ymin));
-    zEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (zmax - zmin));
-
-    xmin -= xEpsilon;
-    ymin -= yEpsilon;
-    zmin -= zEpsilon;
-    xmax += xEpsilon;
-    ymax += yEpsilon;
-    zmax += zEpsilon;
-  }
-}; //class FindAABBs
-
-template <typename Device>
 class LinearBVHBuilder::GatherFloat32 : public vtkm::worklet::WorkletMapField
 {
-private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Float32> FloatArrayHandle;
-  typedef typename FloatArrayHandle::ExecutionTypes<Device>::PortalConst PortalConst;
-  typedef typename FloatArrayHandle::ExecutionTypes<Device>::Portal Portal;
-  PortalConst InputPortal;
-  Portal OutputPortal;
-
 public:
   VTKM_CONT
-  GatherFloat32(const FloatArrayHandle& inputPortal,
-                FloatArrayHandle& outputPortal,
-                const vtkm::Id& size)
-    : InputPortal(inputPortal.PrepareForInput(Device()))
+  GatherFloat32() {}
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3);
+
+  template <typename InType, typename OutType>
+  VTKM_EXEC void operator()(const vtkm::Id& outIndex,
+                            const vtkm::Id& inIndex,
+                            const InType& inPortal,
+                            OutType& outPortal) const
   {
-    this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
-  }
-  typedef void ControlSignature(FieldIn<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
-  VTKM_EXEC
-  void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
-  {
-    OutputPortal.Set(outIndex, InputPortal.Get(inIndex));
+    outPortal.Set(outIndex, inPortal.Get(inIndex));
   }
 }; //class GatherFloat
 
-template <typename Device>
+class LinearBVHBuilder::CreateLeafs : public vtkm::worklet::WorkletMapField
+{
+
+public:
+  VTKM_CONT
+  CreateLeafs() {}
+
+  typedef void ControlSignature(FieldIn, WholeArrayOut);
+  typedef void ExecutionSignature(_1, _2, WorkIndex);
+
+  template <typename LeafPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& dataIndex,
+                            LeafPortalType& leafs,
+                            const vtkm::Id& index) const
+  {
+    const vtkm::Id offset = index * 2;
+    leafs.Set(offset, 1);             // number of primitives
+    leafs.Set(offset + 1, dataIndex); // number of primitives
+  }
+}; //class createLeafs
+
+template <typename DeviceAdapterTag>
 class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Vec4IdArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Vec4IntArrayHandle;
-  typedef typename Vec4IdArrayHandle::ExecutionTypes<Device>::PortalConst PortalConst;
-  typedef typename Vec4IntArrayHandle::ExecutionTypes<Device>::Portal Portal;
+  using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
+  using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
+  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
 
 private:
   PortalConst InputPortal;
@@ -204,12 +136,12 @@ public:
   GatherVecCast(const Vec4IdArrayHandle& inputPortal,
                 Vec4IntArrayHandle& outputPortal,
                 const vtkm::Id& size)
-    : InputPortal(inputPortal.PrepareForInput(Device()))
+    : InputPortal(inputPortal.PrepareForInput(DeviceAdapterTag()))
   {
-    this->OutputPortal = outputPortal.PrepareForOutput(size, Device());
+    this->OutputPortal = outputPortal.PrepareForOutput(size, DeviceAdapterTag());
   }
-  typedef void ControlSignature(FieldIn<>);
-  typedef void ExecutionSignature(WorkIndex, _1);
+  using ControlSignature = void(FieldIn);
+  using ExecutionSignature = void(WorkIndex, _1);
   VTKM_EXEC
   void operator()(const vtkm::Id& outIndex, const vtkm::Id& inIndex) const
   {
@@ -220,49 +152,33 @@ public:
 class LinearBVHBuilder::BVHData
 {
 public:
-  //TODO: make private
-  vtkm::cont::ArrayHandle<vtkm::Float32>* xmins;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* ymins;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* zmins;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* xmaxs;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* ymaxs;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* zmaxs;
-
   vtkm::cont::ArrayHandle<vtkm::UInt32> mortonCodes;
   vtkm::cont::ArrayHandle<vtkm::Id> parent;
   vtkm::cont::ArrayHandle<vtkm::Id> leftChild;
   vtkm::cont::ArrayHandle<vtkm::Id> rightChild;
+  vtkm::cont::ArrayHandle<vtkm::Id> leafs;
+  vtkm::cont::ArrayHandle<vtkm::Bounds> innerBounds;
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> leafOffsets;
+  AABBs& AABB;
 
-  template <typename Device>
-  VTKM_CONT BVHData(vtkm::Id numPrimitives, Device vtkmNotUsed(device))
-    : NumPrimitives(numPrimitives)
+  VTKM_CONT BVHData(vtkm::Id numPrimitives, AABBs& aabbs)
+    : leafOffsets(0, 2, numPrimitives)
+    , AABB(aabbs)
+    , NumPrimitives(numPrimitives)
   {
     InnerNodeCount = NumPrimitives - 1;
     vtkm::Id size = NumPrimitives + InnerNodeCount;
-    xmins = new vtkm::cont::ArrayHandle<vtkm::Float32>();
-    ymins = new vtkm::cont::ArrayHandle<vtkm::Float32>();
-    zmins = new vtkm::cont::ArrayHandle<vtkm::Float32>();
-    xmaxs = new vtkm::cont::ArrayHandle<vtkm::Float32>();
-    ymaxs = new vtkm::cont::ArrayHandle<vtkm::Float32>();
-    zmaxs = new vtkm::cont::ArrayHandle<vtkm::Float32>();
 
-    parent.PrepareForOutput(size, Device());
-    leftChild.PrepareForOutput(InnerNodeCount, Device());
-    rightChild.PrepareForOutput(InnerNodeCount, Device());
-    mortonCodes.PrepareForOutput(NumPrimitives, Device());
+    parent.Allocate(size);
+    leftChild.Allocate(InnerNodeCount);
+    rightChild.Allocate(InnerNodeCount);
+    innerBounds.Allocate(InnerNodeCount);
+    mortonCodes.Allocate(NumPrimitives);
   }
 
   VTKM_CONT
-  ~BVHData()
-  {
-    //
-    delete xmins;
-    delete ymins;
-    delete zmins;
-    delete xmaxs;
-    delete ymaxs;
-    delete zmaxs;
-  }
+  ~BVHData() {}
+
   VTKM_CONT
   vtkm::Id GetNumberOfPrimitives() const { return NumPrimitives; }
   VTKM_CONT
@@ -274,186 +190,177 @@ private:
 
 }; // class BVH
 
-template <typename Device>
 class LinearBVHBuilder::PropagateAABBs : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Int8> Int8Handle;
-  typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 2>> Float2ArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>> VecInt2Handle;
-  typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>> Float4ArrayHandle;
-
-  typedef typename IdArrayHandle::ExecutionTypes<Device>::PortalConst IdConstPortal;
-  typedef typename Float2ArrayHandle::ExecutionTypes<Device>::Portal Float2ArrayPortal;
-  typedef typename VecInt2Handle::ExecutionTypes<Device>::Portal Int2ArrayPortal;
-  typedef typename Int8Handle::ExecutionTypes<Device>::Portal Int8ArrayPortal;
-  typedef typename Float4ArrayHandle::ExecutionTypes<Device>::Portal Float4ArrayPortal;
-
-  Float4ArrayPortal FlatBVH;
-  IdConstPortal Parents;
-  IdConstPortal LeftChildren;
-  IdConstPortal RightChildren;
   vtkm::Int32 LeafCount;
-  //Int8Handle Counters;
-  //Int8ArrayPortal CountersPortal;
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> Counters;
 
 public:
   VTKM_CONT
-  PropagateAABBs(IdArrayHandle& parents,
-                 IdArrayHandle& leftChildren,
-                 IdArrayHandle& rightChildren,
-                 vtkm::Int32 leafCount,
-                 Float4ArrayHandle flatBVH,
-                 const vtkm::exec::AtomicArray<vtkm::Int32, Device>& counters)
-    : Parents(parents.PrepareForInput(Device()))
-    , LeftChildren(leftChildren.PrepareForInput(Device()))
-    , RightChildren(rightChildren.PrepareForInput(Device()))
-    , LeafCount(leafCount)
-    , Counters(counters)
+  PropagateAABBs(vtkm::Int32 leafCount)
+    : LeafCount(leafCount)
 
   {
-    this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
   }
-  typedef void ControlSignature(WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>,
-                                WholeArrayIn<Scalar>);
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6);
+  using ControlSignature = void(WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,     //Parents
+                                WholeArrayIn,     //lchild
+                                WholeArrayIn,     //rchild
+                                AtomicArrayInOut, //counters
+                                WholeArrayInOut   // flatbvh
+                                );
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
 
-  template <typename InputPortalType>
+  template <typename InputPortalType,
+            typename OffsetPortalType,
+            typename IdPortalType,
+            typename AtomicType,
+            typename BVHType>
   VTKM_EXEC_CONT void operator()(const vtkm::Id workIndex,
                                  const InputPortalType& xmin,
                                  const InputPortalType& ymin,
                                  const InputPortalType& zmin,
                                  const InputPortalType& xmax,
                                  const InputPortalType& ymax,
-                                 const InputPortalType& zmax) const
+                                 const InputPortalType& zmax,
+                                 const OffsetPortalType& leafOffsets,
+                                 const IdPortalType& parents,
+                                 const IdPortalType& leftChildren,
+                                 const IdPortalType& rightChildren,
+                                 AtomicType& counters,
+                                 BVHType& flatBVH) const
+
   {
     //move up into the inner nodes
     vtkm::Id currentNode = LeafCount - 1 + workIndex;
-    vtkm::Vec<vtkm::Id, 2> childVector;
+    vtkm::Id2 childVector;
     while (currentNode != 0)
     {
-      currentNode = Parents.Get(currentNode);
-
-      vtkm::Int32 oldCount = Counters.Add(currentNode, 1);
+      currentNode = parents.Get(currentNode);
+      vtkm::Int32 oldCount = counters.Add(currentNode, 1);
       if (oldCount == 0)
+      {
         return;
+      }
       vtkm::Id currentNodeOffset = currentNode * 4;
-      childVector[0] = LeftChildren.Get(currentNode);
-      childVector[1] = RightChildren.Get(currentNode);
+      childVector[0] = leftChildren.Get(currentNode);
+      childVector[1] = rightChildren.Get(currentNode);
       if (childVector[0] > (LeafCount - 2))
       {
+        //our left child is a leaf, so just grab the AABB
+        //and set it in the current node
         childVector[0] = childVector[0] - LeafCount + 1;
 
-        vtkm::Vec<vtkm::Float32, 4>
-          first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
+        vtkm::Vec4f_32 first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
 
         first4Vec[0] = xmin.Get(childVector[0]);
         first4Vec[1] = ymin.Get(childVector[0]);
         first4Vec[2] = zmin.Get(childVector[0]);
         first4Vec[3] = xmax.Get(childVector[0]);
-        FlatBVH.Set(currentNodeOffset, first4Vec);
+        flatBVH.Set(currentNodeOffset, first4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = FlatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[0] = ymax.Get(childVector[0]);
         second4Vec[1] = zmax.Get(childVector[0]);
-        FlatBVH.Set(currentNodeOffset + 1, second4Vec);
-
-        childVector[0] = -(childVector[0] + 1);
+        flatBVH.Set(currentNodeOffset + 1, second4Vec);
+        // set index to leaf
+        vtkm::Id leafIndex = leafOffsets.Get(childVector[0]);
+        childVector[0] = -(leafIndex + 1);
       }
       else
       {
+        //our left child is an inner node, so gather
+        //both AABBs in the child and join them for
+        //the current node left AABB.
         vtkm::Id child = childVector[0] * 4;
 
-        vtkm::Vec<vtkm::Float32, 4> cFirst4Vec = FlatBVH.Get(child);
-        vtkm::Vec<vtkm::Float32, 4> cSecond4Vec = FlatBVH.Get(child + 1);
-        vtkm::Vec<vtkm::Float32, 4> cThird4Vec = FlatBVH.Get(child + 2);
+        vtkm::Vec4f_32 cFirst4Vec = flatBVH.Get(child);
+        vtkm::Vec4f_32 cSecond4Vec = flatBVH.Get(child + 1);
+        vtkm::Vec4f_32 cThird4Vec = flatBVH.Get(child + 2);
 
         cFirst4Vec[0] = vtkm::Min(cFirst4Vec[0], cSecond4Vec[2]);
         cFirst4Vec[1] = vtkm::Min(cFirst4Vec[1], cSecond4Vec[3]);
         cFirst4Vec[2] = vtkm::Min(cFirst4Vec[2], cThird4Vec[0]);
         cFirst4Vec[3] = vtkm::Max(cFirst4Vec[3], cThird4Vec[1]);
-        FlatBVH.Set(currentNodeOffset, cFirst4Vec);
+        flatBVH.Set(currentNodeOffset, cFirst4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = FlatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[0] = vtkm::Max(cSecond4Vec[0], cThird4Vec[2]);
         second4Vec[1] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
 
-        FlatBVH.Set(currentNodeOffset + 1, second4Vec);
+        flatBVH.Set(currentNodeOffset + 1, second4Vec);
       }
 
       if (childVector[1] > (LeafCount - 2))
       {
+        //our right child is a leaf, so just grab the AABB
+        //and set it in the current node
         childVector[1] = childVector[1] - LeafCount + 1;
 
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = FlatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
 
         second4Vec[2] = xmin.Get(childVector[1]);
         second4Vec[3] = ymin.Get(childVector[1]);
-        FlatBVH.Set(currentNodeOffset + 1, second4Vec);
+        flatBVH.Set(currentNodeOffset + 1, second4Vec);
 
-        vtkm::Vec<vtkm::Float32, 4> third4Vec;
+        vtkm::Vec4f_32 third4Vec;
         third4Vec[0] = zmin.Get(childVector[1]);
         third4Vec[1] = xmax.Get(childVector[1]);
         third4Vec[2] = ymax.Get(childVector[1]);
         third4Vec[3] = zmax.Get(childVector[1]);
-        FlatBVH.Set(currentNodeOffset + 2, third4Vec);
-        childVector[1] = -(childVector[1] + 1);
+        flatBVH.Set(currentNodeOffset + 2, third4Vec);
+
+        // set index to leaf
+        vtkm::Id leafIndex = leafOffsets.Get(childVector[1]);
+        childVector[1] = -(leafIndex + 1);
       }
       else
       {
-
+        //our left child is an inner node, so gather
+        //both AABBs in the child and join them for
+        //the current node left AABB.
         vtkm::Id child = childVector[1] * 4;
 
-        vtkm::Vec<vtkm::Float32, 4> cFirst4Vec = FlatBVH.Get(child);
-        vtkm::Vec<vtkm::Float32, 4> cSecond4Vec = FlatBVH.Get(child + 1);
-        vtkm::Vec<vtkm::Float32, 4> cThird4Vec = FlatBVH.Get(child + 2);
+        vtkm::Vec4f_32 cFirst4Vec = flatBVH.Get(child);
+        vtkm::Vec4f_32 cSecond4Vec = flatBVH.Get(child + 1);
+        vtkm::Vec4f_32 cThird4Vec = flatBVH.Get(child + 2);
 
-        vtkm::Vec<vtkm::Float32, 4> second4Vec = FlatBVH.Get(currentNodeOffset + 1);
+        vtkm::Vec4f_32 second4Vec = flatBVH.Get(currentNodeOffset + 1);
         second4Vec[2] = vtkm::Min(cFirst4Vec[0], cSecond4Vec[2]);
         second4Vec[3] = vtkm::Min(cFirst4Vec[1], cSecond4Vec[3]);
-        FlatBVH.Set(currentNodeOffset + 1, second4Vec);
+        flatBVH.Set(currentNodeOffset + 1, second4Vec);
 
         cThird4Vec[0] = vtkm::Min(cFirst4Vec[2], cThird4Vec[0]);
         cThird4Vec[1] = vtkm::Max(cFirst4Vec[3], cThird4Vec[1]);
         cThird4Vec[2] = vtkm::Max(cSecond4Vec[0], cThird4Vec[2]);
         cThird4Vec[3] = vtkm::Max(cSecond4Vec[1], cThird4Vec[3]);
-        FlatBVH.Set(currentNodeOffset + 2, cThird4Vec);
+        flatBVH.Set(currentNodeOffset + 2, cThird4Vec);
       }
-      vtkm::Vec<vtkm::Float32, 4> fourth4Vec;
+      vtkm::Vec4f_32 fourth4Vec;
       vtkm::Int32 leftChild =
         static_cast<vtkm::Int32>((childVector[0] >= 0) ? childVector[0] * 4 : childVector[0]);
       memcpy(&fourth4Vec[0], &leftChild, 4);
       vtkm::Int32 rightChild =
         static_cast<vtkm::Int32>((childVector[1] >= 0) ? childVector[1] * 4 : childVector[1]);
       memcpy(&fourth4Vec[1], &rightChild, 4);
-      FlatBVH.Set(currentNodeOffset + 3, fourth4Vec);
+      flatBVH.Set(currentNodeOffset + 3, fourth4Vec);
     }
   }
 }; //class PropagateAABBs
 
-
-template <typename Device>
 class LinearBVHBuilder::TreeBuilder : public vtkm::worklet::WorkletMapField
 {
-public:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt32> UIntArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename UIntArrayHandle::ExecutionTypes<Device>::PortalConst UIntPortalType;
-  typedef typename IdArrayHandle::ExecutionTypes<Device>::Portal IdPortalType;
-
 private:
-  UIntPortalType MortonCodePortal;
-  IdPortalType ParentPortal;
   vtkm::Id LeafCount;
   vtkm::Id InnerCount;
-  //TODO: get instrinsic support
+  //TODO: get intrinsic support
   VTKM_EXEC
   inline vtkm::Int32 CountLeadingZeros(vtkm::UInt32& x) const
   {
@@ -495,15 +402,17 @@ private:
   //
   // returns count of the largest binary prefix
 
-  VTKM_EXEC
-  inline vtkm::Int32 delta(const vtkm::Int32& a, const vtkm::Int32& b) const
+  template <typename MortonType>
+  VTKM_EXEC inline vtkm::Int32 delta(const vtkm::Int32& a,
+                                     const vtkm::Int32& b,
+                                     const MortonType& mortonCodePortal) const
   {
     bool tie = false;
     bool outOfRange = (b < 0 || b > LeafCount - 1);
     //still make the call but with a valid adderss
     vtkm::Int32 bb = (outOfRange) ? 0 : b;
-    vtkm::UInt32 aCode = MortonCodePortal.Get(a);
-    vtkm::UInt32 bCode = MortonCodePortal.Get(bb);
+    vtkm::UInt32 aCode = mortonCodePortal.Get(a);
+    vtkm::UInt32 bCode = mortonCodePortal.Get(bb);
     //use xor to find where they differ
     vtkm::UInt32 exOr = aCode ^ bCode;
     tie = (exOr == 0);
@@ -518,48 +427,49 @@ private:
 
 public:
   VTKM_CONT
-  TreeBuilder(const UIntArrayHandle& mortonCodesHandle,
-              IdArrayHandle& parentHandle,
-              const vtkm::Id& leafCount)
-    : MortonCodePortal(mortonCodesHandle.PrepareForInput(Device()))
-    , LeafCount(leafCount)
+  TreeBuilder(const vtkm::Id& leafCount)
+    : LeafCount(leafCount)
+    , InnerCount(leafCount - 1)
   {
-    InnerCount = LeafCount - 1;
-    this->ParentPortal = parentHandle.PrepareForOutput(InnerCount + LeafCount, Device());
   }
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
-  typedef void ExecutionSignature(WorkIndex, _1, _2);
-  VTKM_EXEC
-  void operator()(const vtkm::Id& index, vtkm::Id& leftChild, vtkm::Id& rightChild) const
+  using ControlSignature = void(FieldOut, FieldOut, WholeArrayIn, WholeArrayOut);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
+
+  template <typename MortonType, typename ParentType>
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            vtkm::Id& leftChild,
+                            vtkm::Id& rightChild,
+                            const MortonType& mortonCodePortal,
+                            ParentType& parentPortal) const
   {
     vtkm::Int32 idx = vtkm::Int32(index);
-    //something = MortonCodePortal.Get(index) + 1;
     //determine range direction
-    vtkm::Int32 d = 0 > (delta(idx, idx + 1) - delta(idx, idx - 1)) ? -1 : 1;
+    vtkm::Int32 d =
+      0 > (delta(idx, idx + 1, mortonCodePortal) - delta(idx, idx - 1, mortonCodePortal)) ? -1 : 1;
 
     //find upper bound for the length of the range
-    vtkm::Int32 minDelta = delta(idx, idx - d);
+    vtkm::Int32 minDelta = delta(idx, idx - d, mortonCodePortal);
     vtkm::Int32 lMax = 2;
-    while (delta(idx, idx + lMax * d) > minDelta)
+    while (delta(idx, idx + lMax * d, mortonCodePortal) > minDelta)
       lMax *= 2;
 
     //binary search to find the lower bound
     vtkm::Int32 l = 0;
     for (int t = lMax / 2; t >= 1; t /= 2)
     {
-      if (delta(idx, idx + (l + t) * d) > minDelta)
+      if (delta(idx, idx + (l + t) * d, mortonCodePortal) > minDelta)
         l += t;
     }
 
     vtkm::Int32 j = idx + l * d;
-    vtkm::Int32 deltaNode = delta(idx, j);
+    vtkm::Int32 deltaNode = delta(idx, j, mortonCodePortal);
     vtkm::Int32 s = 0;
     vtkm::Float32 divFactor = 2.f;
-    //find the split postition using a binary search
+    //find the split position using a binary search
     for (vtkm::Int32 t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor);;
          divFactor *= 2, t = (vtkm::Int32)ceil(vtkm::Float32(l) / divFactor))
     {
-      if (delta(idx, idx + (s + t) * d) > deltaNode)
+      if (delta(idx, idx + (s + t) * d, mortonCodePortal) > deltaNode)
       {
         s += t;
       }
@@ -573,13 +483,13 @@ public:
     if (vtkm::Min(idx, j) == split)
     {
       //leaf
-      ParentPortal.Set(split + InnerCount, idx);
+      parentPortal.Set(split + InnerCount, idx);
       leftChild = split + InnerCount;
     }
     else
     {
       //inner node
-      ParentPortal.Set(split, idx);
+      parentPortal.Set(split, idx);
       leftChild = split;
     }
 
@@ -587,236 +497,212 @@ public:
     if (vtkm::Max(idx, j) == split + 1)
     {
       //leaf
-      ParentPortal.Set(split + InnerCount + 1, idx);
+      parentPortal.Set(split + InnerCount + 1, idx);
       rightChild = split + InnerCount + 1;
     }
     else
     {
-      ParentPortal.Set(split + 1, idx);
+      parentPortal.Set(split + 1, idx);
       rightChild = split + 1;
     }
   }
 }; // class TreeBuilder
 
-template <typename Device>
-VTKM_CONT void LinearBVHBuilder::SortAABBS(
-  BVHData& bvh,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangleIndices,
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>& outputTriangleIndices,
-  Device vtkmNotUsed(device))
+VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh, bool singleAABB)
 {
   //create array of indexes to be sorted with morton codes
   vtkm::cont::ArrayHandle<vtkm::Id> iterator;
-  iterator.PrepareForOutput(bvh.GetNumberOfPrimitives(), Device());
-  vtkm::worklet::DispatcherMapField<CountingIterator, Device> iteratorDispatcher;
-  iteratorDispatcher.Invoke(iterator);
+  iterator.Allocate(bvh.GetNumberOfPrimitives());
 
-  //std::cout<<"\n\n\n";
+  vtkm::worklet::DispatcherMapField<CountingIterator> iterDispatcher;
+  iterDispatcher.Invoke(iterator);
+
   //sort the morton codes
 
-  vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(bvh.mortonCodes, iterator);
+  vtkm::cont::Algorithm::SortByKey(bvh.mortonCodes, iterator);
 
   vtkm::Id arraySize = bvh.GetNumberOfPrimitives();
-  vtkm::cont::ArrayHandle<vtkm::Float32>* tempStorage;
-  vtkm::cont::ArrayHandle<vtkm::Float32>* tempPtr;
+  vtkm::cont::ArrayHandle<vtkm::Float32> temp1;
+  vtkm::cont::ArrayHandle<vtkm::Float32> temp2;
+  temp1.Allocate(arraySize);
 
+  vtkm::worklet::DispatcherMapField<GatherFloat32> gatherDispatcher;
 
-  tempStorage = new vtkm::cont::ArrayHandle<vtkm::Float32>();
   //xmins
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.xmins, *tempStorage, arraySize))
-    .Invoke(iterator);
+  gatherDispatcher.Invoke(iterator, bvh.AABB.xmins, temp1);
 
-  tempPtr = bvh.xmins;
-  bvh.xmins = tempStorage;
-  tempStorage = tempPtr;
+  temp2 = bvh.AABB.xmins;
+  bvh.AABB.xmins = temp1;
+  temp1 = temp2;
+  //ymins
+  gatherDispatcher.Invoke(iterator, bvh.AABB.ymins, temp1);
 
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.ymins, *tempStorage, arraySize))
-    .Invoke(iterator);
-
-  tempPtr = bvh.ymins;
-  bvh.ymins = tempStorage;
-  tempStorage = tempPtr;
+  temp2 = bvh.AABB.ymins;
+  bvh.AABB.ymins = temp1;
+  temp1 = temp2;
   //zmins
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.zmins, *tempStorage, arraySize))
-    .Invoke(iterator);
-  tempPtr = bvh.zmins;
-  bvh.zmins = tempStorage;
-  tempStorage = tempPtr;
+  gatherDispatcher.Invoke(iterator, bvh.AABB.zmins, temp1);
+
+  temp2 = bvh.AABB.zmins;
+  bvh.AABB.zmins = temp1;
+  temp1 = temp2;
   //xmaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.xmaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  gatherDispatcher.Invoke(iterator, bvh.AABB.xmaxs, temp1);
 
-  tempPtr = bvh.xmaxs;
-  bvh.xmaxs = tempStorage;
-  tempStorage = tempPtr;
+  temp2 = bvh.AABB.xmaxs;
+  bvh.AABB.xmaxs = temp1;
+  temp1 = temp2;
   //ymaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.ymaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  gatherDispatcher.Invoke(iterator, bvh.AABB.ymaxs, temp1);
 
-  tempPtr = bvh.ymaxs;
-  bvh.ymaxs = tempStorage;
-  tempStorage = tempPtr;
+  temp2 = bvh.AABB.ymaxs;
+  bvh.AABB.ymaxs = temp1;
+  temp1 = temp2;
   //zmaxs
-  vtkm::worklet::DispatcherMapField<GatherFloat32<Device>, Device>(
-    GatherFloat32<Device>(*bvh.zmaxs, *tempStorage, arraySize))
-    .Invoke(iterator);
+  gatherDispatcher.Invoke(iterator, bvh.AABB.zmaxs, temp1);
 
-  tempPtr = bvh.zmaxs;
-  bvh.zmaxs = tempStorage;
-  tempStorage = tempPtr;
+  temp2 = bvh.AABB.zmaxs;
+  bvh.AABB.zmaxs = temp1;
+  temp1 = temp2;
 
-  vtkm::worklet::DispatcherMapField<GatherVecCast<Device>, Device>(
-    GatherVecCast<Device>(triangleIndices, outputTriangleIndices, arraySize))
-    .Invoke(iterator);
-  delete tempStorage;
+  // Create the leaf references
+  bvh.leafs.Allocate(arraySize * 2);
+  // we only actually have a single primitive, but the algorithm
+  // requires 2. Make sure they both point to the original
+  // primitive
+  if (singleAABB)
+  {
+    auto iterPortal = iterator.GetPortalControl();
+    for (int i = 0; i < 2; ++i)
+    {
+      iterPortal.Set(i, 0);
+    }
+  }
 
-} // method SortAABBs
+  vtkm::worklet::DispatcherMapField<CreateLeafs> leafDispatcher;
+  leafDispatcher.Invoke(iterator, bvh.leafs);
 
-// Adding this as a template parameter to allow restricted types and
-// storage for dynamic coordinate system to limit crazy code bloat and
-// compile times.
-//
-template <typename Device>
-VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device)
+} // method SortAABB
+
+VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
 {
-  Logger* logger = Logger::GetInstance();
-  logger->OpenLogEntry("bvh_constuct");
-  logger->AddLogData("device", GetDeviceString(Device()));
-  vtkm::cont::Timer<Device> constructTimer;
 
-  auto coordsHandle = linearBVH.GetCoordsHandle();
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangleIndices = linearBVH.GetTriangles();
-  vtkm::Id numberOfTriangles = linearBVH.GetNumberOfTriangles();
+  //
+  //
+  // This algorithm needs at least 2 AABBs
+  //
+  bool singleAABB = false;
+  vtkm::Id numberOfAABBs = linearBVH.GetNumberOfAABBs();
+  if (numberOfAABBs == 1)
+  {
+    numberOfAABBs = 2;
+    singleAABB = true;
+    vtkm::Float32 xmin = linearBVH.AABB.xmins.GetPortalControl().Get(0);
+    vtkm::Float32 ymin = linearBVH.AABB.ymins.GetPortalControl().Get(0);
+    vtkm::Float32 zmin = linearBVH.AABB.zmins.GetPortalControl().Get(0);
+    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.GetPortalControl().Get(0);
+    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.GetPortalControl().Get(0);
+    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.GetPortalControl().Get(0);
 
-  logger->AddLogData("bvh_num_triangles ", numberOfTriangles);
+    linearBVH.AABB.xmins.Allocate(2);
+    linearBVH.AABB.ymins.Allocate(2);
+    linearBVH.AABB.zmins.Allocate(2);
+    linearBVH.AABB.xmaxs.Allocate(2);
+    linearBVH.AABB.ymaxs.Allocate(2);
+    linearBVH.AABB.zmaxs.Allocate(2);
+    for (int i = 0; i < 2; ++i)
+    {
+      linearBVH.AABB.xmins.GetPortalControl().Set(i, xmin);
+      linearBVH.AABB.ymins.GetPortalControl().Set(i, ymin);
+      linearBVH.AABB.zmins.GetPortalControl().Set(i, zmin);
+      linearBVH.AABB.xmaxs.GetPortalControl().Set(i, xmax);
+      linearBVH.AABB.ymaxs.GetPortalControl().Set(i, ymax);
+      linearBVH.AABB.zmaxs.GetPortalControl().Set(i, zmax);
+    }
+  }
 
-  const vtkm::Id numBBoxes = numberOfTriangles;
-  BVHData bvh(numBBoxes, device);
 
-  vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs())
-    .Invoke(triangleIndices,
-            *bvh.xmins,
-            *bvh.ymins,
-            *bvh.zmins,
-            *bvh.xmaxs,
-            *bvh.ymaxs,
-            *bvh.zmaxs,
-            coordsHandle);
+  const vtkm::Id numBBoxes = numberOfAABBs;
+  BVHData bvh(numBBoxes, linearBVH.GetAABBs());
 
-  vtkm::Float64 time = timer.GetElapsedTime();
-  logger->AddLogData("find_aabb", time);
-  timer.Reset();
 
   // Find the extent of all bounding boxes to generate normalization for morton codes
-  vtkm::Vec<vtkm::Float32, 3> minExtent(vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
-  vtkm::Vec<vtkm::Float32, 3> maxExtent(
+  vtkm::Vec3f_32 minExtent(vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
+  vtkm::Vec3f_32 maxExtent(
     vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32());
-  maxExtent[0] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.xmaxs, maxExtent[0], MaxValue());
-  maxExtent[1] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.ymaxs, maxExtent[1], MaxValue());
-  maxExtent[2] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.zmaxs, maxExtent[2], MaxValue());
-  minExtent[0] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.xmins, minExtent[0], MinValue());
-  minExtent[1] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.ymins, minExtent[1], MinValue());
-  minExtent[2] =
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(*bvh.zmins, minExtent[2], MinValue());
+  maxExtent[0] = vtkm::cont::Algorithm::Reduce(bvh.AABB.xmaxs, maxExtent[0], MaxValue());
+  maxExtent[1] = vtkm::cont::Algorithm::Reduce(bvh.AABB.ymaxs, maxExtent[1], MaxValue());
+  maxExtent[2] = vtkm::cont::Algorithm::Reduce(bvh.AABB.zmaxs, maxExtent[2], MaxValue());
+  minExtent[0] = vtkm::cont::Algorithm::Reduce(bvh.AABB.xmins, minExtent[0], MinValue());
+  minExtent[1] = vtkm::cont::Algorithm::Reduce(bvh.AABB.ymins, minExtent[1], MinValue());
+  minExtent[2] = vtkm::cont::Algorithm::Reduce(bvh.AABB.zmins, minExtent[2], MinValue());
 
-  time = timer.GetElapsedTime();
-  logger->AddLogData("calc_extents", time);
-  timer.Reset();
+  linearBVH.TotalBounds.X.Min = minExtent[0];
+  linearBVH.TotalBounds.X.Max = maxExtent[0];
+  linearBVH.TotalBounds.Y.Min = minExtent[1];
+  linearBVH.TotalBounds.Y.Max = maxExtent[1];
+  linearBVH.TotalBounds.Z.Min = minExtent[2];
+  linearBVH.TotalBounds.Z.Max = maxExtent[2];
 
-  vtkm::Vec<vtkm::Float32, 3> deltaExtent = maxExtent - minExtent;
-  vtkm::Vec<vtkm::Float32, 3> inverseExtent;
+  vtkm::Vec3f_32 deltaExtent = maxExtent - minExtent;
+  vtkm::Vec3f_32 inverseExtent;
   for (int i = 0; i < 3; ++i)
   {
     inverseExtent[i] = (deltaExtent[i] == 0.f) ? 0 : 1.f / deltaExtent[i];
   }
 
   //Generate the morton codes
-  vtkm::worklet::DispatcherMapField<MortonCodeAABB, Device>(
-    MortonCodeAABB(inverseExtent, minExtent))
-    .Invoke(
-      *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs, bvh.mortonCodes);
+  vtkm::worklet::DispatcherMapField<MortonCodeAABB> mortonDispatch(
+    MortonCodeAABB(inverseExtent, minExtent));
+  mortonDispatch.Invoke(bvh.AABB.xmins,
+                        bvh.AABB.ymins,
+                        bvh.AABB.zmins,
+                        bvh.AABB.xmaxs,
+                        bvh.AABB.ymaxs,
+                        bvh.AABB.zmaxs,
+                        bvh.mortonCodes);
+  linearBVH.Allocate(bvh.GetNumberOfPrimitives());
 
-  time = timer.GetElapsedTime();
-  logger->AddLogData("morton_codes", time);
-  timer.Reset();
+  SortAABBS(bvh, singleAABB);
 
-  linearBVH.Allocate(bvh.GetNumberOfPrimitives(), Device());
-
-  SortAABBS(bvh, triangleIndices, linearBVH.LeafNodes, Device());
-
-  time = timer.GetElapsedTime();
-  logger->AddLogData("sort_aabbs", time);
-  timer.Reset();
-
-  vtkm::worklet::DispatcherMapField<TreeBuilder<Device>, Device>(
-    TreeBuilder<Device>(bvh.mortonCodes, bvh.parent, bvh.GetNumberOfPrimitives()))
-    .Invoke(bvh.leftChild, bvh.rightChild);
-
-  time = timer.GetElapsedTime();
-  logger->AddLogData("build_tree", time);
-  timer.Reset();
+  vtkm::worklet::DispatcherMapField<TreeBuilder> treeDispatch(
+    TreeBuilder(bvh.GetNumberOfPrimitives()));
+  treeDispatch.Invoke(bvh.leftChild, bvh.rightChild, bvh.mortonCodes, bvh.parent);
 
   const vtkm::Int32 primitiveCount = vtkm::Int32(bvh.GetNumberOfPrimitives());
 
   vtkm::cont::ArrayHandle<vtkm::Int32> counters;
-  counters.PrepareForOutput(bvh.GetNumberOfPrimitives() - 1, Device());
-  vtkm::Int32 zero = 0;
-  vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>, Device>(MemSet<vtkm::Int32>(zero))
-    .Invoke(counters);
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> atomicCounters(counters);
+  counters.Allocate(bvh.GetNumberOfPrimitives() - 1);
 
+  vtkm::cont::ArrayHandleConstant<vtkm::Int32> zero(0, bvh.GetNumberOfPrimitives() - 1);
+  vtkm::cont::Algorithm::Copy(zero, counters);
 
-  vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>, Device>(
-    PropagateAABBs<Device>(
-      bvh.parent, bvh.leftChild, bvh.rightChild, primitiveCount, linearBVH.FlatBVH, atomicCounters))
-    .Invoke(*bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs);
+  vtkm::worklet::DispatcherMapField<PropagateAABBs> propDispatch(PropagateAABBs{ primitiveCount });
 
-  time = timer.GetElapsedTime();
-  logger->AddLogData("propagate_aabbs", time);
+  propDispatch.Invoke(bvh.AABB.xmins,
+                      bvh.AABB.ymins,
+                      bvh.AABB.zmins,
+                      bvh.AABB.xmaxs,
+                      bvh.AABB.ymaxs,
+                      bvh.AABB.zmaxs,
+                      bvh.leafOffsets,
+                      bvh.parent,
+                      bvh.leftChild,
+                      bvh.rightChild,
+                      counters,
+                      linearBVH.FlatBVH);
 
-  time = constructTimer.GetElapsedTime();
-  logger->CloseLogEntry(time);
+  linearBVH.Leafs = bvh.leafs;
 }
 } //namespace detail
-
-struct LinearBVH::ConstructFunctor
-{
-  LinearBVH* Self;
-  VTKM_CONT
-  ConstructFunctor(LinearBVH* self)
-    : Self(self)
-  {
-  }
-  template <typename Device>
-  bool operator()(Device)
-  {
-    Self->ConstructOnDevice(Device());
-    return true;
-  }
-};
 
 LinearBVH::LinearBVH()
   : IsConstructed(false)
   , CanConstruct(false){};
 
 VTKM_CONT
-LinearBVH::LinearBVH(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
-                     vtkm::Bounds coordBounds)
-  : CoordBounds(coordBounds)
-  , CoordsHandle(coordsHandle)
-  , Triangles(triangles)
+LinearBVH::LinearBVH(AABBs& aabbs)
+  : AABB(aabbs)
   , IsConstructed(false)
   , CanConstruct(true)
 {
@@ -824,22 +710,19 @@ LinearBVH::LinearBVH(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
 
 VTKM_CONT
 LinearBVH::LinearBVH(const LinearBVH& other)
-  : FlatBVH(other.FlatBVH)
-  , LeafNodes(other.LeafNodes)
+  : AABB(other.AABB)
+  , FlatBVH(other.FlatBVH)
+  , Leafs(other.Leafs)
   , LeafCount(other.LeafCount)
-  , CoordBounds(other.CoordBounds)
-  , CoordsHandle(other.CoordsHandle)
-  , Triangles(other.Triangles)
   , IsConstructed(other.IsConstructed)
   , CanConstruct(other.CanConstruct)
 {
 }
-template <typename Device>
-VTKM_CONT void LinearBVH::Allocate(const vtkm::Id& leafCount, Device deviceAdapter)
+
+VTKM_CONT void LinearBVH::Allocate(const vtkm::Id& leafCount)
 {
   LeafCount = leafCount;
-  LeafNodes.PrepareForOutput(leafCount, deviceAdapter);
-  FlatBVH.PrepareForOutput((leafCount - 1) * 4, deviceAdapter);
+  FlatBVH.Allocate((leafCount - 1) * 4);
 }
 
 void LinearBVH::Construct()
@@ -850,88 +733,48 @@ void LinearBVH::Construct()
     throw vtkm::cont::ErrorBadValue(
       "Linear BVH: coordinates and triangles must be set before calling construct!");
 
-  ConstructFunctor functor(this);
-  vtkm::cont::TryExecute(functor);
-  IsConstructed = true;
+  detail::LinearBVHBuilder builder;
+  builder.Build(*this);
 }
 
 VTKM_CONT
-void LinearBVH::SetData(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
-                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
-                        vtkm::Bounds coordBounds)
+void LinearBVH::SetData(AABBs& aabbs)
 {
-  CoordBounds = coordBounds;
-  CoordsHandle = coordsHandle;
-  Triangles = triangles;
+  AABB = aabbs;
   IsConstructed = false;
   CanConstruct = true;
 }
 
-template <typename Device>
-void LinearBVH::ConstructOnDevice(Device device)
-{
-  Logger* logger = Logger::GetInstance();
-  vtkm::cont::Timer<Device> timer;
-  logger->OpenLogEntry("bvh");
-  if (!CanConstruct)
-    throw vtkm::cont::ErrorBadValue(
-      "Linear BVH: coordinates and triangles must be set before calling construct!");
-  if (!IsConstructed)
-  {
-    //
-    // This algorithm needs at least 2 triangles
-    //
-    vtkm::Id numTriangles = this->GetNumberOfTriangles();
-    if (numTriangles == 1)
-    {
-      vtkm::Vec<vtkm::Id, 4> triangle = Triangles.GetPortalControl().Get(0);
-      Triangles.Allocate(2);
-      Triangles.GetPortalControl().Set(0, triangle);
-      Triangles.GetPortalControl().Set(1, triangle);
-    }
-    detail::LinearBVHBuilder builder;
-    builder.RunOnDevice(*this, device);
-    IsConstructed = true;
-  }
-
-  vtkm::Float64 time = timer.GetElapsedTime();
-  logger->CloseLogEntry(time);
-}
-
-// explicitly export to workaround an intel compiler bug
-#if defined(VTKM_ICC)
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagSerial>(
-  vtkm::cont::DeviceAdapterTagSerial);
-#ifdef VTKM_ENABLE_TBB
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
-  vtkm::cont::DeviceAdapterTagTBB);
-#endif
-#ifdef VTKM_ENABLE_CUDA
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
-  vtkm::cont::DeviceAdapterTagCuda);
-#endif
-#endif
-
+// explicitly export
+//template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
+//  vtkm::cont::DeviceAdapterTagSerial>(vtkm::cont::DeviceAdapterTagSerial);
+//#ifdef VTKM_ENABLE_TBB
+//template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
+//  vtkm::cont::DeviceAdapterTagTBB);
+//#endif
+//#ifdef VTKM_ENABLE_OPENMP
+//template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagOpenMP>(
+//  vtkm::cont::DeviceAdapterTagOpenMP);
+//#endif
+//#ifdef VTKM_ENABLE_CUDA
+//template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
+//  vtkm::cont::DeviceAdapterTagCuda);
+//#endif
+//
 VTKM_CONT
 bool LinearBVH::GetIsConstructed() const
 {
   return IsConstructed;
 }
-VTKM_CONT
-vtkm::cont::ArrayHandleVirtualCoordinates LinearBVH::GetCoordsHandle() const
+
+vtkm::Id LinearBVH::GetNumberOfAABBs() const
 {
-  return CoordsHandle;
+  return AABB.xmins.GetNumberOfValues();
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> LinearBVH::GetTriangles() const
+AABBs& LinearBVH::GetAABBs()
 {
-  return Triangles;
-}
-
-vtkm::Id LinearBVH::GetNumberOfTriangles() const
-{
-  return Triangles.GetPortalConstControl().GetNumberOfValues();
+  return AABB;
 }
 }
 }

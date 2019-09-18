@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_exec_ColorTable_hxx
 #define vtk_m_exec_ColorTable_hxx
 
@@ -84,7 +72,7 @@ inline vtkm::Vec<float, 3> HSVToRGB(const vtkm::Vec<float, 3>& hsv)
     rgb[0] = (onethird - hsv[0]) * 6.0f;
     rgb[2] = 0.0f;
   }
-  else if (hsv[0] > onethird && hsv[0] <= 0.5) // green/blue
+  else if (hsv[0] > onethird && hsv[0] <= 0.5f) // green/blue
   {
     rgb[1] = 1.0f;
     rgb[2] = (hsv[0] - onethird) * 6.0f;
@@ -286,8 +274,8 @@ inline vtkm::Vec<float, 3> MshToLab(const vtkm::Vec<float, 3>& msh)
 VTKM_EXEC
 inline float DivergingAngleDiff(float a1, float a2)
 {
-  constexpr float f_pi = 3.141592653589793f;
-  constexpr float f_two_pi = 6.28318530717958647692528676655900576f;
+  constexpr float f_pi = vtkm::Pif();
+  constexpr float f_two_pi = vtkm::TwoPif();
   float adiff = a1 - a2;
   if (adiff < 0.0f)
     adiff = -adiff;
@@ -303,6 +291,8 @@ inline float DivergingAngleDiff(float a1, float a2)
 VTKM_EXEC
 inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
 {
+  const float sinS = vtkm::Sin(msh[1]);
+
   if (msh[0] >= unsatM - 0.1f)
   {
     // The best we can do is hold hue constant.
@@ -312,10 +302,9 @@ inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
   {
     // This equation is designed to make the perceptual change of the
     // interpolation to be close to constant.
-    float hueSpin =
-      (msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * vtkm::Sin(msh[1])));
+    float hueSpin = msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * sinS);
 
-    constexpr float one_third_pi = 0.33f * 3.141592653589793f;
+    constexpr float one_third_pi = vtkm::Pi_3f();
     // Spin hue away from 0 except in purple hues.
     if (msh[2] > -one_third_pi)
     {
@@ -369,7 +358,7 @@ void ColorTableBase::FindColors(double value,
     rgb2 = this->NaNColor;
   }
   else if (this->ColorSize == 0)
-  { //If we have no entires use the below range value
+  { //If we have no entries use the below range value
     rgb1 = this->BelowRangeColor;
     rgb2 = this->BelowRangeColor;
   }
@@ -609,7 +598,8 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
   detail::LabToMsh(lab2, msh2);
   // If the endpoints are distinct saturated colors, then place white in between
   // them.
-  constexpr float one_third_pi = 0.33f * 3.141592653589793f;
+
+  constexpr float one_third_pi = vtkm::Pi_3f();
   if ((msh1[1] > 0.05f) && (msh2[1] > 0.05f) &&
       (detail::DivergingAngleDiff(msh1[2], msh2[2]) > one_third_pi))
   {
@@ -653,7 +643,7 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
 }
 
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consitent order among all the translation units of an
+// to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the portal types here.

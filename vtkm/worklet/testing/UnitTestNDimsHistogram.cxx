@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/NDimsHistogram.h>
@@ -57,11 +47,11 @@ vtkm::cont::DataSet MakeTestDataSet()
 
   // Set point scalars
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+    "fieldA", vtkm::cont::Field::Association::POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+    "fieldB", vtkm::cont::Field::Association::POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
   dataSet.AddField(vtkm::cont::make_Field(
-    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
+    "fieldC", vtkm::cont::Field::Association::POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -74,42 +64,29 @@ void TestNDimsHistogram()
   vtkm::worklet::NDimsHistogram ndHistogram;
 
   // Set the number of data points
-  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetData().GetNumberOfValues(),
-                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.SetNumOfDataPoints(ds.GetField(0).GetNumberOfValues());
 
   // Add field one by one
   vtkm::Range rangeFieldA;
   vtkm::Float64 deltaFieldA;
-  ndHistogram.AddField(ds.GetField("fieldA").GetData(),
-                       4,
-                       rangeFieldA,
-                       deltaFieldA,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldA").GetData(), 4, rangeFieldA, deltaFieldA);
 
   vtkm::Range rangeFieldB;
   vtkm::Float64 deltaFieldB;
-  ndHistogram.AddField(ds.GetField("fieldB").GetData(),
-                       4,
-                       rangeFieldB,
-                       deltaFieldB,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldB").GetData(), 4, rangeFieldB, deltaFieldB);
 
   vtkm::Range rangeFieldC;
   vtkm::Float64 deltaFieldC;
-  ndHistogram.AddField(ds.GetField("fieldC").GetData(),
-                       4,
-                       rangeFieldC,
-                       deltaFieldC,
-                       VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.AddField(ds.GetField("fieldC").GetData(), 4, rangeFieldC, deltaFieldC);
 
   // the return binIds and freqs is sparse distribution representation
   // (we do not keep the 0 frequency entities)
   // e.g. we have three variable(data arrays) in this example
   // binIds[0, 1, 2][j] is a combination of bin ID of three variable,
-  // freqs[j] is the freqncy of this bin IDs combination
+  // freqs[j] is the frequency of this bin IDs combination
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
   vtkm::cont::ArrayHandle<vtkm::Id> freqs;
-  ndHistogram.Run(binIds, freqs, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  ndHistogram.Run(binIds, freqs);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 33;
@@ -138,7 +115,7 @@ void TestNDimsHistogram()
 } // TestNDHistogram
 }
 
-int UnitTestNDimsHistogram(int, char* [])
+int UnitTestNDimsHistogram(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestNDimsHistogram);
+  return vtkm::cont::testing::Testing::Run(TestNDimsHistogram, argc, argv);
 }

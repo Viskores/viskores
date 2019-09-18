@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_rendering_Wireframer_h
@@ -23,11 +13,11 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
+#include <vtkm/Swap.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Triangulator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -40,8 +30,8 @@ namespace rendering
 namespace
 {
 
-using ColorMapHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
-using IndicesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>>;
+using ColorMapHandle = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+using IndicesHandle = vtkm::cont::ArrayHandle<vtkm::Id2>;
 using PackedFrameBufferHandle = vtkm::cont::ArrayHandle<vtkm::Int64>;
 
 // Depth value of 1.0f
@@ -78,7 +68,7 @@ VTKM_EXEC_CONT
 vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::Float32 a);
 
 VTKM_EXEC_CONT
-vtkm::UInt32 PackColor(const vtkm::Vec<vtkm::Float32, 4>& color)
+vtkm::UInt32 PackColor(const vtkm::Vec4f_32& color)
 {
   return PackColor(color[0], color[1], color[2], color[3]);
 }
@@ -101,7 +91,7 @@ void UnpackColor(vtkm::UInt32 color,
                  vtkm::Float32& a);
 
 VTKM_EXEC_CONT
-void UnpackColor(vtkm::UInt32 packedColor, vtkm::Vec<vtkm::Float32, 4>& color)
+void UnpackColor(vtkm::UInt32 packedColor, vtkm::Vec4f_32& color)
 {
   UnpackColor(packedColor, color[0], color[1], color[2], color[3]);
 }
@@ -135,14 +125,14 @@ union PackedValue {
 
 struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
   CopyIntoFrameBuffer() {}
 
   VTKM_EXEC
-  void operator()(const vtkm::Vec<vtkm::Float32, 4>& color,
+  void operator()(const vtkm::Vec4f_32& color,
                   const vtkm::Float32& depth,
                   vtkm::Int64& outValue) const
   {
@@ -157,10 +147,12 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle =
+    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
-  typedef void ControlSignature(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -174,7 +166,7 @@ public:
               bool assocPoints,
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
-              const AtomicPackedFrameBufferHandle& frameBuffer,
+              const AtomicPackedFrameBuffer& frameBuffer,
               const vtkm::Range& clippingRange)
     : WorldToProjection(worldToProjection)
     , Width(width)
@@ -186,7 +178,7 @@ public:
     , AssocPoints(assocPoints)
     , ColorMap(colorMap.PrepareForInput(DeviceTag()))
     , ColorMapSize(vtkm::Float32(colorMap.GetNumberOfValues() - 1))
-    , FrameBuffer(frameBuffer)
+    , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag()))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
@@ -194,15 +186,15 @@ public:
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 2>& edgeIndices,
+  VTKM_EXEC void operator()(const vtkm::Id2& edgeIndices,
                             const CoordinatesPortalType& coordsPortal,
                             const ScalarFieldPortalType& fieldPortal) const
   {
     vtkm::Id point1Idx = edgeIndices[0];
     vtkm::Id point2Idx = edgeIndices[1];
 
-    vtkm::Vec<vtkm::Float32, 3> point1 = coordsPortal.Get(edgeIndices[0]);
-    vtkm::Vec<vtkm::Float32, 3> point2 = coordsPortal.Get(edgeIndices[1]);
+    vtkm::Vec3f_32 point1 = coordsPortal.Get(edgeIndices[0]);
+    vtkm::Vec3f_32 point2 = coordsPortal.Get(edgeIndices[1]);
 
     TransformWorldToViewport(point1);
     TransformWorldToViewport(point2);
@@ -219,16 +211,16 @@ public:
     bool transposed = vtkm::Abs(y2 - y1) > vtkm::Abs(x2 - x1);
     if (transposed)
     {
-      std::swap(x1, y1);
-      std::swap(x2, y2);
+      vtkm::Swap(x1, y1);
+      vtkm::Swap(x2, y2);
     }
 
     // Ensure we are always going from left to right
     if (x1 > x2)
     {
-      std::swap(x1, x2);
-      std::swap(y1, y2);
-      std::swap(z1, z2);
+      vtkm::Swap(x1, x2);
+      vtkm::Swap(y1, y2);
+      vtkm::Swap(z1, z2);
     }
 
     vtkm::Float32 dx = x2 - x1;
@@ -252,7 +244,7 @@ public:
     }
 
     // Plot first endpoint
-    vtkm::Vec<vtkm::Float32, 4> color = GetColor(point1Field);
+    vtkm::Vec4f_32 color = GetColor(point1Field);
     if (transposed)
     {
       Plot(yPxl1, xPxl1, zPxl1, color, 1.0f);
@@ -314,9 +306,9 @@ private:
   using ColorMapPortalConst = typename ColorMapHandle::ExecutionTypes<DeviceTag>::PortalConst;
 
   VTKM_EXEC
-  void TransformWorldToViewport(vtkm::Vec<vtkm::Float32, 3>& point) const
+  void TransformWorldToViewport(vtkm::Vec3f_32& point) const
   {
-    vtkm::Vec<vtkm::Float32, 4> temp(point[0], point[1], point[2], 1.0f);
+    vtkm::Vec4f_32 temp(point[0], point[1], point[2], 1.0f);
     temp = vtkm::MatrixMultiply(WorldToProjection, temp);
     for (vtkm::IdComponent i = 0; i < 3; ++i)
     {
@@ -333,7 +325,7 @@ private:
     point[2] -= Offset;
   }
 
-  VTKM_EXEC vtkm::Vec<vtkm::Float32, 4> GetColor(vtkm::Float64 fieldValue) const
+  VTKM_EXEC vtkm::Vec4f_32 GetColor(vtkm::Float64 fieldValue) const
   {
     vtkm::Int32 colorIdx =
       vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
@@ -345,7 +337,7 @@ private:
   void Plot(vtkm::Float32 x,
             vtkm::Float32 y,
             vtkm::Float32 depth,
-            const vtkm::Vec<vtkm::Float32, 4>& color,
+            const vtkm::Vec4f_32& color,
             vtkm::Float32 intensity) const
   {
     vtkm::Id xi = static_cast<vtkm::Id>(x), yi = static_cast<vtkm::Id>(y);
@@ -357,8 +349,8 @@ private:
     PackedValue current, next;
     current.Raw = ClearValue;
     next.Floats.Depth = depth;
-    vtkm::Vec<vtkm::Float32, 4> blendedColor;
-    vtkm::Vec<vtkm::Float32, 4> srcColor;
+    vtkm::Vec4f_32 blendedColor;
+    vtkm::Vec4f_32 srcColor;
     do
     {
       UnpackColor(current.Ints.Color, srcColor);
@@ -395,10 +387,8 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  typedef void ControlSignature(FieldIn<>,
-                                WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
-                                WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ControlSignature = void(FieldIn, WholeArrayOut, WholeArrayOut);
+  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::Int64& packedValue,
@@ -411,7 +401,7 @@ public:
     float depth = packed.Floats.Depth;
     if (depth <= depthBuffer.Get(index))
     {
-      vtkm::Vec<vtkm::Float32, 4> color;
+      vtkm::Vec4f_32 color;
       UnpackColor(packed.Ints.Color, color);
       colorBuffer.Set(index, color);
       depthBuffer.Set(index, depth);
@@ -493,10 +483,8 @@ private:
 
     if (ShowInternalZones && !IsOverlay)
     {
-      using MemSet =
-        typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      MemSet memSet(ClearValue);
-      vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
+      vtkm::cont::ArrayHandleConstant<vtkm::Int64> clear(ClearValue, pixelCount);
+      vtkm::cont::Algorithm::Copy(clear, FrameBuffer);
     }
     else
     {
@@ -532,11 +520,12 @@ private:
       xOffset = static_cast<vtkm::Id>(_x);
     }
 
-    bool isSupportedField = (ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    const bool isSupportedField = ScalarField.IsFieldCell() || ScalarField.IsFieldPoint();
     if (!isSupportedField)
+    {
       throw vtkm::cont::ErrorBadValue("Field not associated with cell set or points");
-    bool isAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    }
+    const bool isAssocPoints = ScalarField.IsFieldPoint();
 
     EdgePlotter<DeviceTag> plotter(WorldToProjection,
                                    width,
@@ -550,12 +539,15 @@ private:
                                    ColorMap,
                                    FrameBuffer,
                                    Camera.GetClippingRange());
-    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
-      PointIndices, Coordinates, ScalarField.GetData());
+    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
+    plotterDispatcher.SetDevice(DeviceTag());
+    plotterDispatcher.Invoke(
+      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
 
     BufferConverter converter;
-    vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
-      FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
+    vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);
+    converterDispatcher.SetDevice(DeviceTag());
+    converterDispatcher.Invoke(FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
   }
 
   VTKM_CONT

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
@@ -26,7 +16,10 @@
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/BitField.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
@@ -122,11 +115,42 @@ private:
 
 public:
   //--------------------------------------------------------------------------
+  // BitFieldToUnorderedSet
+  template <typename IndicesStorage>
+  VTKM_CONT static vtkm::Id BitFieldToUnorderedSet(
+    const vtkm::cont::BitField& bits,
+    vtkm::cont::ArrayHandle<Id, IndicesStorage>& indices)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numBits = bits.GetNumberOfBits();
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    std::atomic<vtkm::UInt64> popCount;
+    popCount.store(0, std::memory_order_seq_cst);
+
+    using Functor = BitFieldToUnorderedSetFunctor<decltype(bitsPortal), decltype(indicesPortal)>;
+    Functor functor{ bitsPortal, indicesPortal, popCount };
+
+    DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
+    DerivedAlgorithm::Synchronize();
+
+    numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
+
+    indices.Shrink(numBits);
+    return numBits;
+  }
+
+  //--------------------------------------------------------------------------
   // Copy
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
     auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTag());
@@ -143,6 +167,8 @@ public:
                                vtkm::cont::ArrayHandle<T, COut>& output,
                                UnaryPredicate unary_predicate)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
 
@@ -176,6 +202,8 @@ public:
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
                                vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     ::vtkm::NotZeroInitialized unary_predicate;
     DerivedAlgorithm::CopyIf(input, stencil, output, unary_predicate);
   }
@@ -189,6 +217,8 @@ public:
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
@@ -240,12 +270,178 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // Count Set Bits
+  VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+
+    std::atomic<vtkm::UInt64> popCount;
+    popCount.store(0, std::memory_order_relaxed);
+
+    using Functor = CountSetBitsFunctor<decltype(bitsPortal)>;
+    Functor functor{ bitsPortal, popCount };
+
+    DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
+    DerivedAlgorithm::Synchronize();
+
+    return static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (bool, resize)
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value, vtkm::Id numBits)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (numBits == 0)
+    {
+      bits.Shrink(0);
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    using WordType =
+      typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+
+    using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
+    Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<WordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (bool)
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, bool value)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numBits = bits.GetNumberOfBits();
+    if (numBits == 0)
+    {
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    using WordType =
+      typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+
+    using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
+    Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<WordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (mask, resize)
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, vtkm::Id numBits)
+  {
+    VTKM_STATIC_ASSERT_MSG(vtkm::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    if (numBits == 0)
+    {
+      bits.Shrink(0);
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    // If less than 32 bits, repeat the word until we get a 32 bit pattern.
+    // Using this for the pattern prevents races while writing small numbers
+    // to adjacent memory locations.
+    auto repWord = RepeatTo32BitsIfNeeded(word);
+    using RepWordType = decltype(repWord);
+
+    using Functor = FillBitFieldFunctor<decltype(portal), RepWordType>;
+    Functor functor{ portal, repWord };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<RepWordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill Bit Field (mask)
+  template <typename WordType>
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word)
+  {
+    VTKM_STATIC_ASSERT_MSG(vtkm::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numBits = bits.GetNumberOfBits();
+    if (numBits == 0)
+    {
+      return;
+    }
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+
+    // If less than 32 bits, repeat the word until we get a 32 bit pattern.
+    // Using this for the pattern prevents races while writing small numbers
+    // to adjacent memory locations.
+    auto repWord = RepeatTo32BitsIfNeeded(word);
+    using RepWordType = decltype(repWord);
+
+    using Functor = FillBitFieldFunctor<decltype(portal), RepWordType>;
+    Functor functor{ portal, repWord };
+
+    const vtkm::Id numWords = portal.template GetNumberOfWords<RepWordType>();
+    DerivedAlgorithm::Schedule(functor, numWords);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill ArrayHandle
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& handle, const T& value)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numValues = handle.GetNumberOfValues();
+    if (numValues == 0)
+    {
+      return;
+    }
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
+    DerivedAlgorithm::Schedule(functor, numValues);
+  }
+
+  //--------------------------------------------------------------------------
+  // Fill ArrayHandle (resize)
+  template <typename T, typename S>
+  VTKM_CONT static void Fill(vtkm::cont::ArrayHandle<T, S>& handle,
+                             const T& value,
+                             const vtkm::Id numValues)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+    if (numValues == 0)
+    {
+      handle.Shrink(0);
+      return;
+    }
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
+    DerivedAlgorithm::Schedule(functor, numValues);
+  }
+
+  //--------------------------------------------------------------------------
   // Lower Bounds
   template <typename T, class CIn, class CVal, class COut>
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id arraySize = values.GetNumberOfValues();
 
     auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
@@ -264,6 +460,8 @@ public:
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id arraySize = values.GetNumberOfValues();
 
     auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
@@ -283,6 +481,8 @@ public:
   VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DeviceAdapterAlgorithmGeneral<DerivedAlgorithm, DeviceAdapterTag>::LowerBounds(
       input, values_output, values_output);
   }
@@ -292,6 +492,8 @@ public:
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::Reduce(input, initialValue, vtkm::Add());
   }
 
@@ -300,6 +502,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //Crazy Idea:
     //We create a implicit array handle that wraps the input
     //array handle. The implicit functor is passed the input array handle, and
@@ -330,6 +534,8 @@ public:
                                      const vtkm::cont::ArrayHandle<T, CIn>& input,
                                      U initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
   }
 
@@ -339,6 +545,8 @@ public:
                                      U initialValue,
                                      BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id fullSize = input.GetNumberOfValues();
     vtkm::Id blockSize = fullSize / numBlocks;
     if (fullSize % numBlocks != 0)
@@ -377,6 +585,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, VOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     using KeysOutputType = vtkm::cont::ArrayHandle<U, KOut>;
 
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
@@ -446,9 +656,12 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numValues = input.GetNumberOfValues();
     if (numValues <= 0)
     {
+      output.Shrink(0);
       return initialValue;
     }
 
@@ -470,7 +683,53 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::ScanExclusive(
+      input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+
+  //--------------------------------------------------------------------------
+  // Scan Exclusive Extend
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output,
+                                     BinaryFunctor binaryFunctor,
+                                     const T& initialValue)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    vtkm::Id numValues = input.GetNumberOfValues();
+    if (numValues <= 0)
+    {
+      output.Allocate(1);
+      output.GetPortalControl().Set(0, initialValue);
+      return;
+    }
+
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> inclusiveScan;
+    T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan, binaryFunctor);
+
+    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag());
+    auto outputPortal = output.PrepareForOutput(numValues + 1, DeviceAdapterTag());
+
+    InclusiveToExtendedKernel<decltype(inputPortal), decltype(outputPortal), BinaryFunctor>
+      inclusiveToExtended(inputPortal,
+                          outputPortal,
+                          binaryFunctor,
+                          initialValue,
+                          binaryFunctor(initialValue, result));
+
+    DerivedAlgorithm::Schedule(inclusiveToExtended, numValues + 1);
+  }
+
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static void ScanExtended(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    DerivedAlgorithm::ScanExtended(
       input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
@@ -488,6 +747,8 @@ public:
                                            const ValueT& initialValue,
                                            BinaryFunctor binaryFunctor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
 
     // 0. Special case for 0 and 1 element input
@@ -541,6 +802,8 @@ public:
                                            const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
                                            vtkm::cont::ArrayHandle<ValueT, VOut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DerivedAlgorithm::ScanExclusiveByKey(
       keys, values, output, vtkm::TypeTraits<ValueT>::ZeroInitialization(), vtkm::Sum());
   }
@@ -552,6 +815,8 @@ public:
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::StreamingScanExclusive(
       numBlocks, input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
@@ -563,6 +828,8 @@ public:
                                             BinaryFunctor binary_functor,
                                             const T& initialValue)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id fullSize = input.GetNumberOfValues();
     vtkm::Id blockSize = fullSize / numBlocks;
     if (fullSize % numBlocks != 0)
@@ -604,6 +871,8 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::ScanInclusive(input, output, vtkm::Add());
   }
 
@@ -612,6 +881,8 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DerivedAlgorithm::Copy(input, output);
 
     vtkm::Id numValues = output.GetNumberOfValues();
@@ -646,6 +917,8 @@ public:
                                            const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
                                            vtkm::cont::ArrayHandle<ValueT, VOut>& values_output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     return DerivedAlgorithm::ScanInclusiveByKey(keys, values, values_output, vtkm::Add());
   }
 
@@ -655,6 +928,8 @@ public:
                                            vtkm::cont::ArrayHandle<ValueT, VOut>& values_output,
                                            BinaryFunctor binary_functor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
 
@@ -703,6 +978,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numValues = values.GetNumberOfValues();
     if (numValues < 2)
     {
@@ -733,6 +1010,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DerivedAlgorithm::Sort(values, DefaultCompareFunctor());
   }
 
@@ -743,6 +1022,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using a custom compare functor.
@@ -755,6 +1036,8 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using the custom compare
@@ -775,6 +1058,8 @@ public:
                                   vtkm::cont::ArrayHandle<V, StorageV>& output,
                                   BinaryFunctor binaryFunctor)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id numValues = vtkm::Min(input1.GetNumberOfValues(), input2.GetNumberOfValues());
     if (numValues <= 0)
     {
@@ -799,6 +1084,8 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DerivedAlgorithm::Unique(values, vtkm::Equal());
   }
 
@@ -806,6 +1093,8 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> stencilArray;
     vtkm::Id inputSize = values.GetNumberOfValues();
 
@@ -834,6 +1123,8 @@ public:
                                     const vtkm::cont::ArrayHandle<T, CVal>& values,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id arraySize = values.GetNumberOfValues();
 
     auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
@@ -851,6 +1142,8 @@ public:
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
                                     BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id arraySize = values.GetNumberOfValues();
 
     auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
@@ -870,129 +1163,14 @@ public:
   VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
                                     vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     DeviceAdapterAlgorithmGeneral<DerivedAlgorithm, DeviceAdapterTag>::UpperBounds(
       input, values_output, values_output);
   }
 };
-}
-}
-} // namespace vtkm::cont::internal
 
-namespace vtkm
-{
-namespace cont
-{
-/// \brief Class providing a device-specific atomic interface.
-///
-/// The class provide the actual implementation used by vtkm::exec::AtomicArray.
-/// A serial default implementation is provided. But each device will have a different
-/// implementation.
-///
-/// Serial requires no form of atomicity
-///
-template <typename T, typename DeviceTag>
-class DeviceAdapterAtomicArrayImplementation
-{
-public:
-  VTKM_CONT
-  DeviceAdapterAtomicArrayImplementation(
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle)
-    : Iterators(IteratorsType(handle.PrepareForInPlace(DeviceTag())))
-  {
-  }
-
-  T Add(vtkm::Id index, const T& value) const
-  {
-    T* lockedValue;
-#if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
-    using IteratorType = typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType;
-    typename IteratorType::pointer temp =
-      &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
-    lockedValue = temp;
-    return vtkmAtomicAdd(lockedValue, value);
-#else
-    lockedValue = (Iterators.GetBegin() + index);
-    return vtkmAtomicAdd(lockedValue, value);
-#endif
-  }
-
-  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
-  {
-    T* lockedValue;
-#if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
-    using IteratorType = typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType;
-    typename IteratorType::pointer temp =
-      &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
-    lockedValue = temp;
-    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
-#else
-    lockedValue = (Iterators.GetBegin() + index);
-    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
-#endif
-  }
-
-private:
-  using PortalType =
-    typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-      DeviceTag>::Portal;
-  using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
-  IteratorsType Iterators;
-
-#if defined(VTKM_MSVC) //MSVC atomics
-  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
-  {
-    return InterlockedExchangeAdd(reinterpret_cast<volatile long*>(address), value);
-  }
-
-  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
-  {
-    return InterlockedExchangeAdd64(reinterpret_cast<volatile long long*>(address), value);
-  }
-
-  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
-                                 const vtkm::Int32& newValue,
-                                 const vtkm::Int32& oldValue) const
-  {
-    return InterlockedCompareExchange(
-      reinterpret_cast<volatile long*>(address), newValue, oldValue);
-  }
-
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
-                                 const vtkm::Int64& newValue,
-                                 const vtkm::Int64& oldValue) const
-  {
-    return InterlockedCompareExchange64(
-      reinterpret_cast<volatile long long*>(address), newValue, oldValue);
-  }
-
-#else //gcc built-in atomics
-
-  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
-  {
-    return __sync_fetch_and_add(address, value);
-  }
-
-  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
-  {
-    return __sync_fetch_and_add(address, value);
-  }
-
-  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
-                                 const vtkm::Int32& newValue,
-                                 const vtkm::Int32& oldValue) const
-  {
-    return __sync_val_compare_and_swap(address, oldValue, newValue);
-  }
-
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
-                                 const vtkm::Int64& newValue,
-                                 const vtkm::Int64& oldValue) const
-  {
-    return __sync_val_compare_and_swap(address, oldValue, newValue);
-  }
-
-#endif
-};
+} // namespace internal
 
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.

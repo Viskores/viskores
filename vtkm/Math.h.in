@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 $# This file uses the pyexpander macro processing utility to build the
 $# FunctionInterface facilities that use a variable number of arguments.
 $# Information, documentation, and downloads for pyexpander can be found at:
@@ -48,14 +36,18 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <stdlib.h>
 #endif // !VTKM_CUDA
 
-#if !defined(__CUDA_ARCH__)
+#if !defined(VTKM_CUDA_DEVICE_PASS)
 #define VTKM_USE_STL
 #include <algorithm>
 #endif
 
-#if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
+#ifdef VTKM_MSVC
+#include <intrin.h>                // For bitwise intrinsics (__popcnt, etc)
+#include <vtkm/internal/Windows.h> // for types used by MSVC intrinsics.
+#ifndef VTKM_CUDA
 #include <math.h>
-#endif
+#endif // VTKM_CUDA
+#endif // VTKM_MSVC
 
 #define VTKM_CUDA_MATH_FUNCTION_32(func) func##f
 #define VTKM_CUDA_MATH_FUNCTION_64(func) func
@@ -189,6 +181,16 @@ static inline VTKM_EXEC_CONT vtkm::Float64 {0}(vtkm::Float64 x, vtkm::Float64 y)
   return {1};
 }}
 '''.format(vtkmname, expression)
+
+def unary_pi_related_function_no_vec(vtkmname):
+  return '''template <typename T>
+  static constexpr inline VTKM_EXEC_CONT auto {0}() -> typename detail::FloatingPointReturnType<T>::Type
+  {{
+    using FT = typename detail::FloatingPointReturnType<T>::Type;
+    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
+    return static_cast<FT>(RAFT::value ? {0}f() : {0}());
+  }}
+'''.format(vtkmname)
 )\
 $extend(unary_math_function)\
 $extend(unary_math_function_no_vec)\
@@ -196,46 +198,13 @@ $extend(unary_Vec_function)\
 $extend(unary_template_function_no_vec)\
 $extend(binary_math_function)\
 $extend(binary_template_function)\
+$extend(unary_pi_related_function_no_vec)\
 \
 // clang-format off
 namespace vtkm
 {
 
 //-----------------------------------------------------------------------------
-/// Returns the constant 2 times Pi.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
-{
-  return 6.28318530717958647692528676655900576;
-}
-
-/// Returns the constant Pi.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi()
-{
-  return 3.14159265358979323846264338327950288;
-}
-
-/// Returns the constant Pi halves.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
-{
-  return 1.57079632679489661923132169163975144;
-}
-/// Returns the constant Pi thirds.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
-{
-  return 1.04719755119659774615421446109316762;
-}
-
-/// Returns the constant Pi fourths.
-///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
-{
-  return 0.78539816339744830961566084581987572;
-}
-
 namespace detail
 {
 template <typename T>
@@ -249,6 +218,113 @@ struct FloatingPointReturnType
                                          vtkm::Float64>::type;
 };
 } // namespace detail
+
+/// Returns the constant 2 times Pi in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 TwoPif()
+{
+  return 6.28318530717958647692528676655900576f;
+}
+
+/// Returns the constant Pi in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pif()
+{
+  return 3.14159265358979323846264338327950288f;
+}
+
+/// Returns the constant Pi halves in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_2f()
+{
+  return 1.57079632679489661923132169163975144f;
+}
+
+/// Returns the constant Pi thirds in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_3f()
+{
+  return 1.04719755119659774615421446109316762f;
+}
+
+/// Returns the constant Pi fourths in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_4f()
+{
+  return 0.78539816339744830961566084581987572f;
+}
+
+/// Returns the constant Pi one hundred and eightieth in float32.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_180f()
+{
+  return 0.01745329251994329547437168059786927f;
+}
+
+/// Returns the constant 2 times Pi in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
+{
+  return 6.28318530717958647692528676655900576;
+}
+
+/// Returns the constant Pi in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi()
+{
+  return 3.14159265358979323846264338327950288;
+}
+
+/// Returns the constant Pi halves in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
+{
+  return 1.57079632679489661923132169163975144;
+}
+
+/// Returns the constant Pi thirds in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
+{
+  return 1.04719755119659774615421446109316762;
+}
+
+/// Returns the constant Pi fourths in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
+{
+  return 0.78539816339744830961566084581987572;
+}
+
+/// Returns the constant Pi one hundred and eightieth in float64.
+///
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_180()
+{
+  return 0.01745329251994329547437168059786927;
+}
+
+/// Returns the constant 2 times Pi.
+///
+$unary_pi_related_function_no_vec('TwoPi')\
+
+/// Returns the constant Pi.
+///
+$unary_pi_related_function_no_vec('Pi')\
+
+/// Returns the constant Pi halves.
+///
+$unary_pi_related_function_no_vec('Pi_2')\
+
+/// Returns the constant Pi thirds.
+///
+$unary_pi_related_function_no_vec('Pi_3')\
+
+/// Returns the constant Pi fourths.
+///
+$unary_pi_related_function_no_vec('Pi_4')\
+/// Returns the constant Pi one hundred and eightieth.
+///
+$unary_pi_related_function_no_vec('Pi_180')\
 
 /// Compute the sine of \p x.
 ///
@@ -553,6 +629,18 @@ static inline VTKM_EXEC_CONT T Min(const T& x, const T& y)
   return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
 
+/// Clamp \p x to the given range.
+///
+
+inline VTKM_EXEC_CONT vtkm::Float32 Clamp(vtkm::Float32 x, vtkm::Float32 lo, vtkm::Float32 hi)
+{
+  return x > lo ? (x < hi ? x : hi) : lo;
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Clamp(vtkm::Float64 x, vtkm::Float64 lo, vtkm::Float64 hi)
+{
+  return x > lo ? (x < hi ? x : hi) : lo;
+}
 //-----------------------------------------------------------------------------
 
 //#ifdef VTKM_CUDA
@@ -922,12 +1010,12 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
 {
   int iQuotient;
 #ifdef VTKM_CUDA
-  const vtkm::Float64 result =
+  const vtkm::Float32 result =
     VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
 #else
   const vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 template <typename QType>
@@ -942,7 +1030,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 #else
   const vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 
@@ -1058,6 +1146,230 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
   }
   return result;
 }
+
+/// Decompose floating poing value
+///
+
+inline VTKM_EXEC_CONT vtkm::Float32 Frexp(vtkm::Float32 x, vtkm::Int32 *exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_32(frexp)(x, exponent);
+#else
+  return std::frexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Frexp(vtkm::Float64 x, vtkm::Int32 *exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_64(frexp)(x, exponent);
+#else
+  return std::frexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float32 Ldexp(vtkm::Float32 x, vtkm::Int32 exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_32(ldexp)(x, exponent);
+#else
+  return std::ldexp(x, exponent);
+#endif
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Ldexp(vtkm::Float64 x, vtkm::Int32 exponent)
+{
+#ifdef VTKM_CUDA
+  return VTKM_CUDA_MATH_FUNCTION_64(ldexp)(x, exponent);
+#else
+  return std::ldexp(x, exponent);
+#endif
+}
+
+/// Bitwise operations
+///
+
+/// Find the first set bit in @a word, and return its position (1-32). If no
+/// bits are set, returns 0.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __ffs is device only.
+inline __device__
+vtkm::Int32 FindFirstSetBit(vtkm::UInt32 word)
+{
+  // Output is [0,32], with ffs(0) == 0
+  return __ffs(static_cast<int>(word));
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 FindFirstSetBit(vtkm::UInt32 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  // Output is [0,32], with ffs(0) == 0
+  return __builtin_ffs(static_cast<int>(word));
+
+#  elif defined(VTKM_MSVC)
+
+  // Output is [0, 31], check return code to see if bits are set:
+  vtkm::UInt32 firstSet;
+  return _BitScanForward(reinterpret_cast<DWORD*>(&firstSet), word) != 0
+         ? static_cast<vtkm::Int32>(firstSet + 1) : 0;
+
+#  elif defined(VTKM_ICC)
+
+  // Output is [0, 31], undefined if word is 0.
+  return word != 0 ? _bit_scan_forward(word) + 1 : 0;
+
+#  else
+
+  // Naive implementation:
+  if (word == 0)
+  {
+    return 0;
+  }
+
+  vtkm::Int32 bit = 1;
+  while ((word & 0x1) == 0)
+  {
+    word >>= 1;
+    ++bit;
+  }
+  return bit;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Find the first set bit in @a word, and return its position (1-64). If no
+/// bits are set, returns 0.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __ffsll is device only.
+inline __device__
+vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
+{
+
+  // Output is [0,64], with ffs(0) == 0
+  return __ffsll(static_cast<long long int>(word));
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 FindFirstSetBit(vtkm::UInt64 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG) || defined(VTKM_ICC)
+
+  // Output is [0,64], with ffs(0) == 0
+  return __builtin_ffsll(static_cast<long long int>(word));
+
+#  elif defined(VTKM_MSVC)
+
+  // Output is [0, 63], check return code to see if bits are set:
+  vtkm::UInt32 firstSet;
+  return _BitScanForward64(reinterpret_cast<DWORD*>(&firstSet), word) != 0
+         ? static_cast<vtkm::Int32>(firstSet + 1) : 0;
+
+#  else
+
+  // Naive implementation:
+  if (word == 0)
+  {
+    return 0;
+  }
+
+  vtkm::Int32 bit = 1;
+  while ((word & 0x1) == 0)
+  {
+    word >>= 1;
+    ++bit;
+  }
+  return bit;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Count the total number of bits set in @a word.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __popc is device only.
+inline __device__
+vtkm::Int32 CountSetBits(vtkm::UInt32 word)
+{
+  return __popc(word);
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 CountSetBits(vtkm::UInt32 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  return __builtin_popcount(word);
+
+#  elif defined(VTKM_MSVC)
+
+  return static_cast<vtkm::Int32>(__popcnt(word));
+
+#  elif defined(VTKM_ICC)
+
+  return _popcnt32(static_cast<int>(word));
+
+#  else
+
+  // Naive implementation:
+  vtkm::Int32 bits = 0;
+  while (word)
+  {
+    if (word & 0x1)
+    {
+      ++bits;
+    }
+    word >>= 1;
+  }
+  return bits;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
+
+/// Count the total number of bits set in @a word.
+#ifdef VTKM_CUDA_DEVICE_PASS
+// Need to explicitly mark this as __device__ since __popcll is device only.
+inline __device__
+vtkm::Int32 CountSetBits(vtkm::UInt64 word)
+{
+  return __popcll(word);
+}
+#else // CUDA_DEVICE_PASS
+inline VTKM_EXEC_CONT
+vtkm::Int32 CountSetBits(vtkm::UInt64 word)
+{
+#  if defined(VTKM_GCC) || defined(VTKM_CLANG)
+
+  return __builtin_popcountll(word);
+
+#  elif defined(VTKM_MSVC)
+
+  return static_cast<vtkm::Int32>(__popcnt64(word));
+
+#  elif defined(VTKM_ICC)
+
+  return _popcnt64(static_cast<vtkm::Int64>(word));
+
+#  else
+
+  // Naive implementation:
+  vtkm::Int32 bits = 0;
+  while (word)
+  {
+    if (word & 0x1)
+    {
+      ++bits;
+    }
+    word >>= 1;
+  }
+  return bits;
+
+#  endif
+}
+#endif // CUDA_DEVICE_PASS
 
 } // namespace vtkm
 // clang-format on

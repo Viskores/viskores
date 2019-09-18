@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 //  Copyright (c) 2016, Los Alamos National Security, LLC
 //  All rights reserved.
@@ -79,11 +69,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<TagType> bestPot,   // (input) bin's best potential
-                                FieldIn<IdType> partOffset, // (input) offset to first particle
-                                FieldIn<IdType> partCount,  // (input) count of particles in bin
-                                WholeArrayOut<IdType> candidate); // (input) z location in bin
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ControlSignature = void(FieldIn bestPot,          // (input) bin's best potential
+                                FieldIn partOffset,       // (input) offset to first particle
+                                FieldIn partCount,        // (input) count of particles in bin
+                                WholeArrayOut candidate); // (input) z location in bin
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   T cutoffPotential; // Lowest potential for a candidate bin

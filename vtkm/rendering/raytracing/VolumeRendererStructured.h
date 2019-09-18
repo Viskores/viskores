@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #ifndef vtk_m_rendering_raytracing_VolumeRendererStructured_h
 #define vtk_m_rendering_raytracing_VolumeRendererStructured_h
 
@@ -36,9 +24,9 @@ namespace raytracing
 class VolumeRendererStructured
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
-    CartesianArrayHandle;
+  using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  using CartesianArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
 
   VTKM_CONT
   VolumeRendererStructured();
@@ -50,7 +38,7 @@ public:
   void DisableCompositeBackground();
 
   VTKM_CONT
-  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap);
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_32>& colorMap);
 
   VTKM_CONT
   void SetData(const vtkm::cont::CoordinateSystem& coords,
@@ -80,7 +68,7 @@ protected:
   vtkm::cont::ArrayHandleVirtualCoordinates Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   vtkm::Float32 SampleDistance;
   vtkm::Range ScalarRange;
 };

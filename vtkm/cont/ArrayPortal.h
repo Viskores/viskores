@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayPortal_h
 #define vtk_m_cont_ArrayPortal_h
@@ -55,6 +45,12 @@ namespace cont
 /// Although portals are defined in the execution environment, they are also
 /// used in the control environment for accessing data on the host.
 ///
+/// Since utilities like IsWritableArrayHandle checks for the existence of a Set
+/// method on a portal, if the portal is backed by a read-only ArrayHandle, the
+/// Set method must not be defined. If the portal may or may not be writable
+/// (e.g., ArrayHandleCast may be casting a read-only OR read-write array), the
+/// Set method may be conditionally removed using SFINAE.
+///
 template <typename T>
 class ArrayPortal
 {
@@ -66,19 +62,18 @@ public:
   /// The total number of values in the array. They are index from 0 to
   /// GetNumberOfValues()-1.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const;
 
   /// Gets a value from the array.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const;
 
   /// Sets a value in the array. If it is not possible to set a value in the
-  /// array, this method may error out (for example with a VTKM_ASSERT). In
-  /// this case the behavior is undefined.
+  /// array, this method must not be defined.
   ///
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const;
 };
 

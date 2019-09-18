@@ -2,21 +2,15 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2016 UT-Battelle, LLC.
-##  Copyright 2016 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
+
+#unconditionally include rendering contexts so that the helper functions
+#are around even if rendering isn't enabled
+include(VTKmRenderingContexts)
 
 if(NOT VTKm_ENABLE_RENDERING)
   return()
@@ -55,15 +49,20 @@ set(headers
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
   ConnectivityProxy.h
+  Cylinderizer.h
   DecodePNG.h
   LineRenderer.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
+  MapperCylinder.h
+  MapperPoint.h
+  MapperQuad.h
   MapperRayTracer.h
   MapperVolume.h
   MapperConnectivity.h
   MapperWireframer.h
+  Quadralizer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -74,30 +73,47 @@ set(headers
   View1D.h
   View2D.h
   View3D.h
+  Wireframer.h
   WorldAnnotator.h
   )
 
 set(sources
+  BitmapFont.cxx
+  BitmapFontFactory.cxx
+
+  Camera.cxx
+  Color.cxx
+  DecodePNG.cxx
+  raytracing/Logger.cxx
+  )
+
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
   Actor.cxx
   AxisAnnotation.cxx
   AxisAnnotation2D.cxx
   AxisAnnotation3D.cxx
-  BitmapFont.cxx
-  BitmapFontFactory.cxx
   BoundingBoxAnnotation.cxx
-  Camera.cxx
-  Color.cxx
+  Canvas.cxx
+  CanvasRayTracer.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
-  DecodePNG.cxx
+  ConnectivityProxy.cxx
   LineRenderer.cxx
+  Mapper.cxx
   MapperConnectivity.cxx
+  MapperCylinder.cxx
+  MapperPoint.cxx
+  MapperQuad.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
@@ -105,10 +121,24 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
-  raytracing/ConnectivityBase.cxx
-  raytracing/ConnectivityTracerBase.cxx
-  raytracing/ConnectivityTracerFactory.cxx
-  raytracing/Logger.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/ConnectivityTracer.cxx
+  raytracing/CylinderExtractor.cxx
+  raytracing/CylinderIntersector.cxx
+  raytracing/MeshConnectivityBuilder.cxx
+  raytracing/MeshConnectivityContainers.cxx
+  raytracing/QuadExtractor.cxx
+  raytracing/QuadIntersector.cxx
+  raytracing/RayTracer.cxx
+  raytracing/RayOperations.cxx
+  raytracing/ShapeIntersector.cxx
+  raytracing/SphereExtractor.cxx
+  raytracing/SphereIntersector.cxx
+  raytracing/TriangleExtractor.cxx
+  raytracing/TriangleIntersector.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 # Note that EGL and OSMesa Canvas depend on the GL version being built. Only
@@ -143,54 +173,35 @@ set(osmesa_sources
   CanvasOSMesa.cxx
   )
 
-# This list of sources has code that uses devices and so might need to be
-# compiled with a device-specific compiler (like CUDA).
-set(device_sources
-  Canvas.cxx
-  CanvasRayTracer.cxx
-  ConnectivityProxy.cxx
-  Mapper.cxx
-  MapperWireframer.cxx
-  TextRenderer.cxx
-
-  raytracing/BoundingVolumeHierarchy.cxx
-  raytracing/Camera.cxx
-  raytracing/ChannelBuffer.cxx
-  raytracing/ConnectivityTracer.cxx
-  raytracing/RayOperations.cxx
-  raytracing/RayTracer.cxx
-  raytracing/VolumeRendererStructured.cxx
-  )
-
 #-----------------------------------------------------------------------------
 vtkm_library(
   NAME vtkm_rendering
   SOURCES ${sources}
   HEADERS ${headers}
-  WRAP_FOR_CUDA ${device_sources}
+  DEVICE_SOURCES ${device_sources}
   )
 
+# Install all headers no matter what backend was selected
+vtkm_declare_headers(${opengl_headers})
+vtkm_declare_headers(${osmesa_headers})
+vtkm_declare_headers(${egl_headers})
+
 if(VTKm_ENABLE_GL_CONTEXT)
-  vtkm_declare_headers(${opengl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources})
 elseif(VTKm_ENABLE_OSMESA_CONTEXT)
-  vtkm_declare_headers(${opengl_headers} ${osmesa_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
 elseif(VTKm_ENABLE_EGL_CONTEXT)
-  vtkm_declare_headers(${opengl_headers} ${egl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
 endif()
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_cont)
-
-
+target_link_libraries(vtkm_rendering PUBLIC vtkm_filter
+                                     PRIVATE vtkm_lodepng)
 if(UNIX AND NOT APPLE)
-  target_link_libraries(vtkm_rendering PRIVATE rt )
+  target_link_libraries(vtkm_rendering PRIVATE rt)
 endif()
 
 #-----------------------------------------------------------------------------
-include(VTKmRenderingContexts)
 target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

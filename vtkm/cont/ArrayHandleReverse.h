@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #ifndef vtk_m_cont_ArrayHandleReverse_h
 #define vtk_m_cont_ArrayHandleReverse_h
@@ -38,6 +26,8 @@ namespace internal
 template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalReverse
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType>;
+
 public:
   using ValueType = typename PortalType::ValueType;
 
@@ -68,8 +58,9 @@ public:
     return this->portal.Get(portal.GetNumberOfValues() - index - 1);
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->portal.Set(portal.GetNumberOfValues() - index - 1, value);
   }
@@ -242,5 +233,66 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH>
+struct SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Reverse<" + SerializableTypeString<AH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename AH>
+struct Serialization<vtkm::cont::ArrayHandleReverse<AH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleReverse<AH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkmdiy::save(bb, obj.GetStorage().GetArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    vtkmdiy::load(bb, array);
+    obj = vtkm::cont::make_ArrayHandleReverse(array);
+  }
+};
+
+template <typename AH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
+  : Serialization<vtkm::cont::ArrayHandleReverse<AH>>
+{
+};
+
+} // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleReverse_h

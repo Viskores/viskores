@@ -2,26 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_FieldStatistics_h
 #define vtk_m_worklet_FieldStatistics_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -37,7 +29,7 @@ namespace worklet
 {
 
 //simple functor that prints basic statistics
-template <typename FieldType, typename DeviceAdapter>
+template <typename FieldType>
 class FieldStatistics
 {
 public:
@@ -65,12 +57,12 @@ public:
   class CalculatePowers : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value,
-                                  FieldOut<> pow1Array,
-                                  FieldOut<> pow2Array,
-                                  FieldOut<> pow3Array,
-                                  FieldOut<> pow4Array);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ControlSignature = void(FieldIn value,
+                                  FieldOut pow1Array,
+                                  FieldOut pow2Array,
+                                  FieldOut pow3Array,
+                                  FieldOut pow4Array);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
     using InputDomain = _1;
 
     vtkm::Id numPowers;
@@ -98,8 +90,8 @@ public:
   class SubtractConst : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value, FieldOut<> diff);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn value, FieldOut diff);
+    using ExecutionSignature = _2(_1);
     using InputDomain = _1;
 
     FieldType constant;
@@ -117,23 +109,22 @@ public:
   template <typename Storage>
   void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, StatInfo& statinfo)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    using FieldPortal = typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl;
+    using DeviceAlgorithms = vtkm::cont::Algorithm;
 
     // Copy original data to array for sorting
     vtkm::cont::ArrayHandle<FieldType> tempArray;
     DeviceAlgorithms::Copy(fieldArray, tempArray);
     DeviceAlgorithms::Sort(tempArray);
 
-    FieldPortal tempPortal = tempArray.GetPortalConstControl();
-    vtkm::Id dataSize = tempPortal.GetNumberOfValues();
+    vtkm::Id dataSize = tempArray.GetNumberOfValues();
     FieldType numValues = static_cast<FieldType>(dataSize);
+    const auto firstAndMedian = vtkm::cont::ArrayGetValues({ 0, dataSize / 2 }, tempArray);
 
     // Median
-    statinfo.median = tempPortal.Get(dataSize / 2);
+    statinfo.median = firstAndMedian[1];
 
     // Minimum and maximum
-    const vtkm::Vec<FieldType, 2> initValue(tempPortal.Get(0));
+    const vtkm::Vec<FieldType, 2> initValue(firstAndMedian[0]);
     vtkm::Vec<FieldType, 2> result =
       DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
     statinfo.minimum = result[0];

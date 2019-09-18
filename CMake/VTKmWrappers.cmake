@@ -2,26 +2,21 @@
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
-##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
-##
-##  Under the terms of Contract DE-NA0003525 with NTESS,
-##  the U.S. Government retains certain rights in this software.
-##
-##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-##  Laboratory (LANL), the U.S. Government retains certain rights in
-##  this software.
 ##============================================================================
 
 include(CMakeParseArguments)
 
 include(VTKmDeviceAdapters)
 include(VTKmCPUVectorization)
+include(VTKmMPI)
+
+#-----------------------------------------------------------------------------
+# INTERNAL FUNCTIONS
+# No promises when used from outside VTK-m
 
 #-----------------------------------------------------------------------------
 # Utility to build a kit name from the current directory.
@@ -48,7 +43,7 @@ function(vtkm_pyexpander_generated_file generated_file_name)
         -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
         -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
         -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
-        -P ${VTKm_CMAKE_MODULE_PATH}/VTKmCheckPyexpander.cmake
+        -P ${VTKm_CMAKE_MODULE_PATH}/testing/VTKmCheckPyexpander.cmake
       MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}.in
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
       COMMENT "Checking validity of ${generated_file_name}"
@@ -58,107 +53,6 @@ function(vtkm_pyexpander_generated_file generated_file_name)
       )
   endif()
 endfunction(vtkm_pyexpander_generated_file)
-
-#-----------------------------------------------------------------------------
-function(vtkm_compile_as_cuda output)
-  # We cant use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
-  # for the following reasons:
-  #
-  # 1. As of CMake 3.10 MSBuild cuda language support has a bug where files
-  #    aren't passed to nvcc with the explicit '-x cu' flag which will cause
-  #    them to be compiled without CUDA actually enabled.
-  # 2. If the source file is used by multiple targets(libraries/executable)
-  #    they will all see the source file marked as being CUDA. This will cause
-  #    tests / examples that reuse sources with different backends to use CUDA
-  #    by mistake
-  #
-  # The result of this is that instead we will use file(GENERATE ) to construct
-  # a proxy cu file
-  set(_cuda_srcs )
-  foreach(_to_be_cuda_file ${ARGN})
-    get_filename_component(_fname_ext "${_to_be_cuda_file}" EXT)
-    if(_fname_ext STREQUAL ".cu")
-      list(APPEND _cuda_srcs "${_to_be_cuda_file}")
-    else()
-      get_filename_component(_cuda_fname "${_to_be_cuda_file}" NAME_WE)
-      get_filename_component(_not_cuda_fullpath "${_to_be_cuda_file}" ABSOLUTE)
-      list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
-      file(GENERATE
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
-            CONTENT "#include \"${_not_cuda_fullpath}\"")
-    endif()
-  endforeach()
-  set(${output} ${_cuda_srcs} PARENT_SCOPE)
-endfunction()
-
-#-----------------------------------------------------------------------------
-function(vtkm_add_header_build_test name dir_prefix use_cuda)
-  set(hfiles ${ARGN})
-
-  set(ext "cxx")
-  if(use_cuda)
-    set(ext "cu")
-  endif()
-
-  set(valid_hfiles )
-  set(srcs)
-  foreach (header ${hfiles})
-    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( cant_be_tested )
-      get_filename_component(headername ${header} NAME_WE)
-
-      #By using file generate we will not trigger CMake execution when
-      #a header gets touched
-      file(GENERATE
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext}
-        CONTENT "
-//mark that we are including headers as test for completeness.
-//This is used by headers that include thrust to properly define a proper
-//device backend / system
-#define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${headername}.h>"
-        )
-      list(APPEND srcs ${src})
-      list(APPEND valid_hfiles ${header})
-    endif()
-  endforeach()
-
-  set_source_files_properties(${valid_hfiles}
-    PROPERTIES HEADER_FILE_ONLY TRUE
-    )
-
-  #only attempt to add a test build executable if we have any headers to
-  #test. this might not happen when everything depends on thrust.
-  list(LENGTH srcs num_srcs)
-  if (${num_srcs} EQUAL 0)
-    return()
-  endif()
-
-  if(TARGET TestBuild_${name})
-    #If the target already exists just add more sources to it
-    target_sources(TestBuild_${name} PRIVATE ${srcs})
-  else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
-    # Send the libraries created for test builds to their own directory so as to
-    # not pollute the directory with useful libraries.
-    set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-    set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
-
-    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
-
-    if(TARGET vtkm::tbb)
-      #make sure that we have the tbb include paths when tbb is enabled.
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm::tbb)
-    endif()
-
-    if(TARGET vtkm_diy)
-      target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
-    endif()
-
-
-  endif()
-
-endfunction()
 
 #-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
@@ -197,9 +91,9 @@ function(vtkm_generate_export_header lib_name)
       DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
       )
   endif()
-
 endfunction(vtkm_generate_export_header)
 
+#-----------------------------------------------------------------------------
 function(vtkm_install_headers dir_prefix)
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     set(hfiles ${ARGN})
@@ -212,53 +106,219 @@ endfunction(vtkm_install_headers)
 
 #-----------------------------------------------------------------------------
 function(vtkm_declare_headers)
-  #TODO: look at the testable and cuda options
-  set(options CUDA)
-  set(oneValueArgs TESTABLE)
-  set(multiValueArgs EXCLUDE_FROM_TESTING)
-  cmake_parse_arguments(VTKm_DH "${options}"
-    "${oneValueArgs}" "${multiValueArgs}"
+  vtkm_get_kit_name(name dir_prefix)
+  vtkm_install_headers("${dir_prefix}" ${ARGN})
+endfunction(vtkm_declare_headers)
+
+#-----------------------------------------------------------------------------
+# FORWARD FACING API
+
+#-----------------------------------------------------------------------------
+# Pass to consumers extra compile flags they need to add to CMAKE_CUDA_FLAGS
+# to have CUDA compatibility.
+#
+# This is required as currently the -sm/-gencode flags when specified inside
+# COMPILE_OPTIONS / target_compile_options are not propagated to the device
+# linker. Instead they must be specified in CMAKE_CUDA_FLAGS
+#
+#
+# add_library(lib_that_uses_vtkm ...)
+# vtkm_add_cuda_flags(CMAKE_CUDA_FLAGS)
+# target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+function(vtkm_get_cuda_flags settings_var)
+  if(TARGET vtkm::cuda)
+    get_property(arch_flags
+      TARGET    vtkm::cuda
+      PROPERTY  cuda_architecture_flags)
+    set(${settings_var} "${${settings_var}} ${arch_flags}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+#-----------------------------------------------------------------------------
+# Add to a target linker flags that allow unused VTK-m functions to be dropped,
+# which helps keep binary sizes down. This works as VTK-m is compiled with
+# ffunction-sections which allows for the linker to remove unused functions.
+# If you are building a program that loads runtime plugins that can call
+# VTK-m this most likely shouldn't be used as symbols the plugin expects
+# to exist will be removed.
+#
+# add_library(lib_that_uses_vtkm ...)
+# vtkm_add_drop_unused_function_flags(lib_that_uses_vtkm)
+# target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+function(vtkm_add_drop_unused_function_flags uses_vtkm_target)
+  get_target_property(lib_type ${uses_vtkm_target} TYPE)
+  if(${lib_type} STREQUAL "SHARED_LIBRARY" OR
+     ${lib_type} STREQUAL "MODULE_LIBRARY" OR
+     ${lib_type} STREQUAL "EXECUTABLE" )
+
+    if(APPLE)
+      #OSX Linker uses a different flag for this
+      set_property(TARGET ${uses_vtkm_target} APPEND_STRING PROPERTY
+        LINK_FLAGS " -Wl,-dead_strip")
+    elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
+      set_property(TARGET ${uses_vtkm_target} APPEND_STRING PROPERTY
+        LINK_FLAGS " -Wl,--gc-sections")
+    endif()
+
+  endif()
+endfunction()
+
+
+#-----------------------------------------------------------------------------
+# Add a relevant information to target that wants to use VTK-m.
+#
+# This higher order function allow build-systems that use VTK-m
+# to use `add_library` or `add_executable` calls but still have an
+# easy to way to get the required information to have VTK-m using
+# compilation units compile correctly.
+#
+# vtkm_add_target_information(
+#   target[s]
+#   [ DROP_UNUSED_SYMBOLS ]
+#   [ MODIFY_CUDA_FLAGS ]
+#   [ EXTENDS_VTKM ]
+#   [ DEVICE_SOURCES <source_list> ]
+#   )
+#
+# Usage:
+#   add_library(lib_that_uses_vtkm STATIC a.cxx)
+#   vtkm_add_target_information(lib_that_uses_vtkm
+#                               DROP_UNUSED_SYMBOLS
+#                               MODIFY_CUDA_FLAGS
+#                               DEVICE_SOURCES a.cxx
+#                               )
+#   target_link_libraries(lib_that_uses_vtkm PRIVATE vtkm_filter)
+#
+#  DROP_UNUSED_SYMBOLS: If enabled will apply the appropiate link
+#  flags to drop unused VTK-m symbols. This works as VTK-m is compiled with
+#  -ffunction-sections which allows for the linker to remove unused functions.
+#  If you are building a program that loads runtime plugins that can call
+#  VTK-m this most likely shouldn't be used as symbols the plugin expects
+#  to exist will be removed.
+#  Enabling this will help keep library sizes down when using static builds
+#  of VTK-m as only the functions you call will be kept. This can have a
+#  dramatic impact on the size of the resulting executable / shared library.
+#
+#
+#  MODIFY_CUDA_FLAGS: If enabled will add the required -arch=<ver> flags
+#  that VTK-m was compiled with. If you have multiple libraries that use
+#  VTK-m calling `vtkm_add_target_information` multiple times with
+#  `MODIFY_CUDA_FLAGS` will cause duplicate compiler flags. To resolve this issue
+#  you can; pass all targets and sources to a single `vtkm_add_target_information`
+#  call, have the first one use `MODIFY_CUDA_FLAGS`, or use the provided
+#  standalone `vtkm_get_cuda_flags` function.
+#
+#  DEVICE_SOURCES: The collection of source files that are used by `target(s)` that
+#  need to be marked as going to a special compiler for certain device adapters
+#  such as CUDA.
+#
+#  EXTENDS_VTKM: Some programming models have restrictions on how types can be used,
+#  passed across library boundaries, and derived from.
+#  For example CUDA doesn't allow device side calls across dynamic library boundaries,
+#  and requires all polymorphic classes to be reachable at dynamic library/executable
+#  link time.
+#
+#  To accommodate these restrictions we need to handle the following allowable
+#  use-cases:
+#   Object library: do nothing, zero restrictions
+#   Executable: do nothing, zero restrictions
+#   Static library: do nothing, zero restrictions
+#   Dynamic library:
+#     -> Wanting to use VTK-m as implementation detail, doesn't expose VTK-m
+#        types to consumers. This is supported no matter if CUDA is enabled.
+#     -> Wanting to extend VTK-m and provide these types to consumers.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#     -> Wanting to pass known VTK-m types across library boundaries for others
+#        to use in filters/worklets.
+#        This is only supported when CUDA isn't enabled. Otherwise we need to ERROR!
+#
+#  For most consumers they can ignore the `EXTENDS_VTKM` property as the default
+#  will be correct.
+#
+#
+function(vtkm_add_target_information uses_vtkm_target)
+  set(options DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS EXTENDS_VTKM)
+  set(multiValueArgs DEVICE_SOURCES)
+  cmake_parse_arguments(VTKm_TI
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
 
-  #The testable keyword allows the caller to turn off the header testing,
-  #mainly used so that backends can be installed even when they can't be
-  #built on the machine.
-  #Since this is an optional property not setting it means you do want testing
-  if(NOT DEFINED VTKm_DH_TESTABLE)
-      set(VTKm_DH_TESTABLE ON)
+
+  if(VTKm_TI_MODIFY_CUDA_FLAGS)
+    vtkm_get_cuda_flags(CMAKE_CUDA_FLAGS)
+    set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} PARENT_SCOPE)
   endif()
 
-  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS} ${VTKm_DH_EXCLUDE_FROM_TESTING})
-  vtkm_get_kit_name(name dir_prefix)
+  set(targets ${uses_vtkm_target})
+  foreach(item IN LISTS VTKm_TI_UNPARSED_ARGUMENTS)
+    if(TARGET ${item})
+      list(APPEND targets ${item})
+    endif()
+  endforeach()
 
-  #only do header testing if enable testing is turned on
-  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
-    set_source_files_properties(${VTKm_DH_EXCLUDE_FROM_TESTING}
-      PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE
-      )
+  # set the required target properties
+  set_target_properties(${targets} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_target_properties(${targets} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-    vtkm_add_header_build_test(
-      "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
+  if(VTKm_TI_DROP_UNUSED_SYMBOLS)
+    foreach(target IN LISTS targets)
+      vtkm_add_drop_unused_function_flags(${target})
+    endforeach()
   endif()
 
-  vtkm_install_headers("${dir_prefix}" ${hfiles})
-endfunction(vtkm_declare_headers)
+  # Validate that following:
+  #   - We are building with CUDA enabled.
+  #   - We are building a VTK-m library or a library that wants cross library
+  #     device calls.
+  #
+  # This is required as CUDA currently doesn't support device side calls across
+  # dynamic library boundaries.
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+    foreach(target IN LISTS targets)
+      get_target_property(lib_type ${target} TYPE)
+      get_target_property(requires_static vtkm::cuda requires_static_builds)
+
+      if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
+        #We provide different error messages based on if we are building VTK-m
+        #or being called by a consumer of VTK-m. We use PROJECT_NAME so that we
+        #produce the correct error message when VTK-m is a subdirectory include
+        #of another project
+        if(PROJECT_NAME STREQUAL "VTKm")
+          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
+                " support virtual methods across dynamic library boundaries. You"
+                " need to set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+        else()
+          message(SEND_ERROR "${target} needs to be built STATIC as CUDA doesn't"
+                  " support virtual methods across dynamic library boundaries. You"
+                  " should either explicitly call add_library with the `STATIC` keyword"
+                  " or set the CMake option BUILD_SHARED_LIBS to `OFF`.")
+        endif()
+      endif()
+    endforeach()
+  endif()
+endfunction()
+
 
 #-----------------------------------------------------------------------------
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
 #
 # vtkm_library(
-#   [NAME <name>]
+#   [ NAME <name> ]
+#   [ OBJECT | STATIC | SHARED ]
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
-#   [WRAP_FOR_CUDA <source_list>]
+#   [ DEVICE_SOURCES <source_list> ]
 #   )
 function(vtkm_library)
+  set(options OBJECT STATIC SHARED)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES WRAP_FOR_CUDA)
+  set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES DEVICE_SOURCES)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -269,27 +329,38 @@ function(vtkm_library)
   endif()
   set(lib_name ${VTKm_LIB_NAME})
 
-  if(TARGET vtkm::cuda)
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_LIB_WRAP_FOR_CUDA})
-    set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
+  if(VTKm_LIB_OBJECT)
+    set(VTKm_LIB_type OBJECT)
+  elseif(VTKm_LIB_STATIC)
+    set(VTKm_LIB_type STATIC)
+  elseif(VTKm_LIB_SHARED)
+    set(VTKm_LIB_type SHARED)
   endif()
 
-
   add_library(${lib_name}
+              ${VTKm_LIB_type}
               ${VTKm_LIB_SOURCES}
               ${VTKm_LIB_HEADERS}
               ${VTKm_LIB_TEMPLATE_SOURCES}
-              ${VTKm_LIB_WRAP_FOR_CUDA}
+              ${VTKm_LIB_DEVICE_SOURCES}
               )
-
+  vtkm_add_target_information(${lib_name}
+                              EXTENDS_VTKM
+                              DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
+                              )
+  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
+  endif()
   #specify where to place the built library
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  if(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
-    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
-    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
+
+  # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
+  if(APPLE)
+    set_property(TARGET ${lib_name} PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
 
   # Setup the SOVERSION and VERSION information for this vtkm library
@@ -308,10 +379,20 @@ function(vtkm_library)
   #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
 
-  #test and install the headers
+  #install the headers
   vtkm_declare_headers(${VTKm_LIB_HEADERS}
-                       EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
-                       )
+                       ${VTKm_LIB_TEMPLATE_SOURCES})
+
+  # When building libraries/tests that are part of the VTK-m repository inherit
+  # the properties from vtkm_developer_flags. The flags are intended only for
+  # VTK-m itself and are not needed by consumers. We will export
+  # vtkm_developer_flags so consumer can use VTK-m's build flags if they so
+  # desire
+  if (VTKm_ENABLE_DEVELOPER_FLAGS)
+    target_link_libraries(${lib_name} PUBLIC $<BUILD_INTERFACE:vtkm_developer_flags>)
+  else()
+    target_link_libraries(${lib_name} PRIVATE $<BUILD_INTERFACE:vtkm_developer_flags>)
+  endif()
 
   #install the library itself
   install(TARGETS ${lib_name}
@@ -322,147 +403,3 @@ function(vtkm_library)
     )
 
 endfunction(vtkm_library)
-
-#-----------------------------------------------------------------------------
-# Declare unit tests, which should be in the same directory as a kit
-# (package, module, whatever you call it).  Usage:
-#
-# vtkm_unit_tests(
-#   NAME
-#   SOURCES <source_list>
-#   BACKEND <type>
-#   LIBRARIES <dependent_library_list>
-#   TEST_ARGS <argument_list>
-#   MPI
-#   <options>
-#   )
-#
-# [BACKEND]: mark all source files as being compiled with the proper defines
-#            to make this backend the default backend
-#            If the backend is specified as CUDA it will also imply all
-#            sources should be treated as CUDA sources
-#            The backend name will also be added to the executable name
-#            so you can test multiple backends easily
-#
-# [LIBRARIES] : extra libraries that this set of tests need to link too
-#
-# [TEST_ARGS] : arguments that should be passed on the command line to the
-#               test executable
-#
-# [MPI]       : when specified, the tests should be run in parallel if
-#               MPI is enabled.
-#
-function(vtkm_unit_tests)
-  if (NOT VTKm_ENABLE_TESTING)
-    return()
-  endif()
-
-  set(options)
-  set(global_options ${options} MPI)
-  set(oneValueArgs BACKEND NAME)
-  set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
-  cmake_parse_arguments(VTKm_UT
-    "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
-  vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
-
-  set(test_prog )
-  set(backend ${VTKm_UT_BACKEND})
-
-  if(VTKm_UT_NAME)
-    set(test_prog "${VTKm_UT_NAME}")
-  else()
-    vtkm_get_kit_name(kit)
-    set(test_prog "UnitTests_${kit}")
-  endif()
-  if(VTKm_UT_BACKEND)
-    string(APPEND test_prog "_${backend}")
-  endif()
-
-  if(VTKm_UT_MPI)
-    # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
-    string(APPEND "test_prog" "_mpi")
-    set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
-                  FUNCTION "vtkm::cont::testing::Environment env")
-  else()
-    set(extraArgs)
-  endif()
-
-  #the creation of the test source list needs to occur before the labeling as
-  #cuda. This is so that we get the correctly named entry points generated
-  create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
-  if(backend STREQUAL "CUDA")
-    vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
-    set(VTKm_UT_SOURCES ${cu_srcs})
-  endif()
-
-  add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
-  set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
-  set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
-  set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
-
-  target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-
-  if(VTKm_UT_NO_TESTS)
-    return()
-  endif()
-
-  #determine the timeout for all the tests based on the backend. CUDA tests
-  #generally require more time because of kernel generation.
-  set(timeout 180)
-  if(backend STREQUAL "CUDA")
-    set(timeout 1500)
-  endif()
-
-  foreach (test ${VTKm_UT_SOURCES})
-    get_filename_component(tname ${test} NAME_WE)
-    if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
-      add_test(NAME ${tname}${backend}
-        COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                $<TARGET_FILE:${test_prog}> ${tname} ${VTKm_UT_TEST_ARGS}
-                ${MPIEXEC_POSTFLAGS}
-        )
-    else()
-      add_test(NAME ${tname}${backend}
-        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
-        )
-    endif()
-    set_tests_properties("${tname}${backend}" PROPERTIES TIMEOUT ${timeout})
-  endforeach (test)
-
-endfunction(vtkm_unit_tests)
-
-# -----------------------------------------------------------------------------
-# vtkm_parse_test_options(varname options)
-#   INTERNAL: Parse options specified for individual tests.
-#
-#   Parses the arguments to separate out options specified after the test name
-#   separated by a comma e.g.
-#
-#   TestName,Option1,Option2
-#
-#   For every option in options, this will set _TestName_Option1,
-#   _TestName_Option2, etc in the parent scope.
-#
-function(vtkm_parse_test_options varname options)
-  set(names)
-  foreach(arg IN LISTS ARGN)
-    set(test_name ${arg})
-    set(test_options)
-    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
-      set(test_name "${CMAKE_MATCH_1}")
-      string(REPLACE "," ";" test_options "${CMAKE_MATCH_2}")
-    endif()
-    foreach(opt IN LISTS test_options)
-      list(FIND options "${opt}" index)
-      if(index EQUAL -1)
-        message(WARNING "Unknown option '${opt}' specified for test '${test_name}'")
-      else()
-        set(_${test_name}_${opt} TRUE PARENT_SCOPE)
-      endif()
-    endforeach()
-    list(APPEND names ${test_name})
-  endforeach()
-  set(${varname} ${names} PARENT_SCOPE)
-endfunction()

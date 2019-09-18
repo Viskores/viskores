@@ -2,28 +2,18 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_ArrayHandleGroupVecVariable_h
 #define vtk_m_cont_ArrayHandleGroupVecVariable_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayPortal.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
@@ -191,7 +181,7 @@ public:
 
   using PortalType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalControl,
-    typename OffsetsArrayHandleType::PortalControl>;
+    typename OffsetsArrayHandleType::PortalConstControl>;
   using PortalConstType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalConstControl,
     typename OffsetsArrayHandleType::PortalConstControl>;
@@ -213,7 +203,8 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->SourceArray.GetPortalControl(), this->OffsetsArray.GetPortalControl());
+    return PortalType(this->SourceArray.GetPortalControl(),
+                      this->OffsetsArray.GetPortalConstControl());
   }
 
   VTKM_CONT
@@ -443,174 +434,135 @@ make_ArrayHandleGroupVecVariable(const SourceArrayHandleType& sourceArray,
 /// each Vec) and returns an array of offsets to a packed array of such Vecs. The resulting array
 /// can be used with \c ArrayHandleGroupVecVariable.
 ///
-/// The first parameter is always the input array that specifies the number of components in each
-/// group Vec.
+/// \param numComponentsArray the input array that specifies the number of components in each group
+/// Vec.
 ///
-/// The next parameter is the output \c ArrayHandle, which must have a value type of \c vtkm::Id.
-/// If the output \c ArrayHandle is not given, it is returned.
+/// \param offsetsArray (optional) the output \c ArrayHandle, which must have a value type of \c
+/// vtkm::Id. If the output \c ArrayHandle is not given, it is returned.
 ///
-/// The next optional parameter is a reference to a \c vtkm::Id and is filled with the expected
+/// \param sourceArraySize (optional) a reference to a \c vtkm::Id and is filled with the expected
 /// size of the source values array.
 ///
-/// The final optional parameter is either a device adapter tag or a \c RuntimeDeviceTracker. If a
-/// device is not specified, then devices specified by the global \c RuntimeDeviceTracker are used.
+/// \param device (optional) specifies the device on which to run the conversion.
 ///
-template <typename NumComponentsArrayType, typename OffsetsStorage, typename Device>
-VTKM_CONT void ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray,
-  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
-  vtkm::Id& sourceArraySize,
-  Device)
-{
-  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  sourceArraySize = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-    vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
-}
-
-template <typename NumComponentsArrayType, typename OffsetsStorage, typename Device>
-VTKM_CONT void ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray,
-  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
-  Device)
-{
-  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  vtkm::Id dummy;
-  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, Device());
-}
-
-template <typename NumComponentsArrayType, typename Device>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray,
-  vtkm::Id& sourceArraySize,
-  Device)
-{
-  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray;
-  vtkm::cont::ConvertNumComponentsToOffsets(
-    numComponentsArray, offsetsArray, sourceArraySize, Device());
-  return offsetsArray;
-}
-
-template <typename NumComponentsArrayType, typename Device>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray,
-  Device)
-{
-  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  vtkm::Id dummy;
-  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy, Device());
-}
-
-namespace detail
-{
-
-template <typename NumComponentsArrayType, typename OffsetsArrayType>
-struct ConvertNumComponentsToOffsetsFunctor
-{
-  const NumComponentsArrayType NumComponentsArray;
-  OffsetsArrayType OffsetsArray;
-  vtkm::Id SourceArraySize;
-
-  VTKM_CONT
-  ConvertNumComponentsToOffsetsFunctor(const NumComponentsArrayType& numCompArray)
-    : NumComponentsArray(numCompArray)
-    , SourceArraySize(0)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    vtkm::cont::ConvertNumComponentsToOffsets(
-      this->NumComponentsArray, this->OffsetsArray, this->SourceArraySize, Device());
-
-    return true;
-  }
-};
-
-template <typename NumComponentsArrayType, typename OffsetsArrayType>
-VTKM_CONT void DoConvertNumComponentsToOffsets(const NumComponentsArrayType& numComponentsArray,
-                                               OffsetsArrayType& offsetsArray,
-                                               vtkm::Id& sourceArraySize,
-                                               vtkm::cont::RuntimeDeviceTracker tracker)
-{
-  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
-  VTKM_IS_ARRAY_HANDLE(OffsetsArrayType);
-
-  detail::ConvertNumComponentsToOffsetsFunctor<NumComponentsArrayType, OffsetsArrayType> functor(
-    numComponentsArray);
-  bool success = vtkm::cont::TryExecute(functor, tracker);
-
-  if (!success)
-  {
-    // Internal error? Maybe need to make a failed to execute error.
-    throw vtkm::cont::ErrorInternal("Failed to run ExclusiveScan on any device.");
-  }
-
-  sourceArraySize = functor.SourceArraySize;
-  offsetsArray = functor.OffsetsArray;
-}
-
-} // namespace detail
-
 template <typename NumComponentsArrayType, typename OffsetsStorage>
 VTKM_CONT void ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
   vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
   vtkm::Id& sourceArraySize,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
-  detail::DoConvertNumComponentsToOffsets(
-    numComponentsArray, offsetsArray, sourceArraySize, tracker);
+  sourceArraySize = vtkm::cont::Algorithm::ScanExclusive(
+    device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
 }
 
 template <typename NumComponentsArrayType, typename OffsetsStorage>
 VTKM_CONT void ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
   vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
   vtkm::Id dummy;
-  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, tracker);
+  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, device);
 }
 
 template <typename NumComponentsArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
   vtkm::Id& sourceArraySize,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
   vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray;
   vtkm::cont::ConvertNumComponentsToOffsets(
-    numComponentsArray, offsetsArray, sourceArraySize, tracker);
+    numComponentsArray, offsetsArray, sourceArraySize, device);
   return offsetsArray;
 }
 
 template <typename NumComponentsArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
   vtkm::Id dummy;
-  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy, tracker);
+  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy, device);
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename SAH, typename OAH>
+struct SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_GroupVecVariable<" + SerializableTypeString<SAH>::Get() + "," +
+      SerializableTypeString<OAH>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename SAH, typename OAH>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
+                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+};
+}
+} // vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <typename SAH, typename OAH>
+struct Serialization<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkmdiy::save(bb, obj.GetStorage().GetSourceArray());
+    vtkmdiy::save(bb, obj.GetStorage().GetOffsetsArray());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    SAH src;
+    OAH off;
+
+    vtkmdiy::load(bb, src);
+    vtkmdiy::load(bb, off);
+
+    obj = vtkm::cont::make_ArrayHandleGroupVecVariable(src, off);
+  }
+};
+
+template <typename SAH, typename OAH>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
+                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
+  : Serialization<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+{
+};
+} // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleGroupVecVariable_h

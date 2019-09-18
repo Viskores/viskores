@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,54 +6,33 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2018 UT-Battelle, LLC.
-//  Copyright 2018 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 
 #ifndef vtk_m_worklet_connectivity_InnerJoin_h
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-template <typename DeviceAdapter>
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
 class InnerJoin
 {
 public:
   struct Merge : vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  WholeArrayIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3, VisitIndex, _4, _5, _6, _7);
+    using ControlSignature =
+      void(FieldIn, FieldIn, FieldIn, WholeArrayIn, FieldOut, FieldOut, FieldOut);
+    using ExecutionSignature = void(_1, _2, _3, VisitIndex, _4, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    VTKM_CONT
-    Merge(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
 
     // TODO: type trait for array portal?
     template <typename KeyType, typename ValueType1, typename InPortalType, typename ValueType2>
@@ -72,12 +50,9 @@ public:
       value1Out = value1;
       value2Out = v2;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Algorithm = vtkm::cont::Algorithm;
 
   // TODO: not mutating input keys and values?
   template <typename Key, typename Value1, typename Value2>
@@ -100,10 +75,13 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> counts;
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
-    vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
-    Merge merge(scatter);
-    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(merge);
+    vtkm::worklet::ScatterCounting scatter{ counts };
+    vtkm::worklet::DispatcherMapField<Merge> mergeDisp(scatter);
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };
+}
+}
+} // vtkm::worklet::connectivity
+
 #endif //vtk_m_worklet_connectivity_InnerJoin_h

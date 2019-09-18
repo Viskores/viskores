@@ -1,5 +1,4 @@
-//=============================================================================
-//
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,18 +6,7 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
-//
-//=============================================================================
+//============================================================================
 #include <vtkm/worklet/ScatterPermutation.h>
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -33,20 +21,21 @@
 namespace
 {
 
-class Worklet : public vtkm::worklet::WorkletMapCellToPoint
+class Worklet : public vtkm::worklet::WorkletVisitPointsWithCells
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
-                                FieldOutPoint<IdType> outPointId,
-                                FieldOutPoint<IdComponentType> outVisit);
-  typedef void ExecutionSignature(InputIndex, VisitIndex, _2, _3);
+  using ControlSignature = void(CellSetIn cellset,
+                                FieldOutPoint outPointId,
+                                FieldOutPoint outVisit);
+  using ExecutionSignature = void(InputIndex, VisitIndex, _2, _3);
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 
-  Worklet(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation)
-    : Scatter(permutation)
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation)
   {
+    return ScatterType(permutation);
   }
 
   VTKM_EXEC void operator()(vtkm::Id pointId,
@@ -57,12 +46,6 @@ public:
     outPointId = pointId;
     outVisit = visit;
   }
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-private:
-  ScatterType Scatter;
 };
 
 template <typename CellSetType>
@@ -71,8 +54,8 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
   vtkm::cont::ArrayHandle<vtkm::Id> outPointId;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> outVisit;
 
-  Worklet worklet(permutation);
-  vtkm::worklet::DispatcherMapTopology<Worklet>(worklet).Invoke(cellset, outPointId, outVisit);
+  vtkm::worklet::DispatcherMapTopology<Worklet> dispatcher(Worklet::MakeScatter(permutation));
+  dispatcher.Invoke(cellset, outPointId, outVisit);
 
   for (vtkm::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {
@@ -123,7 +106,7 @@ void TestScatterPermutation()
 
 } // anonymous namespace
 
-int UnitTestScatterPermutation(int, char* [])
+int UnitTestScatterPermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestScatterPermutation);
+  return vtkm::cont::testing::Testing::Run(TestScatterPermutation, argc, argv);
 }

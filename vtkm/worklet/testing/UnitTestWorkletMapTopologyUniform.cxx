@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -27,6 +17,7 @@
 #include <vtkm/Math.h>
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -34,14 +25,14 @@
 namespace test_uniform
 {
 
-class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
+class MaxPointOrCellValue : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells,
-                                FieldInPoint<Scalar> inPoints,
+  using ControlSignature = void(FieldInCell inCells,
+                                FieldInPoint inPoints,
                                 CellSetIn topology,
-                                FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
+                                FieldOutCell outCells);
+  using ExecutionSignature = void(_1, _4, _2, PointCount, CellShape, PointIndices);
   using InputDomain = _3;
 
   VTKM_CONT
@@ -68,10 +59,10 @@ public:
   }
 };
 
-struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletMapPointToCell
+struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  typedef void ControlSignature(CellSetIn topology, FieldInPoint<Vec3> pointCoords);
-  typedef void ExecutionSignature(_2);
+  using ControlSignature = void(CellSetIn topology, FieldInPoint pointCoords);
+  using ExecutionSignature = void(_2);
 
   VTKM_CONT
   CheckStructuredUniformPointCoords() {}
@@ -99,11 +90,10 @@ static void TestAvgPointToCell();
 static void TestAvgCellToPoint();
 static void TestStructuredUniformPointCoords();
 
-void TestWorkletMapTopologyUniform()
+void TestWorkletMapTopologyUniform(vtkm::cont::DeviceAdapterId id)
 {
-  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
-  std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: " << id.GetName()
+            << std::endl;
 
   TestMaxPointOrCell();
   TestAvgPointToCell();
@@ -121,13 +111,13 @@ static void TestMaxPointOrCell()
 
   vtkm::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
   dispatcher.Invoke(
-    dataSet.GetField("cellvar"),
-    dataSet.GetField("pointvar"),
+    dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
     // We know that the cell set is a structured 2D grid and
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
@@ -145,13 +135,15 @@ static void TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
+  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
+
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
     // We know that the cell set is a structured 2D grid and
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    &cellset,
     dataSet.GetField("pointvar"),
     result);
 
@@ -196,7 +188,7 @@ static void TestAvgCellToPoint()
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
     dataSet.GetField("cellvar"),
     result);
 
@@ -244,7 +236,7 @@ static void TestStructuredUniformPointCoords()
 
 } // anonymous namespace
 
-int UnitTestWorkletMapTopologyUniform(int, char* [])
+int UnitTestWorkletMapTopologyUniform(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyUniform);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestWorkletMapTopologyUniform, argc, argv);
 }

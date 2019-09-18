@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
@@ -33,16 +23,16 @@
 
 struct TestWholeCellSetIn
 {
-  template <typename FromTopology, typename ToTopology>
+  template <typename VisitTopology, typename IncidentTopology>
   struct WholeCellSetWorklet : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> indices,
-                                  WholeCellSetIn<FromTopology, ToTopology>,
-                                  FieldOut<> numberOfElements,
-                                  FieldOut<> shapes,
-                                  FieldOut<> numberOfindices,
-                                  FieldOut<> connectionSum);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+    using ControlSignature = void(FieldIn indices,
+                                  WholeCellSetIn<VisitTopology, IncidentTopology>,
+                                  FieldOut numberOfElements,
+                                  FieldOut shapes,
+                                  FieldOut numberOfindices,
+                                  FieldOut connectionSum);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
     using InputDomain = _1;
 
     template <typename ConnectivityType>
@@ -80,30 +70,30 @@ struct TestWholeCellSetIn
                                  vtkm::cont::ArrayHandle<vtkm::Id> connectionSum)
   {
     using WorkletType =
-      WholeCellSetWorklet<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
+      WholeCellSetWorklet<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet.GetNumberOfCells()),
                       cellSet,
                       numberOfElements,
                       shapeIds,
                       numberOfIndices,
-                      connectionSum);
+                      &connectionSum);
   }
 
   template <typename CellSetType>
-  VTKM_CONT static void RunPoints(const CellSetType& cellSet,
+  VTKM_CONT static void RunPoints(const CellSetType* cellSet,
                                   vtkm::cont::ArrayHandle<vtkm::Id> numberOfElements,
                                   vtkm::cont::ArrayHandle<vtkm::UInt8> shapeIds,
                                   vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
                                   vtkm::cont::ArrayHandle<vtkm::Id> connectionSum)
   {
     using WorkletType =
-      WholeCellSetWorklet<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>;
+      WholeCellSetWorklet<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet.GetNumberOfPoints()),
+    dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(cellSet->GetNumberOfPoints()),
                       cellSet,
                       numberOfElements,
-                      shapeIds,
+                      &shapeIds,
                       numberOfIndices,
                       connectionSum);
   }
@@ -169,7 +159,7 @@ VTKM_CONT void TryPointConnectivity(const CellSetType& cellSet,
   vtkm::cont::ArrayHandle<vtkm::Id> connectionSum;
 
   TestWholeCellSetIn::RunPoints(
-    cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
+    &cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
   std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
             << std::endl;
@@ -244,9 +234,7 @@ void TryCellSetPermutation()
   vtkm::Id permutationArray[] = { 2, 0, 1 };
 
   vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>, vtkm::cont::ArrayHandle<vtkm::Id>>
-    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3),
-            originalCellSet,
-            originalCellSet.GetName());
+    cellSet(vtkm::cont::make_ArrayHandle(permutationArray, 3), originalCellSet);
 
   vtkm::UInt8 expectedCellShapes[] = { vtkm::CELL_SHAPE_TETRA,
                                        vtkm::CELL_SHAPE_HEXAHEDRON,
@@ -361,7 +349,7 @@ void RunWholeCellSetInTests()
   TryStructuredGrid1D();
 }
 
-int UnitTestWholeCellSetIn(int, char* [])
+int UnitTestWholeCellSetIn(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(RunWholeCellSetInTests);
+  return vtkm::cont::testing::Testing::Run(RunWholeCellSetInTests, argc, argv);
 }

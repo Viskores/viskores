@@ -1,22 +1,11 @@
-
 //============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_exec_cuda_internal_ExecutionPolicy_h
 #define vtk_m_exec_cuda_internal_ExecutionPolicy_h
@@ -25,6 +14,7 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
+#include <vtkm/exec/cuda/internal/ThrustPatches.h>
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/execution_policy.h>
 #include <thrust/system/cuda/execution_policy.h>
@@ -196,7 +186,7 @@ __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_ke
                           binary_op);
 
 //only sync if we are being invoked from the host
-#ifndef __CUDA_ARCH__
+#ifndef VTKM_CUDA_DEVICE_PASS
   VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
 #endif
 

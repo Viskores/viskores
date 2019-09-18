@@ -2,34 +2,22 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_internal_ConnectivityExplicitInternals_h
 #define vtk_m_cont_internal_ConnectivityExplicitInternals_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/internal/DeviceAdapterError.h>
+#include <vtkm/cont/internal/ReverseConnectivityBuilder.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -38,10 +26,10 @@ namespace cont
 namespace internal
 {
 
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
+template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
 void buildIndexOffsets(const NumIndicesArrayType& numIndices,
                        IndexOffsetArrayType& offsets,
-                       DeviceAdapterTag,
+                       vtkm::cont::DeviceAdapterId device,
                        std::true_type)
 {
   //We first need to make sure that NumIndices and IndexOffsetArrayType
@@ -51,14 +39,13 @@ void buildIndexOffsets(const NumIndicesArrayType& numIndices,
   // Although technically we are making changes to this object, the changes
   // are logically consistent with the previous state, so we consider it
   // valid under const.
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-  Algorithm::ScanExclusive(CastedNumIndicesType(numIndices), offsets);
+  vtkm::cont::Algorithm::ScanExclusive(device, CastedNumIndicesType(numIndices), offsets);
 }
 
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
+template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
 void buildIndexOffsets(const NumIndicesArrayType&,
                        IndexOffsetArrayType&,
-                       DeviceAdapterTag,
+                       vtkm::cont::DeviceAdapterId,
                        std::false_type)
 {
   //this is a no-op as the storage for the offsets is an implicit handle
@@ -68,14 +55,13 @@ void buildIndexOffsets(const NumIndicesArrayType&,
   //cause a compile time failure.
 }
 
-template <typename ArrayHandleIndices, typename ArrayHandleOffsets, typename DeviceAdapterTag>
+template <typename ArrayHandleIndices, typename ArrayHandleOffsets>
 void buildIndexOffsets(const ArrayHandleIndices& numIndices,
                        ArrayHandleOffsets offsets,
-                       DeviceAdapterTag tag)
+                       vtkm::cont::DeviceAdapterId deviceId)
 {
-  using IsWriteable =
-    vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets, DeviceAdapterTag>;
-  buildIndexOffsets(numIndices, offsets, tag, typename IsWriteable::type());
+  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<ArrayHandleOffsets>;
+  buildIndexOffsets(numIndices, offsets, deviceId, typename IsWritable::type());
 }
 
 template <typename ShapeStorageTag = VTKM_DEFAULT_STORAGE_TAG,
@@ -121,25 +107,20 @@ struct ConnectivityExplicitInternals
     this->IndexOffsets.ReleaseResourcesExecution();
   }
 
-  template <typename Device>
-  VTKM_CONT void BuildIndexOffsets(Device) const
+
+  VTKM_CONT void BuildIndexOffsets(vtkm::cont::DeviceAdapterId deviceId) const
   {
+    if (deviceId == vtkm::cont::DeviceAdapterTagUndefined())
+    {
+      throw vtkm::cont::ErrorBadValue("Cannot build indices using DeviceAdapterTagUndefined");
+    }
+
     VTKM_ASSERT(this->ElementsValid);
 
     if (!this->IndexOffsetsValid)
     {
-      buildIndexOffsets(this->NumIndices, this->IndexOffsets, Device());
+      buildIndexOffsets(this->NumIndices, this->IndexOffsets, deviceId);
       this->IndexOffsetsValid = true;
-    }
-  }
-
-  VTKM_CONT
-  void BuildIndexOffsets(vtkm::cont::DeviceAdapterTagError) const
-  {
-    if (!this->IndexOffsetsValid)
-    {
-      throw vtkm::cont::ErrorBadType(
-        "Cannot build indices using the error device. Must be created previously.");
     }
   }
 
@@ -171,113 +152,168 @@ struct ConnectivityExplicitInternals
   }
 };
 
-
-// Worklet to expand the PointToCell numIndices array by repeating cell index
-class ExpandIndices : public vtkm::worklet::WorkletMapField
+// Pass through (needed for ReverseConnectivityBuilder)
+struct PassThrough
 {
-public:
-  typedef void ControlSignature(FieldIn<> cellIndex,
-                                FieldIn<> offset,
-                                FieldIn<> numIndices,
-                                WholeArrayOut<> cellIndices);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
-  using InputDomain = _1;
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& val) const { return val; }
+};
+
+// Compute cell id from input connectivity:
+// Find the upper bound of the conn idx in the offsets table and subtract 1
+//
+// Example:
+// Offsets: |  0        |  3        |  6           |  10       |
+// Conn:    |  0  1  2  |  0  1  3  |  2  4  5  6  |  1  3  5  |
+// ConnIdx: |  0  1  2  |  3  4  5  |  6  7  8  9  |  10 11 12 |
+// UpprBnd: |  1  1  1  |  2  2  2  |  3  3  3  3  |  4  4  4  |
+// CellIdx: |  0  0  0  |  1  1  1  |  2  2  2  2  |  3  3  3  |
+template <typename OffsetsPortalType>
+struct ConnIdxToCellIdCalc
+{
+  OffsetsPortalType Offsets;
 
   VTKM_CONT
-  ExpandIndices() {}
-
-  template <typename PortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& cellIndex,
-                            const vtkm::Id& offset,
-                            const vtkm::Id& numIndices,
-                            const PortalType& cellIndices) const
+  ConnIdxToCellIdCalc(const OffsetsPortalType& offsets)
+    : Offsets(offsets)
   {
-    VTKM_ASSERT(cellIndices.GetNumberOfValues() >= offset + numIndices);
-    vtkm::Id startIndex = offset;
-    for (vtkm::Id i = 0; i < numIndices; i++)
+  }
+
+  VTKM_EXEC
+  vtkm::Id operator()(vtkm::Id inIdx) const
+  {
+    // Compute the upper bound index:
+    vtkm::Id upperBoundIdx;
     {
-      cellIndices.Set(startIndex++, cellIndex);
+      vtkm::Id first = 0;
+      vtkm::Id length = this->Offsets.GetNumberOfValues();
+
+      while (length > 0)
+      {
+        vtkm::Id halfway = length / 2;
+        vtkm::Id pos = first + halfway;
+        vtkm::Id val = this->Offsets.Get(pos);
+        if (val <= inIdx)
+        {
+          first = pos + 1;
+          length -= halfway + 1;
+        }
+        else
+        {
+          length = halfway;
+        }
+      }
+
+      upperBoundIdx = first;
     }
+
+    return upperBoundIdx - 1;
   }
 };
 
-class ScatterValues : public vtkm::worklet::WorkletMapField
+// Much easier for CellSetSingleType:
+struct ConnIdxToCellIdCalcSingleType
 {
-public:
-  typedef void ControlSignature(FieldIn<> index, FieldIn<> value, WholeArrayOut<> output);
-  typedef void ExecutionSignature(_1, _2, _3);
-  using InputDomain = _1;
+  vtkm::IdComponent CellSize;
 
-  template <typename T, typename PortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& index, const T& value, const PortalType& output) const
+  VTKM_CONT
+  ConnIdxToCellIdCalcSingleType(vtkm::IdComponent cellSize)
+    : CellSize(cellSize)
   {
-    output.Set(index, value);
   }
+
+  VTKM_EXEC
+  vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
 };
 
-template <typename PointToCell, typename C2PShapeStorageTag, typename Device>
-void ComputeCellToPointConnectivity(ConnectivityExplicitInternals<C2PShapeStorageTag>& cell2Point,
-                                    const PointToCell& point2Cell,
-                                    vtkm::Id numberOfPoints,
-                                    Device)
+template <typename VisitCellsWithPoints, typename VisitPointsWithCells, typename Device>
+void ComputeVisitPointsWithCellsConnectivity(VisitPointsWithCells& cell2Point,
+                                             const VisitCellsWithPoints& point2Cell,
+                                             vtkm::Id numberOfPoints,
+                                             Device)
 {
-  // PointToCell connectivity array (point indices) will be
-  // transformed into the CellToPoint numIndices array using reduction
-  //
-  // PointToCell numIndices array using expansion will be
-  // transformed into the CellToPoint connectivity array
-
   if (cell2Point.ElementsValid)
   {
     return;
   }
 
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+  auto& conn = point2Cell.Connectivity;
+  auto& rConn = cell2Point.Connectivity;
+  auto& rNumIndices = cell2Point.NumIndices;
+  auto& rIndexOffsets = cell2Point.IndexOffsets;
+  vtkm::Id rConnSize = conn.GetNumberOfValues();
 
-  // Sizes of the PointToCell information
-  vtkm::Id numberOfCells = point2Cell.NumIndices.GetNumberOfValues();
-  vtkm::Id connectivityLength = point2Cell.Connectivity.GetNumberOfValues();
+  auto offInPortal = point2Cell.IndexOffsets.PrepareForInput(Device{});
 
-  // PointToCell connectivity will be basis of CellToPoint numIndices
-  vtkm::cont::ArrayHandle<vtkm::Id> pointIndices;
-  Algorithm::Copy(point2Cell.Connectivity, pointIndices);
+  PassThrough idxCalc{};
+  ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
 
-  // PointToCell numIndices will be basis of CellToPoint connectivity
+  vtkm::cont::internal::ReverseConnectivityBuilder builder;
+  builder.Run(conn,
+              rConn,
+              rNumIndices,
+              rIndexOffsets,
+              idxCalc,
+              cellIdCalc,
+              numberOfPoints,
+              rConnSize,
+              Device());
 
-  cell2Point.Connectivity.Allocate(connectivityLength);
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> index(0, 1, numberOfCells);
-
-  vtkm::worklet::DispatcherMapField<ExpandIndices, Device> expandDispatcher;
-  expandDispatcher.Invoke(
-    index, point2Cell.IndexOffsets, point2Cell.NumIndices, cell2Point.Connectivity);
-
-  // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
-  Algorithm::SortByKey(pointIndices, cell2Point.Connectivity);
-
-  // CellToPoint numIndices from the now sorted PointToCell connectivity
-  vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numArray(1, connectivityLength);
-  vtkm::cont::ArrayHandle<vtkm::Id> uniquePoints;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-  Algorithm::ReduceByKey(pointIndices, numArray, uniquePoints, numIndices, vtkm::Add());
-
-  // if not all the points have a cell
-  if (uniquePoints.GetNumberOfValues() < numberOfPoints)
-  {
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> fullNumIndices;
-    Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, numberOfPoints),
-                    fullNumIndices);
-    vtkm::worklet::DispatcherMapField<ScatterValues, Device>().Invoke(
-      uniquePoints, numIndices, fullNumIndices);
-    numIndices = fullNumIndices;
-  }
-
-  // Set the CellToPoint information
+  // Set the VisitPointsWithCells information
   cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-  cell2Point.NumIndices = numIndices;
-
   cell2Point.ElementsValid = true;
-  cell2Point.IndexOffsetsValid = false;
+  cell2Point.IndexOffsetsValid = true;
+}
+
+// Specialize for CellSetSingleType:
+template <typename ShapeStorageTag,
+          typename ConnectivityStorageTag,
+          typename IndexOffsetStorageTag,
+          typename VisitPointsWithCells,
+          typename Device>
+void ComputeVisitPointsWithCellsConnectivity(
+  VisitPointsWithCells& cell2Point,
+  const ConnectivityExplicitInternals<
+    ShapeStorageTag,
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag, // nIndices
+    ConnectivityStorageTag,
+    IndexOffsetStorageTag>& point2Cell,
+  vtkm::Id numberOfPoints,
+  Device)
+{
+  if (cell2Point.ElementsValid)
+  {
+    return;
+  }
+
+  auto& conn = point2Cell.Connectivity;
+  auto& rConn = cell2Point.Connectivity;
+  auto& rNumIndices = cell2Point.NumIndices;
+  auto& rIndexOffsets = cell2Point.IndexOffsets;
+  vtkm::Id rConnSize = conn.GetNumberOfValues();
+
+  auto sizesInPortal = point2Cell.NumIndices.GetPortalConstControl();
+  vtkm::IdComponent cellSize = sizesInPortal.GetNumberOfValues() > 0 ? sizesInPortal.Get(0) : 0;
+
+  PassThrough idxCalc{};
+  ConnIdxToCellIdCalcSingleType cellIdCalc{ cellSize };
+
+  vtkm::cont::internal::ReverseConnectivityBuilder builder;
+  builder.Run(conn,
+              rConn,
+              rNumIndices,
+              rIndexOffsets,
+              idxCalc,
+              cellIdCalc,
+              numberOfPoints,
+              rConnSize,
+              Device());
+
+  // Set the VisitPointsWithCells information
+  cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
+    static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
+  cell2Point.ElementsValid = true;
+  cell2Point.IndexOffsetsValid = true;
 }
 }
 }

@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/ThresholdPoints.h>
@@ -98,7 +88,6 @@ private:
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingThresholdPoints
 {
 public:
@@ -118,11 +107,11 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesBetween(40.0f, 71.0f),
-                               DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = threshold.Run(
+      dataset.GetCellSet(),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesBetween(40.0f, 71.0f));
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
                      "Wrong result for ThresholdPoints");
@@ -150,11 +139,11 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesAbove(1.0f),
-                               DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = threshold.Run(
+      dataset.GetCellSet(),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesAbove(1.0f));
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
                      "Wrong result for ThresholdPoints");
@@ -175,11 +164,11 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesBelow(50.0f),
-                               DeviceAdapter());
-    outDataSet.AddCellSet(outCellSet);
+    outCellSet = threshold.Run(
+      dataset.GetCellSet(),
+      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+      ValuesBelow(50.0f));
+    outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6),
                      "Wrong result for ThresholdPoints");
@@ -194,8 +183,7 @@ public:
 };
 }
 
-int UnitTestThresholdPoints(int, char* [])
+int UnitTestThresholdPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingThresholdPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingThresholdPoints(), argc, argv);
 }

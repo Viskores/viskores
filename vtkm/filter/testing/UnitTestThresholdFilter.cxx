@@ -2,25 +2,16 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Threshold.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
@@ -53,6 +44,11 @@ public:
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
                        cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestRegular3D() const
@@ -78,6 +74,11 @@ public:
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
                        cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestExplicit3D() const
@@ -103,6 +104,11 @@ public:
                        cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
                        cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void TestExplicit3DZeroResults() const
@@ -125,6 +131,11 @@ public:
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
+
+    // Make sure that the resulting data set can be successfully passed to another
+    // simple filter using the cell set.
+    vtkm::filter::CleanGrid clean;
+    clean.Execute(output);
   }
 
   void operator()() const
@@ -137,7 +148,7 @@ public:
 };
 }
 
-int UnitTestThresholdFilter(int, char* [])
+int UnitTestThresholdFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingThreshold());
+  return vtkm::cont::testing::Testing::Run(TestingThreshold(), argc, argv);
 }

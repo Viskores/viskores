@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #include <vtkm/worklet/Mask.h>
@@ -32,7 +22,6 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-template <typename DeviceAdapter>
 class TestingMask
 {
 public:
@@ -47,16 +36,15 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set permutation
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for Mask");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -74,16 +62,15 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 9, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 9);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 7), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
@@ -102,16 +89,15 @@ public:
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
-    dataset.GetCellSet(0).CopyTo(cellSet);
+    dataset.GetCellSet().CopyTo(cellSet);
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> cellvar;
     dataset.GetField("cellvar").GetData().CopyTo(cellvar);
-    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray =
-      maskCells.ProcessCellField(cellvar, DeviceAdapter());
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = maskCells.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
@@ -127,7 +113,7 @@ public:
   }
 };
 
-int UnitTestMask(int, char* [])
+int UnitTestMask(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestingMask<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingMask(), argc, argv);
 }

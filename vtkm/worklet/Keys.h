@@ -2,31 +2,25 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2016 UT-Battelle, LLC.
-//  Copyright 2016 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_worklet_Keys_h
 #define vtk_m_worklet_Keys_h
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/Logging.h>
+
+#include <vtkm/Hash.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
@@ -37,6 +31,7 @@
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
+#include <vtkm/worklet/vtkm_worklet_export.h>
 
 #include <vtkm/BinaryOperators.h>
 
@@ -44,6 +39,15 @@ namespace vtkm
 {
 namespace worklet
 {
+
+/// Select the type of sort for BuildArrays calls. Unstable sorting is faster
+/// but will not produce consistent ordering for equal keys. Stable sorting
+/// is slower, but keeps equal keys in their original order.
+enum class KeysSortType
+{
+  Unstable = 0,
+  Stable = 1
+};
 
 /// \brief Manage keys for a \c WorkletReduceByKey.
 ///
@@ -62,24 +66,15 @@ namespace worklet
 /// Keys structure is reused for all the \c Invoke. This is more efficient than
 /// creating a different \c Keys structure for each \c Invoke.
 ///
-template <typename _KeyType>
-class Keys
+template <typename T>
+class VTKM_ALWAYS_EXPORT Keys
 {
 public:
-  using KeyType = _KeyType;
+  using KeyType = T;
   using KeyArrayHandleType = vtkm::cont::ArrayHandle<KeyType>;
 
-  /// Select the type of sort for BuildArrays calls. Unstable sorting is faster
-  /// but will not produce consistent ordering for equal keys. Stable sorting
-  /// is slower, but keeps equal keys in their original order.
-  enum class SortType
-  {
-    Unstable = 0,
-    Stable = 1
-  };
-
   VTKM_CONT
-  Keys() = default;
+  Keys();
 
   /// \b Construct a Keys class from an array of keys.
   ///
@@ -88,34 +83,37 @@ public:
   ///
   /// The input keys object is not modified and the result is not stable
   /// sorted. This is the equivalent of calling
-  /// `BuildArrays(keys, SortType::Unstable, device)`.
+  /// `BuildArrays(keys, KeysSortType::Unstable, device)`.
   ///
-  template <typename KeyStorage, typename Device>
-  VTKM_CONT Keys(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& keys, Device)
+  template <typename KeyStorage>
+  VTKM_CONT Keys(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& keys,
+                 vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    this->BuildArrays(keys, SortType::Unstable, Device());
+    this->BuildArrays(keys, KeysSortType::Unstable, device);
   }
 
   /// Build the internal arrays without modifying the input. This is more
   /// efficient for stable sorted arrays, but requires an extra copy of the
   /// keys for unstable sorting.
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArrays(const KeyArrayType& keys, SortType sort, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArrays(const KeyArrayType& keys,
+                             KeysSortType sort,
+                             vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArrays");
 
     switch (sort)
     {
-      case SortType::Unstable:
+      case KeysSortType::Unstable:
       {
         KeyArrayHandleType mutableKeys;
-        Algorithm::Copy(keys, mutableKeys);
+        vtkm::cont::Algorithm::Copy(device, keys, mutableKeys);
 
-        this->BuildArraysInternal(mutableKeys, Device());
+        this->BuildArraysInternal(mutableKeys, device);
       }
       break;
-      case SortType::Stable:
-        this->BuildArraysInternalStable(keys, Device());
+      case KeysSortType::Stable:
+        this->BuildArraysInternalStable(keys, device);
         break;
     }
   }
@@ -123,24 +121,28 @@ public:
   /// Build the internal arrays and also sort the input keys. This is more
   /// efficient for unstable sorting, but requires an extra copy for stable
   /// sorting.
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInPlace(KeyArrayType& keys, SortType sort, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInPlace(
+    KeyArrayType& keys,
+    KeysSortType sort,
+    vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInPlace");
 
     switch (sort)
     {
-      case SortType::Unstable:
-        this->BuildArraysInternal(keys, Device());
+      case KeysSortType::Unstable:
+        this->BuildArraysInternal(keys, device);
         break;
-      case SortType::Stable:
+      case KeysSortType::Stable:
       {
-        this->BuildArraysInternalStable(keys, Device());
+        this->BuildArraysInternalStable(keys, device);
         KeyArrayHandleType tmp;
         // Copy into a temporary array so that the permutation array copy
         // won't alias input/output memory:
-        Algorithm::Copy(keys, tmp);
-        Algorithm::Copy(vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, tmp), keys);
+        vtkm::cont::Algorithm::Copy(device, keys, tmp);
+        vtkm::cont::Algorithm::Copy(
+          device, vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, tmp), keys);
       }
       break;
     }
@@ -202,57 +204,66 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> Counts;
 
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInternal(KeyArrayType& keys, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInternal(KeyArrayType& keys, vtkm::cont::DeviceAdapterId device)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternal");
 
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 
-    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
+    vtkm::cont::Algorithm::Copy(
+      device, vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
 
     // TODO: Do we need the ability to specify a comparison functor for sort?
-    Algorithm::SortByKey(keys, this->SortedValuesMap);
+    vtkm::cont::Algorithm::SortByKey(device, keys, this->SortedValuesMap);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(keys,
-                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-                           this->UniqueKeys,
-                           this->Counts,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::ReduceByKey(
+      device,
+      keys,
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+      this->UniqueKeys,
+      this->Counts,
+      vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
-    vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
-      vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
+    vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
+      device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
     VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
     (void)offsetsTotal;                   // Shut up, compiler
   }
 
-  template <typename KeyArrayType, typename Device>
-  VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys, Device)
+  template <typename KeyArrayType>
+  VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys,
+                                           vtkm::cont::DeviceAdapterId device)
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Keys::BuildArraysInternalStable");
 
     const vtkm::Id numKeys = keys.GetNumberOfValues();
 
     // Produce a stable sorted map of the keys:
-    this->SortedValuesMap = StableSortIndices<Device>::Sort(keys);
+    this->SortedValuesMap = StableSortIndices::Sort(device, keys);
     auto sortedKeys = vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, keys);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(sortedKeys,
-                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-                           this->UniqueKeys,
-                           this->Counts,
-                           vtkm::Sum());
+    vtkm::cont::Algorithm::ReduceByKey(
+      device,
+      sortedKeys,
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+      this->UniqueKeys,
+      this->Counts,
+      vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
-    vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
+    vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
       vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
     VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
     (void)offsetsTotal;                   // Shut up, compiler
   }
 };
+
+template <typename T>
+VTKM_CONT Keys<T>::Keys() = default;
 }
 } // namespace vtkm::worklet
 
@@ -408,5 +419,29 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
 }
 }
 } // namespace vtkm::cont::arg
+
+#ifndef vtk_m_worklet_Keys_cxx
+
+#define VTK_M_KEYS_EXPORT(T)                                                                       \
+  extern template class VTKM_WORKLET_TEMPLATE_EXPORT vtkm::worklet::Keys<T>;                       \
+  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
+    const vtkm::cont::ArrayHandle<T>& keys,                                                        \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device);                                                           \
+  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
+    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
+    vtkm::worklet::KeysSortType sort,                                                              \
+    vtkm::cont::DeviceAdapterId device)
+
+VTK_M_KEYS_EXPORT(vtkm::HashType);
+VTK_M_KEYS_EXPORT(vtkm::Id);
+VTK_M_KEYS_EXPORT(vtkm::Id3);
+#ifdef VTKM_USE_64BIT_IDS
+VTK_M_KEYS_EXPORT(vtkm::IdComponent);
+#endif
+
+#undef VTK_M_KEYS_EXPORT
+
+#endif // !vtk_m_worklet_Keys_cxx
 
 #endif //vtk_m_worklet_Keys_h

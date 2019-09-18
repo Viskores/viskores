@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_exec_ConnectivityStructured_h
@@ -30,16 +20,16 @@ namespace vtkm
 namespace exec
 {
 
-template <typename FromTopology, typename ToTopology, vtkm::IdComponent Dimension>
+template <typename VisitTopology, typename IncidentTopology, vtkm::IdComponent Dimension>
 class ConnectivityStructured
 {
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
-  VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
+  VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
 
   using InternalsType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
 
   using Helper =
-    vtkm::internal::ConnectivityStructuredIndexHelper<FromTopology, ToTopology, Dimension>;
+    vtkm::internal::ConnectivityStructuredIndexHelper<VisitTopology, IncidentTopology, Dimension>;
 
 public:
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
@@ -63,7 +53,8 @@ public:
   }
 
   VTKM_EXEC_CONT
-  ConnectivityStructured(const ConnectivityStructured<ToTopology, FromTopology, Dimension>& src)
+  ConnectivityStructured(
+    const ConnectivityStructured<IncidentTopology, VisitTopology, Dimension>& src)
     : Internals(src.Internals)
   {
   }
@@ -119,7 +110,13 @@ public:
     return this->Internals.GetPointDimensions();
   }
 
-  friend class ConnectivityStructured<ToTopology, FromTopology, Dimension>;
+  VTKM_EXEC_CONT
+  SchedulingRangeType GetGlobalPointIndexStart() const
+  {
+    return this->Internals.GetGlobalPointIndexStart();
+  }
+
+  friend class ConnectivityStructured<IncidentTopology, VisitTopology, Dimension>;
 
 private:
   InternalsType Internals;

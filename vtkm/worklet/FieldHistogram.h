@@ -2,29 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 
 #ifndef vtk_m_worklet_FieldHistogram_h
 #define vtk_m_worklet_FieldHistogram_h
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -67,8 +58,8 @@ public:
   class SetHistogramBin : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value, FieldOut<> binIndex);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn value, FieldOut binIndex);
+    using ExecutionSignature = void(_1, _2);
     using InputDomain = _1;
 
     vtkm::Id numberOfBins;
@@ -98,10 +89,8 @@ public:
   class AdjacentDifference : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> inputIndex,
-                                  WholeArrayIn<IdType> counts,
-                                  FieldOut<IdType> outputCount);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn inputIndex, WholeArrayIn counts, FieldOut outputCount);
+    using ExecutionSignature = void(_1, _2, _3);
     using InputDomain = _1;
 
     template <typename WholeArrayType>
@@ -121,28 +110,38 @@ public:
   // min value of the bins
   // delta/range of each bin
   // number of values in each bin
-  template <typename FieldType, typename Storage, typename DeviceAdapter>
+  template <typename FieldType, typename Storage>
   void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray,
            vtkm::Id numberOfBins,
            vtkm::Range& rangeOfValues,
            FieldType& binDelta,
-           vtkm::cont::ArrayHandle<vtkm::Id>& binArray,
-           DeviceAdapter vtkmNotUsed(device))
+           vtkm::cont::ArrayHandle<vtkm::Id>& binArray)
   {
-    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
-    //todo: need to have a signature that can use an input range so we can
-    //leverage fields that have already computed there range
-
-    const vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
-
-    const vtkm::Vec<FieldType, 2> initValue(fieldArray.GetPortalConstControl().Get(0));
+    const vtkm::Vec<FieldType, 2> initValue{ vtkm::cont::ArrayGetValue(0, fieldArray) };
 
     vtkm::Vec<FieldType, 2> result =
-      DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
+      vtkm::cont::Algorithm::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
 
-    const FieldType& fieldMinValue = result[0];
-    const FieldType& fieldMaxValue = result[1];
+    this->Run(fieldArray, numberOfBins, result[0], result[1], binDelta, binArray);
+
+    //update the users data
+    rangeOfValues = vtkm::Range(result[0], result[1]);
+  }
+
+  // Execute the histogram binning filter given data and number of bins, min,
+  // max values.
+  // Returns:
+  // number of values in each bin
+  template <typename FieldType, typename Storage>
+  void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray,
+           vtkm::Id numberOfBins,
+           FieldType fieldMinValue,
+           FieldType fieldMaxValue,
+           FieldType& binDelta,
+           vtkm::cont::ArrayHandle<vtkm::Id>& binArray)
+  {
+    const vtkm::Id numberOfValues = fieldArray.GetNumberOfValues();
+
     const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
 
     // Worklet fills in the bin belonging to each value
@@ -156,19 +155,18 @@ public:
     setHistogramBinDispatcher.Invoke(fieldArray, binIndex);
 
     // Sort the resulting bin array for counting
-    DeviceAlgorithms::Sort(binIndex);
+    vtkm::cont::Algorithm::Sort(binIndex);
 
     // Get the upper bound of each bin number
     vtkm::cont::ArrayHandle<vtkm::Id> totalCount;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> binCounter(0, 1, numberOfBins);
-    DeviceAlgorithms::UpperBounds(binIndex, binCounter, totalCount);
+    vtkm::cont::Algorithm::UpperBounds(binIndex, binCounter, totalCount);
 
     // Difference between adjacent items is the bin count
-    vtkm::worklet::DispatcherMapField<AdjacentDifference, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapField<AdjacentDifference> dispatcher;
     dispatcher.Invoke(binCounter, totalCount, binArray);
 
     //update the users data
-    rangeOfValues = vtkm::Range(fieldMinValue, fieldMaxValue);
     binDelta = fieldDelta;
   }
 };

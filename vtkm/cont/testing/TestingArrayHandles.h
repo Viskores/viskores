@@ -2,32 +2,22 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 #ifndef vtk_m_cont_testing_TestingArrayHandles_h
 #define vtk_m_cont_testing_TestingArrayHandles_h
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -90,8 +80,8 @@ struct TestingArrayHandles
 
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = _2(_1);
 
     template <class ValueType>
     VTKM_EXEC ValueType operator()(const ValueType& inValue) const
@@ -136,7 +126,7 @@ private:
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  using DispatcherPassThrough = vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag>;
+  using DispatcherPassThrough = vtkm::worklet::DispatcherMapField<PassThrough>;
   struct VerifyEmptyArrays
   {
     template <typename T>
@@ -406,7 +396,7 @@ private:
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 
-        a1.PrepareForInPlace(DeviceAdapterTagSerial());
+        a1.PrepareForInPlace(DeviceAdapterTag());
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
       }
@@ -415,7 +405,7 @@ private:
       {
         vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
         vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageTagBasic> tmp;
-        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent(tmp, 1);
 
         VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage type compared equal.");
         VTKM_TEST_ASSERT(!(a1 == a2), "Arrays with different storage type compared equal.");
@@ -434,7 +424,7 @@ private:
       {
         vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
         vtkm::cont::ArrayHandle<vtkm::Vec<typename OtherType<T>::Type, 3>, StorageTagBasic> tmp;
-        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent(tmp, 1);
 
         VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage and value type compared equal.");
         VTKM_TEST_ASSERT(!(a1 == a2),
@@ -456,7 +446,11 @@ private:
   };
 
 public:
-  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TryArrayHandleType()); }
+  static VTKM_CONT int Run(int argc, char* argv[])
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapterTag());
+    return vtkm::cont::testing::Testing::Run(TryArrayHandleType(), argc, argv);
+  }
 };
 }
 }

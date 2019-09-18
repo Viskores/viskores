@@ -11,8 +11,7 @@ namespace mpi
                 inline
                 communicator(MPI_Comm comm = MPI_COMM_WORLD, bool owner = false);
 
-                inline
-                ~communicator();
+                ~communicator()                     { destroy(); }
 
                 communicator(const communicator& other):
                     comm_(other.comm_),
@@ -27,9 +26,9 @@ namespace mpi
                     owner_(other.owner_)                    { other.owner_ = false; }
 
     communicator&
-                operator=(const communicator& other)        { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = false; return *this; }
+                operator=(const communicator& other)        { destroy(); comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = false; return *this; }
     communicator&
-                operator=(communicator&& other)             { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = other.owner_; other.owner_ = false; return *this; }
+                operator=(communicator&& other)             { destroy(); comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = other.owner_; other.owner_ = false; return *this; }
 
       int       rank() const                        { return rank_; }
       int       size() const                        { return size_; }
@@ -43,7 +42,7 @@ namespace mpi
       template <class T>
       status recv(int source, int tag, T &x) const
       {
-#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+#if defined(VTKM_DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
         (void) source; (void)tag; (void)x;
         DIY_UNSUPPORTED_MPI_CALL(MPI_Recv);
 #else
@@ -55,7 +54,7 @@ namespace mpi
       template <class T>
       request isend(int dest, int tag, const T &x) const
       {
-#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+#if defined(VTKM_DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
         (void) dest; (void)tag; (void)x;
         DIY_UNSUPPORTED_MPI_CALL(MPI_Send);
 #else
@@ -63,12 +62,16 @@ namespace mpi
 #endif
       }
 
+      //! Non-blocking version of `ssend()`.
+      template<class T>
+      request   issend(int dest, int tag, const T& x) const  { return detail::issend<T>()(comm_, dest, tag, x); }
+
       //! Non-blocking version of `recv()`.
       //! If `T` is an `std::vector<...>`, its size must be big enough to accommodate the sent values.
       template <class T>
       request irecv(int source, int tag, T &x) const
       {
-#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+#if defined(VTKM_DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
         (void)source; (void)tag; (void)x;
         DIY_UNSUPPORTED_MPI_CALL(MPI_Irecv);
 #else
@@ -89,6 +92,10 @@ namespace mpi
       inline
       void      barrier() const;
 
+      //! Nonblocking version of barrier
+      inline
+      request   ibarrier() const;
+
                 operator MPI_Comm() const                   { return comm_; }
 
       //! split
@@ -96,6 +103,14 @@ namespace mpi
       inline
       communicator
                 split(int color, int key = 0) const;
+
+      //! duplicate
+      inline
+      void      duplicate(const communicator& other);
+
+    private:
+      inline
+      void      destroy();
 
     private:
       MPI_Comm  comm_;
@@ -110,7 +125,7 @@ diy::mpi::communicator::
 communicator(MPI_Comm comm, bool owner):
     comm_(comm), rank_(0), size_(1), owner_(owner)
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   if (comm != MPI_COMM_NULL)
   {
     MPI_Comm_rank(comm_, &rank_);
@@ -119,10 +134,11 @@ communicator(MPI_Comm comm, bool owner):
 #endif
 }
 
+void
 diy::mpi::communicator::
-~communicator()
+destroy()
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
     if (owner_)
         MPI_Comm_free(&comm_);
 #endif
@@ -135,7 +151,7 @@ probe(int source, int tag) const
   (void) source;
   (void) tag;
 
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   MPI_Probe(source, tag, comm_, &s.s);
   return s;
@@ -150,7 +166,7 @@ iprobe(int source, int tag) const
 {
   (void) source;
   (void) tag;
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   status s;
   int flag;
   MPI_Iprobe(source, tag, comm_, &flag, &s.s);
@@ -164,7 +180,7 @@ void
 diy::mpi::communicator::
 barrier() const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
   MPI_Barrier(comm_);
 #endif
 }
@@ -173,11 +189,39 @@ diy::mpi::communicator
 diy::mpi::communicator::
 split(int color, int key) const
 {
-#ifndef DIY_NO_MPI
+#ifndef VTKM_DIY_NO_MPI
     MPI_Comm newcomm;
     MPI_Comm_split(comm_, color, key, &newcomm);
     return communicator(newcomm, true);
 #else
     return communicator();
+#endif
+}
+
+diy::mpi::request
+diy::mpi::communicator::
+ibarrier() const
+{
+#ifndef VTKM_DIY_NO_MPI
+    request r_;
+    MPI_Ibarrier(comm_, &r_.r);
+    return r_;
+#else
+    // this is not the ideal fix; in principle we should just return a status
+    // that tests true, but this requires redesigning some parts of our no-mpi
+    // handling
+    DIY_UNSUPPORTED_MPI_CALL(MPI_Ibarrier);
+#endif
+}
+
+
+void
+diy::mpi::communicator::
+duplicate(const communicator& other)
+{
+#ifndef VTKM_DIY_NO_MPI
+    MPI_Comm newcomm;
+    MPI_Comm_dup(other.comm_, &newcomm);
+    (*this) = communicator(newcomm,true);
 #endif
 }
