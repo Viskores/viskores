@@ -24,6 +24,7 @@
 #include "vtkm/exec/CellMeasure.h"
 #include "vtkm/exec/cellmetrics/CellDiagonalRatioMetric.h"
 #include "vtkm/exec/cellmetrics/CellEdgeRatioMetric.h"
+#include "vtkm/exec/cellmetrics/CellJacobianMetric.h"
 #include "vtkm/worklet/WorkletMapTopology.h"
 
 namespace vtkm
@@ -42,26 +43,22 @@ class MeshQuality : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset,
-                                WholeArrayIn counts,
-                                WholeArrayIn metrics,
                                 FieldInPoint pointCoords,
                                 FieldOutCell metricOut);
-  using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
 
-  template <typename CellShapeType,
-            typename PointCoordVecType,
-            typename CountsArrayType,
-            typename MetricsArrayType,
-            typename OutType>
+  void SetMetric(MetricTagType m) { metric = m; }
+
+  template <typename CellShapeType, typename PointCoordVecType, typename OutType>
   VTKM_EXEC void operator()(CellShapeType shape,
                             const vtkm::IdComponent& numPoints,
-                            const CountsArrayType& counts,
-                            const MetricsArrayType& metrics,
+                            //const CountsArrayType& counts,
+                            //const MetricsArrayType& metrics,
+                            //MetricTagType metric,
                             const PointCoordVecType& pts,
                             OutType& metricValue) const
   {
-    printf("shape.Id: %u\n", shape.Id);
     vtkm::UInt8 thisId = shape.Id;
     if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
     {
@@ -72,9 +69,8 @@ public:
     }
     switch (thisId)
     {
-      vtkmGenericCellShapeMacro(
-        metricValue = this->ComputeMetric<OutType>(
-          numPoints, pts, counts.Get(shape.Id), CellShapeTag(), metrics.Get(CellShapeTag().Id)));
+      vtkmGenericCellShapeMacro(metricValue =
+                                  this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag()));
       default:
         this->RaiseError("Asked for metric of unknown cell type.");
         metricValue = OutType(0.0);
@@ -82,17 +78,14 @@ public:
   }
 
 protected:
-  template <typename OutType,
-            typename PointCoordVecType,
-            typename CellShapeType,
-            typename CellMetricType>
+  // data member
+  MetricTagType metric;
+
+  template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VTKM_EXEC OutType ComputeMetric(const vtkm::IdComponent& numPts,
                                   const PointCoordVecType& pts,
-                                  const vtkm::Id& numShapes,
-                                  CellShapeType tag,
-                                  CellMetricType metric) const
+                                  CellShapeType tag) const
   {
-    UNUSED(numShapes);
     constexpr vtkm::IdComponent dims = vtkm::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS;
 
     //Only compute the metric for 2D and 3D shapes; return 0 otherwise
@@ -105,9 +98,15 @@ protected:
           metricValue =
             vtkm::exec::cellmetrics::CellDiagonalRatioMetric<OutType>(numPts, pts, tag, *this);
           break;
+        /*  DEPRECATING
         case MetricTagType::EDGE_RATIO:
           metricValue =
             vtkm::exec::cellmetrics::CellEdgeRatioMetric<OutType>(numPts, pts, tag, *this);
+          break;
+ */
+        case MetricTagType::JACOBIAN:
+          metricValue =
+            vtkm::exec::cellmetrics::CellJacobianMetric<OutType>(numPts, pts, tag, *this);
           break;
         case MetricTagType::VOLUME:
           metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, *this);

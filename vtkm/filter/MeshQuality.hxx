@@ -56,14 +56,16 @@ void MeshQualityDebug(const vtkm::cont::ArrayHandle<T, S>& vtkmNotUsed(outputArr
 } // namespace debug
 
 
-inline VTKM_CONT MeshQuality::MeshQuality(
-  const std::vector<vtkm::Pair<vtkm::UInt8, CellMetric>>& metrics)
+inline VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
   : vtkm::filter::FilterCell<MeshQuality>()
 {
   this->SetUseCoordinateSystemAsField(true);
-  this->CellTypeMetrics.assign(vtkm::NUMBER_OF_CELL_SHAPES, CellMetric::EMPTY);
-  for (auto p : metrics)
-    this->CellTypeMetrics[p.first] = p.second;
+  this->MyMetric = metric;
+  if (this->MyMetric < CellMetric::AREA || this->MyMetric >= CellMetric::NUMBER_OF_CELL_METRICS)
+  {
+    VTKM_ASSERT(true);
+  }
+  this->OutputName = MetricNames[(int)this->MyMetric];
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy>
@@ -75,187 +77,22 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 {
   VTKM_ASSERT(fieldMeta.IsPointField());
 
-  using Algorithm = vtkm::cont::Algorithm;
-  using ShapeHandle = vtkm::cont::ArrayHandle<vtkm::UInt8>;
-  using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using QualityWorklet = vtkm::worklet::MeshQuality<CellMetric>;
-  using FieldStatsWorklet = vtkm::worklet::FieldStatistics<T>;
-
   //TODO: Should other cellset types be supported?
   vtkm::cont::CellSetExplicit<> cellSet;
   input.GetCellSet().CopyTo(cellSet);
 
-  ShapeHandle cellShapes =
-    cellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
-  //Obtain the frequency counts of each cell type in the input dataset
-  IdHandle uniqueCellCounts;
-  ShapeHandle uniqueCellShapes, sortedShapes;
-  Algorithm::Copy(cellShapes, sortedShapes);
-  Algorithm::Sort(sortedShapes);
-  Algorithm::ReduceByKey(
-    sortedShapes,
-    vtkm::cont::make_ArrayHandleConstant(vtkm::Id(1), cellShapes.GetNumberOfValues()),
-    uniqueCellShapes,
-    uniqueCellCounts,
-    vtkm::Add());
-
-  const vtkm::Id numUniqueShapes = uniqueCellShapes.GetNumberOfValues();
-  auto uniqueCellShapesPortal = uniqueCellShapes.GetPortalConstControl();
-  auto numCellsPerShapePortal = uniqueCellCounts.GetPortalConstControl();
-  std::vector<vtkm::Id> tempCounts(vtkm::NUMBER_OF_CELL_SHAPES);
-  for (vtkm::Id i = 0; i < numUniqueShapes; i++)
-  {
-    tempCounts[uniqueCellShapesPortal.Get(i)] = numCellsPerShapePortal.Get(i);
-  }
-  IdHandle cellShapeCounts = vtkm::cont::make_ArrayHandle(tempCounts);
-
   //Invoke the MeshQuality worklet
   vtkm::cont::ArrayHandle<T> outArray;
-  vtkm::cont::ArrayHandle<CellMetric> cellMetrics = vtkm::cont::make_ArrayHandle(CellTypeMetrics);
-  this->Invoke(QualityWorklet{},
-               vtkm::filter::ApplyPolicyCellSet(cellSet, policy),
-               cellShapeCounts,
-               cellMetrics,
-               points,
-               outArray);
+  vtkm::worklet::MeshQuality<CellMetric> qualityWorklet;
+  qualityWorklet.SetMetric(this->MyMetric);
+  this->Invoke(qualityWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), points, outArray);
 
-  //Build the output dataset: a separate field for each cell type that has a specified metric
   vtkm::cont::DataSet result;
   result.CopyStructure(input); //clone of the input dataset
 
-  auto cellShapePortal = cellShapes.GetPortalConstControl();
-  auto metricValuesPortal = outArray.GetPortalConstControl();
-
-  const vtkm::Id numCells = outArray.GetNumberOfValues();
-  T currMetric = 0;
-  vtkm::UInt8 currShape = 0;
-
-  //Output metric values stored in separate containers
-  //based on shape type. Unsupported shape types in VTK-m
-  //are represented with an empty "placeholder" container.
-  std::vector<std::vector<T>> metricValsPerShape = {
-    { /*placeholder*/ }, { /*vertices*/ },  { /*placeholder*/ },  { /*lines*/ },
-    { /*placeholder*/ }, { /*triangles*/ }, { /*placeholder*/ },  { /*polygons*/ },
-    { /*placeholder*/ }, { /*quads*/ },     { /*tetrahedrons*/ }, { /*placeholder*/ },
-    { /*hexahedrons*/ }, { /*wedges*/ },    { /*pyramids*/ }
-  };
-
-  for (vtkm::Id metricArrayIndex = 0; metricArrayIndex < numCells; metricArrayIndex++)
-  {
-    currShape = cellShapePortal.Get(metricArrayIndex);
-    currMetric = metricValuesPortal.Get(metricArrayIndex);
-    metricValsPerShape[currShape].emplace_back(currMetric);
-  }
-
-  //Compute the mesh quality for each shape type. This consists
-  //of computing the summary statistics of the metric values for
-  //each cell of the given shape type.
-  std::string fieldName = "", metricName = "";
-  vtkm::UInt8 cellShape = 0;
-  vtkm::Id cellCount = 0;
-  bool skipShape = false;
-  for (vtkm::Id shapeIndex = 0; shapeIndex < numUniqueShapes; shapeIndex++)
-  {
-    cellShape = uniqueCellShapesPortal.Get(shapeIndex);
-    cellCount = numCellsPerShapePortal.Get(shapeIndex);
-    metricName = MetricNames[static_cast<vtkm::UInt8>(CellTypeMetrics[cellShape])];
-
-    //Skip over shapes with an empty/unspecified metric;
-    //don't include a field for them
-    if (CellTypeMetrics[cellShape] == CellMetric::EMPTY)
-      continue;
-
-    switch (cellShape)
-    {
-      case vtkm::CELL_SHAPE_EMPTY:
-        skipShape = true;
-        break;
-      case vtkm::CELL_SHAPE_VERTEX:
-        fieldName = "vertices";
-        break;
-      case vtkm::CELL_SHAPE_LINE:
-        fieldName = "lines";
-        break;
-      case vtkm::CELL_SHAPE_TRIANGLE:
-        fieldName = "triangles";
-        break;
-      case vtkm::CELL_SHAPE_POLYGON:
-        fieldName = "polygons";
-        break;
-      case vtkm::CELL_SHAPE_QUAD:
-        fieldName = "quads";
-        break;
-      case vtkm::CELL_SHAPE_TETRA:
-        fieldName = "tetrahedrons";
-        break;
-      case vtkm::CELL_SHAPE_HEXAHEDRON:
-        fieldName = "hexahedrons";
-        break;
-      case vtkm::CELL_SHAPE_WEDGE:
-        fieldName = "wedges";
-        break;
-      case vtkm::CELL_SHAPE_PYRAMID:
-        fieldName = "pyramids";
-        break;
-      default:
-        skipShape = true;
-        break;
-    }
-
-    //Skip over shapes of empty cell type; don't include a field for them
-    if (skipShape)
-      continue;
-
-    fieldName += "-" + metricName;
-    auto shapeMetricVals = metricValsPerShape[cellShape];
-    auto shapeMetricValsHandle = vtkm::cont::make_ArrayHandle(std::move(shapeMetricVals));
-
-    //Invoke the field stats worklet on the array of metric values for this shape type
-    typename FieldStatsWorklet::StatInfo statinfo;
-    FieldStatsWorklet().Run(shapeMetricValsHandle, statinfo);
-
-    //Retrieve summary stats from the output stats struct.
-    //These stats define the mesh quality with respect to this shape type.
-    vtkm::cont::ArrayHandle<T> shapeMeshQuality;
-    shapeMeshQuality.Allocate(5);
-    {
-      auto portal = shapeMeshQuality.GetPortalControl();
-      portal.Set(0, T(cellCount));
-      portal.Set(1, statinfo.mean);
-      portal.Set(2, statinfo.variance);
-      portal.Set(3, statinfo.minimum);
-      portal.Set(4, statinfo.maximum);
-    }
-
-    //Append the summary stats into the output dataset as a new field
-    result.AddField(vtkm::cont::make_FieldCell(fieldName, shapeMeshQuality));
-
-#ifdef DEBUG_PRINT
-    std::cout << "-----------------------------------------------------\n"
-              << "Mesh quality of " << fieldName << ":\n"
-              << "Number of cells: " << cellCount << "\n"
-              << "Mean:            " << statinfo.mean << "\n"
-              << "Variance:        " << statinfo.variance << "\n"
-              << "Minimum:         " << statinfo.minimum << "\n"
-              << "Maximum:         " << statinfo.maximum << "\n"
-              << "-----------------------------------------------------\n";
-#endif
-  }
-
-#ifdef DEBUG_PRINT
-  auto metricValsPortal = outArray.GetPortalConstControl();
-  std::cout << "-----------------------------------------------------\n"
-            << "Metric values - all cells:\n";
-  for (vtkm::Id v = 0; v < outArray.GetNumberOfValues(); v++)
-    std::cout << metricValsPortal.Get(v) << "\n";
-  std::cout << "-----------------------------------------------------\n";
-#endif
-
   //Append the metric values of all cells into the output
   //dataset as a new field
-  const std::string s = "allCells-metricValues";
-  result.AddField(vtkm::cont::make_FieldCell(s, outArray));
+  result.AddField(vtkm::cont::make_FieldCell(this->OutputName, outArray));
 
   return result;
 }
