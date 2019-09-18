@@ -9,12 +9,17 @@
 ##============================================================================
 
 set(headers
+  Oscillator.h
   Source.h
   Tangle.h
+  Wavelet.h
   )
 
 set(device_sources
+  Oscillator.cxx
+  Source.cxx
   Tangle.cxx
+  Wavelet.cxx
   )
 
 vtkm_library(NAME vtkm_source
@@ -22,4 +27,7 @@ vtkm_library(NAME vtkm_source
   HEADERS ${headers}
   )
 
-target_link_libraries(vtkm_source PUBLIC vtkm_worklet)
+target_link_libraries(vtkm_source PUBLIC vtkm_cont)
+
+#-----------------------------------------------------------------------------
+add_subdirectory(testing)

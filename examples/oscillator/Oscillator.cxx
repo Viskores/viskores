@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/TryExecute.h>
 
-#include <vtkm/filter/OscillatorSource.h>
+#include <vtkm/source/Oscillator.h>
 
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h> /* unlink */
@@ -58,7 +58,7 @@ static inline std::string& trim(std::string& s)
 
 // ----------------------------------------------------------------------------
 
-void read_oscillators(std::string filePath, vtkm::filter::OscillatorSource& filter)
+void read_oscillators(std::string filePath, vtkm::source::Oscillator& source)
 {
   std::ifstream in(filePath);
   if (!in)
@@ -87,15 +87,15 @@ void read_oscillators(std::string filePath, vtkm::filter::OscillatorSource& filt
 
     if (stype == "damped")
     {
-      filter.AddDamped(x, y, z, r, omega0, zeta);
+      source.AddDamped(x, y, z, r, omega0, zeta);
     }
     else if (stype == "decaying")
     {
-      filter.AddDecaying(x, y, z, r, omega0, zeta);
+      source.AddDecaying(x, y, z, r, omega0, zeta);
     }
     else if (stype == "periodic")
     {
-      filter.AddPeriodic(x, y, z, r, omega0, zeta);
+      source.AddPeriodic(x, y, z, r, omega0, zeta);
     }
   }
 }
@@ -303,22 +303,19 @@ int main(int argc, char** argv)
   std::cout << "  - end: " << endTime << std::endl;
   std::cout << "=======================================\n" << std::endl;
 
-  vtkm::cont::DataSetBuilderUniform builder;
-  vtkm::cont::DataSet dataset = builder.Create(vtkm::Id3(sizeX, sizeY, sizeZ));
-
-  vtkm::filter::OscillatorSource filter;
-  read_oscillators(oscillatorConfigFile, filter);
+  vtkm::source::Oscillator source(vtkm::Id3{ sizeX, sizeY, sizeZ });
+  read_oscillators(oscillatorConfigFile, source);
 
   std::cout << "=========== start computation ============" << std::endl;
   int count = 0;
   while (currentTime < endTime)
   {
-    filter.SetTime(currentTime);
-    vtkm::cont::DataSet rdata = filter.Execute(dataset);
+    source.SetTime(currentTime);
+    vtkm::cont::DataSet rdata = source.Execute();
     if (generateOutput)
     {
       vtkm::cont::ArrayHandle<vtkm::Float64> tmp;
-      rdata.GetField("oscillation", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(tmp);
+      rdata.GetField("scalars", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(tmp);
       double* values = tmp.GetStorage().GetArray();
       writeData(outputDirectory, count++, sizeX, sizeY, sizeZ, values);
     }

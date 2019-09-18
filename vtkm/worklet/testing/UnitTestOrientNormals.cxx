@@ -37,7 +37,7 @@
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
-#include <vtkm/worklet/WaveletGenerator.h>
+#include <vtkm/source/Wavelet.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -59,12 +59,10 @@ struct TestPolicy : public vtkm::filter::PolicyBase<TestPolicy>
 VTKM_CONT
 vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 {
-  vtkm::worklet::WaveletGenerator wavelet;
-  wavelet.SetMinimumExtent({ -25 });
-  wavelet.SetMaximumExtent({ 25 });
+  vtkm::source::Wavelet wavelet({ -25 }, { 25 });
   wavelet.SetFrequency({ 20, 15, 25 });
   wavelet.SetMagnitude({ 5 });
-  auto dataSet = wavelet.GenerateDataSet();
+  auto dataSet = wavelet.Execute();
 
   // Cut a contour
   vtkm::filter::Contour contour;

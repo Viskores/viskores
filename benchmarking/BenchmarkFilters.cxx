@@ -46,8 +46,8 @@
 
 #include <vtkm/io/reader/VTKDataSetReader.h>
 
+#include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WaveletGenerator.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <cctype> // for std::tolower
@@ -1357,10 +1357,10 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   {
     std::cout << "Generating " << waveletDim << "x" << waveletDim << "x" << waveletDim
               << " wavelet...\n";
-    vtkm::worklet::WaveletGenerator gen;
-    gen.SetExtent({ 0 }, { waveletDim });
+    vtkm::source::Wavelet source;
+    source.SetExtent({ 0 }, { waveletDim });
 
-    InputDataSet = gen.GenerateDataSet(config.Device);
+    InputDataSet = source.Execute();
   }
 
   if (tetra)
