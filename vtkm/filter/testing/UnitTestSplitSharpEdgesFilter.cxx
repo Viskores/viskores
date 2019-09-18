@@ -242,12 +242,12 @@ void TestWithStructuredData()
   contour.SetGenerateNormals(true);
   contour.SetComputeFastNormalsForStructured(true);
   contour.SetNormalArrayName("normals");
-  dataSet = contour.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = contour.Execute(dataSet);
 
   // Compute cell normals:
   vtkm::filter::CellAverage cellNormals;
   cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
-  dataSet = cellNormals.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = cellNormals.Execute(dataSet);
 
   // Split sharp edges:
   std::cout << dataSet.GetNumberOfCells() << std::endl;

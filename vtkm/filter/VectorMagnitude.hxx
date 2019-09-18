@@ -16,14 +16,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT VectorMagnitude::VectorMagnitude()
-  : vtkm::filter::FilterField<VectorMagnitude>()
-  , Worklet()
-{
-  this->SetOutputFieldName("magnitude");
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(
   const vtkm::cont::DataSet& inDataSet,

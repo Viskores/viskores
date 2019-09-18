@@ -71,7 +71,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
   contour.SetGenerateNormals(false);
-  dataSet = contour.Execute(dataSet, TestPolicy{});
+  dataSet = contour.Execute(dataSet);
 
   vtkm::filter::SurfaceNormals normals;
   normals.SetGeneratePointNormals(pointNormals);

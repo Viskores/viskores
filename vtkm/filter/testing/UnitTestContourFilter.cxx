@@ -18,6 +18,7 @@
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Contour.hxx>
 #include <vtkm/source/Tangle.h>
 
 namespace vtkm_ut_mc_filter

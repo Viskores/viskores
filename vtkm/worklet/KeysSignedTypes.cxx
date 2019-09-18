@@ -10,6 +10,7 @@
 
 #define vtk_m_worklet_Keys_cxx
 #include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/Keys.hxx>
 
 #define VTK_M_KEYS_EXPORT(T)                                                                       \
   template class VTKM_WORKLET_EXPORT vtkm::worklet::Keys<T>;                                       \
@@ -22,8 +23,8 @@
     vtkm::worklet::KeysSortType sort,                                                              \
     vtkm::cont::DeviceAdapterId device)
 
-VTK_M_KEYS_EXPORT(vtkm::HashType);
 VTK_M_KEYS_EXPORT(vtkm::Id);
+VTK_M_KEYS_EXPORT(vtkm::Id2);
 VTK_M_KEYS_EXPORT(vtkm::Id3);
 #ifdef VTKM_USE_64BIT_IDS
 VTK_M_KEYS_EXPORT(vtkm::IdComponent);

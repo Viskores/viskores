@@ -97,6 +97,7 @@ set(headers
 
 set(header_impls
   ScalarsToColors.hxx
+  Keys.hxx
   )
 
 
@@ -108,7 +109,8 @@ set(sources_no_device
 # This is a list of sources that has code that runs on devices and might need to
 # be compiled with a device-specific compiler (like CUDA).
 set(sources_device
-  Keys.cxx
+  KeysUnsignedTypes.cxx
+  KeysSignedTypes.cxx
   MaskSelect.cxx
   ScatterCounting.cxx
   )

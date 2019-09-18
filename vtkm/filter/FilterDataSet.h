@@ -51,12 +51,11 @@ public:
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
-    const vtkm::cont::DataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(const vtkm::cont::DataSet& input,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::Id CoordinateSystemIndex;
