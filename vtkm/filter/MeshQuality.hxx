@@ -60,12 +60,12 @@ inline VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
   : vtkm::filter::FilterCell<MeshQuality>()
 {
   this->SetUseCoordinateSystemAsField(true);
-  myMetric = metric;
-  if (myMetric < CellMetric::AREA || myMetric >= CellMetric::NUMBER_OF_CELL_METRICS)
+  this->MyMetric = metric;
+  if (this->MyMetric < CellMetric::AREA || this->MyMetric >= CellMetric::NUMBER_OF_CELL_METRICS)
   {
     VTKM_ASSERT(true);
   }
-  outputName = MetricNames[(int)myMetric];
+  this->OutputName = MetricNames[(int)this->MyMetric];
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy>
@@ -77,13 +77,14 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 {
   VTKM_ASSERT(fieldMeta.IsPointField());
 
+  //TODO: Should other cellset types be supported?
   vtkm::cont::CellSetExplicit<> cellSet;
   input.GetCellSet().CopyTo(cellSet);
 
   //Invoke the MeshQuality worklet
   vtkm::cont::ArrayHandle<T> outArray;
   vtkm::worklet::MeshQuality<CellMetric> qualityWorklet;
-  qualityWorklet.SetMetric(myMetric);
+  qualityWorklet.SetMetric(this->MyMetric);
   this->Invoke(qualityWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), points, outArray);
 
   vtkm::cont::DataSet result;
@@ -91,7 +92,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
   //Append the metric values of all cells into the output
   //dataset as a new field
-  result.AddField(vtkm::cont::make_FieldCell(outputName, outArray));
+  result.AddField(vtkm::cont::make_FieldCell(this->OutputName, outArray));
 
   return result;
 }
