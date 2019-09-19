@@ -275,11 +275,11 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 /// is vtkm::Vec<T2, N>.
 ///@{
 #if defined(VTKM_GCC) && (__GNUC__ <= 5)
-  // Silly workaround for bug in GCC <= 6
+  // Silly workaround for bug in GCC <= 5
   template <typename NewComponentType>
   using ReplaceComponentType =
     typename detail::VecReplaceComponentTypeGCC4or5<NewComponentType, Size>::type;
-#else // !GCC <= 6
+#else // !GCC <= 5
   template <typename NewComponentType>
   using ReplaceComponentType = vtkm::Vec<NewComponentType, Size>;
 #endif
@@ -292,11 +292,11 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
 ///@{
 #if defined(VTKM_GCC) && (__GNUC__ <= 5)
-  // Silly workaround for bug in GCC <= 6
+  // Silly workaround for bug in GCC <= 5
   template <typename NewComponentType>
   using ReplaceBaseComponentType =
     typename detail::VecReplaceBaseComponentTypeGCC4or5<T, Size, NewComponentType>::type;
-#else // !GCC <= 6
+#else // !GCC <= 5
   template <typename NewComponentType>
   using ReplaceBaseComponentType = vtkm::Vec<
     typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
