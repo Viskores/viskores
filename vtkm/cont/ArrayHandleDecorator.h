@@ -352,7 +352,7 @@ struct DecoratorStorageTraits
   using ArrayTupleType = vtkmstd::tuple<ArrayTs...>;
 
 // size_t integral constants that index ArrayTs:
-#if defined(VTKM_MSVC) && (_MSC_VER == 1900)
+#if defined(VTKM_MSVC) && (_MSC_VER < 1920) //Less than MSCV2019
   using IndexList = brigand::make_sequence<brigand::size_t<0>, sizeof...(ArrayTs)>;
 #else
   using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
@@ -435,7 +435,7 @@ struct DecoratorStorageTraits
     return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
   }
 
-#if defined(VTKM_MSVC) && (_MSC_VER == 1900)
+#if defined(VTKM_MSVC) && (_MSC_VER < 1920) //Less than MSCV2019
   // Portal construction methods. These actually create portals.
   template <template <typename...> class List, typename... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
