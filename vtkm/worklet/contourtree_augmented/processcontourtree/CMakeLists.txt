@@ -17,6 +17,7 @@ set(headers
   ComputeEulerTourFirstNext.h
   ComputeEulerTourList.h
   ComputeMinMaxValues.h
+  SetTriangleSuperarcId.h
   )
 
 #-----------------------------------------------------------------------------
