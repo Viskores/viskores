@@ -83,7 +83,7 @@ public:
   template <typename DeviceTag>
   MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag) const;
 
-  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols);
+  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows);
 
   MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
 
@@ -94,9 +94,9 @@ private:
 // creates input mesh
 template <typename T, typename StorageType>
 Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D_Freudenthal(
-  vtkm::Id nrows,
-  vtkm::Id ncols)
-  : Mesh_DEM_Triangulation_2D<T, StorageType>(nrows, ncols)
+  vtkm::Id ncols,
+  vtkm::Id nrows)
+  : Mesh_DEM_Triangulation_2D<T, StorageType>(ncols, nrows)
 
 {
   edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
@@ -116,8 +116,8 @@ template <typename DeviceTag>
 MeshStructureFreudenthal2D<DeviceTag>
   Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
-  return MeshStructureFreudenthal2D<DeviceTag>(this->nRows,
-                                               this->nCols,
+  return MeshStructureFreudenthal2D<DeviceTag>(this->nCols,
+                                               this->nRows,
                                                m2d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
                                                this->sortIndices,
@@ -129,7 +129,7 @@ template <typename T, typename StorageType>
 MeshBoundary2DExec
 Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary2DExec(this->nRows, this->nCols, this->sortOrder);
+  return MeshBoundary2DExec(this->nCols, this->nRows, this->sortOrder);
 }
 
 } // namespace contourtree_augmented

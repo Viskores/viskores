@@ -90,14 +90,14 @@ public:
 
   // Main constructor used in the code
   MeshStructureFreudenthal2D(
-    vtkm::Id nrows,
     vtkm::Id ncols,
+    vtkm::Id nrows,
     vtkm::Int32 nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
     const IdArrayType& sortOrder,
     const m2d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
-    : mesh_dem::MeshStructure2D<DeviceAdapter>(nrows, ncols)
+    : mesh_dem::MeshStructure2D<DeviceAdapter>(ncols, nrows)
     , getMax(getmax)
     , nIncidentEdges(nincident_edges)
   {
