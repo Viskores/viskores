@@ -57,8 +57,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-  using Traits = vtkm::filter::FilterTraits<Derived>;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, Traits()), functor);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldNotActive(field, policy), functor);
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been
