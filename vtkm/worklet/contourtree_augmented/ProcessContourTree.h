@@ -96,8 +96,6 @@ namespace worklet
 namespace contourtree_augmented
 {
 
-
-
 // TODO Many of the post processing routines still need to be parallelized
 // Class with routines for post processing the contour tree
 class ProcessContourTree

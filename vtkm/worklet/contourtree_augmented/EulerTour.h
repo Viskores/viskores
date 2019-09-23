@@ -67,7 +67,7 @@ namespace worklet
 namespace contourtree_augmented
 {
 class EulerTour
-{ // class EulerTour
+{
 
 public:
   vtkm::cont::Invoker Invoke;
@@ -78,6 +78,7 @@ public:
   // The tour consists of the directed edges of the contour tree
   cont::ArrayHandle<Vec<Id, 2>> edges;
 
+  // Compute the Euler Tour with root 0
   void computeEulerTour(const IdArrayType::PortalConstControl superarcs)
   {
     //
@@ -132,6 +133,7 @@ public:
     this->Invoke(eulerTourListWorklet, next, first, succ);
   }
 
+  // Reroot the euler tour at a different root (O(n) for finding the first occurence of the new root and O(1) for rerouting and O(n) for returning it as an array)
   void getTourAtRoot(const Id root, const cont::ArrayHandle<Vec<Id, 2>>::PortalControl tourEdges)
   {
     auto edgesPortal = edges.GetPortalControl();
@@ -166,8 +168,6 @@ public:
       } while (i != start);
     }
   }
-
-
 }; // class EulerTour
 } // namespace contourtree_augmented
 } // worklet
