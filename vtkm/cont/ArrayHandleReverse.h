@@ -26,6 +26,8 @@ namespace internal
 template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalReverse
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType>;
+
 public:
   using ValueType = typename PortalType::ValueType;
 
@@ -56,8 +58,9 @@ public:
     return this->portal.Get(portal.GetNumberOfValues() - index - 1);
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->portal.Set(portal.GetNumberOfValues() - index - 1, value);
   }
@@ -233,6 +236,7 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -289,5 +293,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif // vtk_m_cont_ArrayHandleReverse_h

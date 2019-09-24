@@ -24,6 +24,8 @@ namespace internal
 template <typename IndexPortalType, typename ValuePortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 {
+  using Writable = vtkm::internal::PortalSupportsSets<ValuePortalType>;
+
 public:
   using ValueType = typename ValuePortalType::ValueType;
 
@@ -69,8 +71,9 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC void Set(vtkm::Id index, const ValueType& value) const
   {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     this->ValuePortal.Set(permutedIndex, value);
@@ -362,6 +365,7 @@ make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleTyp
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -427,5 +431,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandlePermutation_h

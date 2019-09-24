@@ -17,7 +17,7 @@
 
 // It would make sense to put this in its own header file, but it is hard to imagine needing
 // aligned_union anywhere else.
-#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || (defined(VTKM_ICC) && (__INTEL_COMPILER < 1800))
+#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || defined(VTKM_ICC)
 
 #include <algorithm>
 namespace vtkmstd

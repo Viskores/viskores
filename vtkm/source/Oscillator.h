@@ -7,30 +7,31 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_filter_OscillatorSource_h
-#define vtk_m_filter_OscillatorSource_h
+#ifndef vtk_m_source_OscillatorSource_h
+#define vtk_m_source_OscillatorSource_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/source/Source.h>
 #include <vtkm/worklet/OscillatorSource.h>
 
 namespace vtkm
 {
-namespace filter
+namespace source
 {
 
-/**\brief An analytical, time-varying array-source filter.
-  *
-  * This filter will create a new array (named "oscillation" by default)
-  * that evaluates to a sum of time-varying Gaussian exponentials
-  * specified in its configuration.
-  */
-class OscillatorSource : public vtkm::filter::FilterField<OscillatorSource>
+/**\brief An analytical, time-varying uniform dataset with a point based array
+ *
+ * The Execute method creates a complete structured dataset that have a
+ * point field names 'scalars'
+ *
+ * This array is based on the coordinates and evaluates to a sum of time-varying
+ * Gaussian exponentials specified in its configuration.
+ */
+class VTKM_SOURCE_EXPORT Oscillator final : public vtkm::source::Source
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
-
+  ///Construct a Oscillator with Cell Dimensions
   VTKM_CONT
-  OscillatorSource();
+  Oscillator(vtkm::Id3 dims);
 
   VTKM_CONT
   void SetTime(vtkm::Float64 time);
@@ -59,18 +60,13 @@ public:
                    vtkm::Float64 omega,
                    vtkm::Float64 zeta);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet Execute() const;
 
 private:
+  vtkm::Id3 Dims;
   vtkm::worklet::OscillatorSource Worklet;
 };
 }
 }
 
-#include <vtkm/filter/OscillatorSource.hxx>
-
-#endif // vtk_m_filter_OscillatorSource_h
+#endif // vtk_m_source_Oscillator_h

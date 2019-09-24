@@ -50,9 +50,11 @@
 /// functions to help format common types of log data such as byte counts and
 /// type names.
 ///
-/// Logging is enabled by setting the CMake variable VTKm_ENABLE_LOGGING. When
-/// this flag is enabled, any messages logged to the Info, Warn, Error, and
-/// Fatal levels are printed to stderr by default.
+/// Logging is enabled via the CMake option VTKm_ENABLE_LOGGING by default.
+/// The default log level is set to only log Warn and Error messages; Fatal
+/// levels are printed to stderr by default. The logging system will need
+/// to be initialized through a call to either vtkm::cont::Initialize or
+/// vtkm::cont::InitLogging.
 ///
 /// Additional logging features are enabled by calling vtkm::cont::InitLogging
 /// (or preferably, vtkm::cont::Initialize) in an executable. This will:
@@ -81,7 +83,7 @@
 /// vtkm::cont::SetThreadName. This will appear in the log output so that
 /// per-thread messages can be easily tracked.
 ///
-/// By default, only Info, Warn, Error, and Fatal messages are printed to
+/// By default, only Warn, Error, and Fatal messages are printed to
 /// stderr. This can be changed at runtime by passing the '-v' flag to an
 /// executable that calls vtkm::cont::InitLogging. Alternatively, the
 /// application can explicitly call vtkm::cont::SetStderrLogLevel to change the
@@ -351,7 +353,8 @@ enum class LogLevel
  *
  * Initializes logging. Sets up custom log level and thread names. Parses any
  * "-v [LogLevel]" arguments to set the stderr log level. This argument may
- * be either numeric, or the 4-character string printed in the output.
+ * be either numeric, or the 4-character string printed in the output. Note that
+ * loguru will consume the "-v [LogLevel]" argument and shrink the arg list.
  *
  * If the parameterless overload is used, the `-v` parsing is not used, but
  * other functionality should still work.

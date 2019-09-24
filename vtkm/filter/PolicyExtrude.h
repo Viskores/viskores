@@ -23,23 +23,21 @@
 #include <vtkm/ListTag.h>
 #include <vtkm/filter/PolicyDefault.h>
 
-struct VTKM_ALWAYS_EXPORT ExtrudeUnstructuredCellSets
-  : vtkm::ListTagBase<vtkm::cont::CellSetExtrude>
+namespace vtkm
 {
-};
-
-//Todo: add in Cylinder storage tag when it is written
-struct VTKM_ALWAYS_EXPORT ExtrudeCoordinateStorage
-  : vtkm::ListTagBase<vtkm::cont::StorageTagBasic, vtkm::cont::internal::StorageTagExtrude>
+namespace filter
 {
-};
 
 struct VTKM_ALWAYS_EXPORT PolicyExtrude : vtkm::filter::PolicyBase<PolicyExtrude>
 {
 public:
-  using UnstructuredCellSetList = ExtrudeUnstructuredCellSets;
-  using AllCellSetList = ExtrudeUnstructuredCellSets;
-  using CoordinateStorageList = ExtrudeCoordinateStorage;
+  using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetExtrude>;
+  using AllCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetExtrude>;
+  //Todo: add in Cylinder storage tag when it is written
+  using CoordinateStorageList =
+    vtkm::ListTagBase<vtkm::cont::StorageTagBasic, vtkm::cont::internal::StorageTagExtrude>;
 };
+}
+}
 
 #endif

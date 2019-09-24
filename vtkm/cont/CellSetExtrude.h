@@ -158,6 +158,7 @@ CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -213,6 +214,7 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #include <vtkm/cont/CellSetExtrude.hxx>
 

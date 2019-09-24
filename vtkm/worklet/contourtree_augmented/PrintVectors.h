@@ -217,7 +217,9 @@ inline void printSortedValues(std::string label,
 } // printValues()
 
 
-inline void printIndices(std::string label, IdArrayType& iVec, vtkm::Id nIndices = -1)
+inline void printIndices(std::string label,
+                         const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
+                         vtkm::Id nIndices)
 { // printIndices()
   // -1 means full size
   if (nIndices == -1)

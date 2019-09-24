@@ -57,6 +57,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal2D.h>
 
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -83,6 +84,8 @@ public:
   MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag) const;
 
   Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols);
+
+  MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
 
 private:
   bool useGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -118,9 +121,16 @@ MeshStructureFreudenthal2D<DeviceTag>
                                                m2d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
                                                this->sortIndices,
+                                               this->sortOrder,
                                                edgeBoundaryDetectionMasks);
 }
 
+template <typename T, typename StorageType>
+MeshBoundary2DExec
+Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
+{
+  return MeshBoundary2DExec(this->nRows, this->nCols, this->sortOrder);
+}
 
 } // namespace contourtree_augmented
 } // worklet

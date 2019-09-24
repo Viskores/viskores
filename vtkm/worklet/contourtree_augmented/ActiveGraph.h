@@ -257,11 +257,12 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
   // Initialize the nerighborhoodMasks and outDegrees arrays
   mesh.setPrepareForExecutionBehavior(isJoinGraph);
+  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.nVertices);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
     isJoinGraph);
 
   this->Invoke(initNeighMasksAndOutDegWorklet,
-               mesh.sortIndices,
+               sortIndexArray,
                mesh,
                neighbourhoodMasks, // output
                outDegrees);        // output
@@ -302,14 +303,14 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // activeIndex gets the next available ID in the active graph (was called nearIndex before)
   // globalIndex stores the index in the join tree for later access
   IdArrayType activeIndices;
-  activeIndices.Allocate(mesh.sortIndices.GetNumberOfValues());
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(
-    (vtkm::Id)NO_SUCH_ELEMENT, mesh.sortIndices.GetNumberOfValues());
+  activeIndices.Allocate(mesh.nVertices);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
+                                                               mesh.nVertices);
   vtkm::cont::Algorithm::Copy(noSuchElementArray, activeIndices);
 
   active_graph_inc_ns::InitializeActiveGraphVertices initActiveGraphVerticesWorklet;
   this->Invoke(initActiveGraphVerticesWorklet,
-               mesh.sortIndices,
+               sortIndexArray,
                outDegrees,
                inverseIndex,
                extrema,
@@ -337,8 +338,6 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   active_graph_inc_ns::InitializeActiveEdges<Mesh> initActiveEdgesWorklet;
   this->Invoke(initActiveEdgesWorklet,
                outdegree,
-               mesh.sortOrder,
-               mesh.sortIndices,
                mesh,
                firstEdge,
                globalIndex,

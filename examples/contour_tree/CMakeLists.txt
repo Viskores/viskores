@@ -16,12 +16,11 @@ find_package(VTKm REQUIRED QUIET)
 add_executable(ContourTreeMesh2D ContourTreeMesh2D.cxx)
 target_link_libraries(ContourTreeMesh2D vtkm_filter)
 
-vtkm_add_target_information(ContourTreeMesh2D
-                            DEVICE_SOURCES ContourTreeMesh2D.cxx)
-
 add_executable(ContourTreeMesh3D ContourTreeMesh3D.cxx)
 target_link_libraries(ContourTreeMesh3D vtkm_filter)
 
-vtkm_add_target_information(ContourTreeMesh3D
+vtkm_add_target_information(ContourTreeMesh2D ContourTreeMesh3D
+                            DROP_UNUSED_SYMBOLS
                             MODIFY_CUDA_FLAGS
-                            DEVICE_SOURCES ContourTreeMesh3D.cxx)
+                            DEVICE_SOURCES
+                              ContourTreeMesh2D.cxx ContourTreeMesh3D.cxx)

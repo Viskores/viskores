@@ -11,10 +11,16 @@ set(headers
   Freudenthal_2D_Triangulation.h
   Freudenthal_3D_Triangulation.h
   MarchingCubes_3D_Triangulation.h
+  ContourTreeMesh.h
   MeshStructureFreudenthal2D.h
   MeshStructureFreudenthal3D.h
   MeshStructureMarchingCubes.h
+  MeshStructureContourTreeMesh.h
+  MeshBoundary.h
   )
+
+#----------------------------------------------------------------------------
+add_subdirectory(contourtreemesh)
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

@@ -26,6 +26,14 @@ namespace internal
 template <typename ValueType_, typename PortalTypeFirst_, typename PortalTypeSecond_>
 class ArrayPortalZip
 {
+  using ReadableP1 = vtkm::internal::PortalSupportsGets<PortalTypeFirst_>;
+  using ReadableP2 = vtkm::internal::PortalSupportsGets<PortalTypeSecond_>;
+  using WritableP1 = vtkm::internal::PortalSupportsSets<PortalTypeFirst_>;
+  using WritableP2 = vtkm::internal::PortalSupportsSets<PortalTypeSecond_>;
+
+  using Readable = std::integral_constant<bool, ReadableP1::value && ReadableP2::value>;
+  using Writable = std::integral_constant<bool, WritableP1::value && WritableP2::value>;
+
 public:
   using ValueType = ValueType_;
   using T = typename ValueType::FirstType;
@@ -64,23 +72,19 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->PortalFirst.GetNumberOfValues(); }
 
-  VTKM_EXEC
-  ValueType Get(vtkm::Id index) const
+  template <typename Readable_ = Readable,
+            typename = typename std::enable_if<Readable_::value>::type>
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const noexcept
   {
-    using call_supported_t1 = typename vtkm::internal::PortalSupportsGets<PortalTypeFirst>::type;
-    using call_supported_t2 = typename vtkm::internal::PortalSupportsGets<PortalTypeSecond>::type;
-
-    return vtkm::make_Pair(this->GetFirst(call_supported_t1(), index),
-                           this->GetSecond(call_supported_t2(), index));
+    return vtkm::make_Pair(this->PortalFirst.Get(index), this->PortalSecond.Get(index));
   }
 
-  VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const noexcept
   {
-    using call_supported_t1 = typename vtkm::internal::PortalSupportsSets<PortalTypeFirst>::type;
-    using call_supported_t2 = typename vtkm::internal::PortalSupportsSets<PortalTypeSecond>::type;
-    this->SetFirst(call_supported_t1(), index, value.first);
-    this->SetSecond(call_supported_t2(), index, value.second);
+    this->PortalFirst.Set(index, value.first);
+    this->PortalSecond.Set(index, value.second);
   }
 
   VTKM_EXEC_CONT
@@ -90,28 +94,6 @@ public:
   const PortalTypeSecond& GetSecondPortal() const { return this->PortalSecond; }
 
 private:
-  VTKM_EXEC inline T GetFirst(std::true_type, vtkm::Id index) const noexcept
-  {
-    return this->PortalFirst.Get(index);
-  }
-  VTKM_EXEC inline T GetFirst(std::false_type, vtkm::Id) const noexcept { return T{}; }
-  VTKM_EXEC inline U GetSecond(std::true_type, vtkm::Id index) const noexcept
-  {
-    return this->PortalSecond.Get(index);
-  }
-  VTKM_EXEC inline U GetSecond(std::false_type, vtkm::Id) const noexcept { return U{}; }
-
-  VTKM_EXEC inline void SetFirst(std::true_type, vtkm::Id index, const T& value) const noexcept
-  {
-    this->PortalFirst.Set(index, value);
-  }
-  VTKM_EXEC inline void SetFirst(std::false_type, vtkm::Id, const T&) const noexcept {}
-  VTKM_EXEC inline void SetSecond(std::true_type, vtkm::Id index, const U& value) const noexcept
-  {
-    this->PortalSecond.Set(index, value);
-  }
-  VTKM_EXEC inline void SetSecond(std::false_type, vtkm::Id, const U&) const noexcept {}
-
   PortalTypeFirst PortalFirst;
   PortalTypeSecond PortalSecond;
 };
@@ -376,6 +358,7 @@ VTKM_CONT vtkm::cont::ArrayHandleZip<FirstHandleType, SecondHandleType> make_Arr
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -441,5 +424,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleZip_h

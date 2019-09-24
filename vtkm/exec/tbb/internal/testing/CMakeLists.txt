@@ -11,4 +11,4 @@
 set(unit_tests
   UnitTestTaskTilingTBB.cxx
   )
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} LABEL "TBB")

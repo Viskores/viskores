@@ -37,6 +37,7 @@ public:
 #ifndef GetMessage
   const std::string& GetMessage() const { return this->Message; }
 #endif
+  const std::string& GetStackTrace() const { return this->StackTrace; }
 
 //GetMessage is a macro defined by <windows.h> to redirrect to
 //GetMessageA or W depending on if you are using ansi or unicode.
@@ -47,7 +48,7 @@ public:
 #endif
 
   // For std::exception compatibility:
-  const char* what() const noexcept override { return this->Message.c_str(); }
+  const char* what() const noexcept override { return this->What.c_str(); }
 
   /// Returns true if this exception is device independent. For exceptions that
   /// are not device independent, `vtkm::TryExecute`, for example, may try
@@ -58,17 +59,18 @@ protected:
   Error() {}
   Error(const std::string& message, bool is_device_independent = false)
     : Message(message)
+    , StackTrace(vtkm::cont::GetStackTrace(1))
+    , What(Message + "\n" + StackTrace)
     , IsDeviceIndependent(is_device_independent)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-               "Exception raised: " << message << "\n"
-                                    << vtkm::cont::GetStackTrace(1)); // 1 = skip this ctor frame.
   }
 
   void SetMessage(const std::string& message) { this->Message = message; }
 
 private:
   std::string Message;
+  std::string StackTrace;
+  std::string What;
   bool IsDeviceIndependent;
 };
 

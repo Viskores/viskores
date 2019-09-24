@@ -29,6 +29,8 @@ include(VTKmWrappers)
 #
 # [DEFINES]   : extra defines that need to be set for all unit test sources
 #
+# [LABEL]     : CTest Label to associate to this set of tests
+#
 # [TEST_ARGS] : arguments that should be passed on the command line to the
 #               test executable
 #
@@ -45,7 +47,7 @@ function(vtkm_unit_tests)
 
   set(options)
   set(global_options ${options} MPI ALL_BACKENDS)
-  set(oneValueArgs BACKEND NAME)
+  set(oneValueArgs BACKEND NAME LABEL)
   set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
@@ -97,6 +99,9 @@ function(vtkm_unit_tests)
     set(test_prog "UnitTests_${kit}")
   endif()
 
+  # For Testing Purposes, we will set the default logging level to INFO
+  list(APPEND vtkm_default_test_log_level "-v" "INFO")
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")
@@ -111,7 +116,9 @@ function(vtkm_unit_tests)
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
 
   add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
+  vtkm_add_drop_unused_function_flags(${test_prog})
   target_compile_definitions(${test_prog} PRIVATE ${VTKm_UT_DEFINES})
+
 
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
   set(device_sources )
@@ -154,16 +161,18 @@ function(vtkm_unit_tests)
       if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
         add_test(NAME ${tname}${upper_backend}
           COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
-                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
-                  ${MPIEXEC_POSTFLAGS}
+                  $<TARGET_FILE:${test_prog}> ${tname} ${device_command_line_argument}
+                  ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS} ${MPIEXEC_POSTFLAGS}
           )
       else()
         add_test(NAME ${tname}${upper_backend}
-          COMMAND ${test_prog} ${tname} ${device_command_line_argument} ${VTKm_UT_TEST_ARGS}
+          COMMAND ${test_prog} ${tname} ${device_command_line_argument}
+                  ${vtkm_default_test_log_level} ${VTKm_UT_TEST_ARGS}
           )
       endif()
 
       set_tests_properties("${tname}${upper_backend}" PROPERTIES
+        LABELS "${upper_backend};${VTKm_UT_LABEL}"
         TIMEOUT ${timeout}
         RUN_SERIAL ${run_serial}
         FAIL_REGULAR_EXPRESSION "runtime error"

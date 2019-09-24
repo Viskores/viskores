@@ -46,8 +46,8 @@
 
 #include <vtkm/io/reader/VTKDataSetReader.h>
 
+#include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WaveletGenerator.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <cctype> // for std::tolower
@@ -142,7 +142,6 @@ using UnstructuredCellList =
 
 using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
 
-using CoordinateList = vtkm::ListTagBase<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
@@ -152,8 +151,6 @@ public:
   using StructuredCellSetList = StructuredCellList;
   using UnstructuredCellSetList = UnstructuredCellList;
   using AllCellSetList = AllCellList;
-
-  using CoordinateTypeList = CoordinateList;
 };
 
 // Class implementing all filter benchmarks:
@@ -307,7 +304,7 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet);
       (void)result;
       return timer.GetElapsedTime();
     }
@@ -374,7 +371,7 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet);
       (void)result;
       return timer.GetElapsedTime();
     }
@@ -400,7 +397,7 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet);
       (void)result;
       return timer.GetElapsedTime();
     }
@@ -501,7 +498,7 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet);
       (void)result;
       return timer.GetElapsedTime();
     }
@@ -547,7 +544,7 @@ class BenchmarkFilters
     {
       Timer timer{ DeviceAdapter() };
       timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto result = this->Filter.Execute(InputDataSet);
       (void)result;
       return timer.GetElapsedTime();
     }
@@ -954,7 +951,7 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
       vtkm::filter::PointAverage avg;
       avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
       avg.SetOutputFieldName("GeneratedPointScalars");
-      auto outds = avg.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto outds = avg.Execute(InputDataSet);
       InputDataSet.AddField(
         outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
       PointScalarsName = "GeneratedPointScalars";
@@ -977,7 +974,7 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
       vtkm::filter::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
-      auto outds = mag.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto outds = mag.Execute(InputDataSet);
       InputDataSet.AddField(
         outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
       PointScalarsName = "GeneratedPointScalars";
@@ -999,7 +996,7 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
       vtkm::filter::CellAverage avg;
       avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
       avg.SetOutputFieldName("GeneratedCellScalars");
-      auto outds = avg.Execute(InputDataSet, BenchmarkFilterPolicy());
+      auto outds = avg.Execute(InputDataSet);
       InputDataSet.AddField(
         outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::CELL_SET));
       CellScalarsName = "GeneratedCellScalars";
@@ -1357,10 +1354,10 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   {
     std::cout << "Generating " << waveletDim << "x" << waveletDim << "x" << waveletDim
               << " wavelet...\n";
-    vtkm::worklet::WaveletGenerator gen;
-    gen.SetExtent({ 0 }, { waveletDim });
+    vtkm::source::Wavelet source;
+    source.SetExtent({ 0 }, { waveletDim });
 
-    InputDataSet = gen.GenerateDataSet(config.Device);
+    InputDataSet = source.Execute();
   }
 
   if (tetra)

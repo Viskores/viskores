@@ -133,6 +133,7 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<3>;
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -179,6 +180,7 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #include <vtkm/cont/CellSetStructured.hxx>
 

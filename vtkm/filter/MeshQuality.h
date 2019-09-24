@@ -33,26 +33,36 @@ namespace filter
 
 //Names of the available cell metrics, for use in
 //the output dataset fields
-//TODO: static const?
-static const std::string MetricNames[] = { "empty",
-                                           "diagonalRatio",
-                                           "edgeRatio",
-                                           //"skew",
-                                           "oddy",
-                                           "relativeSizeSquared",
-                                           "volume" };
+static const std::string MetricNames[] = {
+  "area",     "aspectGamma", "aspectRatio", "condition",    "diagonalRatio",  "jacobian",
+  "minAngle", "maxAngle",    "oddy",        "relativeSize", "scaledJacobian", "shape",
+  "shear",    "skew",        "stretch",     "taper",        "volume",         "warpage"
+};
 
 //Different cell metrics available to use
-//TODO: static const?
+//This must follow the same order as the MetricNames above
 enum class CellMetric
 {
-  EMPTY, //0
+  AREA,
+  ASPECT_GAMMA,
+  ASPECT_RATIO,
+  CONDITION,
   DIAGONAL_RATIO,
-  EDGE_RATIO,
+  JACOBIAN,
+  MIN_ANGLE,
+  MAX_ANGLE,
   ODDY,
   RELATIVE_SIZE,
+  SCALED_JACOBIAN,
+  SHAPE,
+  SHEAR,
+  SKEW,
+  STRETCH,
+  TAPER,
   VOLUME,
-  NUMBER_OF_CELL_METRICS //(num metrics = NUMBER_OF_CELL_METRICS - 2)
+  WARPAGE,
+  NUMBER_OF_CELL_METRICS,
+  EMPTY
 };
 
 /** \brief Computes the quality of an unstructured cell-based mesh. The quality is defined in terms of the
@@ -68,9 +78,8 @@ class MeshQuality : public vtkm::filter::FilterCell<MeshQuality>
 public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
-  using ShapeMetricsVecType = std::vector<vtkm::Pair<vtkm::UInt8, CellMetric>>;
-
-  VTKM_CONT MeshQuality(const ShapeMetricsVecType& metrics);
+  VTKM_CONT MeshQuality(CellMetric);
+  void SetOutputName(const std::string& s) { this->OutputName = s; };
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -80,10 +89,8 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  //A user-assigned cell metric per shape/cell type
-  //Empty metric if not provided by user
-  //Length of vector is the number of different VTK-m cell types
-  std::vector<CellMetric> CellTypeMetrics;
+  CellMetric MyMetric;
+  std::string OutputName;
 };
 
 } // namespace filter

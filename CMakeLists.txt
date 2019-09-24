@@ -83,7 +83,6 @@ vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
-vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
@@ -97,6 +96,12 @@ endif()
 
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+
+# VTK-m will turn on logging by default, but will set the default
+# logging level to WARN.  This option should not be visible by default
+# in the GUI, as ERROR and WARN level logging should not interfere
+# with the performance of vtk-m
+vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" ON)
 
 # When VTK-m is embedded into larger projects they may desire to turn off
 # VTK-m internal assert checks when in debug mode to improve debug runtime
@@ -124,6 +129,7 @@ set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing VTK-m" ON)
 
 mark_as_advanced(
+  VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
@@ -244,7 +250,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
-      ${VTKm_SOURCE_DIR}/CMake/FindOpenMP.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 

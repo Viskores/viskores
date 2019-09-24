@@ -67,7 +67,7 @@ find_path(BUILD_DIR CMakeCache.txt .)
 get_filename_component(abs_build_dir ${BUILD_DIR} ABSOLUTE)
 get_filename_component(build_dir_name ${abs_build_dir} NAME)
 set(EXCEPTIONS ${EXCEPTIONS} ${build_dir_name}/*)
-message("${EXCEPTIONS}")
+message("Copyright Check Exceptions: ${EXCEPTIONS}")
 
 # Gets the current year (if possible).
 function (get_year var)

@@ -45,6 +45,12 @@ namespace cont
 /// Although portals are defined in the execution environment, they are also
 /// used in the control environment for accessing data on the host.
 ///
+/// Since utilities like IsWritableArrayHandle checks for the existence of a Set
+/// method on a portal, if the portal is backed by a read-only ArrayHandle, the
+/// Set method must not be defined. If the portal may or may not be writable
+/// (e.g., ArrayHandleCast may be casting a read-only OR read-write array), the
+/// Set method may be conditionally removed using SFINAE.
+///
 template <typename T>
 class ArrayPortal
 {
@@ -65,8 +71,7 @@ public:
   ValueType Get(vtkm::Id index) const;
 
   /// Sets a value in the array. If it is not possible to set a value in the
-  /// array, this method may error out (for example with a VTKM_ASSERT). In
-  /// this case the behavior is undefined.
+  /// array, this method must not be defined.
   ///
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const;

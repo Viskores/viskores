@@ -176,6 +176,85 @@ public:
 
 }; // ComputeRegularStructure_SetArcs
 
+// Worklet for setting the arcs of the contour tree based on the sorted augmented nodes
+class ComputeRegularStructure_SetAugmentArcs : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn arcSorter,               // (input) arcSorter array
+                                WholeArrayIn contourTreeSuperparents, // (input)
+                                WholeArrayIn contourTreeSuperarcs,    // (input)
+                                WholeArrayIn contourTreeSupernodes,   // (input)
+                                WholeArrayIn toCompressed,            // (input)
+                                WholeArrayOut contourTreeArcs);       // (output)
+  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
+  using InputDomain = _1;
+
+  vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
+
+  // Default Constructor
+  VTKM_EXEC_CONT
+  ComputeRegularStructure_SetAugmentArcs(vtkm::Id NumArcs)
+    : numArcs(NumArcs)
+  {
+  }
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const InFieldPortalType& arcSorterPortal,
+                            const vtkm::Id sortedNode,
+                            const InFieldPortalType& contourTreeSuperparentsPortal,
+                            const InFieldPortalType& contourTreeSuperarcsPortal,
+                            const InFieldPortalType& contourTreeSupernodesPortal,
+                            const InFieldPortalType& toCompressedPortal,
+                            const OutFieldPortalType& contourTreeArcsPortal) const
+  {
+    // per node
+    // convert arcSorter to node ID
+    vtkm::Id nodeID = arcSorterPortal.Get(sortedNode);
+    vtkm::Id superparent = contourTreeSuperparentsPortal.Get(nodeID);
+
+    // the end element is always the last
+    bool isLastOnSuperarc = false;
+    if (sortedNode == numArcs - 1)
+    {
+      isLastOnSuperarc = true;
+    }
+    // otherwise look for a change in the superparent
+    else
+    {
+      isLastOnSuperarc =
+        (superparent != contourTreeSuperparentsPortal.Get(arcSorterPortal.Get(sortedNode + 1)));
+    }
+
+    // if it's the last on the superarc
+    if (isLastOnSuperarc)
+    { // last on superarc
+      // retrieve the superarc's far end
+      vtkm::Id superarcEnd = contourTreeSuperarcsPortal.Get(superparent);
+      // this only happens for the root of the tree, but is still needed
+      if (noSuchElement(superarcEnd))
+      {
+        contourTreeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
+      }
+      else
+      {
+        contourTreeArcsPortal.Set(
+          nodeID,
+          toCompressedPortal.Get(contourTreeSupernodesPortal.Get(maskedIndex(superarcEnd))) |
+            (superarcEnd & IS_ASCENDING));
+      }
+    } // last on superarc
+    else
+    { // not last on superarc
+      vtkm::Id neighbour = arcSorterPortal.Get(sortedNode + 1);
+      contourTreeArcsPortal.Set(nodeID, neighbour | ((neighbour > nodeID) ? IS_ASCENDING : 0));
+    } // not last on superarc
+  }
+
+}; // ComputeRegularStructure_SetAugmentArcs
+
+
+
+
 } // namespace contourtree_maker_inc
 } // namespace contourtree_augmented
 } // namespace worklet

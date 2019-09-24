@@ -75,6 +75,8 @@
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 
 namespace vtkm
 {
@@ -85,10 +87,44 @@ class ContourTreePPP2
 {
 public:
   /*!
+  * Run the contour tree to merge an existing set of contour trees
+  *
+  *  meshBoundary : Is computed by calling mesh.GetMeshBoundaryExecutionObject.
+  *                 It is technically only needed if computeRegularStructure==2.
+  *  computeRegularStructure : 0=Off, 1=full augmentation with all vertices
+  *                            2=boundary augmentation using meshBoundary
+  */
+  template <typename FieldType, typename StorageType>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType>
+             fieldArray, // TODO: We really should not need this
+           contourtree_augmented::ContourTreeMesh<FieldType>& mesh,
+           std::vector<std::pair<std::string, vtkm::Float64>>& timings,
+           contourtree_augmented::ContourTree& contourTree,
+           contourtree_augmented::IdArrayType sortOrder,
+           vtkm::Id& nIterations,
+           unsigned int computeRegularStructure,
+           const contourtree_augmented::MeshBoundaryContourTreeMeshExec& meshBoundary)
+  {
+    RunContourTree(
+      fieldArray, // Just a place-holder to fill the required field. Used when calling SortData on the contour tree which is a no-op
+      timings,
+      contourTree,
+      sortOrder,
+      nIterations,
+      mesh,
+      computeRegularStructure,
+      meshBoundary);
+    return;
+  }
+
+  /*!
    * Run the contour tree analysis. This helper function is used to
    * allow one to run the contour tree in a consistent fashion independent
    * of whether the data is 2D, 3D, or 3D_MC. This function just calls
    * Run2D, Run3D, or Run3D_MC depending on the type
+   *
+   *  computeRegularStructure : 0=Off, 1=full augmentation with all vertices
+   *                            2=boundary augmentation using meshBoundary
    */
   template <typename FieldType, typename StorageType>
   void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
@@ -100,7 +136,7 @@ public:
            const vtkm::Id nCols,
            const vtkm::Id nSlices = 1,
            bool useMarchingCubes = false,
-           bool computeRegularStructure = true)
+           unsigned int computeRegularStructure = 1)
   {
     using namespace vtkm::worklet::contourtree_augmented;
     // 2D Contour Tree
@@ -109,16 +145,15 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            1,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(fieldArray,
+                     timings,
+                     contourTree,
+                     sortOrder,
+                     nIterations,
+                     mesh,
+                     computeRegularStructure,
+                     mesh.GetMeshBoundaryExecutionObject());
+      return;
     }
     // 3D Contour Tree using marching cubes
     else if (useMarchingCubes)
@@ -126,16 +161,15 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            nSlices,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(fieldArray,
+                     timings,
+                     contourTree,
+                     sortOrder,
+                     nIterations,
+                     mesh,
+                     computeRegularStructure,
+                     mesh.GetMeshBoundaryExecutionObject());
+      return;
     }
     // 3D Contour Tree with Freudenthal
     else
@@ -143,16 +177,15 @@ public:
       // Build the mesh and fill in the values
       Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
-      return RunContourTree(fieldArray,
-                            timings,
-                            contourTree,
-                            sortOrder,
-                            nIterations,
-                            nRows,
-                            nCols,
-                            nSlices,
-                            mesh,
-                            computeRegularStructure);
+      RunContourTree(fieldArray,
+                     timings,
+                     contourTree,
+                     sortOrder,
+                     nIterations,
+                     mesh,
+                     computeRegularStructure,
+                     mesh.GetMeshBoundaryExecutionObject());
+      return;
     }
   }
 
@@ -161,19 +194,32 @@ private:
   /*!
   *  Run the contour tree for the given mesh. This function implements the main steps for
   *  computing the contour tree after the mesh has been constructed using the approbrite
-  *  contour tree mesh class
+  *  contour tree mesh class.
+  *
+  *  meshBoundary : This parameter is generated by calling mesh.GetMeshBoundaryExecutionObject
+  *                 For regular 2D/3D meshes this required no extra parameters, however, for a
+  *                 ContourTreeMesh additional information about the block must be given. Rather
+  *                 than generating the MeshBoundary descriptor here, we therefore, require it
+  *                 as an input. The MeshBoundary is used to augment the contour tree with the
+  *                 mesh boundary vertices. It is needed only if we want to augement by the
+  *                 mesh boundary and computeRegularStructure is False (i.e., if we compute
+  *                 the full regular strucuture this is not needed because all vertices
+  *                 (including the boundary) will be addded to the tree anyways.
+  *  computeRegularStructure : 0=Off, 1=full augmentation with all vertices
+  *                            2=boundary augmentation using meshBoundary
   */
-  template <typename FieldType, typename StorageType, typename MeshClass>
+  template <typename FieldType,
+            typename StorageType,
+            typename MeshClass,
+            typename MeshBoundaryClass>
   void RunContourTree(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
                       std::vector<std::pair<std::string, vtkm::Float64>>& timings,
                       contourtree_augmented::ContourTree& contourTree,
                       contourtree_augmented::IdArrayType& sortOrder,
                       vtkm::Id& nIterations,
-                      const vtkm::Id /*nRows*/,   // FIXME: Remove unused parameter?
-                      const vtkm::Id /*nCols*/,   // FIXME: Remove unused parameter?
-                      const vtkm::Id /*nSlices*/, // FIXME: Remove unused parameter?
                       MeshClass& mesh,
-                      bool computeRegularStructure)
+                      unsigned int computeRegularStructure,
+                      const MeshBoundaryClass& meshBoundary)
   {
     using namespace vtkm::worklet::contourtree_augmented;
     // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
@@ -204,7 +250,6 @@ private:
                                                             timer.GetElapsedTime()));
 
 #ifdef DEBUG_PRINT
-    joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
 #endif
     timer.Start();
@@ -259,11 +304,17 @@ private:
     timer.Start();
 
     // 9.2 Then we compute the regular structure
-    if (computeRegularStructure)
+    if (computeRegularStructure == 1) // augment with all vertices
     {
       treeMaker.ComputeRegularStructure(extrema);
       timings.push_back(std::pair<std::string, vtkm::Float64>("Contour Tree Regular Structure",
                                                               timer.GetElapsedTime()));
+    }
+    else if (computeRegularStructure == 2) // augment by the mesh boundary
+    {
+      treeMaker.ComputeBoundaryRegularStructure(extrema, mesh, meshBoundary);
+      timings.push_back(std::pair<std::string, vtkm::Float64>(
+        "Contour Tree Boundary Regular Structure", timer.GetElapsedTime()));
     }
 
     // Collect the output data

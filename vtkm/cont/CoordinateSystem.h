@@ -142,6 +142,7 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
 
@@ -165,5 +166,6 @@ struct Serialization<vtkm::cont::CoordinateSystem>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_CoordinateSystem_h

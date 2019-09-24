@@ -18,16 +18,6 @@ namespace vtkm
 {
 namespace filter
 {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT ClipWithField::ClipWithField()
-  : vtkm::filter::FilterDataSetWithField<ClipWithField>()
-  , ClipValue(0)
-  , Worklet()
-  , Invert(false)
-{
-}
-
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
@@ -59,34 +49,6 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
   return output;
-}
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ClipWithField::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  vtkm::cont::ArrayHandle<T> output;
-
-  if (fieldMeta.IsPointField())
-  {
-    output = this->Worklet.ProcessPointField(input);
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    output = this->Worklet.ProcessCellField(input);
-  }
-  else
-  {
-    return false;
-  }
-
-  //use the same meta data as the input so we get the same field name, etc.
-  result.AddField(fieldMeta.AsField(output));
-  return true;
 }
 }
 } // end namespace vtkm::filter

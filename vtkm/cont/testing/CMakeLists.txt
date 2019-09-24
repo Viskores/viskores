@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleExtrude.cxx
@@ -67,6 +68,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
   UnitTestInitialize.cxx
   UnitTestLogging.cxx

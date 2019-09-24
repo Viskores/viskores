@@ -54,6 +54,7 @@ public:
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -116,5 +117,6 @@ struct Serialization<vtkm::cont::ArrayHandle<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_+m_cont_ArrayHandleUniformPointCoordinates_h

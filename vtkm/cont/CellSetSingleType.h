@@ -291,6 +291,7 @@ private:
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -346,5 +347,6 @@ public:
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_CellSetSingleType_h

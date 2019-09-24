@@ -61,7 +61,7 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   GridEvalType eval(coords, cells, field);
-  RK4Type rk4(eval, static_cast<vtkm::worklet::particleadvection::ScalarType>(this->StepSize));
+  RK4Type rk4(eval, this->StepSize);
 
   vtkm::worklet::StreamlineResult res;
 

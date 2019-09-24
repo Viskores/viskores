@@ -24,6 +24,8 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
+#include <vtkm/internal/ArrayPortalHelpers.h>
+
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -74,37 +76,16 @@ struct IsInValidArrayHandle
 {
 };
 
-namespace detail
-{
-
-template <typename ArrayHandle>
-struct IsWritableArrayHandleImpl
-{
-private:
-  template <typename U,
-            typename S = decltype(std::declval<U>().Set(vtkm::Id{},
-                                                        std::declval<typename U::ValueType>()))>
-  static std::true_type hasSet(int);
-  template <typename U>
-  static std::false_type hasSet(...);
-
-  using PortalType = typename ArrayHandle::PortalControl;
-
-public:
-  using type = decltype(hasSet<PortalType>(0));
-  static constexpr bool value = type::value;
-};
-}
-
-/// Checks to see if the ArrayHandle allows
-/// writing, as some ArrayHandles (Implicit) don't support writing.
-/// This check is compatible with the C++11 type_traits.
-/// It contains a typedef named type that is either
+/// Checks to see if the ArrayHandle allows writing, as some ArrayHandles
+/// (Implicit) don't support writing. These will be defined as either
 /// std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
+///
+/// \sa vtkm::internal::PortalSupportsSets
 ///
 template <typename ArrayHandle>
-using IsWritableArrayHandle = typename detail::IsWritableArrayHandleImpl<ArrayHandle>::type;
+using IsWritableArrayHandle =
+  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::PortalControl>;
+/// @}
 
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with C++11 type_traits. It a typedef named \c type that is
@@ -694,6 +675,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -735,6 +717,7 @@ struct Serialization<vtkm::cont::ArrayHandle<T>>
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>

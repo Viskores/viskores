@@ -15,8 +15,8 @@ find_package(VTKm REQUIRED QUIET)
 
 if(TARGET vtkm_rendering)
   add_executable(Demo Demo.cxx)
-  target_link_libraries(Demo PRIVATE vtkm_rendering)
+  target_link_libraries(Demo PRIVATE vtkm_filter vtkm_rendering)
   vtkm_add_target_information(Demo
-                              MODIFY_CUDA_FLAGS
+                              DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES Demo.cxx)
 endif()

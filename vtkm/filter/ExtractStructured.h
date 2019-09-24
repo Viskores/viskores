@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_ExtractStructured_h
 #define vtk_m_filter_ExtractStructured_h
 
+#include <vtkm/filter/vtkm_filter_export.h>
+
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractStructured.h>
 
@@ -34,10 +36,10 @@ namespace filter
 /// for image processing, subsampling large volumes to reduce data size, or
 /// extracting regions of a volume with interesting data.
 ///
-class ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
+class VTKM_ALWAYS_EXPORT ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
 public:
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   ExtractStructured();
 
   // Set the bounding box for the volume of interest
@@ -90,7 +92,27 @@ public:
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    if (fieldMeta.IsPointField())
+    {
+      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input);
+
+      result.AddField(fieldMeta.AsField(output));
+      return true;
+    }
+
+    // cell data must be scattered to the cells created per input cell
+    if (fieldMeta.IsCellField())
+    {
+      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
+
+      result.AddField(fieldMeta.AsField(output));
+      return true;
+    }
+
+    return false;
+  }
 
 private:
   vtkm::RangeId3 VOI;
@@ -99,9 +121,12 @@ private:
   bool IncludeOffset;
   vtkm::worklet::ExtractStructured Worklet;
 };
+
+#ifndef vtkm_filter_ExtractStructured_cxx
+VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractStructured);
+#endif
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/ExtractStructured.hxx>
 
 #endif // vtk_m_filter_ExtractStructured_h

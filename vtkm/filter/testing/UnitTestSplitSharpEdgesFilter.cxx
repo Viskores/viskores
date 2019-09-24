@@ -15,7 +15,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/worklet/WaveletGenerator.h>
+#include <vtkm/source/Wavelet.h>
 
 namespace
 {
@@ -115,13 +115,11 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
 vtkm::cont::DataSet Make3DWavelet()
 {
 
-  vtkm::worklet::WaveletGenerator wavelet;
-  wavelet.SetMinimumExtent({ -25 });
-  wavelet.SetMaximumExtent({ 25 });
+  vtkm::source::Wavelet wavelet({ -25 }, { 25 });
   wavelet.SetFrequency({ 60, 30, 40 });
   wavelet.SetMagnitude({ 5 });
 
-  vtkm::cont::DataSet result = wavelet.GenerateDataSet();
+  vtkm::cont::DataSet result = wavelet.Execute();
   return result;
 }
 
@@ -244,12 +242,12 @@ void TestWithStructuredData()
   contour.SetGenerateNormals(true);
   contour.SetComputeFastNormalsForStructured(true);
   contour.SetNormalArrayName("normals");
-  dataSet = contour.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = contour.Execute(dataSet);
 
   // Compute cell normals:
   vtkm::filter::CellAverage cellNormals;
   cellNormals.SetActiveField("normals", vtkm::cont::Field::Association::POINTS);
-  dataSet = cellNormals.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = cellNormals.Execute(dataSet);
 
   // Split sharp edges:
   std::cout << dataSet.GetNumberOfCells() << std::endl;

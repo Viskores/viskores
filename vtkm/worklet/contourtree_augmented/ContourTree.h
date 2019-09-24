@@ -126,6 +126,10 @@ public:
   // stored as supernode indices
   IdArrayType superarcs;
 
+  // for boundary augmented contour tree (note: these use the same convention as supernodes/superarcs)
+  IdArrayType augmentnodes;
+  IdArrayType augmentarcs;
+
   // vector of hyperarcs to which each supernode/arc belongs
   IdArrayType hyperparents;
 
@@ -159,6 +163,9 @@ public:
   // debug routine
   inline void DebugPrint(const char* message, const char* fileName, long lineNum);
 
+  // print contents
+  inline void PrintContent() const;
+
   // print routines
   //void PrintDotHyperStructure();
   inline void PrintDotSuperStructure();
@@ -189,17 +196,8 @@ void ContourTree::Init(vtkm::Id dataSize)
 } // Init()
 
 
-void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)
-{ // DebugPrint()
-#ifdef DEBUG_PRINT
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
-            << lineNum << std::endl;
-  std::cout << std::left << std::string(message) << std::endl;
-  std::cout << "Contour Tree Contains:     " << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::endl;
-
+inline void ContourTree::PrintContent() const
+{
   printHeader(arcs.GetNumberOfValues());
   printIndices("Arcs", arcs);
   printIndices("Superparents", superparents);
@@ -213,7 +211,23 @@ void ContourTree::DebugPrint(const char* message, const char* fileName, long lin
   printHeader(hypernodes.GetNumberOfValues());
   printIndices("Hypernodes", hypernodes);
   printIndices("Hyperarcs", hyperarcs);
+  printHeader(augmentnodes.GetNumberOfValues());
+  printIndices("Augmentnodes", augmentnodes);
+  printIndices("Augmentarcs", augmentarcs);
+}
+
+void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)
+{ // DebugPrint()
+#ifdef DEBUG_PRINT
+  std::cout << "---------------------------" << std::endl;
+  std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
+            << lineNum << std::endl;
+  std::cout << std::left << std::string(message) << std::endl;
+  std::cout << "Contour Tree Contains:     " << std::endl;
+  std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
+
+  this->PrintContent();
 #else
   // Avoid unused parameter warnings
   (void)message;

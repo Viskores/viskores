@@ -43,9 +43,9 @@ public:
                             const IntegratorType* integrator,
                             IntegralCurveType& integralCurve) const
   {
-    vtkm::Vec<ScalarType, 3> inpos = integralCurve.GetPos(idx);
-    vtkm::Vec<ScalarType, 3> outpos;
-    ScalarType time = integralCurve.GetTime(idx);
+    vtkm::Vec3f inpos = integralCurve.GetPos(idx);
+    vtkm::Vec3f outpos;
+    vtkm::FloatDefault time = integralCurve.GetTime(idx);
     IntegratorStatus status;
     bool tookAnySteps = false;
     while (!integralCurve.Done(idx))
@@ -108,11 +108,11 @@ public:
   ~ParticleAdvectionWorklet() {}
 
   void Run(const IntegratorType& integrator,
-           vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& seedArray,
+           vtkm::cont::ArrayHandle<vtkm::Vec3f>& seedArray,
            vtkm::Id maxSteps,
            vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
+           vtkm::cont::ArrayHandle<vtkm::FloatDefault>& timeArray)
   {
     using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
@@ -158,13 +158,13 @@ class StreamlineWorklet
 public:
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& pts,
+           const vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& pts,
            const vtkm::Id& nSteps,
-           vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>, PointStorage>& positions,
+           vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType, FieldStorage>& timeArray)
+           vtkm::cont::ArrayHandle<vtkm::FloatDefault, FieldStorage>& timeArray)
   {
     integrator = it;
     seedArray = pts;
@@ -182,11 +182,11 @@ public:
   };
 
 private:
-  void run(vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>>& positions,
+  void run(vtkm::cont::ArrayHandle<vtkm::Vec3f>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<ScalarType>& timeArray)
+           vtkm::cont::ArrayHandle<vtkm::FloatDefault>& timeArray)
   {
     using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
@@ -212,7 +212,7 @@ private:
     validPoint = vtkm::cont::make_ArrayHandle(vpa);
 
     //Compact history into positions.
-    vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> history;
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> history;
     StreamlineType streamlines(
       seedArray, history, stepsTaken, status, timeArray, validPoint, maxSteps);
 
@@ -246,7 +246,7 @@ private:
   }
 
   IntegratorType integrator;
-  vtkm::cont::ArrayHandle<vtkm::Vec<ScalarType, 3>> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray;
   vtkm::Id maxSteps;
 };
 }

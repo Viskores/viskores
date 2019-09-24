@@ -50,9 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-
-#ifndef vtkm_worklet_contourtree_chain_doubler_h
-#define vtkm_worklet_contourtree_chain_doubler_h
+#ifndef vtkm_worklet_contourtree_augmented_pointer_doubling_h
+#define vtkm_worklet_contourtree_augmented_pointer_doubling_h
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -94,8 +93,9 @@ public:
     } // else, if the vertex is terminal then do nothing
   }
 }; // PointerDoubling
-}
-}
-}
 
-#endif
+} // namespace contourtree_augmented
+} // namespace worklet
+} // namespace vtkm
+
+#endif // vtkm_worklet_contourtree_augmented_pointer_doubling_h

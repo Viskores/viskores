@@ -44,6 +44,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace mangled_diy_namespace
 {
 

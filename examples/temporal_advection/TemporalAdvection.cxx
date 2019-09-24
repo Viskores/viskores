@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   pathlineFilter.SetNextDataSet(ds2);
   // 2. The current and next times, these times will be used to interpolate
   //    the velocities for particle positions in space and time.
-  pathlineFilter.SetCurrentTime(time1);
+  pathlineFilter.SetPreviousTime(time1);
   pathlineFilter.SetNextTime(time2);
   // 3. Maximum number of steps the particle is allowed to take until termination.
   pathlineFilter.SetNumberOfSteps(numSteps);

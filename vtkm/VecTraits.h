@@ -183,6 +183,26 @@ struct VTKM_NEVER_EXPORT VecTraits<const T> : VecTraits<T>
 {
 };
 
+#if defined(VTKM_GCC) && (__GNUC__ <= 5)
+namespace detail
+{
+
+template <typename NewT, vtkm::IdComponent Size>
+struct VecReplaceComponentTypeGCC4or5
+{
+  using type = vtkm::Vec<NewT, Size>;
+};
+
+template <typename T, vtkm::IdComponent Size, typename NewT>
+struct VecReplaceBaseComponentTypeGCC4or5
+{
+  using type =
+    vtkm::Vec<typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<NewT>, Size>;
+};
+
+} // namespace detail
+#endif // GCC Version 4.8
+
 template <typename T, vtkm::IdComponent Size>
 struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
 {
@@ -247,26 +267,42 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Vec<T, Size>>
     vector[component] = value;
   }
 
-  /// \brief Get a vector of the same type but with a different component.
-  ///
-  /// This type resolves to another vector with a different component type. For example,
-  /// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
-  /// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
-  /// is vtkm::Vec<T2, N>.
-  ///
+/// \brief Get a vector of the same type but with a different component.
+///
+/// This type resolves to another vector with a different component type. For example,
+/// vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2> is vtkm::Vec<T2, N>.
+/// This replacement is not recursive. So VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>
+/// is vtkm::Vec<T2, N>.
+///@{
+#if defined(VTKM_GCC) && (__GNUC__ <= 5)
+  // Silly workaround for bug in GCC <= 5
+  template <typename NewComponentType>
+  using ReplaceComponentType =
+    typename detail::VecReplaceComponentTypeGCC4or5<NewComponentType, Size>::type;
+#else // !GCC <= 5
   template <typename NewComponentType>
   using ReplaceComponentType = vtkm::Vec<NewComponentType, Size>;
+#endif
+///@}
 
-  /// \brief Get a vector of the same type but with a different base component.
-  ///
-  /// This type resolves to another vector with a different base component type. The replacement
-  /// is recursive for nested types. For example,
-  /// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
-  ///
+/// \brief Get a vector of the same type but with a different base component.
+///
+/// This type resolves to another vector with a different base component type. The replacement
+/// is recursive for nested types. For example,
+/// VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> is Vec<Vec<T2, M>, N>.
+///@{
+#if defined(VTKM_GCC) && (__GNUC__ <= 5)
+  // Silly workaround for bug in GCC <= 5
+  template <typename NewComponentType>
+  using ReplaceBaseComponentType =
+    typename detail::VecReplaceBaseComponentTypeGCC4or5<T, Size, NewComponentType>::type;
+#else // !GCC <= 5
   template <typename NewComponentType>
   using ReplaceBaseComponentType = vtkm::Vec<
     typename vtkm::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
     Size>;
+#endif
+  ///@}
 
   /// Converts whatever type this vector is into the standard VTKm Tuple.
   ///

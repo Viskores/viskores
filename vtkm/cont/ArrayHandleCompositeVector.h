@@ -17,6 +17,8 @@
 
 #include <vtkmtaotuple/include/Tuple.h>
 
+#include <vtkm/internal/brigand.hpp>
+
 #include <type_traits>
 
 namespace vtkm
@@ -373,11 +375,18 @@ struct ArraySizeValidator
   }
 };
 
+template <typename PortalList>
+using AllPortalsAreWritable =
+  typename brigand::all<PortalList,
+                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
+
 } // end namespace compvec
 
 template <typename PortalTuple>
 class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 {
+  using Writable = compvec::AllPortalsAreWritable<PortalTuple>;
+
 public:
   using ValueType = typename compvec::GetValueType<PortalTuple>::ValueType;
 
@@ -459,8 +468,9 @@ public:
     return result;
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     SetImpl<0, PortalTuple>::Exec(this->Portals, value, index);
   }
@@ -532,21 +542,21 @@ public:
   void Allocate(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::Allocate(this->Arrays, numValues);
+    ForEachArray::Allocate(this->Arrays, numValues);
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::Shrink(this->Arrays, numValues);
+    ForEachArray::Shrink(this->Arrays, numValues);
   }
 
   VTKM_CONT
   void ReleaseResources()
   {
     VTKM_ASSERT(this->Valid);
-    return ForEachArray::ReleaseResources(this->Arrays);
+    ForEachArray::ReleaseResources(this->Arrays);
   }
 
   VTKM_CONT
@@ -715,7 +725,7 @@ VTKM_CONT ArrayHandleCompositeVector<ArrayTs...> make_ArrayHandleCompositeVector
 
 //=============================================================================
 // Specializations of serialization related classes
-
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -829,5 +839,6 @@ struct Serialization<vtkm::cont::ArrayHandle<
 {
 };
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_ArrayHandleCompositeVector_h

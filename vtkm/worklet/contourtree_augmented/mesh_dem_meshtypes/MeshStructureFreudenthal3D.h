@@ -106,6 +106,7 @@ public:
     vtkm::Id nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
+    const IdArrayType& sortOrder,
     const m3d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
     const m3d_freudenthal::neighbourOffsetsType& neighbourOffsetsIn,
     const m3d_freudenthal::linkComponentCaseTableType& linkComponentCaseTableIn)
@@ -114,6 +115,7 @@ public:
     , nIncidentEdges(nincident_edges)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
+    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
     edgeBoundaryDetectionMasksPortal =
       edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
     neighbourOffsetsPortal = neighbourOffsetsIn.PrepareForInput(DeviceAdapter());
@@ -125,14 +127,16 @@ public:
 
 
   VTKM_EXEC
-  inline vtkm::Id GetNeighbourIndex(vtkm::Id vertex, vtkm::Id edgeNo) const
+  inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const
   { // GetNeighbourIndex
-    return vertex +
-      (neighbourOffsetsPortal.Get(edgeNo)[0] * this->nRows +
-       neighbourOffsetsPortal.Get(edgeNo)[1]) *
-      this->nCols +
-      neighbourOffsetsPortal.Get(edgeNo)[2];
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
+    return sortIndicesPortal.Get(meshIndex +
+                                 (neighbourOffsetsPortal.Get(edgeNo)[0] * this->nRows +
+                                  neighbourOffsetsPortal.Get(edgeNo)[1]) *
+                                   this->nCols +
+                                 neighbourOffsetsPortal.Get(edgeNo)[2]);
   } // GetNeighbourIndex
+
 
 // Disable conversion warnings for Add, Subtract, Multiply, Divide on GCC only.
 // GCC creates false positive warnings for signed/unsigned char* operations.
@@ -147,17 +151,16 @@ public:
 
   // sets outgoing paths for saddles
   VTKM_EXEC
-  inline vtkm::Id GetExtremalNeighbour(vtkm::Id vertex) const
-  {
+  inline vtkm::Id GetExtremalNeighbour(vtkm::Id sortIndex) const
+  { //  GetExtremalNeighbour()
+    // convert to a mesh index
     using namespace m3d_freudenthal;
-    // GetExtremalNeighbour()
-    // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
-    // get the row and column
-    vtkm::Id slice = this->vertexSlice(vertex);
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id slice = this->vertexSlice(meshIndex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
+
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
       ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
@@ -170,35 +173,33 @@ public:
       // only consider valid edges
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(nbrNo)))
       {
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(GetNeighbourIndex(vertex, nbrNo));
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, nbrNo);
         // explicit test allows reversal between join and split trees
-        if (getMax ? (nbrIndex > sortIndex) : (nbrIndex < sortIndex))
+        if (getMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         { // valid edge and outbound
-          return nbrIndex;
+          return nbrSortIndex;
         } // valid edge and outbound
       }
     } // per edge
-
     return sortIndex | TERMINAL_ELEMENT;
-
   } // GetExtremalNeighbour()
+
 
   // NOTE/FIXME: The following also iterates over all values and could be combined with GetExtremalNeighbour(). However, the
   // results are needed at different places and splitting the two functions leads to a cleaner design
   VTKM_EXEC
   inline vtkm::Pair<vtkm::Id, vtkm::Id> GetNeighbourComponentsMaskAndDegree(
-    vtkm::Id vertex,
+    vtkm::Id sortIndex,
     bool getMaxComponents) const
-  {
+  { // GetNeighbourComponentsMaskAndDegree()
+    // convert to a meshIndex
     using namespace m3d_freudenthal;
-    // GetNeighbourComponentsMaskAndDegree()
-    // convert to a sort index
-    vtkm::Id sortIndex = sortIndicesPortal.Get(vertex);
+    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id slice = this->vertexSlice(vertex);
-    vtkm::Id row = this->vertexRow(vertex);
-    vtkm::Id col = this->vertexColumn(vertex);
+    vtkm::Id slice = this->vertexSlice(meshIndex);
+    vtkm::Id row = this->vertexRow(meshIndex);
+    vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
       ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
       ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
@@ -212,11 +213,10 @@ public:
     {
       if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
-        vtkm::Id nbrIndex = sortIndicesPortal.Get(this->GetNeighbourIndex(vertex, edgeNo));
-
-        if (getMaxComponents ? (sortIndex < nbrIndex) : (sortIndex > nbrIndex))
+        vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
+        if (getMaxComponents ? (sortIndex < nbrSortIndex) : (sortIndex > nbrSortIndex))
         {
-          caseNo |= static_cast<vtkm::Id>(1) << edgeNo;
+          caseNo |= vtkm::Id{ 1 } << edgeNo;
         }
       } // inside grid
     }   // for each edge
@@ -226,14 +226,16 @@ public:
     vtkm::Id neighbourComponentMask = 0;
 
     for (int nbrNo = 0; nbrNo < N_INCIDENT_EDGES; ++nbrNo)
-      if (linkComponentCaseTablePortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << nbrNo))
+      if (linkComponentCaseTablePortal.Get(caseNo) & (1 << nbrNo))
       {
         outDegree++;
-        neighbourComponentMask |= static_cast<vtkm::Id>(1) << nbrNo;
+        neighbourComponentMask |= vtkm::Id{ 1 } << nbrNo;
       }
 
-    return vtkm::make_Pair(neighbourComponentMask, outDegree);
+    vtkm::Pair<vtkm::Id, vtkm::Id> re(neighbourComponentMask, outDegree);
+    return re;
   } // GetNeighbourComponentsMaskAndDegree()
+
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic pop
@@ -242,6 +244,7 @@ public:
 
 private:
   sortIndicesPortalType sortIndicesPortal;
+  sortIndicesPortalType sortOrderPortal;
   edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
   neighbourOffsetsPortalType neighbourOffsetsPortal;
   linkComponentCaseTablePortalType linkComponentCaseTablePortal;

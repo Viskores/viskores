@@ -13,8 +13,9 @@
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
 #include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellAverage.h>
+
 #include <vtkm/filter/PointAverage.h>
+#include <vtkm/filter/PointAverage.hxx>
 #include <vtkm/filter/PolicyExtrude.h>
 
 namespace
@@ -143,7 +144,7 @@ int TestCellSetExtrude()
   try
   {
     avg.SetActiveField("cfield");
-    auto result = avg.Execute(dataset, PolicyExtrude{});
+    auto result = avg.Execute(dataset, vtkm::filter::PolicyExtrude{});
     VTKM_TEST_ASSERT(result.HasPointField("cfield"), "filter resulting dataset should be valid");
   }
   catch (const vtkm::cont::Error& err)

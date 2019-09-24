@@ -25,6 +25,8 @@ namespace internal
 template <typename PortalType, vtkm::IdComponent N_COMPONENTS>
 class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType>;
+
 public:
   static constexpr vtkm::IdComponent NUM_COMPONENTS = N_COMPONENTS;
   using SourcePortalType = PortalType;
@@ -79,8 +81,9 @@ public:
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     vtkm::Id sourceIndex = index * NUM_COMPONENTS;
     for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
@@ -358,6 +361,7 @@ VTKM_CONT vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_
 
 //=============================================================================
 // Specializations of serialization related classes
+/// @cond SERIALIZATION
 namespace vtkm
 {
 namespace cont
@@ -418,5 +422,6 @@ struct Serialization<
 };
 
 } // diy
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleGroupVec_h

@@ -50,22 +50,46 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
+cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 
-#Find the VTK-m package
+# Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(ContourTree ContourTreeApp.cxx)
-target_link_libraries(ContourTree vtkm_filter)
-vtkm_add_target_information(ContourTree
-                            MODIFY_CUDA_FLAGS
+####################################
+# Serial
+####################################
+add_executable(ContourTree_Augmented ContourTreeApp.cxx)
+target_link_libraries(ContourTree_Augmented vtkm_filter)
+vtkm_add_target_information(ContourTree_Augmented
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES ContourTreeApp.cxx)
 
-####################################
-# Debug algorithm build
-####################################
-# target_compile_definitions(ContourTree PRIVATE DEBUG_PRINT)
+option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+  target_compile_definitions(ContourTree_Augmented PRIVATE "DEBUG_PRINT")
+endif()
 
-if(TARGET vtkm::tbb)
-  # TBB 2D/3D/MC
-  target_compile_definitions(ContourTree PRIVATE ENABLE_SET_NUM_THREADS)
+if (TARGET vtkm::tbb)
+  target_compile_definitions(ContourTree_Augmented PRIVATE "ENABLE_SET_NUM_THREADS")
+endif()
+
+####################################
+# MPI
+####################################
+if (VTKm_ENABLE_MPI)
+  add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
+  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter)
+  vtkm_add_target_information(ContourTree_Augmented_MPI
+                              MODIFY_CUDA_FLAGS
+                              DEVICE_SOURCES ContourTreeApp.cxx)
+  target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "WITH_MPI")
+
+  option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+  if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+    target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "DEBUG_PRINT")
+  endif()
+
+  if (TARGET vtkm::tbb)
+    target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "ENABLE_SET_NUM_THREADS")
+  endif()
 endif()
