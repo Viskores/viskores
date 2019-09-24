@@ -118,6 +118,7 @@ set(sources_device
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(cellmetrics)
 add_subdirectory(clip)
 add_subdirectory(colorconversion)
 add_subdirectory(connectivities)
