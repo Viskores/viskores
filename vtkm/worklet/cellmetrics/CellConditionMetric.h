@@ -124,14 +124,14 @@ VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
   const Scalar l1 = GetQuadL1Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l2 = GetQuadL2Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l3 = GetQuadL3Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
-  const Scalar half(0.5);
+  const Scalar hhalf(0.5);
 
   const Scalar q0 = ((l0 * l0) + (l3 * l3)) / a0;
   const Scalar q1 = ((l1 * l1) + (l0 * l0)) / a1;
   const Scalar q2 = ((l2 * l2) + (l1 * l1)) / a2;
   const Scalar q3 = ((l3 * l3) + (l2 * l2)) / a3;
 
-  const Scalar q = half * vtkm::Max(q0, vtkm::Max(q1, vtkm::Max(q2, q3)));
+  const Scalar q = hhalf * vtkm::Max(q0, vtkm::Max(q1, vtkm::Max(q2, q3)));
   return q;
 }
 

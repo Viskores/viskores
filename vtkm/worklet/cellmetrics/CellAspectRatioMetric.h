@@ -156,9 +156,9 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
 
     const Scalar lmax = GetTriangleLMax <Scalar, Vector, CollectionOfPoints> (pts);
     const Scalar r = GetTriangleInradius <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar half(0.5);
+    const Scalar hhalf(0.5);
     const Scalar three(3.0);
-    const Scalar q = (lmax * half * vtkm::RSqrt(three)) / r;
+    const Scalar q = (lmax * hhalf * vtkm::RSqrt(three)) / r;
     return q;
   }
 
@@ -208,10 +208,10 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
     using Vector = typename PointCoordVecType::ComponentType;
 
     const Scalar rootSixInvert = vtkm::RSqrt(Scalar(6.0));
-    const Scalar half(0.5);
+    const Scalar hhalf(0.5);
     const Scalar lmax = GetTetraLMax <Scalar, Vector, CollectionOfPoints> (pts);
     const Scalar r = GetTetraInradius <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar q = (half * rootSixInvert * lmax) / r;
+    const Scalar q = (hhalf * rootSixInvert * lmax) / r;
     return q;
   }
   */
