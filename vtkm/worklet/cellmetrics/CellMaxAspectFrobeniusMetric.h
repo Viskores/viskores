@@ -313,7 +313,7 @@ VTKM_EXEC OutType CellMaxAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
       max_aspect_frobenius = curr;
   }
 
-  max_aspect_frobenius /= 3.0;
+  max_aspect_frobenius *= (OutType)0.3333333;
 
   if (max_aspect_frobenius > 0)
     return vtkm::Min(max_aspect_frobenius, vtkm::Infinity<OutType>());
