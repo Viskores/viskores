@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_cellmetrics_TypeOfCellQuadrilateral
-#define vtk_m_exec_cellmetrics_TypeOfCellQuadrilateral
+#ifndef vtk_m_worklet_cellmetrics_TypeOfCellQuadrilateral
+#define vtk_m_worklet_cellmetrics_TypeOfCellQuadrilateral
 /**
  * The Verdict manual defines a set of commonly
  * used components of a quadrilateral (quad). For example,

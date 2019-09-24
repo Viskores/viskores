@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_cellmetrics_TypeOfCellTetrahedral
-#define vtk_m_exec_cellmetrics_TypeOfCellTetrahedral
+#ifndef vtk_m_worklet_cellmetrics_TypeOfCellTetrahedral
+#define vtk_m_worklet_cellmetrics_TypeOfCellTetrahedral
 /**
  * Returns the L0 vector, as defined by the verdict manual.
  *

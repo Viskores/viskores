@@ -18,8 +18,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_cellmetrics_Jacobian_h
-#define vtk_m_exec_cellmetrics_Jacobian_h
+#ifndef vtk_m_worklet_cellmetrics_Jacobian_h
+#define vtk_m_worklet_cellmetrics_Jacobian_h
 
 /*
  * Mesh quality metric functions that computes the Jacobian of mesh cells.
@@ -46,7 +46,7 @@
 
 namespace vtkm
 {
-namespace exec
+namespace worklet
 {
 namespace cellmetrics
 {
@@ -181,7 +181,7 @@ VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
   return q;
 }
 } // namespace cellmetrics
-} // namespace exec
+} // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellJacobianMetric_h
+#endif // vtk_m_worklet_cellmetrics_CellJacobianMetric_h

@@ -19,9 +19,26 @@
 ##============================================================================
 
 set(headers
+  CellAspectFrobeniusMetric.h
+  CellAspectGammaMetric.h
+  CellAspectRatioMetric.h
+  CellConditionMetric.h
   CellDiagonalRatioMetric.h
   CellEdgeRatioMetric.h
   CellJacobianMetric.h
+  CellMaxAngleMetric.h
+  CellMaxAspectFrobeniusMetric.h
+  CellMaxDiagonalMetric.h
+  CellMinAngleMetric.h
+  CellMinDiagonalMetric.h
+  CellOddyMetric.h
+  CellScaledJacobianMetric.h
+  CellShapeMetric.h
+  CellShearMetric.h
+  CellSkewMetric.h
+  CellStretchMetric.h
+  CellTaperMetric.h
+  CellWarpageMetric.h
   TypeOfCellHexahedral.h
   TypeOfCellQuadrilateral.h
   TypeOfCellTetrahedral.h
