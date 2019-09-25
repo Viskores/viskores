@@ -138,9 +138,7 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   for (unsigned long i = 0; i < expectedVals.size(); i++)
   {
     vtkm::Id id = (vtkm::Id)i;
-    const vtkm::FloatDefault tol = (vtkm::FloatDefault)1.e-4;
-    const vtkm::FloatDefault diff = portal1.Get(id) - expectedVals[i];
-    if (vtkm::Abs(diff) > tol)
+    if (!test_equal(portal1.Get(id), expectedVals[i]))
     {
       printf("Metric \"%s\" for cell type \"%s\" does not match.  Expected %f and got %f\n",
              outputname.c_str(),
@@ -177,7 +175,8 @@ int TestMeshQuality()
   metrics.push_back(vtkm::filter::CellMetric::AREA);
   metricName.push_back("area");
 
-  FloatVec aspectRatioExpectedValues = { 0, (float)1.118034, 0, 0, 0, (float)1.1547 };
+  FloatVec aspectRatioExpectedValues = { (float)1.164010, (float)1.118034, (float)1.648938, 0, 0,
+                                         (float)1.1547 };
   expectedValues.push_back(aspectRatioExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::ASPECT_RATIO);
   metricName.push_back("aspectRatio");

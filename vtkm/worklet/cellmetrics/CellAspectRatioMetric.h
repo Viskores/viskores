@@ -65,6 +65,32 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
 }
 
 // ========================= 2D cells ==================================
+
+// Compute the diagonal ratio of a triangle.
+template <typename OutType, typename PointCoordVecType>
+VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
+                                        const PointCoordVecType& pts,
+                                        vtkm::CellShapeTagTriangle,
+                                        const vtkm::exec::FunctorBase& worklet)
+{
+  if (numPts != 3)
+  {
+    worklet.RaiseError("Aspect ratio metric (triangle) requires 3 points.");
+    return OutType(0.0);
+  }
+
+  using Scalar = OutType;
+  using CollectionOfPoints = PointCoordVecType;
+  using Vector = typename PointCoordVecType::ComponentType;
+
+  const Scalar lmax = GetTriangleLMax<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar r = GetTriangleInradius<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar hhalf(0.5);
+  const Scalar three(3.0);
+  const Scalar q = (lmax * hhalf * vtkm::RSqrt(three)) / r;
+  return q;
+}
+
 template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
                                         const PointCoordVecType& pts,
@@ -131,90 +157,30 @@ VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
   return q;
 }
 
-///////////////////////////////////////////////////
-////Definitions as found in the Verdict Manual/////
-///////////////////////////////////////////////////
-
-// ========================= 2D cells ==================================
-// Compute the diagonal ratio of a triangle.
-/*
-  template <typename OutType, typename PointCoordVecType>
-  VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
-  const PointCoordVecType& pts,
-  vtkm::CellShapeTagTriangle,
-  const vtkm::exec::FunctorBase& worklet)
+// Compute the aspect ratio of a tetrahedron.
+template <typename OutType, typename PointCoordVecType>
+VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
+                                        const PointCoordVecType& pts,
+                                        vtkm::CellShapeTagTetra,
+                                        const vtkm::exec::FunctorBase& worklet)
+{
+  if (numPts != 4)
   {
-    if (numPts != 3)
-    {
-    worklet.RaiseError("Aspect ratio metric (triangle) requires 3 points.");
-    return OutType(0.0);
-    }
-
-    using Scalar = OutType;
-    using CollectionOfPoints = PointCoordVecType;
-    using Vector = typename PointCoordVecType::ComponentType;
-
-    const Scalar lmax = GetTriangleLMax <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar r = GetTriangleInradius <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar hhalf(0.5);
-    const Scalar three(3.0);
-    const Scalar q = (lmax * hhalf * vtkm::RSqrt(three)) / r;
-    return q;
-  }
-
-  template <typename OutType, typename PointCoordVecType>
-  VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
-  const PointCoordVecType& pts,
-  vtkm::CellShapeTagQuad,
-  const vtkm::exec::FunctorBase& worklet)
-  {
-    if (numPts != 4)
-    {
-    worklet.RaiseError("Aspect ratio metric (quad) requires 4 points.");
-    return OutType(0.0);
-    }
-
-    using Scalar = OutType;
-    using CollectionOfPoints = PointCoordVecType;
-    using Vector = typename PointCoordVecType::ComponentType;
-
-    const Scalar lmax = GetQuadLMax <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar l0 = GetQuadL0Magnitude <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar l1 = GetQuadL1Magnitude <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar l2 = GetQuadL2Magnitude <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar l3 = GetQuadL3Magnitude <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar four(4.0);
-    const Scalar area = GetQuadArea <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar q = (lmax * (l0 + l1 + l2 + l3)) / (four * area);
-    return q;
-  }
-
-  // ============================= 3D Volume cells ==================================
-  // Compute the aspect ratio of a tetrahedron.
-  template <typename OutType, typename PointCoordVecType>
-  VTKM_EXEC OutType CellAspectRatioMetric(const vtkm::IdComponent& numPts,
-  const PointCoordVecType& pts,
-  vtkm::CellShapeTagTetra,
-  const vtkm::exec::FunctorBase& worklet)
-  {
-    if (numPts != 4)
-    {
     worklet.RaiseError("Aspect ratio metric (tetrahedron) requires 4 points.");
     return OutType(0.0);
-    }
-
-    using Scalar = OutType;
-    using CollectionOfPoints = PointCoordVecType;
-    using Vector = typename PointCoordVecType::ComponentType;
-
-    const Scalar rootSixInvert = vtkm::RSqrt(Scalar(6.0));
-    const Scalar hhalf(0.5);
-    const Scalar lmax = GetTetraLMax <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar r = GetTetraInradius <Scalar, Vector, CollectionOfPoints> (pts);
-    const Scalar q = (hhalf * rootSixInvert * lmax) / r;
-    return q;
   }
-  */
+
+  using Scalar = OutType;
+  using CollectionOfPoints = PointCoordVecType;
+  using Vector = typename PointCoordVecType::ComponentType;
+
+  const Scalar rootSixInvert = vtkm::RSqrt(Scalar(6.0));
+  const Scalar hhalf(0.5);
+  const Scalar lmax = GetTetraLMax<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar r = GetTetraInradius<Scalar, Vector, CollectionOfPoints>(pts);
+  const Scalar q = (hhalf * rootSixInvert * lmax) / r;
+  return q;
+}
 } // namespace cellmetrics
 } // namespace worklet
 } // namespace vtkm
