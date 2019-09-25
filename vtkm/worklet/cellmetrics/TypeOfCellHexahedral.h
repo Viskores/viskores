@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_cellmetrics_TypeOfCellHexahedral
-#define vtk_m_exec_cellmetrics_TypeOfCellHexahedral
+#ifndef vtk_m_worklet_cellmetrics_TypeOfCellHexahedral
+#define vtk_m_worklet_cellmetrics_TypeOfCellHexahedral
 /**
  * The Verdict manual defines a set of commonly
  * used components of a hexahedra (hex). For example,

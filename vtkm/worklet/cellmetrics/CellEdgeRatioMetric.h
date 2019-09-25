@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_cellmetrics_CellEdgeRatioMetric_h
-#define vtk_m_exec_cellmetrics_CellEdgeRatioMetric_h
+#ifndef vtk_m_worklet_cellmetrics_CellEdgeRatioMetric_h
+#define vtk_m_worklet_cellmetrics_CellEdgeRatioMetric_h
 
 /*
  * Mesh quality metric functions that compute the edge ratio of mesh cells.
@@ -46,7 +46,7 @@
 
 namespace vtkm
 {
-namespace exec
+namespace worklet
 {
 namespace cellmetrics
 {
@@ -143,7 +143,7 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
   //The 3 edges of a triangle
   using Edge = typename PointCoordVecType::ComponentType;
   const Edge TriEdges[3] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2] };
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(TriEdges, numEdges));
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(TriEdges, numEdges));
 }
 
 
@@ -170,7 +170,8 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
   using Edge = typename PointCoordVecType::ComponentType;
   const Edge QuadEdges[4] = { pts[1] - pts[0], pts[2] - pts[1], pts[3] - pts[2], pts[0] - pts[3] };
 
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(QuadEdges, numEdges));
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
+    vtkm::make_VecC(QuadEdges, numEdges));
 }
 
 
@@ -201,7 +202,7 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
   const Edge TetEdges[6] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2],
                              pts[3] - pts[0], pts[3] - pts[1], pts[3] - pts[2] };
 
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(TetEdges, numEdges));
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(TetEdges, numEdges));
 }
 
 
@@ -229,7 +230,7 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                               pts[5] - pts[4], pts[6] - pts[5], pts[7] - pts[6], pts[4] - pts[7],
                               pts[4] - pts[0], pts[5] - pts[1], pts[6] - pts[2], pts[7] - pts[3] };
 
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(HexEdges, numEdges));
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(HexEdges, numEdges));
 }
 
 
@@ -257,7 +258,8 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
                                pts[4] - pts[3], pts[5] - pts[4], pts[3] - pts[5],
                                pts[3] - pts[0], pts[4] - pts[1], pts[5] - pts[2] };
 
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(vtkm::make_VecC(WedgeEdges, numEdges));
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
+    vtkm::make_VecC(WedgeEdges, numEdges));
 }
 
 // Compute the edge ratio of a pyramid.
@@ -286,14 +288,14 @@ VTKM_EXEC OutType CellEdgeRatioMetric(const vtkm::IdComponent& numPts,
     pts[4] - pts[0], pts[4] - pts[1], pts[4] - pts[2], pts[4] - pts[3]
   };
 
-  return vtkm::exec::cellmetrics::ComputeEdgeRatio<OutType>(
+  return vtkm::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
     vtkm::make_VecC(PyramidEdges, numEdges));
 }
 
 
 
 } // namespace cellmetrics
-} // namespace exec
+} // namespace worklet
 } // namespace vtkm
 
-#endif // vtk_m_exec_cellmetrics_CellEdgeRatioMetric_h
+#endif // vtk_m_worklet_cellmetrics_CellEdgeRatioMetric_h

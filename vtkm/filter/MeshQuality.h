@@ -34,9 +34,10 @@ namespace filter
 //Names of the available cell metrics, for use in
 //the output dataset fields
 static const std::string MetricNames[] = {
-  "area",     "aspectGamma", "aspectRatio", "condition",    "diagonalRatio",  "jacobian",
-  "minAngle", "maxAngle",    "oddy",        "relativeSize", "scaledJacobian", "shape",
-  "shear",    "skew",        "stretch",     "taper",        "volume",         "warpage"
+  "area",         "aspectGamma",    "aspectRatio", "condition",    "diagonalRatio", "dimension",
+  "jacobian",     "maxAngle",       "maxDiagonal", "minAngle",     "minDiagonal",   "oddy",
+  "relativeSize", "scaledJacobian", "shape",       "shapeAndSize", "shear",         "skew",
+  "stretch",      "taper",          "volume",      "warpage"
 };
 
 //Different cell metrics available to use
@@ -48,13 +49,17 @@ enum class CellMetric
   ASPECT_RATIO,
   CONDITION,
   DIAGONAL_RATIO,
+  DIMENSION,
   JACOBIAN,
-  MIN_ANGLE,
   MAX_ANGLE,
+  MAX_DIAGONAL,
+  MIN_ANGLE,
+  MIN_DIAGONAL,
   ODDY,
   RELATIVE_SIZE,
   SCALED_JACOBIAN,
   SHAPE,
+  SHAPE_AND_SIZE,
   SHEAR,
   SKEW,
   STRETCH,
