@@ -33,6 +33,7 @@
 #include "vtkm/worklet/cellmetrics/CellMinAngleMetric.h"
 #include "vtkm/worklet/cellmetrics/CellMinDiagonalMetric.h"
 #include "vtkm/worklet/cellmetrics/CellOddyMetric.h"
+#include "vtkm/worklet/cellmetrics/CellRelativeSizeSquaredMetric.h"
 #include "vtkm/worklet/cellmetrics/CellScaledJacobianMetric.h"
 #include "vtkm/worklet/cellmetrics/CellShapeMetric.h"
 #include "vtkm/worklet/cellmetrics/CellShearMetric.h"
@@ -62,7 +63,9 @@ public:
   using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
 
-  void SetMetric(MetricTagType m) { metric = m; }
+  void SetMetric(MetricTagType m) { this->Metric = m; }
+  void SetAverageArea(vtkm::FloatDefault a) { this->AverageArea = a; };
+  void SetAverageVolume(vtkm::FloatDefault v) { this->AverageVolume = v; };
 
   template <typename CellShapeType, typename PointCoordVecType, typename OutType>
   VTKM_EXEC void operator()(CellShapeType shape,
@@ -93,7 +96,9 @@ public:
 
 protected:
   // data member
-  MetricTagType metric;
+  MetricTagType Metric;
+  vtkm::FloatDefault AverageArea;
+  vtkm::FloatDefault AverageVolume;
 
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VTKM_EXEC OutType ComputeMetric(const vtkm::IdComponent& numPts,
@@ -104,9 +109,11 @@ protected:
 
     //Only compute the metric for 2D and 3D shapes; return 0 otherwise
     OutType metricValue = OutType(0.0);
+    vtkm::FloatDefault average = (dims == 2 ? this->AverageArea : this->AverageVolume);
+
     if (dims > 0)
     {
-      switch (metric)
+      switch (this->Metric)
       {
         case MetricTagType::AREA:
           metricValue = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, *this);
@@ -153,6 +160,16 @@ protected:
           metricValue =
             vtkm::worklet::cellmetrics::CellOddyMetric<OutType>(numPts, pts, tag, *this);
           break;
+        case MetricTagType::RELATIVE_SIZE_SQUARED:
+          metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
+            numPts, pts, average, tag, *this);
+          break;
+        /*
+        case MetricTagType::SHAPE_AND_SIZE:
+          metricValue =
+            vtkm::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(numPts, pts, average, tag, *this);
+            break;
+ */
         case MetricTagType::SCALED_JACOBIAN:
           metricValue =
             vtkm::worklet::cellmetrics::CellScaledJacobianMetric<OutType>(numPts, pts, tag, *this);
@@ -187,7 +204,6 @@ protected:
             vtkm::worklet::cellmetrics::CellWarpageMetric<OutType>(numPts, pts, tag, *this);
           break;
         case MetricTagType::DIMENSION:
-        case MetricTagType::RELATIVE_SIZE:
         case MetricTagType::SHAPE_AND_SIZE:
           this->RaiseError("Asked for unimplemented metric.");
         case MetricTagType::EMPTY:

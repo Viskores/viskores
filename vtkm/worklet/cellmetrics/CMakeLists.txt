@@ -32,6 +32,7 @@ set(headers
   CellMinAngleMetric.h
   CellMinDiagonalMetric.h
   CellOddyMetric.h
+  CellRelativeSizeSquaredMetric.h
   CellScaledJacobianMetric.h
   CellShapeMetric.h
   CellShearMetric.h
