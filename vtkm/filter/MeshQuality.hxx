@@ -64,23 +64,23 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
       this->MyMetric == vtkm::filter::CellMetric::SHAPE_AND_SIZE)
   {
     vtkm::FloatDefault averageArea = 1.;
-    vtkm::FloatDefault total = 0.;
     vtkm::worklet::MeshQuality<CellMetric> subWorklet;
     vtkm::cont::ArrayHandle<T> array;
     subWorklet.SetMetric(vtkm::filter::CellMetric::AREA);
     this->Invoke(subWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), points, array);
     T zero = 0.0;
-    total = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
+    vtkm::FloatDefault totalArea = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
 
     vtkm::FloatDefault averageVolume = 1.;
     subWorklet.SetMetric(vtkm::filter::CellMetric::VOLUME);
     this->Invoke(subWorklet, vtkm::filter::ApplyPolicyCellSet(cellSet, policy), points, array);
-    total = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
+    vtkm::FloatDefault totalVolume = (vtkm::FloatDefault)vtkm::cont::Algorithm::Reduce(array, zero);
 
     vtkm::Id numVals = array.GetNumberOfValues();
     if (numVals > 0)
     {
-      averageArea = total / numVals;
+      averageArea = totalArea / numVals;
+      averageVolume = totalVolume / numVals;
     }
     qualityWorklet.SetAverageArea(averageArea);
     qualityWorklet.SetAverageVolume(averageVolume);
