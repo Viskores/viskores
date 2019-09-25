@@ -139,14 +139,11 @@ public:
   std::string getOption(const std::string& option) const
   {
     std::size_t index = static_cast<std::size_t>(this->findOption(option));
-    if (index >= 0)
+    std::string val = this->mCLOptions[index];
+    auto valPos = val.find("=");
+    if (valPos)
     {
-      std::string val = this->mCLOptions[index];
-      auto valPos = val.find("=");
-      if (valPos)
-      {
-        return val.substr(valPos + 1);
-      }
+      return val.substr(valPos + 1);
     }
     return std::string("");
   }
