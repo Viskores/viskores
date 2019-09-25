@@ -29,7 +29,6 @@ set(headers
   ExecutionWholeArray.h
   FieldNeighborhood.h
   FunctorBase.h
-  Jacobian.h
   ParametricCoordinates.h
   PointLocator.h
   PointLocatorUniformGrid.h

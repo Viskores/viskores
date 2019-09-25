@@ -13,10 +13,19 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
+#include <vtkc/vtkc.h>
+
 namespace vtkm
 {
 namespace exec
 {
+
+template <typename T, typename CellShapeTag>
+static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, CellShapeTag)
+{
+  using VtkcTagType = typename vtkm::internal::CellShapeTagVtkmToVtkc<CellShapeTag>::Type;
+  return vtkc::cellInside(VtkcTagType{}, pcoords);
+}
 
 template <typename T>
 static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>&, vtkm::CellShapeTagEmpty)
@@ -25,70 +34,9 @@ static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>&, vtkm::CellShapeT
 }
 
 template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagVertex)
-{
-  return pcoords[0] == T(0) && pcoords[1] == T(0) && pcoords[2] == T(0);
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagLine)
-{
-  return pcoords[0] >= T(0) && pcoords[0] <= T(1);
-}
-
-template <typename T>
 static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagPolyLine)
 {
   return pcoords[0] >= T(0) && pcoords[0] <= T(1);
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagTriangle)
-{
-  return pcoords[0] >= T(0) && pcoords[1] >= T(0) && (pcoords[0] + pcoords[1] <= T(1));
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagPolygon)
-{
-  return ((pcoords[0] - T(0.5)) * (pcoords[0] - T(0.5))) +
-    ((pcoords[1] - T(0.5)) * (pcoords[1] - T(0.5))) <=
-    T(0.25);
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagQuad)
-{
-  return pcoords[0] >= T(0) && pcoords[0] <= T(1) && pcoords[1] >= T(0) && pcoords[1] <= T(1);
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagTetra)
-{
-  return pcoords[0] >= T(0) && pcoords[1] >= T(0) && pcoords[2] >= T(0) &&
-    (pcoords[0] + pcoords[1] + pcoords[2] <= T(1));
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords,
-                                        vtkm::CellShapeTagHexahedron)
-{
-  return pcoords[0] >= T(0) && pcoords[0] <= T(1) && pcoords[1] >= T(0) && pcoords[1] <= T(1) &&
-    pcoords[2] >= T(0) && pcoords[2] <= T(1);
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagWedge)
-{
-  return pcoords[0] >= T(0) && pcoords[1] >= T(0) && pcoords[2] >= T(0) && pcoords[2] <= T(1) &&
-    (pcoords[0] + pcoords[1] <= T(1));
-}
-
-template <typename T>
-static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::CellShapeTagPyramid)
-{
-  return pcoords[0] >= T(0) && pcoords[0] <= T(1) && pcoords[1] >= T(0) && pcoords[1] <= T(1) &&
-    pcoords[2] >= T(0) && pcoords[2] <= T(1);
 }
 
 /// Checks if the parametric coordinates `pcoords` are on the inside for the
