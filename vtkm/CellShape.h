@@ -13,6 +13,17 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
+#include <vtkc/Polygon.h>
+#include <vtkc/Shapes.h>
+
+// Vtk-c does not have tags for Empty and PolyLine. Define dummy tags here to
+// avoid compilation errors. These tags are not used anywhere.
+namespace vtkc
+{
+struct Empty;
+struct PolyLine;
+}
+
 namespace vtkm
 {
 
@@ -22,21 +33,21 @@ namespace vtkm
 enum CellShapeIdEnum
 {
   // Linear cells
-  CELL_SHAPE_EMPTY = 0,
-  CELL_SHAPE_VERTEX = 1,
+  CELL_SHAPE_EMPTY = vtkc::ShapeId::EMPTY,
+  CELL_SHAPE_VERTEX = vtkc::ShapeId::VERTEX,
   //CELL_SHAPE_POLY_VERTEX      = 2,
-  CELL_SHAPE_LINE = 3,
+  CELL_SHAPE_LINE = vtkc::ShapeId::LINE,
   CELL_SHAPE_POLY_LINE = 4,
-  CELL_SHAPE_TRIANGLE = 5,
+  CELL_SHAPE_TRIANGLE = vtkc::ShapeId::TRIANGLE,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
-  CELL_SHAPE_POLYGON = 7,
+  CELL_SHAPE_POLYGON = vtkc::ShapeId::POLYGON,
   //CELL_SHAPE_PIXEL            = 8,
-  CELL_SHAPE_QUAD = 9,
-  CELL_SHAPE_TETRA = 10,
+  CELL_SHAPE_QUAD = vtkc::ShapeId::QUAD,
+  CELL_SHAPE_TETRA = vtkc::ShapeId::TETRA,
   //CELL_SHAPE_VOXEL            = 11,
-  CELL_SHAPE_HEXAHEDRON = 12,
-  CELL_SHAPE_WEDGE = 13,
-  CELL_SHAPE_PYRAMID = 14,
+  CELL_SHAPE_HEXAHEDRON = vtkc::ShapeId::HEXAHEDRON,
+  CELL_SHAPE_WEDGE = vtkc::ShapeId::WEDGE,
+  CELL_SHAPE_PYRAMID = vtkc::ShapeId::PYRAMID,
 
   NUMBER_OF_CELL_SHAPES
 };
@@ -57,6 +68,10 @@ template <typename T>
 struct CellShapeTagCheck : std::false_type
 {
 };
+
+/// Convert VTK-m tag to VTK-c tag
+template <typename VtkmCellShapeTag>
+struct CellShapeTagVtkmToVtkc;
 
 } // namespace internal
 
@@ -93,6 +108,11 @@ struct CellShapeIdToTag
   template <>                                                                                      \
   struct CellShapeTagCheck<vtkm::CellShapeTag##name> : std::true_type                              \
   {                                                                                                \
+  };                                                                                               \
+  template <>                                                                                      \
+  struct CellShapeTagVtkmToVtkc<vtkm::CellShapeTag##name>                                          \
+  {                                                                                                \
+    using Type = vtkc::name;                                                                       \
   };                                                                                               \
   }                                                                                                \
   static inline VTKM_EXEC_CONT const char* GetCellShapeName(vtkm::CellShapeTag##name)              \
@@ -139,6 +159,35 @@ struct CellShapeTagGeneric
 
   vtkm::UInt8 Id;
 };
+
+namespace internal
+{
+
+template <typename VtkmCellShapeTag>
+VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type make_VtkcCellShapeTag(
+  const VtkmCellShapeTag&,
+  vtkm::IdComponent numPoints = 0)
+{
+  using VtkcCellShapeTag = typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type;
+  static_cast<void>(numPoints); // unused
+  return VtkcCellShapeTag{};
+}
+
+VTKM_EXEC_CONT
+inline vtkc::Polygon make_VtkcCellShapeTag(const vtkm::CellShapeTagPolygon&,
+                                           vtkm::IdComponent numPoints = 0)
+{
+  return vtkc::Polygon(numPoints);
+}
+
+VTKM_EXEC_CONT
+inline vtkc::Cell make_VtkcCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
+                                        vtkm::IdComponent numPoints = 0)
+{
+  return vtkc::Cell(static_cast<std::int8_t>(tag.Id), numPoints);
+}
+
+} // namespace internal
 
 #define vtkmGenericCellShapeMacroCase(cellShapeId, call)                                           \
   case vtkm::cellShapeId:                                                                          \

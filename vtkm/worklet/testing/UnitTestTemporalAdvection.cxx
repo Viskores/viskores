@@ -84,7 +84,7 @@ void ValidateEvaluator(const EvalType& eval,
     vtkm::Vec<ScalarType, 3> result = resultsPortal.Get(index);
     vtkm::Vec<ScalarType, 3> expected = validityPortal.Get(index);
     VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
-    VTKM_TEST_ASSERT(result == expected, "Error in evaluator result for " + msg);
+    VTKM_TEST_ASSERT(test_equal(result, expected), "Error in evaluator result for " + msg);
   }
   evalStatus.ReleaseResources();
   evalResults.ReleaseResources();
