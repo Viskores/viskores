@@ -24,7 +24,7 @@
  * Mesh quality metric functions that compute the relative size squared of mesh
  * cells. The RSS of a cell is defined as the square of the minimum of: the area
  * divided by the average area of an ensemble of triangles or the inverse. For
- * 3D cells we use the volumes instead of the areas. 
+ * 3D cells we use the volumes instead of the areas.
  *
  * These metric computations are adapted from the VTK implementation of the
  * Verdict library, which provides a set of mesh/cell metrics for evaluating the

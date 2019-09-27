@@ -23,10 +23,10 @@
 /*
  * Mesh quality metric functions that compute the dimension of mesh cells.  The
  * Dimension metric is defined as the volume divided by two times the gradient
- * of the volume. 
+ * of the volume.
  *
  * This metric was designed in context of Sandia's Pronto code for stable time
- * step calculation. 
+ * step calculation.
  *
  * These metric computations are adapted from the VTK implementation of the
  * Verdict library, which provides a set of mesh/cell metrics for evaluating the
