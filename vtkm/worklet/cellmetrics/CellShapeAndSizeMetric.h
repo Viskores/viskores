@@ -36,6 +36,7 @@
 #include "vtkm/VecTraits.h"
 #include "vtkm/VectorAnalysis.h"
 #include "vtkm/exec/FunctorBase.h"
+#include "vtkm/worklet/cellmetrics/CellShapeMetric.h"
 
 #define UNUSED(expr) (void)(expr);
 
