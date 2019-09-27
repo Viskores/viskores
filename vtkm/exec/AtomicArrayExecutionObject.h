@@ -95,6 +95,33 @@ public:
                                                static_cast<APIType>(value)));
   }
 
+  /// \brief Peform an atomic store to memory while enforcing, at minimum, "release"
+  /// memory ordering.
+  /// \param index The index of the array element that will be added to.
+  /// \param value The value to write for the atomic store operation.
+  /// \warning Using something like:
+  /// ```
+  /// Set(index, Get(index)+N)
+  /// ```
+  /// Should not be done as it is not thread safe, instead you should use
+  /// the provided Add method instead.
+  ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
+    // We only support 32/64 bit signed/unsigned ints, and AtomicInterface
+    // currently only provides API for unsigned types.
+    // We'll cast the signed types to unsigned to work around this.
+    // This is safe, since the only difference between signed/unsigned types
+    // is how overflow works, and signed overflow is already undefined. We also
+    // document that overflow is undefined for this operation.
+    using APIType = typename std::make_unsigned<ValueType>::type;
+
+    AtomicInterface::Store(reinterpret_cast<APIType*>(this->Data + index),
+                           static_cast<APIType>(value));
+  }
+
   /// \brief Perform an atomic CAS operation with sequentially consistent
   /// memory ordering.
   /// \param index The index of the array element that will be atomically
