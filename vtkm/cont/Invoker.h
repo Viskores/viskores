@@ -22,6 +22,13 @@ namespace vtkm
 namespace cont
 {
 
+namespace detail
+{
+template <typename T>
+using scatter_or_mask = std::integral_constant<bool,
+                                               vtkm::worklet::internal::is_mask<T>::value ||
+                                                 vtkm::worklet::internal::is_scatter<T>::value>;
+}
 
 /// \brief Allows launching any worklet without a dispatcher.
 ///
@@ -53,40 +60,59 @@ struct Invoker
   }
 
   /// Launch the worklet that is provided as the first parameter.
-  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Optional second parameter is either the scatter or mask type associated with the worklet.
   /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
-  template <
-    typename Worklet,
-    typename T,
-    typename... Args,
-    typename std::enable_if<std::is_base_of<worklet::internal::ScatterBase,
-                                            worklet::internal::detail::remove_cvref<T>>::value,
-                            int>::type* = nullptr>
-  inline void operator()(Worklet&& worklet, T&& scatter, Args&&... args) const
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<detail::scatter_or_mask<T>::value, int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet, T&& scatterOrMask, Args&&... args) const
   {
-    using WorkletType = worklet::internal::detail::remove_cvref<Worklet>;
+    using WorkletType = worklet::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
-    DispatcherType dispatcher(worklet, scatter);
+    DispatcherType dispatcher(worklet, scatterOrMask);
     dispatcher.SetDevice(this->DeviceId);
     dispatcher.Invoke(std::forward<Args>(args)...);
   }
 
   /// Launch the worklet that is provided as the first parameter.
-  /// Optional second parameter is the scatter type associated with the worklet.
+  /// Optional second parameter is either the scatter or mask type associated with the worklet.
+  /// Optional third parameter is either the scatter or mask type associated with the worklet.
   /// Any additional parameters are the ControlSignature arguments for the worklet.
   ///
   template <
     typename Worklet,
     typename T,
+    typename U,
     typename... Args,
-    typename std::enable_if<!std::is_base_of<worklet::internal::ScatterBase,
-                                             worklet::internal::detail::remove_cvref<T>>::value,
+    typename std::enable_if<detail::scatter_or_mask<T>::value && detail::scatter_or_mask<U>::value,
                             int>::type* = nullptr>
+  inline void operator()(Worklet&& worklet,
+                         T&& scatterOrMaskA,
+                         U&& scatterOrMaskB,
+                         Args&&... args) const
+  {
+    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
+
+    DispatcherType dispatcher(worklet, scatterOrMaskA, scatterOrMaskB);
+    dispatcher.SetDevice(this->DeviceId);
+    dispatcher.Invoke(std::forward<Args>(args)...);
+  }
+
+  /// Launch the worklet that is provided as the first parameter.
+  /// Optional second parameter is either the scatter or mask type associated with the worklet.
+  /// Any additional parameters are the ControlSignature arguments for the worklet.
+  ///
+  template <typename Worklet,
+            typename T,
+            typename... Args,
+            typename std::enable_if<!detail::scatter_or_mask<T>::value, int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
   {
-    using WorkletType = worklet::internal::detail::remove_cvref<Worklet>;
+    using WorkletType = worklet::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);

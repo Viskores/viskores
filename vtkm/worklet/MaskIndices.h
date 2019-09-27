@@ -11,6 +11,7 @@
 #define vtk_m_worklet_MaskIndices_h
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/worklet/internal/MaskBase.h>
 
 namespace vtkm
 {
@@ -26,7 +27,7 @@ namespace worklet
 /// It is OK to give indices that are out of order, but any index must be provided at most one
 /// time. It is an error to have the same index listed twice.
 ///
-class MaskIndices
+class MaskIndices : public internal::MaskBase
 {
 public:
   using ThreadToOutputMapType = vtkm::cont::ArrayHandle<vtkm::Id>;

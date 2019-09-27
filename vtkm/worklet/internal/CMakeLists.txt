@@ -9,7 +9,9 @@
 ##============================================================================
 
 set(headers
+  DecayHelpers.h
   DispatcherBase.h
+  MaskBase.h
   ScatterBase.h
   TriangulateTables.h
   WorkletBase.h
