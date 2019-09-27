@@ -27,6 +27,7 @@
 #include "vtkm/worklet/cellmetrics/CellAspectRatioMetric.h"
 #include "vtkm/worklet/cellmetrics/CellConditionMetric.h"
 #include "vtkm/worklet/cellmetrics/CellDiagonalRatioMetric.h"
+#include "vtkm/worklet/cellmetrics/CellDimensionMetric.h"
 #include "vtkm/worklet/cellmetrics/CellJacobianMetric.h"
 #include "vtkm/worklet/cellmetrics/CellMaxAngleMetric.h"
 #include "vtkm/worklet/cellmetrics/CellMaxDiagonalMetric.h"
@@ -35,6 +36,7 @@
 #include "vtkm/worklet/cellmetrics/CellOddyMetric.h"
 #include "vtkm/worklet/cellmetrics/CellRelativeSizeSquaredMetric.h"
 #include "vtkm/worklet/cellmetrics/CellScaledJacobianMetric.h"
+#include "vtkm/worklet/cellmetrics/CellShapeAndSizeMetric.h"
 #include "vtkm/worklet/cellmetrics/CellShapeMetric.h"
 #include "vtkm/worklet/cellmetrics/CellShearMetric.h"
 #include "vtkm/worklet/cellmetrics/CellSkewMetric.h"
@@ -136,6 +138,10 @@ protected:
           metricValue =
             vtkm::worklet::cellmetrics::CellDiagonalRatioMetric<OutType>(numPts, pts, tag, *this);
           break;
+        case MetricTagType::DIMENSION:
+          metricValue =
+            vtkm::worklet::cellmetrics::CellDimensionMetric<OutType>(numPts, pts, tag, *this);
+          break;
         case MetricTagType::JACOBIAN:
           metricValue =
             vtkm::worklet::cellmetrics::CellJacobianMetric<OutType>(numPts, pts, tag, *this);
@@ -164,12 +170,10 @@ protected:
           metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
             numPts, pts, average, tag, *this);
           break;
-        /*
         case MetricTagType::SHAPE_AND_SIZE:
-          metricValue =
-            vtkm::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(numPts, pts, average, tag, *this);
-            break;
- */
+          metricValue = vtkm::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(
+            numPts, pts, average, tag, *this);
+          break;
         case MetricTagType::SCALED_JACOBIAN:
           metricValue =
             vtkm::worklet::cellmetrics::CellScaledJacobianMetric<OutType>(numPts, pts, tag, *this);
@@ -203,9 +207,6 @@ protected:
           metricValue =
             vtkm::worklet::cellmetrics::CellWarpageMetric<OutType>(numPts, pts, tag, *this);
           break;
-        case MetricTagType::DIMENSION:
-        case MetricTagType::SHAPE_AND_SIZE:
-          this->RaiseError("Asked for unimplemented metric.");
         case MetricTagType::EMPTY:
           break;
         default:

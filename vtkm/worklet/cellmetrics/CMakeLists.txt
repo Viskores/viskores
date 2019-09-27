@@ -24,6 +24,7 @@ set(headers
   CellAspectRatioMetric.h
   CellConditionMetric.h
   CellDiagonalRatioMetric.h
+  CellDimensionMetric.h
   CellEdgeRatioMetric.h
   CellJacobianMetric.h
   CellMaxAngleMetric.h
@@ -35,6 +36,7 @@ set(headers
   CellRelativeSizeSquaredMetric.h
   CellScaledJacobianMetric.h
   CellShapeMetric.h
+  CellShapeAndSizeMetric.h
   CellShearMetric.h
   CellSkewMetric.h
   CellStretchMetric.h
