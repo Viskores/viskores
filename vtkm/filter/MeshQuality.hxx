@@ -57,7 +57,7 @@ void MeshQualityDebug(const vtkm::cont::ArrayHandle<T, S>& vtkmNotUsed(outputArr
 
 
 inline VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
-  : vtkm::filter::FilterCell<MeshQuality>()
+  : vtkm::filter::FilterField<MeshQuality>()
 {
   this->SetUseCoordinateSystemAsField(true);
   this->MyMetric = metric;
