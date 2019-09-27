@@ -22,7 +22,7 @@
 #define vtk_m_filter_MeshQuality_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/worklet/MeshQuality.h>
 
@@ -78,13 +78,12 @@ enum class CellMetric
   * Each field contains the metric summary statistics for the cell type.
   * Summary statists with all 0 values imply that the specified metric does not support the cell type.
   */
-class MeshQuality : public vtkm::filter::FilterCell<MeshQuality>
+class MeshQuality : public vtkm::filter::FilterField<MeshQuality>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
   VTKM_CONT MeshQuality(CellMetric);
-  void SetOutputName(const std::string& s) { this->OutputName = s; };
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -95,7 +94,6 @@ public:
 
 private:
   CellMetric MyMetric;
-  std::string OutputName;
 };
 
 } // namespace filter
