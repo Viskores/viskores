@@ -153,40 +153,35 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
     worklet.RaiseError("Edge ratio metric(hexahedral) requires 8 points.");
     return OutType(-1.);
   }
-  printf("In hex RSS, spot 0\n");
-  OutType X1x = (pts[0][1] - pts[0][0]) + (pts[0][2] - pts[0][3]) + (pts[0][5] - pts[0][4]) +
-    (pts[0][6] - pts[0][7]);
-  printf("In hex RSS, spot 1\n");
-  OutType X1y = (pts[1][1] - pts[1][0]) + (pts[1][2] - pts[1][3]) + (pts[1][5] - pts[1][4]) +
-    (pts[1][6] - pts[1][7]);
-  OutType X1z = (pts[2][1] - pts[2][0]) + (pts[2][2] - pts[2][3]) + (pts[2][5] - pts[2][4]) +
-    (pts[2][6] - pts[2][7]);
+  OutType X1x = (pts[1][0] - pts[0][0]) + (pts[2][0] - pts[3][0]) + (pts[5][0] - pts[4][0]) +
+    (pts[6][0] - pts[7][0]);
+  OutType X1y = (pts[1][1] - pts[0][1]) + (pts[2][1] - pts[3][1]) + (pts[5][1] - pts[4][1]) +
+    (pts[6][1] - pts[7][1]);
+  OutType X1z = (pts[1][2] - pts[0][2]) + (pts[2][2] - pts[3][2]) + (pts[5][2] - pts[4][2]) +
+    (pts[6][2] - pts[7][2]);
 
-  OutType X2x = (pts[0][3] - pts[0][0]) + (pts[0][2] - pts[0][1]) + (pts[0][7] - pts[0][4]) +
-    (pts[0][6] - pts[0][5]);
-  OutType X2y = (pts[1][3] - pts[1][0]) + (pts[1][2] - pts[1][1]) + (pts[1][7] - pts[1][4]) +
-    (pts[1][6] - pts[1][5]);
-  OutType X2z = (pts[2][3] - pts[2][0]) + (pts[2][2] - pts[2][1]) + (pts[2][7] - pts[2][4]) +
-    (pts[2][6] - pts[2][5]);
+  OutType X2x = (pts[2][0] - pts[0][0]) + (pts[2][0] - pts[1][0]) + (pts[7][0] - pts[4][0]) +
+    (pts[6][0] - pts[5][0]);
+  OutType X2y = (pts[2][1] - pts[0][1]) + (pts[2][1] - pts[1][1]) + (pts[7][1] - pts[4][1]) +
+    (pts[6][1] - pts[5][1]);
+  OutType X2z = (pts[2][2] - pts[0][2]) + (pts[2][2] - pts[1][2]) + (pts[7][2] - pts[4][2]) +
+    (pts[6][2] - pts[5][2]);
 
-  OutType X3x = (pts[0][4] - pts[0][0]) + (pts[0][5] - pts[0][1]) + (pts[0][6] - pts[0][2]) +
-    (pts[0][7] - pts[0][3]);
-  OutType X3y = (pts[1][4] - pts[1][0]) + (pts[1][5] - pts[1][1]) + (pts[1][6] - pts[1][2]) +
-    (pts[1][7] - pts[1][3]);
-  OutType X3z = (pts[2][4] - pts[2][0]) + (pts[2][5] - pts[2][1]) + (pts[2][6] - pts[2][2]) +
-    (pts[2][7] - pts[2][3]);
-  printf("spot 1\n");
+  OutType X3x = (pts[4][0] - pts[0][0]) + (pts[5][0] - pts[1][0]) + (pts[6][0] - pts[2][0]) +
+    (pts[7][0] - pts[3][0]);
+  OutType X3y = (pts[4][1] - pts[0][1]) + (pts[5][1] - pts[1][1]) + (pts[6][1] - pts[2][1]) +
+    (pts[7][1] - pts[3][1]);
+  OutType X3z = (pts[4][2] - pts[0][2]) + (pts[5][2] - pts[1][2]) + (pts[6][2] - pts[2][2]) +
+    (pts[7][2] - pts[3][2]);
   vtkm::Matrix<OutType, 3, 3> A8;
   vtkm::MatrixSetRow(A8, 0, vtkm::Vec<OutType, 3>(X1x, X1y, X1z));
   vtkm::MatrixSetRow(A8, 1, vtkm::Vec<OutType, 3>(X2x, X2y, X2z));
   vtkm::MatrixSetRow(A8, 2, vtkm::Vec<OutType, 3>(X3x, X3y, X3z));
-  printf("spot 2\n");
   OutType D = vtkm::MatrixDeterminant(A8);
   D = D / (OutType(64.) * avgVolume);
   if (D == OutType(0.))
     return OutType(0.);
   OutType q = vtkm::Pow(vtkm::Min(D, OutType(1.) / D), OutType(2.));
-  printf("Done with hex RSS\n");
   return OutType(q);
 }
 
