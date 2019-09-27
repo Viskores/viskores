@@ -84,7 +84,6 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
     worklet.RaiseError("Edge ratio metric(triangle) requires 3 points.");
     return OutType(-1.);
   }
-  // fix this
   OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
   OutType R = A / avgArea;
   if (R == OutType(0.))
@@ -106,7 +105,6 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
     worklet.RaiseError("Edge ratio metric(quadrilateral) requires 4 points.");
     return OutType(-1.);
   }
-  // fix this
   OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
   OutType R = A / avgArea;
   if (R == OutType(0.))
@@ -130,7 +128,6 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
     worklet.RaiseError("Edge ratio metric(tetrahedral) requires 4 points.");
     return OutType(-1.);
   }
-  // fix this
   OutType V = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
   OutType R = V / avgVolume;
   if (R == OutType(0.))
