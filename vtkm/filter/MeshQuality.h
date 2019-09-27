@@ -84,7 +84,6 @@ public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
   VTKM_CONT MeshQuality(CellMetric);
-  void SetOutputName(const std::string& s) { this->OutputName = s; };
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -95,7 +94,6 @@ public:
 
 private:
   CellMetric MyMetric;
-  std::string OutputName;
 };
 
 } // namespace filter

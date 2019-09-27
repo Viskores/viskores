@@ -65,7 +65,7 @@ inline VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
   {
     VTKM_ASSERT(true);
   }
-  this->OutputName = MetricNames[(int)this->MyMetric];
+  this->SetOutputFieldName(MetricNames[(int)this->MyMetric]);
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy>
@@ -92,7 +92,7 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
   //Append the metric values of all cells into the output
   //dataset as a new field
-  result.AddField(vtkm::cont::make_FieldCell(this->OutputName, outArray));
+  result.AddField(vtkm::cont::make_FieldCell(this->GetOutputFieldName(), outArray));
 
   return result;
 }
