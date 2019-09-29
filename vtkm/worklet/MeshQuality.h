@@ -168,11 +168,11 @@ protected:
           break;
         case MetricTagType::RELATIVE_SIZE_SQUARED:
           metricValue = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-            numPts, pts, average, tag, *this);
+            numPts, pts, static_cast<OutType>(average), tag, *this);
           break;
         case MetricTagType::SHAPE_AND_SIZE:
           metricValue = vtkm::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(
-            numPts, pts, average, tag, *this);
+            numPts, pts, static_cast<OutType>(average), tag, *this);
           break;
         case MetricTagType::SCALED_JACOBIAN:
           metricValue =
