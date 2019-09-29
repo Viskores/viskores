@@ -79,8 +79,8 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
     vtkm::Id numVals = array.GetNumberOfValues();
     if (numVals > 0)
     {
-      averageArea = totalArea / numVals;
-      averageVolume = totalVolume / numVals;
+      averageArea = totalArea / static_cast<vtkm::FloatDefault>(numVals);
+      averageVolume = totalVolume / static_cast<vtkm::FloatDefault>(numVals);
     }
     qualityWorklet.SetAverageArea(averageArea);
     qualityWorklet.SetAverageVolume(averageVolume);
