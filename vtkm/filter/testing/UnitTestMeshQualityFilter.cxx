@@ -266,22 +266,22 @@ int TestMeshQuality()
   metrics.push_back(vtkm::filter::CellMetric::WARPAGE);
   metricName.push_back("warpage");
 
-  /*
-  FloatVec dimensionExpectedValues = { -1, -1, -1, -1, -1, (float) 0.707107 };
+  FloatVec dimensionExpectedValues = { -1, -1, -1, -1, -1, (float)0.707107 };
   expectedValues.push_back(dimensionExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::DIMENSION);
   metricName.push_back("dimension");
 
-  FloatVec relSizeExpectedValues = { 1, 1, 1, -1, -1, 1 };
+  FloatVec relSizeExpectedValues = { (float)0.151235, (float)0.085069, (float)0.337149, -1, -1,
+                                     (float)0.185378 };
   expectedValues.push_back(relSizeExpectedValues);
-  metrics.push_back(vtkm::filter::CellMetric::RELATIVE_SIZE);
-  metricName.push_back("relativeSize");
+  metrics.push_back(vtkm::filter::CellMetric::RELATIVE_SIZE_SQUARED);
+  metricName.push_back("relativeSizeSquared");
 
-  FloatVec shapeAndSizeExpectedValues = { (float) 0.944755, (float) 0.444444, (float) 0.756394, -1, -1,(float)  0.68723 };
+  FloatVec shapeAndSizeExpectedValues = { (float)0.142880, (float)0.037809, (float)0.255017, -1, -1,
+                                          (float)0.127397 };
   expectedValues.push_back(shapeAndSizeExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::SHAPE_AND_SIZE);
   metricName.push_back("shapeAndSize");
- */
 
   unsigned long numTests = (unsigned long)metrics.size();
   for (unsigned long i = 0; i < numTests; i++)
