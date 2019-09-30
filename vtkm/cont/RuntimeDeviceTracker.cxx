@@ -86,8 +86,6 @@ void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, 
 {
   this->CheckDevice(deviceId);
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "Setting device '" << deviceId.GetName() << "' to " << state);
   this->Internals->RuntimeAllowed[deviceId.GetValue()] = state;
 }
 
@@ -102,6 +100,7 @@ VTKM_CONT void RuntimeDeviceTracker::ResetDevice(vtkm::cont::DeviceAdapterId dev
   {
     vtkm::cont::RuntimeDeviceInformation runtimeDevice;
     this->SetDeviceState(deviceId, runtimeDevice.Exists(deviceId));
+    this->LogEnabledDevices();
   }
 }
 
@@ -122,10 +121,9 @@ void RuntimeDeviceTracker::Reset()
     {
       const bool state = runtimeDevice.Exists(device);
       this->Internals->RuntimeAllowed[device.GetValue()] = state;
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Reset device '" << device.GetName() << "' to " << state);
     }
   }
+  this->LogEnabledDevices();
 }
 
 VTKM_CONT void RuntimeDeviceTracker::DisableDevice(vtkm::cont::DeviceAdapterId deviceId)
@@ -138,6 +136,7 @@ VTKM_CONT void RuntimeDeviceTracker::DisableDevice(vtkm::cont::DeviceAdapterId d
   {
     this->SetDeviceState(deviceId, false);
   }
+  this->LogEnabledDevices();
 }
 
 VTKM_CONT
@@ -160,12 +159,10 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
       throw vtkm::cont::ErrorBadValue(message.str());
     }
 
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Forcing execution to occur on device '" << deviceId.GetName() << "'");
-
     std::fill_n(this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, false);
 
     this->Internals->RuntimeAllowed[deviceId.GetValue()] = runtimeExists;
+    this->LogEnabledDevices();
   }
 }
 
@@ -181,11 +178,34 @@ void RuntimeDeviceTracker::PrintSummary(std::ostream& out) const
 }
 
 VTKM_CONT
+void RuntimeDeviceTracker::LogEnabledDevices() const
+{
+  std::stringstream message;
+  message << "Enabled devices:";
+  bool atLeastOneDeviceEnabled = false;
+  for (vtkm::Int8 deviceIndex = 1; deviceIndex < VTKM_MAX_DEVICE_ADAPTER_ID; ++deviceIndex)
+  {
+    vtkm::cont::DeviceAdapterId device = vtkm::cont::make_DeviceAdapterId(deviceIndex);
+    if (this->CanRunOn(device))
+    {
+      message << " " << device.GetName();
+      atLeastOneDeviceEnabled = true;
+    }
+  }
+  if (!atLeastOneDeviceEnabled)
+  {
+    message << " NONE!";
+  }
+  VTKM_LOG_S(vtkm::cont::LogLevel::DevicesEnabled, message.str());
+}
+
+VTKM_CONT
 ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterId device,
                                                        RuntimeDeviceTrackerMode mode)
   : RuntimeDeviceTracker(GetRuntimeDeviceTracker().Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
+  VTKM_LOG_S(vtkm::cont::LogLevel::DevicesEnabled, "Entering scoped runtime region");
   std::copy_n(
     this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->SavedState->RuntimeAllowed);
 
@@ -211,6 +231,7 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
   : RuntimeDeviceTracker(tracker.Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
+  VTKM_LOG_S(vtkm::cont::LogLevel::DevicesEnabled, "Entering scoped runtime region");
   std::copy_n(
     this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->SavedState->RuntimeAllowed);
   if (mode == RuntimeDeviceTrackerMode::Force)
@@ -233,6 +254,7 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
   : RuntimeDeviceTracker(tracker.Internals, false)
   , SavedState(new detail::RuntimeDeviceTrackerInternals())
 {
+  VTKM_LOG_S(vtkm::cont::LogLevel::DevicesEnabled, "Entering scoped runtime region");
   std::copy_n(
     this->Internals->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->SavedState->RuntimeAllowed);
 }
@@ -240,8 +262,10 @@ ScopedRuntimeDeviceTracker::ScopedRuntimeDeviceTracker(
 VTKM_CONT
 ScopedRuntimeDeviceTracker::~ScopedRuntimeDeviceTracker()
 {
+  VTKM_LOG_S(vtkm::cont::LogLevel::DevicesEnabled, "Leaving scoped runtime region");
   std::copy_n(
     this->SavedState->RuntimeAllowed, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeAllowed);
+  this->LogEnabledDevices();
 }
 
 VTKM_CONT
