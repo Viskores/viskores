@@ -13,8 +13,10 @@
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
 #define vtk_m_worklet_particleadvection_Integrators_h
 
+#include <iomanip>
 #include <limits>
 
+#include <vtkm/Bitset.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
@@ -22,7 +24,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
 
-#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
+#include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
@@ -31,13 +33,57 @@ namespace worklet
 {
 namespace particleadvection
 {
-enum class IntegratorStatus
+
+class IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
-  SUCCESS = 0,
-  OUTSIDE_SPATIAL_BOUNDS,
-  OUTSIDE_TEMPORAL_BOUNDS,
-  FAIL
+public:
+  VTKM_EXEC_CONT IntegratorStatus() {}
+
+  VTKM_EXEC_CONT IntegratorStatus(const bool& ok, const bool& spatial, const bool& temporal)
+  {
+    SetBit(0 /*SUCCESS_BIT*/, ok);
+    SetBit(1 /*SPATIAL_BOUNDS_BIT*/, spatial);
+    SetBit(2 /*TEMPORAL_BOUNDS_BIT*/, temporal);
+  }
+
+  VTKM_EXEC_CONT IntegratorStatus(const EvaluatorStatus& es)
+  {
+    SetBit(0 /*SUCCESS_BIT*/, es.CheckOk());
+    SetBit(1 /*SPATIAL_BOUNDS_BIT*/, es.CheckSpatialBounds());
+    SetBit(2 /*TEMPORAL_BOUNDS_BIT*/, es.CheckTemporalBounds());
+  }
+
+  VTKM_EXEC_CONT void SetOk() { this->set(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckOk() const { return this->test(SUCCESS_BIT); }
+
+  VTKM_EXEC_CONT void SetFail() { this->reset(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(SUCCESS_BIT); }
+
+  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
+
+  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
+
+private:
+  VTKM_EXEC_CONT void SetBit(const vtkm::IdComponent& bit, bool val)
+  {
+    if (val)
+      this->set(bit);
+    else
+      this->reset(bit);
+  }
+  const static vtkm::IdComponent SUCCESS_BIT = 0;
+  const static vtkm::IdComponent SPATIAL_BOUNDS_BIT = 1;
+  const static vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 2;
 };
+
+inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatus& status)
+{
+  s << "[" << status.CheckOk() << " " << status.CheckSpatialBounds() << " "
+    << status.CheckTemporalBounds() << "]";
+  return s;
+}
 
 class Integrator : public vtkm::cont::ExecutionObjectBase
 {
@@ -72,22 +118,6 @@ public:
     virtual IntegratorStatus SmallStep(vtkm::Vec3f& inpos,
                                        vtkm::FloatDefault& time,
                                        vtkm::Vec3f& outpos) const = 0;
-
-    VTKM_EXEC
-    IntegratorStatus ConvertToIntegratorStatus(EvaluatorStatus status) const
-    {
-      switch (status)
-      {
-        case EvaluatorStatus::SUCCESS:
-          return IntegratorStatus::SUCCESS;
-        case EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS:
-          return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
-        case EvaluatorStatus::OUTSIDE_TEMPORAL_BOUNDS:
-          return IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS;
-        default:
-          return IntegratorStatus::FAIL;
-      }
-    }
 
   protected:
     vtkm::FloatDefault StepLength = 1.0f;
@@ -135,14 +165,21 @@ protected:
     {
       // If particle is out of either spatial or temporal boundary to begin with,
       // then return the corresponding status.
+      IntegratorStatus status;
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
-        return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
+      {
+        status.SetSpatialBounds();
+        return status;
+      }
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
-        return IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS;
+      {
+        status.SetTemporalBounds();
+        return status;
+      }
 
       vtkm::Vec3f velocity;
-      IntegratorStatus status = CheckStep(inpos, this->StepLength, time, velocity);
-      if (status == IntegratorStatus::SUCCESS)
+      status = CheckStep(inpos, this->StepLength, time, velocity);
+      if (status.CheckOk())
       {
         outpos = inpos + StepLength * velocity;
         time += StepLength;
@@ -159,54 +196,55 @@ protected:
                                vtkm::Vec3f& outpos) const override
     {
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
-        return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
+        return IntegratorStatus(false, true, false);
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
-        return IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS;
+        return IntegratorStatus(false, false, true);
 
-      vtkm::FloatDefault optimalLength = static_cast<vtkm::FloatDefault>(0);
-      vtkm::Id iteration = static_cast<vtkm::Id>(1);
-      vtkm::Id maxIterations = static_cast<vtkm::Id>(1 << 20);
-      vtkm::Vec3f velocity;
-      vtkm::Vec3f workpos(inpos);
-      vtkm::FloatDefault worktime = time;
-      // According to the earlier checks this call to Evaluate should return
-      // the correct velocity at the current location, this is to use just in
-      // case we are not able to find the optimal lenght in 20 iterations..
-      this->Evaluator.Evaluate(workpos, time, velocity);
-      while (iteration < maxIterations)
-      {
-        iteration = iteration << 1;
-        vtkm::FloatDefault length =
-          optimalLength + (this->StepLength / static_cast<vtkm::FloatDefault>(iteration));
-        IntegratorStatus status = this->CheckStep(inpos, length, time, velocity);
-        if (status == IntegratorStatus::SUCCESS &&
-            this->Evaluator.IsWithinSpatialBoundary(inpos + velocity * length))
-        {
-          workpos = inpos + velocity * length;
-          worktime = time + length;
-          optimalLength = length;
-        }
-      }
-      this->Evaluator.Evaluate(workpos, worktime, velocity);
-      // We have calculated a large enough step length to push the particle
-      // using the higher order evaluator, take a step using that evaluator.
-      // Take one final step, which should be an Euler step just to push the
-      // particle out of the domain boundary
-      vtkm::Bounds bounds = this->Evaluator.GetSpatialBoundary();
-      vtkm::Vec3f direction = velocity / vtkm::Magnitude(velocity);
+      //Stepping by this->StepLength goes beyond the bounds of the dataset.
+      //We need to take an Euler step that goes outside of the dataset.
+      //Use a binary search to find the largest step INSIDE the dataset.
+      //Binary search uses a shrinking bracket of inside / outside, so when
+      //we terminate, the outside value is the stepsize that will nudge
+      //the particle outside the dataset.
+
+      //The binary search will be between [0, this->StepLength]
+      vtkm::FloatDefault stepShort = 0, stepLong = this->StepLength;
+      vtkm::Vec3f currPos(inpos), velocity;
+      vtkm::FloatDefault currTime = time;
+
+      auto evalStatus = this->Evaluator.Evaluate(currPos, time, velocity);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
 
       const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>();
-      vtkm::FloatDefault xStepLength =
-        vtkm::Abs(direction[0] * eps * static_cast<vtkm::FloatDefault>(bounds.X.Length()));
-      vtkm::FloatDefault yStepLength =
-        vtkm::Abs(direction[1] * eps * static_cast<vtkm::FloatDefault>(bounds.Y.Length()));
-      vtkm::FloatDefault zStepLength =
-        vtkm::Abs(direction[2] * eps * static_cast<vtkm::FloatDefault>(bounds.Z.Length()));
-      vtkm::FloatDefault minLength = vtkm::Min(xStepLength, vtkm::Min(yStepLength, zStepLength));
+      vtkm::FloatDefault div = 1;
+      for (int i = 0; i < 50; i++)
+      {
+        div *= 2;
+        vtkm::FloatDefault stepCurr = stepShort + (this->StepLength / div);
+        //See if we can step by stepCurr.
+        IntegratorStatus status = this->CheckStep(inpos, stepCurr, time, velocity);
+        if (status.CheckOk())
+        {
+          currPos = inpos + velocity * stepShort;
+          stepShort = stepCurr;
+        }
+        else
+          stepLong = stepCurr;
 
-      outpos = workpos + minLength * velocity;
-      time = worktime + minLength;
-      return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
+        //Stop if step bracket is small enough.
+        if (stepLong - stepShort < eps)
+          break;
+      }
+
+      //Take Euler step.
+      currTime = time + stepShort;
+      evalStatus = this->Evaluator.Evaluate(currPos, currTime, velocity);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+
+      outpos = currPos + stepLong * velocity;
+      return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 
     VTKM_EXEC
@@ -299,22 +337,22 @@ public:
       vtkm::Vec3f k1 = vtkm::TypeTraits<vtkm::Vec3f>::ZeroInitialization();
       vtkm::Vec3f k2 = k1, k3 = k1, k4 = k1;
 
-      EvaluatorStatus status;
-      status = this->Evaluator.Evaluate(inpos, time, k1);
-      if (status != EvaluatorStatus::SUCCESS)
-        return this->ConvertToIntegratorStatus(status);
-      status = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
-      if (status != EvaluatorStatus::SUCCESS)
-        return this->ConvertToIntegratorStatus(status);
-      status = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
-      if (status != EvaluatorStatus::SUCCESS)
-        return this->ConvertToIntegratorStatus(status);
-      status = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
-      if (status != EvaluatorStatus::SUCCESS)
-        return this->ConvertToIntegratorStatus(status);
+      EvaluatorStatus evalStatus;
+      evalStatus = this->Evaluator.Evaluate(inpos, time, k1);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      evalStatus = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      evalStatus = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      evalStatus = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
 
       velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
-      return IntegratorStatus::SUCCESS;
+      return IntegratorStatus(true, false, evalStatus.CheckTemporalBounds());
     }
   };
 
@@ -377,7 +415,7 @@ public:
                                vtkm::Vec3f& velocity) const
     {
       EvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, velocity);
-      return this->ConvertToIntegratorStatus(status);
+      return IntegratorStatus(status);
     }
   };
 

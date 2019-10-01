@@ -24,7 +24,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
+//#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
 
 namespace vtkm
 {
@@ -42,10 +42,11 @@ public:
   using InputDomain = _1;
 
   template <typename IntegratorType, typename ParticleType>
-  VTKM_EXEC void operator()(const vtkm::Id& idx,
-                            const IntegratorType* integrator,
-                            ParticleType& particle) const
+  VTKM_EXEC void operator()(const vtkm::Id& /*idx*/,
+                            const IntegratorType* /*integrator*/,
+                            ParticleType& /*particle*/) const
   {
+#if 0
     vtkm::Vec3f inpos = particle.GetPos(idx);
     vtkm::Vec3f outpos;
     vtkm::FloatDefault time = particle.GetTime(idx);
@@ -57,7 +58,7 @@ public:
       status = integrator->Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
-      if (status == IntegratorStatus::SUCCESS)
+      if (status.CheckOk())
       {
         particle.TakeStep(idx, outpos, time);
         // This is to keep track of the particle's time.
@@ -70,26 +71,26 @@ public:
       // push it a little out of the boundary so that it will start advection in
       // another domain, or in another time slice. Taking small steps enables
       // reducing the error introduced at spatial or temporal boundaries.
-      else if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+      else if (status.CheckTemporalBounds())
       {
         particle.SetExitTemporalBoundary(idx);
         break;
       }
-      else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+      else if (status.CheckSpatialBounds())
       {
         status = integrator->SmallStep(inpos, time, outpos);
         particle.TakeStep(idx, outpos, time);
-        if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+        if (status.CheckTemporalBounds())
         {
           particle.SetExitTemporalBoundary(idx);
           break;
         }
-        else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
+        else if (status.CheckSpatialBounds())
         {
           particle.SetExitSpatialBoundary(idx);
           break;
         }
-        else if (status == IntegratorStatus::FAIL)
+        else if (status.CheckFail())
         {
           particle.SetError(idx);
           break;
@@ -97,19 +98,76 @@ public:
       }
     }
     particle.SetTookAnySteps(idx, tookAnySteps);
+#endif
   }
 };
 
-
+//for streamlines: inherit from the worklet below.
+// overload take step to do something else.
+//
 class ParticleAdvectWorkletAOS2 : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(ExecObject integrator, FieldInOut particles, FieldIn maxSteps);
-  using ExecutionSignature = void(_1, _2, _3);
-  using InputDomain = _3;
+  using ControlSignature = void(FieldIn idx,
+                                ExecObject integrator,
+                                FieldInOut particles,
+                                FieldIn maxSteps);
+  using ExecutionSignature = void(_1 idx, _2 integrator, _3 particles, _4 maxSteps);
+  using InputDomain = _1;
+
+  template <typename ParticleType>
+  VTKM_EXEC void PostProcessStep(const vtkm::Id& vtkmNotUsed(idx),
+                                 ParticleType& vtkmNotUsed(particle)) const
+  {
+  }
+
+  template <typename ParticleType>
+  VTKM_EXEC void StepUpdate(const vtkm::Id& idx,
+                            ParticleType& particle,
+                            const vtkm::Vec3f& pos,
+                            const vtkm::FloatDefault& time) const
+  {
+    particle.Pos = pos;
+    particle.NumSteps++;
+    particle.Time = time;
+    this->PostProcessStep(idx, particle);
+  }
+
+  template <typename ParticleType>
+  VTKM_EXEC bool ExtraCanContinue(const vtkm::Id& vtkmNotUsed(idx),
+                                  ParticleType& vtkmNotUsed(particle)) const
+  {
+    return true;
+  }
+
+  template <typename ParticleType>
+  VTKM_EXEC bool CanContinue(const vtkm::Id& idx, const ParticleType& particle) const
+  {
+    return (particle.Status.CheckOk() && !particle.Status.CheckTerminate() &&
+            !particle.Status.CheckSpatialBounds() && !particle.Status.CheckTemporalBounds() &&
+            this->ExtraCanContinue(idx, particle));
+  }
+
+  template <typename ParticleType>
+  VTKM_EXEC void UpdateStatus(const vtkm::Id& vtkmNotUsed(idx),
+                              ParticleType& particle,
+                              const IntegratorStatus& iStatus,
+                              const vtkm::Id& maxSteps) const
+  {
+    if (particle.NumSteps == maxSteps)
+      particle.Status.SetTerminate();
+
+    if (iStatus.CheckFail())
+      particle.Status.SetFail();
+    if (iStatus.CheckSpatialBounds())
+      particle.Status.SetSpatialBounds();
+    if (iStatus.CheckTemporalBounds())
+      particle.Status.SetTemporalBounds();
+  }
 
   template <typename IntegratorType, typename ParticleType>
-  VTKM_EXEC void operator()(const IntegratorType* integrator,
+  VTKM_EXEC void operator()(const vtkm::Id& idx,
+                            const IntegratorType* integrator,
                             ParticleType& particle,
                             const vtkm::Id& maxSteps) const
 
@@ -118,71 +176,47 @@ public:
     vtkm::FloatDefault time = particle.Time;
     IntegratorStatus status;
     bool tookAnySteps = false;
-    while ((particle.Status & ParticleStatus::SUCCESS) != 0)
+
+    //the integrator status needs to be more robust:
+    // 1. you could have success AND at temporal boundary.
+    // 2. could you have success AND at spatial?
+    // 3. all three?
+
+    //    std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
+    do
     {
       status = integrator->Step(inpos, time, outpos);
-      // If the status is OK, we only need to check if the particle
-      // has completed the maximum steps required.
-      if (status == IntegratorStatus::SUCCESS)
+      if (status.CheckOk())
       {
-        //particle.TakeStep(idx, outpos, time);
-        particle.Pos = outpos;
-        particle.NumSteps++;
-        particle.Time = time;
-        if (particle.NumSteps == maxSteps)
-        {
-          particle.Status &= ~ParticleStatus::SUCCESS;
-          particle.Status |= ParticleStatus::TERMINATED;
-        }
-
-        // This is to keep track of the particle's time.
-        // This is what the Evaluator uses to determine if the particle
-        // has exited temporal boundary.
-        inpos = outpos;
+        this->StepUpdate(idx, particle, outpos, time);
         tookAnySteps = true;
+        inpos = outpos;
       }
-      // If the particle is at spatial or temporal  boundary, take steps to just
-      // push it a little out of the boundary so that it will start advection in
-      // another domain, or in another time slice. Taking small steps enables
-      // reducing the error introduced at spatial or temporal boundaries.
-      else if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
-      {
-        particle.Status &= ~ParticleStatus::SUCCESS;
-        particle.Status |= ParticleStatus::EXIT_TEMPORAL_BOUNDARY;
-        break;
-      }
-      else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
-      {
-        status = integrator->SmallStep(inpos, time, outpos);
-        //particle.TakeStep(idx, outpos, time);
-        particle.Pos = outpos;
-        particle.NumSteps++;
-        particle.Time = time;
 
-        if (status == IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS)
+      //We can't take a step inside spatial boundary.
+      //Try and take a step just past the boundary.
+      else if (status.CheckSpatialBounds())
+      {
+        IntegratorStatus status2 = integrator->SmallStep(inpos, time, outpos);
+        if (status2.CheckOk())
         {
-          particle.Status &= ~ParticleStatus::SUCCESS;
-          particle.Status |= ParticleStatus::EXIT_TEMPORAL_BOUNDARY;
-          break;
-        }
-        else if (status == IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS)
-        {
-          particle.Status &= ~ParticleStatus::SUCCESS;
-          particle.Status |= ParticleStatus::EXIT_SPATIAL_BOUNDARY;
-          break;
-        }
-        else if (status == IntegratorStatus::FAIL)
-        {
-          particle.Status &= ~ParticleStatus::SUCCESS;
-          particle.Status |= ParticleStatus::FAIL;
-          break;
+          this->StepUpdate(idx, particle, outpos, time);
+          tookAnySteps = true;
+
+          //we took a step, so use this status to consider below.
+          status = status2;
         }
       }
-    }
+
+      this->UpdateStatus(idx, particle, status, maxSteps);
+
+    } while (this->CanContinue(idx, particle));
+
+    //Mark if any steps taken
     if (tookAnySteps)
-      particle.Status |= ParticleStatus::TOOK_ANY_STEPS;
+      particle.Status.SetTookAnySteps();
     else
-      particle.Status &= ~ParticleStatus::TOOK_ANY_STEPS;
+      particle.Status.ClearTookAnySteps();
   }
 };
 
@@ -195,10 +229,11 @@ public:
   using InputDomain = _1;
 
   template <typename IntegratorType, typename IntegralCurveType>
-  VTKM_EXEC void operator()(const vtkm::Id& idx,
-                            const IntegratorType* integrator,
-                            IntegralCurveType& integralCurve) const
+  VTKM_EXEC void operator()(const vtkm::Id& /*idx*/,
+                            const IntegratorType* /*integrator*/,
+                            IntegralCurveType& /*integralCurve*/) const
   {
+#if 0
     vtkm::Vec3f inpos = integralCurve.GetPos(idx);
     vtkm::Vec3f outpos;
     vtkm::FloatDefault time = integralCurve.GetTime(idx);
@@ -251,6 +286,7 @@ public:
       }
     }
     integralCurve.SetTookAnySteps(idx, tookAnySteps);
+#endif
   }
 };
 
@@ -293,34 +329,8 @@ public:
 
   //AOS version
   void Run(const IntegratorType& integrator,
-           vtkm::cont::ArrayHandle<vtkm::Particle>& p,
+           vtkm::cont::ArrayHandle<vtkm::Particle>& particles,
            const vtkm::Id& MaxSteps)
-  {
-    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorkletAOS;
-    using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleTypeAOS = vtkm::worklet::particleadvection::ParticlesAOS;
-
-    vtkm::Id numSeeds = static_cast<vtkm::Id>(p.GetNumberOfValues());
-    //Create and invoke the particle advection.
-    vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-    ParticleTypeAOS particles(p, MaxSteps);
-
-#ifdef VTKM_CUDA
-    // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
-    (void)stack;
-#endif // VTKM_CUDA
-
-    //Invoke particle advection worklet
-    ParticleWorkletDispatchType particleWorkletDispatch;
-    particleWorkletDispatch.Invoke(idxArray, integrator, particles);
-  }
-
-  //AOS version
-  void Run2(const IntegratorType& integrator,
-            vtkm::cont::ArrayHandle<vtkm::Particle>& particles,
-            const vtkm::Id& MaxSteps)
   {
     using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorkletAOS2;
     using ParticleWorkletDispatchType =
@@ -329,6 +339,7 @@ public:
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
+    vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
@@ -338,7 +349,7 @@ public:
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
-    particleWorkletDispatch.Invoke(integrator, particles, maxSteps);
+    particleWorkletDispatch.Invoke(idxArray, integrator, particles, maxSteps);
   }
 };
 

@@ -41,7 +41,7 @@ struct Bitset
     this->Mask = this->Mask ^ (static_cast<MaskType>(0) << bitIndex);
   }
 
-  VTKM_EXEC_CONT bool test(vtkm::Id bitIndex)
+  VTKM_EXEC_CONT bool test(vtkm::Id bitIndex) const
   {
     return ((this->Mask & (static_cast<MaskType>(1) << bitIndex)) != 0);
   }

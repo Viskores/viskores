@@ -10,21 +10,57 @@
 #ifndef vtk_m_Particle_h
 #define vtk_m_Particle_h
 
-
+#include <vtkm/Bitset.h>
 
 namespace vtkm
 {
 
-enum ParticleStatus : vtkm::Id
+//Bit field describing the status:
+class ParticleStatus : public vtkm::Bitset<vtkm::UInt8>
 {
-  UNDEFINED = 0,
-  SUCCESS = 1,
-  TERMINATED = 1 << 1,
-  EXIT_SPATIAL_BOUNDARY = 1 << 2,
-  EXIT_TEMPORAL_BOUNDARY = 1 << 3,
-  FAIL = 1 << 4,
-  TOOK_ANY_STEPS = 1 << 5
+public:
+  VTKM_EXEC_CONT ParticleStatus()
+  {
+    this->SetOk();
+    this->ClearTerminate();
+  }
+
+  VTKM_EXEC_CONT void SetOk() { this->set(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckOk() const { return this->test(SUCCESS_BIT); }
+
+  VTKM_EXEC_CONT void SetFail() { this->reset(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(SUCCESS_BIT); }
+
+  VTKM_EXEC_CONT void SetTerminate() { this->set(TERMINATE_BIT); }
+  VTKM_EXEC_CONT void ClearTerminate() { this->reset(TERMINATE_BIT); }
+  VTKM_EXEC_CONT bool CheckTerminate() const { return this->test(TERMINATE_BIT); }
+
+  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void ClearSpatialBounds() { this->reset(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
+
+  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void ClearTemporalBounds() { this->reset(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
+
+  VTKM_EXEC_CONT void SetTookAnySteps() { this->set(TOOK_ANY_STEPS_BIT); }
+  VTKM_EXEC_CONT void ClearTookAnySteps() { this->reset(TOOK_ANY_STEPS_BIT); }
+  VTKM_EXEC_CONT bool CheckTookAnySteps() const { return this->test(TOOK_ANY_STEPS_BIT); }
+
+private:
+  static constexpr vtkm::IdComponent SUCCESS_BIT = 0;
+  static constexpr vtkm::IdComponent TERMINATE_BIT = 1;
+  static constexpr vtkm::IdComponent SPATIAL_BOUNDS_BIT = 2;
+  static constexpr vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 3;
+  static constexpr vtkm::IdComponent TOOK_ANY_STEPS_BIT = 4;
 };
+
+inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleStatus& status)
+{
+  s << "[" << status.CheckOk() << " " << status.CheckTerminate() << " "
+    << status.CheckSpatialBounds() << " " << status.CheckTemporalBounds() << "]";
+  return s;
+}
 
 class Particle
 {
@@ -34,7 +70,7 @@ public:
     : Pos()
     , ID(-1)
     , NumSteps(0)
-    , Status(vtkm::ParticleStatus::UNDEFINED)
+    , Status()
     , Time(0)
   {
   }
@@ -51,10 +87,10 @@ public:
 
   VTKM_EXEC_CONT
   Particle(const vtkm::Vec3f& p,
-           vtkm::Id id,
-           vtkm::Id numSteps,
-           vtkm::Id status = vtkm::ParticleStatus::UNDEFINED,
-           vtkm::FloatDefault time = 0)
+           const vtkm::Id& id,
+           const vtkm::Id& numSteps = 0,
+           const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
+           const vtkm::FloatDefault& time = 0)
     : Pos(p)
     , ID(id)
     , NumSteps(numSteps)
@@ -66,7 +102,7 @@ public:
   vtkm::Vec3f Pos;
   vtkm::Id ID;
   vtkm::Id NumSteps;
-  vtkm::Id Status;
+  vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time;
 };
 }

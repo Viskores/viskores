@@ -139,15 +139,11 @@ public:
   template <typename IntegratorType, typename ParticleStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Particle, ParticleStorage>& particles,
-                              const vtkm::Id& MaxSteps,
-                              int which)
+                              const vtkm::Id& MaxSteps)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
 
-    if (which == 0)
-      worklet.Run(it, particles, MaxSteps);
-    else
-      worklet.Run2(it, particles, MaxSteps);
+    worklet.Run(it, particles, MaxSteps);
 
     return ParticleAdvectionResult();
   }

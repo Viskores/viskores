@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_particleadvection_GridEvaluators_h
 #define vtk_m_worklet_particleadvection_GridEvaluators_h
 
+#include <vtkm/Bitset.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -23,7 +24,6 @@
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
-#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -32,6 +32,26 @@ namespace worklet
 {
 namespace particleadvection
 {
+class EvaluatorStatus : public vtkm::Bitset<vtkm::UInt8>
+{
+public:
+  void SetOk() { this->set(SUCCESS_BIT); }
+  bool CheckOk() const { return this->test(SUCCESS_BIT); }
+
+  void SetFail() { this->reset(SUCCESS_BIT); }
+  bool CheckFail() const { return !this->test(SUCCESS_BIT); }
+
+  void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
+  bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
+
+  void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
+  bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
+
+private:
+  static constexpr vtkm::IdComponent SUCCESS_BIT = 0;
+  static constexpr vtkm::IdComponent SPATIAL_BOUNDS_BIT = 1;
+  static constexpr vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 2;
+};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
@@ -94,9 +114,15 @@ public:
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
+    EvaluatorStatus status;
+
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS;
+    {
+      status.SetFail();
+      status.SetSpatialBounds();
+      return status;
+    }
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
@@ -108,7 +134,8 @@ public:
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return EvaluatorStatus::SUCCESS;
+    status.SetOk();
+    return status;
   }
 
 private:
