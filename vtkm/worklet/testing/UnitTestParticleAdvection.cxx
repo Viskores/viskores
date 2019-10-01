@@ -27,6 +27,8 @@
 #include <chrono>
 #include <ctime>
 
+
+
 namespace
 {
 vtkm::FloatDefault vecData[125 * 3] = {
@@ -289,18 +291,18 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename EvaluatorType>
-  VTKM_EXEC void operator()(vtkm::Vec3f& pointIn,
+  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const EvaluatorType& evaluator,
                             vtkm::worklet::particleadvection::EvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
-    status = evaluator.Evaluate(pointIn, pointOut);
+    status = evaluator.Evaluate(pointIn.Pos, pointOut);
   }
 };
 
 template <typename EvalType>
 void ValidateEvaluator(const EvalType& eval,
-                       const std::vector<vtkm::Vec3f>& pointIns,
+                       const std::vector<vtkm::Particle>& pointIns,
                        const vtkm::Vec3f& vec,
                        const std::string& msg)
 {
@@ -309,7 +311,7 @@ void ValidateEvaluator(const EvalType& eval,
   using Status = vtkm::worklet::particleadvection::EvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::cont::ArrayHandle<vtkm::Particle> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
@@ -320,7 +322,7 @@ void ValidateEvaluator(const EvalType& eval,
   {
     Status status = statusPortal.Get(index);
     vtkm::Vec3f result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status == Status::SUCCESS, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
@@ -339,20 +341,22 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename IntegratorType>
-  VTKM_EXEC void operator()(vtkm::Vec3f& pointIn,
+  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const IntegratorType* integrator,
                             vtkm::worklet::particleadvection::IntegratorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::FloatDefault time = 0;
-    status = integrator->Step(pointIn, time, pointOut);
+    status = integrator->Step(pointIn.Pos, time, pointOut);
+    if (status.CheckSpatialBounds())
+      status = integrator->SmallStep(pointIn.Pos, time, pointOut);
   }
 };
 
 
 template <typename IntegratorType>
 void ValidateIntegrator(const IntegratorType& integrator,
-                        const std::vector<vtkm::Vec3f>& pointIns,
+                        const std::vector<vtkm::Particle>& pointIns,
                         const std::vector<vtkm::Vec3f>& expStepResults,
                         const std::string& msg)
 {
@@ -360,7 +364,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -372,9 +376,9 @@ void ValidateIntegrator(const IntegratorType& integrator,
   {
     Status status = statusPortal.Get(index);
     vtkm::Vec3f result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status != Status::FAIL, "Error in evaluator for " + msg);
-    if (status == Status::OUTSIDE_SPATIAL_BOUNDS)
-      VTKM_TEST_ASSERT(result == pointsPortal.Get(index),
+    VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
+    if (status.CheckSpatialBounds())
+      VTKM_TEST_ASSERT(result == pointsPortal.Get(index).Pos,
                        "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
     else
       VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
@@ -386,19 +390,17 @@ void ValidateIntegrator(const IntegratorType& integrator,
 }
 
 template <typename IntegratorType>
-void ValidateIntegratorForBoundary(const vtkm::Vec3f& vector,
-                                   const vtkm::Bounds& bounds,
+void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
                                    const IntegratorType& integrator,
-                                   const std::vector<vtkm::Vec3f>& pointIns,
+                                   const std::vector<vtkm::Particle>& pointIns,
                                    const std::string& msg)
 {
   using IntegratorTester = TestIntegratorWorklet;
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
 
-  vtkm::FloatDefault tolerance = vtkm::Epsilon<vtkm::FloatDefault>() * 100;
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -408,15 +410,12 @@ void ValidateIntegratorForBoundary(const vtkm::Vec3f& vector,
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
+    VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
+
     vtkm::Vec3f result = resultsPortal.Get(index);
-    if (vector[0] == 1.)
-      VTKM_TEST_ASSERT((bounds.X.Max - result[0]) < tolerance, "X Tolerance not satisfied.");
-    if (vector[1] == 1.)
-      VTKM_TEST_ASSERT((bounds.Y.Max - result[1]) < tolerance, "Y Tolerance not satisfied.");
-    if (vector[2] == 1.)
-      VTKM_TEST_ASSERT((bounds.Z.Max - result[2]) < tolerance, "Z Tolerance not satisfied.");
-    VTKM_TEST_ASSERT(status == Status::OUTSIDE_SPATIAL_BOUNDS, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(!bounds.Contains(result), "Tolerance not satisfied.");
   }
+
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
   stepResults.ReleaseResources();
@@ -429,18 +428,19 @@ void TestEvaluators()
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   std::vector<vtkm::Vec3f> vecs;
-  vecs.push_back(vtkm::Vec3f(1, 0, 0));
-  vecs.push_back(vtkm::Vec3f(0, 1, 0));
-  vecs.push_back(vtkm::Vec3f(0, 0, 1));
-  vecs.push_back(vtkm::Vec3f(1, 1, 0));
-  vecs.push_back(vtkm::Vec3f(0, 1, 1));
-  vecs.push_back(vtkm::Vec3f(1, 0, 1));
-  vecs.push_back(vtkm::Vec3f(1, 1, 1));
+  vtkm::FloatDefault vals[3] = { -1., 0., 1. };
+  for (int i = 0; i < 3; i++)
+    for (int j = 0; j < 3; j++)
+      for (int k = 0; k < 3; k++)
+        if (!(i == 1 && j == 1 && k == 1)) //don't add a [0,0,0] vec.
+          vecs.push_back(vtkm::Vec3f(vals[i], vals[j], vals[k]));
 
   std::vector<vtkm::Bounds> bounds;
   bounds.push_back(vtkm::Bounds(0, 10, 0, 10, 0, 10));
   bounds.push_back(vtkm::Bounds(-1, 1, -1, 1, -1, 1));
   bounds.push_back(vtkm::Bounds(0, 1, 0, 1, -1, 1));
+  bounds.push_back(vtkm::Bounds(0, 1000, 0, 1, -1, 1000));
+  bounds.push_back(vtkm::Bounds(0, 1000, -100, 0, -1, 1000));
 
   std::vector<vtkm::Id3> dims;
   dims.push_back(vtkm::Id3(5, 5, 5));
@@ -460,8 +460,9 @@ void TestEvaluators()
         vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
 
-        vtkm::FloatDefault stepSize = 0.01f;
-        std::vector<vtkm::Vec3f> pointIns;
+        //vtkm::FloatDefault stepSize = 0.01f;
+        vtkm::FloatDefault stepSize = 0.1f;
+        std::vector<vtkm::Particle> pointIns;
         std::vector<vtkm::Vec3f> stepResult;
         //Create a bunch of random points in the bounds.
         srand(314);
@@ -476,22 +477,35 @@ void TestEvaluators()
         for (int k = 0; k < 38; k++)
         {
           auto p = RandomPoint(interiorBounds);
-          pointIns.push_back(p);
+          pointIns.push_back(vtkm::Particle(p, k));
           stepResult.push_back(p + vec * stepSize);
         }
 
-        std::vector<vtkm::Vec3f> boundaryPoints;
-        const vtkm::Range xRange(bound.X.Max - stepSize / 2., bound.X.Max);
-        const vtkm::Range yRange(bound.Y.Max - stepSize / 2., bound.Y.Max);
-        const vtkm::Range zRange(bound.Z.Max - stepSize / 2., bound.Z.Max);
+        vtkm::Range xRange, yRange, zRange;
+
+        if (vec[0] > 0)
+          xRange = vtkm::Range(bound.X.Max - stepSize / 2., bound.X.Max);
+        else
+          xRange = vtkm::Range(bound.X.Min, bound.X.Min + stepSize / 2.);
+        if (vec[1] > 0)
+          yRange = vtkm::Range(bound.Y.Max - stepSize / 2., bound.Y.Max);
+        else
+          yRange = vtkm::Range(bound.Y.Min, bound.Y.Min + stepSize / 2.);
+        if (vec[2] > 0)
+          zRange = vtkm::Range(bound.Z.Max - stepSize / 2., bound.Z.Max);
+        else
+          zRange = vtkm::Range(bound.Z.Min, bound.Z.Min + stepSize / 2.);
+
         vtkm::Bounds forBoundary(xRange, yRange, zRange);
+
+        std::vector<vtkm::Particle> boundaryPoints;
         for (int k = 0; k < 10; k++)
         {
-          // Generate bunch of boundary points towards the face of the direction
+          // Generate a bunch of boundary points towards the face of the direction
           // of the velocity field
           // All velocities are in the +ve direction.
           auto p = RandomPoint(forBoundary);
-          pointIns.push_back(p);
+          boundaryPoints.push_back(vtkm::Particle(p, k));
         }
 
         for (auto& ds : dataSets)
@@ -502,7 +516,7 @@ void TestEvaluators()
           RK4Type rk4(gridEval, stepSize);
           ValidateIntegrator(rk4, pointIns, stepResult, "constant vector RK4");
 
-          ValidateIntegratorForBoundary(vec, bound, rk4, boundaryPoints, "constant vector RK4");
+          ValidateIntegratorForBoundary(bound, rk4, boundaryPoints, "constant vector RK4");
         }
       }
     }
@@ -643,103 +657,24 @@ void TestParticleStatus()
   RK4Type rk4(eval, stepSize);
 
   vtkm::worklet::ParticleAdvection pa;
-  std::vector<vtkm::Vec3f> pts;
-  pts.push_back(vtkm::Vec3f(.5, .5, .5));
-  pts.push_back(vtkm::Vec3f(-1, -1, -1));
+  std::vector<vtkm::Particle> pts;
+  pts.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
+  pts.push_back(vtkm::Particle(vtkm::Vec3f(-1, -1, -1), 1));
   auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
-  auto res = pa.Run(rk4, seedsArray, maxSteps);
-  auto statusPortal = res.status.GetPortalConstControl();
+  pa.Run(rk4, seedsArray, maxSteps);
+  auto portal = seedsArray.GetPortalConstControl();
 
-  vtkm::Id tookStep0 =
-    statusPortal.Get(0) & static_cast<vtkm::Id>(vtkm::ParticleStatus::TOOK_ANY_STEPS);
-  vtkm::Id tookStep1 =
-    statusPortal.Get(1) & static_cast<vtkm::Id>(vtkm::ParticleStatus::TOOK_ANY_STEPS);
-  VTKM_TEST_ASSERT(tookStep0 != 0, "Particle failed to take any steps");
-  VTKM_TEST_ASSERT(tookStep1 == 0, "Particle took a step when it should not have.");
+  bool tookStep0 = portal.Get(0).Status.CheckTookAnySteps();
+  bool tookStep1 = portal.Get(1).Status.CheckTookAnySteps();
+  VTKM_TEST_ASSERT(tookStep0 == true, "Particle failed to take any steps");
+  VTKM_TEST_ASSERT(tookStep1 == false, "Particle took a step when it should not have.");
 }
-
-#if 0
-double TestParticleAOS(bool doAOS)
-{
-  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
-  const vtkm::Id3 dims(5, 5, 5);
-  vtkm::cont::DataSet ds = CreateUniformDataSet(bounds, dims);
-
-  vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
-
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> field;
-  for (vtkm::Id i = 0; i < nElements; i++)
-  {
-    vtkm::FloatDefault x = vecData[i];
-    vtkm::FloatDefault y = vecData[++i];
-    vtkm::FloatDefault z = vecData[++i];
-    vtkm::Vec3f vec(x, y, z);
-    field.push_back(vtkm::Normal(vec));
-  }
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
-
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-  vtkm::Id maxSteps = 1000;
-  vtkm::FloatDefault stepSize = 0.001f;
-
-  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
-  RK4Type rk4(eval, stepSize);
-
-  vtkm::worklet::ParticleAdvection pa;
-  std::vector<vtkm::Particle> particles;
-  std::vector<vtkm::Vec3f> pts;
-
-  int n = 10000;
-  for (int i = 0; i < n; i++)
-  {
-      vtkm::Particle p;
-      p.ID = i;
-      p.Status = vtkm::ParticleStatus::SUCCESS;
-      auto pt = RandomPoint(bounds);
-      p.Pos = pt;
-      particles.push_back(p);
-      pts.push_back(pt);
-  }
-
-  std::chrono::duration<double> dT;
-  if (doAOS)
-  {
-      auto seedsArray = vtkm::cont::make_ArrayHandle(particles);
-      //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
-      auto s = std::chrono::system_clock::now();
-      auto res = pa.Run(rk4, seedsArray, maxSteps);
-      auto e = std::chrono::system_clock::now();
-      dT = e-s;
-  }
-  else
-  {
-      auto seedsArray = vtkm::cont::make_ArrayHandle(pts);
-      //vtkm::cont::printSummary_ArrayHandle(seedsArray, std::cout, true);
-      auto s = std::chrono::system_clock::now();
-      auto res = pa.Run(rk4, seedsArray, maxSteps);
-      auto e = std::chrono::system_clock::now();
-      dT = e-s;
-  }
-
-  return dT.count();
-}
-#endif
 
 void TestParticleAdvection()
 {
-  //  TestEvaluators();
-  //  TestParticleWorklets();
-  //  TestParticleStatus();
-
-  //  double aosTime = TestParticleAOS(true);
-  //  double soaTime = TestParticleAOS(false);
-
-  //  std::cout<<"AOS_time= "<< aosTime<<std::endl;
-  //  std::cout<<"SOA_time= "<< soaTime<<std::endl;
+  TestEvaluators();
+  TestParticleWorklets();
+  TestParticleStatus();
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])
