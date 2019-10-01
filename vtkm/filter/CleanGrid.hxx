@@ -44,22 +44,24 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
     vtkm::cont::ArrayHandle<vtkm::Id> offsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
+    vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connectivitySize);
     numIndices.ReleaseResourcesExecution();
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     connectivity.Allocate(connectivitySize);
 
+    auto offsetsTrim =
+      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
+
     this->Invoke(worklet::CellDeepCopy::PassCellStructure{},
                  deducedCellSet,
                  shapes,
-                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim));
     shapes.ReleaseResourcesExecution();
     offsets.ReleaseResourcesExecution();
     connectivity.ReleaseResourcesExecution();
 
-    outputCellSet.Fill(
-      deducedCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
+    outputCellSet.Fill(deducedCellSet.GetNumberOfPoints(), shapes, connectivity, offsets);
 
     //Release the input grid from the execution space
     deducedCellSet.ReleaseResourcesExecution();

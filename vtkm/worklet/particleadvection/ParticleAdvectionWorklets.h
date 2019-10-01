@@ -238,11 +238,10 @@ private:
                                                                numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;
-    vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent()),
-                          cellCounts);
+    auto numIndices = vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent());
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
 
-    polyLines.Fill(positions.GetNumberOfValues(), cellTypes, cellCounts, connectivity);
+    polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
   }
 
   IntegratorType integrator;

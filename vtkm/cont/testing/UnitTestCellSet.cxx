@@ -75,8 +75,10 @@ vtkm::cont::CellSetExplicit<> MakeCellSetExplicit()
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   vtkm::cont::ArrayCopy(BaseLineConnectivity, connectivity);
 
+  auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+
   vtkm::cont::CellSetExplicit<> cellset;
-  cellset.Fill(BaseLineNumberOfPoints, shapes, numIndices, connectivity);
+  cellset.Fill(BaseLineNumberOfPoints, shapes, connectivity, offsets);
   return cellset;
 }
 

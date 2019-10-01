@@ -12,6 +12,7 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -26,67 +27,24 @@ namespace cont
 namespace internal
 {
 
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
-void buildIndexOffsets(const NumIndicesArrayType& numIndices,
-                       IndexOffsetArrayType& offsets,
-                       vtkm::cont::DeviceAdapterId device,
-                       std::true_type)
-{
-  //We first need to make sure that NumIndices and IndexOffsetArrayType
-  //have the same type so we can call scane exclusive
-  using CastedNumIndicesType = vtkm::cont::ArrayHandleCast<vtkm::Id, NumIndicesArrayType>;
-
-  // Although technically we are making changes to this object, the changes
-  // are logically consistent with the previous state, so we consider it
-  // valid under const.
-  vtkm::cont::Algorithm::ScanExclusive(device, CastedNumIndicesType(numIndices), offsets);
-}
-
-template <typename NumIndicesArrayType, typename IndexOffsetArrayType>
-void buildIndexOffsets(const NumIndicesArrayType&,
-                       IndexOffsetArrayType&,
-                       vtkm::cont::DeviceAdapterId,
-                       std::false_type)
-{
-  //this is a no-op as the storage for the offsets is an implicit handle
-  //and should already be built. This signature exists so that
-  //the compiler doesn't try to generate un-used code that will
-  //try and run Algorithm::ScanExclusive on an implicit array which will
-  //cause a compile time failure.
-}
-
-template <typename ArrayHandleIndices, typename ArrayHandleOffsets>
-void buildIndexOffsets(const ArrayHandleIndices& numIndices,
-                       ArrayHandleOffsets offsets,
-                       vtkm::cont::DeviceAdapterId deviceId)
-{
-  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<ArrayHandleOffsets>;
-  buildIndexOffsets(numIndices, offsets, deviceId, typename IsWritable::type());
-}
-
-template <typename ShapeStorageTag = VTKM_DEFAULT_STORAGE_TAG,
-          typename NumIndicesStorageTag = VTKM_DEFAULT_STORAGE_TAG,
+template <typename ShapesStorageTag = VTKM_DEFAULT_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_STORAGE_TAG,
-          typename IndexOffsetStorageTag = VTKM_DEFAULT_STORAGE_TAG>
+          typename OffsetsStorageTag = VTKM_DEFAULT_STORAGE_TAG>
 struct ConnectivityExplicitInternals
 {
-  using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag>;
-  using NumIndicesArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag>;
+  using ShapesArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapesStorageTag>;
   using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>;
-  using IndexOffsetArrayType = vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag>;
+  using OffsetsArrayType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>;
 
-  ShapeArrayType Shapes;
-  NumIndicesArrayType NumIndices;
+  ShapesArrayType Shapes;
   ConnectivityArrayType Connectivity;
-  mutable IndexOffsetArrayType IndexOffsets;
+  OffsetsArrayType Offsets;
 
   bool ElementsValid;
-  mutable bool IndexOffsetsValid;
 
   VTKM_CONT
   ConnectivityExplicitInternals()
     : ElementsValid(false)
-    , IndexOffsetsValid(false)
   {
   }
 
@@ -102,26 +60,8 @@ struct ConnectivityExplicitInternals
   void ReleaseResourcesExecution()
   {
     this->Shapes.ReleaseResourcesExecution();
-    this->NumIndices.ReleaseResourcesExecution();
     this->Connectivity.ReleaseResourcesExecution();
-    this->IndexOffsets.ReleaseResourcesExecution();
-  }
-
-
-  VTKM_CONT void BuildIndexOffsets(vtkm::cont::DeviceAdapterId deviceId) const
-  {
-    if (deviceId == vtkm::cont::DeviceAdapterTagUndefined())
-    {
-      throw vtkm::cont::ErrorBadValue("Cannot build indices using DeviceAdapterTagUndefined");
-    }
-
-    VTKM_ASSERT(this->ElementsValid);
-
-    if (!this->IndexOffsetsValid)
-    {
-      buildIndexOffsets(this->NumIndices, this->IndexOffsets, deviceId);
-      this->IndexOffsetsValid = true;
-    }
+    this->Offsets.ReleaseResourcesExecution();
   }
 
   VTKM_CONT
@@ -131,19 +71,10 @@ struct ConnectivityExplicitInternals
     {
       out << "     Shapes: ";
       vtkm::cont::printSummary_ArrayHandle(this->Shapes, out);
-      out << "     NumIndices: ";
-      vtkm::cont::printSummary_ArrayHandle(this->NumIndices, out);
       out << "     Connectivity: ";
       vtkm::cont::printSummary_ArrayHandle(this->Connectivity, out);
-      if (this->IndexOffsetsValid)
-      {
-        out << "     IndexOffsets: ";
-        vtkm::cont::printSummary_ArrayHandle(this->IndexOffsets, out);
-      }
-      else
-      {
-        out << "     IndexOffsets: Not Allocated" << std::endl;
-      }
+      out << "     Offsets: ";
+      vtkm::cont::printSummary_ArrayHandle(this->Offsets, out);
     }
     else
     {
@@ -225,95 +156,73 @@ struct ConnIdxToCellIdCalcSingleType
   vtkm::Id operator()(vtkm::Id inIdx) const { return inIdx / this->CellSize; }
 };
 
-template <typename VisitCellsWithPoints, typename VisitPointsWithCells, typename Device>
-void ComputeVisitPointsWithCellsConnectivity(VisitPointsWithCells& cell2Point,
-                                             const VisitCellsWithPoints& point2Cell,
-                                             vtkm::Id numberOfPoints,
-                                             Device)
+template <typename ConnTableT, typename RConnTableT, typename Device>
+void ComputeRConnTable(RConnTableT& rConnTable,
+                       const ConnTableT& connTable,
+                       vtkm::Id numberOfPoints,
+                       Device)
 {
-  if (cell2Point.ElementsValid)
+  if (rConnTable.ElementsValid)
   {
     return;
   }
 
-  auto& conn = point2Cell.Connectivity;
-  auto& rConn = cell2Point.Connectivity;
-  auto& rNumIndices = cell2Point.NumIndices;
-  auto& rIndexOffsets = cell2Point.IndexOffsets;
-  vtkm::Id rConnSize = conn.GetNumberOfValues();
+  const auto& conn = connTable.Connectivity;
+  auto& rConn = rConnTable.Connectivity;
+  auto& rOffsets = rConnTable.Offsets;
+  const vtkm::Id rConnSize = conn.GetNumberOfValues();
 
-  auto offInPortal = point2Cell.IndexOffsets.PrepareForInput(Device{});
+  const auto offInPortal = connTable.Offsets.PrepareForInput(Device{});
 
   PassThrough idxCalc{};
   ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
 
   vtkm::cont::internal::ReverseConnectivityBuilder builder;
-  builder.Run(conn,
-              rConn,
-              rNumIndices,
-              rIndexOffsets,
-              idxCalc,
-              cellIdCalc,
-              numberOfPoints,
-              rConnSize,
-              Device());
+  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
 
-  // Set the VisitPointsWithCells information
-  cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
+  rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-  cell2Point.ElementsValid = true;
-  cell2Point.IndexOffsetsValid = true;
+  rConnTable.ElementsValid = true;
 }
 
 // Specialize for CellSetSingleType:
-template <typename ShapeStorageTag,
-          typename ConnectivityStorageTag,
-          typename IndexOffsetStorageTag,
-          typename VisitPointsWithCells,
-          typename Device>
-void ComputeVisitPointsWithCellsConnectivity(
-  VisitPointsWithCells& cell2Point,
-  const ConnectivityExplicitInternals<
-    ShapeStorageTag,
-    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag, // nIndices
-    ConnectivityStorageTag,
-    IndexOffsetStorageTag>& point2Cell,
-  vtkm::Id numberOfPoints,
-  Device)
+template <typename RConnTableT, typename ConnectivityStorageTag, typename Device>
+void ComputeRConnTable(RConnTableT& rConnTable,
+                       const ConnectivityExplicitInternals< // SingleType specialization types:
+                         typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
+                         ConnectivityStorageTag,
+                         typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>& connTable,
+                       vtkm::Id numberOfPoints,
+                       Device)
 {
-  if (cell2Point.ElementsValid)
+  if (rConnTable.ElementsValid)
   {
     return;
   }
 
-  auto& conn = point2Cell.Connectivity;
-  auto& rConn = cell2Point.Connectivity;
-  auto& rNumIndices = cell2Point.NumIndices;
-  auto& rIndexOffsets = cell2Point.IndexOffsets;
-  vtkm::Id rConnSize = conn.GetNumberOfValues();
+  const auto& conn = connTable.Connectivity;
+  auto& rConn = rConnTable.Connectivity;
+  auto& rOffsets = rConnTable.Offsets;
+  const vtkm::Id rConnSize = conn.GetNumberOfValues();
 
-  auto sizesInPortal = point2Cell.NumIndices.GetPortalConstControl();
-  vtkm::IdComponent cellSize = sizesInPortal.GetNumberOfValues() > 0 ? sizesInPortal.Get(0) : 0;
+  const vtkm::IdComponent cellSize = [&]() -> vtkm::IdComponent {
+    if (connTable.Offsets.GetNumberOfValues() >= 2)
+    {
+      const auto firstTwo = vtkm::cont::ArrayGetValues({ 0, 1 }, connTable.Offsets);
+      return static_cast<vtkm::IdComponent>(firstTwo[1] - firstTwo[0]);
+    }
+    return 0;
+  }();
 
   PassThrough idxCalc{};
   ConnIdxToCellIdCalcSingleType cellIdCalc{ cellSize };
 
   vtkm::cont::internal::ReverseConnectivityBuilder builder;
-  builder.Run(conn,
-              rConn,
-              rNumIndices,
-              rIndexOffsets,
-              idxCalc,
-              cellIdCalc,
-              numberOfPoints,
-              rConnSize,
-              Device());
+  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
 
-  // Set the VisitPointsWithCells information
-  cell2Point.Shapes = vtkm::cont::make_ArrayHandleConstant(
+  rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-  cell2Point.ElementsValid = true;
-  cell2Point.IndexOffsetsValid = true;
+  rConnTable.ElementsValid = true;
 }
 }
 }

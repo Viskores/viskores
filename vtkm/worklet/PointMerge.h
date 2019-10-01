@@ -443,18 +443,11 @@ public:
     points = vtkm::cont::ArrayHandleVirtualCoordinates(concretePoints);
   }
 
-  template <typename ShapeStorage,
-            typename NumIndicesStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT vtkm::cont::CellSetExplicit<ShapeStorage,
-                                        NumIndicesStorage,
-                                        VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
-                                        OffsetsStorage>
-  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
-                                               NumIndicesStorage,
-                                               ConnectivityStorage,
-                                               OffsetsStorage>& inCellSet) const
+  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
+  VTKM_CONT
+    vtkm::cont::CellSetExplicit<ShapeStorage, VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
+    MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+                 inCellSet) const
   {
     return vtkm::worklet::RemoveUnusedPoints::MapCellSet(
       inCellSet, this->PointInputToOutputMap, this->MergeKeys.GetInputRange());

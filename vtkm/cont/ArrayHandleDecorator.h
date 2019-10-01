@@ -26,6 +26,11 @@
 #include <type_traits>
 #include <utility>
 
+// MSVC < 2019 and CUDA have issues with tao integer sequences
+#if (defined(VTKM_MSVC) && (_MSC_VER < 1920)) || defined(VTKM_CUDA_DEVICE_PASS)
+#define VTKM_USE_BRIGAND_SEQ
+#endif
+
 namespace vtkm
 {
 namespace cont
@@ -352,11 +357,11 @@ struct DecoratorStorageTraits
   using ArrayTupleType = vtkmstd::tuple<ArrayTs...>;
 
 // size_t integral constants that index ArrayTs:
-#if defined(VTKM_MSVC) && (_MSC_VER < 1920) //Less than MSCV2019
+#ifdef VTKM_USE_BRIGAND_SEQ
   using IndexList = brigand::make_sequence<brigand::size_t<0>, sizeof...(ArrayTs)>;
-#else
+#else // VTKM_USE_BRIGAND_SEQ
   using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
-#endif
+#endif // VTKM_USE_BRIGAND_SEQ
 
   // Portal lists:
   // NOTE we have to pass the parameter pack here instead of using ArrayList
@@ -435,7 +440,7 @@ struct DecoratorStorageTraits
     return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
   }
 
-#if defined(VTKM_MSVC) && (_MSC_VER < 1920) //Less than MSCV2019
+#ifdef VTKM_USE_BRIGAND_SEQ
   // Portal construction methods. These actually create portals.
   template <template <typename...> class List, typename... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
@@ -516,7 +521,7 @@ struct DecoratorStorageTraits
       GetPortalOutput(vtkmstd::get<Indices{}.value>(arrays), dev)...);
   }
 
-#else
+#else  // VTKM_USE_BRIGAND_SEQ
   // Portal construction methods. These actually create portals.
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
@@ -570,7 +575,7 @@ struct DecoratorStorageTraits
     return CreatePortalDecorator<PortalExecutionType<Device>>(
       numValues, impl, GetPortalOutput(vtkmstd::get<Indices>(arrays), dev)...);
   }
-#endif
+#endif // VTKM_USE_BRIGAND_SEQ
 };
 
 } // end namespace decor
@@ -886,5 +891,7 @@ make_ArrayHandleDecorator(vtkm::Id numValues, DecoratorImplT&& f, ArrayTs&&... a
 }
 }
 } // namespace vtkm::cont
+
+#undef VTKM_USE_BRIGAND_SEQ
 
 #endif //vtk_m_ArrayHandleDecorator_h
