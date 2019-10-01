@@ -35,10 +35,6 @@ public:
     vtkm::cont::DataSet iso = filter.Execute(dataSet);
 
     vtkm::filter::CellSetConnectivity connectivity;
-    // The CellSetConnectivityFilter does not care about field but we are
-    // setting the active field anyway, otherwise FilterField will complain.
-    //connectivity.SetUseCoordinateSystemAsField(true);
-    connectivity.SetActiveField("cellvar");
     const vtkm::cont::DataSet output = connectivity.Execute(iso);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
@@ -57,10 +53,6 @@ public:
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
 
     vtkm::filter::CellSetConnectivity connectivity;
-    // The CellSetConnectivityFilter does not care about field but we are
-    // setting the active field anyway, otherwise FilterField will complain.
-    //connectivity.SetUseCoordinateSystemAsField(true);
-    connectivity.SetActiveField("cellvar");
     const vtkm::cont::DataSet output = connectivity.Execute(dataSet);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
@@ -78,10 +70,6 @@ public:
   {
     vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::CellSetConnectivity connectivity;
-    // The CellSetConnectivityFilter does not care about field but we are
-    // setting the active field anyway, otherwise FilterField will complain.
-    //connectivity.SetUseCoordinateSystemAsField(true);
-    connectivity.SetActiveField("cellvar");
     const vtkm::cont::DataSet output = connectivity.Execute(dataSet);
 
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
