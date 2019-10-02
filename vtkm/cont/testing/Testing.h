@@ -38,7 +38,7 @@ public:
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
-    vtkm::cont::Initialize(argc, argv);
+    vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
 
     try
     {
@@ -71,7 +71,8 @@ public:
   template <class Func>
   static VTKM_CONT int RunOnDevice(Func function, int argc, char* argv[])
   {
-    auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+    auto opts =
+      vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::Strict;
     auto config = vtkm::cont::Initialize(argc, argv, opts);
 
     try
