@@ -489,8 +489,12 @@ private:
 protected:
   using ControlInterface =
     vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>;
-  using ExecutionInterface =
-    vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>;
+
+  // We go through the GetExecSig as that generates a default ExecutionSignature
+  // if one doesn't exist on the worklet
+  using ExecutionSignature =
+    typename vtkm::placeholders::GetExecSig<WorkletType>::ExecutionSignature;
+  using ExecutionInterface = vtkm::internal::FunctionInterface<ExecutionSignature>;
 
   static constexpr vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
