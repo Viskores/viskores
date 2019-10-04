@@ -183,8 +183,8 @@ public:
   {
     using Helper = RConnTableHelpers;
 
-    static constexpr vtkm::TopologyElementTagCell cell;
-    static constexpr vtkm::TopologyElementTagPoint point;
+    static constexpr vtkm::TopologyElementTagCell cell{};
+    static constexpr vtkm::TopologyElementTagPoint point{};
 
     auto fullCellSet = cellset.GetFullCellSet();
 
