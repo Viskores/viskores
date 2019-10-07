@@ -18,7 +18,7 @@
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkc/vtkc.h>
+#include <lcl/lcl.h>
 
 namespace vtkm
 {
@@ -76,16 +76,16 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeImpl(
 
   auto fieldNumComponents = vtkm::VecTraits<FieldType>::GetNumberOfComponents(field[0]);
   vtkm::Vec<FieldType, 3> derivs;
-  auto status = vtkc::derivative(tag,
-                                 vtkc::makeFieldAccessorNestedSOA(wCoords, 3),
-                                 vtkc::makeFieldAccessorNestedSOA(field, fieldNumComponents),
-                                 pcoords,
-                                 derivs[0],
-                                 derivs[1],
-                                 derivs[2]);
-  if (status != vtkc::ErrorCode::SUCCESS)
+  auto status = lcl::derivative(tag,
+                                lcl::makeFieldAccessorNestedSOA(wCoords, 3),
+                                lcl::makeFieldAccessorNestedSOA(field, fieldNumComponents),
+                                pcoords,
+                                derivs[0],
+                                derivs[1],
+                                derivs[2]);
+  if (status != lcl::ErrorCode::SUCCESS)
   {
-    worklet.RaiseError(vtkc::errorString(status));
+    worklet.RaiseError(lcl::errorString(status));
     derivs = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
   }
 
@@ -155,7 +155,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   auto lineField = vtkm::make_Vec(field[idx - 1], field[idx]);
   auto lineWCoords = vtkm::make_Vec(wCoords[idx - 1], wCoords[idx]);
   auto pc = (pcoords[0] - static_cast<ParametricCoordType>(idx) * dt) / dt;
-  return internal::CellDerivativeImpl(vtkc::Line{}, lineField, lineWCoords, &pc, worklet);
+  return internal::CellDerivativeImpl(lcl::Line{}, lineField, lineWCoords, &pc, worklet);
 }
 
 //-----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       return CellDerivative(field, wCoords, pcoords, vtkm::CellShapeTagLine(), worklet);
     default:
       return internal::CellDerivativeImpl(
-        vtkc::Polygon(numPoints), field, wCoords, pcoords, worklet);
+        lcl::Polygon(numPoints), field, wCoords, pcoords, worklet);
   }
 }
 
@@ -193,7 +193,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   vtkm::CellShapeTagQuad,
   const vtkm::exec::FunctorBase& worklet)
 {
-  return internal::CellDerivativeImpl(vtkc::Pixel{}, field, wCoords, pcoords, worklet);
+  return internal::CellDerivativeImpl(lcl::Pixel{}, field, wCoords, pcoords, worklet);
 }
 
 template <typename FieldVecType, typename ParametricCoordType>
@@ -204,7 +204,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   vtkm::CellShapeTagHexahedron,
   const vtkm::exec::FunctorBase& worklet)
 {
-  return internal::CellDerivativeImpl(vtkc::Voxel{}, field, wCoords, pcoords, worklet);
+  return internal::CellDerivativeImpl(lcl::Voxel{}, field, wCoords, pcoords, worklet);
 }
 }
 } // namespace vtkm::exec

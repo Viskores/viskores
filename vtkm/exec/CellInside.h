@@ -13,7 +13,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
-#include <vtkc/vtkc.h>
+#include <lcl/lcl.h>
 
 namespace vtkm
 {
@@ -24,7 +24,7 @@ template <typename T, typename CellShapeTag>
 static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, CellShapeTag)
 {
   using VtkcTagType = typename vtkm::internal::CellShapeTagVtkmToVtkc<CellShapeTag>::Type;
-  return vtkc::cellInside(VtkcTagType{}, pcoords);
+  return lcl::cellInside(VtkcTagType{}, pcoords);
 }
 
 template <typename T>

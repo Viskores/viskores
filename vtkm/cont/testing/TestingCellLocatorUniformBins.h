@@ -15,7 +15,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/exec/CellInterpolate.h>
+#include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -60,7 +60,7 @@ public:
                             const PointType& pc,
                             PointType& wc) const
   {
-    wc = vtkm::exec::CellInterpolate(points, pc, cellShape, *this);
+    wc = vtkm::exec::ParametricCoordinatesToWorldCoordinates(points, pc, cellShape, *this);
   }
 };
 
@@ -159,7 +159,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     cellIds.GetPortalControl().Set(i, cellIdGen(RandomGenerator));
 
     PointType pc(0.0f);
-    vtkm::FloatDefault minPc = 1e-3f;
+    vtkm::FloatDefault minPc = 1e-2f;
     vtkm::FloatDefault sum = 0.0f;
     for (vtkm::IdComponent c = 0; c < DIMENSIONS; ++c)
     {

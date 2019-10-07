@@ -15,7 +15,7 @@
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkc/vtkc.h>
+#include <lcl/lcl.h>
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
@@ -43,10 +43,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolateImpl(
   IdComponent numComponents = vtkm::VecTraits<FieldValueType>::GetNumberOfComponents(field[0]);
   FieldValueType result(0);
   auto status =
-    vtkc::interpolate(tag, vtkc::makeFieldAccessorNestedSOA(field, numComponents), pcoords, result);
-  if (status != vtkc::ErrorCode::SUCCESS)
+    lcl::interpolate(tag, lcl::makeFieldAccessorNestedSOA(field, numComponents), pcoords, result);
+  if (status != lcl::ErrorCode::SUCCESS)
   {
-    worklet.RaiseError(vtkc::errorString(status));
+    worklet.RaiseError(lcl::errorString(status));
   }
   return result;
 }
@@ -86,9 +86,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   CellShapeTag tag,
   const vtkm::exec::FunctorBase& worklet)
 {
-  auto vtkcTag =
+  auto lclTag =
     vtkm::internal::make_VtkcCellShapeTag(tag, pointFieldValues.GetNumberOfComponents());
-  return internal::CellInterpolateImpl(vtkcTag, pointFieldValues, pcoords, worklet);
+  return internal::CellInterpolateImpl(lclTag, pointFieldValues, pcoords, worklet);
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 
   T pc = (pcoords[0] - static_cast<T>(idx) * dt) / dt;
   return internal::CellInterpolateImpl(
-    vtkc::Line{}, vtkm::make_Vec(field[idx], field[idx + 1]), &pc, worklet);
+    lcl::Line{}, vtkm::make_Vec(field[idx], field[idx + 1]), &pc, worklet);
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
     case 2:
       return CellInterpolate(field, pcoords, vtkm::CellShapeTagLine(), worklet);
     default:
-      return internal::CellInterpolateImpl(vtkc::Polygon(numPoints), field, pcoords, worklet);
+      return internal::CellInterpolateImpl(lcl::Polygon(numPoints), field, pcoords, worklet);
   }
 }
 
@@ -161,7 +161,7 @@ VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates
                                       vtkm::CellShapeTagQuad,
                                       const vtkm::exec::FunctorBase& worklet)
 {
-  return internal::CellInterpolateImpl(vtkc::Pixel{}, field, pcoords, worklet);
+  return internal::CellInterpolateImpl(lcl::Pixel{}, field, pcoords, worklet);
 }
 
 //-----------------------------------------------------------------------------
@@ -171,7 +171,7 @@ VTKM_EXEC vtkm::Vec3f CellInterpolate(const vtkm::VecAxisAlignedPointCoordinates
                                       vtkm::CellShapeTagHexahedron,
                                       const vtkm::exec::FunctorBase& worklet)
 {
-  return internal::CellInterpolateImpl(vtkc::Voxel{}, field, pcoords, worklet);
+  return internal::CellInterpolateImpl(lcl::Voxel{}, field, pcoords, worklet);
 }
 }
 } // namespace vtkm::exec
