@@ -485,9 +485,9 @@ static inline VTKM_CONT std::string TypeToString()
   return TypeToString(typeid(T));
 }
 template <typename T>
-static inline VTKM_CONT std::string TypeToString(const T& t)
+static inline VTKM_CONT std::string TypeToString(const T&)
 {
-  return TypeToString(typeid(t));
+  return TypeToString(typeid(T));
 }
 /**@}*/
 }
