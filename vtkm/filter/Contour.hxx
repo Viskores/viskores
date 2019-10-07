@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_Contour_hxx
+#define vtk_m_filter_Contour_hxx
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
@@ -152,3 +154,5 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

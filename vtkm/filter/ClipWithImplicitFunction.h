@@ -84,4 +84,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithImplicitFunction);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/ClipWithImplicitFunction.hxx>
+
 #endif // vtk_m_filter_ClipWithImplicitFunction_h

@@ -9,7 +9,6 @@
 //============================================================================
 #define vtkm_filter_Contour_cxx
 #include <vtkm/filter/Contour.h>
-#include <vtkm/filter/Contour.hxx>
 
 namespace vtkm
 {

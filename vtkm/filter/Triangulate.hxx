@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/worklet/DispatcherMapField.h>
+#ifndef vtk_m_filter_Triangulate_hxx
+#define vtk_m_filter_Triangulate_hxx
 
 namespace
 {
@@ -107,3 +107,4 @@ inline VTKM_CONT bool Triangulate::DoMapField(vtkm::cont::DataSet& result,
 }
 }
 }
+#endif

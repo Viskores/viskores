@@ -8,7 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/CleanGrid.h>
+#ifndef vtkm_m_filter_CleanGrid_hxx
+#define vtkm_m_filter_CleanGrid_hxx
 
 #include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
@@ -71,3 +72,5 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
 }
 }
 }
+
+#endif

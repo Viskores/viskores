@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
-#include <vtkm/filter/SurfaceNormals.h>
+#ifndef vtk_m_filter_SurfaceNormals_hxx
+#define vtk_m_filter_SurfaceNormals_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
 
@@ -151,3 +151,4 @@ inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
 }
 }
 } // vtkm::filter
+#endif

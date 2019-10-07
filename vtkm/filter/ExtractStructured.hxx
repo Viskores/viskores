@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExtractStructured_hxx
+#define vtk_m_filter_ExtractStructured_hxx
+
 namespace vtkm
 {
 namespace filter
@@ -37,3 +40,5 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
 }
 }
 }
+
+#endif

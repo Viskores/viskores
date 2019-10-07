@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExternalFaces_hxx
+#define vtk_m_filter_ExternalFaces_hxx
+
 namespace vtkm
 {
 namespace filter
@@ -41,3 +44,5 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
 }
 }
 }
+
+#endif

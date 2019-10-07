@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_NDHistogram_hxx
+#define vtk_m_filter_NDHistogram_hxx
 
 #include <vector>
 #include <vtkm/cont/DataSet.h>
@@ -86,3 +88,4 @@ inline VTKM_CONT bool NDHistogram::DoMapField(vtkm::cont::DataSet&,
 }
 }
 }
+#endif

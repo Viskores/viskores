@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_Threshold_hxx
+#define vtk_m_filter_Threshold_hxx
 
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -66,3 +68,4 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
 }
 }
 }
+#endif

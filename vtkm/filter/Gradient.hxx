@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Gradient_hxx
+#define vtk_m_filter_Gradient_hxx
+
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
@@ -112,3 +115,5 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

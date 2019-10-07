@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_VectorMagnitude_hxx
+#define vtk_m_filter_VectorMagnitude_hxx
 
 #include <vtkm/Math.h>
 
@@ -32,3 +34,4 @@ inline VTKM_CONT vtkm::cont::DataSet VectorMagnitude::DoExecute(
 }
 }
 } // namespace vtkm::filter
+#endif

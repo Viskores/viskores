@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_GhostCellClassify_hxx
+#define vtk_m_filter_GhostCellClassify_hxx
 
 #include <vtkm/CellClassification.h>
 #include <vtkm/RangeId.h>
@@ -154,3 +156,4 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::co
 }
 }
 }
+#endif

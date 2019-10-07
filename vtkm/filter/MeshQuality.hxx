@@ -17,6 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //=========================================================================
+#ifndef vtk_m_filter_MeshQuality_hxx
+#define vtk_m_filter_MeshQuality_hxx
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -103,3 +105,4 @@ inline VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(
 
 } // namespace filter
 } // namespace vtkm
+#endif

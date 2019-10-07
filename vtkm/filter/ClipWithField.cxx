@@ -10,7 +10,6 @@
 #define vtkm_filter_Clip_cxx
 
 #include <vtkm/filter/ClipWithField.h>
-#include <vtkm/filter/ClipWithField.hxx>
 
 namespace vtkm
 {

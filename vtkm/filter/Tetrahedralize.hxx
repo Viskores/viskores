@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Tetrahedralize_hxx
+#define vtk_m_filter_Tetrahedralize_hxx
+
 namespace
 {
 struct DeduceCellSet
@@ -81,3 +84,4 @@ inline VTKM_CONT bool Tetrahedralize::DoMapField(
 }
 }
 }
+#endif

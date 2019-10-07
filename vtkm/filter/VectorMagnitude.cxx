@@ -10,7 +10,6 @@
 #define vtkm_filter_VectorMagnitude_cxx
 
 #include <vtkm/filter/VectorMagnitude.h>
-#include <vtkm/filter/VectorMagnitude.hxx>
 
 namespace vtkm
 {

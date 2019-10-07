@@ -47,4 +47,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(CellAverage);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/CellAverage.hxx>
+
 #endif // vtk_m_filter_CellAverage_h

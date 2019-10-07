@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExtractPoints_hxx
+#define vtk_m_filter_ExtractPoints_hxx
+
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
@@ -88,3 +91,5 @@ inline VTKM_CONT bool ExtractPoints::DoMapField(
 }
 }
 }
+
+#endif

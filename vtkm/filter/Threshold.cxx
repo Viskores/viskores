@@ -9,7 +9,6 @@
 //============================================================================
 #define vtkm_filter_Threshold_cxx
 #include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/Threshold.hxx>
 
 namespace vtkm
 {

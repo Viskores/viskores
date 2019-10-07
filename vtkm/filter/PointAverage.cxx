@@ -10,7 +10,6 @@
 #define vtkm_filter_PointAverage_cxx
 
 #include <vtkm/filter/PointAverage.h>
-#include <vtkm/filter/PointAverage.hxx>
 
 namespace vtkm
 {

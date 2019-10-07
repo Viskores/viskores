@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_PointAverage_hxx
+#define vtk_m_filter_PointAverage_hxx
+
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
@@ -47,3 +50,4 @@ inline VTKM_CONT vtkm::cont::DataSet PointAverage::DoExecute(
 }
 }
 } // namespace vtkm::filter
+#endif

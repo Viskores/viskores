@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ClipWithField_hxx
+#define vtk_m_filter_ClipWithField_hxx
+
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -52,3 +55,5 @@ inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
 }
 }
 } // end namespace vtkm::filter
+
+#endif
