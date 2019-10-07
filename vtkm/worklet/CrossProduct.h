@@ -23,7 +23,6 @@ class CrossProduct : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T>
   VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec1,
