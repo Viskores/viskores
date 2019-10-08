@@ -140,17 +140,17 @@ public:
   VTKM_EXEC
   void SetBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
-    Status.Set(idx, Status.Get(idx) | static_cast<vtkm::Id>(b));
+    //    Status.Set(idx, Status.Get(idx) | static_cast<vtkm::Id>(b));
   }
   VTKM_EXEC
   void ClearBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
-    Status.Set(idx, Status.Get(idx) & ~static_cast<vtkm::Id>(b));
+    //    Status.Set(idx, Status.Get(idx) & ~static_cast<vtkm::Id>(b));
   }
   VTKM_EXEC
   bool CheckBit(const vtkm::Id& idx, const ParticleStatus& b) const
   {
-    return (Status.Get(idx) & static_cast<vtkm::Id>(b)) != 0;
+    return true; //return (Status.Get(idx) & static_cast<vtkm::Id>(b)) != 0;
   }
 
   VTKM_EXEC
