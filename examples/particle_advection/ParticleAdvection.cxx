@@ -29,8 +29,9 @@ int main(int argc, char** argv)
 
   if (argc < 8)
   {
-    std::cerr << "Usage: " << argv[0] << " dataFile varName numSeeds numSteps stepSize outputFile"
-              << std::endl;
+    std::cerr << "Usage: " << argv[0]
+              << "dataFile varName numSeeds numSteps stepSize outputFile [options]" << std::endl;
+    std::cerr << "where options are: " << std::endl << config.Usage << std::endl;
     return -1;
   }
 
