@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExtractGeometry_hxx
+#define vtk_m_filter_ExtractGeometry_hxx
+
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -128,3 +131,5 @@ inline VTKM_CONT bool ExtractGeometry::DoMapField(
 }
 }
 }
+
+#endif

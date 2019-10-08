@@ -128,5 +128,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractStructured);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/ExtractStructured.hxx>
 
 #endif // vtk_m_filter_ExtractStructured_h

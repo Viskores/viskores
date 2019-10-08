@@ -146,4 +146,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(CleanGrid);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/CleanGrid.hxx>
+
 #endif //vtk_m_filter_CleanGrid_h

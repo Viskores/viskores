@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_Tube_hxx
+#define vtk_m_filter_Tube_hxx
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -70,3 +72,4 @@ inline VTKM_CONT bool Tube::DoMapField(vtkm::cont::DataSet& result,
 }
 }
 } // namespace vtkm::filter
+#endif

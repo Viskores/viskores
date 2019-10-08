@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_ZFPDecompressor3D_hxx
+#define vtk_m_filter_ZFPDecompressor3D_hxx
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -67,3 +69,4 @@ inline VTKM_CONT bool ZFPDecompressor3D::DoMapField(vtkm::cont::DataSet&,
 }
 }
 } // namespace vtkm::filter
+#endif

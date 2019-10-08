@@ -10,7 +10,6 @@
 //============================================================================
 #define vtkm_filter_ExternalFaces_cxx
 #include <vtkm/filter/ExternalFaces.h>
-#include <vtkm/filter/ExternalFaces.hxx>
 
 namespace vtkm
 {

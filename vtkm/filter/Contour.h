@@ -156,4 +156,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(Contour);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/Contour.hxx>
+
 #endif // vtk_m_filter_Contour_h
