@@ -7,36 +7,36 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_vtkc_h
-#define vtk_c_vtkc_h
+#ifndef lcl_lcl_h
+#define lcl_lcl_h
 
-#include <vtkc/Hexahedron.h>
-#include <vtkc/Line.h>
-#include <vtkc/Pixel.h>
-#include <vtkc/Polygon.h>
-#include <vtkc/Pyramid.h>
-#include <vtkc/Quad.h>
-#include <vtkc/Tetra.h>
-#include <vtkc/Triangle.h>
-#include <vtkc/Vertex.h>
-#include <vtkc/Voxel.h>
-#include <vtkc/Wedge.h>
+#include <lcl/Hexahedron.h>
+#include <lcl/Line.h>
+#include <lcl/Pixel.h>
+#include <lcl/Polygon.h>
+#include <lcl/Pyramid.h>
+#include <lcl/Quad.h>
+#include <lcl/Tetra.h>
+#include <lcl/Triangle.h>
+#include <lcl/Vertex.h>
+#include <lcl/Voxel.h>
+#include <lcl/Wedge.h>
 
 #include <utility>
 
-namespace vtkc
+namespace lcl
 {
 
 /// \brief Perform basic checks to validate cell's state.
 /// \param[in]  tag  The cell tag to validate.
-/// \return          vtkc::ErrorCode::SUCCESS if valid.
+/// \return          lcl::ErrorCode::SUCCESS if valid.
 ///
-VTKC_EXEC inline vtkc::ErrorCode validate(Cell tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Cell tag) noexcept
 {
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = validate(CellTag{tag}));
+    lclGenericCellShapeMacro(status = validate(CellTag{tag}));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
       break;
@@ -48,17 +48,17 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Cell tag) noexcept
 /// \remark Note that the parametric center is not always located at (0.5,0.5,0.5).
 /// \param[in]   tag      The cell tag.
 /// \param[out]  pcoords  The center of the cell in parametric coordinates.
-/// \return               A vtkc::ErrorCode value indicating the status of the operation.
+/// \return               A lcl::ErrorCode value indicating the status of the operation.
 ///
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Cell tag, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Cell tag, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = parametricCenter(CellTag{tag}, std::forward<CoordType>(pcoords)));
+    lclGenericCellShapeMacro(status = parametricCenter(CellTag{tag}, std::forward<CoordType>(pcoords)));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
       break;
@@ -70,18 +70,18 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Cell tag, CoordType&& pcoords)
 /// \param[in]   tag      The cell tag.
 /// \param[in]   pointId  The point number.
 /// \param[out]  pcoords  The parametric coordinates of a cell's point.
-/// \return               A vtkc::ErrorCode value indicating the status of the operation.
+/// \return               A lcl::ErrorCode value indicating the status of the operation.
 ///
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Cell tag, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = parametricPoint(CellTag{tag}, pointId, std::forward<CoordType>(pcoords)));
+    lclGenericCellShapeMacro(status = parametricPoint(CellTag{tag}, pointId, std::forward<CoordType>(pcoords)));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
       break;
@@ -97,14 +97,14 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 /// \pre tag should be a valid cell, otherwise the result is undefined.
 ///
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Cell tag, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Cell tag, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ComponentType<CoordType> dist{0};
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(dist = parametricDistance(CellTag{tag}, pcoords));
+    lclGenericCellShapeMacro(dist = parametricDistance(CellTag{tag}, pcoords));
     default:
       break;
   }
@@ -118,14 +118,14 @@ VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Cell tag, const Coo
 /// \pre tag should be a valid cell, otherwise the result is undefined.
 ///
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Cell tag, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Cell tag, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   bool inside = false;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(inside = cellInside(CellTag{tag}, pcoords));
+    lclGenericCellShapeMacro(inside = cellInside(CellTag{tag}, pcoords));
     default:
       break;
   }
@@ -137,21 +137,21 @@ VTKC_EXEC inline bool cellInside(Cell tag, const CoordType& pcoords) noexcept
 /// \param[in]   values   A \c FieldAccessor for values to interpolate
 /// \param[in]   pcoords  The parametric coordinates.
 /// \param[out]  result   The interpolation result
-/// \return               A vtkc::ErrorCode value indicating the status of the operation.
+/// \return               A lcl::ErrorCode value indicating the status of the operation.
 ///
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Cell tag,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = interpolate(CellTag{tag}, values, pcoords, std::forward<Result>(result)));
+    lclGenericCellShapeMacro(status = interpolate(CellTag{tag}, values, pcoords, std::forward<Result>(result)));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
   }
@@ -166,10 +166,10 @@ VTKC_EXEC inline vtkc::ErrorCode interpolate(
 /// \param[out]  dx       The derivative along X
 /// \param[out]  dy       The derivative along Y
 /// \param[out]  dz       The derivative along Z
-/// \return               A vtkc::ErrorCode value indicating the status of the operation.
+/// \return               A lcl::ErrorCode value indicating the status of the operation.
 ///
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Cell tag,
   const Points& points,
   const Values& values,
@@ -178,12 +178,12 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = derivative(CellTag{tag},
+    lclGenericCellShapeMacro(status = derivative(CellTag{tag},
                                                 points,
                                                 values,
                                                 pcoords,
@@ -203,18 +203,18 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 /// \param[out]  wcoords  The world coordinates.
 ///
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Cell tag,
   const Points& points,
   const PCoordType& pcoords,
   WCoordType&& wcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = parametricToWorld(CellTag{tag}, points, pcoords, std::forward<WCoordType>(wcoords)));
+    lclGenericCellShapeMacro(status = parametricToWorld(CellTag{tag}, points, pcoords, std::forward<WCoordType>(wcoords)));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
   }
@@ -228,24 +228,24 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 /// \param[out]  pcoords  The parametric coordinates.
 ///
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Cell tag,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   ErrorCode status = ErrorCode::SUCCESS;
   switch (tag.shape())
   {
-    vtkcGenericCellShapeMacro(status = worldToParametric(CellTag{tag}, points, wcoords, std::forward<PCoordType>(pcoords)));
+    lclGenericCellShapeMacro(status = worldToParametric(CellTag{tag}, points, wcoords, std::forward<PCoordType>(pcoords)));
     default:
       status = ErrorCode::INVALID_SHAPE_ID;
   }
   return status;
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_vtkc_h
+#endif //lcl_lcl_h

@@ -1,4 +1,4 @@
-# VTK-c License Version 1.0 #
+# Lightweight Cell Library License Version 1.0 #
 
 Copyright (c) 2019
 Kitware Inc.,

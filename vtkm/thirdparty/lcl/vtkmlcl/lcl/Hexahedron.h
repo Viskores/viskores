@@ -7,25 +7,25 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Hexahedron_h
-#define vtk_c_Hexahedron_h
+#ifndef lcl_Hexahedron_h
+#define lcl_Hexahedron_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Hexahedron : public Cell
 {
 public:
-  constexpr VTKC_EXEC Hexahedron() : Cell(ShapeId::HEXAHEDRON, 8) {}
-  constexpr VTKC_EXEC explicit Hexahedron(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Hexahedron() : Cell(ShapeId::HEXAHEDRON, 8) {}
+  constexpr LCL_EXEC explicit Hexahedron(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Hexahedron tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Hexahedron tag) noexcept
 {
   if (tag.shape() != ShapeId::HEXAHEDRON && tag.shape() != ShapeId::VOXEL)
   {
@@ -40,9 +40,9 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Hexahedron tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Hexahedron, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Hexahedron, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   component(pcoords, 0) = 0.5f;
   component(pcoords, 1) = 0.5f;
@@ -51,10 +51,10 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Hexahedron, CoordType&& pcoord
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Hexahedron, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (pointId)
   {
@@ -106,31 +106,33 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Hexahedron, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Hexahedron, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
   return internal::findParametricDistance(pcoords, 3);
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Hexahedron, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Hexahedron, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
-  return component(pcoords, 0) >= T{0} && component(pcoords, 0) <= T{1} &&
-         component(pcoords, 1) >= T{0} && component(pcoords, 1) <= T{1} &&
-         component(pcoords, 2) >= T{0} && component(pcoords, 2) <= T{1};
+
+  constexpr T eps = 1e-6f;
+  return component(pcoords, 0) >= -eps && component(pcoords, 0) <= (T{1} + eps) &&
+         component(pcoords, 1) >= -eps && component(pcoords, 1) <= (T{1} + eps) &&
+         component(pcoords, 2) >= -eps && component(pcoords, 2) <= (T{1} + eps);
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Hexahedron,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = internal::ClosestFloatType<typename Values::ValueType>;
 
@@ -161,7 +163,7 @@ namespace internal
 {
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline void parametricDerivative(Hexahedron,
+LCL_EXEC inline void parametricDerivative(Hexahedron,
                                            const Values& values,
                                            IdComponent comp,
                                            const CoordType& pcoords,
@@ -210,7 +212,7 @@ VTKC_EXEC inline void parametricDerivative(Hexahedron,
 } // internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Hexahedron,
   const Points& points,
   const Values& values,
@@ -229,7 +231,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Hexahedron,
   const Points& points,
   const PCoordType& pcoords,
@@ -239,7 +241,7 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Hexahedron,
   const Points& points,
   const WCoordType& wcoords,
@@ -249,6 +251,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
     Hexahedron{}, points, wcoords, std::forward<PCoordType>(pcoords));
 }
 
-} // vtkc
+} // lcl
 
-#endif // vtk_c_Hexahedron_h
+#endif // lcl_Hexahedron_h

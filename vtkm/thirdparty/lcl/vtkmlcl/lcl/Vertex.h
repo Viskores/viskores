@@ -7,23 +7,23 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Vertex_h
-#define vtk_c_Vertex_h
+#ifndef lcl_Vertex_h
+#define lcl_Vertex_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Vertex : public Cell
 {
 public:
-  constexpr VTKC_EXEC Vertex() : Cell(ShapeId::VERTEX, 1) {}
-  constexpr VTKC_EXEC explicit Vertex(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Vertex() : Cell(ShapeId::VERTEX, 1) {}
+  constexpr LCL_EXEC explicit Vertex(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Vertex tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Vertex tag) noexcept
 {
   if (tag.shape() != ShapeId::VERTEX)
   {
@@ -38,13 +38,13 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Vertex tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Vertex, CoordType&&) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Vertex, CoordType&&) noexcept
 {
   return ErrorCode::SUCCESS;
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(Vertex, IdComponent pointId, CoordType&&) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricPoint(Vertex, IdComponent pointId, CoordType&&) noexcept
 {
   if (pointId == 0)
   {
@@ -57,19 +57,19 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(Vertex, IdComponent pointId, Co
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Vertex, const CoordType&) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Vertex, const CoordType&) noexcept
 {
   return ComponentType<CoordType>{1};
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Vertex, const CoordType&) noexcept
+LCL_EXEC inline bool cellInside(Vertex, const CoordType&) noexcept
 {
   return false;
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Vertex,
   const Values& values,
   const CoordType&,
@@ -85,7 +85,7 @@ VTKC_EXEC inline vtkc::ErrorCode interpolate(
 }
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Vertex,
   const Points&,
   const Values& values,
@@ -103,7 +103,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline  vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline  lcl::ErrorCode parametricToWorld(
   Vertex,
   const Points& points,
   const PCoordType&,
@@ -117,7 +117,7 @@ VTKC_EXEC inline  vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Vertex,
   const Points&,
   const WCoordType&,
@@ -126,6 +126,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   return ErrorCode::SUCCESS;
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_Vertex_h
+#endif //lcl_Vertex_h

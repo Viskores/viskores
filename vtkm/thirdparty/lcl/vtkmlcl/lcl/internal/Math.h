@@ -7,18 +7,18 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_internal_Math_h
-#define vtk_c_internal_Math_h
+#ifndef lcl_internal_Math_h
+#define lcl_internal_Math_h
 
 #include <cmath>
 
 #ifdef __CUDA_ARCH__
-# define VTKC_MATH_CALL(func, ...) func(__VA_ARGS__)
+# define LCL_MATH_CALL(func, ...) func(__VA_ARGS__)
 #else
-# define VTKC_MATH_CALL(func, ...) std::func(__VA_ARGS__)
+# define LCL_MATH_CALL(func, ...) std::func(__VA_ARGS__)
 #endif
 
-namespace vtkc
+namespace lcl
 {
 
 namespace internal
@@ -33,13 +33,13 @@ public:
 #if defined(_MSC_VER) && (_MSC_VER == 1900)
   // workaround vs2015 bug producing the following error:
   // error C2476: ‘constexpr’ constructor does not initialize all members
-  VTKC_EXEC Vector() noexcept {};
+  LCL_EXEC Vector() noexcept {};
 #else
-  VTKC_EXEC
+  LCL_EXEC
   constexpr Vector() noexcept {};
 #endif
 
-  VTKC_EXEC
+  LCL_EXEC
   explicit Vector(const T& val) noexcept
   {
     for (auto& c : Data)
@@ -49,7 +49,7 @@ public:
   }
 
   template <typename... Ts>
-  VTKC_EXEC
+  LCL_EXEC
   constexpr explicit Vector(const T& c1, const Ts&... cs) noexcept
     : Data{c1, cs...}
   {
@@ -61,25 +61,25 @@ public:
     return Dim;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   T& operator[](IdComponent c) noexcept
   {
     return this->Data[c];
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   constexpr const T& operator[](IdComponent c) const noexcept
   {
     return this->Data[c];
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   T* data() noexcept
   {
     return this->Data;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   constexpr const T* data() const noexcept
   {
     return this->Data;
@@ -91,7 +91,7 @@ private:
 
 //---------------------------------------------------------------------------
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator+=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -102,7 +102,7 @@ Vector<T, Dim>& operator+=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcep
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator-=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -113,7 +113,7 @@ Vector<T, Dim>& operator-=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcep
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator*=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -124,7 +124,7 @@ Vector<T, Dim>& operator*=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcep
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator*=(Vector<T, Dim>& v, const T& s) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -135,7 +135,7 @@ Vector<T, Dim>& operator*=(Vector<T, Dim>& v, const T& s) noexcept
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator/=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -146,7 +146,7 @@ Vector<T, Dim>& operator/=(Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcep
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim>& operator/=(Vector<T, Dim>& v, const T& s) noexcept
 {
   for (IdComponent i = 0; i < Dim; ++i)
@@ -157,49 +157,49 @@ Vector<T, Dim>& operator/=(Vector<T, Dim>& v, const T& s) noexcept
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator+(Vector<T, Dim> v1, const Vector<T, Dim>& v2) noexcept
 {
   return v1 += v2;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator-(Vector<T, Dim> v1, const Vector<T, Dim>& v2) noexcept
 {
   return v1 -= v2;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator*(Vector<T, Dim> v1, const Vector<T, Dim>& v2) noexcept
 {
   return v1 *= v2;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator*(Vector<T, Dim> v, const T& s) noexcept
 {
   return v *= s;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator*(const T& s, Vector<T, Dim> v) noexcept
 {
   return v *= s;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator/(Vector<T, Dim> v1, const Vector<T, Dim>& v2) noexcept
 {
   return v1 /= v2;
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> operator/(Vector<T, Dim> v, const T& s) noexcept
 {
   return v /= s;
@@ -207,7 +207,7 @@ Vector<T, Dim> operator/(Vector<T, Dim> v, const T& s) noexcept
 
 //---------------------------------------------------------------------------
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 T dot(const Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 {
   T result{};
@@ -219,7 +219,7 @@ T dot(const Vector<T, Dim>& v1, const Vector<T, Dim>& v2) noexcept
 }
 
 template <typename T>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, 3> cross(const Vector<T, 3>& v1, const Vector<T, 3>& v2) noexcept
 {
   return Vector<T, 3>(v1[1] * v2[2] - v1[2] * v2[1],
@@ -228,21 +228,21 @@ Vector<T, 3> cross(const Vector<T, 3>& v1, const Vector<T, 3>& v2) noexcept
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 T magnitude(const Vector<T, Dim>& v)
 {
-  return VTKC_MATH_CALL(sqrt, (dot(v, v)));
+  return LCL_MATH_CALL(sqrt, (dot(v, v)));
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 void normalize(Vector<T, Dim>& v)
 {
   v /= magnitude(v);
 }
 
 template <typename T, IdComponent Dim>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Dim> normal(Vector<T, Dim> v)
 {
   normalize(v);
@@ -259,43 +259,43 @@ public:
 #if defined(_MSC_VER) && (_MSC_VER == 1900)
   // workaround vs2015 bug producing the following error:
   // error C2476: ‘constexpr’ constructor does not initialize all members
-  VTKC_EXEC Matrix() noexcept {};
+  LCL_EXEC Matrix() noexcept {};
 #else
-  VTKC_EXEC
+  LCL_EXEC
   constexpr Matrix() noexcept {};
 #endif
 
-  VTKC_EXEC
+  LCL_EXEC
   T& operator()(IdComponent r, IdComponent c) noexcept
   {
     return this->Columns[c][r];
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   constexpr const T& operator()(IdComponent r, IdComponent c) const noexcept
   {
     return this->Columns[c][r];
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   static constexpr IdComponent getNumberOfRows() noexcept
   {
     return NumberOfRows;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   static constexpr IdComponent getNumberOfColumns() noexcept
   {
     return NumberOfColumns;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   constexpr const Vector<T, NumberOfRows>& getColumn(IdComponent c) const
   {
     return this->Columns[c];
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   Vector<T, NumberOfColumns> getRow(IdComponent r) const
   {
     Vector<T, NumberOfColumns> row;
@@ -306,7 +306,7 @@ public:
     return row;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   Matrix& operator+=(const Matrix& m) noexcept
   {
     for (IdComponent i = 0; i < NumberOfColumns; ++i)
@@ -316,7 +316,7 @@ public:
     return *this;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   Matrix& operator-=(const Matrix& m) noexcept
   {
     for (IdComponent i = 0; i < NumberOfColumns; ++i)
@@ -326,7 +326,7 @@ public:
     return *this;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   Matrix& operator*=(const T& s) noexcept
   {
     for (auto& c : this->Columns)
@@ -336,7 +336,7 @@ public:
     return *this;
   }
 
-  VTKC_EXEC
+  LCL_EXEC
   Matrix& operator/=(const T& s) noexcept
   {
     for (auto& c : this->Columns)
@@ -352,7 +352,7 @@ private:
 
 //---------------------------------------------------------------------------
 template <typename T, IdComponent NRows, IdComponent NCols>
-VTKC_EXEC
+LCL_EXEC
 Matrix<T, NRows, NCols> operator+(Matrix<T, NRows, NCols> m1,
                                   const Matrix<T, NRows, NCols>& m2) noexcept
 {
@@ -360,7 +360,7 @@ Matrix<T, NRows, NCols> operator+(Matrix<T, NRows, NCols> m1,
 }
 
 template <typename T, IdComponent NRows, IdComponent NCols>
-VTKC_EXEC
+LCL_EXEC
 Matrix<T, NRows, NCols> operator-(Matrix<T, NRows, NCols> m1,
                                   const Matrix<T, NRows, NCols>& m2) noexcept
 {
@@ -368,14 +368,14 @@ Matrix<T, NRows, NCols> operator-(Matrix<T, NRows, NCols> m1,
 }
 
 template <typename T, IdComponent NRows, IdComponent NCols>
-VTKC_EXEC
+LCL_EXEC
 Matrix<T, NRows, NCols> operator*(Matrix<T, NRows, NCols> m, const T& s) noexcept
 {
   return m *= s;
 }
 
 template <typename T, IdComponent NRows, IdComponent NCols>
-VTKC_EXEC
+LCL_EXEC
 Matrix<T, NRows, NCols> operator/(Matrix<T, NRows, NCols> m, const T& s) noexcept
 {
   return m /= s;
@@ -386,7 +386,7 @@ template <typename T,
           IdComponent NumRow,
           IdComponent NumCol,
           IdComponent NumInternal>
-VTKC_EXEC
+LCL_EXEC
 Matrix<T, NumRow, NumCol> matrixMultiply(
   const Matrix<T, NumRow, NumInternal>& leftFactor,
   const Matrix<T, NumInternal, NumCol>& rightFactor) noexcept
@@ -408,7 +408,7 @@ Matrix<T, NumRow, NumCol> matrixMultiply(
 }
 
 template <typename T, IdComponent NumRow, IdComponent NumCol>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, NumRow> matrixMultiply(
   const Matrix<T, NumRow, NumCol>& leftFactor,
   const Vector<T, NumCol>& rightFactor) noexcept
@@ -422,7 +422,7 @@ Vector<T, NumRow> matrixMultiply(
 }
 
 template <typename T, IdComponent NumRow, IdComponent NumCol>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, NumCol> matrixMultiply(
   const Vector<T, NumRow>& leftFactor,
   const Matrix<T, NumRow, NumCol>& rightFactor) noexcept
@@ -442,8 +442,8 @@ namespace detail
 {
 
 template <typename T, IdComponent Size>
-VTKC_EXEC
-vtkc::ErrorCode matrixLUPFactorFindPivot(Matrix<T, Size, Size>& m,
+LCL_EXEC
+lcl::ErrorCode matrixLUPFactorFindPivot(Matrix<T, Size, Size>& m,
                                          Vector<IdComponent, Size>& permutation,
                                          IdComponent topCornerIndex,
                                          T& inversionParity) noexcept
@@ -453,10 +453,10 @@ vtkc::ErrorCode matrixLUPFactorFindPivot(Matrix<T, Size, Size>& m,
                         T{};
 
   IdComponent maxRowIndex = topCornerIndex;
-  T maxValue = VTKC_MATH_CALL(abs, (m(maxRowIndex, topCornerIndex)));
+  T maxValue = LCL_MATH_CALL(abs, (m(maxRowIndex, topCornerIndex)));
   for (IdComponent rowIndex = topCornerIndex + 1; rowIndex < Size; rowIndex++)
   {
-    T compareValue = VTKC_MATH_CALL(abs, (m(rowIndex, topCornerIndex)));
+    T compareValue = LCL_MATH_CALL(abs, (m(rowIndex, topCornerIndex)));
     if (maxValue < compareValue)
     {
       maxValue = compareValue;
@@ -466,7 +466,7 @@ vtkc::ErrorCode matrixLUPFactorFindPivot(Matrix<T, Size, Size>& m,
 
   if (maxValue < epsilon)
   {
-    return vtkc::ErrorCode::MATRIX_LUP_FACTORIZATION_FAILED;
+    return lcl::ErrorCode::MATRIX_LUP_FACTORIZATION_FAILED;
   }
 
   if (maxRowIndex != topCornerIndex)
@@ -488,12 +488,12 @@ vtkc::ErrorCode matrixLUPFactorFindPivot(Matrix<T, Size, Size>& m,
     inversionParity = -inversionParity;
   }
 
-  return vtkc::ErrorCode::SUCCESS;
+  return lcl::ErrorCode::SUCCESS;
 }
 
 // Used with MatrixLUPFactor
 template <typename T, IdComponent Size>
-VTKC_EXEC
+LCL_EXEC
 void matrixLUPFactorFindUpperTriangleElements(
   Matrix<T, Size, Size>& m, IdComponent topCornerIndex) noexcept
 {
@@ -544,8 +544,8 @@ void matrixLUPFactorFindUpperTriangleElements(
 /// Otherwise, valid is set to false and the result is indeterminant.
 ///
 template <typename T, IdComponent Size>
-VTKC_EXEC
-vtkc::ErrorCode matrixLUPFactor(Matrix<T, Size, Size>& m,
+LCL_EXEC
+lcl::ErrorCode matrixLUPFactor(Matrix<T, Size, Size>& m,
                                 Vector<IdComponent, Size>& permutation,
                                 T& inversionParity) noexcept
 {
@@ -558,11 +558,11 @@ vtkc::ErrorCode matrixLUPFactor(Matrix<T, Size, Size>& m,
 
   for (IdComponent rowIndex = 0; rowIndex < Size; rowIndex++)
   {
-    VTKC_RETURN_ON_ERROR(matrixLUPFactorFindPivot(m, permutation, rowIndex, inversionParity))
+    LCL_RETURN_ON_ERROR(matrixLUPFactorFindPivot(m, permutation, rowIndex, inversionParity))
     matrixLUPFactorFindUpperTriangleElements(m, rowIndex);
   }
 
-  return vtkc::ErrorCode::SUCCESS;
+  return lcl::ErrorCode::SUCCESS;
 }
 
 /// Use a previous factorization done with MatrixLUPFactor to solve the
@@ -570,7 +570,7 @@ vtkc::ErrorCode matrixLUPFactor(Matrix<T, Size, Size>& m,
 /// matrices calculated by MatrixLUPFactor from A. The x matrix is returned.
 ///
 template <typename T, IdComponent Size>
-VTKC_EXEC
+LCL_EXEC
 Vector<T, Size> matrixLUPSolve(
   const Matrix<T, Size, Size>& LU,
   const Vector<IdComponent, Size>& permutation,
@@ -613,8 +613,8 @@ Vector<T, Size> matrixLUPSolve(
 } // namespace detail
 
 template <typename T, IdComponent Size>
-VTKC_EXEC
-vtkc::ErrorCode solveLinearSystem(const Matrix<T, Size, Size>& A,
+LCL_EXEC
+lcl::ErrorCode solveLinearSystem(const Matrix<T, Size, Size>& A,
                                   const Vector<T, Size>& b,
                                   Vector<T, Size>& x) noexcept
 {
@@ -622,25 +622,25 @@ vtkc::ErrorCode solveLinearSystem(const Matrix<T, Size, Size>& A,
   Matrix<T, Size, Size> LU = A;
   Vector<IdComponent, Size> permutation;
   T inversionParity; // Unused.
-  VTKC_RETURN_ON_ERROR(detail::matrixLUPFactor(LU, permutation, inversionParity))
+  LCL_RETURN_ON_ERROR(detail::matrixLUPFactor(LU, permutation, inversionParity))
 
   // Next, use the decomposition to solve the system.
   x = detail::matrixLUPSolve(LU, permutation, b);
-  return vtkc::ErrorCode::SUCCESS;
+  return lcl::ErrorCode::SUCCESS;
 }
 
 /// Find and return the inverse of the given matrix. If the matrix is singular,
 /// the inverse will not be correct and valid will be set to false.
 ///
 template <typename T, IdComponent Size>
-VTKC_EXEC
-vtkc::ErrorCode matrixInverse(const Matrix<T, Size, Size>& A, Matrix<T, Size, Size>& invA) noexcept
+LCL_EXEC
+lcl::ErrorCode matrixInverse(const Matrix<T, Size, Size>& A, Matrix<T, Size, Size>& invA) noexcept
 {
   // First, we will make an LUP-factorization to help us.
   Matrix<T, Size, Size> LU = A;
   Vector<IdComponent, Size> permutation;
   T inversionParity; // Unused
-  VTKC_RETURN_ON_ERROR(detail::matrixLUPFactor(LU, permutation, inversionParity))
+  LCL_RETURN_ON_ERROR(detail::matrixLUPFactor(LU, permutation, inversionParity))
 
   // We will use the decomposition to solve AX = I for X where X is
   // clearly the inverse of A.  Our solve method only works for vectors,
@@ -656,13 +656,13 @@ vtkc::ErrorCode matrixInverse(const Matrix<T, Size, Size>& A, Matrix<T, Size, Si
       invA(i, colIndex) = invACol[i];
     }
   }
-  return vtkc::ErrorCode::SUCCESS;
+  return lcl::ErrorCode::SUCCESS;
 }
 
 ///=========================================================================
 template <typename JacobianFunctor, typename FunctionFunctor, typename T, IdComponent Size>
-VTKC_EXEC
-inline vtkc::ErrorCode newtonsMethod(
+LCL_EXEC
+inline lcl::ErrorCode newtonsMethod(
   const JacobianFunctor& jacobianEvaluator,
   const FunctionFunctor& functionEvaluator,
   const Vector<T, Size>& rhs,
@@ -678,17 +678,17 @@ inline vtkc::ErrorCode newtonsMethod(
     Matrix<T, Size, Size> jacobian;
     Vector<T, Size> fx(0);
 
-    VTKC_RETURN_ON_ERROR(jacobianEvaluator(x, jacobian))
-    VTKC_RETURN_ON_ERROR(functionEvaluator(x, fx))
+    LCL_RETURN_ON_ERROR(jacobianEvaluator(x, jacobian))
+    LCL_RETURN_ON_ERROR(functionEvaluator(x, fx))
 
     Vector<T, Size> deltax;
-    VTKC_RETURN_ON_ERROR(solveLinearSystem(jacobian, fx - rhs, deltax))
+    LCL_RETURN_ON_ERROR(solveLinearSystem(jacobian, fx - rhs, deltax))
     x -= deltax;
 
     converged = true;
     for (int c = 0; c < Size; ++c)
     {
-      converged &= (VTKC_MATH_CALL(abs, (deltax[c])) < convergeDifference);
+      converged &= (LCL_MATH_CALL(abs, (deltax[c])) < convergeDifference);
     }
   }
 
@@ -698,15 +698,15 @@ inline vtkc::ErrorCode newtonsMethod(
 
 ///=========================================================================
 template <typename T>
-VTKC_EXEC inline T lerp(T v0, T v1, T t)
+LCL_EXEC inline T lerp(T v0, T v1, T t)
 {
   static_assert(std::is_floating_point<T>::value,
                 "lerp requires floating point parameters");
 
-  return VTKC_MATH_CALL(fma, (t), (v1), (VTKC_MATH_CALL(fma, (-t), (v0), (v0))));
+  return LCL_MATH_CALL(fma, (t), (v1), (LCL_MATH_CALL(fma, (-t), (v0), (v0))));
 }
 
 }
-} // vtkc::internal
+} // lcl::internal
 
-#endif // vtk_c_internal_Math_h
+#endif // lcl_internal_Math_h

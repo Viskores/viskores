@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Shapes_h
-#define vtk_c_Shapes_h
+#ifndef lcl_Shapes_h
+#define lcl_Shapes_h
 
-#include <vtkc/internal/Config.h>
+#include <lcl/internal/Config.h>
 
 #include <cstdint>
 
-namespace vtkc
+namespace lcl
 {
 
 enum ShapeId : IdShape
@@ -42,14 +42,14 @@ enum ShapeId : IdShape
 class Cell
 {
 public:
-  constexpr VTKC_EXEC Cell() : Shape(ShapeId::EMPTY), NumberOfPoints(0) {}
-  constexpr VTKC_EXEC Cell(IdShape shape, IdComponent numberOfPoints)
-    : Shape(shape), NumberOfPoints(numberOfPoints)
+  constexpr LCL_EXEC Cell() : Shape(ShapeId::EMPTY), NumberOfPoints(0) {}
+  constexpr LCL_EXEC Cell(IdShape shape, IdComponent numPoints)
+    : Shape(shape), NumberOfPoints(numPoints)
   {
   }
 
-  constexpr VTKC_EXEC IdShape shape() const noexcept { return this->Shape; }
-  constexpr VTKC_EXEC IdComponent numberOfPoints() const noexcept { return this->NumberOfPoints; }
+  constexpr LCL_EXEC IdShape shape() const noexcept { return this->Shape; }
+  constexpr LCL_EXEC IdComponent numberOfPoints() const noexcept { return this->NumberOfPoints; }
 
 protected:
   IdShape Shape;
@@ -60,7 +60,7 @@ protected:
 /// \param[in]  shapeId  The id to check.
 /// \return              true if id is a valid shape id.
 ///
-constexpr inline VTKC_EXEC bool isValidShape(IdShape shapeId)
+constexpr inline LCL_EXEC bool isValidShape(IdShape shapeId)
 {
   return (shapeId >= ShapeId::EMPTY) && (shapeId < ShapeId::NUMBER_OF_CELL_SHAPES);
 }
@@ -69,7 +69,7 @@ constexpr inline VTKC_EXEC bool isValidShape(IdShape shapeId)
 /// \param[in]  shapeId  The shape id of the cell.
 /// \return              The dimensionality of the cell, -1 for invalid shapes.
 ///
-inline VTKC_EXEC int dimension(IdShape shapeId)
+inline LCL_EXEC int dimension(IdShape shapeId)
 {
   switch (shapeId)
   {
@@ -98,7 +98,7 @@ inline VTKC_EXEC int dimension(IdShape shapeId)
 /// \param[in]  cell  The cell.
 /// \return           The dimensionality of the cell, -1 for invalid shapes.
 ///
-inline VTKC_EXEC int dimension(Cell cell)
+inline LCL_EXEC int dimension(Cell cell)
 {
   return dimension(cell.shape());
 }
@@ -116,9 +116,9 @@ class Hexahedron;
 class Wedge;
 class Pyramid;
 
-} //namespace vtkc
+} //namespace lcl
 
-#define vtkcGenericCellShapeMacroCase(cellId, cell, call)                                          \
+#define lclGenericCellShapeMacroCase(cellId, cell, call)                                          \
   case cellId:                                                                                     \
   {                                                                                                \
     using CellTag = cell;                                                                          \
@@ -126,17 +126,17 @@ class Pyramid;
   }                                                                                                \
   break
 
-#define vtkcGenericCellShapeMacro(call)                                                            \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::VERTEX,     vtkc::Vertex,     call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::LINE,       vtkc::Line,       call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::TRIANGLE,   vtkc::Triangle,   call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::POLYGON,    vtkc::Polygon,    call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::PIXEL,      vtkc::Pixel,      call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::QUAD,       vtkc::Quad,       call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::TETRA,      vtkc::Tetra,      call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::VOXEL,      vtkc::Voxel,      call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::HEXAHEDRON, vtkc::Hexahedron, call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::WEDGE,      vtkc::Wedge,      call);                \
-  vtkcGenericCellShapeMacroCase(vtkc::ShapeId::PYRAMID,    vtkc::Pyramid,    call)
+#define lclGenericCellShapeMacro(call)                                                            \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::VERTEX,     lcl::Vertex,     call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::LINE,       lcl::Line,       call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::TRIANGLE,   lcl::Triangle,   call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::POLYGON,    lcl::Polygon,    call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::PIXEL,      lcl::Pixel,      call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::QUAD,       lcl::Quad,       call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::TETRA,      lcl::Tetra,      call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::VOXEL,      lcl::Voxel,      call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::HEXAHEDRON, lcl::Hexahedron, call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::WEDGE,      lcl::Wedge,      call);                \
+  lclGenericCellShapeMacroCase(lcl::ShapeId::PYRAMID,    lcl::Pyramid,    call)
 
-#endif //vtk_c_Shapes_h
+#endif //lcl_Shapes_h

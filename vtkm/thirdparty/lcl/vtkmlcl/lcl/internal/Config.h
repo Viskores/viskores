@@ -7,19 +7,19 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_internal_Config_h
-#define vtk_c_internal_Config_h
+#ifndef lcl_internal_Config_h
+#define lcl_internal_Config_h
 
 #include <cstdint>
 #include <type_traits>
 
 #ifdef __CUDACC__
-# define VTKC_EXEC __device__ __host__
+# define LCL_EXEC __device__ __host__
 #else
-# define VTKC_EXEC
+# define LCL_EXEC
 #endif
 
-namespace vtkc
+namespace lcl
 {
 
 namespace internal
@@ -33,6 +33,6 @@ using ClosestFloatType =
 using IdShape = std::int8_t;
 using IdComponent = std::int32_t;
 
-} // namespace vtkc
+} // namespace lcl
 
-#endif // vtk_c_internal_Config_h
+#endif // lcl_internal_Config_h

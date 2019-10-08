@@ -7,25 +7,25 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Pyramid_h
-#define vtk_c_Pyramid_h
+#ifndef lcl_Pyramid_h
+#define lcl_Pyramid_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Pyramid : public Cell
 {
 public:
-  constexpr VTKC_EXEC Pyramid() : Cell(ShapeId::PYRAMID, 5) {}
-  constexpr VTKC_EXEC explicit Pyramid(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Pyramid() : Cell(ShapeId::PYRAMID, 5) {}
+  constexpr LCL_EXEC explicit Pyramid(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Pyramid tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Pyramid tag) noexcept
 {
   if (tag.shape() != ShapeId::PYRAMID)
   {
@@ -40,9 +40,9 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Pyramid tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Pyramid, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Pyramid, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   component(pcoords, 0) = 0.5f;
   component(pcoords, 1) = 0.5f;
@@ -51,10 +51,10 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Pyramid, CoordType&& pcoords) 
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Pyramid, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (pointId)
   {
@@ -91,31 +91,33 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Pyramid, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Pyramid, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
   return internal::findParametricDistance(pcoords, 3);
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Pyramid, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Pyramid, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
-  return component(pcoords, 0) >= T{0} && component(pcoords, 0) <= T{1} &&
-         component(pcoords, 1) >= T{0} && component(pcoords, 1) <= T{1} &&
-         component(pcoords, 2) >= T{0} && component(pcoords, 2) <= T{1};
+
+  constexpr T eps = 0.001f;
+  return component(pcoords, 0) >= -eps && component(pcoords, 0) <= (T{1} + eps) &&
+         component(pcoords, 1) >= -eps && component(pcoords, 1) <= (T{1} + eps) &&
+         component(pcoords, 2) >= -eps && component(pcoords, 2) <= (T{1} + eps);
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Pyramid,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = internal::ClosestFloatType<typename Values::ValueType>;
 
@@ -144,7 +146,7 @@ namespace internal
 {
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline void parametricDerivative(Pyramid,
+LCL_EXEC inline void parametricDerivative(Pyramid,
                                            const Values& values,
                                            IdComponent comp,
                                            const CoordType& pcoords,
@@ -182,7 +184,7 @@ VTKC_EXEC inline void parametricDerivative(Pyramid,
 } // internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Pyramid,
   const Points& points,
   const Values& values,
@@ -191,7 +193,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -210,11 +212,11 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 
     const ComponentType<CoordType> pc1[3] = {0.5f, 0.5f, (2.0f * 0.998f) - component(pcoords, 2)};
     internal::jacobian3D(Pyramid{}, points, pc1, j);
-    VTKC_RETURN_ON_ERROR(internal::matrixInverse(j, ij1))
+    LCL_RETURN_ON_ERROR(internal::matrixInverse(j, ij1))
 
     const ComponentType<CoordType> pc2[3] = {0.5f, 0.5f, 0.998f};
     internal::jacobian3D(Pyramid{}, points, pc2, j);
-    VTKC_RETURN_ON_ERROR(internal::matrixInverse(j, ij2))
+    LCL_RETURN_ON_ERROR(internal::matrixInverse(j, ij2))
 
     for (IdComponent c = 0; c < values.getNumberOfComponents(); ++c)
     {
@@ -246,7 +248,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Pyramid,
   const Points& points,
   const PCoordType& pcoords,
@@ -256,13 +258,13 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Pyramid,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using TIn = typename Points::ValueType;
   using TOut = ComponentType<PCoordType>;
@@ -274,7 +276,7 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   internal::Vector<TOut, 3> pcBaseCenter(0.5f, 0.5f, 0.0f);
   internal::Vector<TIn, 3> apex, wcBaseCenter;
   points.getTuple(4, apex);
-  VTKC_RETURN_ON_ERROR(parametricToWorld(Pyramid{}, points, pcBaseCenter, wcBaseCenter))
+  LCL_RETURN_ON_ERROR(parametricToWorld(Pyramid{}, points, pcBaseCenter, wcBaseCenter))
   auto apexToBase = wcBaseCenter - apex;
   auto apexToWc = wcVec - apex;
   auto dist2ApexToBase = internal::dot(apexToBase, apexToBase);
@@ -288,6 +290,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
     Pyramid{}, points, wcoords, std::forward<PCoordType>(pcoords));
 }
 
-} // vtkc
+} // lcl
 
-#endif // vtk_c_Pyramid_h
+#endif // lcl_Pyramid_h

@@ -7,29 +7,29 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Voxel_h
-#define vtk_c_Voxel_h
+#ifndef lcl_Voxel_h
+#define lcl_Voxel_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Hexahedron.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Hexahedron.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Voxel : public Hexahedron
 {
 public:
-  constexpr VTKC_EXEC Voxel() : Hexahedron(Cell(ShapeId::VOXEL, 8)) {}
-  constexpr VTKC_EXEC explicit Voxel(const Cell& cell) : Hexahedron(cell) {}
+  constexpr LCL_EXEC Voxel() : Hexahedron(Cell(ShapeId::VOXEL, 8)) {}
+  constexpr LCL_EXEC explicit Voxel(const Cell& cell) : Hexahedron(cell) {}
 };
 
 namespace internal
 {
 
 template <typename Points, typename T>
-VTKC_EXEC inline int getVoxelSpacing(const Points& points, T spacing[3])
+LCL_EXEC inline int getVoxelSpacing(const Points& points, T spacing[3])
 {
   int zeros = 0;
   for (int i = 0; i < 3; ++i)
@@ -46,7 +46,7 @@ VTKC_EXEC inline int getVoxelSpacing(const Points& points, T spacing[3])
 } // internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Voxel,
   const Points& points,
   const Values& values,
@@ -55,7 +55,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -80,13 +80,13 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC vtkc::ErrorCode parametricToWorld(
+LCL_EXEC lcl::ErrorCode parametricToWorld(
   Voxel,
   const Points& points,
   const PCoordType& pcoords,
   WCoordType&& wcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using T = ComponentType<WCoordType>;
 
@@ -106,13 +106,13 @@ VTKC_EXEC vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC vtkc::ErrorCode worldToParametric(
+LCL_EXEC lcl::ErrorCode worldToParametric(
   Voxel,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using T = ComponentType<PCoordType>;
 
@@ -131,6 +131,6 @@ VTKC_EXEC vtkc::ErrorCode worldToParametric(
   return ErrorCode::SUCCESS;
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_Voxel_h
+#endif //lcl_Voxel_h

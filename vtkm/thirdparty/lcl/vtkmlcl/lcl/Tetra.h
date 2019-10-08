@@ -7,25 +7,25 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Tetra_h
-#define vtk_c_Tetra_h
+#ifndef lcl_Tetra_h
+#define lcl_Tetra_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Tetra : public Cell
 {
 public:
-  constexpr VTKC_EXEC Tetra() : Cell(ShapeId::TETRA, 4) {}
-  constexpr VTKC_EXEC explicit Tetra(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Tetra() : Cell(ShapeId::TETRA, 4) {}
+  constexpr LCL_EXEC explicit Tetra(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Tetra tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Tetra tag) noexcept
 {
   if (tag.shape() != ShapeId::TETRA)
   {
@@ -40,9 +40,9 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Tetra tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Tetra, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Tetra, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   component(pcoords, 0) = 0.25f;
   component(pcoords, 1) = 0.25f;
@@ -51,10 +51,10 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Tetra, CoordType&& pcoords) no
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Tetra, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (pointId)
   {
@@ -86,48 +86,40 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Tetra, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Tetra, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   ComponentType<CoordType> weights[4];
   weights[0] = ComponentType<CoordType>{1} - component(pcoords, 0) - component(pcoords, 1) - component(pcoords, 2);
   weights[1] = component(pcoords, 0);
   weights[2] = component(pcoords, 1);
   weights[3] = component(pcoords, 2);
-  interpolationWeights(Tetra{}, pcoords, weights);
   return internal::findParametricDistance(weights, 4);
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Tetra, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Tetra, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
-  return component(pcoords, 0) >= T{0} &&
-         component(pcoords, 1) >= T{0} &&
-         component(pcoords, 2) >= T{0} &&
-         (component(pcoords, 0) + component(pcoords, 1) + component(pcoords, 2)) <= T{1};
-}
 
-template <typename CoordType, typename T>
-VTKC_EXEC inline void interpolationWeights(Tetra, const CoordType& pcoords, T weights[4]) noexcept
-{
-  weights[1] = static_cast<T>(component(pcoords, 0));
-  weights[2] = static_cast<T>(component(pcoords, 1));
-  weights[3] = static_cast<T>(component(pcoords, 2));
-  weights[0] = T(1) - weights[1] - weights[2] - weights[3];
+  constexpr T eps = 0.001f;
+  return component(pcoords, 0) >= -eps &&
+         component(pcoords, 1) >= -eps &&
+         component(pcoords, 2) >= -eps &&
+         (component(pcoords, 0) + component(pcoords, 1) + component(pcoords, 2)) <= (T{1} + eps);
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Tetra,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = internal::ClosestFloatType<typename Values::ValueType>;
 
@@ -151,7 +143,7 @@ namespace internal
 {
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline void parametricDerivative(
+LCL_EXEC inline void parametricDerivative(
   Tetra, const Values& values, IdComponent comp, const CoordType&, Result&& result) noexcept
 {
   component(result, 0) = static_cast<ComponentType<Result>>(values.getValue(1, comp) -
@@ -165,7 +157,7 @@ VTKC_EXEC inline void parametricDerivative(
 } // internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Tetra,
   const Points& points,
   const Values& values,
@@ -184,7 +176,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Tetra,
   const Points& points,
   const PCoordType& pcoords,
@@ -194,15 +186,34 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Tetra,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  return internal::worldToParametric3D(Tetra{}, points, wcoords, std::forward<PCoordType>(pcoords));
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+
+  using T = ComponentType<PCoordType>;
+
+  internal::Matrix<T, 3, 3> A;
+  internal::Vector<T, 3> b, x;
+  for (int i = 0; i < 3; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+    {
+      A(j, i) = static_cast<T>(points.getValue(i + 1, j) - points.getValue(0, j));
+    }
+    b[i] = static_cast<T>(component(wcoords, i) - points.getValue(0, i));
+  }
+  LCL_RETURN_ON_ERROR(internal::solveLinearSystem(A, b, x))
+
+  component(pcoords, 0) = x[0];
+  component(pcoords, 1) = x[1];
+  component(pcoords, 2) = x[2];
+  return ErrorCode::SUCCESS;
 }
 
-} // vtkc
+} // lcl
 
-#endif // vtk_c_Tetra_h
+#endif // lcl_Tetra_h

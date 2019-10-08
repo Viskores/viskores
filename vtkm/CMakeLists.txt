@@ -76,7 +76,7 @@ if(VTKm_ENABLE_LOGGING)
 endif()
 add_subdirectory(thirdparty/optionparser)
 add_subdirectory(thirdparty/taotuple)
-add_subdirectory(thirdparty/vtkc)
+add_subdirectory(thirdparty/lcl)
 
 add_subdirectory(testing)
 add_subdirectory(internal)

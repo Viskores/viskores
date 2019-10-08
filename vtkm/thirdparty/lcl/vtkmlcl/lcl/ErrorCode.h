@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_ErrorCode_h
-#define vtk_c_ErrorCode_h
+#ifndef lcl_ErrorCode_h
+#define lcl_ErrorCode_h
 
-#include <vtkc/internal/Config.h>
+#include <lcl/internal/Config.h>
 
 #include <cstdint>
 
-namespace vtkc
+namespace lcl
 {
 
 enum class ErrorCode : std::int32_t
@@ -29,7 +29,7 @@ enum class ErrorCode : std::int32_t
   DEGENERATE_CELL_DETECTED
 };
 
-VTKC_EXEC
+LCL_EXEC
 inline const char* errorString(ErrorCode code) noexcept
 {
   switch (code)
@@ -55,15 +55,15 @@ inline const char* errorString(ErrorCode code) noexcept
   return "Invalid error";
 }
 
-} // vtkc
+} // lcl
 
-#define VTKC_RETURN_ON_ERROR(call)                                                                 \
+#define LCL_RETURN_ON_ERROR(call)                                                                 \
   {                                                                                                \
     auto status = call;                                                                            \
-    if (status != vtkc::ErrorCode::SUCCESS)                                                        \
+    if (status != lcl::ErrorCode::SUCCESS)                                                        \
     {                                                                                              \
       return status;                                                                               \
     }                                                                                              \
   }
 
-#endif // vtk_c_ErrorCode_h
+#endif // lcl_ErrorCode_h

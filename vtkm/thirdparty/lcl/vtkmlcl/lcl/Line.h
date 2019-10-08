@@ -7,25 +7,25 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Line_h
-#define vtk_c_Line_h
+#ifndef lcl_Line_h
+#define lcl_Line_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Line : public Cell
 {
 public:
-  constexpr VTKC_EXEC Line() : Cell(ShapeId::LINE, 2) {}
-  constexpr VTKC_EXEC explicit Line(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Line() : Cell(ShapeId::LINE, 2) {}
+  constexpr LCL_EXEC explicit Line(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Line tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Line tag) noexcept
 {
   if (tag.shape() != ShapeId::LINE)
   {
@@ -40,19 +40,19 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Line tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Line, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Line, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   component(pcoords, 0) = 0.5f;
   return ErrorCode::SUCCESS;
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Line, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (pointId)
   {
@@ -68,29 +68,29 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Line, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Line, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
   return internal::findParametricDistance(pcoords, 1);
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Line, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Line, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
   return component(pcoords, 0) >= T{0} && component(pcoords, 0) <= T{1};
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Line,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -107,7 +107,7 @@ VTKC_EXEC inline vtkc::ErrorCode interpolate(
 }
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Line,
   const Points& points,
   const Values& values,
@@ -116,7 +116,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -137,7 +137,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Line,
   const Points& points,
   const PCoordType& pcoords,
@@ -147,13 +147,13 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Line,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using T = ComponentType<PCoordType>;
   internal::Vector<T, 3> p0(static_cast<T>(points.getValue(0, 0)),
@@ -171,6 +171,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   return ErrorCode::SUCCESS;
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_Line_h
+#endif //lcl_Line_h

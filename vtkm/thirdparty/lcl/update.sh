@@ -4,13 +4,13 @@ set -e
 set -x
 shopt -s dotglob
 
-readonly name="vtkc"
-readonly ownership="VTK-c Upstream <kwrobot@kitware.com>"
+readonly name="lcl"
+readonly ownership="Lightweight Cell Library Upstream <kwrobot@kitware.com>"
 readonly subtree="vtkm/thirdparty/$name/vtkm$name"
-readonly repo="https://gitlab.kitware.com/sujin.philip/vtk-c.git"
+readonly repo="https://gitlab.kitware.com/vtk/lcl.git"
 readonly tag="master"
 readonly paths="
-vtkc
+lcl
 LICENSE.md
 README.md
 "
@@ -18,7 +18,7 @@ README.md
 extract_source () {
     git_archive
     pushd "${extractdir}/${name}-reduced"
-    rm -rf vtkc/testing
+    rm -rf lcl/testing
     popd
 }
 

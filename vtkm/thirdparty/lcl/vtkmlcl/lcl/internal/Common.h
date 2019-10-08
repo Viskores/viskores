@@ -7,27 +7,27 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_internal_Common_h
-#define vtk_c_internal_Common_h
+#ifndef lcl_internal_Common_h
+#define lcl_internal_Common_h
 
-#include <vtkc/FieldAccessor.h>
-#include <vtkc/internal/Math.h>
+#include <lcl/FieldAccessor.h>
+#include <lcl/internal/Math.h>
 
 #include <cstdint>
 #include <type_traits>
 
-#define VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType)                   \
+#define LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType)                   \
   static_assert(std::is_floating_point<ComponentType<PCoordType>>::value,      \
                 "parametric coordinates should be of floating point type");
 
-namespace vtkc
+namespace lcl
 {
 namespace internal
 {
 
 ///=========================================================================
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> findParametricDistance(
+LCL_EXEC inline ComponentType<CoordType> findParametricDistance(
   const CoordType& pvals, IdComponent numVals) noexcept
 {
   using T = ComponentType<CoordType>;
@@ -57,8 +57,8 @@ VTKC_EXEC inline ComponentType<CoordType> findParametricDistance(
 /// Forward declaration
 #define FORWARD_DECLAR_PARAMETRIC_DERIVATIVE(tag)                                                  \
 template <typename Values, typename CoordType, typename Result>                                    \
-VTKC_EXEC inline void parametricDerivative(                                                        \
-  vtkc::tag, const Values& values, IdComponent comp, const CoordType&, Result&& result) noexcept
+LCL_EXEC inline void parametricDerivative(                                                        \
+  lcl::tag, const Values& values, IdComponent comp, const CoordType&, Result&& result) noexcept
 
 FORWARD_DECLAR_PARAMETRIC_DERIVATIVE(Triangle);
 FORWARD_DECLAR_PARAMETRIC_DERIVATIVE(Quad);
@@ -74,7 +74,7 @@ template <typename T>
 class Space2D
 {
 public:
-  explicit VTKC_EXEC Space2D(const Vector<T, 3>& origin, const Vector<T, 3>& p1, const Vector<T, 3>& p2) noexcept
+  explicit LCL_EXEC Space2D(const Vector<T, 3>& origin, const Vector<T, 3>& p1, const Vector<T, 3>& p2) noexcept
   {
     this->Origin = origin;
     this->XAxis = p1 - origin;
@@ -85,13 +85,13 @@ public:
     internal::normalize(this->YAxis);
   }
 
-  VTKC_EXEC Vector<T, 2> to2DPoint(Vector<T, 3> pt) const noexcept
+  LCL_EXEC Vector<T, 2> to2DPoint(Vector<T, 3> pt) const noexcept
   {
     pt -= this->Origin;
     return Vector<T, 2>{ internal::dot(pt, this->XAxis), internal::dot(pt, this->YAxis) };
   }
 
-  VTKC_EXEC Vector<T, 3> to3DVec(const Vector<T, 2>& vec) const noexcept
+  LCL_EXEC Vector<T, 3> to3DVec(const Vector<T, 2>& vec) const noexcept
   {
     return (this->XAxis * vec[0]) + (this->YAxis * vec[1]);
   }
@@ -102,7 +102,7 @@ private:
 };
 
 template <typename CellTag, typename Points, typename PCoords, typename T>
-VTKC_EXEC inline void jacobian2D(
+LCL_EXEC inline void jacobian2D(
   CellTag tag, const Points& points, const PCoords& pcoords, Matrix<T, 2, 2>& jacobian) noexcept
 {
   T pd[2];
@@ -115,7 +115,7 @@ VTKC_EXEC inline void jacobian2D(
 }
 
 template <typename CellTag, typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative2D(
+LCL_EXEC inline lcl::ErrorCode derivative2D(
   CellTag tag,
   const Points& points,
   const Values& values,
@@ -124,7 +124,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative2D(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -148,7 +148,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative2D(
   Matrix<ProcessingType, 2, 2> jacobian;
   jacobian2D(tag, makeFieldAccessorNestedSOA(pts2d, 2), pcoords, jacobian);
   Matrix<ProcessingType, 2, 2> invJacobian;
-  VTKC_RETURN_ON_ERROR(matrixInverse(jacobian, invJacobian))
+  LCL_RETURN_ON_ERROR(matrixInverse(jacobian, invJacobian))
 
   for (IdComponent c = 0; c < values.getNumberOfComponents(); ++c)
   {
@@ -166,13 +166,13 @@ VTKC_EXEC inline vtkc::ErrorCode derivative2D(
 }
 
 template <typename CellTag, typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric2D(
+LCL_EXEC inline lcl::ErrorCode worldToParametric2D(
   CellTag tag,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using TIn = typename Points::ValueType;
   using TOut = ComponentType<PCoordType>;
@@ -200,7 +200,7 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric2D(
 
   auto functionEvaluator = [&points, &planeSpace](const Vector<TOut, 2>& pc, Vector<TIn, 2>& wc) {
     Vector<TIn, 3> wc3(0);
-    VTKC_RETURN_ON_ERROR(parametricToWorld(CellTag{}, points, pc, wc3))
+    LCL_RETURN_ON_ERROR(parametricToWorld(CellTag{}, points, pc, wc3))
     wc = planeSpace.to2DPoint(wc3);
 
     return ErrorCode::SUCCESS;
@@ -208,19 +208,22 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric2D(
 
   Vector<TIn, 3> wcVec{component(wcoords, 0), component(wcoords, 1), component(wcoords, 2)};
   Vector<TOut, 2> pcVec;
-  VTKC_RETURN_ON_ERROR(parametricCenter(tag, pcVec))
-  VTKC_RETURN_ON_ERROR(newtonsMethod(
-    jacobianEvaluator, functionEvaluator, planeSpace.to2DPoint(wcVec), pcVec))
+  LCL_RETURN_ON_ERROR(parametricCenter(tag, pcVec))
+  auto status = newtonsMethod(
+    jacobianEvaluator, functionEvaluator, planeSpace.to2DPoint(wcVec), pcVec);
 
-  component(pcoords, 0) = pcVec[0];
-  component(pcoords, 1) = pcVec[1];
+  if (status == ErrorCode::SUCCESS || status == ErrorCode::SOLUTION_DID_NOT_CONVERGE)
+  {
+    component(pcoords, 0) = pcVec[0];
+    component(pcoords, 1) = pcVec[1];
+  }
 
-  return ErrorCode::SUCCESS;
+  return status;
 }
 
 ///=========================================================================
 template <typename CellTag, typename Points, typename PCoords, typename T>
-VTKC_EXEC inline void jacobian3D(
+LCL_EXEC inline void jacobian3D(
   CellTag tag, const Points& points, const PCoords& pcoords, Matrix<T, 3, 3>& jacobian) noexcept
 {
   T pd[3];
@@ -239,7 +242,7 @@ VTKC_EXEC inline void jacobian3D(
 }
 
 template <typename CellTag, typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative3D(
+LCL_EXEC inline lcl::ErrorCode derivative3D(
   CellTag tag,
   const Points& points,
   const Values& values,
@@ -248,7 +251,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative3D(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using ProcessingType = internal::ClosestFloatType<typename Values::ValueType>;
   using ResultCompType = ComponentType<Result>;
@@ -256,7 +259,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative3D(
   Matrix<ProcessingType, 3, 3> jacobian;
   jacobian3D(tag, points, pcoords, jacobian);
   Matrix<ProcessingType, 3, 3> invJacobian;
-  VTKC_RETURN_ON_ERROR(matrixInverse(jacobian, invJacobian))
+  LCL_RETURN_ON_ERROR(matrixInverse(jacobian, invJacobian))
 
   for (IdComponent c = 0; c < values.getNumberOfComponents(); ++c)
   {
@@ -272,13 +275,13 @@ VTKC_EXEC inline vtkc::ErrorCode derivative3D(
 }
 
 template <typename CellTag, typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric3D(
+LCL_EXEC inline lcl::ErrorCode worldToParametric3D(
   CellTag tag,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   using TIn = typename Points::ValueType;
   using TOut = ComponentType<PCoordType>;
@@ -294,17 +297,20 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric3D(
 
   internal::Vector<TIn, 3> wcVec{component(wcoords, 0), component(wcoords, 1), component(wcoords, 2)};
   internal::Vector<TOut, 3> pcVec;
-  VTKC_RETURN_ON_ERROR(parametricCenter(tag, pcVec))
-  VTKC_RETURN_ON_ERROR(newtonsMethod(jacobianEvaluator, functionEvaluator, wcVec, pcVec))
+  LCL_RETURN_ON_ERROR(parametricCenter(tag, pcVec))
+  auto status = newtonsMethod(jacobianEvaluator, functionEvaluator, wcVec, pcVec);
 
-  component(pcoords, 0) = pcVec[0];
-  component(pcoords, 1) = pcVec[1];
-  component(pcoords, 2) = pcVec[2];
+  if (status == ErrorCode::SUCCESS || status == ErrorCode::SOLUTION_DID_NOT_CONVERGE)
+  {
+    component(pcoords, 0) = pcVec[0];
+    component(pcoords, 1) = pcVec[1];
+    component(pcoords, 2) = pcVec[2];
+  }
 
-  return ErrorCode::SUCCESS;
+  return status;
 }
 
 }
-} // vtkc::internal
+} // lcl::internal
 
-#endif //vtk_c_internal_Common_h
+#endif //lcl_internal_Common_h

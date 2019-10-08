@@ -7,25 +7,25 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Quad_h
-#define vtk_c_Quad_h
+#ifndef lcl_Quad_h
+#define lcl_Quad_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Shapes.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Shapes.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 class Quad : public Cell
 {
 public:
-  constexpr VTKC_EXEC Quad() : Cell(ShapeId::QUAD, 4) {}
-  constexpr VTKC_EXEC explicit Quad(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC Quad() : Cell(ShapeId::QUAD, 4) {}
+  constexpr LCL_EXEC explicit Quad(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Quad tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Quad tag) noexcept
 {
   if (tag.shape() != ShapeId::QUAD && tag.shape() != ShapeId::PIXEL)
   {
@@ -40,9 +40,9 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Quad tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Quad, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Quad, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   component(pcoords, 0) = 0.5f;
   component(pcoords, 1) = 0.5f;
@@ -50,10 +50,10 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Quad, CoordType&& pcoords) noe
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Quad, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (pointId)
   {
@@ -81,30 +81,32 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Quad, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Quad, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
   return internal::findParametricDistance(pcoords, 2);
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Quad, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Quad, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
-  return component(pcoords, 0) >= T{0} && component(pcoords, 0) <= T{1} &&
-         component(pcoords, 1) >= T{0} && component(pcoords, 1) <= T{1};
+
+  constexpr T eps = 0.001f;
+  return component(pcoords, 0) >= -eps && component(pcoords, 0) <= (T{1} + eps) &&
+         component(pcoords, 1) >= -eps && component(pcoords, 1) <= (T{1} + eps);
 }
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode interpolate(
+LCL_EXEC inline lcl::ErrorCode interpolate(
   Quad,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = internal::ClosestFloatType<typename Values::ValueType>;
 
@@ -127,7 +129,7 @@ namespace internal
 {
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline void parametricDerivative(
+LCL_EXEC inline void parametricDerivative(
   Quad, const Values& values, IdComponent comp, const CoordType& pcoords, Result&& result) noexcept
 {
   using T = internal::ClosestFloatType<typename Values::ValueType>;
@@ -152,7 +154,7 @@ VTKC_EXEC inline void parametricDerivative(
 } // internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Quad,
   const Points& points,
   const Values& values,
@@ -171,7 +173,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Quad,
   const Points& points,
   const PCoordType& pcoords,
@@ -181,7 +183,7 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Quad,
   const Points& points,
   const WCoordType& wcoords,
@@ -190,6 +192,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   return internal::worldToParametric2D(Quad{}, points, wcoords, std::forward<PCoordType>(pcoords));
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_Quad_h
+#endif //lcl_Quad_h

@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_FieldAccessor_h
-#define vtk_c_FieldAccessor_h
+#ifndef lcl_FieldAccessor_h
+#define lcl_FieldAccessor_h
 
-#include <vtkc/internal/Config.h>
+#include <lcl/internal/Config.h>
 
 #include <utility>
 
-namespace vtkc
+namespace lcl
 {
 namespace internal
 {
@@ -72,19 +72,19 @@ using VecTypeTag =
 
 //----------------------------------------------------------------------------
 template <typename T>
-VTKC_EXEC auto componentImpl(VecTypeIndexer, T&& vec, int idx) -> decltype(vec[0])
+LCL_EXEC auto componentImpl(VecTypeIndexer, T&& vec, int idx) -> decltype(vec[0])
 {
   return vec[static_cast<IndexType<T>>(idx)];
 }
 
 template <typename T>
-VTKC_EXEC auto componentImpl(VecTypeFunctor, T&& vec, int idx) -> decltype(vec(0))
+LCL_EXEC auto componentImpl(VecTypeFunctor, T&& vec, int idx) -> decltype(vec(0))
 {
   return vec(idx);
 }
 
 template <typename T>
-VTKC_EXEC T& componentImpl(VecTypeScalar, T&& vec, int)
+LCL_EXEC T& componentImpl(VecTypeScalar, T&& vec, int)
 {
   return vec;
 }
@@ -93,7 +93,7 @@ VTKC_EXEC T& componentImpl(VecTypeScalar, T&& vec, int)
 
 //----------------------------------------------------------------------------
 template <typename T>
-VTKC_EXEC auto component(T&& vec, int idx)
+LCL_EXEC auto component(T&& vec, int idx)
   -> decltype(internal::componentImpl<T>(internal::VecTypeTag<T>{}, std::forward<T>(vec), 0))
 {
   return internal::componentImpl<T>(internal::VecTypeTag<T>{}, std::forward<T>(vec), idx);
@@ -105,7 +105,7 @@ using ComponentType = typename std::decay<decltype(component(std::declval<T>(), 
 
 ///============================================================================
 /// Since there are different ways fields maybe represented in the clients of
-/// this libarary, VTK-c relies on helper classes that implement the
+/// this libarary, LCL relies on helper classes that implement the
 /// \c FieldAccessor "concept" to access the elements of a field.
 ///
 /// These classes should wrap the field and provide the follolwing interface:
@@ -127,13 +127,13 @@ using ComponentType = typename std::decay<decltype(component(std::declval<T>(), 
 ///   ValueType getValue(int tuple, int comp) const;
 ///
 ///   /// Set the tuple at index `tuple`. It is recomended to make this a
-///   /// template function and use `vtkc::component` to access
+///   /// template function and use `lcl::component` to access
 ///   /// the components of `value`.
 ///   template <typename VecType>
 ///   void setTuple(int tuple, const VecType& value) const;
 ///
 ///   /// Get the tuple at index `tuple`. It is recomended to make this a
-///   /// template function and use `vtkc::component` to access
+///   /// template function and use `lcl::component` to access
 ///   /// the components of `value`.
 ///   template <typename VecType>
 ///   void getTuple(int tuple, VecType& value) const;
@@ -150,28 +150,28 @@ class FieldAccessorNestedSOA
 public:
   using ValueType = typename std::decay<decltype(component(std::declval<FieldType>()[0], 0))>::type;
 
-  VTKC_EXEC FieldAccessorNestedSOA(FieldType& field, int numberOfComponents = 1)
+  LCL_EXEC FieldAccessorNestedSOA(FieldType& field, int numberOfComponents = 1)
     : Field(&field), NumberOfComponents(numberOfComponents)
   {
   }
 
-  VTKC_EXEC int getNumberOfComponents() const
+  LCL_EXEC int getNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
 
-  VTKC_EXEC void setValue(int tuple, int comp, const ValueType& value) const
+  LCL_EXEC void setValue(int tuple, int comp, const ValueType& value) const
   {
     component((*this->Field)[static_cast<IdxType>(tuple)], comp) = value;
   }
 
-  VTKC_EXEC ValueType getValue(int tuple, int comp) const
+  LCL_EXEC ValueType getValue(int tuple, int comp) const
   {
     return component((*this->Field)[static_cast<IdxType>(tuple)], comp);
   }
 
   template <typename VecType>
-  VTKC_EXEC void setTuple(int tuple, const VecType& value) const
+  LCL_EXEC void setTuple(int tuple, const VecType& value) const
   {
     for (int i = 0; i < this->NumberOfComponents; ++i)
     {
@@ -181,7 +181,7 @@ public:
   }
 
   template <typename VecType>
-  VTKC_EXEC void getTuple(int tuple, VecType& value) const
+  LCL_EXEC void getTuple(int tuple, VecType& value) const
   {
     for (int i = 0; i < this->NumberOfComponents; ++i)
     {
@@ -203,23 +203,23 @@ class FieldAccessorNestedSOAConst
 public:
   using ValueType = typename std::decay<decltype(component(std::declval<FieldType>()[0], 0))>::type;
 
-  VTKC_EXEC FieldAccessorNestedSOAConst(const FieldType& field, int numberOfComponents = 1)
+  LCL_EXEC FieldAccessorNestedSOAConst(const FieldType& field, int numberOfComponents = 1)
     : Field(&field), NumberOfComponents(numberOfComponents)
   {
   }
 
-  VTKC_EXEC int getNumberOfComponents() const
+  LCL_EXEC int getNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
 
-  VTKC_EXEC ValueType getValue(int tuple, int comp) const
+  LCL_EXEC ValueType getValue(int tuple, int comp) const
   {
     return component((*this->Field)[static_cast<IdxType>(tuple)], comp);
   }
 
   template <typename VecType>
-  VTKC_EXEC void getTuple(int tuple, VecType& value) const
+  LCL_EXEC void getTuple(int tuple, VecType& value) const
   {
     for (int i = 0; i < this->NumberOfComponents; ++i)
     {
@@ -236,7 +236,7 @@ private:
 };
 
 template <typename FieldType>
-VTKC_EXEC
+LCL_EXEC
 FieldAccessorNestedSOA<FieldType> makeFieldAccessorNestedSOA(FieldType& field,
                                                              int numberOfComponents = 1)
 {
@@ -244,7 +244,7 @@ FieldAccessorNestedSOA<FieldType> makeFieldAccessorNestedSOA(FieldType& field,
 }
 
 template <typename FieldType>
-VTKC_EXEC
+LCL_EXEC
 FieldAccessorNestedSOAConst<FieldType> makeFieldAccessorNestedSOAConst(const FieldType& field,
                                                                        int numberOfComponents = 1)
 {
@@ -258,30 +258,30 @@ class FieldAccessorFlatSOA
 public:
   using ValueType = typename std::decay<decltype(std::declval<FieldType>()[0])>::type;
 
-  VTKC_EXEC FieldAccessorFlatSOA(FieldType& field, int numberOfComponents = 1)
+  LCL_EXEC FieldAccessorFlatSOA(FieldType& field, int numberOfComponents = 1)
     : Field(&field), NumberOfComponents(numberOfComponents)
   {
   }
 
-  VTKC_EXEC int getNumberOfComponents() const
+  LCL_EXEC int getNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
 
-  VTKC_EXEC void setValue(int tuple, int comp, const ValueType& value) const
+  LCL_EXEC void setValue(int tuple, int comp, const ValueType& value) const
   {
     auto FlatIdx = static_cast<IdxType>(tuple * this->NumberOfComponents + comp);
     (*this->Field)[FlatIdx] = value;
   }
 
-  VTKC_EXEC ValueType getValue(int tuple, int comp) const
+  LCL_EXEC ValueType getValue(int tuple, int comp) const
   {
     auto FlatIdx = static_cast<IdxType>(tuple * this->NumberOfComponents + comp);
     return (*this->Field)[FlatIdx];
   }
 
   template <typename VecType>
-  VTKC_EXEC void setTuple(int tuple, const VecType& value) const
+  LCL_EXEC void setTuple(int tuple, const VecType& value) const
   {
     auto start = static_cast<IdxType>(tuple * this->NumberOfComponents);
     for (int i = 0; i < this->NumberOfComponents; ++i)
@@ -291,7 +291,7 @@ public:
   }
 
   template <typename VecType>
-  VTKC_EXEC void getTuple(int tuple, VecType& value) const
+  LCL_EXEC void getTuple(int tuple, VecType& value) const
   {
     auto start = static_cast<IdxType>(tuple * this->NumberOfComponents);
     for (int i = 0; i < this->NumberOfComponents; ++i)
@@ -313,24 +313,24 @@ class FieldAccessorFlatSOAConst
 public:
   using ValueType = typename std::decay<decltype(std::declval<FieldType>()[0])>::type;
 
-  VTKC_EXEC FieldAccessorFlatSOAConst(const FieldType& field, int numberOfComponents = 1)
+  LCL_EXEC FieldAccessorFlatSOAConst(const FieldType& field, int numberOfComponents = 1)
     : Field(&field), NumberOfComponents(numberOfComponents)
   {
   }
 
-  VTKC_EXEC int getNumberOfComponents() const
+  LCL_EXEC int getNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
 
-  VTKC_EXEC ValueType getValue(int tuple, int comp) const
+  LCL_EXEC ValueType getValue(int tuple, int comp) const
   {
     auto FlatIdx = static_cast<IdxType>(tuple * this->NumberOfComponents + comp);
     return (*this->Field)[FlatIdx];
   }
 
   template <typename VecType>
-  VTKC_EXEC void getTuple(int tuple, VecType& value) const
+  LCL_EXEC void getTuple(int tuple, VecType& value) const
   {
     auto start = static_cast<IdxType>(tuple * this->NumberOfComponents);
     for (int i = 0; i < this->NumberOfComponents; ++i)
@@ -347,7 +347,7 @@ private:
 };
 
 template <typename FieldType>
-VTKC_EXEC
+LCL_EXEC
 FieldAccessorFlatSOA<FieldType> makeFieldAccessorFlatSOA(FieldType& field,
                                                          int numberOfComponents)
 {
@@ -355,13 +355,13 @@ FieldAccessorFlatSOA<FieldType> makeFieldAccessorFlatSOA(FieldType& field,
 }
 
 template <typename FieldType>
-VTKC_EXEC
+LCL_EXEC
 FieldAccessorFlatSOAConst<FieldType> makeFieldAccessorFlatSOAConst(const FieldType& field,
                                                                    int numberOfComponents)
 {
   return FieldAccessorFlatSOAConst<FieldType>(field, numberOfComponents);
 }
 
-} // namespace vtkc
+} // namespace lcl
 
-#endif // vtk_c_FieldAccessor_h
+#endif // lcl_FieldAccessor_h

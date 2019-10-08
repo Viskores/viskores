@@ -7,17 +7,17 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_c_Polygon_h
-#define vtk_c_Polygon_h
+#ifndef lcl_Polygon_h
+#define lcl_Polygon_h
 
-#include <vtkc/ErrorCode.h>
-#include <vtkc/Quad.h>
-#include <vtkc/Shapes.h>
-#include <vtkc/Triangle.h>
+#include <lcl/ErrorCode.h>
+#include <lcl/Quad.h>
+#include <lcl/Shapes.h>
+#include <lcl/Triangle.h>
 
-#include <vtkc/internal/Common.h>
+#include <lcl/internal/Common.h>
 
-namespace vtkc
+namespace lcl
 {
 
 /// \c Polygon with 3 and 4 points behave exactly as \c Triangle and \c Quad
@@ -32,15 +32,15 @@ namespace vtkc
 class Polygon : public Cell
 {
 public:
-  constexpr VTKC_EXEC Polygon() : Cell(ShapeId::POLYGON, 3) {}
-  constexpr VTKC_EXEC explicit Polygon(vtkc::IdComponent numPoints)
+  constexpr LCL_EXEC Polygon() : Cell(ShapeId::POLYGON, 3) {}
+  constexpr LCL_EXEC explicit Polygon(lcl::IdComponent numPoints)
     : Cell(ShapeId::POLYGON, numPoints)
   {
   }
-  constexpr VTKC_EXEC explicit Polygon(const Cell& cell) : Cell(cell) {}
+  constexpr LCL_EXEC explicit Polygon(const Cell& cell) : Cell(cell) {}
 };
 
-VTKC_EXEC inline vtkc::ErrorCode validate(Polygon tag) noexcept
+LCL_EXEC inline lcl::ErrorCode validate(Polygon tag) noexcept
 {
   if (tag.shape() != ShapeId::POLYGON)
   {
@@ -55,9 +55,9 @@ VTKC_EXEC inline vtkc::ErrorCode validate(Polygon tag) noexcept
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Polygon tag, CoordType&& pcoords) noexcept
+LCL_EXEC inline lcl::ErrorCode parametricCenter(Polygon tag, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (tag.numberOfPoints())
   {
@@ -73,10 +73,10 @@ VTKC_EXEC inline vtkc::ErrorCode parametricCenter(Polygon tag, CoordType&& pcoor
 }
 
 template<typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
+LCL_EXEC inline lcl::ErrorCode parametricPoint(
   Polygon tag, IdComponent pointId, CoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   if (pointId < 0 || pointId >= tag.numberOfPoints())
   {
@@ -94,17 +94,17 @@ VTKC_EXEC inline vtkc::ErrorCode parametricPoint(
       using T = ComponentType<CoordType>;
       constexpr double two_pi = 2.0 * 3.14159265359;
       auto angle = (static_cast<T>(pointId) * static_cast<T>(two_pi)) / static_cast<T>(tag.numberOfPoints());
-      component(pcoords, 0) = 0.5f * (VTKC_MATH_CALL(cos, (angle)) + 1.0f);
-      component(pcoords, 1) = 0.5f * (VTKC_MATH_CALL(sin, (angle)) + 1.0f);
+      component(pcoords, 0) = 0.5f * (LCL_MATH_CALL(cos, (angle)) + 1.0f);
+      component(pcoords, 1) = 0.5f * (LCL_MATH_CALL(sin, (angle)) + 1.0f);
       return ErrorCode::SUCCESS;
     }
   }
 }
 
 template<typename CoordType>
-VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Polygon tag, const CoordType& pcoords) noexcept
+LCL_EXEC inline ComponentType<CoordType> parametricDistance(Polygon tag, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (tag.numberOfPoints())
   {
@@ -116,9 +116,9 @@ VTKC_EXEC inline ComponentType<CoordType> parametricDistance(Polygon tag, const 
 }
 
 template<typename CoordType>
-VTKC_EXEC inline bool cellInside(Polygon tag, const CoordType& pcoords) noexcept
+LCL_EXEC inline bool cellInside(Polygon tag, const CoordType& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   using T = ComponentType<CoordType>;
   switch (tag.numberOfPoints())
@@ -128,8 +128,43 @@ VTKC_EXEC inline bool cellInside(Polygon tag, const CoordType& pcoords) noexcept
     case 4:
       return cellInside(Quad{}, pcoords);
     default:
-      return (((component(pcoords, 0) - T(0.5f)) * (component(pcoords, 0) - T(0.5f))) +
-              ((component(pcoords, 1) - T(0.5f)) * (component(pcoords, 1) - T(0.5f)))) <= T(0.25f);
+      break;
+  }
+
+  constexpr T epsilon = std::is_same<T, float>::value ? T(1e-5f) : T(1e-9f);
+
+  auto x = component(pcoords, 0) - T(0.5f);
+  auto y = component(pcoords, 1) - T(0.5f);
+  auto dist2 = (x * x) + (y * y);
+  if (dist2 > 0.25f) // definitely outside
+  {
+    return false;
+  }
+  else if (LCL_MATH_CALL(abs, (x)) < (T(4) * epsilon) && LCL_MATH_CALL(abs, (y)) < (T(4) * epsilon))
+  {
+    return true; // at the center
+  }
+  else
+  {
+    constexpr double two_pi = 2.0 * 3.14159265359;
+    T deltaAngle = static_cast<T>(two_pi) / static_cast<T>(tag.numberOfPoints());
+    T apothem = 0.5f * LCL_MATH_CALL(cos, (deltaAngle/2.0f));
+    if (dist2 <= (apothem * apothem)) // inside in-circle
+    {
+      return true;
+    }
+
+    // compute distance at which the line, from the center, through the given point, intersects
+    // the polygon edge
+    T angle = LCL_MATH_CALL(atan2, (y), (x));
+    if (angle < T(0))
+    {
+      angle += static_cast<T>(two_pi);
+    }
+
+    T a2 = angle - (LCL_MATH_CALL(floor, (angle / deltaAngle)) * deltaAngle);
+    T maxDist = apothem / LCL_MATH_CALL(cos, (LCL_MATH_CALL(abs, (deltaAngle/2.0f - a2))));
+    return dist2 <= (maxDist * maxDist);
   }
 }
 
@@ -137,7 +172,7 @@ namespace internal
 {
 
 template <typename CoordType>
-VTKC_EXEC inline vtkc::ErrorCode polygonToSubTrianglePCoords(
+LCL_EXEC inline lcl::ErrorCode polygonToSubTrianglePCoords(
   Polygon tag,
   const CoordType& polygonPC,
   IdComponent& p0,
@@ -149,9 +184,9 @@ VTKC_EXEC inline vtkc::ErrorCode polygonToSubTrianglePCoords(
   constexpr T epsilon = std::is_same<T, float>::value ? T(1e-5f) : T(1e-9f);
 
   // Find the sub-triangle containing pcoords
-  auto x = component(polygonPC, 1) - T(0.5f);
-  auto y = component(polygonPC, 0) - T(0.5f);
-  if (VTKC_MATH_CALL(abs, (x)) < (T(4) * epsilon) && VTKC_MATH_CALL(abs, (y)) < (T(4) * epsilon))
+  auto x = component(polygonPC, 0) - T(0.5f);
+  auto y = component(polygonPC, 1) - T(0.5f);
+  if (LCL_MATH_CALL(abs, (x)) < (T(4) * epsilon) && LCL_MATH_CALL(abs, (y)) < (T(4) * epsilon))
   {
     // we are at the center
     p0 = 0;
@@ -161,31 +196,31 @@ VTKC_EXEC inline vtkc::ErrorCode polygonToSubTrianglePCoords(
   }
 
   constexpr double two_pi = 2.0 * 3.14159265359;
-  T angle = VTKC_MATH_CALL(atan2, (x), (y));
+  T angle = LCL_MATH_CALL(atan2, (y), (x));
   if (angle < T(0))
   {
     angle += static_cast<T>(two_pi);
   }
   T deltaAngle = static_cast<T>(two_pi) / static_cast<T>(tag.numberOfPoints());
 
-  p0 = static_cast<IdComponent>(VTKC_MATH_CALL(floor, (angle / deltaAngle)));
+  p0 = static_cast<IdComponent>(LCL_MATH_CALL(floor, (angle / deltaAngle)));
   p1 = (p0 + 1) % tag.numberOfPoints();
 
   // Build triangle with polygon pcoords as its wcoords
   T triPts[9] = { T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0), T(0) };
-  VTKC_RETURN_ON_ERROR(parametricCenter(tag, triPts))
-  VTKC_RETURN_ON_ERROR(parametricPoint(tag, p0, triPts + 3))
-  VTKC_RETURN_ON_ERROR(parametricPoint(tag, p1, triPts + 6))
+  LCL_RETURN_ON_ERROR(parametricCenter(tag, triPts))
+  LCL_RETURN_ON_ERROR(parametricPoint(tag, p0, triPts + 3))
+  LCL_RETURN_ON_ERROR(parametricPoint(tag, p1, triPts + 6))
 
   // Find the parametric coord on the triangle
   T triWC[3] = { component(polygonPC, 0), component(polygonPC, 1), T(0) };
-  VTKC_RETURN_ON_ERROR(worldToParametric(Triangle{}, makeFieldAccessorFlatSOAConst(triPts, 3), triWC, trianglePC))
+  LCL_RETURN_ON_ERROR(worldToParametric(Triangle{}, makeFieldAccessorFlatSOAConst(triPts, 3), triWC, trianglePC))
 
   return ErrorCode::SUCCESS;
 }
 
 template <typename Values>
-VTKC_EXEC inline typename Values::ValueType polygonInterpolateComponentAtCenter(
+LCL_EXEC inline typename Values::ValueType polygonInterpolateComponentAtCenter(
   Polygon tag, const Values& values, IdComponent comp) noexcept
 {
   using T = internal::ClosestFloatType<typename Values::ValueType>;
@@ -204,13 +239,13 @@ VTKC_EXEC inline typename Values::ValueType polygonInterpolateComponentAtCenter(
 } // namespace internal
 
 template <typename Values, typename CoordType, typename Result>
-VTKC_EXEC vtkc::ErrorCode interpolate(
+LCL_EXEC lcl::ErrorCode interpolate(
   Polygon tag,
   const Values& values,
   const CoordType& pcoords,
   Result&& result) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (tag.numberOfPoints())
   {
@@ -227,7 +262,7 @@ VTKC_EXEC vtkc::ErrorCode interpolate(
 
   IdComponent p0, p1;
   ComponentType<CoordType> triPc[2];
-  VTKC_RETURN_ON_ERROR(internal::polygonToSubTrianglePCoords(tag, pcoords, p0, p1, triPc))
+  LCL_RETURN_ON_ERROR(internal::polygonToSubTrianglePCoords(tag, pcoords, p0, p1, triPc))
 
   // compute polygon interpolation from triangle weights
   for (IdComponent c = 0; c < values.getNumberOfComponents(); ++c)
@@ -237,7 +272,7 @@ VTKC_EXEC vtkc::ErrorCode interpolate(
     triVals[1] = static_cast<ProcessingType>(values.getValue(p0, c));
     triVals[2] = static_cast<ProcessingType>(values.getValue(p1, c));
     ResultCompType val = 0;
-    VTKC_RETURN_ON_ERROR(interpolate(Triangle{}, makeFieldAccessorNestedSOA(triVals), triPc, &val))
+    LCL_RETURN_ON_ERROR(interpolate(Triangle{}, makeFieldAccessorNestedSOA(triVals), triPc, &val))
     component(result, c) = val;
   }
 
@@ -256,7 +291,7 @@ namespace internal
 // we do not want to push any of the points over the edge, and it is not trivial to determine
 // exactly where the edge of the polygon is.
 template <typename CoordType>
-VTKC_EXEC inline void polygonGetTriangleAroundPCoords(
+LCL_EXEC inline void polygonGetTriangleAroundPCoords(
   const CoordType& pcoords, ComponentType<CoordType> pc1[2], ComponentType<CoordType> pc2[2]) noexcept
 {
   using T = ComponentType<CoordType>;
@@ -266,7 +301,7 @@ VTKC_EXEC inline void polygonGetTriangleAroundPCoords(
   auto magSqr = dot(radialVector, radialVector);
   if (magSqr > 8.0f * 1e-4f)
   {
-    radialVector /= VTKC_MATH_CALL(sqrt, (magSqr));
+    radialVector /= LCL_MATH_CALL(sqrt, (magSqr));
   }
   else
   {
@@ -305,7 +340,7 @@ VTKC_EXEC inline void polygonGetTriangleAroundPCoords(
 } // namespace internal
 
 template <typename Points, typename Values, typename CoordType, typename Result>
-VTKC_EXEC inline vtkc::ErrorCode derivative(
+LCL_EXEC inline lcl::ErrorCode derivative(
   Polygon tag,
   const Points& points,
   const Values& values,
@@ -314,7 +349,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   Result&& dy,
   Result&& dz) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(CoordType);
 
   switch (tag.numberOfPoints())
   {
@@ -347,9 +382,9 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 
   // Compute world coordinates of the points of the triangle
   internal::Vector<ProcessingType, 3> triPts[3];
-  VTKC_RETURN_ON_ERROR(interpolate(tag, points, pcoords, triPts[0]))
-  VTKC_RETURN_ON_ERROR(interpolate(tag, points, ptPc1, triPts[1]))
-  VTKC_RETURN_ON_ERROR(interpolate(tag, points, ptPc2, triPts[2]))
+  LCL_RETURN_ON_ERROR(interpolate(tag, points, pcoords, triPts[0]))
+  LCL_RETURN_ON_ERROR(interpolate(tag, points, ptPc1, triPts[1]))
+  LCL_RETURN_ON_ERROR(interpolate(tag, points, ptPc2, triPts[2]))
 
   // Compute the derivative on the triangle
   //----------------------------------------
@@ -365,7 +400,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
   internal::Matrix<ProcessingType, 2, 2> jacobian;
   internal::jacobian2D(Triangle{}, makeFieldAccessorNestedSOA(pts2d, 2), nullptr, jacobian);
   internal::Matrix<ProcessingType, 2, 2> invJacobian;
-  VTKC_RETURN_ON_ERROR(internal::matrixInverse(jacobian, invJacobian))
+  LCL_RETURN_ON_ERROR(internal::matrixInverse(jacobian, invJacobian))
 
   // Compute sub-triangle information of the three vertices of the derivation triangle to
   // reduce the amount of redundant computations in the loop.
@@ -385,7 +420,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
       ProcessingType field[3] = {vCenter,
                                  static_cast<ProcessingType>(values.getValue(subP1P2[i][0], c)),
                                  static_cast<ProcessingType>(values.getValue(subP1P2[i][1], c))};
-      VTKC_RETURN_ON_ERROR(interpolate(Triangle{}, makeFieldAccessorNestedSOA(field), pcs[i], triVals + i))
+      LCL_RETURN_ON_ERROR(interpolate(Triangle{}, makeFieldAccessorNestedSOA(field), pcs[i], triVals + i))
     }
 
     // Compute derivative in the triangle
@@ -403,7 +438,7 @@ VTKC_EXEC inline vtkc::ErrorCode derivative(
 }
 
 template <typename Points, typename PCoordType, typename WCoordType>
-VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
+LCL_EXEC inline lcl::ErrorCode parametricToWorld(
   Polygon tag,
   const Points& points,
   const PCoordType& pcoords,
@@ -413,13 +448,13 @@ VTKC_EXEC inline vtkc::ErrorCode parametricToWorld(
 }
 
 template <typename Points, typename WCoordType, typename PCoordType>
-VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
+LCL_EXEC inline lcl::ErrorCode worldToParametric(
   Polygon tag,
   const Points& points,
   const WCoordType& wcoords,
   PCoordType&& pcoords) noexcept
 {
-  VTKC_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
+  LCL_STATIC_ASSERT_PCOORDS_IS_FLOAT_TYPE(PCoordType);
 
   switch (tag.numberOfPoints())
   {
@@ -516,18 +551,18 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   // coordinates.
   internal::Vector<T, 3> triangleWCoords[3] = { wcoordCenter, firstPoint, secondPoint };
   internal::Vector<T, 3> trianglePCoords;
-  VTKC_RETURN_ON_ERROR(worldToParametric(
+  LCL_RETURN_ON_ERROR(worldToParametric(
     Triangle{}, makeFieldAccessorNestedSOA(triangleWCoords, 3), wc, trianglePCoords))
 
   // trianglePCoords is in the triangle's parameter space rather than the
   // polygon's parameter space. We can find the polygon's parameter space by
   // repurposing parametricToWorld by using the
   // polygon parametric coordinates as a proxy for world coordinates.
-  VTKC_RETURN_ON_ERROR(parametricCenter(tag, triangleWCoords[0]))
-  VTKC_RETURN_ON_ERROR(parametricPoint(tag, firstPointIndex, triangleWCoords[1]))
-  VTKC_RETURN_ON_ERROR(parametricPoint(tag, secondPointIndex, triangleWCoords[2]))
+  LCL_RETURN_ON_ERROR(parametricCenter(tag, triangleWCoords[0]))
+  LCL_RETURN_ON_ERROR(parametricPoint(tag, firstPointIndex, triangleWCoords[1]))
+  LCL_RETURN_ON_ERROR(parametricPoint(tag, secondPointIndex, triangleWCoords[2]))
   triangleWCoords[0][2] = triangleWCoords[1][2] = triangleWCoords[2][2] = T(0);
-  VTKC_RETURN_ON_ERROR(
+  LCL_RETURN_ON_ERROR(
     parametricToWorld(Triangle{}, makeFieldAccessorNestedSOA(triangleWCoords, 3), trianglePCoords, wc))
 
   component(pcoords, 0) = static_cast<ComponentType<PCoordType>>(wc[0]);
@@ -536,6 +571,6 @@ VTKC_EXEC inline vtkc::ErrorCode worldToParametric(
   return ErrorCode::SUCCESS;
 }
 
-} //namespace vtkc
+} //namespace lcl
 
-#endif //vtk_c_Polygon_h
+#endif //lcl_Polygon_h
