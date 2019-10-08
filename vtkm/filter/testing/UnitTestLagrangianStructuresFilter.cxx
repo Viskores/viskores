@@ -30,7 +30,7 @@ void ValidateLCSFilterResult(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& 
   VTKM_TEST_ASSERT(vtkmOutput.GetNumberOfValues() == visitOutput.GetNumberOfValues(),
                    "Wrong number of values");
 
-  const vtkm::FloatDefault tolerance = 100 * vtkm::Epsilon<vtkm::FloatDefault>();
+  const vtkm::FloatDefault tolerance = static_cast<vtkm::FloatDefault>(1e-3);
 
   auto vtkmPortal = vtkmOutput.GetPortalConstControl();
   auto visitPortal = visitOutput.GetPortalConstControl();
