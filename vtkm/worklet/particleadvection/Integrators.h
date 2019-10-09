@@ -66,9 +66,9 @@ public:
   VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
 
 private:
-  static constexpr vtkm::IdComponent SUCCESS_BIT = 0;
-  static constexpr vtkm::IdComponent SPATIAL_BOUNDS_BIT = 1;
-  static constexpr vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 2;
+  static constexpr vtkm::Id SUCCESS_BIT = 0;
+  static constexpr vtkm::Id SPATIAL_BOUNDS_BIT = 1;
+  static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 2;
 };
 
 inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatus& status)
