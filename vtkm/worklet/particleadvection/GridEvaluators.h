@@ -35,17 +35,17 @@ namespace particleadvection
 class EvaluatorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
 public:
-  void SetOk() { this->set(SUCCESS_BIT); }
-  bool CheckOk() const { return this->test(SUCCESS_BIT); }
+  VTKM_EXEC_CONT void SetOk() { this->set(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckOk() const { return this->test(SUCCESS_BIT); }
 
-  void SetFail() { this->reset(SUCCESS_BIT); }
-  bool CheckFail() const { return !this->test(SUCCESS_BIT); }
+  VTKM_EXEC_CONT void SetFail() { this->reset(SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(SUCCESS_BIT); }
 
-  void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
-  bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
 
-  void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
-  bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
 
 private:
   static constexpr vtkm::IdComponent SUCCESS_BIT = 0;

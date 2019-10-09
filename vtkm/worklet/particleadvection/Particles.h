@@ -68,19 +68,19 @@ public:
 
   /* Set/Change Status */
   VTKM_EXEC
-  void SetOK(const vtkm::Id& idx)
+  void SetOK(const vtkm::Id& /*idx*/)
   {
     //    Clear(idx);
     //    Status.Set(idx, ParticleStatus::SUCCESS);
   }
   VTKM_EXEC
-  void SetTerminated(const vtkm::Id& idx)
+  void SetTerminated(const vtkm::Id& /*idx*/)
   {
     //    ClearBit(idx, ParticleStatus::SUCCESS);
     //    SetBit(idx, ParticleStatus::TERMINATED);
   }
   VTKM_EXEC
-  void SetTookAnySteps(const vtkm::Id& idx, const bool& val)
+  void SetTookAnySteps(const vtkm::Id& /*idx*/, const bool& /*val*/)
   {
     //    if (val)
     //      SetBit(idx, ParticleStatus::TOOK_ANY_STEPS);
@@ -88,19 +88,19 @@ public:
     //      ClearBit(idx, ParticleStatus::TOOK_ANY_STEPS);
   }
   VTKM_EXEC
-  void SetExitSpatialBoundary(const vtkm::Id& idx)
+  void SetExitSpatialBoundary(const vtkm::Id& /*idx*/)
   {
     //    ClearBit(idx, ParticleStatus::SUCCESS);
     //    SetBit(idx, ParticleStatus::EXIT_SPATIAL_BOUNDARY);
   }
   VTKM_EXEC
-  void SetExitTemporalBoundary(const vtkm::Id& idx)
+  void SetExitTemporalBoundary(const vtkm::Id& /*idx*/)
   {
     //    ClearBit(idx, ParticleStatus::SUCCESS);
     //    SetBit(idx, ParticleStatus::EXIT_TEMPORAL_BOUNDARY);
   }
   VTKM_EXEC
-  void SetError(const vtkm::Id& idx)
+  void SetError(const vtkm::Id& /*idx*/)
   {
     //    ClearBit(idx, ParticleStatus::SUCCESS);
     //    SetBit(idx, ParticleStatus::FAIL);
@@ -108,31 +108,31 @@ public:
 
   /* Check Status */
   VTKM_EXEC
-  bool OK(const vtkm::Id& idx) { return true; /*CheckBit(idx, ParticleStatus::SUCCESS);*/ }
+  bool OK(const vtkm::Id& /*idx*/) { return true; /*CheckBit(idx, ParticleStatus::SUCCESS);*/ }
   VTKM_EXEC
-  bool Terminated(const vtkm::Id& idx)
+  bool Terminated(const vtkm::Id& /*idx*/)
   {
     return true; /*CheckBit(idx, ParticleStatus::TERMINATED);*/
   }
   VTKM_EXEC
-  bool ExitSpatialBoundary(const vtkm::Id& idx)
+  bool ExitSpatialBoundary(const vtkm::Id& /*idx*/)
   {
     return true; //CheckBit(idx, ParticleStatus::EXIT_SPATIAL_BOUNDARY);
   }
   VTKM_EXEC
-  bool ExitTemporalBoundary(const vtkm::Id& idx)
+  bool ExitTemporalBoundary(const vtkm::Id& /*idx*/)
   {
     return true; //CheckBit(idx, ParticleStatus::EXIT_TEMPORAL_BOUNDARY);
   }
   VTKM_EXEC
-  bool Error(const vtkm::Id& idx) { return true; /*CheckBit(idx, ParticleStatus::FAIL);*/ }
+  bool Error(const vtkm::Id& /*idx*/) { return true; /*CheckBit(idx, ParticleStatus::FAIL);*/ }
   VTKM_EXEC
-  bool Integrateable(const vtkm::Id& idx)
+  bool Integrateable(const vtkm::Id& /*idx*/)
   {
     return true; //OK(idx) && !(Terminated(idx) || ExitSpatialBoundary(idx) || ExitTemporalBoundary(idx));
   }
   VTKM_EXEC
-  bool Done(const vtkm::Id& idx) { return true; /*!Integrateable(idx);*/ }
+  bool Done(const vtkm::Id& /*idx*/) { return true; /*!Integrateable(idx);*/ }
 
   /* Bit Operations */
   VTKM_EXEC
@@ -140,7 +140,7 @@ public:
   VTKM_EXEC
   void SetBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
-    //    Status.Set(idx, Status.Get(idx) | static_cast<vtkm::Id>(b));
+    //Status.Set(idx, Status.Get(idx) | static_cast<vtkm::Id>(b));
   }
   VTKM_EXEC
   void ClearBit(const vtkm::Id& idx, const ParticleStatus& b)
