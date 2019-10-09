@@ -29,8 +29,6 @@ struct DivergenceTypes
 struct Divergence : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn input, FieldOut output);
-  using ExecutionSignature = void(_1, _2);
-  using InputDomain = _1;
 
   template <typename InputType, typename OutputType>
   VTKM_EXEC void operator()(const InputType& input, OutputType& divergence) const
