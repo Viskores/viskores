@@ -188,7 +188,6 @@ protected:
                                vtkm::FloatDefault& time,
                                vtkm::Vec3f& outpos) const override
     {
-      std::cout << " **SmallStep: " << inpos << std::endl;
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
       {
         outpos = inpos;
@@ -244,8 +243,6 @@ protected:
         return IntegratorStatus(evalStatus);
 
       outpos = currPos + stepLong * velocity;
-      std::cout << " ***SmallStep: " << outpos << " h= [" << stepShort << " " << stepLong << "]"
-                << std::endl;
       return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 
