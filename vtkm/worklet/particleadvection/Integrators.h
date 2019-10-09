@@ -195,10 +195,17 @@ protected:
                                vtkm::FloatDefault& time,
                                vtkm::Vec3f& outpos) const override
     {
+      std::cout << " **SmallStep: " << inpos << std::endl;
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
+      {
+        outpos = inpos;
         return IntegratorStatus(false, true, false);
+      }
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
+      {
+        outpos = inpos;
         return IntegratorStatus(false, false, true);
+      }
 
       //Stepping by this->StepLength goes beyond the bounds of the dataset.
       //We need to take an Euler step that goes outside of the dataset.
@@ -244,6 +251,8 @@ protected:
         return IntegratorStatus(evalStatus);
 
       outpos = currPos + stepLong * velocity;
+      std::cout << " ***SmallStep: " << outpos << " h= [" << stepShort << " " << stepLong << "]"
+                << std::endl;
       return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 

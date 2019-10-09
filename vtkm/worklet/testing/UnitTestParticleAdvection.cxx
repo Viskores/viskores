@@ -413,6 +413,9 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
     VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
 
     vtkm::Vec3f result = resultsPortal.Get(index);
+    if (bounds.Contains(result))
+      std::cout << index << ": " << bounds << " res= " << result << std::endl;
+
     VTKM_TEST_ASSERT(!bounds.Contains(result), "Tolerance not satisfied.");
   }
 
@@ -505,16 +508,20 @@ void TestEvaluators()
           // of the velocity field
           // All velocities are in the +ve direction.
           auto p = RandomPoint(forBoundary);
-          boundaryPoints.push_back(vtkm::Particle(p, k));
+          if (k == 9)
+          {
+            std::cout << "pt= " << p << std::endl;
+            boundaryPoints.push_back(vtkm::Particle(p, k));
+          }
         }
 
         for (auto& ds : dataSets)
         {
           GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
-          ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
+          //ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
 
           RK4Type rk4(gridEval, stepSize);
-          ValidateIntegrator(rk4, pointIns, stepResult, "constant vector RK4");
+          //ValidateIntegrator(rk4, pointIns, stepResult, "constant vector RK4");
 
           ValidateIntegratorForBoundary(bound, rk4, boundaryPoints, "constant vector RK4");
         }
