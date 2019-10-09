@@ -23,6 +23,22 @@ namespace
 //
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
+void FillTest()
+{
+  vtkm::cont::BitField bits;
+  vtkm::cont::ArrayHandle<vtkm::Id> array;
+
+  bits.Allocate(ARRAY_SIZE);
+  array.Allocate(ARRAY_SIZE);
+
+  vtkm::cont::Algorithm::Fill(bits, true);
+  vtkm::cont::Algorithm::Fill(bits, true, 5);
+  vtkm::cont::Algorithm::Fill(bits, vtkm::UInt8(0xab));
+  vtkm::cont::Algorithm::Fill(bits, vtkm::UInt8(0xab), 5);
+  vtkm::cont::Algorithm::Fill(array, vtkm::Id(5));
+  vtkm::cont::Algorithm::Fill(array, vtkm::Id(5), 5);
+}
+
 void CopyTest()
 {
   vtkm::cont::ArrayHandle<vtkm::Id> input;
@@ -171,6 +187,7 @@ void UniqueTest()
 
 void TestAll()
 {
+  FillTest();
   CopyTest();
   BoundsTest();
   ReduceTest();
