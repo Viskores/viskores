@@ -34,23 +34,23 @@ namespace worklet
 namespace particleadvection
 {
 
-class IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
+class VTKM_ALWAYS_EXPORT IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
 public:
   VTKM_EXEC_CONT IntegratorStatus() {}
 
   VTKM_EXEC_CONT IntegratorStatus(const bool& ok, const bool& spatial, const bool& temporal)
   {
-    SetBit(0 /*SUCCESS_BIT*/, ok);
-    SetBit(1 /*SPATIAL_BOUNDS_BIT*/, spatial);
-    SetBit(2 /*TEMPORAL_BOUNDS_BIT*/, temporal);
+    this->set(this->SUCCESS_BIT, ok);
+    this->set(SPATIAL_BOUNDS_BIT, spatial);
+    this->set(TEMPORAL_BOUNDS_BIT, temporal);
   }
 
   VTKM_EXEC_CONT IntegratorStatus(const EvaluatorStatus& es)
   {
-    SetBit(0 /*SUCCESS_BIT*/, es.CheckOk());
-    SetBit(1 /*SPATIAL_BOUNDS_BIT*/, es.CheckSpatialBounds());
-    SetBit(2 /*TEMPORAL_BOUNDS_BIT*/, es.CheckTemporalBounds());
+    this->set(SUCCESS_BIT, es.CheckOk());
+    this->set(SPATIAL_BOUNDS_BIT, es.CheckSpatialBounds());
+    this->set(TEMPORAL_BOUNDS_BIT, es.CheckTemporalBounds());
   }
 
   VTKM_EXEC_CONT void SetOk() { this->set(SUCCESS_BIT); }
@@ -66,16 +66,9 @@ public:
   VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
 
 private:
-  VTKM_EXEC_CONT void SetBit(const vtkm::IdComponent& bit, bool val)
-  {
-    if (val)
-      this->set(bit);
-    else
-      this->reset(bit);
-  }
-  const static vtkm::IdComponent SUCCESS_BIT = 0;
-  const static vtkm::IdComponent SPATIAL_BOUNDS_BIT = 1;
-  const static vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 2;
+  static constexpr vtkm::IdComponent SUCCESS_BIT = 0;
+  static constexpr vtkm::IdComponent SPATIAL_BOUNDS_BIT = 1;
+  static constexpr vtkm::IdComponent TEMPORAL_BOUNDS_BIT = 2;
 };
 
 inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatus& status)
