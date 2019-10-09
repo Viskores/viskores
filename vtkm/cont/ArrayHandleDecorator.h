@@ -26,8 +26,8 @@
 #include <type_traits>
 #include <utility>
 
-// MSVC < 2019 and CUDA and Xcode < 10 and Clang < 5 have issues with tao integer sequences
-#if (defined(VTKM_MSVC) && (_MSC_VER < 1920)) || defined(VTKM_CUDA_DEVICE_PASS) ||                 \
+// MSVC and CUDA and Xcode < 10 and Clang < 5 have issues with tao integer sequences
+#if defined(VTKM_MSVC) || defined(VTKM_CUDA_DEVICE_PASS) ||                                        \
   (defined(__apple_build_version__) && (__apple_build_version__ < 10000000)) ||                    \
   (defined(VTKM_CLANG) && (__clang_major__ < 5))
 #define VTKM_USE_BRIGAND_SEQ
