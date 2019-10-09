@@ -43,8 +43,8 @@ class Cell
 {
 public:
   constexpr LCL_EXEC Cell() : Shape(ShapeId::EMPTY), NumberOfPoints(0) {}
-  constexpr LCL_EXEC Cell(IdShape shape, IdComponent numPoints)
-    : Shape(shape), NumberOfPoints(numPoints)
+  constexpr LCL_EXEC Cell(IdShape shapeId, IdComponent numPoints)
+    : Shape(shapeId), NumberOfPoints(numPoints)
   {
   }
 
