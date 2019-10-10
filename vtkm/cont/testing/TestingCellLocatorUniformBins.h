@@ -67,10 +67,6 @@ public:
 template <vtkm::IdComponent DIMENSIONS>
 vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
 {
-  using Connectivity = vtkm::internal::ConnectivityStructuredInternals<DIMENSIONS>;
-
-  const vtkm::IdComponent PointsPerCell = 1 << DIMENSIONS;
-
   auto uniformDs =
     vtkm::cont::DataSetBuilderUniform::Create(dims,
                                               vtkm::Vec<vtkm::FloatDefault, DIMENSIONS>(0.0f),
@@ -80,29 +76,11 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
   vtkm::cont::ArrayHandle<PointType> points;
   vtkm::cont::ArrayCopy(uniformDs.GetCoordinateSystem().GetData(), points);
 
-  vtkm::Id numberOfCells = uniformDs.GetNumberOfCells();
-  vtkm::Id numberOfIndices = numberOfCells * PointsPerCell;
-
-  Connectivity structured;
-  structured.SetPointDimensions(dims);
-
-  // copy connectivity
-  vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-  connectivity.Allocate(numberOfIndices);
-  for (vtkm::Id i = 0, idx = 0; i < numberOfCells; ++i)
-  {
-    auto ptids = structured.GetPointsOfCell(i);
-    for (vtkm::IdComponent j = 0; j < PointsPerCell; ++j, ++idx)
-    {
-      connectivity.GetPortalControl().Set(idx, ptids[j]);
-    }
-  }
-
   auto uniformCs =
     uniformDs.GetCellSet().template Cast<vtkm::cont::CellSetStructured<DIMENSIONS>>();
-  vtkm::cont::CellSetSingleType<> cellset;
 
   // triangulate the cellset
+  vtkm::cont::CellSetSingleType<> cellset;
   switch (DIMENSIONS)
   {
     case 2:
@@ -115,19 +93,15 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
       VTKM_ASSERT(false);
   }
 
-  // It is possible that the warping will result in invalid cells. So use a
-  // local random generator with a known seed that does not create invalid cells.
-  std::default_random_engine rgen;
-
   // Warp the coordinates
-  std::uniform_real_distribution<vtkm::FloatDefault> warpFactor(-0.25f, 0.25f);
+  std::uniform_real_distribution<vtkm::FloatDefault> warpFactor(-0.10f, 0.10f);
   auto pointsPortal = points.GetPortalControl();
   for (vtkm::Id i = 0; i < pointsPortal.GetNumberOfValues(); ++i)
   {
     PointType warpVec(0);
     for (vtkm::IdComponent c = 0; c < DIMENSIONS; ++c)
     {
-      warpVec[c] = warpFactor(rgen);
+      warpVec[c] = warpFactor(RandomGenerator);
     }
     pointsPortal.Set(i, pointsPortal.Get(i) + warpVec);
   }
