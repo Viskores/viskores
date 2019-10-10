@@ -55,7 +55,7 @@ private:
   static constexpr vtkm::Id TOOK_ANY_STEPS_BIT = 4;
 };
 
-inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleStatus& status)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleStatus& status)
 {
   s << "[" << status.CheckOk() << " " << status.CheckTerminate() << " "
     << status.CheckSpatialBounds() << " " << status.CheckTemporalBounds() << "]";

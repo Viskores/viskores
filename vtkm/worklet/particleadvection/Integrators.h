@@ -34,7 +34,7 @@ namespace worklet
 namespace particleadvection
 {
 
-class VTKM_ALWAYS_EXPORT IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
+class IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
 public:
   VTKM_EXEC_CONT IntegratorStatus() {}
@@ -71,7 +71,7 @@ private:
   static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 2;
 };
 
-inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatus& status)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatus& status)
 {
   s << "[" << status.CheckOk() << " " << status.CheckSpatialBounds() << " "
     << status.CheckTemporalBounds() << "]";
@@ -161,11 +161,13 @@ protected:
       IntegratorStatus status;
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
       {
+        status.SetFail();
         status.SetSpatialBounds();
         return status;
       }
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
       {
+        status.SetFail();
         status.SetTemporalBounds();
         return status;
       }
