@@ -265,9 +265,9 @@ public:
     return StreamlineResult(positions, polyLines, status, inputSteps, inputTime);
   }
 
-  template <typename IntegratorType, typename FieldType, typename PointStorage>
+  template <typename IntegratorType, typename PointStorage>
   StreamlineResult Run(const IntegratorType& it,
-                       vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
+                       vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& seedArray,
                        vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>& inputTime,
                        const vtkm::Id& nSteps)
@@ -275,6 +275,19 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec3f> seedCopy;
     vtkm::cont::ArrayCopy(seedArray, seedCopy);
     return Run(it, seedCopy, inputSteps, inputTime, nSteps);
+  }
+
+  //AOS version
+  template <typename IntegratorType, typename ParticleStorage>
+  StreamlineResult Run(const IntegratorType& it,
+                       vtkm::cont::ArrayHandle<vtkm::Particle, ParticleStorage>& particles,
+                       const vtkm::Id& MaxSteps)
+  {
+    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType> worklet;
+
+    worklet.RunAOS(it, particles, MaxSteps);
+
+    return StreamlineResult();
   }
 };
 }

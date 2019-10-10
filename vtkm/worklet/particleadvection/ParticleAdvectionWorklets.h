@@ -46,6 +46,7 @@ public:
                             const IntegratorType* /*integrator*/,
                             ParticleType& /*particle*/) const
   {
+//std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
 #if 0
     vtkm::Vec3f inpos = particle.GetPos(idx);
     vtkm::Vec3f outpos;
@@ -115,17 +116,12 @@ public:
   using ExecutionSignature = void(_1 idx, _2 integrator, _3 particles, _4 maxSteps);
   using InputDomain = _1;
 
-  template <typename ParticleType>
-  VTKM_EXEC void PostProcessStep(const vtkm::Id& vtkmNotUsed(idx),
-                                 ParticleType& vtkmNotUsed(particle)) const
-  {
-  }
+  VTKM_EXEC virtual void PostProcessStep(const vtkm::Id& idx, vtkm::Particle& particle) const {}
 
-  template <typename ParticleType>
-  VTKM_EXEC void StepUpdate(const vtkm::Id& idx,
-                            ParticleType& particle,
-                            const vtkm::Vec3f& pos,
-                            const vtkm::FloatDefault& time) const
+  VTKM_EXEC virtual void StepUpdate(const vtkm::Id& idx,
+                                    vtkm::Particle& particle,
+                                    const vtkm::Vec3f& pos,
+                                    const vtkm::FloatDefault& time) const
   {
     particle.Pos = pos;
     particle.NumSteps++;
@@ -133,15 +129,13 @@ public:
     this->PostProcessStep(idx, particle);
   }
 
-  template <typename ParticleType>
-  VTKM_EXEC bool ExtraCanContinue(const vtkm::Id& vtkmNotUsed(idx),
-                                  ParticleType& vtkmNotUsed(particle)) const
+  VTKM_EXEC virtual bool ExtraCanContinue(const vtkm::Id& vtkmNotUsed(idx),
+                                          const vtkm::Particle& vtkmNotUsed(particle)) const
   {
     return true;
   }
 
-  template <typename ParticleType>
-  VTKM_EXEC bool CanContinue(const vtkm::Id& idx, const ParticleType& particle) const
+  VTKM_EXEC bool CanContinue(const vtkm::Id& idx, const vtkm::Particle& particle) const
   {
     return (particle.Status.CheckOk() && !particle.Status.CheckTerminate() &&
             !particle.Status.CheckSpatialBounds() && !particle.Status.CheckTemporalBounds() &&
@@ -182,7 +176,7 @@ public:
     // 2. could you have success AND at spatial?
     // 3. all three?
 
-    //    std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
+    //std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
     do
     {
       status = integrator->Step(inpos, time, outpos);
@@ -369,6 +363,18 @@ public:
 };
 } // namespace detail
 
+
+class StreamlineWorkletAOS : public ParticleAdvectWorkletAOS2
+{
+public:
+  VTKM_EXEC virtual void PostProcessStep(const vtkm::Id& idx,
+                                         vtkm::Particle& particle) const override
+  {
+    //std::cout<<"streamline:: Post process: "<<idx<<" "<<particle.Pos<<std::endl;
+  }
+};
+
+
 template <typename IntegratorType>
 class StreamlineWorklet
 {
@@ -388,6 +394,33 @@ public:
     maxSteps = nSteps;
     run(positions, polyLines, statusArray, stepsTaken, timeArray);
   }
+
+  template <typename PointStorage>
+  void RunAOS(const IntegratorType& it,
+              const vtkm::cont::ArrayHandle<vtkm::Particle, PointStorage>& particles,
+              const vtkm::Id& MaxSteps)
+  {
+    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::StreamlineWorkletAOS;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+
+
+    vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
+    //Create and invoke the particle advection.
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
+    vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
+
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
+
+    //Invoke particle advection worklet
+    ParticleWorkletDispatchType particleWorkletDispatch;
+    particleWorkletDispatch.Invoke(idxArray, it, particles, maxSteps);
+  }
+
 
   struct IsOne
   {

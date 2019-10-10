@@ -677,11 +677,53 @@ void TestParticleStatus()
   VTKM_TEST_ASSERT(tookStep1 == false, "Particle took a step when it should not have.");
 }
 
+void TestStreamline()
+{
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::FloatDefault stepSize = 0.01f;
+
+  const vtkm::Id3 dims(5, 5, 5);
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
+
+  std::vector<vtkm::Vec3f> field;
+  for (vtkm::Id i = 0; i < nElements; i++)
+  {
+    vtkm::FloatDefault x = vecData[i];
+    vtkm::FloatDefault y = vecData[++i];
+    vtkm::FloatDefault z = vecData[++i];
+    vtkm::Vec3f vec(x, y, z);
+    field.push_back(vtkm::Normal(vec));
+  }
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+  auto ds = CreateUniformDataSet(bounds, dims);
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  RK4Type rk4(eval, stepSize);
+
+  std::vector<vtkm::Particle> pts;
+  pts.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
+  auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
+  vtkm::Id maxSteps = 100;
+
+  vtkm::worklet::Streamline s;
+  vtkm::worklet::StreamlineResult res;
+
+  res = s.Run(rk4, seedsArray, maxSteps);
+}
+
 void TestParticleAdvection()
 {
+  TestStreamline();
+  /*
   TestEvaluators();
   TestParticleWorklets();
   TestParticleStatus();
+  */
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])
