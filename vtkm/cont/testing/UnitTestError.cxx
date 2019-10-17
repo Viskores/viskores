@@ -48,7 +48,14 @@ void ValidateError(const vtkm::cont::Error& error)
   else
   {
     std::string assert_msg = "StackTrace did not recurse: (" + std::to_string(count) + " <= 5)";
+
+#if defined(NDEBUG)
     VTKM_TEST_ASSERT(count > 5, assert_msg);
+#else
+    // The compiler can optimize out the recursive function and any other functions in release
+    // mode, but the backtrace should contain atleast one entry
+    VTKM_TEST_ASSERT(count >= 1, assert_msg);
+#endif
   }
   VTKM_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
   VTKM_TEST_ASSERT(test_equal(message + "\n" + stackTrace, std::string(error.what())),
