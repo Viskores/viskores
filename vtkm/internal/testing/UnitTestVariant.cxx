@@ -12,6 +12,7 @@
 
 #include <vtkm/testing/Testing.h>
 
+#include <memory>
 #include <vector>
 
 namespace
@@ -58,6 +59,32 @@ void TestIndexing()
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<1>, TypePlaceholder<1>>::value));
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<2>, TypePlaceholder<2>>::value));
   VTKM_STATIC_ASSERT((std::is_same<VariantType::TypeAt<3>, TypePlaceholder<3>>::value));
+}
+
+void TestTriviallyCopyable()
+{
+  // Make sure base types are behaving as expected
+  VTKM_STATIC_ASSERT(std::is_trivially_copyable<float>::value);
+  VTKM_STATIC_ASSERT(std::is_trivially_copyable<int>::value);
+  VTKM_STATIC_ASSERT(!std::is_trivially_copyable<std::shared_ptr<float>>::value);
+
+  // A variant of trivially copyable things should be trivially copyable
+  VTKM_STATIC_ASSERT((vtkm::internal::detail::AllTriviallyCopyable<float, int>::value));
+  VTKM_STATIC_ASSERT((std::is_trivially_copyable<vtkm::internal::Variant<float, int>>::value));
+
+  // A variant of any non-trivially copyable things is not trivially copyable
+  VTKM_STATIC_ASSERT(
+    (!vtkm::internal::detail::AllTriviallyCopyable<std::shared_ptr<float>, float, int>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkm::internal::detail::AllTriviallyCopyable<float, std::shared_ptr<float>, int>::value));
+  VTKM_STATIC_ASSERT(
+    (!vtkm::internal::detail::AllTriviallyCopyable<float, int, std::shared_ptr<float>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_copyable<
+                      vtkm::internal::Variant<std::shared_ptr<float>, float, int>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_copyable<
+                      vtkm::internal::Variant<float, std::shared_ptr<float>, int>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_copyable<
+                      vtkm::internal::Variant<float, int, std::shared_ptr<float>>>::value));
 }
 
 struct TestFunctor
@@ -139,6 +166,7 @@ void TestCopyDestroy()
                                               CountConstructDestruct,
                                               TypePlaceholder<2>,
                                               TypePlaceholder<3>>;
+  VTKM_STATIC_ASSERT(!std::is_trivially_copyable<VariantType>::value);
   vtkm::Id count = 0;
 
   VariantType variant1 = CountConstructDestruct(&count);
@@ -218,6 +246,7 @@ void RunTest()
 {
   TestSize();
   TestIndexing();
+  TestTriviallyCopyable();
   TestGet();
   TestCastAndCall();
   TestCopyDestroy();
