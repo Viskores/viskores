@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-namespace
+namespace test_variant
 {
 
 template <vtkm::IdComponent Index>
@@ -141,25 +141,25 @@ void TestCastAndCall()
   VTKM_TEST_ASSERT(test_equal(result, TestValue(3, vtkm::FloatDefault{})));
 }
 
+struct CountConstructDestruct
+{
+  vtkm::Id* Count;
+  CountConstructDestruct(vtkm::Id* count)
+    : Count(count)
+  {
+    ++(*this->Count);
+  }
+  CountConstructDestruct(const CountConstructDestruct& src)
+    : Count(src.Count)
+  {
+    ++(*this->Count);
+  }
+  ~CountConstructDestruct() { --(*this->Count); }
+};
+
 void TestCopyDestroy()
 {
   std::cout << "Test copy destroy" << std::endl;
-
-  struct CountConstructDestruct
-  {
-    vtkm::Id* Count;
-    CountConstructDestruct(vtkm::Id* count)
-      : Count(count)
-    {
-      ++(*this->Count);
-    }
-    CountConstructDestruct(const CountConstructDestruct& src)
-      : Count(src.Count)
-    {
-      ++(*this->Count);
-    }
-    ~CountConstructDestruct() { --(*this->Count); }
-  };
 
   using VariantType = vtkm::internal::Variant<TypePlaceholder<0>,
                                               TypePlaceholder<1>,
@@ -253,9 +253,9 @@ void RunTest()
   TestEmplace();
 }
 
-} // anonymous namespace
+} // namespace test_variant
 
 int UnitTestVariant(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(RunTest, argc, argv);
+  return vtkm::testing::Testing::Run(test_variant::RunTest, argc, argv);
 }
