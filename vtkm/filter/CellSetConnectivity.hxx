@@ -20,23 +20,21 @@ namespace filter
 {
 
 VTKM_CONT CellSetConnectivity::CellSetConnectivity()
+  : OutputFieldName("component")
 {
-  this->SetOutputFieldName("component");
 }
 
-template <typename T, typename StorageType, typename DerivedPolicy>
+template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet CellSetConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>&,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<Policy> policy)
 {
   vtkm::cont::ArrayHandle<vtkm::Id> component;
 
   vtkm::worklet::connectivity::CellSetConnectivity().Run(
     vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy), component);
 
-  return CreateResult(input, component, this->GetOutputFieldName(), fieldMetadata);
+  return CreateResultFieldCell(input, component, this->GetOutputFieldName());
 }
 }
 }

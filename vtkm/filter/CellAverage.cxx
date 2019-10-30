@@ -10,7 +10,6 @@
 #define vtkm_filter_CellAverage_cxx
 
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/CellAverage.hxx>
 
 namespace vtkm
 {

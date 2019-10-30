@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ClipWithImplicitFunction_hxx
+#define vtk_m_filter_ClipWithImplicitFunction_hxx
+
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -44,3 +47,5 @@ inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
 }
 }
 } // end namespace vtkm::filter
+
+#endif

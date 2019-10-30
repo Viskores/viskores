@@ -22,18 +22,18 @@ using PointTag = vtkm::TopologyElementTagPoint;
 
 const vtkm::Id numberOfPoints = 11;
 
-vtkm::UInt8 g_shapes[] = { static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON),
-                           static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_PYRAMID),
-                           static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA),
-                           static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_WEDGE) };
+const vtkm::UInt8 g_shapes[] = { static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON),
+                                 static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_PYRAMID),
+                                 static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA),
+                                 static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_WEDGE) };
+const vtkm::UInt8 g_shapes2[] = { g_shapes[1], g_shapes[2] };
 
-vtkm::IdComponent g_numIndices[] = { 8, 5, 4, 6 };
+const vtkm::Id g_offsets[] = { 0, 8, 13, 17, 23 };
+const vtkm::Id g_offsets2[] = { 0, 5, 9 };
 
-vtkm::Id g_indexOffset[] = { 0, 8, 13, 17 };
-
-vtkm::Id g_connectivity[] = {
-  0, 1, 5, 4, 3, 2, 6, 7, 1, 5, 6, 2, 8, 5, 8, 10, 6, 4, 7, 9, 5, 6, 10
-};
+const vtkm::Id g_connectivity[] = { 0, 1, 5, 4,  3, 2, 6, 7, 1, 5, 6, 2,
+                                    8, 5, 8, 10, 6, 4, 7, 9, 5, 6, 10 };
+const vtkm::Id g_connectivity2[] = { 1, 5, 6, 2, 8, 5, 8, 10, 6 };
 
 template <typename T, std::size_t Length>
 vtkm::Id ArrayLength(const T (&)[Length])
@@ -46,10 +46,9 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet1()
 {
   vtkm::cont::CellSetExplicit<> cs;
   cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes, 4),
-          vtkm::cont::make_ArrayHandle(g_numIndices, 4),
+          vtkm::cont::make_ArrayHandle(g_shapes, ArrayLength(g_shapes)),
           vtkm::cont::make_ArrayHandle(g_connectivity, ArrayLength(g_connectivity)),
-          vtkm::cont::make_ArrayHandle(g_indexOffset, 4));
+          vtkm::cont::make_ArrayHandle(g_offsets, ArrayLength(g_offsets)));
   return cs;
 }
 
@@ -58,10 +57,9 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
 {
   vtkm::cont::CellSetExplicit<> cs;
   cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes + 1, 2),
-          vtkm::cont::make_ArrayHandle(g_numIndices + 1, 2),
-          vtkm::cont::make_ArrayHandle(g_connectivity + g_indexOffset[1],
-                                       g_indexOffset[3] - g_indexOffset[1]));
+          vtkm::cont::make_ArrayHandle(g_shapes2, ArrayLength(g_shapes2)),
+          vtkm::cont::make_ArrayHandle(g_connectivity2, ArrayLength(g_connectivity2)),
+          vtkm::cont::make_ArrayHandle(g_offsets2, ArrayLength(g_offsets2)));
   return cs;
 }
 
@@ -107,7 +105,8 @@ void TestCellSetExplicit()
                    "result length not equal to number of cells");
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == g_numIndices[i], "incorrect result");
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
+                     "incorrect result");
   }
 
   std::cout << "\tTesting CellToPoint\n";
@@ -131,9 +130,11 @@ void TestCellSetExplicit()
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfCells(),
                    "result length not equal to number of cells");
-  VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == g_numIndices[1] &&
-                     result.GetPortalConstControl().Get(1) == g_numIndices[2],
-                   "incorrect result");
+  for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
+  {
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
+                     "incorrect result");
+  }
 
   std::cout << "\tTesting CellToPoint\n";
   vtkm::worklet::DispatcherMapTopology<WorkletCellToPoint>().Invoke(cellset, result);
@@ -144,7 +145,8 @@ void TestCellSetExplicit()
   vtkm::Id expected2[] = { 0, 1, 1, 0, 0, 2, 2, 0, 2, 0, 1 };
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result");
+    VTKM_TEST_ASSERT(
+      result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result at ", i);
   }
 
   std::cout << "----------------------------------------------------\n";
@@ -152,7 +154,7 @@ void TestCellSetExplicit()
 
   std::cout << "\tTesting resource releasing in CellSetExplicit\n";
   cellset.ReleaseResourcesExecution();
-  VTKM_TEST_ASSERT(cellset.GetNumberOfCells() == ArrayLength(g_numIndices) / 2,
+  VTKM_TEST_ASSERT(cellset.GetNumberOfCells() == ArrayLength(g_shapes) / 2,
                    "release execution resources should not change the number of cells");
   VTKM_TEST_ASSERT(cellset.GetNumberOfPoints() == ArrayLength(expected2),
                    "release execution resources should not change the number of points");

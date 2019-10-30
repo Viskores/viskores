@@ -379,8 +379,8 @@ public:
       makeStreamLines, fieldArray, seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 
     // Size of connectivity based on size of returned streamlines
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesOut;
-    vtkm::IdComponent connectivityLen = Algorithm::ScanExclusive(numIndices, numIndicesOut);
+    vtkm::Id connectivityLen;
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices, connectivityLen);
 
     // Connectivity is sequential
     vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
@@ -395,7 +395,7 @@ public:
     vtkm::cont::DataSet OutDataSet;
     vtkm::cont::CellSetExplicit<> outCellSet;
 
-    outCellSet.Fill(coordinates.GetNumberOfValues(), cellTypes, numIndices, connectivity);
+    outCellSet.Fill(coordinates.GetNumberOfValues(), cellTypes, connectivity, offsets);
     OutDataSet.SetCellSet(outCellSet);
     OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 

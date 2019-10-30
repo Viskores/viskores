@@ -980,6 +980,9 @@ protected:
         {
           std::getline(this->DataFile->Stream, line);
         } while (this->DataFile->Stream.good() && !line.empty());
+
+        // Eat any remaining whitespace after the INFORMATION to be ready to read the next token
+        this->DataFile->Stream >> std::ws;
       }
     }
     else

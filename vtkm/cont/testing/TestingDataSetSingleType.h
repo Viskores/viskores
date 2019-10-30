@@ -105,26 +105,20 @@ private:
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =
       cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numIndicesPointToCell =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::Id> connPointToCell =
       cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
     VTKM_TEST_ASSERT(shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
-    VTKM_TEST_ASSERT(numIndicesPointToCell.GetNumberOfValues() == 3, "Wrong number of indices");
     VTKM_TEST_ASSERT(connPointToCell.GetNumberOfValues() == 9, "Wrong connectivity length");
 
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint =
       cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint =
-      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> connCellToPoint =
       cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     VTKM_TEST_ASSERT(shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
-    VTKM_TEST_ASSERT(numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");
     VTKM_TEST_ASSERT(connCellToPoint.GetNumberOfValues() == 9, "Wrong connectivity length");
 
     //run a basic for-each topology algorithm on this

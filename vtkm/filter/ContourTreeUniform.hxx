@@ -54,6 +54,10 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
+#ifndef vtk_m_filter_ContourTreeUniform_hxx
+#define vtk_m_filter_ContourTreeUniform_hxx
+
+
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 #include <vtkm/worklet/ContourTreeUniform.h>
@@ -137,3 +141,5 @@ vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

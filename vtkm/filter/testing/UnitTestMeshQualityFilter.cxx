@@ -138,7 +138,7 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   for (unsigned long i = 0; i < expectedVals.size(); i++)
   {
     vtkm::Id id = (vtkm::Id)i;
-    if (portal1.Get(id) != expectedVals[i])
+    if (!test_equal(portal1.Get(id), expectedVals[i]))
     {
       printf("Metric \"%s\" for cell type \"%s\" does not match.  Expected %f and got %f\n",
              outputname.c_str(),
@@ -165,24 +165,123 @@ int TestMeshQuality()
   std::vector<vtkm::filter::CellMetric> metrics;
   std::vector<std::string> metricName;
 
-  /*
-  FloatVec volumeExpectedValues = { 0, 0, 1, (float) 1.333333333, 4, 4 };
+  FloatVec volumeExpectedValues = { 0, 0, 1, (float)1.333333333, 4, 4 };
   expectedValues.push_back(volumeExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::VOLUME);
   metricName.push_back("volume");
- */
+
+  FloatVec areaExpectedValues = { 3, 4, 0, 0, 0, 0 };
+  expectedValues.push_back(areaExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::AREA);
+  metricName.push_back("area");
+
+  FloatVec aspectRatioExpectedValues = { (float)1.164010, (float)1.118034, (float)1.648938, 0, 0,
+                                         (float)1.1547 };
+  expectedValues.push_back(aspectRatioExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::ASPECT_RATIO);
+  metricName.push_back("aspectRatio");
+
+  FloatVec aspectGammaExpectedValues = { 0, 0, (float)1.52012, 0, 0, 0 };
+  expectedValues.push_back(aspectGammaExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::ASPECT_GAMMA);
+  metricName.push_back("aspectGamma");
+
+  FloatVec conditionExpectedValues = {
+    (float)1.058475, 2.25, (float)1.354007, 0, 0, (float)1.563472
+  };
+  expectedValues.push_back(conditionExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::CONDITION);
+  metricName.push_back("condition");
+
+  FloatVec minAngleExpectedValues = { 45, 45, -1, -1, -1, -1 };
+  expectedValues.push_back(minAngleExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::MIN_ANGLE);
+  metricName.push_back("minAngle");
+
+  FloatVec maxAngleExpectedValues = { (float)71.56505, 135, -1, -1, -1, -1 };
+  expectedValues.push_back(maxAngleExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::MAX_ANGLE);
+  metricName.push_back("maxAngle");
+
+  FloatVec minDiagonalExpectedValues = { -1, -1, -1, -1, -1, (float)1.73205 };
+  expectedValues.push_back(minDiagonalExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::MIN_DIAGONAL);
+  metricName.push_back("minDiagonal");
+
+  FloatVec maxDiagonalExpectedValues = { -1, -1, -1, -1, -1, (float)4.3589 };
+  expectedValues.push_back(maxDiagonalExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::MAX_DIAGONAL);
+  metricName.push_back("maxDiagonal");
 
   FloatVec jacobianExpectedValues = { 0, 2, 6, 0, 0, 4 };
   expectedValues.push_back(jacobianExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::JACOBIAN);
   metricName.push_back("jacobian");
 
-  /*
-  FloatVec diagonalRatioExpectedValues = { -1, -1, -1, -1, -1, (float) 0.39 };
+  FloatVec scaledJacobianExpectedValues = {
+    (float)0.816497, (float)0.707107, (float)0.408248, -2, -2, (float)0.57735
+  };
+  expectedValues.push_back(scaledJacobianExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::SCALED_JACOBIAN);
+  metricName.push_back("scaledJacobian");
+
+  FloatVec oddyExpectedValues = { -1, 8.125, -1, -1, -1, (float)2.62484 };
+  expectedValues.push_back(oddyExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::ODDY);
+  metricName.push_back("oddy");
+
+  FloatVec diagonalRatioExpectedValues = { -1, (float)0.620174, -1, -1, -1, (float)0.397360 };
   expectedValues.push_back(diagonalRatioExpectedValues);
   metrics.push_back(vtkm::filter::CellMetric::DIAGONAL_RATIO);
   metricName.push_back("diagonalRatio");
- */
+
+  FloatVec shapeExpectedValues = { (float)0.944755, (float)0.444444, (float)0.756394, -1, -1,
+                                   (float)0.68723 };
+  expectedValues.push_back(shapeExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::SHAPE);
+  metricName.push_back("shape");
+
+  FloatVec shearExpectedValues = { (float)-1, (float).707107, -1, -1, -1, (float)0.57735 };
+  expectedValues.push_back(shearExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::SHEAR);
+  metricName.push_back("shear");
+
+  FloatVec skewExpectedValues = { (float)-1, (float)0.447214, -1, -1, -1, (float)0.57735 };
+  expectedValues.push_back(skewExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::SKEW);
+  metricName.push_back("skew");
+
+  FloatVec stretchExpectedValues = { -1, (float)0.392232, -1, -1, -1, (float)0.688247 };
+  expectedValues.push_back(stretchExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::STRETCH);
+  metricName.push_back("stretch");
+
+  FloatVec taperExpectedValues = { -1, 0.5, -1, -1, -1, 0 };
+  expectedValues.push_back(taperExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::TAPER);
+  metricName.push_back("taper");
+
+  FloatVec warpageExpectedValues = { -1, 1, -1, -1, -1, -1 };
+  expectedValues.push_back(warpageExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::WARPAGE);
+  metricName.push_back("warpage");
+
+  FloatVec dimensionExpectedValues = { -1, -1, -1, -1, -1, (float)0.707107 };
+  expectedValues.push_back(dimensionExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::DIMENSION);
+  metricName.push_back("dimension");
+
+  FloatVec relSizeExpectedValues = { (float)0.151235, (float)0.085069, (float)0.337149, -1, -1,
+                                     (float)0.185378 };
+  expectedValues.push_back(relSizeExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::RELATIVE_SIZE_SQUARED);
+  metricName.push_back("relativeSizeSquared");
+
+  FloatVec shapeAndSizeExpectedValues = { (float)0.142880, (float)0.037809, (float)0.255017, -1, -1,
+                                          (float)0.127397 };
+  expectedValues.push_back(shapeAndSizeExpectedValues);
+  metrics.push_back(vtkm::filter::CellMetric::SHAPE_AND_SIZE);
+  metricName.push_back("shapeAndSize");
 
   unsigned long numTests = (unsigned long)metrics.size();
   for (unsigned long i = 0; i < numTests; i++)

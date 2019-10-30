@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_SplitSharpEdges_hxx
+#define vtk_m_filter_SplitSharpEdges_hxx
+
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -79,3 +82,4 @@ inline VTKM_CONT bool SplitSharpEdges::DoMapField(
 }
 }
 }
+#endif

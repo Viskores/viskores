@@ -10,7 +10,6 @@
 //============================================================================
 #define vtkm_filter_ClipWithImplicitFunction_cxx
 #include <vtkm/filter/ClipWithImplicitFunction.h>
-#include <vtkm/filter/ClipWithImplicitFunction.hxx>
 
 namespace vtkm
 {

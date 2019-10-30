@@ -143,12 +143,10 @@ template <typename DeviceAdapter>
 class ExplicitCellInterpolationHelper : public vtkm::exec::CellInterpolationHelper
 {
   using ShapeType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
-  using NumIdxType = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
   using OffsetType = vtkm::cont::ArrayHandle<vtkm::Id>;
   using ConnType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
   using ShapePortalType = typename ShapeType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using NumIdxPortalType = typename NumIdxType::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using OffsetPortalType = typename OffsetType::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using ConnPortalType = typename ConnType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
@@ -157,11 +155,9 @@ public:
 
   VTKM_CONT
   ExplicitCellInterpolationHelper(const ShapeType& shape,
-                                  const NumIdxType& numIdx,
                                   const OffsetType& offset,
                                   const ConnType& connectivity)
     : Shape(shape.PrepareForInput(DeviceAdapter()))
-    , NumIdx(numIdx.PrepareForInput(DeviceAdapter()))
     , Offset(offset.PrepareForInput(DeviceAdapter()))
     , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
   {
@@ -173,17 +169,16 @@ public:
                    vtkm::IdComponent& numVerts,
                    vtkm::VecVariable<vtkm::Id, 8>& indices) const override
   {
-    cellShape = Shape.Get(cellId);
-    numVerts = NumIdx.Get(cellId);
-    vtkm::Id offset = Offset.Get(cellId);
+    cellShape = this->Shape.Get(cellId);
+    const vtkm::Id offset = this->Offset.Get(cellId);
+    numVerts = static_cast<vtkm::IdComponent>(this->Offset.Get(cellId + 1) - offset);
 
     for (vtkm::IdComponent i = 0; i < numVerts; i++)
-      indices.Append(Connectivity.Get(offset + i));
+      indices.Append(this->Connectivity.Get(offset + i));
   }
 
 private:
   ShapePortalType Shape;
-  NumIdxPortalType NumIdx;
   OffsetPortalType Offset;
   ConnPortalType Connectivity;
 };
@@ -341,10 +336,8 @@ public:
       vtkm::cont::CellSetExplicit<> CellSet = cellSet.Cast<vtkm::cont::CellSetExplicit<>>();
       Shape =
         CellSet.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-      NumIdx =
-        CellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-      Offset = CellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell(),
-                                           vtkm::TopologyElementTagPoint());
+      Offset =
+        CellSet.GetOffsetsArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
       Connectivity = CellSet.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                   vtkm::TopologyElementTagPoint());
     }
@@ -360,10 +353,8 @@ public:
                               HandleType& execInterpolator) const
     {
       using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper<DeviceAdapter>;
-      ExecutionType* execObject = new ExecutionType(contInterpolator.Shape,
-                                                    contInterpolator.NumIdx,
-                                                    contInterpolator.Offset,
-                                                    contInterpolator.Connectivity);
+      ExecutionType* execObject = new ExecutionType(
+        contInterpolator.Shape, contInterpolator.Offset, contInterpolator.Connectivity);
       execInterpolator.Reset(execObject);
       return true;
     }
@@ -384,7 +375,6 @@ public:
 
 private:
   vtkm::cont::ArrayHandle<vtkm::UInt8> Shape;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> NumIdx;
   vtkm::cont::ArrayHandle<vtkm::Id> Offset;
   vtkm::cont::ArrayHandle<vtkm::Id> Connectivity;
   mutable HandleType ExecHandle;

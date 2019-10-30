@@ -149,7 +149,6 @@ protected:
       }
       else
         outpos = inpos;
-
       return status;
     }
 
@@ -159,53 +158,56 @@ protected:
                                vtkm::Vec3f& outpos) const override
     {
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
-        return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
-      if (!this->Evaluator.IsWithinTemporalBoundary(time))
-        return IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS;
-
-      vtkm::FloatDefault optimalLength = static_cast<vtkm::FloatDefault>(0);
-      vtkm::Id iteration = static_cast<vtkm::Id>(1);
-      vtkm::Id maxIterations = static_cast<vtkm::Id>(1 << 20);
-      vtkm::Vec3f velocity;
-      vtkm::Vec3f workpos(inpos);
-      vtkm::FloatDefault worktime = time;
-      // According to the earlier checks this call to Evaluate should return
-      // the correct velocity at the current location, this is to use just in
-      // case we are not able to find the optimal lenght in 20 iterations..
-      this->Evaluator.Evaluate(workpos, time, velocity);
-      while (iteration < maxIterations)
       {
-        iteration = iteration << 1;
-        vtkm::FloatDefault length =
-          optimalLength + (this->StepLength / static_cast<vtkm::FloatDefault>(iteration));
-        IntegratorStatus status = this->CheckStep(inpos, length, time, velocity);
-        if (status == IntegratorStatus::SUCCESS &&
-            this->Evaluator.IsWithinSpatialBoundary(inpos + velocity * length))
-        {
-          workpos = inpos + velocity * length;
-          worktime = time + length;
-          optimalLength = length;
-        }
+        outpos = inpos;
+        return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
       }
-      this->Evaluator.Evaluate(workpos, worktime, velocity);
-      // We have calculated a large enough step length to push the particle
-      // using the higher order evaluator, take a step using that evaluator.
-      // Take one final step, which should be an Euler step just to push the
-      // particle out of the domain boundary
-      vtkm::Bounds bounds = this->Evaluator.GetSpatialBoundary();
-      vtkm::Vec3f direction = velocity / vtkm::Magnitude(velocity);
+      if (!this->Evaluator.IsWithinTemporalBoundary(time))
+      {
+        outpos = inpos;
+        return IntegratorStatus::OUTSIDE_TEMPORAL_BOUNDS;
+      }
 
-      const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>();
-      vtkm::FloatDefault xStepLength =
-        vtkm::Abs(direction[0] * eps * static_cast<vtkm::FloatDefault>(bounds.X.Length()));
-      vtkm::FloatDefault yStepLength =
-        vtkm::Abs(direction[1] * eps * static_cast<vtkm::FloatDefault>(bounds.Y.Length()));
-      vtkm::FloatDefault zStepLength =
-        vtkm::Abs(direction[2] * eps * static_cast<vtkm::FloatDefault>(bounds.Z.Length()));
-      vtkm::FloatDefault minLength = vtkm::Min(xStepLength, vtkm::Min(yStepLength, zStepLength));
+      //Stepping by this->StepLength goes beyond the bounds of the dataset.
+      //We need to take an Euler step that goes outside of the dataset.
+      //Use a binary search to find the largest step INSIDE the dataset.
+      //Binary search uses a shrinking bracket of inside / outside, so when
+      //we terminate, the outside value is the stepsize that will nudge
+      //the particle outside the dataset.
 
-      outpos = workpos + minLength * velocity;
-      time = worktime + minLength;
+      //The binary search will be between [0, this->StepLength]
+      vtkm::FloatDefault stepShort = 0, stepLong = this->StepLength;
+      vtkm::Vec3f currPos(inpos), velocity;
+      vtkm::FloatDefault currTime = time;
+
+      this->Evaluator.Evaluate(currPos, time, velocity);
+
+      const vtkm::FloatDefault eps = 10 * vtkm::Epsilon<vtkm::FloatDefault>();
+      vtkm::FloatDefault div = 1;
+      for (int i = 0; i < 50; i++)
+      {
+        div *= 2;
+        vtkm::FloatDefault stepCurr = stepShort + (this->StepLength / div);
+        //See if we can step by stepCurr.
+        IntegratorStatus status = this->CheckStep(inpos, stepCurr, time, velocity);
+        if (status == IntegratorStatus::SUCCESS)
+        {
+          currPos = inpos + velocity * stepShort;
+          stepShort = stepCurr;
+        }
+        else
+          stepLong = stepCurr;
+
+        //Stop if step bracket is small enough.
+        if (stepLong - stepShort < eps)
+          break;
+      }
+
+      //Take Euler step.
+      time = currTime + stepShort;
+      this->Evaluator.Evaluate(currPos, time, velocity);
+
+      outpos = currPos + stepLong * velocity;
       return IntegratorStatus::OUTSIDE_SPATIAL_BOUNDS;
     }
 

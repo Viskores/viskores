@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_WarpScalar_hxx
+#define vtk_m_filter_WarpScalar_hxx
 
 namespace vtkm
 {
@@ -50,3 +52,4 @@ inline VTKM_CONT vtkm::cont::DataSet WarpScalar::DoExecute(
 }
 }
 }
+#endif

@@ -45,4 +45,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(VectorMagnitude);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/VectorMagnitude.hxx>
+
 #endif // vtk_m_filter_VectorMagnitude_h

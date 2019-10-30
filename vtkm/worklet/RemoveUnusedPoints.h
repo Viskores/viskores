@@ -71,14 +71,9 @@ public:
   VTKM_CONT
   RemoveUnusedPoints() {}
 
-  template <typename ShapeStorage,
-            typename NumIndicesStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT RemoveUnusedPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
-                                                                 NumIndicesStorage,
-                                                                 ConnectivityStorage,
-                                                                 OffsetsStorage>& inCellSet)
+  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
+  VTKM_CONT RemoveUnusedPoints(
+    const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet)
   {
     this->FindPointsStart();
     this->FindPoints(inCellSet);
@@ -93,14 +88,9 @@ public:
   /// points are those that are not found in any cell sets passed to this
   /// method.
   ///
-  template <typename ShapeStorage,
-            typename NumIndicesStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT void FindPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
-                                                              NumIndicesStorage,
-                                                              ConnectivityStorage,
-                                                              OffsetsStorage>& inCellSet)
+  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
+  VTKM_CONT void FindPoints(
+    const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet)
   {
     if (this->MaskArray.GetNumberOfValues() < 1)
     {
@@ -133,18 +123,11 @@ public:
   /// returns a new cell set with cell points transformed to use the indices of
   /// the new reduced point arrays.
   ///
-  template <typename ShapeStorage,
-            typename NumIndicesStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT vtkm::cont::CellSetExplicit<ShapeStorage,
-                                        NumIndicesStorage,
-                                        VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
-                                        OffsetsStorage>
-  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
-                                               NumIndicesStorage,
-                                               ConnectivityStorage,
-                                               OffsetsStorage>& inCellSet) const
+  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
+  VTKM_CONT
+    vtkm::cont::CellSetExplicit<ShapeStorage, VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
+    MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+                 inCellSet) const
   {
     VTKM_ASSERT(this->PointScatter);
 
@@ -166,20 +149,16 @@ public:
   /// of \c MapCellSet.
   ///
   template <typename ShapeStorage,
-            typename NumIndicesStorage,
             typename ConnectivityStorage,
             typename OffsetsStorage,
             typename MapStorage>
   VTKM_CONT static vtkm::cont::CellSetExplicit<ShapeStorage,
-                                               NumIndicesStorage,
                                                VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
                                                OffsetsStorage>
-  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
-                                               NumIndicesStorage,
-                                               ConnectivityStorage,
-                                               OffsetsStorage>& inCellSet,
-             const vtkm::cont::ArrayHandle<vtkm::Id, MapStorage>& inputToOutputPointMap,
-             vtkm::Id numberOfPoints)
+  MapCellSet(
+    const vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet,
+    const vtkm::cont::ArrayHandle<vtkm::Id, MapStorage>& inputToOutputPointMap,
+    vtkm::Id numberOfPoints)
   {
     using VisitTopology = vtkm::TopologyElementTagCell;
     using IncidentTopology = vtkm::TopologyElementTagPoint;
@@ -193,14 +172,11 @@ public:
                       inputToOutputPointMap,
                       newConnectivityArray);
 
-    vtkm::cont::
-      CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
-        outCellSet;
+    vtkm::cont::CellSetExplicit<ShapeStorage, NewConnectivityStorage, OffsetsStorage> outCellSet;
     outCellSet.Fill(numberOfPoints,
                     inCellSet.GetShapesArray(VisitTopology(), IncidentTopology()),
-                    inCellSet.GetNumIndicesArray(VisitTopology(), IncidentTopology()),
                     newConnectivityArray,
-                    inCellSet.GetIndexOffsetArray(VisitTopology(), IncidentTopology()));
+                    inCellSet.GetOffsetsArray(VisitTopology(), IncidentTopology()));
 
     return outCellSet;
   }

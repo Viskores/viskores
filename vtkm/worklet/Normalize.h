@@ -23,7 +23,6 @@ class Normal : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename T2>
   VTKM_EXEC void operator()(const T& inValue, T2& outValue) const
@@ -36,7 +35,6 @@ class Normalize : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldInOut);
-  using ExecutionSignature = void(_1);
 
   template <typename T>
   VTKM_EXEC void operator()(T& value) const

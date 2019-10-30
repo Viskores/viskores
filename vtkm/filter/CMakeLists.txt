@@ -42,6 +42,7 @@ set(headers
   Gradient.h
   Histogram.h
   ImageConnectivity.h
+  ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
   Mask.h
@@ -107,6 +108,7 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   ImageConnectivity.hxx
+  ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
   Mask.hxx

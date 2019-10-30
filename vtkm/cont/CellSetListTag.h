@@ -42,15 +42,12 @@ struct VTKM_ALWAYS_EXPORT CellSetListTagStructured3D
 };
 
 
-template <typename ShapeStorageTag = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
-          typename NumIndicesStorageTag = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
+template <typename ShapesStorageTag = VTKM_DEFAULT_SHAPES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
 struct VTKM_ALWAYS_EXPORT CellSetListTagExplicit
-  : vtkm::ListTagBase<vtkm::cont::CellSetExplicit<ShapeStorageTag,
-                                                  NumIndicesStorageTag,
-                                                  ConnectivityStorageTag,
-                                                  OffsetsStorageTag>>
+  : vtkm::ListTagBase<
+      vtkm::cont::CellSetExplicit<ShapesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>>
 {
 };
 

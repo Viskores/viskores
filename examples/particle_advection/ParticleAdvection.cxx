@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
@@ -23,10 +24,14 @@
 
 int main(int argc, char** argv)
 {
-  if (argc != 7)
+  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = vtkm::cont::Initialize(argc, argv, opts);
+
+  if (argc < 8)
   {
-    std::cerr << "Usage: " << argv[0] << " dataFile varName numSeeds numSteps stepSize outputFile"
-              << std::endl;
+    std::cerr << "Usage: " << argv[0]
+              << "dataFile varName numSeeds numSteps stepSize outputFile [options]" << std::endl;
+    std::cerr << "where options are: " << std::endl << config.Usage << std::endl;
     return -1;
   }
 

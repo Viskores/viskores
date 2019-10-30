@@ -22,6 +22,7 @@
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -891,6 +892,64 @@ private:
     }
   };
 
+  struct TestMultiplexerAsInput
+  {
+    vtkm::cont::Invoker Invoke;
+
+    template <typename T>
+    VTKM_CONT void operator()(T vtkmNotUsed(type)) const
+    {
+      using InputArrayType = vtkm::cont::ArrayHandleCounting<T>;
+
+      InputArrayType input(T(1), T(2), ARRAY_SIZE);
+      vtkm::cont::ArrayHandleMultiplexer<
+        vtkm::cont::ArrayHandle<T>,
+        InputArrayType,
+        vtkm::cont::ArrayHandleCast<T, vtkm::cont::ArrayHandleIndex>>
+        multiplexArray(input);
+      vtkm::cont::ArrayHandle<T> result;
+
+      this->Invoke(PassThrough{}, multiplexArray, result);
+
+      vtkm::cont::printSummary_ArrayHandle(multiplexArray, std::cout);
+      std::cout << std::endl;
+
+      // verify results
+      VTKM_TEST_ASSERT(
+        test_equal_portals(result.GetPortalConstControl(), input.GetPortalConstControl()),
+        "CastingArrayHandle failed");
+    }
+  };
+
+  struct TestMultiplexerAsOutput
+  {
+    vtkm::cont::Invoker Invoke;
+
+    template <typename CastFromType>
+    VTKM_CONT void operator()(CastFromType vtkmNotUsed(type)) const
+    {
+      using InputArrayType = vtkm::cont::ArrayHandleIndex;
+      using ResultArrayType = vtkm::cont::ArrayHandle<CastFromType>;
+
+      InputArrayType input(ARRAY_SIZE);
+
+      ResultArrayType result;
+      vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                         vtkm::cont::ArrayHandleCast<vtkm::Id, ResultArrayType>>
+        multiplexerArray = vtkm::cont::make_ArrayHandleCast<vtkm::Id>(result);
+
+      this->Invoke(PassThrough{}, input, multiplexerArray);
+
+      vtkm::cont::printSummary_ArrayHandle(multiplexerArray, std::cout);
+      std::cout << std::endl;
+
+      // verify results
+      VTKM_TEST_ASSERT(
+        test_equal_portals(input.GetPortalConstControl(), result.GetPortalConstControl()),
+        "Multiplexing ArrayHandle failed");
+    }
+  };
+
   template <vtkm::IdComponent NUM_COMPONENTS>
   struct TestGroupVecAsInput
   {
@@ -1510,6 +1569,16 @@ private:
       std::cout << "Testing ArrayHandleCast as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestCastAsOutput(), CastTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleMultiplexer as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestMultiplexerAsInput(), CastTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleMultiplexer as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestMultiplexerAsOutput(), CastTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleGroupVec<3> as Input" << std::endl;

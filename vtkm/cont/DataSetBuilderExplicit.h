@@ -10,6 +10,8 @@
 #ifndef vtk_m_cont_DataSetBuilderExplicit_h
 #define vtk_m_cont_DataSetBuilderExplicit_h
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -21,17 +23,9 @@ namespace cont
 {
 
 //Coordinates builder??
-//Need a singlecellset handler.
 
 class VTKM_CONT_EXPORT DataSetBuilderExplicit
 {
-  template <typename T>
-  VTKM_CONT static void CopyInto(const std::vector<T>& input, vtkm::cont::ArrayHandle<T>& output)
-  {
-    output.Allocate(static_cast<vtkm::Id>(input.size()));
-    std::copy(input.begin(), input.end(), ArrayPortalToIteratorBegin(output.GetPortalControl()));
-  }
-
 public:
   VTKM_CONT
   DataSetBuilderExplicit() {}
@@ -84,8 +78,10 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     const std::string& coordsNm = "coords")
   {
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+
     return DataSetBuilderExplicit::BuildDataSet(
-      xVals, yVals, zVals, shapes, numIndices, connectivity, coordsNm);
+      xVals, yVals, zVals, shapes, offsets, connectivity, coordsNm);
   }
 
   template <typename T>
@@ -103,7 +99,8 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     const std::string& coordsNm = "coords")
   {
-    return DataSetBuilderExplicit::BuildDataSet(coords, shapes, numIndices, connectivity, coordsNm);
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    return DataSetBuilderExplicit::BuildDataSet(coords, shapes, offsets, connectivity, coordsNm);
   }
 
   template <typename T, typename CellShapeTag>
@@ -127,20 +124,19 @@ public:
 
 private:
   template <typename T>
-  static vtkm::cont::DataSet BuildDataSet(
-    const vtkm::cont::ArrayHandle<T>& X,
-    const vtkm::cont::ArrayHandle<T>& Y,
-    const vtkm::cont::ArrayHandle<T>& Z,
-    const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-    const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-    const std::string& coordsNm);
+  static vtkm::cont::DataSet BuildDataSet(const vtkm::cont::ArrayHandle<T>& X,
+                                          const vtkm::cont::ArrayHandle<T>& Y,
+                                          const vtkm::cont::ArrayHandle<T>& Z,
+                                          const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+                                          const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
+                                          const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+                                          const std::string& coordsNm);
 
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet BuildDataSet(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
     const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-    const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+    const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
     const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     const std::string& coordsNm);
 
@@ -165,19 +161,18 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
 {
   VTKM_ASSERT(xVals.size() == yVals.size() && yVals.size() == zVals.size() && xVals.size() > 0);
 
-  vtkm::cont::ArrayHandle<T> Xc, Yc, Zc;
-  DataSetBuilderExplicit::CopyInto(xVals, Xc);
-  DataSetBuilderExplicit::CopyInto(yVals, Yc);
-  DataSetBuilderExplicit::CopyInto(zVals, Zc);
+  auto xArray = vtkm::cont::make_ArrayHandle(xVals, vtkm::CopyFlag::On);
+  auto yArray = vtkm::cont::make_ArrayHandle(yVals, vtkm::CopyFlag::On);
+  auto zArray = vtkm::cont::make_ArrayHandle(zVals, vtkm::CopyFlag::On);
 
-  vtkm::cont::ArrayHandle<vtkm::UInt8> Sc;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> Nc;
-  vtkm::cont::ArrayHandle<vtkm::Id> Cc;
-  DataSetBuilderExplicit::CopyInto(shapes, Sc);
-  DataSetBuilderExplicit::CopyInto(numIndices, Nc);
-  DataSetBuilderExplicit::CopyInto(connectivity, Cc);
+  auto shapesArray = vtkm::cont::make_ArrayHandle(shapes, vtkm::CopyFlag::On);
+  auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
 
-  return DataSetBuilderExplicit::BuildDataSet(Xc, Yc, Zc, Sc, Nc, Cc, coordsNm);
+  auto offsetsArray = vtkm::cont::ConvertNumIndicesToOffsets(
+    vtkm::cont::make_ArrayHandle(numIndices, vtkm::CopyFlag::Off));
+
+  return DataSetBuilderExplicit::BuildDataSet(
+    xArray, yArray, zArray, shapesArray, offsetsArray, connArray, coordsNm);
 }
 
 template <typename T>
@@ -186,13 +181,13 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   const vtkm::cont::ArrayHandle<T>& Y,
   const vtkm::cont::ArrayHandle<T>& Z,
   const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-  const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
   const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   const std::string& coordsNm)
 {
   VTKM_ASSERT(X.GetNumberOfValues() == Y.GetNumberOfValues() &&
               Y.GetNumberOfValues() == Z.GetNumberOfValues() && X.GetNumberOfValues() > 0 &&
-              shapes.GetNumberOfValues() == numIndices.GetNumberOfValues());
+              shapes.GetNumberOfValues() + 1 == offsets.GetNumberOfValues());
 
   vtkm::cont::DataSet dataSet;
   dataSet.AddCoordinateSystem(
@@ -200,7 +195,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::Id nPts = X.GetNumberOfValues();
   vtkm::cont::CellSetExplicit<> cellSet;
 
-  cellSet.Fill(nPts, shapes, numIndices, connectivity);
+  cellSet.Fill(nPts, shapes, connectivity, offsets);
   dataSet.SetCellSet(cellSet);
 
   return dataSet;
@@ -214,24 +209,22 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
   const std::vector<vtkm::Id>& connectivity,
   const std::string& coordsNm)
 {
-  vtkm::cont::ArrayHandle<Vec<T, 3>> coordsArray;
-  DataSetBuilderExplicit::CopyInto(coords, coordsArray);
+  auto coordsArray = vtkm::cont::make_ArrayHandle(coords, vtkm::CopyFlag::On);
+  auto shapesArray = vtkm::cont::make_ArrayHandle(shapes, vtkm::CopyFlag::On);
+  auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
 
-  vtkm::cont::ArrayHandle<vtkm::UInt8> Sc;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> Nc;
-  vtkm::cont::ArrayHandle<vtkm::Id> Cc;
-  DataSetBuilderExplicit::CopyInto(shapes, Sc);
-  DataSetBuilderExplicit::CopyInto(numIndices, Nc);
-  DataSetBuilderExplicit::CopyInto(connectivity, Cc);
+  auto offsetsArray = vtkm::cont::ConvertNumIndicesToOffsets(
+    vtkm::cont::make_ArrayHandle(numIndices, vtkm::CopyFlag::Off));
 
-  return DataSetBuilderExplicit::Create(coordsArray, Sc, Nc, Cc, coordsNm);
+  return DataSetBuilderExplicit::BuildDataSet(
+    coordsArray, shapesArray, offsetsArray, connArray, coordsNm);
 }
 
 template <typename T>
 inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
   const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-  const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
   const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   const std::string& coordsNm)
 {
@@ -241,7 +234,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   vtkm::Id nPts = static_cast<vtkm::Id>(coords.GetNumberOfValues());
   vtkm::cont::CellSetExplicit<> cellSet;
 
-  cellSet.Fill(nPts, shapes, numIndices, connectivity);
+  cellSet.Fill(nPts, shapes, connectivity, offsets);
   dataSet.SetCellSet(cellSet);
 
   return dataSet;
@@ -255,13 +248,11 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
   const std::vector<vtkm::Id>& connectivity,
   const std::string& coordsNm)
 {
-  vtkm::cont::ArrayHandle<Vec<T, 3>> coordsArray;
-  DataSetBuilderExplicit::CopyInto(coords, coordsArray);
+  auto coordsArray = vtkm::cont::make_ArrayHandle(coords, vtkm::CopyFlag::On);
+  auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> Cc;
-  DataSetBuilderExplicit::CopyInto(connectivity, Cc);
-
-  return DataSetBuilderExplicit::Create(coordsArray, tag, numberOfPointsPerCell, Cc, coordsNm);
+  return DataSetBuilderExplicit::Create(
+    coordsArray, tag, numberOfPointsPerCell, connArray, coordsNm);
 }
 
 template <typename T, typename CellShapeTag>

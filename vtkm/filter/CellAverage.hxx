@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_CellAverage_hxx
+#define vtk_m_filter_CellAverage_hxx
+
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
@@ -47,3 +50,5 @@ inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

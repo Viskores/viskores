@@ -40,18 +40,10 @@
 
 #include <vtkm/worklet/MaskNone.h>
 #include <vtkm/worklet/ScatterIdentity.h>
+#include <vtkm/worklet/internal/Placeholders.h>
 
 namespace vtkm
 {
-namespace placeholders
-{
-
-template <int ControlSignatureIndex>
-struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex>
-{
-};
-}
-
 namespace worklet
 {
 namespace internal

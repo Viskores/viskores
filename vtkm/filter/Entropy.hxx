@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Entropy_hxx
+#define vtk_m_filter_Entropy_hxx
+
 #include <vtkm/worklet/FieldEntropy.h>
 
 namespace vtkm
@@ -43,3 +46,5 @@ inline VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

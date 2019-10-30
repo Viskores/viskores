@@ -9,7 +9,6 @@
 //============================================================================
 #define vtkm_filter_ExtractStructured_cxx
 #include <vtkm/filter/ExtractStructured.h>
-#include <vtkm/filter/ExtractStructured.hxx>
 
 namespace vtkm
 {

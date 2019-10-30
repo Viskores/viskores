@@ -30,13 +30,13 @@ public:
 
   VTKM_CONT void SetRadius(double _radius) { this->Radius = _radius; }
 
-  VTKM_CONT void SetSpacing(vtkm::Vec<double, 3> _spacing) { this->Spacing = _spacing; }
+  VTKM_CONT void SetSpacing(vtkm::Vec3f _spacing) { this->Spacing = _spacing; }
 
   VTKM_CONT void SetOrder(vtkm::Int32 _order) { this->Order = _order; }
 
 private:
   double Radius = 1;
-  vtkm::Vec<double, 3> Spacing = { 1, 1, 1 };
+  vtkm::Vec3f Spacing = { 1.0f, 1.0f, 1.0f };
   vtkm::Int32 Order = 0;
 };
 }

@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_CoordianteSystemTransform_hxx
+#define vtk_m_filter_CoordianteSystemTransform_hxx
+
 namespace vtkm
 {
 namespace filter
@@ -54,3 +57,5 @@ inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

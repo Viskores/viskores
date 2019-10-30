@@ -46,4 +46,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(PointAverage);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/PointAverage.hxx>
+
 #endif // vtk_m_filter_PointAverage_h

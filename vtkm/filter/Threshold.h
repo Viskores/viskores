@@ -89,4 +89,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(Threshold);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/Threshold.hxx>
+
 #endif // vtk_m_filter_Threshold_h

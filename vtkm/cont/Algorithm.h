@@ -594,7 +594,7 @@ struct Algorithm
   template <typename WordType>
   VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word)
   {
-    FillBitField(vtkm::cont::DeviceAdapterTagAny{}, bits, word);
+    Fill(vtkm::cont::DeviceAdapterTagAny{}, bits, word);
   }
 
   template <typename T, typename S>

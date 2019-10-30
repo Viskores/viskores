@@ -86,4 +86,6 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
 }
 } // namespace vtkm::filter
 
+#include <vtkm/filter/ClipWithField.hxx>
+
 #endif // vtk_m_filter_ClipWithField_h
