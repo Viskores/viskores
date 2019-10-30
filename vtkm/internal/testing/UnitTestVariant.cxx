@@ -63,6 +63,7 @@ void TestIndexing()
 
 void TestTriviallyCopyable()
 {
+#ifndef VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED
   // Make sure base types are behaving as expected
   VTKM_STATIC_ASSERT(std::is_trivially_copyable<float>::value);
   VTKM_STATIC_ASSERT(std::is_trivially_copyable<int>::value);
@@ -85,6 +86,7 @@ void TestTriviallyCopyable()
                       vtkm::internal::Variant<float, std::shared_ptr<float>, int>>::value));
   VTKM_STATIC_ASSERT((!std::is_trivially_copyable<
                       vtkm::internal::Variant<float, int, std::shared_ptr<float>>>::value));
+#endif // !VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED
 }
 
 struct TestFunctor
@@ -166,7 +168,9 @@ void TestCopyDestroy()
                                               CountConstructDestruct,
                                               TypePlaceholder<2>,
                                               TypePlaceholder<3>>;
+#ifndef VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED
   VTKM_STATIC_ASSERT(!std::is_trivially_copyable<VariantType>::value);
+#endif // !VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED
   vtkm::Id count = 0;
 
   VariantType variant1 = CountConstructDestruct(&count);
