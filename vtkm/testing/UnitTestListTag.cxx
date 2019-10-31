@@ -69,6 +69,32 @@ struct TestListTagAppendUnique2 : vtkm::ListTagAppendUnique<TestListTagAppendUni
 {
 };
 
+template <typename T>
+struct DoubleTransformImpl;
+template <int N>
+struct DoubleTransformImpl<TestClass<N>>
+{
+  using type = TestClass<2 * N>;
+};
+
+template <typename T>
+using DoubleTransform = typename DoubleTransformImpl<T>::type;
+
+struct TestListTagTransform : vtkm::ListTagTransform<TestListTag4, DoubleTransform>
+{
+};
+
+template <typename T>
+struct EvenPredicate;
+template <int N>
+struct EvenPredicate<TestClass<N>> : std::integral_constant<bool, (N % 2) == 0>
+{
+};
+
+struct TestListTagRemoveIf : vtkm::ListTagRemoveIf<TestListTag4, EvenPredicate>
+{
+};
+
 template <int N, int M>
 std::pair<int, int> test_number(brigand::list<TestClass<N>, TestClass<M>>)
 {
@@ -252,6 +278,12 @@ void TestLists()
 
   std::cout << "ListTagAppendUnique2" << std::endl;
   TryList(vtkm::Vec<int, 4>(31, 32, 33, 34), TestListTagAppendUnique2());
+
+  std::cout << "ListTagTransform" << std::endl;
+  TryList(vtkm::Vec<int, 4>(82, 84, 86, 88), TestListTagTransform());
+
+  std::cout << "ListTagRemoveIf" << std::endl;
+  TryList(vtkm::Vec<int, 2>(41, 43), TestListTagRemoveIf());
 
 
 
