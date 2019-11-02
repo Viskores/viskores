@@ -74,50 +74,48 @@ struct AllCastingTypes
                       typename VTraits::template ReplaceBaseComponentType<vtkm::Float64>>;
 };
 
-template <typename TargetT, typename SourceT, typename Storage, bool Valid>
-struct CastArrayIfValid;
-
-template <typename TargetT, typename SourceT, typename Storage>
-struct CastArrayIfValid<TargetT, SourceT, Storage, true>
-{
-  using type = vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, Storage>>;
-};
-
-template <typename TargetT, typename SourceT, typename Storage>
-struct CastArrayIfValid<TargetT, SourceT, Storage, false>
-{
-  using type = vtkm::cont::ArrayHandleDiscard<TargetT>;
-};
-
 // Provides a transform template that builds a cast from an array of some source type to a
 // cast array to a specific target type.
 template <typename TargetT, typename Storage>
 struct CastArrayTransform
 {
   template <typename SourceT>
-  using Transform = typename CastArrayIfValid<
-    TargetT,
-    SourceT,
-    Storage,
-    vtkm::cont::internal::IsValidArrayHandle<SourceT, Storage>::value>::type;
+  using Transform = vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, Storage>>;
+};
+
+// Provides a predicate for a particular storage that resolves to std::true_type if a given
+// type cannot be used with the storage.
+template <typename Storage>
+struct ArrayValidPredicate
+{
+  template <typename T>
+  using Predicate = vtkm::cont::internal::IsInValidArrayHandle<T, Storage>;
 };
 
 template <typename TargetT, typename Storage, bool Valid>
 struct AllCastArraysForStorageImpl;
 
 template <typename TargetT, typename Storage>
+struct ValidCastingTypes
+{
+  using type = vtkm::ListTagRemoveIf<typename AllCastingTypes<TargetT>::type,
+                                     ArrayValidPredicate<Storage>::template Predicate>;
+};
+
+template <typename TargetT, typename Storage>
 struct AllCastArraysForStorageImpl<TargetT, Storage, true>
 {
-  using SourceTypes = typename AllCastingTypes<TargetT>::type;
-  using type = vtkm::ListTagJoin<
-    vtkm::ListTagBase<vtkm::cont::ArrayHandle<TargetT, Storage>>,
-    vtkm::ListTagTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>>;
+  using SourceTypes = typename ValidCastingTypes<TargetT, Storage>::type;
+  using CastArrays =
+    vtkm::ListTagTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
+  using type =
+    vtkm::ListTagJoin<vtkm::ListTagBase<vtkm::cont::ArrayHandle<TargetT, Storage>>, CastArrays>;
 };
 
 template <typename TargetT, typename Storage>
 struct AllCastArraysForStorageImpl<TargetT, Storage, false>
 {
-  using SourceTypes = typename AllCastingTypes<TargetT>::type;
+  using SourceTypes = typename ValidCastingTypes<TargetT, Storage>::type;
   using type =
     vtkm::ListTagTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
 };
@@ -191,7 +189,6 @@ struct AllCastArraysForStorageImpl<
 template <typename TargetT, typename Storage>
 struct AllCastArraysForStorage
 {
-  using SourceTypes = typename AllCastingTypes<TargetT>::type;
   using type = typename AllCastArraysForStorageImpl<
     TargetT,
     Storage,
