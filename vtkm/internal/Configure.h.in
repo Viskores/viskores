@@ -278,10 +278,43 @@
   while (false)
 #endif
 
-// Use a trick to pass arguments containing commas through a macro. This is
-// helpful for mixing template code with macros.
-// See https://stackoverflow.com/questions/13842468
+/// \def VTKM_PASS_COMMAS(...)
+///
+/// A trick to pass arguments containing commas through a macro. This is
+/// helpful for mixing template code with macros.
+///
+/// See https://stackoverflow.com/questions/13842468
 #define VTKM_PASS_COMMAS(...) __VA_ARGS__
+
+/// \def VTKM_EXPAND(expr)
+///
+/// A utility macro to expand the arguments of macro before invoking it in the
+/// preprocessor. This is mostly used to handle the `__VA_ARGS__` created for
+/// variadic preprocessor macros. Often you will have to pass `__VA_ARGS__` to
+/// another macro to tease out particular parameters. For example, to get the
+/// first argument, you might make something like this.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg)
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+/// You would expect this pair of macros to give you the first argument or the
+/// token `no_arg` if no arguments were given, and for most compilers that
+/// is what you would get. But Visual Studio in particular has a weird
+/// interpretation of the standard that causes `__VA_ARGS__` to be treated
+/// as a single argument when passed to another macro. Consequently, for the
+/// example above, Visual Studio actually returns all args passed instead of
+/// the first. To get around the problem, you can wrap the entire call to
+/// the secondary macro in VTKM_EXPAND to get Visual Studio (and all other
+/// compilers) to properly treat `__VA_ARGS__` as separate arguments.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) VTKM_EXPAND(GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg))
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+#define VTKM_EXPAND(expr) expr
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
