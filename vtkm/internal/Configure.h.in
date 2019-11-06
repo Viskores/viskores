@@ -322,20 +322,6 @@
 //
 #pragma warning(disable:4503)
 
-//MSVC has a warning for using "unsafe" algorithms such as fill_n that can
-//easily overrun the end of unchecked pointers. The problem is that there
-//are lots of valid uses of these algorithms, and the signal that this is
-//a valid use is MSVC-specific. Even less fortunate is the fact that if
-//another header violates the warning, it is impossible to suppress it
-//because it happens in a system header file (xutility), which was included
-//far before the actual offending code occurred. Even less fortunate than
-//that, a boost header we (indirectly) use sets off this warning, cannot
-//be suppressed, and is not going to be fixed
-//(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to
-//turn off this problematic warning for everybody.
-//
-#pragma warning(disable:4996)
-
 //In VTK-m libraries, we are typically exporting (with declspec) classes rather
 //than the independent methods within the class. When you are exporting to a
 //dll in MSVC and the class contains a field that is not similarly exported,
