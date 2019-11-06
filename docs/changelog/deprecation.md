@@ -10,6 +10,8 @@ deprecated features should remain viable until at least the next major
 version. At the next major version, deprecated features from the previous
 version may be removed.
 
+## Declaring things deprecated
+
 Classes and methods are marked deprecated using the `VTKM_DEPRECATED`
 macro. The first argument of `VTKM_DEPRECATED` should be set to the first
 version in which the feature is deprecated. For example, if the last
@@ -67,4 +69,29 @@ enum struct NewEnum
   NEW_VALUE,
   OLD_VALUE2 VTKM_DEPRECATED(1.7) = 42
 };
+```
+
+## Using deprecated items
+
+Using deprecated items should work, but the compiler will give a warning.
+That is the point. However, sometimes you need to legitimately use a
+deprecated item without a warning. This is usually because you are
+implementing another deprecated item or because you have a test for a
+deprecated item (that can be easily removed with the deprecated bit). To
+support this a pair of macros, `VTKM_DEPRECATED_SUPPRESS_BEGIN` and
+`VTKM_DEPRECATED_SUPPRESS_END` are provided. Code that legitimately uses
+deprecated items should be wrapped in these macros.
+
+``` cpp
+VTKM_EXEC_CONT
+VTKM_DEPRECATED(1.6, "You must now specify both a value and tolerance.")
+void ImportantMethod()
+{
+  // It can be the case that to implement a deprecated method you need to
+  // use other deprecated features. To do that, just temporarily suppress
+  // those warnings.
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  this->ImportantMethod(0.0);
+  VTKM_DEPRECATED_SUPPRESS_END
+}
 ```
