@@ -42,10 +42,10 @@
 // tl;dr, put all const variables accessed from openmp blocks in a
 // VTKM_OPENMP_SHARED_CONST(var1, var2, ...) macro. This will do The Right Thing
 // on all gcc.
-#if defined(__GNUC__) && __GNUC__ >= 9
-#define VTKM_OPENMP_SHARED_CONST(...) shared(__VA_ARGS__)
-#else
+#if defined(VTKM_GCC) && (__GNUC__ < 9)
 #define VTKM_OPENMP_SHARED_CONST(...)
+#else
+#define VTKM_OPENMP_SHARED_CONST(...) shared(__VA_ARGS__)
 #endif
 
 // When defined, supported type / operator combinations will use the OpenMP
