@@ -246,9 +246,11 @@ public:
   VTKM_CONT
   void AllocateFullArray(vtkm::Id numberOfValues)
   {
-    this->ReleaseResourcesExecutionInternal();
-    this->Internals->ControlArray.AllocateFullArray(numberOfValues);
-    this->Internals->ControlArrayValid = true;
+    auto lock = this->GetLock();
+
+    this->ReleaseResourcesExecutionInternal(lock);
+    this->Internals->GetControlArray(lock)->AllocateFullArray(numberOfValues);
+    this->Internals->SetControlArrayValid(lock, true);
   }
 };
 }
