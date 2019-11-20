@@ -25,7 +25,8 @@
   extern template VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<    \
     Device>::Portal ArrayHandle<Type, StorageTagBasic>::PrepareForInPlace(Device);                 \
   extern template VTKM_CONT_TEMPLATE_EXPORT void                                                   \
-    ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device) const;
+  ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(const std::unique_lock<std::mutex>&,        \
+                                                       Device) const;
 
 #define VTKM_EXPORT_ARRAYHANDLE_FOR_DEVICE_ADAPTER(BasicType, Device)                              \
   VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(BasicType, Device)                     \
@@ -63,7 +64,8 @@
     ArrayHandle<Type, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);                        \
   template VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<Device>::Portal     \
     ArrayHandle<Type, StorageTagBasic>::PrepareForInPlace(Device);                                 \
-  template VTKM_CONT_EXPORT void ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device) const;
+  template VTKM_CONT_EXPORT void ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(             \
+    const std::unique_lock<std::mutex>&, Device) const;
 
 #define VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER(BasicType, Device)                         \
   VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(BasicType, Device)                \
