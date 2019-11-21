@@ -97,18 +97,24 @@ public:
                             const FirstArrayPortalType& first,
                             const OutputArrayPortalType& succ) const
   {
-    // For the current vertex find the index of the opposite edge
-    // That is for (i, j) find (j, i) with a binary search
-    cont::ArrayHandle<Vec<Id, 2>> value;
-    value.Allocate(1);
-    value.GetPortalControl().Set(0,
-                                 Vec<Id, 2>{ edges.GetPortalConstControl().Get(i)[1],
-                                             edges.GetPortalConstControl().Get(i)[0] });
+    // For edge (a, b) find the opposite edge (b, a) in the sorted list of edges
+    // This relies on the fact that in the contour tree nodes have bounded degree.
+    // This comes from the fact that vertices in a 2D/3D mesh have a bounded degree.
+    auto edgesPortal = edges.GetPortalConstControl();
 
-    cont::ArrayHandle<Id> output;
-    vtkm::cont::Algorithm::LowerBounds(edges, value, output, vtkm::SortLess());
+    auto currentEdge = edgesPortal.Get(i);
+    auto oppositeIndex = first.Get(currentEdge[1]);
 
-    int oppositeIndex = output.GetPortalControl().Get(0);
+    while (oppositeIndex < edges.GetNumberOfValues() &&
+           currentEdge[1] == edgesPortal.Get(oppositeIndex)[0])
+    {
+      if (currentEdge[0] == edgesPortal.Get(oppositeIndex)[1])
+      {
+        break;
+      }
+
+      oppositeIndex++;
+    }
 
     if (NO_SUCH_ELEMENT == next.Get(oppositeIndex))
     {

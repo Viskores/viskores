@@ -423,7 +423,6 @@ public:
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
     auto bestUpwardPortal = bestUpward.GetPortalControl();
     auto bestDownwardPortal = bestDownward.GetPortalControl();
-    auto whichBranchPortal = whichBranch.GetPortalControl();
 
     // STAGE II: Pick the best (largest volume) edge upwards and downwards
     // II A. Pick the best upwards weight by sorting on lower vertex then processing by segments
@@ -790,72 +789,6 @@ public:
       dataFieldIsSorted);
   }
 
-  void static computeBestUpDown(const IdArrayType nodes,
-                                const IdArrayType supernodes,
-                                const IdArrayType superarcs,
-                                const IdArrayType minValues,
-                                const IdArrayType minParents,
-                                const IdArrayType maxValues,
-                                const IdArrayType maxParents,
-                                const IdArrayType ctSortOrder,
-                                const cont::ArrayHandle<Float64> fieldValues,
-                                IdArrayType bestUpward,
-                                IdArrayType bestDownward)
-  {
-
-    // Make a list of the neighbours of every vetex
-    std::vector<std::vector<Id>> edgesStd(supernodes.GetNumberOfValues());
-
-    for (int i = 0; i < superarcs.GetNumberOfValues(); i++)
-    {
-      Id j = maskedIndex(superarcs.GetPortalConstControl().Get(i));
-
-      if (j != 0)
-      {
-        edgesStd[i].push_back(j);
-        edgesStd[j].push_back(i);
-      }
-    }
-
-    // A linear list of edges (0, 1), (0, 5), (1, 0), (1, 4)
-    cont::ArrayHandle<Pair<Id, Id>> edgesLinear;
-    edgesLinear.Allocate(2 * (supernodes.GetNumberOfValues() - 1));
-
-    // A list of where the first edge for a vertex is [0, 2, ...] in the edgesLinear
-    cont::ArrayHandle<Id> first;
-    first.Allocate(supernodes.GetNumberOfValues());
-
-    int counter = 0;
-    for (int i = 0; i < edgesStd.size(); i++)
-    {
-      first.GetPortalControl().Set(i, counter);
-      for (int j = 0; j < edgesStd[i].size(); j++)
-      {
-        edgesLinear.GetPortalControl().Set(counter++, { i, edgesStd[i][j] });
-      }
-    }
-
-    // Run Worklet
-    vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeBestUpDown
-      bestUpDownWorklet;
-
-    vtkm::cont::Invoker Invoke;
-    Invoke(bestUpDownWorklet,
-           first,
-           nodes,
-           supernodes,
-           minValues,
-           minParents,
-           maxValues,
-           maxParents,
-           ctSortOrder,
-           edgesLinear,
-           fieldValues,
-           bestUpward,  // output
-           bestDownward // output
-           );
-  }
-
   void static findMinMaxParallel(const IdArrayType supernodes,
                                  const cont::ArrayHandle<Vec<Id, 2>> tourEdges,
                                  const bool isMin,
@@ -934,7 +867,7 @@ public:
     };
 
     std::vector<VertexData> vertexData(supernodes.GetNumberOfValues(), { -1, -1 });
-    for (int i = 0; i < vertexData.size(); i++)
+    for (unsigned int i = 0; i < vertexData.size(); i++)
     {
       vertexData[i].index = i;
     }
@@ -961,7 +894,7 @@ public:
       minMaxIndex.Set(i, i);
     }
 
-    for (int i = 0; i < vertexData.size(); i++)
+    for (unsigned int i = 0; i < vertexData.size(); i++)
     {
       Id vertex = vertexData[i].index;
       Id parent = parents.Get(vertex);
@@ -981,6 +914,7 @@ public:
   void static ComputeHeightBranchDecomposition(const ContourTree& contourTree,
                                                const cont::ArrayHandle<Float64> fieldValues,
                                                const IdArrayType& ctSortOrder,
+                                               const bool useParallelMinMaxSearch,
                                                IdArrayType& whichBranch,
                                                IdArrayType& branchMinimum,
                                                IdArrayType& branchMaximum,
@@ -1020,49 +954,62 @@ public:
                          contourTree.nodes.GetNumberOfValues() - 1)),
                        maxTourEdges.GetPortalControl());
 
+    //
     // Compute Min/Max per subtree
+    //
     IdArrayType minValues, minParents, maxValues, maxParents;
     vtkm::cont::ArrayCopy(noSuchElementArray, minValues);
     vtkm::cont::ArrayCopy(noSuchElementArray, minParents);
     vtkm::cont::ArrayCopy(noSuchElementArray, maxValues);
     vtkm::cont::ArrayCopy(noSuchElementArray, maxParents);
 
-    //ProcessContourTree::findMinMax(
-    //contourTree.supernodes.GetPortalConstControl(),
-    //minTourEdges.GetPortalConstControl(),
-    //true,
-    //minValues.GetPortalControl(),
-    //minParents.GetPortalControl()
-    //);
+    // Finding the min/max for every subtree can either be done in parallel or serial
+    // The parallel implementation is not work efficient and will not work well on a single/few cores
+    // This is why I have left the option to do a BFS style search in serial instead of doing an a prefix min/max for every subtree in the euler tour
+    if (false == useParallelMinMaxSearch)
+    {
+      ProcessContourTree::findMinMax(contourTree.supernodes.GetPortalConstControl(),
+                                     minTourEdges.GetPortalConstControl(),
+                                     true,
+                                     minValues.GetPortalControl(),
+                                     minParents.GetPortalControl());
 
-    //ProcessContourTree::findMinMax(
-    //contourTree.supernodes.GetPortalConstControl(),
-    //maxTourEdges.GetPortalConstControl(),
-    //false,
-    //maxValues.GetPortalControl(),
-    //maxParents.GetPortalControl()
-    //);
+      ProcessContourTree::findMinMax(contourTree.supernodes.GetPortalConstControl(),
+                                     maxTourEdges.GetPortalConstControl(),
+                                     false,
+                                     maxValues.GetPortalControl(),
+                                     maxParents.GetPortalControl());
+    }
+    else
+    {
+      ProcessContourTree::findMinMaxParallel(
+        contourTree.supernodes, minTourEdges, true, minValues, minParents);
 
-    ProcessContourTree::findMinMaxParallel(
-      contourTree.supernodes, minTourEdges, true, minValues, minParents);
-
-    ProcessContourTree::findMinMaxParallel(
-      contourTree.supernodes, maxTourEdges, false, maxValues, maxParents);
+      ProcessContourTree::findMinMaxParallel(
+        contourTree.supernodes, maxTourEdges, false, maxValues, maxParents);
+    }
 
     //
     // Compute bestUp and bestDown
     //
-    computeBestUpDown(contourTree.nodes,
-                      contourTree.supernodes,
-                      contourTree.superarcs,
-                      minValues,
-                      minParents,
-                      maxValues,
-                      maxParents,
-                      ctSortOrder,
-                      fieldValues,
-                      bestUpward,
-                      bestDownward);
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeBestUpDown
+      bestUpDownWorklet;
+
+    vtkm::cont::Invoker Invoke;
+    Invoke(bestUpDownWorklet,
+           tour.first,
+           contourTree.nodes,
+           contourTree.supernodes,
+           minValues,
+           minParents,
+           maxValues,
+           maxParents,
+           ctSortOrder,
+           tour.edges,
+           fieldValues,
+           bestUpward,  // output
+           bestDownward // output
+           );
 
     ProcessContourTree::ComputeBranchData(contourTree,
                                           whichBranch,

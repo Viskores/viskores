@@ -129,9 +129,9 @@ public:
     Float64 maxUpSubtreeHeight = 0;
     Float64 maxDownSubtreeHeight = 0;
 
-    while (k < edgesLinear.GetNumberOfValues() && edgesLinear.Get(k).first == i)
+    while (k < edgesLinear.GetNumberOfValues() && edgesLinear.Get(k)[0] == i)
     {
-      Id j = edgesLinear.Get(k++).second;
+      Id j = edgesLinear.Get(k++)[1];
 
       Id regularVertexValueI = maskedIndex(supernodes.Get(i));
       Id regularVertexValueJ = maskedIndex(supernodes.Get(j));

@@ -78,6 +78,9 @@ public:
   // The tour consists of the directed edges of the contour tree
   cont::ArrayHandle<Vec<Id, 2>> edges;
 
+  // The first occurance of an vertex
+  cont::ArrayHandle<Id> first;
+
   // Compute the Euler Tour with root 0
   void computeEulerTour(const IdArrayType::PortalConstControl superarcs)
   {
@@ -106,8 +109,8 @@ public:
     // Initialize first and next arrays. They are used to compute the ciculer linked list that is the euler tour
     //
 
+    //cont::ArrayHandle<Id> first;
     cont::ArrayHandle<Id> next;
-    cont::ArrayHandle<Id> first;
 
     vtkm::cont::ArrayCopy(
       vtkm::cont::make_ArrayHandle(std::vector<Id>(superarcs.GetNumberOfValues(), NO_SUCH_ELEMENT)),
