@@ -10,8 +10,19 @@
 
 set(unit_tests
   UnitTestBOVDataSetReader.cxx
+  UnitTestPixelTypes.cxx
   UnitTestVTKDataSetReader.cxx
   UnitTestVTKDataSetWriter.cxx
- )
+)
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_lodepng)
+
+if(NOT VTKm_ENABLE_RENDERING)
+  return()
+endif()
+
+set(image_unit_tests
+  UnitTestImageWriter.cxx
+)
+
+vtkm_unit_tests(NAME UnitTests_vtkm_io_image_testing SOURCES ${image_unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering vtkm_lodepng)
