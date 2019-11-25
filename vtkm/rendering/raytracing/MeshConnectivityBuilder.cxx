@@ -522,7 +522,7 @@ VTKM_CONT void GenerateFaceConnnectivity(const CellSetType cellSet,
                                          vtkm::cont::ArrayHandle<vtkm::Int32>& uniqueFaces)
 {
 
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   vtkm::Id numCells = shapes.GetNumberOfValues();
@@ -611,7 +611,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
   const OffsetsHandleType& shapeOffsets)
 {
 
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
   vtkm::cont::ArrayHandle<vtkm::Id3> externalFacePairs;
   vtkm::cont::Algorithm::CopyIf(cellFaceId, uniqueFaces, externalFacePairs, IsUnique());
@@ -668,7 +668,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("mesh_conn");
   //logger->AddLogData("device", GetDeviceString(DeviceAdapter()));
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   vtkm::Float32 BoundingBox[6];
@@ -730,7 +730,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
 {
   Logger* logger = Logger::GetInstance();
   logger->OpenLogEntry("meah_conn");
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   vtkm::Float32 BoundingBox[6];
@@ -807,7 +807,7 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Id4> MeshConnectivityBuilder::ExternalTrianglesStructured(
   vtkm::cont::CellSetStructured<3>& cellSetStructured)
 {
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   vtkm::Id3 cellDims = cellSetStructured.GetCellDimensions();
@@ -895,7 +895,7 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   logger->OpenLogEntry("mesh_conn_construction");
 
   MeshConnContainer* meshConn = nullptr;
-  vtkm::cont::Timer timer{ cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   if (type == Unstructured)
