@@ -269,7 +269,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays)
   using Timer = vtkm::cont::Timer;
 
   Logger* logger = Logger::GetInstance();
-  Timer renderTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  Timer renderTimer;
   renderTimer.Start();
   vtkm::Float64 time = 0.;
   logger->OpenLogEntry("ray_tracer");
