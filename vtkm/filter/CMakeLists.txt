@@ -154,6 +154,8 @@ set(sources_device
   VectorMagnitude.cxx
 )
 
+set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+
 vtkm_library(
   NAME vtkm_filter
   TEMPLATE_SOURCES ${header_template_sources}
