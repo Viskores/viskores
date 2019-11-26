@@ -147,6 +147,7 @@ vtkm_library(
   )
 target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 
+set_source_files_properties(${sources_device} PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
