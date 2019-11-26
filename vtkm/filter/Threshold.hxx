@@ -31,7 +31,17 @@ public:
   template <typename T>
   VTKM_EXEC bool operator()(const T& value) const
   {
+
     return value >= static_cast<T>(this->Lower) && value <= static_cast<T>(this->Upper);
+  }
+
+  //Needed to work with ArrayHandleVirtual
+  template <typename PortalType>
+  VTKM_EXEC bool operator()(
+    const vtkm::internal::ArrayPortalValueReference<PortalType>& value) const
+  {
+    using T = typename PortalType::ValueType;
+    return value.Get() >= static_cast<T>(this->Lower) && value.Get() <= static_cast<T>(this->Upper);
   }
 
 private:
