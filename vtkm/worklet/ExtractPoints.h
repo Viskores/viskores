@@ -28,10 +28,6 @@ namespace worklet
 class ExtractPoints
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool>
-  {
-  };
-
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify points within volume of interest
   class ExtractPointsByVOI : public vtkm::worklet::WorkletVisitPointsWithCells

@@ -29,10 +29,6 @@ namespace worklet
 class ExtractGeometry
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool>
-  {
-  };
-
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify cells within volume of interest
   class ExtractCellsByVOI : public vtkm::worklet::WorkletVisitCellsWithPoints
