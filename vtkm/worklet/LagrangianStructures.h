@@ -49,23 +49,21 @@ public:
                             const PointArray& output,
                             Scalar& outputField) const
   {
-    using Point = typename PointArray::ValueType;
-
     const vtkm::Vec<vtkm::Id, 6> neighborIndices = this->GridData.GetNeighborIndices(index);
 
     // Calculate Stretching / Squeezing
-    Point xin1 = input.Get(neighborIndices[0]);
-    Point xin2 = input.Get(neighborIndices[1]);
-    Point yin1 = input.Get(neighborIndices[2]);
-    Point yin2 = input.Get(neighborIndices[3]);
+    auto xin1 = input.Get(neighborIndices[0]);
+    auto xin2 = input.Get(neighborIndices[1]);
+    auto yin1 = input.Get(neighborIndices[2]);
+    auto yin2 = input.Get(neighborIndices[3]);
 
     Scalar xDiff = 1.0f / (xin2[0] - xin1[0]);
     Scalar yDiff = 1.0f / (yin2[1] - yin1[1]);
 
-    Point xout1 = output.Get(neighborIndices[0]);
-    Point xout2 = output.Get(neighborIndices[1]);
-    Point yout1 = output.Get(neighborIndices[2]);
-    Point yout2 = output.Get(neighborIndices[3]);
+    auto xout1 = output.Get(neighborIndices[0]);
+    auto xout2 = output.Get(neighborIndices[1]);
+    auto yout1 = output.Get(neighborIndices[2]);
+    auto yout2 = output.Get(neighborIndices[3]);
 
     // Total X gradient w.r.t X, Y
     Scalar f1x = (xout2[0] - xout1[0]) * xDiff;
@@ -130,27 +128,25 @@ public:
                             const PointArray& output,
                             Scalar& outputField) const
   {
-    using Point = typename PointArray::ValueType;
-
     const vtkm::Vec<vtkm::Id, 6> neighborIndices = this->GridData.GetNeighborIndices(index);
 
-    Point xin1 = input.Get(neighborIndices[0]);
-    Point xin2 = input.Get(neighborIndices[1]);
-    Point yin1 = input.Get(neighborIndices[2]);
-    Point yin2 = input.Get(neighborIndices[3]);
-    Point zin1 = input.Get(neighborIndices[4]);
-    Point zin2 = input.Get(neighborIndices[5]);
+    auto xin1 = input.Get(neighborIndices[0]);
+    auto xin2 = input.Get(neighborIndices[1]);
+    auto yin1 = input.Get(neighborIndices[2]);
+    auto yin2 = input.Get(neighborIndices[3]);
+    auto zin1 = input.Get(neighborIndices[4]);
+    auto zin2 = input.Get(neighborIndices[5]);
 
     Scalar xDiff = 1.0f / (xin2[0] - xin1[0]);
     Scalar yDiff = 1.0f / (yin2[1] - yin1[1]);
     Scalar zDiff = 1.0f / (zin2[2] - zin1[2]);
 
-    Point xout1 = output.Get(neighborIndices[0]);
-    Point xout2 = output.Get(neighborIndices[1]);
-    Point yout1 = output.Get(neighborIndices[2]);
-    Point yout2 = output.Get(neighborIndices[3]);
-    Point zout1 = output.Get(neighborIndices[4]);
-    Point zout2 = output.Get(neighborIndices[5]);
+    auto xout1 = output.Get(neighborIndices[0]);
+    auto xout2 = output.Get(neighborIndices[1]);
+    auto yout1 = output.Get(neighborIndices[2]);
+    auto yout2 = output.Get(neighborIndices[3]);
+    auto zout1 = output.Get(neighborIndices[4]);
+    auto zout2 = output.Get(neighborIndices[5]);
 
     // Total X gradient w.r.t X, Y, Z
     Scalar f1x = (xout2[0] - xout1[0]) * xDiff;
