@@ -161,6 +161,7 @@ vtkm_library(
   TEMPLATE_SOURCES ${header_template_sources}
   HEADERS ${headers}
   DEVICE_SOURCES ${sources_device}
+  USE_VTKM_JOB_POOL
   )
 target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
 

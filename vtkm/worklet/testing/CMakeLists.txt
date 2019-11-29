@@ -90,6 +90,7 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES vtkm_source vtkm_worklet vtkm_filter
   ALL_BACKENDS
+  USE_VTKM_JOB_POOL
   )
 if (TARGET vtkm::cuda)
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
