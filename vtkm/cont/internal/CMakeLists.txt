@@ -22,7 +22,6 @@ set(headers
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterListHelpers.h
-  DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h

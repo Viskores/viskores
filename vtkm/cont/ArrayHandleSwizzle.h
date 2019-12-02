@@ -144,6 +144,9 @@ public:
   {
   }
 
+  ArrayPortalSwizzle& operator=(const ArrayPortalSwizzle& src) = default;
+  ArrayPortalSwizzle& operator=(ArrayPortalSwizzle&& src) = default;
+
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 

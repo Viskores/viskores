@@ -59,6 +59,11 @@ public:
   {
   }
 
+
+  ConnectivityStructured& operator=(const ConnectivityStructured& src) = default;
+  ConnectivityStructured& operator=(ConnectivityStructured&& src) = default;
+
+
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return Helper::GetNumberOfElements(this->Internals); }
 
