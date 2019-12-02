@@ -250,7 +250,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
-      ${VTKm_SOURCE_DIR}/CMake/FindOpenMP.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 

@@ -199,8 +199,9 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   return dataSet;
 }
 
-template <typename T>
-int TestMetrics(const char* outFileName, vtkm::cont::DataSet data, T filter)
+int TestMetrics(const char* outFileName,
+                vtkm::cont::DataSet data,
+                vtkm::filter::MeshQuality& filter)
 {
   vtkm::cont::DataSet outputData;
   try
@@ -255,22 +256,10 @@ int main(int argc, char* argv[])
   vtkm::io::reader::VTKDataSetReader reader(argv[1]);
 
 
-  //Assign a cell metric to compute for each different
-  //shape type that may exist in the input dataset. If no metric
-  //is specified for a shape type, then it is assumed to be EMPTY
-  //and no metric is computed.
-  std::vector<vtkm::Pair<vtkm::UInt8, vtkm::filter::CellMetric>> shapeMetrics{
-    vtkm::make_Pair(vtkm::CELL_SHAPE_LINE, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_TRIANGLE, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_POLYGON, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_TETRA, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_HEXAHEDRON, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_WEDGE, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_QUAD, vtkm::filter::CellMetric::VOLUME),
-    vtkm::make_Pair(vtkm::CELL_SHAPE_PYRAMID, vtkm::filter::CellMetric::VOLUME)
-  };
+  // A cell metric is now computed for every shape type that exists in the
+  // input dataset.
+  vtkm::filter::CellMetric shapeMetric = vtkm::filter::CellMetric::VOLUME;
 
-  vtkm::filter::MeshQuality filter(shapeMetrics);
   try
   {
     input = reader.ReadDataSet(); //FIELD not supported errors here, but doesnt affect data
@@ -281,6 +270,8 @@ int main(int argc, char* argv[])
     std::cerr << "Error occured while reading input. Exiting" << std::endl;
     return 1;
   }
+
+  vtkm::filter::MeshQuality filter(shapeMetric);
   TestMetrics(outFileName, input, filter);
   return 0;
 }

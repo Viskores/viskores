@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Histogram_hxx
+#define vtk_m_filter_Histogram_hxx
+
 #include <vtkm/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Algorithm.h>
@@ -249,3 +252,5 @@ inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::PartitionedDataSe
 }
 }
 } // namespace vtkm::filter
+
+#endif

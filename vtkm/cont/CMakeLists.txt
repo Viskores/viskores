@@ -211,7 +211,7 @@ if(TARGET vtkm::openmp)
 endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
-target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser vtkm_diy)
+target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser vtkm_diy vtkm_lcl)
 if(TARGET vtkm_loguru)
   target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)
 endif()

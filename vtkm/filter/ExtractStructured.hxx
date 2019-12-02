@@ -8,22 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExtractStructured_hxx
+#define vtk_m_filter_ExtractStructured_hxx
+
 namespace vtkm
 {
 namespace filter
 {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT ExtractStructured::ExtractStructured()
-  : vtkm::filter::FilterDataSet<ExtractStructured>()
-  , VOI(vtkm::RangeId3(0, -1, 0, -1, 0, -1))
-  , SampleRate(vtkm::Id3(1, 1, 1))
-  , IncludeBoundary(false)
-  , IncludeOffset(false)
-  , Worklet()
-{
-}
-
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
@@ -47,33 +38,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   output.AddCoordinateSystem(outputCoordinates);
   return output;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ExtractStructured::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  if (fieldMeta.IsPointField())
-  {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input);
-
-    result.AddField(fieldMeta.AsField(output));
-    return true;
-  }
-
-  // cell data must be scattered to the cells created per input cell
-  if (fieldMeta.IsCellField())
-  {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
-
-    result.AddField(fieldMeta.AsField(output));
-    return true;
-  }
-
-  return false;
 }
 }
-}
+
+#endif

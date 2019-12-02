@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_CrossProduct_hxx
+#define vtk_m_filter_CrossProduct_hxx
+
 #include <vtkm/cont/ArrayHandleCast.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -55,3 +58,5 @@ inline VTKM_CONT vtkm::cont::DataSet CrossProduct::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

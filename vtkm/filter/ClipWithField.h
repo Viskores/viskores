@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_ClipWithField_h
 #define vtk_m_filter_ClipWithField_h
 
+#include <vtkm/filter/vtkm_filter_export.h>
+
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Clip.h>
 
@@ -24,13 +26,10 @@ namespace filter
 /// value are considered outside, and will be discarded. All points that are greater
 /// are kept.
 /// The resulting geometry will not be water tight.
-class ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
+class VTKM_ALWAYS_EXPORT ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagScalarAll;
-
-  VTKM_CONT
-  ClipWithField();
 
   VTKM_CONT
   void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
@@ -53,13 +52,37 @@ public:
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    vtkm::cont::ArrayHandle<T> output;
+
+    if (fieldMeta.IsPointField())
+    {
+      output = this->Worklet.ProcessPointField(input);
+    }
+    else if (fieldMeta.IsCellField())
+    {
+      output = this->Worklet.ProcessCellField(input);
+    }
+    else
+    {
+      return false;
+    }
+
+    //use the same meta data as the input so we get the same field name, etc.
+    result.AddField(fieldMeta.AsField(output));
+    return true;
+  }
 
 private:
-  vtkm::Float64 ClipValue;
+  vtkm::Float64 ClipValue = 0;
   vtkm::worklet::Clip Worklet;
-  bool Invert;
+  bool Invert = false;
 };
+
+#ifndef vtkm_filter_Clip_cxx
+VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
+#endif
 }
 } // namespace vtkm::filter
 

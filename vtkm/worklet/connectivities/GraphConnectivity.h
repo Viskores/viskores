@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_connectivity_graph_connectivity_h
 #define vtk_m_worklet_connectivity_graph_connectivity_h
 
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 #include <vtkm/worklet/connectivities/UnionFind.h>
@@ -26,10 +27,12 @@ namespace detail
 class Graft : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn index, FieldIn start, FieldIn degree, WholeArrayIn ids, WholeArrayInOut comp);
+  using ControlSignature = void(FieldIn start,
+                                FieldIn degree,
+                                WholeArrayIn ids,
+                                WholeArrayInOut comp);
 
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
 
   using InputDomain = _1;
 
@@ -64,35 +67,40 @@ public:
            const InputPortalType& connectivityArray,
            OutputPortalType& componentsOut) const
   {
-    bool allStar = false;
+    bool everythingIsAStar = false;
     vtkm::cont::ArrayHandle<vtkm::Id> components;
-    vtkm::cont::ArrayHandle<bool> isStar;
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     Algorithm::Copy(
       vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      cellIds);
-    Algorithm::Copy(cellIds, components);
+      components);
+
+    //used as an atomic bool, so we use Int32 as it the
+    //smallest type that VTK-m supports as atomics
+    vtkm::cont::ArrayHandle<vtkm::Int32> allStars;
+    allStars.Allocate(1);
+
+    vtkm::cont::Invoker invoke;
 
     do
     {
-      vtkm::worklet::DispatcherMapField<detail::Graft> graftDispatcher;
-      graftDispatcher.Invoke(
-        cellIds, indexOffsetsArray, numIndicesArray, connectivityArray, components);
+      allStars.GetPortalControl().Set(0, 1); //reset the atomic state
+      invoke(detail::Graft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
 
-      // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-      vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
-      isStarDisp.Invoke(cellIds, components, isStar);
-      allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
-
-      vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
-      pointJumpingDispatcher.Invoke(cellIds, components);
-    } while (!allStar);
+      // Detection of allStars has to come before pointer jumping. Don't try to rearrange it.
+      invoke(IsStar{}, components, allStars);
+      everythingIsAStar = (allStars.GetPortalControl().Get(0) == 1);
+      invoke(PointerJumping{}, components);
+    } while (!everythingIsAStar);
 
     // renumber connected component to the range of [0, number of components).
     vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
     Algorithm::Copy(components, uniqueComponents);
     Algorithm::Sort(uniqueComponents);
     Algorithm::Unique(uniqueComponents);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
+    Algorithm::Copy(
+      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
+      cellIds);
 
     vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
     Algorithm::Copy(

@@ -14,7 +14,9 @@
 #
 #   vtkm_rendering  Target that contains all the rendering code
 #
-#   vtkm_filter     Target that contains all of VTK-m filters
+#   vtkm_filter     Target that contains all of VTK-m pre-built filters
+#
+#   vtkm_source     Target that contains all of VTK-m pre-built sources
 #
 #   vtkm::tbb       Target that contains tbb related link information
 #                   implicitly linked to by `vtkm_cont` if tbb is enabled

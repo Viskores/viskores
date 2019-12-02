@@ -8,37 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExternalFaces_hxx
+#define vtk_m_filter_ExternalFaces_hxx
+
 namespace vtkm
 {
 namespace filter
 {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT ExternalFaces::ExternalFaces()
-  : vtkm::filter::FilterDataSet<ExternalFaces>()
-  , CompactPoints(false)
-  , Worklet()
-{
-  this->SetPassPolyData(true);
-}
-
-namespace
-{
-
-template <typename BasePolicy>
-struct CellSetExplicitPolicy : public BasePolicy
-{
-  using AllCellSetList = vtkm::cont::CellSetListTagExplicitDefault;
-};
-
-template <typename DerivedPolicy>
-inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSetExplicitPolicy(
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>>();
-}
-
-} // anonymous namespace
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
@@ -64,68 +40,9 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
     this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(cells, policy), outCellSet);
   }
 
-  //3. Check the fields of the dataset to see what kinds of fields are present so
-  //   we can free the cell mapping array if it won't be needed.
-  const vtkm::Id numFields = input.GetNumberOfFields();
-  bool hasCellFields = false;
-  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
-  {
-    auto f = input.GetField(fieldIdx);
-    hasCellFields = f.IsFieldCell();
-  }
-
-  if (!hasCellFields)
-  {
-    this->Worklet.ReleaseCellMapArrays();
-  }
-
-  //4. create the output dataset
-  vtkm::cont::DataSet output;
-  output.SetCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  if (this->CompactPoints)
-  {
-    this->Compactor.SetCompactPointFields(true);
-    this->Compactor.SetMergePoints(false);
-    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy));
-  }
-  else
-  {
-    return output;
-  }
-}
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ExternalFaces::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
-{
-  if (fieldMeta.IsPointField())
-  {
-    if (this->CompactPoints)
-    {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
-    }
-    else
-    {
-      result.AddField(fieldMeta.AsField(input));
-      return true;
-    }
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    vtkm::cont::ArrayHandle<T> fieldArray;
-    fieldArray = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(fieldArray));
-    return true;
-  }
-
-
-  return false;
+  return this->GenerateOutput(input, outCellSet);
 }
 }
 }
+
+#endif

@@ -71,7 +71,6 @@ public:
     ZFPDims = PaddedDims / 4;
   }
   using ControlSignature = void(FieldIn, WholeArrayIn, AtomicArrayInOut bitstream);
-  using ExecutionSignature = void(_1, _2, _3);
 
   template <class InputScalarPortal, typename BitstreamPortal>
   VTKM_EXEC void operator()(const vtkm::Id blockIdx,

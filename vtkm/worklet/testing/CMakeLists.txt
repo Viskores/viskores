@@ -82,14 +82,13 @@ set(unit_tests
   UnitTestWarpScalar.cxx
   UnitTestWarpVector.cxx
   UnitTestWaveletCompressor.cxx
-  UnitTestWaveletGenerator.cxx
   UnitTestZFPCompressor.cxx
  )
 
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_worklet vtkm_source
+  LIBRARIES vtkm_source vtkm_worklet vtkm_filter
   ALL_BACKENDS
   )
 if (TARGET vtkm::cuda)

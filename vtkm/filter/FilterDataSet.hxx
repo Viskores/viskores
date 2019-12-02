@@ -38,7 +38,7 @@ template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet FilterDataSet<Derived>::PrepareForExecution(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   return (static_cast<Derived*>(this))->DoExecute(input, policy);
 }
@@ -49,7 +49,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   vtkm::cont::DataSet& result,
   const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   bool valid = false;
 
@@ -57,8 +57,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
   FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-  using Traits = vtkm::filter::FilterTraits<Derived>;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, Traits()), functor);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldNotActive(field, policy), functor);
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been

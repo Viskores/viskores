@@ -29,6 +29,7 @@
 
 #include <vtkm/internal/brigand.hpp>
 
+#include <vtkm/worklet/internal/DecayHelpers.h>
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <sstream>
@@ -167,12 +168,6 @@ template <int Value>
 struct ReportValueOnError<Value, true> : std::true_type
 {
 };
-
-template <typename T>
-using remove_pointer_and_decay = typename std::remove_pointer<typename std::decay<T>::type>::type;
-
-template <typename T>
-using remove_cvref = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 // Is designed as a brigand fold operation.
 template <typename Type, typename State>
@@ -494,8 +489,12 @@ private:
 protected:
   using ControlInterface =
     vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>;
-  using ExecutionInterface =
-    vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>;
+
+  // We go through the GetExecSig as that generates a default ExecutionSignature
+  // if one doesn't exist on the worklet
+  using ExecutionSignature =
+    typename vtkm::placeholders::GetExecSig<WorkletType>::ExecutionSignature;
+  using ExecutionInterface = vtkm::internal::FunctionInterface<ExecutionSignature>;
 
   static constexpr vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
@@ -510,8 +509,7 @@ private:
   template <typename... Args>
   VTKM_CONT void StartInvoke(Args&&... args) const
   {
-    using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
+    using ParameterInterface = vtkm::internal::FunctionInterface<void(remove_cvref<Args>...)>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
@@ -556,8 +554,7 @@ private:
   template <typename... Args>
   VTKM_CONT void StartInvokeDynamic(std::false_type, Args&&... args) const
   {
-    using ParameterInterface =
-      vtkm::internal::FunctionInterface<void(detail::remove_cvref<Args>...)>;
+    using ParameterInterface = vtkm::internal::FunctionInterface<void(remove_cvref<Args>...)>;
 
     //Nothing requires a conversion from dynamic to static types, so
     //next we need to verify that each argument's type is correct. If not
@@ -578,7 +575,7 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-    auto fi = vtkm::internal::make_FunctionInterface<void, detail::remove_cvref<Args>...>(args...);
+    auto fi = vtkm::internal::make_FunctionInterface<void, remove_cvref<Args>...>(args...);
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
                                           ExecutionInterface,

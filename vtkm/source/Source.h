@@ -12,21 +12,26 @@
 #define vtk_m_source_Source_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/source/vtkm_source_export.h>
-
 namespace vtkm
 {
 namespace source
 {
 
-class Source
+class VTKM_SOURCE_EXPORT Source
 {
 public:
   VTKM_CONT
-  Source() {}
+  Source();
 
   VTKM_CONT
-  ~Source() {}
+  virtual ~Source();
+
+  virtual vtkm::cont::DataSet Execute() const = 0;
+
+protected:
+  vtkm::cont::Invoker Invoke;
 };
 
 } // namespace source

@@ -31,9 +31,6 @@ struct Transpose3x3 : vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldInOut field);
 
-  using ExecutionSignature = void(_1);
-  using InputDomain = _1;
-
   template <typename FieldInVecType>
   VTKM_EXEC void operator()(FieldInVecType& field) const
   {

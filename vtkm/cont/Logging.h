@@ -322,6 +322,9 @@ enum class LogLevel
   /// The range 1-255 are reserved to application use.
   UserLast = 255,
 
+  /// Information about which devices are enabled/disabled
+  DevicesEnabled,
+
   /// General timing data and algorithm flow information, such as filter
   /// execution, worklet dispatches, and device algorithm calls.
   Perf,
@@ -482,9 +485,9 @@ static inline VTKM_CONT std::string TypeToString()
   return TypeToString(typeid(T));
 }
 template <typename T>
-static inline VTKM_CONT std::string TypeToString(const T& t)
+static inline VTKM_CONT std::string TypeToString(const T&)
 {
-  return TypeToString(typeid(t));
+  return TypeToString(typeid(T));
 }
 /**@}*/
 }

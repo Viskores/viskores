@@ -80,8 +80,9 @@ private:
     }
     else
     {
+      auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
       vtkm::cont::CellSetExplicit<> cellSet;
-      cellSet.Fill(numPoints, shapes, numIndices, connectivity);
+      cellSet.Fill(numPoints, shapes, connectivity, offsets);
       this->DataSet.SetCellSet(cellSet);
     }
 

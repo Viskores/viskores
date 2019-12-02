@@ -1120,7 +1120,7 @@ template <typename FloatType>
 void ConnectivityTracer::IntersectCell(Ray<FloatType>& rays,
                                        detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
   vtkm::worklet::DispatcherMapField<LocateCell> locateDispatch;
   locateDispatch.Invoke(rays.HitIdx,
@@ -1150,7 +1150,7 @@ void ConnectivityTracer::AccumulatePathLengths(Ray<FloatType>& rays,
 template <typename FloatType>
 void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   vtkm::worklet::DispatcherMapField<RayBumper> bumpDispatch;
@@ -1172,7 +1172,7 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
 {
   using SampleP = SampleCellAssocPoints<FloatType>;
   using SampleC = SampleCellAssocCells<FloatType>;
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
 
   VTKM_ASSERT(rays.Buffers.at(0).GetNumChannels() == 4);
@@ -1220,7 +1220,7 @@ template <typename FloatType>
 void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
                                         detail::RayTracking<FloatType>& tracker)
 {
-  vtkm::cont::Timer timer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer timer;
   timer.Start();
   if (HasEmission)
   {
@@ -1293,7 +1293,7 @@ void ConnectivityTracer::OffsetMinDistances(Ray<FloatType>& rays)
 template <typename FloatType>
 void ConnectivityTracer::FindMeshEntry(Ray<FloatType>& rays)
 {
-  vtkm::cont::Timer entryTimer{ vtkm::cont::DeviceAdapterTagSerial() };
+  vtkm::cont::Timer entryTimer;
   entryTimer.Start();
   //
   // if ray misses the external face it will be marked RAY_EXITED_MESH

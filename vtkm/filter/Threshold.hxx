@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_Threshold_hxx
+#define vtk_m_filter_Threshold_hxx
 
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -29,7 +31,17 @@ public:
   template <typename T>
   VTKM_EXEC bool operator()(const T& value) const
   {
+
     return value >= static_cast<T>(this->Lower) && value <= static_cast<T>(this->Upper);
+  }
+
+  //Needed to work with ArrayHandleVirtual
+  template <typename PortalType>
+  VTKM_EXEC bool operator()(
+    const vtkm::internal::ArrayPortalValueReference<PortalType>& value) const
+  {
+    using T = typename PortalType::ValueType;
+    return value.Get() >= static_cast<T>(this->Lower) && value.Get() <= static_cast<T>(this->Upper);
   }
 
 private:
@@ -43,14 +55,6 @@ namespace vtkm
 {
 namespace filter
 {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT Threshold::Threshold()
-  : vtkm::filter::FilterDataSetWithField<Threshold>()
-  , LowerValue(0)
-  , UpperValue(0)
-{
-}
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
@@ -72,30 +76,6 @@ inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   return output;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Threshold::DoMapField(vtkm::cont::DataSet& result,
-                                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                            const vtkm::filter::FieldMetadata& fieldMeta,
-                                            vtkm::filter::PolicyBase<DerivedPolicy>)
-{
-  if (fieldMeta.IsPointField())
-  {
-    //we copy the input handle to the result dataset, reusing the metadata
-    result.AddField(fieldMeta.AsField(input));
-    return true;
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(out));
-    return true;
-  }
-  else
-  {
-    return false;
-  }
 }
 }
-}
+#endif

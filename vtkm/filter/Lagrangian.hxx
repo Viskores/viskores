@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Lagrangian_hxx
+#define vtk_m_filter_Lagrangian_hxx
+
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -329,3 +332,5 @@ inline VTKM_CONT bool Lagrangian::DoMapField(vtkm::cont::DataSet&,
 }
 }
 } // namespace vtkm::filter
+
+#endif
