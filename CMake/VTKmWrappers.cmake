@@ -117,7 +117,6 @@ function(vtkm_setup_job_pool)
   get_property(vtkm_pool_established
     GLOBAL PROPERTY VTKM_JOB_POOL_ESTABLISHED SET)
   if(NOT vtkm_pool_established)
-    message(STATUS "building vtkm_job_pool")
     # The VTK-m filters uses large amounts of memory to compile as it does lots
     # of template expansion. To reduce the amount of tension on the machine when
     # using generators such as ninja we restrict the number of VTK-m enabled
