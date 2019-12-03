@@ -68,4 +68,5 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES vtkm_filter vtkm_source
   ALL_BACKENDS
+  USE_VTKM_JOB_POOL
   )
