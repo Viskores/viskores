@@ -11,6 +11,7 @@
 #define vtk_m_internal_Invocation_h
 
 #include <vtkm/Types.h>
+#include <vtkm/internal/FunctionInterface.h>
 
 namespace vtkm
 {
@@ -342,7 +343,7 @@ struct Invocation
   VTKM_EXEC_CONT
   const InputDomainType& GetInputDomain() const
   {
-    return this->Parameters.template GetParameter<InputDomainIndex>();
+    return vtkm::internal::ParameterGet<InputDomainIndex>(this->Parameters);
   }
 
   /// The state of an \c Invocation object holds the parameters of the
