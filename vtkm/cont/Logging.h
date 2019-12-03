@@ -471,7 +471,7 @@ VTKM_CONT inline std::string GetSizeString(T&& bytes, int prec = 2)
  * enabled and the platform supports it, the type name will also be demangled.
  * @{
  */
-static inline VTKM_CONT std::string TypeToString(const std::type_info& t)
+inline VTKM_CONT std::string TypeToString(const std::type_info& t)
 {
 #ifdef VTKM_ENABLE_LOGGING
   return loguru::demangle(t.name()).c_str();
@@ -480,12 +480,12 @@ static inline VTKM_CONT std::string TypeToString(const std::type_info& t)
 #endif // VTKM_ENABLE_LOGGING
 }
 template <typename T>
-static inline VTKM_CONT std::string TypeToString()
+inline VTKM_CONT std::string TypeToString()
 {
   return TypeToString(typeid(T));
 }
 template <typename T>
-static inline VTKM_CONT std::string TypeToString(const T&)
+inline VTKM_CONT std::string TypeToString(const T&)
 {
   return TypeToString(typeid(T));
 }
