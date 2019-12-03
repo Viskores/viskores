@@ -140,7 +140,7 @@ function(vtkm_unit_tests)
 
   if(VTKm_UT_USE_VTKM_JOB_POOL)
     vtkm_setup_job_pool()
-    set_property(TARGET ${test_prog} PROPERTY JOB_POOL_COMPILE VALUE vtkm_pool)
+    set_property(TARGET ${test_prog} PROPERTY JOB_POOL_COMPILE vtkm_pool)
   endif()
 
   list(LENGTH per_device_command_line_arguments number_of_devices)
