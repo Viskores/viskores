@@ -24,6 +24,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -32,33 +33,6 @@ namespace worklet
 {
 namespace particleadvection
 {
-class EvaluatorStatus : public vtkm::Bitset<vtkm::UInt8>
-{
-public:
-  VTKM_EXEC_CONT EvaluatorStatus(){};
-  VTKM_EXEC_CONT EvaluatorStatus(bool ok, bool spatial, bool temporal)
-  {
-    this->set(SUCCESS_BIT, ok);
-    this->set(SPATIAL_BOUNDS_BIT, spatial);
-    this->set(TEMPORAL_BOUNDS_BIT, temporal);
-  };
-  VTKM_EXEC_CONT void SetOk() { this->set(this->SUCCESS_BIT); }
-  VTKM_EXEC_CONT bool CheckOk() const { return this->test(this->SUCCESS_BIT); }
-
-  VTKM_EXEC_CONT void SetFail() { this->reset(SUCCESS_BIT); }
-  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(SUCCESS_BIT); }
-
-  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
-
-  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
-
-private:
-  static constexpr vtkm::Id SUCCESS_BIT = 0;
-  static constexpr vtkm::Id SPATIAL_BOUNDS_BIT = 1;
-  static constexpr vtkm::Id TEMPORAL_BOUNDS_BIT = 2;
-};
 
 template <typename DeviceAdapter, typename FieldArrayType>
 class ExecutionGridEvaluator
@@ -108,20 +82,20 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos,
-                                     vtkm::FloatDefault vtkmNotUsed(time),
-                                     Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
+                                         vtkm::FloatDefault vtkmNotUsed(time),
+                                         Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point& point, Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
-    EvaluatorStatus status;
+    GridEvaluatorStatus status;
 
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)

@@ -11,7 +11,9 @@
 set(headers
   CellInterpolationHelper.h
   GridEvaluators.h
+  GridEvaluatorStatus.h
   Integrators.h
+  IntegratorStatus.h
   Particles.h
   ParticleAdvectionWorklets.h
   TemporalGridEvaluators.h

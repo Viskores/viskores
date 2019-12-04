@@ -34,8 +34,8 @@ set(unit_tests
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
-  UnitTestLagrangianFilter.cxx
-  UnitTestLagrangianStructuresFilter.cxx
+#  UnitTestLagrangianFilter.cxx
+#  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
@@ -48,8 +48,8 @@ set(unit_tests
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
-  UnitTestStreamlineFilter.cxx
-  UnitTestStreamSurfaceFilter.cxx
+#  UnitTestStreamlineFilter.cxx
+#  UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx

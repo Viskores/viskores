@@ -81,7 +81,6 @@ int main(int argc, char** argv)
 
   //create seeds randomly placed withing the bounding box of the data.
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  std::vector<vtkm::Vec3f> seeds;
   std::vector<vtkm::Particle> particles, particles2;
 
   for (int i = 0; i < numSeeds; i++)
@@ -93,18 +92,16 @@ int main(int argc, char** argv)
     p[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
     p[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
     p[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
-    seeds.push_back(p);
 
     vtkm::Particle pa;
     pa.ID = i;
-    pa.Status = vtkm::ParticleStatus::SUCCESS;
+    pa.Status.SetOk();
     pa.Pos = p;
     pa.NumSteps = 0;
     particles.push_back(pa);
     particles2.push_back(pa);
   }
 
-  auto seedArrayPts = vtkm::cont::make_ArrayHandle(seeds);
   auto seedArrayPar = vtkm::cont::make_ArrayHandle(particles);
   auto seedArrayPar2 = vtkm::cont::make_ArrayHandle(particles2);
 
@@ -117,35 +114,27 @@ int main(int argc, char** argv)
   RK4Type rk4(eval, stepSize);
 
 
-  vtkm::worklet::ParticleAdvection paPTS, paPART;
+  vtkm::worklet::ParticleAdvection paWorklet;
+  //vtkm::worklet::Streamline sWorklet;
   std::chrono::duration<double> dT;
 
   std::cout << "Advect particles." << std::endl;
   if (1)
   {
     auto s = std::chrono::system_clock::now();
-    auto res0 = paPTS.Run(rk4, seedArrayPts, numSteps);
+    auto res = paWorklet.Run(rk4, seedArrayPar, numSteps);
     auto e = std::chrono::system_clock::now();
     dT = e - s;
-    std::cout << "Time= " << dT.count() << std::endl;
+    std::cout << "PA_Time= " << dT.count() << std::endl;
   }
-
+  std::cout << "Streamline particles." << std::endl;
   if (1)
   {
     auto s = std::chrono::system_clock::now();
-    auto res1 = paPART.Run(rk4, seedArrayPar, numSteps, 0);
+    //    auto res = sWorklet.Run(rk4, seedArrayPar2, numSteps);
     auto e = std::chrono::system_clock::now();
     dT = e - s;
-    std::cout << "AOS_Time= " << dT.count() << std::endl;
-  }
-
-  if (1)
-  {
-    auto s = std::chrono::system_clock::now();
-    auto res1 = paPART.Run(rk4, seedArrayPar2, numSteps, 1);
-    auto e = std::chrono::system_clock::now();
-    dT = e - s;
-    std::cout << "AOS2_Time= " << dT.count() << std::endl;
+    std::cout << "S_Time= " << dT.count() << std::endl;
   }
 
   /*

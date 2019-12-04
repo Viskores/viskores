@@ -25,6 +25,7 @@
 #include <vtkm/cont/VirtualObjectHandle.h>
 
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/worklet/particleadvection/IntegratorStatus.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
@@ -34,6 +35,7 @@ namespace worklet
 namespace particleadvection
 {
 
+#if 0
 class IntegratorStatus : public vtkm::Bitset<vtkm::UInt8>
 {
 public:
@@ -46,7 +48,7 @@ public:
     this->set(TEMPORAL_BOUNDS_BIT, temporal);
   }
 
-  VTKM_EXEC_CONT IntegratorStatus(const EvaluatorStatus& es)
+  VTKM_EXEC_CONT IntegratorStatus(const GridEvaluatorStatus& es)
   {
     this->set(SUCCESS_BIT, es.CheckOk());
     this->set(SPATIAL_BOUNDS_BIT, es.CheckSpatialBounds());
@@ -77,6 +79,7 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const IntegratorStatu
     << status.CheckTemporalBounds() << "]";
   return s;
 }
+#endif
 
 class Integrator : public vtkm::cont::ExecutionObjectBase
 {
@@ -338,7 +341,7 @@ public:
       vtkm::Vec3f k1 = vtkm::TypeTraits<vtkm::Vec3f>::ZeroInitialization();
       vtkm::Vec3f k2 = k1, k3 = k1, k4 = k1;
 
-      EvaluatorStatus evalStatus;
+      GridEvaluatorStatus evalStatus;
       evalStatus = this->Evaluator.Evaluate(inpos, time, k1);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
@@ -415,7 +418,7 @@ public:
                                vtkm::FloatDefault time,
                                vtkm::Vec3f& velocity) const
     {
-      EvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, velocity);
+      GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, velocity);
       return IntegratorStatus(status);
     }
   };
