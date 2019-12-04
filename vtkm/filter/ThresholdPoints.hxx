@@ -7,26 +7,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_ThresholdPoints_hxx
+#define vtk_m_filter_ThresholdPoints_hxx
 
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace
 {
-
-// Needed to CompactPoints
-template <typename BasePolicy>
-struct CellSetSingleTypePolicy : public BasePolicy
-{
-  using AllCellSetList = vtkm::cont::CellSetListTagUnstructured;
-};
-
-template <typename DerivedPolicy>
-inline vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>> GetCellSetSingleTypePolicy(
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>();
-}
-
 // Predicate for values less than minimum
 class ValuesBelow
 {
@@ -191,7 +178,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(true);
-    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
+    return this->Compactor.Execute(output, PolicyDefault{});
   }
   else
   {
@@ -226,3 +213,4 @@ inline VTKM_CONT bool ThresholdPoints::DoMapField(
 }
 }
 }
+#endif

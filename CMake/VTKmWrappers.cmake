@@ -111,6 +111,33 @@ function(vtkm_declare_headers)
 endfunction(vtkm_declare_headers)
 
 #-----------------------------------------------------------------------------
+function(vtkm_setup_job_pool)
+  # The VTK-m job pool is only used for components that use large amounts
+  # of memory such as worklet tests, filters, and filter tests
+  get_property(vtkm_pool_established
+    GLOBAL PROPERTY VTKM_JOB_POOL_ESTABLISHED SET)
+  if(NOT vtkm_pool_established)
+    # The VTK-m filters uses large amounts of memory to compile as it does lots
+    # of template expansion. To reduce the amount of tension on the machine when
+    # using generators such as ninja we restrict the number of VTK-m enabled
+    # compilation units to be built at the same time.
+    #
+    # We try to allocate a pool size where we presume each compilation process
+    # will require 4GB of memory. To allow for other NON VTK-m jobs we leave at
+    # least 8GB of memory as 'slop'.
+    cmake_host_system_information(RESULT vtkm_mem_ QUERY TOTAL_PHYSICAL_MEMORY)
+    math(EXPR vtkm_pool_size "(${vtkm_mem_}/4096)-2")
+    if (vtkm_pool_size EQUAL 0)
+      set(vtkm_pool_size 1)
+    endif ()
+    set_property(GLOBAL APPEND
+      PROPERTY
+        JOB_POOLS vtkm_pool=${vtkm_pool_size})
+    set_property(GLOBAL PROPERTY VTKM_JOB_POOL_ESTABLISHED TRUE)
+  endif()
+endfunction()
+
+#-----------------------------------------------------------------------------
 # FORWARD FACING API
 
 #-----------------------------------------------------------------------------
@@ -313,10 +340,11 @@ endfunction()
 #   SOURCES <source_list>
 #   TEMPLATE_SOURCES <.hxx >
 #   HEADERS <header list>
+#   USE_VTKM_JOB_POOL
 #   [ DEVICE_SOURCES <source_list> ]
 #   )
 function(vtkm_library)
-  set(options OBJECT STATIC SHARED)
+  set(options OBJECT STATIC SHARED USE_VTKM_JOB_POOL)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES HEADERS TEMPLATE_SOURCES DEVICE_SOURCES)
   cmake_parse_arguments(VTKm_LIB
@@ -356,7 +384,6 @@ function(vtkm_library)
   set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
-
 
   # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
   if(APPLE)
@@ -401,5 +428,10 @@ function(vtkm_library)
     LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
     )
+
+  if(VTKm_LIB_USE_VTKM_JOB_POOL)
+    vtkm_setup_job_pool()
+    set_property(TARGET ${lib_name} PROPERTY JOB_POOL_COMPILE vtkm_pool)
+  endif()
 
 endfunction(vtkm_library)

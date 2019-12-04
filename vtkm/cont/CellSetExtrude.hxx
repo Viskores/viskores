@@ -15,7 +15,6 @@ namespace
 struct ComputeReverseMapping : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn cellIndex, WholeArrayOut cellIds);
-  using ExecutionSignature = void(_1, _2);
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>

@@ -131,6 +131,9 @@ private:
 
   VTKM_CONT
   void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId, bool state);
+
+  VTKM_CONT
+  void LogEnabledDevices() const;
 };
 
 

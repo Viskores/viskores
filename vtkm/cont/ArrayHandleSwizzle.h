@@ -117,6 +117,7 @@ template <typename PortalType, typename ArrayHandleType, vtkm::IdComponent OutSi
 class VTKM_ALWAYS_EXPORT ArrayPortalSwizzle
 {
   using Traits = internal::ArrayHandleSwizzleTraits<ArrayHandleType, OutSize>;
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType>;
 
 public:
   using MapType = typename Traits::MapType;
@@ -143,6 +144,9 @@ public:
   {
   }
 
+  ArrayPortalSwizzle& operator=(const ArrayPortalSwizzle& src) = default;
+  ArrayPortalSwizzle& operator=(ArrayPortalSwizzle&& src) = default;
+
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
@@ -154,8 +158,9 @@ public:
     return result;
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     if (Traits::AllCompsUsed)
     { // No need to prefetch the value, all values overwritten

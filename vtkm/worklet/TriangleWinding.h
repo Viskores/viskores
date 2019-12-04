@@ -28,6 +28,7 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetSingleType.h>
@@ -237,26 +238,28 @@ public:
       { // Multiple cell types:
         vtkm::cont::ArrayHandle<vtkm::Id> offsets;
         vtkm::Id connSize;
-        vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connSize);
+        vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connSize);
         numIndices.ReleaseResourcesExecution();
 
         vtkm::cont::ArrayHandle<vtkm::Id> conn;
         conn.Allocate(connSize);
 
-        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
+        // Trim the last value off for the group vec array:
+        auto offsetsTrim =
+          vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
+        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
 
         WorkletWindToCellNormalsGeneric worklet;
         invoker(worklet, cellSet, coords, cellNormals, connGroupVec);
 
         vtkm::cont::CellSetExplicit<> outCells;
-        outCells.Fill(cellSet.GetNumberOfPoints(), cellShapes, numIndices, conn, offsets);
+        outCells.Fill(cellSet.GetNumberOfPoints(), cellShapes, conn, offsets);
         this->Result = outCells;
       }
     }
 
     // Specialization for CellSetExplicit
     template <typename S,
-              typename N,
               typename C,
               typename O,
               typename PointComponentType,
@@ -264,7 +267,7 @@ public:
               typename CellNormalComponentType,
               typename CellNormalStorageType>
     VTKM_CONT void operator()(
-      const vtkm::cont::CellSetExplicit<S, N, C, O>& cellSet,
+      const vtkm::cont::CellSetExplicit<S, C, O>& cellSet,
       const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& coords,
       const vtkm::cont::ArrayHandle<vtkm::Vec<CellNormalComponentType, 3>, CellNormalStorageType>&
         cellNormals,
@@ -286,19 +289,19 @@ public:
         vtkm::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{},
-                                                        vtkm::TopologyElementTagPoint{});
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
+      const auto& offsets =
+        cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+      auto offsetsTrim =
+        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
 
       const auto& shapes =
         cellSet.GetShapesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      const auto& numIndices =
-        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      vtkm::cont::CellSetExplicit<S, N, vtkm::cont::StorageTagBasic, O> newCells;
-      newCells.Fill(cellSet.GetNumberOfPoints(), shapes, numIndices, conn, offsets);
+      vtkm::cont::CellSetExplicit<S, vtkm::cont::StorageTagBasic, O> newCells;
+      newCells.Fill(cellSet.GetNumberOfPoints(), shapes, conn, offsets);
 
       this->Result = newCells;
     }
@@ -332,9 +335,11 @@ public:
         vtkm::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets = cellSet.GetIndexOffsetArray(vtkm::TopologyElementTagCell{},
-                                                        vtkm::TopologyElementTagPoint{});
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
+      const auto& offsets =
+        cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
+      auto offsetsTrim =
+        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);

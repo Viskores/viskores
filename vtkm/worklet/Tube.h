@@ -304,19 +304,18 @@ public:
         return;
       else
       {
-        vtkm::Vec3f n, p, pNext, sNext, sPrev;
         vtkm::Id outIdx = tubePointOffsets;
-        vtkm::Id pIdx, pNextIdx;
+        vtkm::Id pIdx = ptIndices[0];
+        vtkm::Id pNextIdx = ptIndices[1];
+        vtkm::Vec3f p = inPts.Get(pIdx);
+        vtkm::Vec3f pNext = inPts.Get(pNextIdx);
+        vtkm::Vec3f sNext = pNext - p;
+        vtkm::Vec3f sPrev = sNext;
         for (vtkm::IdComponent j = 0; j < numPoints; j++)
         {
           if (j == 0) //first point
           {
-            pIdx = ptIndices[j];
-            pNextIdx = ptIndices[j + 1];
-            p = inPts.Get(pIdx);
-            pNext = inPts.Get(pNextIdx);
-            sNext = pNext - p;
-            sPrev = sNext;
+            //Variables initialized before loop started.
           }
           else if (j == numPoints - 1) //last point
           {
@@ -333,7 +332,7 @@ public:
             sPrev = sNext;
             sNext = pNext - p;
           }
-          n = inNormals.Get(polylineOffset + j);
+          vtkm::Vec3f n = inNormals.Get(polylineOffset + j);
 
           //Coincident points.
           if (vtkm::Magnitude(sNext) <= vtkm::Epsilon<vtkm::FloatDefault>())

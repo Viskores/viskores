@@ -28,12 +28,15 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMetadata,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
-  VTKM_CONT void SetRadius(vtkm::Vec<vtkm::Int32, 3> _radius) { this->Radius = _radius; }
+  VTKM_CONT void SetRadius(double _radius) { this->Radius = _radius; }
+
+  VTKM_CONT void SetSpacing(vtkm::Vec3f _spacing) { this->Spacing = _spacing; }
 
   VTKM_CONT void SetOrder(vtkm::Int32 _order) { this->Order = _order; }
 
 private:
-  vtkm::Vec<vtkm::Int32, 3> Radius = { 1, 1, 1 };
+  double Radius = 1;
+  vtkm::Vec3f Spacing = { 1.0f, 1.0f, 1.0f };
   vtkm::Int32 Order = 0;
 };
 }

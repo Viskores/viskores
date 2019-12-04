@@ -30,19 +30,16 @@ namespace cont
 template <typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT CellSetSingleType
   : public vtkm::cont::CellSetExplicit<
-      typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag, //ShapeStorageTag
-      typename vtkm::cont::ArrayHandleConstant<
-        vtkm::IdComponent>::StorageTag, //NumIndicesStorageTag
+      typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag, //ShapesStorageTag
       ConnectivityStorageTag,
-      typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag //IndexOffsetStorageTag
+      typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag //OffsetsStorageTag
       >
 {
   using Thisclass = vtkm::cont::CellSetSingleType<ConnectivityStorageTag>;
-  using Superclass = vtkm::cont::CellSetExplicit<
-    typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
-    typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
-    ConnectivityStorageTag,
-    typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>;
+  using Superclass =
+    vtkm::cont::CellSetExplicit<typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
+                                ConnectivityStorageTag,
+                                typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>;
 
 public:
   VTKM_CONT
@@ -98,7 +95,7 @@ public:
   {
     this->CellShapeAsId = vtkm::CELL_SHAPE_EMPTY;
 
-    this->Data->VisitCellsWithPoints.Connectivity.Allocate(connectivityMaxLen);
+    this->Data->CellPointIds.Connectivity.Allocate(connectivityMaxLen);
 
     this->Data->NumberOfCellsAdded = 0;
     this->Data->ConnectivityAdded = 0;
@@ -119,10 +116,10 @@ public:
     }
 
     if (this->Data->ConnectivityAdded + numVertices >
-        this->Data->VisitCellsWithPoints.Connectivity.GetNumberOfValues())
+        this->Data->CellPointIds.Connectivity.GetNumberOfValues())
     {
       throw vtkm::cont::ErrorBadValue(
-        "Connectivity increased passed estimated maximum connectivity.");
+        "Connectivity increased past estimated maximum connectivity.");
     }
 
     if (this->CellShapeAsId == vtkm::CELL_SHAPE_EMPTY)
@@ -147,10 +144,10 @@ public:
           "Inconsistent number of points in cells for CellSetSingleType.");
       }
     }
+    auto conn = this->Data->CellPointIds.Connectivity.GetPortalControl();
     for (vtkm::IdComponent iVert = 0; iVert < numVertices; ++iVert)
     {
-      this->Data->VisitCellsWithPoints.Connectivity.GetPortalControl().Set(
-        this->Data->ConnectivityAdded + iVert, Traits::GetComponent(ids, iVert));
+      conn.Set(this->Data->ConnectivityAdded + iVert, Traits::GetComponent(ids, iVert));
     }
     this->Data->NumberOfCellsAdded++;
     this->Data->ConnectivityAdded += numVertices;
@@ -161,19 +158,16 @@ public:
   void CompleteAddingCells(vtkm::Id numPoints)
   {
     this->Data->NumberOfPoints = numPoints;
-    this->VisitCellsWithPoints.Connectivity.Shrink(this->ConnectivityAdded);
+    this->CellPointIds.Connectivity.Shrink(this->ConnectivityAdded);
 
     vtkm::Id numCells = this->NumberOfCellsAdded;
 
-    this->VisitCellsWithPoints.Shapes =
+    this->CellPointIds.Shapes =
       vtkm::cont::make_ArrayHandleConstant(this->GetCellShape(0), numCells);
-    this->VisitCellsWithPoints.NumIndices =
-      vtkm::cont::make_ArrayHandleConstant(this->NumberOfPointsPerCell, numCells);
-    this->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
+    this->CellPointIds.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
       vtkm::Id(0), static_cast<vtkm::Id>(this->NumberOfPointsPerCell), numCells);
 
-    this->VisitCellsWithPoints.ElementsValid = true;
-    this->VisitCellsWithPoints.IndexOffsetsValid = true;
+    this->CellPointIds.ElementsValid = true;
 
     if (this->ExpectedNumberOfCellsAdded != this->GetNumberOfCells())
     {
@@ -195,18 +189,18 @@ public:
     this->Data->NumberOfPoints = numPoints;
     this->CellShapeAsId = shapeId;
     this->CheckNumberOfPointsPerCell(numberOfPointsPerCell);
+
     const vtkm::Id numCells = connectivity.GetNumberOfValues() / numberOfPointsPerCell;
     VTKM_ASSERT((connectivity.GetNumberOfValues() % numberOfPointsPerCell) == 0);
-    this->Data->VisitCellsWithPoints.Shapes =
-      vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
-    this->Data->VisitCellsWithPoints.NumIndices =
-      vtkm::cont::make_ArrayHandleConstant(numberOfPointsPerCell, numCells);
-    this->Data->VisitCellsWithPoints.IndexOffsets = vtkm::cont::make_ArrayHandleCounting(
-      vtkm::Id(0), static_cast<vtkm::Id>(numberOfPointsPerCell), numCells);
-    this->Data->VisitCellsWithPoints.Connectivity = connectivity;
 
-    this->Data->VisitCellsWithPoints.ElementsValid = true;
-    this->Data->VisitCellsWithPoints.IndexOffsetsValid = true;
+    this->Data->CellPointIds.Shapes = vtkm::cont::make_ArrayHandleConstant(shapeId, numCells);
+
+    this->Data->CellPointIds.Offsets = vtkm::cont::make_ArrayHandleCounting(
+      vtkm::Id(0), static_cast<vtkm::Id>(numberOfPointsPerCell), numCells + 1);
+
+    this->Data->CellPointIds.Connectivity = connectivity;
+
+    this->Data->CellPointIds.ElementsValid = true;
 
     this->ResetConnectivity(TopologyElementTagPoint{}, TopologyElementTagCell{});
   }
@@ -242,11 +236,11 @@ public:
 
   virtual void PrintSummary(std::ostream& out) const override
   {
-    out << "   CellSetSingleType ShapeType " << this->CellShapeAsId << std::endl;
-    out << "   VisitCellsWithPoints: " << std::endl;
-    this->Data->VisitCellsWithPoints.PrintSummary(out);
-    out << "   VisitPointsWithCells: " << std::endl;
-    this->Data->VisitPointsWithCells.PrintSummary(out);
+    out << "   CellSetSingleType: Type=" << this->CellShapeAsId << std::endl;
+    out << "   CellPointIds:" << std::endl;
+    this->Data->CellPointIds.PrintSummary(out);
+    out << "   PointCellIds:" << std::endl;
+    this->Data->PointCellIds.PrintSummary(out);
   }
 
 private:

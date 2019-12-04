@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestBinaryOperators.cxx
   UnitTestBounds.cxx
   UnitTestCellShape.cxx
+  UnitTestDeprecated.cxx
   UnitTestExceptions.cxx
   UnitTestHash.cxx
   UnitTestListTag.cxx

@@ -100,14 +100,14 @@ private:
 
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
       cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices =
+    auto numIndices =
       cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
     vtkm::cont::ArrayHandle<vtkm::Id> conn =
       cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     VTKM_TEST_ASSERT(TestArrayHandle(shapes, correctShapes, numPoints), "Got incorrect shapes");
     VTKM_TEST_ASSERT(TestArrayHandle(numIndices, correctNumIndices, numPoints),
-                     "Got incorrect shapes");
+                     "Got incorrect numIndices");
 
     // Some device adapters have unstable sorts, which may cause the order of
     // the indices for each point to be different but still correct. Iterate

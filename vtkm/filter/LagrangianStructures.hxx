@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_LagrangianStructures_hxx
+#define vtk_m_filter_LagrangianStructures_hxx
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -144,3 +146,4 @@ inline VTKM_CONT bool LagrangianStructures::DoMapField(
 }
 }
 } // namespace vtkm::filter
+#endif

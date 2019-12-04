@@ -26,6 +26,8 @@ namespace internal
 template <typename TargetPortalType>
 class ArrayPortalView
 {
+  using Writable = vtkm::internal::PortalSupportsSets<TargetPortalType>;
+
 public:
   using ValueType = typename TargetPortalType::ValueType;
 
@@ -59,8 +61,9 @@ public:
   ValueType Get(vtkm::Id index) const { return this->TargetPortal.Get(index + this->StartIndex); }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->TargetPortal.Set(index + this->StartIndex, value);
   }

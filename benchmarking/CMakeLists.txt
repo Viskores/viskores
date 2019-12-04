@@ -42,7 +42,7 @@ set(benchmarks
   )
 
 foreach (benchmark ${benchmarks})
-  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_filter)
+  add_benchmark(NAME ${benchmark} FILE ${benchmark}.cxx LIBS vtkm_source vtkm_filter)
 endforeach ()
 
 if(TARGET vtkm_rendering)

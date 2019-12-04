@@ -22,6 +22,7 @@ include(VTKmWrappers)
 #   TEST_ARGS <argument_list>
 #   MPI
 #   ALL_BACKENDS
+#   USE_VTKM_JOB_POOL
 #   <options>
 #   )
 #
@@ -46,7 +47,7 @@ function(vtkm_unit_tests)
   endif()
 
   set(options)
-  set(global_options ${options} MPI ALL_BACKENDS)
+  set(global_options ${options} USE_VTKM_JOB_POOL MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME LABEL)
   set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
@@ -137,6 +138,11 @@ function(vtkm_unit_tests)
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
+  if(VTKm_UT_USE_VTKM_JOB_POOL)
+    vtkm_setup_job_pool()
+    set_property(TARGET ${test_prog} PROPERTY JOB_POOL_COMPILE vtkm_pool)
+  endif()
+
   list(LENGTH per_device_command_line_arguments number_of_devices)
   foreach(index RANGE ${number_of_devices})
     if(index EQUAL number_of_devices)
@@ -145,7 +151,7 @@ function(vtkm_unit_tests)
       break()
     endif()
     if(per_device_command_line_arguments STREQUAL "NONE")
-      set(device_command_line_argument ${per_device_command_line_arguments})
+      set(device_command_line_argument)
       set(upper_backend ${per_device_suffix})
       set(timeout       ${per_device_timeout})
       set(run_serial    ${per_device_serial})

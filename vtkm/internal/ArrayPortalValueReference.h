@@ -49,6 +49,14 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
+  ArrayPortalValueReference(const ArrayPortalValueReference& ref)
+    : Portal(ref.Portal)
+    , Index(ref.Index)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   ValueType Get() const { return this->Portal.Get(this->Index); }
 
   VTKM_SUPPRESS_EXEC_WARNINGS

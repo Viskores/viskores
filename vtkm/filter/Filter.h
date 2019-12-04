@@ -243,7 +243,7 @@ public:
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                        vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
 
   //@{
@@ -253,9 +253,8 @@ public:
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(
-    const vtkm::cont::PartitionedDataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input,
+                                                   vtkm::filter::PolicyBase<DerivedPolicy> policy);
   //@}
 
   /// Map fields from input dataset to output.
@@ -264,7 +263,7 @@ public:
   template <typename DerivedPolicy>
   VTKM_CONT void MapFieldsToPass(const vtkm::cont::DataSet& input,
                                  vtkm::cont::DataSet& output,
-                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   /// Specify the vtkm::cont::Invoker to be used to execute worklets by
   /// this filter instance. Overriding the default allows callers to control
@@ -279,6 +278,19 @@ private:
 };
 }
 } // namespace vtkm::filter
+
+#define VTKM_FILTER_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                                \
+  extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet                       \
+  vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,                       \
+                                      vtkm::filter::PolicyBase<Policy>)
+#define VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                           \
+  template VTKM_FILTER_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute(                \
+    vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
+
+#define VTKM_FILTER_EXPORT_EXECUTE_METHOD(Name)                                                    \
+  VTKM_FILTER_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
+#define VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(Name)                                               \
+  VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, vtkm::filter::PolicyDefault)
 
 #include <vtkm/filter/Filter.hxx>
 #endif

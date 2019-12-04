@@ -30,10 +30,9 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/BitField.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/MaskIndices.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
@@ -336,12 +335,6 @@ public:
   {
     using RangeType = vtkm::cont::ArrayHandle<vtkm::Range>;
 
-    using MarkSourcePoints = vtkm::worklet::DispatcherMapField<WorkletMarkSourcePoints>;
-    using ProcessSourceCells = vtkm::worklet::DispatcherMapTopology<WorkletProcessSourceCells>;
-    using MarkActivePoints = vtkm::worklet::DispatcherMapTopology<WorkletMarkActivePoints>;
-    using MarkActiveCells = vtkm::worklet::DispatcherMapTopology<WorkletMarkActiveCells>;
-    using ProcessCellNormals = vtkm::worklet::DispatcherMapField<WorkletProcessCellNormals>;
-
     const vtkm::Id numPoints = coords.GetNumberOfValues();
     const vtkm::Id numCells = cells.GetNumberOfCells();
 
@@ -367,6 +360,7 @@ public:
     vtkm::cont::Algorithm::Fill(visitedCellBits, false, numCells);
     auto visitedCells = vtkm::cont::make_ArrayHandleBitField(visitedCellBits);
 
+    vtkm::cont::Invoker invoke;
     vtkm::cont::ArrayHandle<vtkm::Id> mask; // Allocated as needed
 
     // For each cell, store a reference alignment cell.
@@ -381,10 +375,7 @@ public:
 
     // 2) Locate points on a boundary, since their normal alignment direction
     //    is known.
-    {
-      MarkSourcePoints dispatcher;
-      dispatcher.Invoke(coords, ranges, activePoints);
-    }
+    invoke(WorkletMarkSourcePoints{}, coords, ranges, activePoints);
 
     // 3) For each source point, align the normals of the adjacent cells.
     {
@@ -392,15 +383,16 @@ public:
       (void)numActive;
       VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
                  "ProcessSourceCells from " << numActive << " source points.");
-      ProcessSourceCells dispatcher{ vtkm::worklet::MaskIndices{ mask } };
-      dispatcher.Invoke(cells,
-                        coords,
-                        ranges,
-                        cellNormals,
-                        activeCellBits,
-                        visitedCellBits,
-                        activePoints,
-                        visitedPoints);
+      invoke(WorkletProcessSourceCells{},
+             vtkm::worklet::MaskIndices{ mask },
+             cells,
+             coords,
+             ranges,
+             cellNormals,
+             activeCellBits,
+             visitedCellBits,
+             activePoints,
+             visitedPoints);
     }
 
     for (size_t iter = 1;; ++iter)
@@ -411,8 +403,12 @@ public:
         (void)numActive;
         VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
                    "MarkActivePoints from " << numActive << " active cells.");
-        MarkActivePoints dispatcher{ vtkm::worklet::MaskIndices{ mask } };
-        dispatcher.Invoke(cells, activePointBits, visitedPointBits, activeCells);
+        invoke(WorkletMarkActivePoints{},
+               vtkm::worklet::MaskIndices{ mask },
+               cells,
+               activePointBits,
+               visitedPointBits,
+               activeCells);
       }
 
       // 5) Mark unvisited cells adjacent to active points
@@ -421,8 +417,13 @@ public:
         (void)numActive;
         VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
                    "MarkActiveCells from " << numActive << " active points.");
-        MarkActiveCells dispatcher{ vtkm::worklet::MaskIndices{ mask } };
-        dispatcher.Invoke(cells, refCells, activeCellBits, visitedCellBits, activePoints);
+        invoke(WorkletMarkActiveCells{},
+               vtkm::worklet::MaskIndices{ mask },
+               cells,
+               refCells,
+               activeCellBits,
+               visitedCellBits,
+               activePoints);
       }
 
       vtkm::Id numActiveCells = vtkm::cont::Algorithm::BitFieldToUnorderedSet(activeCellBits, mask);
@@ -438,8 +439,11 @@ public:
 
       // 5) Correct normals for active cells.
       {
-        ProcessCellNormals dispatcher{ vtkm::worklet::MaskIndices{ mask } };
-        dispatcher.Invoke(refCells, cellNormals, visitedCells);
+        invoke(WorkletProcessCellNormals{},
+               vtkm::worklet::MaskIndices{ mask },
+               refCells,
+               cellNormals,
+               visitedCells);
       }
     }
   }

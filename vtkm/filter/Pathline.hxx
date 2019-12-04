@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_Pathline_hxx
+#define vtk_m_filter_Pathline_hxx
+
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -97,3 +100,4 @@ inline VTKM_CONT bool Pathline::DoMapField(vtkm::cont::DataSet&,
 }
 }
 } // namespace vtkm::filter
+#endif

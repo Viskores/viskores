@@ -34,8 +34,9 @@ set(unit_tests
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
-#  UnitTestLagrangianFilter.cxx
-#  UnitTestLagrangianStructuresFilter.cxx
+  UnitTestImageMedianFilter.cxx
+  UnitTestLagrangianFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
@@ -67,4 +68,5 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES vtkm_filter vtkm_source
   ALL_BACKENDS
+  USE_VTKM_JOB_POOL
   )

@@ -22,7 +22,7 @@
 #define vtk_m_filter_MeshQuality_h
 
 #include <vtkm/CellShape.h>
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/worklet/MeshQuality.h>
 
@@ -33,26 +33,57 @@ namespace filter
 
 //Names of the available cell metrics, for use in
 //the output dataset fields
-//TODO: static const?
-static const std::string MetricNames[] = { "empty",
+static const std::string MetricNames[] = { "area",
+                                           "aspectGamma",
+                                           "aspectRatio",
+                                           "condition",
                                            "diagonalRatio",
-                                           "edgeRatio",
-                                           //"skew",
+                                           "dimension",
+                                           "jacobian",
+                                           "maxAngle",
+                                           "maxDiagonal",
+                                           "minAngle",
+                                           "minDiagonal",
                                            "oddy",
                                            "relativeSizeSquared",
-                                           "volume" };
+                                           "scaledJacobian",
+                                           "shape",
+                                           "shapeAndSize",
+                                           "shear",
+                                           "skew",
+                                           "stretch",
+                                           "taper",
+                                           "volume",
+                                           "warpage" };
 
 //Different cell metrics available to use
-//TODO: static const?
+//This must follow the same order as the MetricNames above
 enum class CellMetric
 {
-  EMPTY, //0
+  AREA,
+  ASPECT_GAMMA,
+  ASPECT_RATIO,
+  CONDITION,
   DIAGONAL_RATIO,
-  EDGE_RATIO,
+  DIMENSION,
+  JACOBIAN,
+  MAX_ANGLE,
+  MAX_DIAGONAL,
+  MIN_ANGLE,
+  MIN_DIAGONAL,
   ODDY,
-  RELATIVE_SIZE,
+  RELATIVE_SIZE_SQUARED,
+  SCALED_JACOBIAN,
+  SHAPE,
+  SHAPE_AND_SIZE,
+  SHEAR,
+  SKEW,
+  STRETCH,
+  TAPER,
   VOLUME,
-  NUMBER_OF_CELL_METRICS //(num metrics = NUMBER_OF_CELL_METRICS - 2)
+  WARPAGE,
+  NUMBER_OF_CELL_METRICS,
+  EMPTY
 };
 
 /** \brief Computes the quality of an unstructured cell-based mesh. The quality is defined in terms of the
@@ -63,14 +94,12 @@ enum class CellMetric
   * Each field contains the metric summary statistics for the cell type.
   * Summary statists with all 0 values imply that the specified metric does not support the cell type.
   */
-class MeshQuality : public vtkm::filter::FilterCell<MeshQuality>
+class MeshQuality : public vtkm::filter::FilterField<MeshQuality>
 {
 public:
   using SupportedTypes = vtkm::TypeListTagFieldVec3;
 
-  using ShapeMetricsVecType = std::vector<vtkm::Pair<vtkm::UInt8, CellMetric>>;
-
-  VTKM_CONT MeshQuality(const ShapeMetricsVecType& metrics);
+  VTKM_CONT MeshQuality(CellMetric);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -80,10 +109,7 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  //A user-assigned cell metric per shape/cell type
-  //Empty metric if not provided by user
-  //Length of vector is the number of different VTK-m cell types
-  std::vector<CellMetric> CellTypeMetrics;
+  CellMetric MyMetric;
 };
 
 } // namespace filter

@@ -43,11 +43,13 @@ namespace vtkmstd
 using simple_tuple::get;
 using simple_tuple::make_tuple;
 using simple_tuple::tuple;
+using simple_tuple::tuple_element;
 using simple_tuple::tuple_size;
 #else
 using tao::get;
 using tao::make_tuple;
 using tao::tuple;
+using tao::tuple_element;
 using tao::tuple_size;
 #endif
 

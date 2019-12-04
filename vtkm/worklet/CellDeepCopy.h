@@ -62,18 +62,15 @@ struct CellDeepCopy
 
   template <typename InCellSetType,
             typename ShapeStorage,
-            typename NumIndicesStorage,
             typename ConnectivityStorage,
             typename OffsetsStorage>
-  VTKM_CONT static void Run(const InCellSetType& inCellSet,
-                            vtkm::cont::CellSetExplicit<ShapeStorage,
-                                                        NumIndicesStorage,
-                                                        ConnectivityStorage,
-                                                        OffsetsStorage>& outCellSet)
+  VTKM_CONT static void Run(
+    const InCellSetType& inCellSet,
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
   {
     VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
-    vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> numIndices;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
 
     vtkm::worklet::DispatcherMapTopology<CountCellPoints> countDispatcher;
     countDispatcher.Invoke(inCellSet, numIndices);
@@ -83,17 +80,18 @@ struct CellDeepCopy
 
     vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage> offsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, connectivitySize);
+    vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connectivitySize);
     connectivity.Allocate(connectivitySize);
+
+    auto offsetsTrim =
+      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
 
     vtkm::worklet::DispatcherMapTopology<PassCellStructure> passDispatcher;
     passDispatcher.Invoke(
-      inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+      inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim));
 
-    vtkm::cont::
-      CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage, OffsetsStorage>
-        newCellSet;
-    newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage> newCellSet;
+    newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, connectivity, offsets);
     outCellSet = newCellSet;
   }
 

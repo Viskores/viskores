@@ -23,7 +23,6 @@ class Magnitude : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename T2>
   VTKM_EXEC void operator()(const T& inValue, T2& outValue) const

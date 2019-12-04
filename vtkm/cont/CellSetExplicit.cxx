@@ -19,7 +19,6 @@ namespace cont
 template class VTKM_CONT_EXPORT CellSetExplicit<>; // default
 template class VTKM_CONT_EXPORT
   CellSetExplicit<typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
-                  typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
                   VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
                   typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>;
 }

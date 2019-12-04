@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_WarpVector_hxx
+#define vtk_m_filter_WarpVector_hxx
 
 namespace vtkm
 {
@@ -45,3 +47,4 @@ inline VTKM_CONT vtkm::cont::DataSet WarpVector::DoExecute(
 }
 }
 }
+#endif

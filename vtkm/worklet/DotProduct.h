@@ -23,7 +23,6 @@ class DotProduct : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T, vtkm::IdComponent Size>
   VTKM_EXEC void operator()(const vtkm::Vec<T, Size>& v1,

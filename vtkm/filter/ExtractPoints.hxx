@@ -8,26 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_ExtractPoints_hxx
+#define vtk_m_filter_ExtractPoints_hxx
+
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
-namespace
-{
-
-// Needed to CompactPoints
-template <typename BasePolicy>
-struct CellSetSingleTypePolicy : public BasePolicy
-{
-  using AllCellSetList = vtkm::cont::CellSetListTagUnstructured;
-};
-
-template <typename DerivedPolicy>
-inline vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>> GetCellSetSingleTypePolicy(
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>();
-}
-}
 
 namespace vtkm
 {
@@ -71,7 +56,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy));
+    return this->Compactor.Execute(output, PolicyDefault{});
   }
   else
   {
@@ -106,3 +91,5 @@ inline VTKM_CONT bool ExtractPoints::DoMapField(
 }
 }
 }
+
+#endif

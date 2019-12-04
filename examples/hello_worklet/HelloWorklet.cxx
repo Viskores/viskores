@@ -29,7 +29,6 @@ namespace worklet
 struct HelloWorklet : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn inVector, FieldOut outMagnitude);
-  using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC void operator()(const vtkm::Vec3f& inVector, vtkm::FloatDefault& outMagnitude) const
   {

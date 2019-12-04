@@ -27,6 +27,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
@@ -668,16 +669,11 @@ public:
   ///
   /// Faster Run() method for uniform and rectilinear grid types.
   /// Uses grid extents to find cells on the boundaries of the grid.
-  template <typename ShapeStorage,
-            typename NumIndicesStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT void Run(const vtkm::cont::CellSetStructured<3>& inCellSet,
-                     const vtkm::cont::CoordinateSystem& coord,
-                     vtkm::cont::CellSetExplicit<ShapeStorage,
-                                                 NumIndicesStorage,
-                                                 ConnectivityStorage,
-                                                 OffsetsStorage>& outCellSet)
+  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
+  VTKM_CONT void Run(
+    const vtkm::cont::CellSetStructured<3>& inCellSet,
+    const vtkm::cont::CoordinateSystem& coord,
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
   {
     vtkm::Vec3f_64 MinPoint;
     vtkm::Vec3f_64 MaxPoint;
@@ -732,7 +728,7 @@ public:
     vtkm::Id connectivitySize = 4 * numberOfExternalFaces;
     vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage> faceConnectivity;
     vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> faceShapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> facePointCount;
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> facePointCount;
     // Must pre allocate because worklet invocation will not have enough
     // information to.
     faceConnectivity.Allocate(connectivitySize);
@@ -748,23 +744,23 @@ public:
       facePointCount,
       vtkm::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
       coordData);
-    outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity);
+
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(facePointCount);
+
+    outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, faceConnectivity, offsets);
   }
 
   ///////////////////////////////////////////////////
   /// \brief ExternalFaces: Extract Faces on outside of geometry
   template <typename InCellSetType,
             typename ShapeStorage,
-            typename NumIndicesStorage,
             typename ConnectivityStorage,
             typename OffsetsStorage>
-  VTKM_CONT void Run(const InCellSetType& inCellSet,
-                     vtkm::cont::CellSetExplicit<ShapeStorage,
-                                                 NumIndicesStorage,
-                                                 ConnectivityStorage,
-                                                 OffsetsStorage>& outCellSet)
+  VTKM_CONT void Run(
+    const InCellSetType& inCellSet,
+    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
   {
-    using PointCountArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage>;
+    using PointCountArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
     using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage>;
     using OffsetsArrayType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>;
     using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage>;
@@ -802,7 +798,7 @@ public:
 
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
 
-        vtkm::cont::ConvertNumComponentsToOffsets(
+        vtkm::cont::ConvertNumIndicesToOffsets(
           polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
 
         vtkm::worklet::DispatcherMapTopology<PassPolyDataCells> passPolyDataCellsDispatcher(
@@ -810,10 +806,13 @@ public:
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
+        auto pdOffsetsTrim = vtkm::cont::make_ArrayHandleView(
+          polyDataOffsets, 0, polyDataOffsets.GetNumberOfValues() - 1);
+
         passPolyDataCellsDispatcher.Invoke(
           inCellSet,
           polyDataShapes,
-          vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
+          vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, pdOffsetsTrim),
           polyDataCellIdMap);
       }
     }
@@ -830,11 +829,8 @@ public:
       else
       {
         // Pass only input poly data to output
-        outCellSet.Fill(inCellSet.GetNumberOfPoints(),
-                        polyDataShapes,
-                        polyDataPointCount,
-                        polyDataConnectivity,
-                        polyDataOffsets);
+        outCellSet.Fill(
+          inCellSet.GetNumberOfPoints(), polyDataShapes, polyDataConnectivity, polyDataOffsets);
         this->CellIdMap = polyDataCellIdMap;
         return;
       }
@@ -866,7 +862,7 @@ public:
 
     OffsetsArrayType faceOffsets;
     vtkm::Id connectivitySize;
-    vtkm::cont::ConvertNumComponentsToOffsets(facePointCount, faceOffsets, connectivitySize);
+    vtkm::cont::ConvertNumIndicesToOffsets(facePointCount, faceOffsets, connectivitySize);
 
     ConnectivityArrayType faceConnectivity;
     // Must pre allocate because worklet invocation will not have enough
@@ -878,19 +874,22 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> faceToCellIdMap;
 
+    // Create a view that doesn't have the last offset:
+    auto faceOffsetsTrim =
+      vtkm::cont::make_ArrayHandleView(faceOffsets, 0, faceOffsets.GetNumberOfValues() - 1);
+
     buildConnectivityDispatcher.Invoke(
       faceKeys,
       inCellSet,
       originCells,
       originFaces,
       faceShapes,
-      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets),
+      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsetsTrim),
       faceToCellIdMap);
 
     if (!polyDataConnectivitySize)
     {
-      outCellSet.Fill(
-        inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity, faceOffsets);
+      outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, faceConnectivity, faceOffsets);
       this->CellIdMap = faceToCellIdMap;
     }
     else
@@ -912,13 +911,11 @@ public:
       vtkm::cont::ArrayCopy(connectivityArray, joinedConnectivity);
 
       // Adjust poly data offsets array with face connectivity size before join
-      using TransformBiasArrayType =
-        vtkm::cont::ArrayHandleTransform<OffsetsArrayType, BiasFunctor<vtkm::Id>>;
-      TransformBiasArrayType adjustedPolyDataOffsets =
-        vtkm::cont::make_ArrayHandleTransform<OffsetsArrayType>(
-          polyDataOffsets, BiasFunctor<vtkm::Id>(faceConnectivity.GetNumberOfValues()));
-      vtkm::cont::ArrayHandleConcatenate<OffsetsArrayType, TransformBiasArrayType> offsetsArray(
-        faceOffsets, adjustedPolyDataOffsets);
+      auto adjustedPolyDataOffsets = vtkm::cont::make_ArrayHandleTransform(
+        polyDataOffsets, BiasFunctor<vtkm::Id>(faceConnectivity.GetNumberOfValues()));
+
+      auto offsetsArray =
+        vtkm::cont::make_ArrayHandleConcatenate(faceOffsetsTrim, adjustedPolyDataOffsets);
       OffsetsArrayType joinedOffsets;
       vtkm::cont::ArrayCopy(offsetsArray, joinedOffsets);
 
@@ -928,11 +925,8 @@ public:
       vtkm::cont::ArrayHandle<vtkm::Id> joinedCellIdMap;
       vtkm::cont::ArrayCopy(cellIdMapArray, joinedCellIdMap);
 
-      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
-                      joinedShapesArray,
-                      joinedPointCountArray,
-                      joinedConnectivity,
-                      joinedOffsets);
+      outCellSet.Fill(
+        inCellSet.GetNumberOfPoints(), joinedShapesArray, joinedConnectivity, joinedOffsets);
       this->CellIdMap = joinedCellIdMap;
     }
   }

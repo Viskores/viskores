@@ -23,6 +23,8 @@ namespace internal
 template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalExtractComponent
 {
+  using Writable = vtkm::internal::PortalSupportsSets<PortalType>;
+
 public:
   using VectorType = typename PortalType::ValueType;
   using Traits = vtkm::VecTraits<VectorType>;
@@ -49,6 +51,9 @@ public:
   {
   }
 
+  ArrayPortalExtractComponent& operator=(const ArrayPortalExtractComponent& src) = default;
+  ArrayPortalExtractComponent& operator=(ArrayPortalExtractComponent&& src) = default;
+
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
@@ -58,8 +63,9 @@ public:
     return Traits::GetComponent(this->Portal.Get(index), this->Component);
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     VectorType vec = this->Portal.Get(index);
     Traits::SetComponent(vec, this->Component, value);

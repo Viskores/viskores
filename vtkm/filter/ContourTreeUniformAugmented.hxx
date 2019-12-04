@@ -50,6 +50,9 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#ifndef vtk_m_filter_ContourTreeUniformAugmented_hxx
+#define vtk_m_filter_ContourTreeUniformAugmented_hxx
+
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
@@ -953,3 +956,5 @@ inline VTKM_CONT void ContourTreePPP2::PostExecute(
 
 } // namespace filter
 } // namespace vtkm::filter
+
+#endif

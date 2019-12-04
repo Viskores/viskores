@@ -42,6 +42,7 @@ set(headers
   Gradient.h
   Histogram.h
   ImageConnectivity.h
+  ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
   Mask.h
@@ -49,7 +50,6 @@ set(headers
   MeshQuality.h
   NDEntropy.h
   NDHistogram.h
-  OscillatorSource.h
   Pathline.h
   PointAverage.h
   PointElevation.h
@@ -108,6 +108,7 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   ImageConnectivity.hxx
+  ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx
   Mask.hxx
@@ -115,7 +116,6 @@ set(header_template_sources
   MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
-  OscillatorSource.hxx
   Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx
@@ -141,16 +141,29 @@ set(header_template_sources
   ZFPCompressor3D.hxx
   ZFPDecompressor3D.hxx
 )
+set(sources_device
+  CellAverage.cxx
+  CleanGrid.cxx
+  ClipWithField.cxx
+  ClipWithImplicitFunction.cxx
+  Contour.cxx
+  ExternalFaces.cxx
+  ExtractStructured.cxx
+  PointAverage.cxx
+  Threshold.cxx
+  VectorMagnitude.cxx
+)
 
-vtkm_declare_headers(${headers})
-vtkm_declare_headers(${header_template_sources})
+set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
-# Create an interface library for vtkm_filter. At some point, this will be replaced with a real
-# library that contains pre-built filters. That would be created with the vtkm_library CMake
-# function (defined in VTKmWrappers.cmake).
-add_library(vtkm_filter INTERFACE)
-target_link_libraries(vtkm_filter INTERFACE vtkm_worklet)
-install(TARGETS vtkm_filter EXPORT ${VTKm_EXPORT_NAME})
+vtkm_library(
+  NAME vtkm_filter
+  TEMPLATE_SOURCES ${header_template_sources}
+  HEADERS ${headers}
+  DEVICE_SOURCES ${sources_device}
+  USE_VTKM_JOB_POOL
+  )
+target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
 
 add_subdirectory(internal)
 

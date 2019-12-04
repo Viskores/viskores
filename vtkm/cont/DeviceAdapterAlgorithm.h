@@ -134,7 +134,7 @@ struct DeviceAdapterAlgorithm
   template <typename WordType>
   VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, vtkm::Id numBits);
   template <typename WordType>
-  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word, bool value);
+  VTKM_CONT static void Fill(vtkm::cont::BitField& bits, WordType word);
   /// @}
 
   /// Fill @a array with @a value. If @a numValues is specified, the array will
@@ -253,16 +253,6 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Streaming version of scan exclusive
-  ///
-  /// Computes a scan one block at a time.
-  ///
-  /// \return The total sum.
-  ///
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -377,6 +367,17 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output);
+
+  /// \brief Streaming version of scan exclusive
+  ///
+  /// Computes a scan one block at a time.
+  ///
+  /// \return The total sum.
+  ///
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
+                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                            vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
   ///

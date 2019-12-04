@@ -17,6 +17,8 @@
 
 #include <vtkmtaotuple/include/Tuple.h>
 
+#include <vtkm/internal/brigand.hpp>
+
 #include <type_traits>
 
 namespace vtkm
@@ -373,11 +375,18 @@ struct ArraySizeValidator
   }
 };
 
+template <typename PortalList>
+using AllPortalsAreWritable =
+  typename brigand::all<PortalList,
+                        brigand::bind<vtkm::internal::PortalSupportsSets, brigand::_1>>::type;
+
 } // end namespace compvec
 
 template <typename PortalTuple>
 class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 {
+  using Writable = compvec::AllPortalsAreWritable<PortalTuple>;
+
 public:
   using ValueType = typename compvec::GetValueType<PortalTuple>::ValueType;
 
@@ -459,8 +468,9 @@ public:
     return result;
   }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const
+  template <typename Writable_ = Writable,
+            typename = typename std::enable_if<Writable_::value>::type>
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     SetImpl<0, PortalTuple>::Exec(this->Portals, value, index);
   }

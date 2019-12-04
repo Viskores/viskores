@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_Contour_h
 #define vtk_m_filter_Contour_h
 
+#include <vtkm/filter/vtkm_filter_export.h>
+
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Contour.h>
 
@@ -25,30 +27,30 @@ namespace filter
 /// Multiple contour values must be specified to generate the isosurfaces.
 /// @warning
 /// This filter is currently only supports 3D volumes.
-class Contour : public vtkm::filter::FilterDataSetWithField<Contour>
+class VTKM_ALWAYS_EXPORT Contour : public vtkm::filter::FilterDataSetWithField<Contour>
 {
 public:
   using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   Contour();
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   void SetNumberOfIsoValues(vtkm::Id num);
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   vtkm::Id GetNumberOfIsoValues() const;
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   void SetIsoValue(vtkm::Float64 v) { this->SetIsoValue(0, v); }
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   void SetIsoValue(vtkm::Id index, vtkm::Float64);
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   void SetIsoValues(const std::vector<vtkm::Float64>& values);
 
-  VTKM_CONT
+  VTKM_FILTER_EXPORT
   vtkm::Float64 GetIsoValue(vtkm::Id index) const;
 
   /// Set/Get whether the points generated should be unique for every triangle
@@ -104,10 +106,10 @@ public:
   const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                const vtkm::filter::FieldMetadata& fieldMeta,
+                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
@@ -115,7 +117,27 @@ public:
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    vtkm::cont::ArrayHandle<T> fieldArray;
+
+    if (fieldMeta.IsPointField())
+    {
+      fieldArray = this->Worklet.ProcessPointField(input);
+    }
+    else if (fieldMeta.IsCellField())
+    {
+      fieldArray = this->Worklet.ProcessCellField(input);
+    }
+    else
+    {
+      return false;
+    }
+
+    //use the same meta data as the input so we get the same field name, etc.
+    result.AddField(fieldMeta.AsField(fieldArray));
+    return true;
+  }
 
 private:
   std::vector<vtkm::Float64> IsoValues;
@@ -127,6 +149,10 @@ private:
   std::string InterpolationEdgeIdsArrayName;
   vtkm::worklet::Contour Worklet;
 };
+
+#ifndef vtkm_filter_Contour_cxx
+VTKM_FILTER_EXPORT_EXECUTE_METHOD(Contour);
+#endif
 }
 } // namespace vtkm::filter
 

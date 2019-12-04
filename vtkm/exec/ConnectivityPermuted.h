@@ -50,6 +50,11 @@ public:
   {
   }
 
+  ConnectivityPermutedVisitCellsWithPoints& operator=(
+    const ConnectivityPermutedVisitCellsWithPoints& src) = default;
+  ConnectivityPermutedVisitCellsWithPoints& operator=(
+    ConnectivityPermutedVisitCellsWithPoints&& src) = default;
+
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return this->Portal.GetNumberOfValues(); }
 
@@ -80,9 +85,7 @@ public:
   OriginalConnectivity Connectivity;
 };
 
-template <typename ConnectivityPortalType,
-          typename NumIndicesPortalType,
-          typename IndexOffsetPortalType>
+template <typename ConnectivityPortalType, typename OffsetPortalType>
 class ConnectivityPermutedVisitPointsWithCells
 {
 public:
@@ -93,32 +96,36 @@ public:
   ConnectivityPermutedVisitPointsWithCells() = default;
 
   ConnectivityPermutedVisitPointsWithCells(const ConnectivityPortalType& connectivity,
-                                           const NumIndicesPortalType& numIndices,
-                                           const IndexOffsetPortalType& indexOffset)
+                                           const OffsetPortalType& offsets)
     : Connectivity(connectivity)
-    , NumIndices(numIndices)
-    , IndexOffset(indexOffset)
+    , Offsets(offsets)
   {
   }
 
   VTKM_EXEC
-  SchedulingRangeType GetNumberOfElements() const { return this->NumIndices.GetNumberOfValues(); }
+  SchedulingRangeType GetNumberOfElements() const { return this->Offsets.GetNumberOfValues() - 1; }
 
   VTKM_EXEC CellShapeTag GetCellShape(vtkm::Id) const { return CellShapeTag(); }
 
   VTKM_EXEC
-  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const { return this->NumIndices.Get(index); }
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
+  {
+    const vtkm::Id offBegin = this->Offsets.Get(index);
+    const vtkm::Id offEnd = this->Offsets.Get(index + 1);
+    return static_cast<vtkm::IdComponent>(offEnd - offBegin);
+  }
 
   VTKM_EXEC IndicesType GetIndices(vtkm::Id index) const
   {
+    const vtkm::Id offBegin = this->Offsets.Get(index);
+    const vtkm::Id offEnd = this->Offsets.Get(index + 1);
     return IndicesType(
-      this->Connectivity, this->NumIndices.Get(index), this->IndexOffset.Get(index));
+      this->Connectivity, static_cast<vtkm::IdComponent>(offEnd - offBegin), offBegin);
   }
 
 private:
   ConnectivityPortalType Connectivity;
-  NumIndicesPortalType NumIndices;
-  IndexOffsetPortalType IndexOffset;
+  OffsetPortalType Offsets;
 };
 }
 } // namespace vtkm::exec

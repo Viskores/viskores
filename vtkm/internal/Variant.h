@@ -17,7 +17,7 @@
 
 // It would make sense to put this in its own header file, but it is hard to imagine needing
 // aligned_union anywhere else.
-#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || (defined(VTKM_ICC) && (__INTEL_COMPILER < 1800))
+#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || defined(VTKM_ICC)
 
 #include <algorithm>
 namespace vtkmstd
@@ -67,10 +67,45 @@ using std::aligned_union;
 
 #endif
 
+// It would make sense to put this in its own header file.
+#if (defined(VTKM_GCC) && (__GNUC__ == 4))
+#define VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED 1
+
+namespace vtkmstd
+{
+
+// GCC 4.8 and 4.9 claim to support C++11, but do not support std::is_trivially_copyable.
+// There is no relyable way to get this information (since it has to come special from
+// the compiler). For our purposes, we will report as nothing being trivially copyable,
+// which causes us to call the constructors with everything. This should be fine unless
+// some other part of the compiler is trying to check for trivial copies (perhaps nvcc
+// on top of GCC 4.8).
+template <typename>
+struct is_trivially_copyable : std::false_type
+{
+};
+
+} // namespace vtkmstd
+
+#else // is_trivially_copyable supported
+
+namespace vtkmstd
+{
+
+using std::is_trivially_copyable;
+
+} // namespace vtkmstd
+
+#endif // is_trivially_copyable supported
+
 namespace vtkm
 {
 namespace internal
 {
+
+// Forward declaration
+template <typename... Ts>
+class Variant;
 
 namespace detail
 {
@@ -95,16 +130,76 @@ struct VariantDestroyFunctor
   }
 };
 
-} // namespace detail
+template <typename... Ts>
+struct AllTriviallyCopyable;
+
+template <>
+struct AllTriviallyCopyable<> : std::true_type
+{
+};
+
+template <typename T0>
+struct AllTriviallyCopyable<T0>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value)>
+{
+};
+
+template <typename T0, typename T1>
+struct AllTriviallyCopyable<T0, T1>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2>
+struct AllTriviallyCopyable<T0, T1, T2>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+struct AllTriviallyCopyable<T0, T1, T2, T3>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value &&
+                            vtkmstd::is_trivially_copyable<T3>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
+struct AllTriviallyCopyable<T0, T1, T2, T3, T4, Ts...>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value &&
+                            vtkmstd::is_trivially_copyable<T3>::value &&
+                            vtkmstd::is_trivially_copyable<T4>::value &&
+                            AllTriviallyCopyable<Ts...>::value)>
+{
+};
+
+template <typename VariantType>
+struct VariantTriviallyCopyable;
 
 template <typename... Ts>
-class Variant
+struct VariantTriviallyCopyable<vtkm::internal::Variant<Ts...>> : AllTriviallyCopyable<Ts...>
 {
-  struct ListTag : vtkm::ListTagBase<Ts...>
-  {
-  };
+};
 
+template <typename... Ts>
+struct VariantStorageImpl
+{
   typename vtkmstd::aligned_union<0, Ts...>::type Storage;
+
+  vtkm::IdComponent Index = -1;
+
+  template <vtkm::IdComponent Index>
+  using TypeAt = typename vtkm::ListTypeAt<vtkm::ListTagBase<Ts...>, Index>::type;
 
   VTKM_EXEC_CONT void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
   VTKM_EXEC_CONT const void* GetPointer() const
@@ -112,23 +207,129 @@ class Variant
     return reinterpret_cast<const void*>(&this->Storage);
   }
 
-  vtkm::IdComponent Index = -1;
+  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
+  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->GetIndex() >= 0; }
+
+  VTKM_EXEC_CONT void Reset() noexcept
+  {
+    if (this->IsValid())
+    {
+      this->CastAndCall(detail::VariantDestroyFunctor{});
+      this->Index = -1;
+    }
+  }
+
+  template <typename Functor, typename... Args>
+  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) const
+    noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
+      -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
+  {
+    VTKM_ASSERT(this->IsValid());
+    return detail::VariantCastAndCallImpl<decltype(f(std::declval<const TypeAt<0>&>(), args...))>(
+      brigand::list<Ts...>{},
+      this->GetIndex(),
+      std::forward<Functor>(f),
+      this->GetPointer(),
+      std::forward<Args>(args)...);
+  }
+
+  template <typename Functor, typename... Args>
+  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) noexcept(
+    noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
+    -> decltype(f(std::declval<TypeAt<0>&>(), args...))
+  {
+    VTKM_ASSERT(this->IsValid());
+    return detail::VariantCastAndCallImpl<decltype(f(std::declval<TypeAt<0>&>(), args...))>(
+      brigand::list<Ts...>{},
+      this->GetIndex(),
+      std::forward<Functor>(f),
+      this->GetPointer(),
+      std::forward<Args>(args)...);
+  }
+};
+
+template <typename VariantType,
+          typename TriviallyCopyable = typename VariantTriviallyCopyable<VariantType>::type>
+struct VariantConstructorImpl;
+
+template <typename... Ts>
+struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type>
+  : VariantStorageImpl<Ts...>
+{
+  VariantConstructorImpl() = default;
+  ~VariantConstructorImpl() = default;
+
+  VariantConstructorImpl(const VariantConstructorImpl&) = default;
+  VariantConstructorImpl(VariantConstructorImpl&&) = default;
+  VariantConstructorImpl& operator=(const VariantConstructorImpl&) = default;
+  VariantConstructorImpl& operator=(VariantConstructorImpl&&) = default;
+};
+
+template <typename... Ts>
+struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type>
+  : VariantStorageImpl<Ts...>
+{
+  VariantConstructorImpl() = default;
+
+  VTKM_EXEC_CONT ~VariantConstructorImpl() { this->Reset(); }
+
+  VTKM_EXEC_CONT VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
+  {
+    src.CastAndCall(VariantCopyFunctor{}, this->GetPointer());
+    this->Index = src.Index;
+  }
+
+  VTKM_EXEC_CONT VariantConstructorImpl(VariantConstructorImpl&& rhs) noexcept
+  {
+    this->Storage = std::move(rhs.Storage);
+    this->Index = std::move(rhs.Index);
+    rhs.Index = -1;
+  }
+
+  VTKM_EXEC_CONT VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
+  {
+    this->Reset();
+    src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
+    this->Index = src.Index;
+    return *this;
+  }
+
+  VTKM_EXEC_CONT VariantConstructorImpl& operator=(VariantConstructorImpl&& rhs) noexcept
+  {
+    this->Reset();
+    this->Storage = std::move(rhs.Storage);
+    this->Index = std::move(rhs.Index);
+    rhs.Index = -1;
+    return *this;
+  }
+};
+
+} // namespace detail
+
+template <typename... Ts>
+class Variant : detail::VariantConstructorImpl<Variant<Ts...>>
+{
+  using Superclass = detail::VariantConstructorImpl<Variant<Ts...>>;
 
 public:
   /// Returns the index of the type of object this variant is storing. If no object is currently
   /// stored (i.e. the Variant is invalid), -1 is returned.
   ///
-  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
+  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept
+  {
+    return this->Superclass::GetIndex();
+  }
 
   /// Returns true if this Variant is storing an object from one of the types in the template
   /// list, false otherwise.
   ///
-  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->GetIndex() >= 0; }
+  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->Superclass::IsValid(); }
 
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
   template <typename T>
-  using IndexOf = std::integral_constant<vtkm::IdComponent, vtkm::ListIndexOf<ListTag, T>::value>;
+  using IndexOf = std::integral_constant<vtkm::IdComponent,
+                                         vtkm::ListIndexOf<vtkm::ListTagBase<Ts...>, T>::value>;
 
   /// Returns the index for the given type (or -1 if that type is not in the list).
   ///
@@ -141,13 +342,18 @@ public:
   /// Type that converts to the type at the given index.
   ///
   template <vtkm::IdComponent Index>
-  using TypeAt = typename vtkm::ListTypeAt<ListTag, Index>::type;
+  using TypeAt = typename Superclass::template TypeAt<Index>;
 
   /// The number of types representable by this Variant.
   ///
   static constexpr vtkm::IdComponent NumberOfTypes = vtkm::IdComponent{ sizeof...(Ts) };
 
   Variant() = default;
+  ~Variant() = default;
+  Variant(const Variant&) = default;
+  Variant(Variant&&) = default;
+  Variant& operator=(const Variant&) = default;
+  Variant& operator=(Variant&&) = default;
 
   template <typename T>
   VTKM_EXEC_CONT Variant(const T& src) noexcept
@@ -169,38 +375,6 @@ public:
 
     new (this->GetPointer()) T(std::move(src));
     this->Index = index;
-  }
-
-  VTKM_EXEC_CONT Variant(Variant&& rhs) noexcept
-  {
-    this->Storage = std::move(rhs.Storage);
-    this->Index = std::move(rhs.Index);
-    rhs.Index = -1;
-  }
-
-  VTKM_EXEC_CONT Variant(const Variant& src) noexcept
-  {
-    src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
-    this->Index = src.GetIndex();
-  }
-
-  VTKM_EXEC_CONT ~Variant() { this->Reset(); }
-
-  VTKM_EXEC_CONT Variant& operator=(Variant&& rhs) noexcept
-  {
-    this->Reset();
-    this->Storage = std::move(rhs.Storage);
-    this->Index = std::move(rhs.Index);
-    rhs.Index = -1;
-    return *this;
-  }
-
-  VTKM_EXEC_CONT Variant& operator=(const Variant& src) noexcept
-  {
-    this->Reset();
-    src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
-    this->Index = src.GetIndex();
-    return *this;
   }
 
   template <typename T, typename... Args>
@@ -305,13 +479,7 @@ public:
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
-    VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl<decltype(f(std::declval<const TypeAt<0>&>(), args...))>(
-      vtkm::internal::ListTagAsBrigandList<ListTag>(),
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->GetPointer(),
-      std::forward<Args>(args)...);
+    return this->Superclass::CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
   }
 
   template <typename Functor, typename... Args>
@@ -319,26 +487,13 @@ public:
     noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
-    VTKM_ASSERT(this->IsValid());
-    return detail::VariantCastAndCallImpl<decltype(f(std::declval<TypeAt<0>&>(), args...))>(
-      vtkm::internal::ListTagAsBrigandList<ListTag>(),
-      this->GetIndex(),
-      std::forward<Functor>(f),
-      this->GetPointer(),
-      std::forward<Args>(args)...);
+    return this->Superclass::CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
   }
 
   /// Destroys any object the Variant is holding and sets the Variant to an invalid state. This
   /// method is not thread safe.
   ///
-  VTKM_EXEC_CONT void Reset() noexcept
-  {
-    if (this->IsValid())
-    {
-      this->CastAndCall(detail::VariantDestroyFunctor{});
-      this->Index = -1;
-    }
-  }
+  VTKM_EXEC_CONT void Reset() noexcept { this->Superclass::Reset(); }
 };
 
 /// \brief Convert a ListTag to a Variant.

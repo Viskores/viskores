@@ -8,6 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#ifndef vtk_m_filter_FieldToColors_hxx
+#define vtk_m_filter_FieldToColors_hxx
+
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -257,3 +260,5 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif

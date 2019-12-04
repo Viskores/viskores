@@ -25,21 +25,6 @@ namespace internal
 namespace detail
 {
 
-struct IdentityFunctor
-{
-  template <typename T>
-  VTKM_EXEC_CONT T& operator()(T& x) const
-  {
-    return x;
-  }
-
-  template <typename T>
-  VTKM_EXEC_CONT const T& operator()(const T& x) const
-  {
-    return x;
-  }
-};
-
 // These functions exist to help copy components of a FunctionInterface.
 
 template <vtkm::IdComponent NumToMove, vtkm::IdComponent ParameterIndex = 1>
@@ -75,11 +60,6 @@ struct FunctionInterfaceMoveParameters<0, ParameterIndex>
 template <typename OriginalSignature, typename Transform>
 struct FunctionInterfaceStaticTransformType;
 
-template <typename OriginalFunction,
-          typename NewFunction,
-          typename TransformFunctor,
-          typename FinishFunctor>
-class FunctionInterfaceDynamicTransformContContinue;
 
 } // namespace detail
 
@@ -92,10 +72,10 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// series of transformations and operations can occur.
 ///
 /// Supporting arbitrary function and template arguments is difficult and
-/// really requires separate implementations for ANSI and C++11 versions of
-/// compilers. Thus, variatic template arguments are, at this point in time,
+/// really requires separate implementations for pre-C++11 and C++11 versions of
+/// compilers. Thus, variadic template arguments are, at this point in time,
 /// something to be avoided when possible. The intention of \c
-/// FunctionInterface is to collect most of the variatic template code into one
+/// FunctionInterface is to collect most of the variadic template code into one
 /// place. The \c FunctionInterface template class takes a function signature,
 /// which can have a variable number of arguments. The \c FunctionInterface
 /// will hold in its state a copy of all input parameters (regardless of number
@@ -162,39 +142,6 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// functionInterface.template SetParameter<1>(100);
 /// \endcode
 ///
-/// \c FunctionInterface can invoke a functor of a matching signature using the
-/// parameters stored within. If the functor returns a value, that return value
-/// will be stored in the \c FunctionInterface object for later retrieval.
-/// There are several versions of the invoke method including those for the
-/// control and execution environments as well as methods that allow
-/// transformation of the parameters and return value. See the method document
-/// for more details.
-///
-/// \code{.cpp}
-/// functionInterface.InvokeCont(Functor());
-/// \endcode
-///
-/// Once a functor has been invoked, the return value can be retrieved with the
-/// \c GetReturnValue method. \c GetReturnValue should only be used if the
-/// function signature has a non-void return value. Otherwise calling this
-/// method will result in a compile error.
-///
-/// \code{.cpp}
-/// functionInterface.GetReturnValue();
-/// \endcode
-///
-/// Providing the appropriate template specification to specialize when there
-/// is no return value can be done but can be tricky. To make it easier, \c
-/// FunctionInterface also has a \c GetReturnValueSafe method that provides the
-/// return value wrapped in a \c FunctionInterfaceReturnContainer structure.
-/// This will work regardless of whether the return value exists (although this
-/// container might be empty). Specializing on the type of \c
-/// FunctionInterfaceReturnContainer is much easier.
-///
-/// \code{.cpp}
-/// functionInterface.GetReturnValueSafe();
-/// \endcode
-///
 /// \c FunctionInterface also provides several methods for modifying the
 /// parameters. First, the \c Append method tacks an additional parameter to
 /// the end of the function signature.
@@ -210,12 +157,10 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// functionInterface.Replace<1>(std::string("new first argument"));
 /// \endcode
 ///
-/// Finally, there are a couple of ways to replace all of the parameters at
+/// Finally, there is a way to replace all of the parameters at
 /// once. The \c StaticTransform methods take a transform functor that modifies
-/// each of the parameters. The \c DynamicTransform methods similarly take a
-/// transform functor, but is called in a different way to defer the type
-/// resolution to run time. See the documentation for each of these methods for
-/// details on how they are used.
+/// each of the parameters. See the documentation for this method for
+/// details on how it is used.
 ///
 template <typename FunctionSignature>
 class FunctionInterface
@@ -228,15 +173,13 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   FunctionInterface()
-    : Result()
-    , Parameters()
+    : Parameters()
   {
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   explicit FunctionInterface(const detail::ParameterContainer<FunctionSignature>& p)
-    : Result()
-    , Parameters(p)
+    : Parameters(p)
   {
   }
 
@@ -253,8 +196,6 @@ public:
     using type = typename detail::AtType<ParameterIndex, FunctionSignature>::type;
   };
 
-  static constexpr bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
-
   /// The number of parameters in this \c Function Interface.
   ///
   static constexpr vtkm::IdComponent ARITY = SigInfo::Arity;
@@ -264,27 +205,6 @@ public:
   ///
   VTKM_EXEC_CONT
   vtkm::IdComponent GetArity() const { return ARITY; }
-
-  /// Retrieves the return value from the last invocation called. This method
-  /// will result in a compiler error if used with a function having a void
-  /// return type.
-  ///
-  VTKM_EXEC_CONT
-  ResultType GetReturnValue() const { return this->Result.Value; }
-
-  /// Retrieves the return value from the last invocation wrapped in a \c
-  /// FunctionInterfaceReturnContainer object. This call can succeed even if
-  /// the return type is void. You still have to somehow check to make sure the
-  /// return is non-void before trying to use it, but using this method can
-  /// simplify templated programming.
-  ///
-  VTKM_EXEC_CONT
-  const FunctionInterfaceReturnContainer<ResultType>& GetReturnValueSafe() const
-  {
-    return this->Result;
-  }
-  VTKM_EXEC_CONT
-  FunctionInterfaceReturnContainer<ResultType>& GetReturnValueSafe() { return this->Result; }
 
   /// Gets the value for the parameter of the given index. Parameters are
   /// indexed starting at 1. To use this method you have to specify a static,
@@ -377,8 +297,6 @@ public:
   template <typename SrcFunctionSignature>
   void Copy(const FunctionInterface<SrcFunctionSignature>& src)
   {
-    this->Result = src.GetReturnValueSafe();
-
     constexpr vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
       ? ARITY
       : FunctionInterface<SrcFunctionSignature>::ARITY;
@@ -388,66 +306,7 @@ public:
 
   void Copy(const FunctionInterface<FunctionSignature>& src)
   { //optimized version for assignment/copy
-    this->Result = src.GetReturnValueSafe();
     this->Parameters = src.Parameters;
-  }
-
-  /// Invoke a function \c f using the arguments stored in this
-  /// FunctionInterface.
-  ///
-  /// If this FunctionInterface specifies a non-void return value, then the
-  /// result of the function call is stored within this FunctionInterface and
-  /// can be retrieved with GetReturnValue().
-  ///
-  template <typename Function>
-  VTKM_CONT void InvokeCont(const Function& f)
-  {
-    detail::DoInvokeCont(f, this->Parameters, this->Result, detail::IdentityFunctor());
-  }
-  template <typename Function>
-  VTKM_CONT void InvokeCont(Function& f)
-  {
-    detail::DoInvokeCont(f, this->Parameters, this->Result, detail::IdentityFunctor());
-  }
-  template <typename Function>
-  VTKM_EXEC void InvokeExec(const Function& f)
-  {
-    detail::DoInvokeExec(f, this->Parameters, this->Result, detail::IdentityFunctor());
-  }
-  template <typename Function>
-  VTKM_EXEC void InvokeExec(Function& f)
-  {
-    detail::DoInvokeExec(f, this->Parameters, this->Result, detail::IdentityFunctor());
-  }
-
-  /// Invoke a function \c f using the arguments stored in this
-  /// FunctionInterface and a transform.
-  ///
-  /// These versions of invoke also apply a transform to the input arguments.
-  /// The transform is a second functor passed a second argument. If this
-  /// FunctionInterface specifies a non-void return value, then the result of
-  /// the function call is also transformed and stored within this
-  /// FunctionInterface and can be retrieved with GetReturnValue().
-  ///
-  template <typename Function, typename TransformFunctor>
-  VTKM_CONT void InvokeCont(const Function& f, const TransformFunctor& transform)
-  {
-    detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
-  }
-  template <typename Function, typename TransformFunctor>
-  VTKM_CONT void InvokeCont(Function& f, const TransformFunctor& transform)
-  {
-    detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
-  }
-  template <typename Function, typename TransformFunctor>
-  VTKM_EXEC void InvokeExec(const Function& f, const TransformFunctor& transform)
-  {
-    detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
-  }
-  template <typename Function, typename TransformFunctor>
-  VTKM_EXEC void InvokeExec(Function& f, const TransformFunctor& transform)
-  {
-    detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
 
   template <typename NewType>
@@ -596,236 +455,31 @@ public:
     detail::DoStaticTransformCont(transform, this->Parameters, newFuncInterface.Parameters);
     return newFuncInterface;
   }
-  template <typename Transform>
-  VTKM_EXEC typename StaticTransformType<Transform>::type StaticTransformExec(
-    const Transform& transform)
-  {
-    typename StaticTransformType<Transform>::type newFuncInterface;
-    detail::DoStaticTransformExec(transform, this->Parameters, newFuncInterface.Parameters);
-    return newFuncInterface;
-  }
-
-  /// \brief Transforms the \c FunctionInterface based on run-time information.
-  ///
-  /// The \c DynamicTransform method transforms all the parameters of this \c
-  /// FunctionInterface to different types and values based on run-time
-  /// information. It operates by accepting two functors. The first functor
-  /// accepts three arguments. The first argument is a parameter to transform,
-  /// the second is a functor to call with the transformed result, and the third
-  /// is an instance of \c IndexTag denoting the index parameter..
-  ///
-  /// The second argument to \c DynamicTransform is another functor that
-  /// accepts the transformed \c FunctionInterface and does something. If that
-  /// transformed \c FunctionInterface has a return value, that return value
-  /// will be passed back to this \c FunctionInterface.
-  ///
-  /// Here is a contrived but illustrative example. This transformation will
-  /// pass all arguments except any string that looks like a number will be
-  /// converted to a vtkm::FloatDefault. Note that because the types are not
-  /// determined until runtime, this transform cannot be determined at compile
-  /// time with meta-template programming.
-  ///
-  /// \code
-  /// struct MyTransformFunctor {
-  ///   template<typename InputType,
-  ///            typename ContinueFunctor,
-  ///            vtkm::IdComponent Index>
-  ///   VTKM_CONT
-  ///   void operator()(const InputType &input,
-  ///                   const ContinueFunctor &continueFunc,
-  ///                   vtkm::internal::IndexTag<Index>) const
-  ///   {
-  ///     continueFunc(input);
-  ///   }
-  ///
-  ///   template<typename ContinueFunctor, vtkm::IdComponent Index>
-  ///   VTKM_CONT
-  ///   void operator()(const std::string &input,
-  ///                   const ContinueFunctor &continueFunc,
-  ///                   vtkm::internal::IndexTag<Index>) const
-  ///   {
-  ///     if ((input[0] >= '0' && (input[0] <= '9'))
-  ///     {
-  ///       std::stringstream stream(input);
-  ///       vtkm::FloatDefault value;
-  ///       stream >> value;
-  ///       continueFunc(value);
-  ///     }
-  ///     else
-  ///     {
-  ///       continueFunc(input);
-  ///     }
-  ///   }
-  /// };
-  ///
-  /// struct MyFinishFunctor {
-  ///   template<typename FunctionSignature>
-  ///   VTKM_CONT
-  ///   void operator()(vtkm::internal::FunctionInterface<FunctionSignature> &funcInterface) const
-  ///   {
-  ///     // Do something
-  ///   }
-  /// };
-  ///
-  /// template<typename FunctionSignature>
-  /// void ImportantStuff(vtkm::internal::FunctionInterface<FunctionSignature> &funcInterface)
-  /// {
-  ///   funcInterface.DynamicTransformCont(MyContinueFunctor(), MyFinishFunctor());
-  /// }
-  /// \endcode
-  ///
-  /// An interesting feature of \c DynamicTransform is that there does not have
-  /// to be a one-to-one transform. It is possible to make many valid
-  /// transforms by calling the continue functor multiple times within the
-  /// transform functor. It is also possible to abort the transform by not
-  /// calling the continue functor.
-  ///
-  template <typename TransformFunctor, typename FinishFunctor>
-  VTKM_CONT void DynamicTransformCont(const TransformFunctor& transform,
-                                      const FinishFunctor& finish) const
-  {
-    using ContinueFunctorType =
-      detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature,
-                                                            ResultType(),
-                                                            TransformFunctor,
-                                                            FinishFunctor>;
-
-    FunctionInterface<ResultType()> emptyInterface;
-    ContinueFunctorType continueFunctor =
-      ContinueFunctorType(*this, emptyInterface, transform, finish);
-
-    continueFunctor.DoNextTransform(emptyInterface);
-    //    this->Result = emptyInterface.GetReturnValueSafe();
-  }
-
-  /// \brief Applies a function to all the parameters.
-  ///
-  /// The \c ForEach methods take a functor and apply that functor to each of
-  /// the parameters in the \c FunctionInterface. (Return values are not
-  /// effected.) The first argument of the functor is the parameter value and
-  /// the second argument is an \c IndexTag, which can be used to identify the
-  /// index of the parameter.
-  ///
-  template <typename Functor>
-  VTKM_CONT void ForEachCont(const Functor& f) const
-  {
-    detail::DoForEachCont(f, this->Parameters);
-  }
-  template <typename Functor>
-  VTKM_CONT void ForEachCont(const Functor& f)
-  {
-    detail::DoForEachCont(f, this->Parameters);
-  }
-  template <typename Functor>
-  VTKM_EXEC void ForEachExec(const Functor& f) const
-  {
-    detail::DoForEachExec(f, this->Parameters);
-  }
-  template <typename Functor>
-  VTKM_EXEC void ForEachExec(const Functor& f)
-  {
-    detail::DoForEachExec(f, this->Parameters);
-  }
 
 private:
-  vtkm::internal::FunctionInterfaceReturnContainer<ResultType> Result;
   detail::ParameterContainer<FunctionSignature> Parameters;
 };
 
-namespace detail
+//============================================================================
+/// \brief Create a \c FunctionInterface
+///
+/// \c make_FunctionInterface is a function that takes a variable number of
+/// arguments and returns a \c FunctionInterface object containing these
+/// objects. Since the return type for the function signature is not specified,
+/// you must always specify it as a template parameter
+///
+/// \code{.cpp}
+/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
+///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
+/// \endcode
+///
+
+template <typename R, typename... Args>
+FunctionInterface<R(Args...)> make_FunctionInterface(const Args&... args)
 {
-
-template <typename OriginalFunction,
-          typename NewFunction,
-          typename TransformFunctor,
-          typename FinishFunctor>
-class FunctionInterfaceDynamicTransformContContinue
-{
-public:
-  FunctionInterfaceDynamicTransformContContinue(
-    const vtkm::internal::FunctionInterface<OriginalFunction>& originalInterface,
-    vtkm::internal::FunctionInterface<NewFunction>& newInterface,
-    const TransformFunctor& transform,
-    const FinishFunctor& finish)
-    : OriginalInterface(originalInterface)
-    , NewInterface(newInterface)
-    , Transform(transform)
-    , Finish(finish)
-  {
-  }
-
-  template <typename T>
-  VTKM_CONT void operator()(const T& newParameter) const
-  {
-    using NewFSigComp = typename FunctionInterface<NewFunction>::ComponentSig;
-
-    //Determine if we should do the next transform
-    using appended = brigand::push_back<NewFSigComp, T>;
-    using interfaceSig = typename detail::AsSigType<appended>::type;
-    using NextInterfaceType = FunctionInterface<interfaceSig>;
-
-    static constexpr std::size_t newArity = NextInterfaceType::ARITY;
-    static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
-    using ShouldDoNextTransformType = std::integral_constant<bool, (newArity < oldArity)>;
-
-    NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
-
-    this->DoNextTransform(nextInterface, ShouldDoNextTransformType());
-    this->NewInterface.GetReturnValueSafe() = nextInterface.GetReturnValueSafe();
-  }
-
-  template <typename NextFunction>
-  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface) const
-  {
-    using NextContinueType = FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
-                                                                           NextFunction,
-                                                                           TransformFunctor,
-                                                                           FinishFunctor>;
-    NextContinueType nextContinue =
-      NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
-    static constexpr vtkm::IdComponent Index =
-      vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
-    vtkm::internal::IndexTag<Index> indexTag;
-    this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);
-  }
-
-private:
-  template <typename NextFunction>
-  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
-                       std::true_type) const
-  {
-    using NextContinueType = FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
-                                                                           NextFunction,
-                                                                           TransformFunctor,
-                                                                           FinishFunctor>;
-    NextContinueType nextContinue =
-      NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
-    static constexpr vtkm::IdComponent Index =
-      vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
-    vtkm::internal::IndexTag<Index> indexTag;
-    this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);
-  }
-
-  template <typename NextFunction>
-  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
-                       std::false_type) const
-  {
-    this->Finish(nextInterface);
-  }
-
-private:
-  const vtkm::internal::FunctionInterface<OriginalFunction>& OriginalInterface;
-  vtkm::internal::FunctionInterface<NewFunction>& NewInterface;
-  const TransformFunctor& Transform;
-  const FinishFunctor& Finish;
-
-  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
-                                                                     NewFunction,
-                                                                     TransformFunctor,
-                                                                     FinishFunctor>&) = delete;
-};
-
-} // namespace detail
+  detail::ParameterContainer<R(Args...)> container = { args... };
+  return FunctionInterface<R(Args...)>{ container };
+}
 }
 } // namespace vtkm::internal
 

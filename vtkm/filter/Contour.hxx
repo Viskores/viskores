@@ -7,6 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_filter_Contour_hxx
+#define vtk_m_filter_Contour_hxx
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
@@ -25,7 +27,7 @@ namespace
 {
 
 template <typename CellSetList>
-bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+inline bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
 {
   if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>() ||
       cellset.template IsType<vtkm::cont::CellSetStructured<2>>() ||
@@ -38,65 +40,12 @@ bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cell
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT Contour::Contour()
-  : vtkm::filter::FilterDataSetWithField<Contour>()
-  , IsoValues()
-  , GenerateNormals(false)
-  , AddInterpolationEdgeIds(false)
-  , ComputeFastNormalsForStructured(false)
-  , ComputeFastNormalsForUnstructured(true)
-  , NormalArrayName("normals")
-  , InterpolationEdgeIdsArrayName("edgeIds")
-  , Worklet()
-{
-  // todo: keep an instance of marching cubes worklet as a member variable
-}
-
-//-----------------------------------------------------------------------------
-inline void Contour::SetNumberOfIsoValues(vtkm::Id num)
-{
-  if (num >= 0)
-  {
-    this->IsoValues.resize(static_cast<std::size_t>(num));
-  }
-}
-
-//-----------------------------------------------------------------------------
-inline vtkm::Id Contour::GetNumberOfIsoValues() const
-{
-  return static_cast<vtkm::Id>(this->IsoValues.size());
-}
-
-//-----------------------------------------------------------------------------
-inline void Contour::SetIsoValue(vtkm::Id index, vtkm::Float64 v)
-{
-  std::size_t i = static_cast<std::size_t>(index);
-  if (i >= this->IsoValues.size())
-  {
-    this->IsoValues.resize(i + 1);
-  }
-  this->IsoValues[i] = v;
-}
-
-//-----------------------------------------------------------------------------
-inline void Contour::SetIsoValues(const std::vector<vtkm::Float64>& values)
-{
-  this->IsoValues = values;
-}
-
-//-----------------------------------------------------------------------------
-inline vtkm::Float64 Contour::GetIsoValue(vtkm::Id index) const
-{
-  return this->IsoValues[static_cast<std::size_t>(index)];
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -203,32 +152,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
 
   return output;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Contour::DoMapField(vtkm::cont::DataSet& result,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  vtkm::cont::ArrayHandle<T> fieldArray;
-
-  if (fieldMeta.IsPointField())
-  {
-    fieldArray = this->Worklet.ProcessPointField(input);
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    fieldArray = this->Worklet.ProcessCellField(input);
-  }
-  else
-  {
-    return false;
-  }
-
-  //use the same meta data as the input so we get the same field name, etc.
-  result.AddField(fieldMeta.AsField(fieldArray));
-  return true;
-}
 }
 } // namespace vtkm::filter
+
+#endif

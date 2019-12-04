@@ -76,6 +76,17 @@ VTKM_CONT static vtkm::worklet::MaskSelect::ThreadToOutputMapType BuildThreadToO
   return threadToOutputMap;
 }
 
+VTKM_CONT static vtkm::worklet::MaskSelect::ThreadToOutputMapType BuildThreadToOutputMapAllOn(
+  vtkm::Id numThreads,
+  vtkm::cont::DeviceAdapterId device)
+{
+  vtkm::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
+  threadToOutputMap.Allocate(numThreads);
+  vtkm::cont::Algorithm::Copy(
+    device, vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numThreads), threadToOutputMap);
+  return threadToOutputMap;
+}
+
 struct MaskBuilder
 {
   template <typename ArrayHandleType>
@@ -86,7 +97,7 @@ struct MaskBuilder
     vtkm::cont::ArrayHandle<vtkm::Id> outputToThreadMap;
     vtkm::Id numThreads = vtkm::cont::Algorithm::ScanExclusive(
       device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(maskArray), outputToThreadMap);
-    VTKM_ASSERT(numThreads < maskArray.GetNumberOfValues());
+    VTKM_ASSERT(numThreads <= maskArray.GetNumberOfValues());
 
     // We have implemented two different ways to compute the thread to output map. The first way is
     // to use a binary search on each thread index into the output map. The second way is to
@@ -97,7 +108,11 @@ struct MaskBuilder
     // The former is obviously faster for one thread and the latter is obviously faster when all
     // outputs have a thread. We have to guess for values in the middle. I'm using if the square of
     // the number of threads is less than the number of outputs because it is easy to compute.
-    if ((numThreads * numThreads) < maskArray.GetNumberOfValues())
+    if (numThreads == maskArray.GetNumberOfValues())
+    { //fast path when everything is on
+      threadToOutputMap = BuildThreadToOutputMapAllOn(numThreads, device);
+    }
+    else if ((numThreads * numThreads) < maskArray.GetNumberOfValues())
     {
       threadToOutputMap = BuildThreadToOutputMapWithFind(numThreads, outputToThreadMap, device);
     }
