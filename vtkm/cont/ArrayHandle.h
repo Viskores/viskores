@@ -57,24 +57,18 @@ class VTKM_CONT_EXPORT ArrayHandleBase
 /// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
-struct IsValidArrayHandle
-  : std::integral_constant<bool,
-                           !(std::is_base_of<vtkm::cont::internal::UndefinedStorage,
-                                             vtkm::cont::internal::Storage<T, StorageTag>>::value)>
-{
-};
+using IsValidArrayHandle =
+  std::integral_constant<bool,
+                         !(std::is_base_of<vtkm::cont::internal::UndefinedStorage,
+                                           vtkm::cont::internal::Storage<T, StorageTag>>::value)>;
 
 /// Checks to see if the given type and storage forms a invalid array handle
 /// (some storage objects cannot support all types). This check is compatible
 /// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
-struct IsInValidArrayHandle
-  : std::integral_constant<bool,
-                           (std::is_base_of<vtkm::cont::internal::UndefinedStorage,
-                                            vtkm::cont::internal::Storage<T, StorageTag>>::value)>
-{
-};
+using IsInValidArrayHandle =
+  std::integral_constant<bool, !IsValidArrayHandle<T, StorageTag>::value>;
 
 /// Checks to see if the ArrayHandle allows writing, as some ArrayHandles
 /// (Implicit) don't support writing. These will be defined as either

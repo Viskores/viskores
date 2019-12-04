@@ -150,6 +150,27 @@ struct ListTagTransform : detail::ListRoot
                                   brigand::bind<Transform, brigand::_1>>;
 };
 
+/// A list tag that takes an existing ListTag and a predicate template that is applied to
+/// each type in the ListTag. Any type in the ListTag that has a value element equal to true
+/// (the equivalent of std::true_type), that item will be removed from the list. For example
+/// the following type
+///
+/// ```cpp
+/// vtkm::ListTagRemoveIf<vtkm::ListTagBase<int, float, long long, double>, std::is_integral>
+/// ```
+///
+/// resolves to a ListTag that is equivalent to `vtkm::ListTag<float, double>` because
+/// `std::is_integral<int>` and `std::is_integral<long long>` resolve to `std::true_type`
+/// whereas `std::is_integral<float>` and `std::is_integral<double>` resolve to
+/// `std::false_type`.
+template <typename ListTag, template <typename> class Predicate>
+struct ListTagRemoveIf : detail::ListRoot
+{
+  VTKM_IS_LIST_TAG(ListTag);
+  using list = brigand::remove_if<internal::ListTagAsBrigandList<ListTag>,
+                                  brigand::bind<Predicate, brigand::_1>>;
+};
+
 /// \brief Determines the number of types in the given list.
 ///
 /// There is a static member named \c value that is set to the length of the list.
