@@ -50,7 +50,6 @@
 
 #define VTKM_STRINGIFY_FIRST(...) VTKM_EXPAND(VTK_M_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
 #define VTK_M_STRINGIFY_FIRST_IMPL(first, ...) #first
-#define VTKM_EXPAND(x) x
 
 /// \def VTKM_TEST_ASSERT(condition, messages..)
 ///
@@ -568,6 +567,30 @@ struct TestEqualImpl<std::string, std::string>
                             vtkm::Float64 vtkmNotUsed(tolerance)) const
   {
     return string1 == string2;
+  }
+};
+template <typename T>
+struct TestEqualImpl<const char*, T>
+{
+  VTKM_CONT bool operator()(const char* string1, T value2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<std::string, T>()(string1, value2, tolerance);
+  }
+};
+template <typename T>
+struct TestEqualImpl<T, const char*>
+{
+  VTKM_CONT bool operator()(T value1, const char* string2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<T, std::string>()(value1, string2, tolerance);
+  }
+};
+template <>
+struct TestEqualImpl<const char*, const char*>
+{
+  VTKM_CONT bool operator()(const char* string1, const char* string2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<std::string, std::string>()(string1, string2, tolerance);
   }
 };
 

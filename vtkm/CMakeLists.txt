@@ -25,6 +25,7 @@ set(headers
   CellClassification.h
   CellShape.h
   CellTraits.h
+  Deprecated.h
   Flags.h
   Geometry.h
   Hash.h
