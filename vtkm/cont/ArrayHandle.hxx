@@ -18,11 +18,26 @@ namespace cont
 {
 
 template <typename T, typename S>
-ArrayHandle<T, S>::ArrayHandle()
-  : Internals(new InternalStruct)
+ArrayHandle<T, S>::InternalStruct::InternalStruct(
+  const typename ArrayHandle<T, S>::StorageType& storage)
+  : ControlArray(storage)
+  , ControlArrayValid(true)
+  , ExecutionArrayValid(false)
 {
-  this->Internals->ControlArrayValid = false;
-  this->Internals->ExecutionArrayValid = false;
+}
+
+template <typename T, typename S>
+ArrayHandle<T, S>::InternalStruct::InternalStruct(typename ArrayHandle<T, S>::StorageType&& storage)
+  : ControlArray(std::move(storage))
+  , ControlArrayValid(true)
+  , ExecutionArrayValid(false)
+{
+}
+
+template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle()
+  : Internals(std::make_shared<InternalStruct>())
+{
 }
 
 template <typename T, typename S>
@@ -39,20 +54,14 @@ ArrayHandle<T, S>::ArrayHandle(ArrayHandle<T, S>&& src) noexcept
 
 template <typename T, typename S>
 ArrayHandle<T, S>::ArrayHandle(const typename ArrayHandle<T, S>::StorageType& storage)
-  : Internals(new InternalStruct)
+  : Internals(std::make_shared<InternalStruct>(storage))
 {
-  this->Internals->ControlArray = storage;
-  this->Internals->ControlArrayValid = true;
-  this->Internals->ExecutionArrayValid = false;
 }
 
 template <typename T, typename S>
 ArrayHandle<T, S>::ArrayHandle(typename ArrayHandle<T, S>::StorageType&& storage) noexcept
-  : Internals(new InternalStruct)
+  : Internals(std::make_shared<InternalStruct>(std::move(storage)))
 {
-  this->Internals->ControlArray = std::move(storage);
-  this->Internals->ControlArrayValid = true;
-  this->Internals->ExecutionArrayValid = false;
 }
 
 template <typename T, typename S>
@@ -77,10 +86,12 @@ ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(ArrayHandle<T, S>&& src) noexcep
 template <typename T, typename S>
 typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage()
 {
-  this->SyncControlArray();
-  if (this->Internals->ControlArrayValid)
+  LockType lock = this->GetLock();
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
   {
-    return this->Internals->ControlArray;
+    return *this->Internals->GetControlArray(lock);
   }
   else
   {
@@ -92,10 +103,12 @@ typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage()
 template <typename T, typename S>
 const typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage() const
 {
-  this->SyncControlArray();
-  if (this->Internals->ControlArrayValid)
+  LockType lock = this->GetLock();
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
   {
-    return this->Internals->ControlArray;
+    return *this->Internals->GetControlArray(lock);
   }
   else
   {
@@ -107,14 +120,16 @@ const typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage() c
 template <typename T, typename S>
 typename ArrayHandle<T, S>::PortalControl ArrayHandle<T, S>::GetPortalControl()
 {
-  this->SyncControlArray();
-  if (this->Internals->ControlArrayValid)
+  LockType lock = this->GetLock();
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
   {
     // If the user writes into the iterator we return, then the execution
     // array will become invalid. Play it safe and release the execution
     // resources. (Use the const version to preserve the execution array.)
-    this->ReleaseResourcesExecutionInternal();
-    return this->Internals->ControlArray.GetPortal();
+    this->ReleaseResourcesExecutionInternal(lock);
+    return this->Internals->GetControlArray(lock)->GetPortal();
   }
   else
   {
@@ -126,10 +141,12 @@ typename ArrayHandle<T, S>::PortalControl ArrayHandle<T, S>::GetPortalControl()
 template <typename T, typename S>
 typename ArrayHandle<T, S>::PortalConstControl ArrayHandle<T, S>::GetPortalConstControl() const
 {
-  this->SyncControlArray();
-  if (this->Internals->ControlArrayValid)
+  LockType lock = this->GetLock();
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
   {
-    return this->Internals->ControlArray.GetPortalConst();
+    return this->Internals->GetControlArray(lock)->GetPortalConst();
   }
   else
   {
@@ -139,15 +156,15 @@ typename ArrayHandle<T, S>::PortalConstControl ArrayHandle<T, S>::GetPortalConst
 }
 
 template <typename T, typename S>
-vtkm::Id ArrayHandle<T, S>::GetNumberOfValues() const
+vtkm::Id ArrayHandle<T, S>::GetNumberOfValues(LockType& lock) const
 {
-  if (this->Internals->ControlArrayValid)
+  if (this->Internals->IsControlArrayValid(lock))
   {
-    return this->Internals->ControlArray.GetNumberOfValues();
+    return this->Internals->GetControlArray(lock)->GetNumberOfValues();
   }
-  else if (this->Internals->ExecutionArrayValid)
+  else if (this->Internals->IsExecutionArrayValid(lock))
   {
-    return this->Internals->ExecutionArray->GetNumberOfValues();
+    return this->Internals->GetExecutionArray(lock)->GetNumberOfValues();
   }
   else
   {
@@ -162,17 +179,19 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 
   if (numberOfValues > 0)
   {
-    vtkm::Id originalNumberOfValues = this->GetNumberOfValues();
+    LockType lock = this->GetLock();
+
+    vtkm::Id originalNumberOfValues = this->GetNumberOfValues(lock);
 
     if (numberOfValues < originalNumberOfValues)
     {
-      if (this->Internals->ControlArrayValid)
+      if (this->Internals->IsControlArrayValid(lock))
       {
-        this->Internals->ControlArray.Shrink(numberOfValues);
+        this->Internals->GetControlArray(lock)->Shrink(numberOfValues);
       }
-      if (this->Internals->ExecutionArrayValid)
+      if (this->Internals->IsExecutionArrayValid(lock))
       {
-        this->Internals->ExecutionArray->Shrink(numberOfValues);
+        this->Internals->GetExecutionArray(lock)->Shrink(numberOfValues);
       }
     }
     else if (numberOfValues == originalNumberOfValues)
@@ -184,7 +203,7 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
       throw vtkm::cont::ErrorBadValue("ArrayHandle::Shrink cannot be used to grow array.");
     }
 
-    VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
+    VTKM_ASSERT(this->GetNumberOfValues(lock) == numberOfValues);
   }
   else // numberOfValues == 0
   {
@@ -198,24 +217,25 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-  ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag) const
+ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
+  LockType lock = this->GetLock();
+
+  if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
     // Want to use an empty array.
     // Set up ArrayHandle state so this actually works.
-    this->Internals->ControlArray.Allocate(0);
-    this->Internals->ControlArrayValid = true;
+    this->Internals->GetControlArray(lock)->Allocate(0);
+    this->Internals->SetControlArrayValid(lock, true);
   }
 
-  this->PrepareForDevice(DeviceAdapterTag());
-  typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
-    this->Internals->ExecutionArray->PrepareForInput(!this->Internals->ExecutionArrayValid,
-                                                     DeviceAdapterTag());
+  this->PrepareForDevice(lock, device);
+  auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInput(
+    !this->Internals->IsExecutionArrayValid(lock), device);
 
-  this->Internals->ExecutionArrayValid = true;
+  this->Internals->SetExecutionArrayValid(lock, true);
 
   return portal;
 }
@@ -223,18 +243,19 @@ typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::PortalCon
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
+ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+
+  LockType lock = this->GetLock();
 
   // Invalidate any control arrays.
   // Should the control array resource be released? Probably not a good
   // idea when shared with execution.
-  this->Internals->ControlArrayValid = false;
+  this->Internals->SetControlArrayValid(lock, false);
 
-  this->PrepareForDevice(DeviceAdapterTag());
-  typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-    this->Internals->ExecutionArray->PrepareForOutput(numberOfValues, DeviceAdapterTag());
+  this->PrepareForDevice(lock, device);
+  auto portal = this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device);
 
   // We are assuming that the calling code will fill the array using the
   // iterators we are returning, so go ahead and mark the execution array as
@@ -245,7 +266,7 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
   // implementation the only access to the array is through the iterators
   // returned from this method, so you would have to work to invalidate this
   // assumption anyway.)
-  this->Internals->ExecutionArrayValid = true;
+  this->Internals->SetExecutionArrayValid(lock, true);
 
   return portal;
 }
@@ -253,40 +274,41 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-  ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag)
+ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
+  LockType lock = this->GetLock();
+
+  if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
     // Want to use an empty array.
     // Set up ArrayHandle state so this actually works.
-    this->Internals->ControlArray.Allocate(0);
-    this->Internals->ControlArrayValid = true;
+    this->Internals->GetControlArray(lock)->Allocate(0);
+    this->Internals->SetControlArrayValid(lock, true);
   }
 
-  this->PrepareForDevice(DeviceAdapterTag());
-  typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-    this->Internals->ExecutionArray->PrepareForInPlace(!this->Internals->ExecutionArrayValid,
-                                                       DeviceAdapterTag());
+  this->PrepareForDevice(lock, device);
+  auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInPlace(
+    !this->Internals->IsExecutionArrayValid(lock), device);
 
-  this->Internals->ExecutionArrayValid = true;
+  this->Internals->SetExecutionArrayValid(lock, true);
 
   // Invalidate any control arrays since their data will become invalid when
   // the execution data is overwritten. Don't actually release the control
   // array. It may be shared as the execution array.
-  this->Internals->ControlArrayValid = false;
+  this->Internals->SetControlArrayValid(lock, false);
 
   return portal;
 }
 
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
+void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device) const
 {
-  if (this->Internals->ExecutionArray != nullptr)
+  if (this->Internals->GetExecutionArray(lock) != nullptr)
   {
-    if (this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
+    if (this->Internals->GetExecutionArray(lock)->IsDeviceAdapter(DeviceAdapterTag()))
     {
       // Already have manager for correct device adapter. Nothing to do.
       return;
@@ -299,42 +321,38 @@ void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
       // there is not a clear use case for that yet and it is unclear what
       // the behavior of "dirty" arrays should be, so it is not currently
       // implemented.)
-      this->SyncControlArray();
+      this->SyncControlArray(lock);
       // Need to change some state that does not change the logical state from
       // an external point of view.
-      this->Internals->ExecutionArray.reset();
-      this->Internals->ExecutionArrayValid = false;
+      this->Internals->DeleteExecutionArray(lock);
     }
   }
 
-  VTKM_ASSERT(this->Internals->ExecutionArray == nullptr);
-  VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
   // Need to change some state that does not change the logical state from
   // an external point of view.
-  this->Internals->ExecutionArray.reset(
-    new vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>(
-      &this->Internals->ControlArray));
+  this->Internals->NewExecutionArray(lock, device);
 }
 
 template <typename T, typename S>
-void ArrayHandle<T, S>::SyncControlArray() const
+void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
 {
-  if (!this->Internals->ControlArrayValid)
+  if (!this->Internals->IsControlArrayValid(lock))
   {
     // Need to change some state that does not change the logical state from
     // an external point of view.
-    if (this->Internals->ExecutionArrayValid)
+    if (this->Internals->IsExecutionArrayValid(lock))
     {
-      this->Internals->ExecutionArray->RetrieveOutputData(&this->Internals->ControlArray);
-      this->Internals->ControlArrayValid = true;
+      this->Internals->GetExecutionArray(lock)->RetrieveOutputData(
+        this->Internals->GetControlArray(lock));
+      this->Internals->SetControlArrayValid(lock, true);
     }
     else
     {
       // This array is in the null state (there is nothing allocated), but
       // the calling function wants to do something with the array. Put this
       // class into a valid state by allocating an array of size 0.
-      this->Internals->ControlArray.Allocate(0);
-      this->Internals->ControlArrayValid = true;
+      this->Internals->GetControlArray(lock)->Allocate(0);
+      this->Internals->SetControlArrayValid(lock, true);
     }
   }
 }
