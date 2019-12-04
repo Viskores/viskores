@@ -30,6 +30,7 @@ set(headers
   Geometry.h
   Hash.h
   ImplicitFunction.h
+  List.h
   ListTag.h
   Math.h
   Matrix.h

@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestDeprecated.cxx
   UnitTestExceptions.cxx
   UnitTestHash.cxx
+  UnitTestList.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx
   UnitTestMatrix.cxx

@@ -10,6 +10,8 @@
 #ifndef vtk_m_ListTag_h
 #define vtk_m_ListTag_h
 
+#include <vtkm/List.h>
+
 #include <vtkm/internal/ListTagDetail.h>
 
 #include <vtkm/StaticAssert.h>
@@ -19,6 +21,14 @@
 
 namespace vtkm
 {
+
+/// A special tag for a list that represents holding all potential values
+///
+/// Note: Can not be used with ForEach for obvious reasons.
+struct ListTagUniversal : detail::ListRoot
+{
+  using list = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
+};
 
 namespace internal
 {
@@ -60,6 +70,24 @@ struct ListTagAsBrigandListImpl
 template <typename ListTag>
 using ListTagAsBrigandList = typename detail::ListTagAsBrigandListImpl<ListTag>::type;
 
+template <typename List>
+using ListAsListTag = brigand::wrap<List, vtkm::ListTagBase>;
+
+// This allows the new `List` operations work on `ListTag`s.
+template <typename T>
+struct AsListImpl
+{
+  VTKM_STATIC_ASSERT_MSG(ListTagCheck<T>::value,
+                         "Attempted to use something that is not a List with a List operation.");
+  using type = brigand::wrap<ListTagAsBrigandList<T>, vtkm::List>;
+};
+
+template <>
+struct AsListImpl<vtkm::ListTagUniversal>
+{
+  using type = vtkm::ListUniversal;
+};
+
 } // namespace internal
 
 
@@ -85,14 +113,6 @@ struct ListTagApplyImpl<brigand::list<Ts...>, Target>
 template <typename ListTag, template <typename...> class Target>
 using ListTagApply =
   typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>::type;
-
-/// A special tag for a list that represents holding all potential values
-///
-/// Note: Can not be used with ForEach for obvious reasons.
-struct ListTagUniversal : detail::ListRoot
-{
-  using list = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
-};
 
 /// A special tag for an empty list.
 ///
@@ -171,30 +191,6 @@ struct ListTagRemoveIf : detail::ListRoot
                                   brigand::bind<Predicate, brigand::_1>>;
 };
 
-/// \brief Determines the number of types in the given list.
-///
-/// There is a static member named \c value that is set to the length of the list.
-///
-template <typename ListTag>
-struct ListSize
-{
-  VTKM_IS_LIST_TAG(ListTag);
-  static constexpr vtkm::IdComponent value =
-    detail::ListSizeImpl<internal::ListTagAsBrigandList<ListTag>>::value;
-};
-
-/// For each typename represented by the list tag, call the functor with a
-/// default instance of that type.
-///
-template <typename Functor, typename ListTag, typename... Args>
-VTKM_CONT void ListForEach(Functor&& f, ListTag, Args&&... args)
-{
-  VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(std::forward<Functor>(f),
-                          internal::ListTagAsBrigandList<ListTag>{},
-                          std::forward<Args>(args)...);
-}
-
 /// Generate a tag that is the cross product of two other tags. The resulting
 /// tag has the form of Tag< brigand::list<A1,B1>, brigand::list<A1,B2> .... >
 ///
@@ -231,19 +227,6 @@ struct ListTypeAt
   VTKM_IS_LIST_TAG(ListTag);
   using type = brigand::at<internal::ListTagAsBrigandList<ListTag>,
                            std::integral_constant<vtkm::IdComponent, Index>>;
-};
-
-/// \brief Finds the index of the given type.
-///
-/// There is a static member named \c value that is set to the index of the given type. If the
-/// given type is not in the list, the value is set to -1.
-///
-template <typename ListTag, typename Type>
-struct ListIndexOf
-{
-  VTKM_IS_LIST_TAG(ListTag);
-  static constexpr vtkm::IdComponent value =
-    detail::ListIndexOfImpl<Type, internal::ListTagAsBrigandList<ListTag>, 0>::value;
 };
 
 } // namespace vtkm

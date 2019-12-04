@@ -13,6 +13,7 @@
 #include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
+#include <vtkm/List.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Pair.h>
@@ -148,6 +149,34 @@ struct TypeName<vtkm::Bitset<T>>
     stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
     return stream.str();
   }
+};
+
+template <typename T0, typename... Ts>
+struct TypeName<vtkm::List<T0, Ts...>>
+{
+  static std::string Name()
+  {
+    std::initializer_list<std::string> subtypeStrings = { TypeName<Ts>::Name()... };
+
+    std::stringstream stream;
+    stream << "vtkm::List<" << TypeName<T0>::Name();
+    for (auto&& subtype : subtypeStrings)
+    {
+      stream << ", " << subtype;
+    }
+    stream << ">";
+    return stream.str();
+  }
+};
+template <>
+struct TypeName<vtkm::ListEmpty>
+{
+  static std::string Name() { return "vtkm::ListEmpty"; }
+};
+template <>
+struct TypeName<vtkm::ListUniversal>
+{
+  static std::string Name() { return "vtkm::ListUniversal"; }
 };
 
 namespace detail
