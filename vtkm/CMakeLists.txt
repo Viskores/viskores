@@ -17,6 +17,7 @@ vtkm_install_headers(
   vtkm ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Version.h)
 
 set(headers
+  Algorithms.h
   Assert.h
   BinaryPredicates.h
   BinaryOperators.h

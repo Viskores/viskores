@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestTBBAlgorithms.cxx
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
   UnitTestTBBArrayHandleMultiplexer.cxx
