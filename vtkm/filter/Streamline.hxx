@@ -72,8 +72,8 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
   vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-  outData.SetCellSet(res.polyLines);
+  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.Positions);
+  outData.SetCellSet(res.PolyLines);
   outData.AddCoordinateSystem(outputCoords);
 
   return outData;

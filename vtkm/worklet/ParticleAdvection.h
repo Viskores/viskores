@@ -80,44 +80,24 @@ public:
 struct StreamlineResult
 {
   StreamlineResult()
-    : positions()
-    , polyLines()
-    , status()
-    , stepsTaken()
-    , times()
+    : Particles()
+    , Positions()
+    , PolyLines()
   {
   }
 
-  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
-                   const vtkm::cont::CellSetExplicit<>& lines,
-                   const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
-                   const vtkm::cont::ArrayHandle<vtkm::Id>& steps)
-    : positions(pos)
-    , polyLines(lines)
-    , status(stat)
-    , stepsTaken(steps)
+  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Particle>& part,
+                   const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
+                   const vtkm::cont::CellSetExplicit<>& lines)
+    : Particles(part)
+    , Positions(pos)
+    , PolyLines(lines)
   {
   }
 
-  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
-                   const vtkm::cont::CellSetExplicit<>& lines,
-                   const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
-                   const vtkm::cont::ArrayHandle<vtkm::Id>& steps,
-                   const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& timeArray)
-
-    : positions(pos)
-    , polyLines(lines)
-    , status(stat)
-    , stepsTaken(steps)
-    , times(timeArray)
-  {
-  }
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
-  vtkm::cont::CellSetExplicit<> polyLines;
-  vtkm::cont::ArrayHandle<vtkm::Id> status;
-  vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> times;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Particles;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> Positions;
+  vtkm::cont::CellSetExplicit<> PolyLines;
 };
 
 class Streamline
@@ -137,8 +117,7 @@ public:
 
     worklet.Run(it, particles, MaxSteps, positions, polyLines);
 
-    std::cout << "FIX ME " << __FILE__ << " " << __LINE__ << std::endl;
-    return StreamlineResult();
+    return StreamlineResult(particles, positions, polyLines);
   }
 };
 }

@@ -534,23 +534,33 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
                    "Number of output particles does not match input.");
   for (vtkm::Id i = 0; i < nSeeds; i++)
+  {
     VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).NumSteps <= maxSteps,
                      "Too many steps taken in particle advection");
+    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).Status.CheckOk(),
+                     "Bad status in particle advection");
+  }
 }
 
 void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
                               vtkm::Id nSeeds,
                               vtkm::Id maxSteps)
 {
-  VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == nSeeds,
+  VTKM_TEST_ASSERT(res.PolyLines.GetNumberOfCells() == nSeeds,
                    "Number of output streamlines does not match input.");
 
   for (vtkm::Id i = 0; i < nSeeds; i++)
-    VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(i) <= maxSteps,
+  {
+    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).NumSteps <= maxSteps,
                      "Too many steps taken in streamline");
+    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).Status.CheckOk(),
+                     "Bad status in streamline");
+  }
+  VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
+                   "Number of output particles does not match input.");
 }
 
-void TestParticleWorklets()
+void TestParticleWorkletsWithDataSetTypes()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
@@ -641,9 +651,7 @@ void TestParticleWorklets()
             auto seeds = vtkm::cont::make_ArrayHandle(pts2, vtkm::CopyFlag::On);
             res = s.Run(rk4, seeds, maxSteps);
           }
-
-          std::cout << "FIX ME.. Add some testing " << __FILE__ << " " << __LINE__ << std::endl;
-          //ValidateStreamlineResult(res, nSeeds, maxSteps);
+          ValidateStreamlineResult(res, nSeeds, maxSteps);
         }
       }
     }
@@ -688,7 +696,7 @@ void TestParticleStatus()
   VTKM_TEST_ASSERT(tookStep1 == false, "Particle took a step when it should not have.");
 }
 
-void TestStreamline()
+void TestWorkletsBasic()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
@@ -699,14 +707,10 @@ void TestStreamline()
   vtkm::Id nElements = dims[0] * dims[1] * dims[2] * 3;
 
   std::vector<vtkm::Vec3f> field;
+  vtkm::Vec3f vecDir(1, 0, 0);
   for (vtkm::Id i = 0; i < nElements; i++)
-  {
-    vtkm::FloatDefault x = vecData[i];
-    vtkm::FloatDefault y = vecData[++i];
-    vtkm::FloatDefault z = vecData[++i];
-    vtkm::Vec3f vec(x, y, z);
-    field.push_back(vtkm::Normal(vec));
-  }
+    field.push_back(vtkm::Normal(vecDir));
+
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
@@ -716,24 +720,112 @@ void TestStreamline()
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
   RK4Type rk4(eval, stepSize);
 
-  std::vector<vtkm::Particle> pts;
-  pts.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
-  auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
-  vtkm::Id maxSteps = 100;
+  vtkm::Id maxSteps = 83;
+  std::vector<std::string> workletTypes = { "particleAdvection", "streamline" };
+  vtkm::FloatDefault endT = stepSize * maxSteps;
 
-  vtkm::worklet::Streamline s;
-  vtkm::worklet::StreamlineResult res;
+  for (auto w : workletTypes)
+  {
+    std::vector<vtkm::Particle> particles;
+    std::vector<vtkm::Vec3f> pts, samplePts, endPts;
+    vtkm::FloatDefault X = static_cast<vtkm::FloatDefault>(.1);
+    vtkm::FloatDefault Y = static_cast<vtkm::FloatDefault>(.1);
+    vtkm::FloatDefault Z = static_cast<vtkm::FloatDefault>(.1);
 
-  res = s.Run(rk4, seedsArray, maxSteps);
-  std::cout << "FIX ME.. Add some testing " << __FILE__ << " " << __LINE__ << std::endl;
+    for (int i = 0; i < 8; i++)
+    {
+      pts.push_back(vtkm::Vec3f(X, Y, Z));
+      Y += static_cast<vtkm::FloatDefault>(.1);
+    }
+
+    vtkm::Id id = 0;
+    for (std::size_t i = 0; i < pts.size(); i++, id++)
+    {
+      vtkm::Vec3f p = pts[i];
+      particles.push_back(vtkm::Particle(p, id));
+      samplePts.push_back(p);
+      for (vtkm::Id j = 0; j < maxSteps; j++)
+      {
+        p = p + vecDir * stepSize;
+        samplePts.push_back(p);
+      }
+      endPts.push_back(p);
+    }
+
+    auto seedsArray = vtkm::cont::make_ArrayHandle(particles, vtkm::CopyFlag::On);
+
+    if (w == "particleAdvection")
+    {
+      vtkm::worklet::ParticleAdvection pa;
+      vtkm::worklet::ParticleAdvectionResult res;
+
+      res = pa.Run(rk4, seedsArray, maxSteps);
+
+      vtkm::Id numRequiredPoints = static_cast<vtkm::Id>(endPts.size());
+      VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == numRequiredPoints,
+                       "Wrong number of points in particle advection result.");
+      auto portal = res.Particles.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
+      {
+        VTKM_TEST_ASSERT(portal.Get(i).Pos == endPts[i], "Particle advection point is wrong");
+        VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps,
+                         "Particle advection NumSteps is wrong");
+        VTKM_TEST_ASSERT(vtkm::Abs(portal.Get(i).Time - endT) < stepSize / 100,
+                         "Particle advection Time is wrong");
+        VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
+        VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
+                         "Particle advection particle did not terminate");
+      }
+    }
+    else if (w == "streamline")
+    {
+      vtkm::worklet::Streamline s;
+      vtkm::worklet::StreamlineResult res;
+
+      res = s.Run(rk4, seedsArray, maxSteps);
+
+      vtkm::Id numRequiredPoints = static_cast<vtkm::Id>(samplePts.size());
+      VTKM_TEST_ASSERT(res.Positions.GetNumberOfValues() == numRequiredPoints,
+                       "Wrong number of points in streamline result.");
+
+      //Make sure all the points match.
+      auto parPortal = res.Particles.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
+      {
+        VTKM_TEST_ASSERT(parPortal.Get(i).Pos == endPts[i], "Streamline end point is wrong");
+        VTKM_TEST_ASSERT(parPortal.Get(i).NumSteps == maxSteps, "Streamline NumSteps is wrong");
+        VTKM_TEST_ASSERT(vtkm::Abs(parPortal.Get(i).Time - endT) < stepSize / 100,
+                         "Streamline Time is wrong");
+        VTKM_TEST_ASSERT(parPortal.Get(i).Status.CheckOk(), "Streamline Status is wrong");
+        VTKM_TEST_ASSERT(parPortal.Get(i).Status.CheckTerminate(),
+                         "Streamline particle did not terminate");
+      }
+
+      auto posPortal = res.Positions.GetPortalConstControl();
+      for (vtkm::Id i = 0; i < res.Positions.GetNumberOfValues(); i++)
+        VTKM_TEST_ASSERT(posPortal.Get(i) == samplePts[i], "Streamline points do not match");
+
+      vtkm::Id numCells = res.PolyLines.GetNumberOfCells();
+      VTKM_TEST_ASSERT(numCells == static_cast<vtkm::Id>(pts.size()),
+                       "Wrong number of polylines in streamline");
+      for (vtkm::Id i = 0; i < numCells; i++)
+      {
+        VTKM_TEST_ASSERT(res.PolyLines.GetCellShape(i) == vtkm::CELL_SHAPE_POLY_LINE,
+                         "Wrong cell type in streamline.");
+        VTKM_TEST_ASSERT(res.PolyLines.GetNumberOfPointsInCell(i) ==
+                           static_cast<vtkm::Id>(maxSteps + 1),
+                         "Wrong number of points in streamline cell");
+      }
+    }
+  }
 }
 
 void TestParticleAdvection()
 {
-  TestStreamline();
   TestEvaluators();
-  TestParticleWorklets();
   TestParticleStatus();
+  TestWorkletsBasic();
+  TestParticleWorkletsWithDataSetTypes();
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

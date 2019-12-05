@@ -139,6 +139,7 @@ public:
     : ParticleExecutionObject<Device>()
     , History()
     , Length(0)
+    , StepCount()
     , ValidPoint()
   {
   }
@@ -147,6 +148,7 @@ public:
   StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Particle> pArray,
                                         vtkm::cont::ArrayHandle<vtkm::Vec3f> historyArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> stepCountArray,
                                         vtkm::Id maxSteps)
     : ParticleExecutionObject<Device>(pArray, maxSteps)
     , Length(maxSteps + 1)
@@ -154,6 +156,7 @@ public:
     vtkm::Id numPos = pArray.GetNumberOfValues();
     History = historyArray.PrepareForOutput(numPos * Length, Device());
     ValidPoint = validPointArray.PrepareForInPlace(Device());
+    StepCount = stepCountArray.PrepareForInPlace(Device());
   }
 
   VTKM_EXEC
@@ -163,9 +166,10 @@ public:
     if (p.NumSteps == 0)
     {
       vtkm::Id loc = idx * Length;
-      std::cout << "PreStepUpdate " << idx << ": loc= " << loc << " " << p.Pos << std::endl;
+      //std::cout<<"PreStepUpdate "<<idx<<": loc= "<<loc<<" "<<p.Pos<<std::endl;
       this->History.Set(loc, p.Pos);
       this->ValidPoint.Set(loc, 1);
+      this->StepCount.Set(idx, 1);
     }
   }
 
@@ -174,12 +178,16 @@ public:
   {
     this->ParticleExecutionObject<Device>::StepUpdate(idx, time, pt);
 
-    vtkm::Particle p = this->ParticleExecutionObject<Device>::GetParticle(idx);
+    //vtkm::Particle p = this->ParticleExecutionObject<Device>::GetParticle(idx);
 
-    vtkm::Id loc = idx * Length + p.NumSteps;
-    std::cout << "StepUpdate " << idx << ": loc= " << loc << " " << pt << std::endl;
+    //local step count.
+    vtkm::Id stepCount = this->StepCount.Get(idx);
+
+    vtkm::Id loc = idx * Length + stepCount;
+    //std::cout<<"StepUpdate "<<idx<<": loc= "<<loc<<" "<<pt<<std::endl;
     this->History.Set(loc, pt);
     this->ValidPoint.Set(loc, 1);
+    this->StepCount.Set(idx, stepCount + 1);
   }
 
 protected:
@@ -190,6 +198,7 @@ protected:
 
   HistoryPortal History;
   vtkm::Id Length;
+  IdPortal StepCount;
   IdPortal ValidPoint;
 };
 
@@ -201,7 +210,11 @@ public:
     PrepareForExecution(Device) const
   {
     return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device>(
-      ParticleArray, HistoryArray, ValidPointArray, MaxSteps);
+      this->ParticleArray,
+      this->HistoryArray,
+      this->ValidPointArray,
+      this->StepCountArray,
+      this->MaxSteps);
   }
   VTKM_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Particle>& pArray, const vtkm::Id& maxSteps)
@@ -209,9 +222,14 @@ public:
     , ParticleArray(pArray)
   {
     vtkm::Id numParticles = static_cast<vtkm::Id>(pArray.GetNumberOfValues());
-    std::cout << "ctor size: " << this->MaxSteps + 1 << " " << numParticles << std::endl;
+
+    //Create ValidPointArray initialized to zero.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> tmp(0, (this->MaxSteps + 1) * numParticles);
     vtkm::cont::ArrayCopy(tmp, this->ValidPointArray);
+
+    //Create StepCountArray initialized to zero.
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> tmp2(0, numParticles);
+    vtkm::cont::ArrayCopy(tmp2, this->StepCountArray);
   }
 
   VTKM_CONT
@@ -236,6 +254,7 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Vec3f> HistoryArray;
   vtkm::Id MaxSteps;
   vtkm::cont::ArrayHandle<vtkm::Particle> ParticleArray;
+  vtkm::cont::ArrayHandle<vtkm::Id> StepCountArray;
   vtkm::cont::ArrayHandle<vtkm::Id> ValidPointArray;
 
   struct IsOne

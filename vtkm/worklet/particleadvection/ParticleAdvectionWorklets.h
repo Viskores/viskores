@@ -63,8 +63,8 @@ public:
     integralCurve.PreStepUpdate(idx);
     do
     {
-      vtkm::Particle p = integralCurve.GetParticle(idx);
-      std::cout << idx << ": " << inpos << " #" << p.NumSteps << " " << p.Status << std::endl;
+      //vtkm::Particle p = integralCurve.GetParticle(idx);
+      //std::cout<<idx<<": "<<inpos<<" #"<<p.NumSteps<<" "<<p.Status<<std::endl;
       vtkm::Vec3f outpos;
       auto status = integrator->Step(inpos, time, outpos);
       if (status.CheckOk())
@@ -96,9 +96,8 @@ public:
     //Mark if any steps taken
     integralCurve.UpdateTookSteps(idx, tookAnySteps);
 
-    particle = integralCurve.GetParticle(idx);
-    std::cout << idx << ": " << inpos << " #" << particle.NumSteps << " " << particle.Status
-              << std::endl;
+    //particle = integralCurve.GetParticle(idx);
+    //std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
   }
 };
 
@@ -143,16 +142,34 @@ public:
 
 namespace detail
 {
-class Subtract : public vtkm::worklet::WorkletMapField
+class GetSteps : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  Subtract() {}
-  using ControlSignature = void(FieldOut, FieldIn, FieldIn);
-  using ExecutionSignature = void(_1, _2, _3);
-  VTKM_EXEC void operator()(vtkm::Id& res, const vtkm::Id& x, const vtkm::Id& y) const
+  GetSteps() {}
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2);
+  VTKM_EXEC void operator()(const vtkm::Particle& p, vtkm::Id& numSteps) const
   {
-    res = x - y;
+    numSteps = p.NumSteps;
+  }
+};
+
+class ComputeNumPoints : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  ComputeNumPoints() {}
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut);
+  using ExecutionSignature = void(_1, _2, _3);
+
+  // Offset is number of points in streamline.
+  // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
+  VTKM_EXEC void operator()(const vtkm::Particle& p,
+                            const vtkm::Id& initialNumSteps,
+                            vtkm::Id& diff) const
+  {
+    diff = 1 + p.NumSteps - initialNumSteps;
   }
 };
 } // namespace detail
@@ -174,11 +191,19 @@ public:
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
     using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
 
-    //NEED TO DEFINE THESE
-    vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, initialStepsTaken, offsets;
+    vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
+
+    vtkm::worklet::DispatcherMapField<detail::GetSteps> getStepDispatcher{ (detail::GetSteps{}) };
+    getStepDispatcher.Invoke(particles, initialStepsTaken);
+
+#ifdef VTKM_CUDA
+    // This worklet needs some extra space on CUDA.
+    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    (void)stack;
+#endif // VTKM_CUDA
 
     //Run streamline worklet
     StreamlineType streamlines(particles, MaxSteps);
@@ -188,16 +213,15 @@ public:
 
     //Get the positions
     streamlines.GetCompactedHistory(positions);
-    vtkm::cont::printSummary_ArrayHandle(positions, std::cout);
 
     //Create the cells
-    vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenNow;
-    stepsTakenNow.Allocate(numSeeds);
-    vtkm::worklet::DispatcherMapField<detail::Subtract> subtractDispatcher{ (detail::Subtract{}) };
-    subtractDispatcher.Invoke(stepsTakenNow, stepsTaken, initialStepsTaken);
+    vtkm::cont::ArrayHandle<vtkm::Id> numPoints;
+    vtkm::worklet::DispatcherMapField<detail::ComputeNumPoints> computeNumPointsDispatcher{ (
+      detail::ComputeNumPoints{}) };
+    computeNumPointsDispatcher.Invoke(particles, initialStepsTaken, numPoints);
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-    vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(stepsTakenNow, cellIndex);
+    vtkm::Id connectivityLen = vtkm::cont::Algorithm::ScanExclusive(numPoints, cellIndex);
     vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     vtkm::cont::ArrayCopy(connCount, connectivity);
@@ -207,34 +231,9 @@ public:
       vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_POLY_LINE, numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
-    auto numIndices = vtkm::cont::make_ArrayHandleCast(stepsTakenNow, vtkm::IdComponent());
-    //auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto numIndices = vtkm::cont::make_ArrayHandleCast(numPoints, vtkm::IdComponent());
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
-
-
-
-
-    /*
-    using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::StreamlineWorkletAOS;
-    using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-
-
-    vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
-    //Create and invoke the particle advection.
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
-    vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-
-#ifdef VTKM_CUDA
-    // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
-    (void)stack;
-#endif // VTKM_CUDA
-
-    //Invoke particle advection worklet
-    ParticleWorkletDispatchType particleWorkletDispatch;
-    particleWorkletDispatch.Invoke(idxArray, it, particles, maxSteps);
-      */
   }
 };
 }

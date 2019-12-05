@@ -62,7 +62,7 @@ set(unit_tests
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
   UnitTestSurfaceNormals.cxx
-#  UnitTestTemporalAdvection.cxx
+  UnitTestTemporalAdvection.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
