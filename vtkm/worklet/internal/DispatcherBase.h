@@ -759,23 +759,27 @@ private:
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
-    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
-                           .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device))
-                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
-                         threadRange,
-                         device);
+    vtkm::internal::Invocation<ExecObjectParameters,
+                               typename Invocation::ControlInterface,
+                               typename Invocation::ExecutionInterface,
+                               Invocation::InputDomainIndex,
+                               decltype(outputToInputMap.PrepareForInput(device)),
+                               decltype(visitArray.PrepareForInput(device)),
+                               decltype(threadToOutputMap.PrepareForInput(device)),
+                               DeviceAdapter>
+      changedInvocation(execObjectParameters,
+                        outputToInputMap.PrepareForInput(device),
+                        visitArray.PrepareForInput(device),
+                        threadToOutputMap.PrepareForInput(device));
+
+    this->InvokeSchedule(changedInvocation, threadRange, device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT void InvokeSchedule(const Invocation& invocation,
-                                RangeType range,
-                                DeviceAdapter device) const
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
-
-    auto invocationForDevice = invocation.ChangeDeviceAdapterTag(device);
 
     // The TaskType class handles the magic of fetching values
     // for each instance and calling the worklet's function.
@@ -784,7 +788,7 @@ private:
     // vtkm::exec::internal::TaskSingular
     // vtkm::exec::internal::TaskTiling1D
     // vtkm::exec::internal::TaskTiling3D
-    auto task = TaskTypes::MakeTask(this->Worklet, invocationForDevice, range);
+    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
     Algorithm::ScheduleTask(task, range);
   }
 };
