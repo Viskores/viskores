@@ -17,3 +17,6 @@ target_link_libraries(RedistributePoints PRIVATE vtkm_filter)
 vtkm_add_target_information(RedistributePoints
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES RedistributePoints.cxx)
+
+set_property(TARGET RedistributePoints PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+set_property(TARGET RedistributePoints PROPERTY CXX_VISIBILITY_PRESET "hidden")
