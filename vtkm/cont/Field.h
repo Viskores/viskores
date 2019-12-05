@@ -150,7 +150,7 @@ private:
   template <typename TypeList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList) const
   {
-    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST(TypeList);
 
     if (this->ModifiedFlag)
     {

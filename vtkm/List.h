@@ -22,13 +22,23 @@ struct List
 {
 };
 
+namespace detail
+{
+
+// This prototype is here to detect deprecated ListTag objects. When ListTags are removed, then
+// this should be removed too.
+struct ListRoot;
+}
+
 namespace internal
 {
 
 template <typename T>
 struct IsListImpl
 {
-  using type = std::false_type;
+  // This prototype is here to detect deprecated ListTag objects. When ListTags are removed, then
+  // this should be changed to be just std::false_type.
+  using type = std::is_base_of<vtkm::detail::ListRoot, T>;
 };
 
 template <typename... Ts>
@@ -243,12 +253,29 @@ struct ListIndexOfImpl<vtkm::ListUniversal, Target>
 template <typename List, typename T>
 using ListIndexOf = typename detail::ListIndexOfImpl<internal::AsList<List>, T>::type;
 
+namespace detail
+{
+
+template <typename List, typename T>
+struct ListHasImpl
+{
+  using type = std::integral_constant<bool, (vtkm::ListIndexOf<List, T>::value >= 0)>;
+};
+
+template <typename T>
+struct ListHasImpl<vtkm::ListUniversal, T>
+{
+  using type = std::true_type;
+};
+
+} // namespace detail
+
 /// \brief Checks to see if the given `T` is in the list pointed to by `List`.
 ///
 /// Becomes `std::true_type` if the `T` is in `List`. `std::false_type` otherwise.
 ///
 template <typename List, typename T>
-using ListHas = std::integral_constant<bool, (vtkm::ListIndexOf<List, T>::value >= 0)>;
+using ListHas = typename detail::ListHasImpl<List, T>::type;
 
 /// Concatinates a set of lists into a single list.
 ///

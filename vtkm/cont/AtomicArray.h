@@ -48,7 +48,7 @@ struct AtomicArrayTypeListTag
 template <typename T>
 class AtomicArray : public vtkm::cont::ExecutionObjectBase
 {
-  static constexpr bool ValueTypeIsValid = vtkm::ListContains<AtomicArrayTypeListTag, T>::value;
+  static constexpr bool ValueTypeIsValid = vtkm::ListHas<AtomicArrayTypeListTag, T>::value;
   VTKM_STATIC_ASSERT_MSG(ValueTypeIsValid, "AtomicArray used with unsupported ValueType.");
 
 

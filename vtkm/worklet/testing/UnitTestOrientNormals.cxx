@@ -50,10 +50,10 @@ namespace
 
 struct TestPolicy : public vtkm::filter::PolicyBase<TestPolicy>
 {
-  using StructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListTagJoin<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::ListTagBase<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
+  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
+  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
+  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
+  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
 };
 
 VTKM_CONT

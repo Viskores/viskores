@@ -10,6 +10,8 @@
 #ifndef vtk_m_ListTag_h
 #define vtk_m_ListTag_h
 
+#include <vtkm/Deprecated.h>
+
 #include <vtkm/List.h>
 
 #include <vtkm/internal/ListTagDetail.h>
@@ -41,13 +43,24 @@ struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot, ListTag>
 
 } // namespace internal
 
+namespace detail
+{
+
+template <typename ListTag>
+struct VTKM_DEPRECATED(1.6, "VTKM_IS_LIST_TAG replaced with VTKM_IS_LIST.") ListTagAssert
+  : internal::ListTagCheck<ListTag>
+{
+};
+
+} // namespace detal
+
 /// Checks that the argument is a proper list tag. This is a handy concept
 /// check for functions and classes to make sure that a template argument is
 /// actually a device adapter tag. (You can get weird errors elsewhere in the
 /// code when a mistake is made.)
 ///
 #define VTKM_IS_LIST_TAG(tag)                                                                      \
-  VTKM_STATIC_ASSERT_MSG((::vtkm::internal::ListTagCheck<tag>::value),                             \
+  VTKM_STATIC_ASSERT_MSG((::vtkm::detail::ListTagAssert<tag>::value),                              \
                          "Provided type is not a valid VTK-m list tag.")
 
 namespace internal
@@ -59,7 +72,9 @@ namespace detail
 template <typename ListTag>
 struct ListTagAsBrigandListImpl
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using type = typename ListTag::list;
 };
 
@@ -70,8 +85,10 @@ struct ListTagAsBrigandListImpl
 template <typename ListTag>
 using ListTagAsBrigandList = typename detail::ListTagAsBrigandListImpl<ListTag>::type;
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename List>
 using ListAsListTag = brigand::wrap<List, vtkm::ListTagBase>;
+VTKM_DEPRECATED_SUPPRESS_END
 
 // This allows the new `List` operations work on `ListTag`s.
 template <typename T>
@@ -82,11 +99,13 @@ struct AsListImpl
   using type = brigand::wrap<ListTagAsBrigandList<T>, vtkm::List>;
 };
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <>
 struct AsListImpl<vtkm::ListTagUniversal>
 {
   using type = vtkm::ListUniversal;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace internal
 
@@ -111,12 +130,14 @@ struct ListTagApplyImpl<brigand::list<Ts...>, Target>
 /// represented by the ListTag.
 ///
 template <typename ListTag, template <typename...> class Target>
-using ListTagApply =
+using ListTagApply VTKM_DEPRECATED(1.6, "ListTagApply replaced by ListApply.") =
   typename detail::ListTagApplyImpl<internal::ListTagAsBrigandList<ListTag>, Target>::type;
 
 /// A special tag for an empty list.
 ///
-struct ListTagEmpty : detail::ListRoot
+struct VTKM_DEPRECATED(1.6,
+                       "ListTagEmpty replaced by ListTag. Note that ListTag cannot be subclassed.")
+  ListTagEmpty : detail::ListRoot
 {
   using list = vtkm::detail::ListBase<>;
 };
@@ -124,7 +145,10 @@ struct ListTagEmpty : detail::ListRoot
 /// A tag that is a construction of two other tags joined together. This struct
 /// can be subclassed and still behave like a list tag.
 template <typename... ListTags>
-struct ListTagJoin : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagJoin replaced by ListAppend. Note that ListAppend cannot be subclassed.") ListTagJoin
+  : detail::ListRoot
 {
   using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTags>...>::type;
 };
@@ -132,9 +156,14 @@ struct ListTagJoin : detail::ListRoot
 
 /// A tag that is constructed by appending \c Type to \c ListTag.
 template <typename ListTag, typename Type>
-struct ListTagAppend : detail::ListRoot
+struct VTKM_DEPRECATED(1.6,
+                       "ListTagAppend<List, Type> replaced by ListAppend<List, vtkm::List<Type>. "
+                       "Note that ListAppend cannot be subclassed.") ListTagAppend
+  : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list = typename detail::ListJoin<internal::ListTagAsBrigandList<ListTag>,
                                          detail::ListBase<Type>>::type;
 };
@@ -142,9 +171,11 @@ struct ListTagAppend : detail::ListRoot
 /// Append \c Type to \c ListTag only if \c ListTag does not already contain \c Type.
 /// No checks are performed to see if \c ListTag itself has only unique elements.
 template <typename ListTag, typename Type>
-struct ListTagAppendUnique : detail::ListRoot
+struct VTKM_DEPRECATED(1.6) ListTagAppendUnique : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list =
     typename detail::ListAppendUniqueImpl<internal::ListTagAsBrigandList<ListTag>, Type>::type;
 };
@@ -152,10 +183,15 @@ struct ListTagAppendUnique : detail::ListRoot
 /// A tag that consists of elements that are found in both tags. This struct
 /// can be subclassed and still behave like a list tag.
 template <typename ListTag1, typename ListTag2>
-struct ListTagIntersect : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagIntersect replaced by ListIntersect. Note that ListIntersect cannot be subclassed.")
+  ListTagIntersect : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag1);
   VTKM_IS_LIST_TAG(ListTag2);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list = typename detail::ListIntersect<internal::ListTagAsBrigandList<ListTag1>,
                                               internal::ListTagAsBrigandList<ListTag2>>::type;
 };
@@ -163,9 +199,14 @@ struct ListTagIntersect : detail::ListRoot
 /// A list tag that consists of each item in another list tag fed into a template that takes
 /// a single parameter.
 template <typename ListTag, template <typename> class Transform>
-struct ListTagTransform : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagTransform replaced by ListTransform. Note that ListTransform cannot be subclassed.")
+  ListTagTransform : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list = brigand::transform<internal::ListTagAsBrigandList<ListTag>,
                                   brigand::bind<Transform, brigand::_1>>;
 };
@@ -184,9 +225,14 @@ struct ListTagTransform : detail::ListRoot
 /// whereas `std::is_integral<float>` and `std::is_integral<double>` resolve to
 /// `std::false_type`.
 template <typename ListTag, template <typename> class Predicate>
-struct ListTagRemoveIf : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagRemoveIf replaced by ListRemoveIf. Note that ListRemoveIf cannot be subclassed.")
+  ListTagRemoveIf : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list = brigand::remove_if<internal::ListTagAsBrigandList<ListTag>,
                                   brigand::bind<Predicate, brigand::_1>>;
 };
@@ -195,10 +241,15 @@ struct ListTagRemoveIf : detail::ListRoot
 /// tag has the form of Tag< brigand::list<A1,B1>, brigand::list<A1,B2> .... >
 ///
 template <typename ListTag1, typename ListTag2>
-struct ListCrossProduct : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListCrossProduct replaced by ListCross. Note that LIstCross cannot be subclassed.")
+  ListCrossProduct : detail::ListRoot
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag1);
   VTKM_IS_LIST_TAG(ListTag2);
+  VTKM_DEPRECATED_SUPPRESS_END
   using list =
     typename detail::ListCrossProductImpl<internal::ListTagAsBrigandList<ListTag1>,
                                           internal::ListTagAsBrigandList<ListTag2>>::type;
@@ -210,9 +261,11 @@ struct ListCrossProduct : detail::ListRoot
 /// contained in the list and false otherwise.
 ///
 template <typename ListTag, typename Type>
-struct ListContains
+struct VTKM_DEPRECATED(1.6, "ListContains replaced by ListHas.") ListContains
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   static constexpr bool value =
     detail::ListContainsImpl<Type, internal::ListTagAsBrigandList<ListTag>>::value;
 };
@@ -222,9 +275,11 @@ struct ListContains
 /// This struct contains subtype \c type that resolves to the type at the given index.
 ///
 template <typename ListTag, vtkm::IdComponent Index>
-struct ListTypeAt
+struct VTKM_DEPRECATED(1.6, "ListTypeAt::type replaced by ListAt.") ListTypeAt
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
+  VTKM_DEPRECATED_SUPPRESS_END
   using type = brigand::at<internal::ListTagAsBrigandList<ListTag>,
                            std::integral_constant<vtkm::IdComponent, Index>>;
 };

@@ -42,13 +42,13 @@ struct TypeCheck<TypeCheckTagAtomicArray, ArrayType>
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
-  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
+  static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeListTag, T>::value;
 };
 
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 {
-  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
+  static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeListTag, T>::value;
 };
 }
 }

@@ -101,7 +101,7 @@ VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 
   using Traits = vtkm::filter::FilterTraits<Derived>;
   constexpr bool supportsVec3 =
-    vtkm::ListContains<typename Traits::InputFieldTypeList, vtkm::Vec3f>::value;
+    vtkm::ListHas<typename Traits::InputFieldTypeList, vtkm::Vec3f>::value;
 
   using supportsCoordinateSystem = std::integral_constant<bool, supportsVec3>;
   vtkm::cont::ConditionalCastAndCall(supportsCoordinateSystem(),

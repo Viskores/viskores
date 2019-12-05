@@ -133,14 +133,14 @@ static bool ReducedOptions;
 
 // Limit the filter executions to only consider the following types, otherwise
 // compile times and binary sizes are nuts.
-using FieldTypes = vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
-using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
+using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
 
 using UnstructuredCellList =
-  vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
+  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
 
-using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
+using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
 
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>

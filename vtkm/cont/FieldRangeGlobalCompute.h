@@ -43,7 +43,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
-  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST(TypeList);
   return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, TypeList());
 }
 
@@ -71,7 +71,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
-  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST(TypeList);
   return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, TypeList());
 }
 //@}

@@ -32,9 +32,9 @@ template <typename Derived>
 struct PolicyBase
 {
   using FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG;
-  using StorageList = vtkm::ListTagJoin<
+  using StorageList = vtkm::ListAppend<
     VTKM_DEFAULT_STORAGE_LIST_TAG,
-    vtkm::ListTagBase<
+    vtkm::List<
       vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
       vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                               vtkm::cont::ArrayHandle<vtkm::Float32>,
@@ -61,17 +61,16 @@ struct AllCastingTypes
 {
   using VTraits = vtkm::VecTraits<BaseType>;
 
-  using type =
-    vtkm::ListTagBase<typename VTraits::template ReplaceBaseComponentType<vtkm::Int8>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::UInt8>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::Int16>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::UInt8>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::Int32>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::UInt32>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::Int64>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::UInt64>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::Float32>,
-                      typename VTraits::template ReplaceBaseComponentType<vtkm::Float64>>;
+  using type = vtkm::List<typename VTraits::template ReplaceBaseComponentType<vtkm::Int8>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::UInt8>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::Int16>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::UInt8>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::Int32>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::UInt32>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::Int64>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::UInt64>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::Float32>,
+                          typename VTraits::template ReplaceBaseComponentType<vtkm::Float64>>;
 };
 
 // Provides a transform template that builds a cast from an array of some source type to a
@@ -98,8 +97,8 @@ struct AllCastArraysForStorageImpl;
 template <typename TargetT, typename Storage>
 struct ValidCastingTypes
 {
-  using type = vtkm::ListTagRemoveIf<typename AllCastingTypes<TargetT>::type,
-                                     ArrayValidPredicate<Storage>::template Predicate>;
+  using type = vtkm::ListRemoveIf<typename AllCastingTypes<TargetT>::type,
+                                  ArrayValidPredicate<Storage>::template Predicate>;
 };
 
 template <typename TargetT, typename Storage>
@@ -107,9 +106,8 @@ struct AllCastArraysForStorageImpl<TargetT, Storage, true>
 {
   using SourceTypes = typename ValidCastingTypes<TargetT, Storage>::type;
   using CastArrays =
-    vtkm::ListTagTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
-  using type =
-    vtkm::ListTagJoin<vtkm::ListTagBase<vtkm::cont::ArrayHandle<TargetT, Storage>>, CastArrays>;
+    vtkm::ListTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
+  using type = vtkm::ListAppend<vtkm::List<vtkm::cont::ArrayHandle<TargetT, Storage>>, CastArrays>;
 };
 
 template <typename TargetT, typename Storage>
@@ -117,7 +115,7 @@ struct AllCastArraysForStorageImpl<TargetT, Storage, false>
 {
   using SourceTypes = typename ValidCastingTypes<TargetT, Storage>::type;
   using type =
-    vtkm::ListTagTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
+    vtkm::ListTransform<SourceTypes, CastArrayTransform<TargetT, Storage>::template Transform>;
 };
 
 // Special cases for known storage with limited type support.
@@ -126,14 +124,14 @@ struct AllCastArraysForStorageImpl<vtkm::Vec3f,
                                    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
                                    true>
 {
-  using type = vtkm::ListTagBase<vtkm::cont::ArrayHandleUniformPointCoordinates>;
+  using type = vtkm::List<vtkm::cont::ArrayHandleUniformPointCoordinates>;
 };
 template <typename T>
 struct AllCastArraysForStorageImpl<vtkm::Vec<T, 3>,
                                    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
                                    false>
 {
-  using type = vtkm::ListTagBase<vtkm::cont::ArrayHandleCast<
+  using type = vtkm::List<vtkm::cont::ArrayHandleCast<
     vtkm::Vec<T, 3>,
     vtkm::cont::ArrayHandle<vtkm::Vec3f,
                             vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>>>;
@@ -143,7 +141,7 @@ struct AllCastArraysForStorageImpl<TargetT,
                                    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
                                    false>
 {
-  using type = vtkm::ListTagEmpty;
+  using type = vtkm::ListEmpty;
 };
 
 template <typename T, typename S1, typename S2, typename S3>
@@ -154,10 +152,9 @@ struct AllCastArraysForStorageImpl<
                                                    vtkm::cont::ArrayHandle<T, S3>>,
   true>
 {
-  using type =
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, S1>,
-                                                              vtkm::cont::ArrayHandle<T, S2>,
-                                                              vtkm::cont::ArrayHandle<T, S3>>>;
+  using type = vtkm::List<vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, S1>,
+                                                                  vtkm::cont::ArrayHandle<T, S2>,
+                                                                  vtkm::cont::ArrayHandle<T, S3>>>;
 };
 template <typename TargetT, typename SourceT, typename S1, typename S2, typename S3>
 struct AllCastArraysForStorageImpl<
@@ -167,7 +164,7 @@ struct AllCastArraysForStorageImpl<
                                                    vtkm::cont::ArrayHandle<SourceT, S3>>,
   false>
 {
-  using type = vtkm::ListTagBase<vtkm::cont::ArrayHandleCast<
+  using type = vtkm::List<vtkm::cont::ArrayHandleCast<
     vtkm::Vec<TargetT, 3>,
     vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<SourceT, S1>,
                                             vtkm::cont::ArrayHandle<SourceT, S2>,
@@ -181,7 +178,7 @@ struct AllCastArraysForStorageImpl<
                                                    vtkm::cont::ArrayHandle<SourceT, S3>>,
   false>
 {
-  using type = vtkm::ListTagEmpty;
+  using type = vtkm::ListEmpty;
 };
 
 // Given a target type and storage of an array handle, provides a list this array handle plus all
@@ -210,16 +207,16 @@ struct AllCastArraysTransform
 template <typename TargetT, typename StorageList>
 struct AllCastArraysForStorageList
 {
-  VTKM_IS_LIST_TAG(StorageList);
+  VTKM_IS_LIST(StorageList);
   using listOfLists =
-    vtkm::ListTagTransform<StorageList, AllCastArraysTransform<TargetT>::template Transform>;
-  using type = vtkm::ListTagApply<listOfLists, vtkm::ListTagJoin>;
+    vtkm::ListTransform<StorageList, AllCastArraysTransform<TargetT>::template Transform>;
+  using type = vtkm::ListApply<listOfLists, vtkm::ListAppend>;
 };
 
 } // detail
 
 template <typename TargetT, typename StorageList>
-using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerFromListTag<
+using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerFromList<
   typename detail::AllCastArraysForStorageList<TargetT, StorageList>::type>;
 
 } // namespace internal
@@ -248,16 +245,16 @@ ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBa
 template <typename T, typename DerivedPolicy, typename FilterType>
 VTKM_CONT internal::ArrayHandleMultiplexerForStorageList<
   T,
-  vtkm::ListTagJoin<typename vtkm::filter::FilterTraits<FilterType>::AdditionalFieldStorage,
-                    typename DerivedPolicy::StorageList>>
+  vtkm::ListAppend<typename vtkm::filter::FilterTraits<FilterType>::AdditionalFieldStorage,
+                   typename DerivedPolicy::StorageList>>
 ApplyPolicyFieldOfType(const vtkm::cont::Field& field,
                        vtkm::filter::PolicyBase<DerivedPolicy>,
                        const FilterType&)
 {
   using ArrayHandleMultiplexerType = internal::ArrayHandleMultiplexerForStorageList<
     T,
-    vtkm::ListTagJoin<typename FilterType::AdditionalFieldStorage,
-                      typename DerivedPolicy::StorageList>>;
+    vtkm::ListAppend<typename FilterType::AdditionalFieldStorage,
+                     typename DerivedPolicy::StorageList>>;
   return field.GetData().AsMultiplexer<ArrayHandleMultiplexerType>();
 }
 

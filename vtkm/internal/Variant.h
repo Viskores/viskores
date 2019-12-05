@@ -12,7 +12,8 @@
 
 #include <vtkm/internal/VariantDetail.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/List.h>
 
 
 // It would make sense to put this in its own header file, but it is hard to imagine needing
@@ -199,7 +200,7 @@ struct VariantStorageImpl
   vtkm::IdComponent Index = -1;
 
   template <vtkm::IdComponent Index>
-  using TypeAt = typename vtkm::ListTypeAt<vtkm::ListTagBase<Ts...>, Index>::type;
+  using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
 
   VTKM_EXEC_CONT void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
   VTKM_EXEC_CONT const void* GetPointer() const
@@ -328,8 +329,8 @@ public:
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
   template <typename T>
-  using IndexOf = std::integral_constant<vtkm::IdComponent,
-                                         vtkm::ListIndexOf<vtkm::ListTagBase<Ts...>, T>::value>;
+  using IndexOf =
+    std::integral_constant<vtkm::IdComponent, vtkm::ListIndexOf<vtkm::List<Ts...>, T>::value>;
 
   /// Returns the index for the given type (or -1 if that type is not in the list).
   ///
@@ -498,8 +499,18 @@ public:
 
 /// \brief Convert a ListTag to a Variant.
 ///
+/// Depricated. Use ListAsVariant instead.
+///
 template <typename ListTag>
-using ListTagAsVariant = typename vtkm::ListTagApply<ListTag, vtkm::internal::Variant>::type;
+using ListTagAsVariant VTKM_DEPRECATED(
+  1.6,
+  "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
+  vtkm::ListApply<ListTag, vtkm::internal::Variant>;
+
+/// \brief Convert a `List` to a `Variant`.
+///
+template <typename List>
+using ListAsVariant = vtkm::ListApply<List, vtkm::internal::Variant>;
 }
 } // namespace vtkm::internal
 

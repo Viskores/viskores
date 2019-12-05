@@ -183,19 +183,14 @@ struct VTKM_ALWAYS_EXPORT TypeListTagVecUncommon
 /// A list of all vector classes with standard types as components and
 /// lengths between 2 and 4.
 ///
-struct VTKM_ALWAYS_EXPORT TypeListTagVecAll
-  : vtkm::ListTagJoin<vtkm::TypeListTagVecCommon, vtkm::internal::TypeListTagVecUncommon>
-{
-};
+using TypeListTagVecAll =
+  vtkm::ListAppend<vtkm::TypeListTagVecCommon, vtkm::internal::TypeListTagVecUncommon>;
 
 /// A list of all basic types listed in vtkm/Types.h. Does not include all
 /// possible VTK-m types like arbitrarily typed and sized Vecs (only up to
 /// length 4) or math types like matrices.
 ///
-struct VTKM_ALWAYS_EXPORT TypeListTagAll
-  : vtkm::ListTagJoin<vtkm::TypeListTagScalarAll, vtkm::TypeListTagVecAll>
-{
-};
+using TypeListTagAll = vtkm::ListAppend<vtkm::TypeListTagScalarAll, vtkm::TypeListTagVecAll>;
 
 /// A list of the most commonly used types across multiple domains. Includes
 /// integers, floating points, and 3 dimensional vectors of floating points.
@@ -211,6 +206,7 @@ struct VTKM_ALWAYS_EXPORT TypeListTagCommon
 {
 };
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 // Special implementation of ListContains for TypeListTagAll to always be
 // true. Although TypeListTagAll is necessarily finite, the point is to
 // be all inclusive. Besides, this should speed up the compilation when
@@ -220,6 +216,22 @@ struct ListContains<vtkm::TypeListTagAll, Type>
 {
   static constexpr bool value = true;
 };
+VTKM_DEPRECATED_SUPPRESS_END
+
+// Special implementation of ListContains for TypeListTagAll to always be
+// true. Although TypeListTagAll is necessarily finite, the point is to
+// be all inclusive. Besides, this should speed up the compilation when
+// checking a list that should contain everything.
+namespace detail
+{
+
+template<typename Type>
+struct ListHasImpl<vtkm::TypeListTagAll, Type>
+{
+  using type = std::true_type;
+};
+
+} // namespace detail
 
 } // namespace vtkm
 

@@ -53,7 +53,7 @@ namespace cont
 template <typename CellSetList>
 class VTKM_ALWAYS_EXPORT DynamicCellSetBase
 {
-  VTKM_IS_LIST_TAG(CellSetList);
+  VTKM_IS_LIST(CellSetList);
 
 public:
   VTKM_CONT
@@ -136,7 +136,7 @@ public:
   VTKM_CONT DynamicCellSetBase<NewCellSetList> ResetCellSetList(
     NewCellSetList = NewCellSetList()) const
   {
-    VTKM_IS_LIST_TAG(NewCellSetList);
+    VTKM_IS_LIST(NewCellSetList);
     return DynamicCellSetBase<NewCellSetList>(*this);
   }
 

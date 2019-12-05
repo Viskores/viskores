@@ -8,6 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+// ListTag has been depricated. Until it is officially removed, we continue to test it, but
+// disable the deprecated warnings while doing so. Once ListTag is officially removed,
+// this entire test can be deleted.
+#include <vtkm/Deprecated.h>
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #include <vtkm/ListTag.h>
 
 #include <vtkm/Types.h>
@@ -297,3 +303,5 @@ int UnitTestListTag(int argc, char* argv[])
 {
   return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

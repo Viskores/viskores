@@ -68,7 +68,7 @@ constexpr vtkm::Id ArraySize = 10;
 using TestTypesList = vtkm::ListTagBase<vtkm::Int8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f>;
 
 template <typename T, typename S>
-inline vtkm::cont::VariantArrayHandleBase<vtkm::ListTagAppendUnique<TestTypesList, T>>
+inline vtkm::cont::VariantArrayHandleBase<vtkm::ListAppend<TestTypesList, vtkm::List<T>>>
 MakeTestVariantArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
 {
   return array;

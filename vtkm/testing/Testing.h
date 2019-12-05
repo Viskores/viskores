@@ -404,15 +404,13 @@ public:
     vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function), TypeList());
   }
 
-  struct TypeListTagExemplarTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>
-  {
-  };
+  using TypeListExemplarTypes =
+    vtkm::List<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>;
 
   template <typename FunctionType>
   static void TryTypes(const FunctionType& function)
   {
-    TryTypes(function, TypeListTagExemplarTypes());
+    TryTypes(function, TypeListExemplarTypes());
   }
 
   // Disabled: This very long list results is very long compile times.
