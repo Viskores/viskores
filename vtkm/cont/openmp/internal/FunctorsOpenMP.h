@@ -62,8 +62,8 @@ namespace cont
 namespace openmp
 {
 
-constexpr static vtkm::Id CACHE_LINE_SIZE = 64;
-constexpr static vtkm::Id PAGE_SIZE = 4096;
+constexpr static vtkm::Id VTKM_CACHE_LINE_SIZE = 64;
+constexpr static vtkm::Id VTKM_PAGE_SIZE = 4096;
 
 // Returns ceil(num/den) for integral types
 template <typename T>
@@ -83,11 +83,11 @@ static void ComputeChunkSize(const vtkm::Id numVals,
 {
   // try to evenly distribute pages across chunks:
   const vtkm::Id bytesIn = numVals * bytesPerValue;
-  const vtkm::Id pagesIn = CeilDivide(bytesIn, PAGE_SIZE);
+  const vtkm::Id pagesIn = CeilDivide(bytesIn, VTKM_PAGE_SIZE);
   // If we don't have enough pages to honor chunksPerThread, ignore it:
   numChunks = (pagesIn > numThreads * chunksPerThread) ? numThreads * chunksPerThread : numThreads;
   const vtkm::Id pagesPerChunk = CeilDivide(pagesIn, numChunks);
-  valuesPerChunk = CeilDivide(pagesPerChunk * PAGE_SIZE, bytesPerValue);
+  valuesPerChunk = CeilDivide(pagesPerChunk * VTKM_PAGE_SIZE, bytesPerValue);
 }
 
 template <typename T, typename U>
@@ -593,8 +593,8 @@ struct UniqueHelper
 
     // Pad the node out to the size of a cache line to prevent false sharing:
     static constexpr size_t DataSize = 2 * sizeof(vtkm::Id2);
-    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, CACHE_LINE_SIZE);
-    static constexpr size_t PaddingSize = NumCacheLines * CACHE_LINE_SIZE - DataSize;
+    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, VTKM_CACHE_LINE_SIZE);
+    static constexpr size_t PaddingSize = NumCacheLines * VTKM_CACHE_LINE_SIZE - DataSize;
     unsigned char Padding[PaddingSize];
   };
 
