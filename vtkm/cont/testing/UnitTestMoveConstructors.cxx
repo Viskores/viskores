@@ -94,13 +94,11 @@ struct IsNoExceptHandle
   }
 };
 
-struct vtkmComplexCustomTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<float, 3>, 3>,
-                                                  vtkm::Pair<vtkm::UInt64, vtkm::UInt64>,
-                                                  vtkm::Bitset<vtkm::UInt64>,
-                                                  vtkm::Bounds,
-                                                  vtkm::Range>
-{
-};
+using vtkmComplexCustomTypes = vtkm::List<vtkm::Vec<vtkm::Vec<float, 3>, 3>,
+                                          vtkm::Pair<vtkm::UInt64, vtkm::UInt64>,
+                                          vtkm::Bitset<vtkm::UInt64>,
+                                          vtkm::Bounds,
+                                          vtkm::Range>;
 }
 
 //-----------------------------------------------------------------------------

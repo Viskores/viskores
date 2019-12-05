@@ -65,9 +65,7 @@ template <typename T>
 class EqualsMinimumPotential : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn partId,            // (input) particle Id
                                 FieldIn potential1,        // (input) particle potential

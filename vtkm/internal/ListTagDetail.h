@@ -15,6 +15,7 @@
 #error ListTagDetail.h must be included from ListTag.h
 #endif
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 #include <vtkm/internal/brigand.hpp>
 
@@ -244,7 +245,8 @@ struct ListAppendUniqueImpl
 /// A basic tag for a list of typenames. This struct can be subclassed
 /// and still behave like a list tag.
 template <typename... ArgTypes>
-struct ListTagBase : detail::ListRoot
+struct VTKM_DEPRECATED(1.6, "ListTagBase replace by List. Note that List cannot be subclassed.")
+  ListTagBase : detail::ListRoot
 {
   using list = detail::ListBase<ArgTypes...>;
 };

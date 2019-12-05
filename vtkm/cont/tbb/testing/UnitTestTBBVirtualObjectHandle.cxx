@@ -19,12 +19,12 @@ void TestVirtualObjectHandle()
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
 
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
-  using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagTBB>;
+  using DeviceAdapterList = vtkm::List<vtkm::cont::DeviceAdapterTagTBB>;
   vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();
 
   tracker.Reset();
   using DeviceAdapterList2 =
-    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagTBB>;
+    vtkm::List<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagTBB>;
   vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList2>::Run();
 }
 

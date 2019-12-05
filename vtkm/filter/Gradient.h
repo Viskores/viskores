@@ -30,8 +30,7 @@ namespace filter
 class Gradient : public vtkm::filter::FilterCell<Gradient>
 {
 public:
-  using SupportedTypes =
-    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
   /// When this flag is on (default is off), the gradient filter will provide a
   /// point based gradients, which are significantly more costly since for each

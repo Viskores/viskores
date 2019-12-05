@@ -182,7 +182,7 @@ public:
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
-    input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
+    input.ResetCellSetList(vtkm::cont::CellSetListStructured())
       .CastAndCall(ResolveDynamicCellSet(), pixels, componentsOut);
   }
 };

@@ -124,21 +124,15 @@ using ColorBuffer4b = vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>;
 //vec3s
 using Vec3F = vtkm::Vec3f_32;
 using Vec3D = vtkm::Vec3f_64;
-struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
-{
-};
+using Vec3RenderingTypes = vtkm::List<Vec3F, Vec3D>;
 
 // Scalars Types
 using ScalarF = vtkm::Float32;
 using ScalarD = vtkm::Float64;
 
-struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
-{
-};
+using RayStatusType = vtkm::List<vtkm::UInt8>;
 
-struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
-{
-};
+using ScalarRenderingTypes = vtkm::List<ScalarF, ScalarD>;
 }
 }
 } //namespace vtkm::rendering::raytracing

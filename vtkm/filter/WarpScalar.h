@@ -34,8 +34,8 @@ public:
 
   // WarpScalar often operates on a constant normal value
   using AdditionalFieldStorage =
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_32>::StorageTag,
-                      vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_64>::StorageTag>;
+    vtkm::List<vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_32>::StorageTag,
+               vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_64>::StorageTag>;
 
   VTKM_CONT
   WarpScalar(vtkm::FloatDefault scaleAmount);

@@ -102,7 +102,7 @@ private:
   RuntimeDeviceNames()
   {
     InitializeDeviceNames functor(DeviceNames, LowerCaseDeviceNames);
-    vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+    vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST());
   }
 
   friend struct InitializeDeviceNames;
@@ -175,7 +175,7 @@ bool RuntimeDeviceInformation::Exists(DeviceAdapterId id) const
   }
 
   RuntimeDeviceInformationFunctor functor;
-  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(), id);
+  vtkm::ListForEach(functor, VTKM_DEFAULT_DEVICE_ADAPTER_LIST(), id);
   return functor.Exists;
 }
 }

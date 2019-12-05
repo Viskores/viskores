@@ -88,9 +88,7 @@ namespace contourtree
 class Mesh3D_DEM_SaddleStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct PairType : vtkm::ListTagBase<vtkm::Pair<vtkm::Id, vtkm::Id>>
-  {
-  };
+  using PairType = vtkm::List<vtkm::Pair<vtkm::Id, vtkm::Id>>;
 
   using ControlSignature = void(FieldIn vertex,          // (input) index into active vertices
                                 FieldIn outDegFirstEdge, // (input) out degree/first edge of vertex

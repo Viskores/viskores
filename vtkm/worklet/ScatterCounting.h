@@ -43,16 +43,14 @@ struct ScatterCountingBuilder;
 ///
 struct VTKM_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
 {
-  struct CountTypes : vtkm::ListTagBase<vtkm::Int64,
-                                        vtkm::Int32,
-                                        vtkm::Int16,
-                                        vtkm::Int8,
-                                        vtkm::UInt64,
-                                        vtkm::UInt32,
-                                        vtkm::UInt16,
-                                        vtkm::UInt8>
-  {
-  };
+  using CountTypes = vtkm::List<vtkm::Int64,
+                                vtkm::Int32,
+                                vtkm::Int16,
+                                vtkm::Int8,
+                                vtkm::UInt64,
+                                vtkm::UInt32,
+                                vtkm::UInt16,
+                                vtkm::UInt8>;
   using VariantArrayHandleCount = vtkm::cont::VariantArrayHandleBase<CountTypes>;
 
   /// Construct a \c ScatterCounting object using an array of counts for the

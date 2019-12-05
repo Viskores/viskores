@@ -65,7 +65,7 @@
  * // We can now run our benchmark using VTKM_RUN_BENCHMARK, passing the
  * // benchmark name and type list to run on
  * int main(int, char**){
- *   VTKM_RUN_BENCHMARK(Silly, vtkm::ListTagBase<vtkm::Float32>());
+ *   VTKM_RUN_BENCHMARK(Silly, vtkm::List<vtkm::Float32>());
  *   return 0;
  * }
  *

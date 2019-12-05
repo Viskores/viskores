@@ -23,10 +23,10 @@ class Filter;
 
 //namespace detail
 //{
-//// template<typename T> vtkm::ListTagBase<T> as_list(T);
-//vtkm::ListTagUniversal as_list(vtkm::ListTagUniversal);
+//// template<typename T> vtkm::List<T> as_list(T);
+//vtkm::ListUniversal as_list(vtkm::ListTagUniversal);
 //template <typename... T>
-//vtkm::ListTagBase<T...> as_list(vtkm::ListTagBase<T...>);
+//vtkm::List<T...> as_list(vtkm::List<T...>);
 //}
 
 

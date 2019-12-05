@@ -16,7 +16,7 @@ namespace
 
 void TestVirtualObjectHandle()
 {
-  using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial>;
+  using DeviceAdapterList = vtkm::List<vtkm::cont::DeviceAdapterTagSerial>;
   vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();
 }
 

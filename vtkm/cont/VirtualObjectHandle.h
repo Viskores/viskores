@@ -71,7 +71,7 @@ public:
   }
 
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT explicit VirtualObjectHandle(VirtualDerivedType* derived,
                                          bool acquireOwnership = true,
                                          DeviceAdapterList devices = DeviceAdapterList())
@@ -95,7 +95,7 @@ public:
 
   /// Reset the underlying derived type object
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT void Reset(VirtualDerivedType* derived,
                        bool acquireOwnership = true,
                        DeviceAdapterList devices = DeviceAdapterList())

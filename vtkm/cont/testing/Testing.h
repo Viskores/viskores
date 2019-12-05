@@ -348,7 +348,7 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
   return result;
 }
 
-template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST_TAG,
+template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST,
           typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
 inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& ds1,
                                                      const vtkm::cont::DataSet& ds2,

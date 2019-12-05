@@ -90,9 +90,7 @@ template <typename T>
 class Mesh3D_DEM_VertexStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn vertex,      // (input) index of vertex
                                 WholeArrayIn values, // (input) values within mesh

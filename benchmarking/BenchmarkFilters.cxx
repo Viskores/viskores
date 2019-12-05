@@ -690,7 +690,7 @@ public:
   static VTKM_CONT int Run(int benches, vtkm::cont::DeviceAdapterId id)
   {
     // This has no influence on the benchmarks. See issue #286.
-    auto dummyTypes = vtkm::ListTagBase<vtkm::Int32>{};
+    auto dummyTypes = vtkm::List<vtkm::Int32>{};
 
     std::cout << DIVIDER << "\nRunning Filter benchmarks\n";
 

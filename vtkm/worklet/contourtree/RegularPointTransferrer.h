@@ -90,9 +90,7 @@ template <typename T>
 class RegularPointTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn vertexID,           // (input) vertex ID
                                 WholeArrayIn chainExtremum, // (input) chain extremum

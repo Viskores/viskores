@@ -53,7 +53,7 @@
 
 struct GameOfLifePolicy : public vtkm::filter::PolicyBase<GameOfLifePolicy>
 {
-  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec4ui_8>;
+  using FieldTypeList = vtkm::List<vtkm::UInt8, vtkm::Vec4ui_8>;
 };
 
 struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood

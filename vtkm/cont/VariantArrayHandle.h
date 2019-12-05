@@ -134,7 +134,7 @@ public:
   /// be specified in the second template parameter, which will be passed to
   /// the CastAndCall.
   ///
-  template <typename T, typename StorageTagList = VTKM_DEFAULT_STORAGE_LIST_TAG>
+  template <typename T, typename StorageTagList = VTKM_DEFAULT_STORAGE_LIST>
   VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
     VTKM_IS_LIST(StorageTagList);
@@ -287,7 +287,7 @@ private:
   VTKM_CONT void CastAndCallImpl(std::false_type, Functor&& f, Args&&... args) const
   {
     this->CastAndCallImpl(std::true_type(),
-                          VTKM_DEFAULT_STORAGE_LIST_TAG(),
+                          VTKM_DEFAULT_STORAGE_LIST(),
                           std::forward<Functor>(f),
                           std::forward<Args>(args)...);
   }

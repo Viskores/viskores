@@ -8,13 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/StorageListTag.h>
+#include <vtkm/cont/StorageList.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {
@@ -62,15 +60,13 @@ void TryList(const vtkm::Vec<TypeId, N>& expected, ListTag)
 
 void TestLists()
 {
-  std::cout << "StorageListTagBasic" << std::endl;
-  TryList(vtkm::Vec<TypeId, 1>(BASIC), vtkm::cont::StorageListTagBasic());
+  std::cout << "StorageListBasic" << std::endl;
+  TryList(vtkm::Vec<TypeId, 1>(BASIC), vtkm::cont::StorageListBasic());
 }
 
 } // anonymous namespace
 
-int UnitTestStorageListTag(int argc, char* argv[])
+int UnitTestStorageList(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestLists, argc, argv);
 }
-
-VTKM_DEPRECATED_SUPPRESS_END

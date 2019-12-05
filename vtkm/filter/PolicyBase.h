@@ -33,7 +33,7 @@ struct PolicyBase
 {
   using FieldTypeList = VTKM_DEFAULT_TYPE_LIST;
   using StorageList = vtkm::ListAppend<
-    VTKM_DEFAULT_STORAGE_LIST_TAG,
+    VTKM_DEFAULT_STORAGE_LIST,
     vtkm::List<
       vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
       vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
@@ -43,9 +43,9 @@ struct PolicyBase
                                               vtkm::cont::ArrayHandle<vtkm::Float64>,
                                               vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>>;
 
-  using StructuredCellSetList = vtkm::cont::CellSetListTagStructured;
-  using UnstructuredCellSetList = vtkm::cont::CellSetListTagUnstructured;
-  using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG;
+  using StructuredCellSetList = vtkm::cont::CellSetListStructured;
+  using UnstructuredCellSetList = vtkm::cont::CellSetListUnstructured;
+  using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST;
 };
 
 namespace internal

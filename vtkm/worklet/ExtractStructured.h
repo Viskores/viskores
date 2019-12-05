@@ -130,7 +130,7 @@ class ExtractStructured
 {
 public:
   using DynamicCellSetStructured =
-    vtkm::cont::DynamicCellSetBase<vtkm::cont::CellSetListTagStructured>;
+    vtkm::cont::DynamicCellSetBase<vtkm::cont::CellSetListStructured>;
 
 private:
   using AxisIndexArrayPoints =

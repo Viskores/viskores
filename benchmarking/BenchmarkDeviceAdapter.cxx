@@ -142,31 +142,27 @@ struct BenchDevAlgoConfig
 // functors):
 static BenchDevAlgoConfig Config = BenchDevAlgoConfig();
 
-struct BaseTypes : vtkm::ListTagBase<vtkm::UInt8,
-                                     vtkm::Int32,
-                                     vtkm::Int64,
-                                     vtkm::Pair<vtkm::Id, vtkm::Float32>,
-                                     vtkm::Float32,
-                                     vtkm::Vec3f_32,
-                                     vtkm::Float64,
-                                     vtkm::Vec3f_64>
-{
-};
+using BaseTypes = vtkm::List<vtkm::UInt8,
+                             vtkm::Int32,
+                             vtkm::Int64,
+                             vtkm::Pair<vtkm::Id, vtkm::Float32>,
+                             vtkm::Float32,
+                             vtkm::Vec3f_32,
+                             vtkm::Float64,
+                             vtkm::Vec3f_64>;
 
-struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
-                                         vtkm::Vec4ui_8,
-                                         vtkm::Int32,
-                                         vtkm::Int64,
-                                         vtkm::Pair<vtkm::Int32, vtkm::Float32>,
-                                         vtkm::Pair<vtkm::Int32, vtkm::Float32>,
-                                         vtkm::Pair<vtkm::Int64, vtkm::Float64>,
-                                         vtkm::Pair<vtkm::Int64, vtkm::Float64>,
-                                         vtkm::Float32,
-                                         vtkm::Vec3f_32,
-                                         vtkm::Float64,
-                                         vtkm::Vec3f_64>
-{
-};
+using ExtendedTypes = vtkm::List<vtkm::UInt8,
+                                 vtkm::Vec4ui_8,
+                                 vtkm::Int32,
+                                 vtkm::Int64,
+                                 vtkm::Pair<vtkm::Int32, vtkm::Float32>,
+                                 vtkm::Pair<vtkm::Int32, vtkm::Float32>,
+                                 vtkm::Pair<vtkm::Int64, vtkm::Float64>,
+                                 vtkm::Pair<vtkm::Int64, vtkm::Float64>,
+                                 vtkm::Float32,
+                                 vtkm::Vec3f_32,
+                                 vtkm::Float64,
+                                 vtkm::Vec3f_64>;
 
 static const std::string DIVIDER(40, '-');
 
@@ -1329,10 +1325,10 @@ public:
   template <typename ValueTypes>
   static VTKM_CONT void RunInternal(vtkm::cont::DeviceAdapterId id)
   {
-    using UInt8Type = vtkm::ListTagBase<vtkm::UInt8>;
-    using UInt16Type = vtkm::ListTagBase<vtkm::UInt16>;
-    using UInt32Type = vtkm::ListTagBase<vtkm::UInt32>;
-    using UInt64Type = vtkm::ListTagBase<vtkm::UInt64>;
+    using UInt8Type = vtkm::List<vtkm::UInt8>;
+    using UInt16Type = vtkm::List<vtkm::UInt16>;
+    using UInt32Type = vtkm::List<vtkm::UInt32>;
+    using UInt64Type = vtkm::List<vtkm::UInt64>;
 
     // These need specific word types:
     if (Config.BenchmarkFlags & BITFIELD_TO_UNORDERED_SET)

@@ -11,29 +11,17 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/internal/brigand.hpp>
+#include <tuple>
 
 namespace
 {
-template <typename State, typename T>
-struct RemoveDisabledDevice
-{
-  using type = typename std::conditional<T::IsEnabled, brigand::push_back<State, T>, State>::type;
-};
+template <typename Device>
+using DeviceInvalid = std::integral_constant<bool, !Device::IsEnabled>;
+using EnabledDeviceList = vtkm::ListRemoveIf<vtkm::cont::DeviceAdapterListCommon, DeviceInvalid>;
 
-/// TMP code to generate enabled device timer container
-using AllDeviceList = vtkm::internal::ListTagAsBrigandList<vtkm::cont::DeviceAdapterListTagCommon>;
-using EnabledDeviceList = brigand::fold<AllDeviceList,
-                                        brigand::list<>,
-                                        RemoveDisabledDevice<brigand::_state, brigand::_element>>;
-struct EnabledDeviceListTag : vtkm::ListTagBase<>
-{
-  using list = EnabledDeviceList;
-};
 using EnabledTimerImpls =
-  brigand::transform<EnabledDeviceList,
-                     brigand::bind<vtkm::cont::DeviceAdapterTimerImplementation, brigand::_1>>;
-using EnabledTimerImplTuple = brigand::as_tuple<EnabledTimerImpls>;
+  vtkm::ListTransform<EnabledDeviceList, vtkm::cont::DeviceAdapterTimerImplementation>;
+using EnabledTimerImplTuple = vtkm::ListApply<EnabledTimerImpls, std::tuple>;
 } // anonymous namespace
 
 namespace vtkm
@@ -239,7 +227,7 @@ void Timer::Init()
 
 void Timer::Reset()
 {
-  vtkm::ListForEach(ResetFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(ResetFunctor(), EnabledDeviceList(), this, this->Internal.get());
 }
 
 void Timer::Reset(vtkm::cont::DeviceAdapterId device)
@@ -258,32 +246,32 @@ void Timer::Reset(vtkm::cont::DeviceAdapterId device)
 
 void Timer::Start()
 {
-  vtkm::ListForEach(StartFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(StartFunctor(), EnabledDeviceList(), this, this->Internal.get());
 }
 
 void Timer::Stop()
 {
-  vtkm::ListForEach(StopFunctor(), EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(StopFunctor(), EnabledDeviceList(), this, this->Internal.get());
 }
 
 bool Timer::Started() const
 {
   StartedFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(functor, EnabledDeviceList(), this, this->Internal.get());
   return functor.Value;
 }
 
 bool Timer::Stopped() const
 {
   StoppedFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(functor, EnabledDeviceList(), this, this->Internal.get());
   return functor.Value;
 }
 
 bool Timer::Ready() const
 {
   ReadyFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), this, this->Internal.get());
+  vtkm::ListForEach(functor, EnabledDeviceList(), this, this->Internal.get());
   return functor.Value;
 }
 
@@ -327,7 +315,7 @@ vtkm::Float64 Timer::GetElapsedTime(vtkm::cont::DeviceAdapterId device) const
   }
 
   ElapsedTimeFunctor functor;
-  vtkm::ListForEach(functor, EnabledDeviceListTag(), deviceToTime, this->Internal.get());
+  vtkm::ListForEach(functor, EnabledDeviceList(), deviceToTime, this->Internal.get());
 
   return functor.ElapsedTime;
 }

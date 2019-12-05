@@ -25,8 +25,7 @@ using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 class MultiDeviceGradient : public vtkm::filter::FilterField<MultiDeviceGradient>
 {
 public:
-  using SupportedTypes =
-    vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+  using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
   //Construct a MultiDeviceGradient and worker pool
   VTKM_CONT

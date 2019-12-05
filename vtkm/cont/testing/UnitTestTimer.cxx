@@ -20,8 +20,8 @@
 namespace
 {
 
-using TimerTestDevices = vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG,
-                                          vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
+using TimerTestDevices =
+  vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST, vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
 
 constexpr long long waitTimeMilliseconds = 250;
 constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;

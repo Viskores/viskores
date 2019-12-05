@@ -293,7 +293,7 @@ VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(Functor&& f, Args&&.
   }
 }
 
-using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST_TAG>;
+using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST>;
 
 namespace internal
 {

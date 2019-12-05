@@ -29,6 +29,8 @@
   { \
   }
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace vtkm
 {
 
@@ -61,13 +63,12 @@ VTKM_DEPRECATED(
   1.6,
   "VTKM_DEFAULT_TYPE_LIST_TAG replaced by VTKM_DEFAULT_TYPE_LIST. "
   "Note that the new VTKM_DEFAULT_TYPE_LIST cannot be subclassed.")
-TypeListTagDefault : vtkm::internal::ListAsListTag<vtkm::TypeListCommon>
+TypeListTagDefault : vtkm::internal::ListAsListTag<VTKM_DEFAULT_TYPE_LIST>
 {
 };
 
 } // namespace internal
 
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 // Special implementation of ListContains for TypeListTagAll to always be
 // true. Although TypeListTagAll is necessarily finite, the point is to
 // be all inclusive. Besides, this should speed up the compilation when
@@ -77,7 +78,6 @@ struct ListContains<vtkm::TypeListTagAll, Type>
 {
   static constexpr bool value = true;
 };
-VTKM_DEPRECATED_SUPPRESS_END
 
 // Special implementation of ListHas for TypeListTagAll to always be
 // true. Although TypeListTagAll is necessarily finite, the point is to
@@ -86,18 +86,17 @@ VTKM_DEPRECATED_SUPPRESS_END
 namespace detail
 {
 
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 template<typename Type>
 struct ListHasImpl<vtkm::TypeListTagAll, Type>
 {
   using type = std::true_type;
 };
-VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace detail
 
 } // namespace vtkm
 
+VTKM_DEPRECATED_SUPPRESS_END
 #undef VTK_M_OLD_TYPE_LIST_DEFINITION
 
 #endif //vtk_m_TypeListTag_h

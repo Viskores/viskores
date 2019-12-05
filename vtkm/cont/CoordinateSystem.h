@@ -24,8 +24,7 @@ namespace cont
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
-  using CoordinatesTypeList =
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
+  using CoordinatesTypeList = vtkm::List<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
 
 public:
   VTKM_CONT

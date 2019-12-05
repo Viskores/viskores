@@ -106,7 +106,7 @@ void TestCellMeasure()
   TestCellMeasureWorklet(data,
                          "explicit dataset 6 (empty)",
                          { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.0f, 0.0f },
-                         vtkm::ListTagBase<>());
+                         vtkm::List<>());
 }
 }
 

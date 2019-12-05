@@ -116,7 +116,7 @@ static void TestMaxPointOrCell()
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that
                     // part more flexible.
-                    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+                    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
                     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
@@ -134,7 +134,7 @@ static void TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
+  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
@@ -160,7 +160,7 @@ static void TestAvgPointToCell()
       // The worklet does not work with general types because
       // of the way we get cell indices. We need to make that
       // part more flexible.
-      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
       dataSet.GetField("cellvar"), // should be pointvar
       result);
   }
@@ -187,7 +187,7 @@ static void TestAvgCellToPoint()
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
     dataSet.GetField("cellvar"),
     result);
 
@@ -205,7 +205,7 @@ static void TestAvgCellToPoint()
       // The worklet does not work with general types because
       // of the way we get cell indices. We need to make that
       // part more flexible.
-      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
       dataSet.GetField("pointvar"), // should be cellvar
       result);
   }

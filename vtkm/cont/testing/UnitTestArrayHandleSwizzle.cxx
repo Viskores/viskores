@@ -311,7 +311,7 @@ struct ArgToTemplateType
 
 void TestArrayHandleSwizzle()
 {
-  using TestTypes = vtkm::ListTagBase<vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
+  using TestTypes = vtkm::List<vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
   vtkm::testing::Testing::TryTypes(ArgToTemplateType(), TestTypes());
 }
 

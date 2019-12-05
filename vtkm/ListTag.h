@@ -27,7 +27,10 @@ namespace vtkm
 /// A special tag for a list that represents holding all potential values
 ///
 /// Note: Can not be used with ForEach for obvious reasons.
-struct ListTagUniversal : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagUniversal replaced by ListUniversal. Note that ListUniversal cannot be subclassed.")
+  ListTagUniversal : detail::ListRoot
 {
   using list = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
 };
@@ -86,8 +89,22 @@ template <typename ListTag>
 using ListTagAsBrigandList = typename detail::ListTagAsBrigandListImpl<ListTag>::type;
 
 VTKM_DEPRECATED_SUPPRESS_BEGIN
+namespace detail
+{
+
+// Could use ListApply instead, but that causes deprecation warnings.
 template <typename List>
-using ListAsListTag = brigand::wrap<List, vtkm::ListTagBase>;
+struct ListAsListTagImpl;
+template <typename... Ts>
+struct ListAsListTagImpl<vtkm::List<Ts...>>
+{
+  using type = vtkm::ListTagBase<Ts...>;
+};
+
+} // namespace detail
+
+template <typename List>
+using ListAsListTag = typename detail::ListAsListTagImpl<List>::type;
 VTKM_DEPRECATED_SUPPRESS_END
 
 // This allows the new `List` operations work on `ListTag`s.
@@ -135,9 +152,10 @@ using ListTagApply VTKM_DEPRECATED(1.6, "ListTagApply replaced by ListApply.") =
 
 /// A special tag for an empty list.
 ///
-struct VTKM_DEPRECATED(1.6,
-                       "ListTagEmpty replaced by ListTag. Note that ListTag cannot be subclassed.")
-  ListTagEmpty : detail::ListRoot
+struct VTKM_DEPRECATED(
+  1.6,
+  "ListTagEmpty replaced by ListEmpty. Note that ListEmpty cannot be subclassed.") ListTagEmpty
+  : detail::ListRoot
 {
   using list = vtkm::detail::ListBase<>;
 };
