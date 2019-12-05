@@ -108,7 +108,7 @@ public:
   {
     Id optimal = tourEdges.Get(firstLast.Get(i).first)[1];
 
-    for (int j = firstLast.Get(i).first; j < firstLast.Get(i).second; j++)
+    for (Id j = firstLast.Get(i).first; j < firstLast.Get(i).second; j++)
     {
       Id vertex = tourEdges.Get(j)[1];
 

@@ -866,22 +866,24 @@ public:
       long long index;
     };
 
-    std::vector<VertexData> vertexData(supernodes.GetNumberOfValues(), { -1, -1 });
-    for (unsigned int i = 0; i < vertexData.size(); i++)
+    std::vector<VertexData> vertexData(static_cast<unsigned long>(supernodes.GetNumberOfValues()),
+                                       { -1, -1 });
+    for (unsigned long i = 0; i < vertexData.size(); i++)
     {
       vertexData[i].index = i;
     }
 
     parents.Set(root, root);
-    vertexData[root].distance = 0;
+    vertexData[static_cast<unsigned long>(root)].distance = 0;
 
     for (int i = 0; i < tourEdges.GetNumberOfValues(); i++)
     {
       const Vec<Id, 2> e = tourEdges.Get(i);
-      if (-1 == vertexData[e[1]].distance)
+      if (-1 == vertexData[static_cast<unsigned long>(e[1])].distance)
       {
         parents.Set(e[1], e[0]);
-        vertexData[e[1]].distance = vertexData[e[0]].distance + 1;
+        vertexData[static_cast<unsigned long>(e[1])].distance =
+          vertexData[static_cast<unsigned long>(e[0])].distance + 1;
       }
     }
 
@@ -896,7 +898,7 @@ public:
 
     for (unsigned int i = 0; i < vertexData.size(); i++)
     {
-      Id vertex = vertexData[i].index;
+      Id vertex = static_cast<Id>(vertexData[i].index);
       Id parent = parents.Get(vertex);
 
       Id vertexValue = maskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));

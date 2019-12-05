@@ -113,10 +113,12 @@ public:
     cont::ArrayHandle<Id> next;
 
     vtkm::cont::ArrayCopy(
-      vtkm::cont::make_ArrayHandle(std::vector<Id>(superarcs.GetNumberOfValues(), NO_SUCH_ELEMENT)),
+      vtkm::cont::make_ArrayHandle(std::vector<Id>(
+        static_cast<unsigned long>(superarcs.GetNumberOfValues()), NO_SUCH_ELEMENT)),
       first);
     vtkm::cont::ArrayCopy(
-      vtkm::cont::make_ArrayHandle(std::vector<Id>(edges.GetNumberOfValues(), NO_SUCH_ELEMENT)),
+      vtkm::cont::make_ArrayHandle(
+        std::vector<Id>(static_cast<unsigned long>(edges.GetNumberOfValues()), NO_SUCH_ELEMENT)),
       next);
 
     //
@@ -132,8 +134,8 @@ public:
     succ.Allocate(edges.GetNumberOfValues());
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeEulerTourList
-      eulerTourListWorklet(edges);
-    this->Invoke(eulerTourListWorklet, next, first, succ);
+      eulerTourListWorklet;
+    this->Invoke(eulerTourListWorklet, next, first, edges, succ);
   }
 
   // Reroot the euler tour at a different root (O(n) for finding the first occurence of the new root and O(1) for rerouting and O(n) for returning it as an array)
@@ -144,8 +146,8 @@ public:
     //
     // Reroot at the global min/max
     //
-    int i = 0;
-    int start = -1;
+    Id i = 0;
+    Id start = NO_SUCH_ELEMENT;
     do
     {
       if (edgesPortal.Get(i)[0] == root)

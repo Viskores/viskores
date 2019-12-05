@@ -76,39 +76,34 @@ namespace process_contourtree_inc
 class ComputeEulerTourList : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn next, WholeArrayIn first, WholeArrayOut succ);
+  typedef void ControlSignature(WholeArrayIn next,
+                                WholeArrayIn first,
+                                WholeArrayIn edges,
+                                WholeArrayOut succ);
 
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
   using InputDomain = _1;
-
-  vtkm::cont::ArrayHandle<Vec<Id, 2>> edges;
-
-  // Default Constructor
-  VTKM_EXEC_CONT ComputeEulerTourList(vtkm::cont::ArrayHandle<Vec<Id, 2>> _edges)
-    : edges(_edges)
-  {
-  }
 
   template <typename NextArrayPortalType,
             typename FirstArrayPortalType,
+            typename EdgesArrayPortalType,
             typename OutputArrayPortalType>
   VTKM_EXEC void operator()(const vtkm::Id i,
                             const NextArrayPortalType& next,
                             const FirstArrayPortalType& first,
+                            const EdgesArrayPortalType& edges,
                             const OutputArrayPortalType& succ) const
   {
     // For edge (a, b) find the opposite edge (b, a) in the sorted list of edges
     // This relies on the fact that in the contour tree nodes have bounded degree.
     // This comes from the fact that vertices in a 2D/3D mesh have a bounded degree.
-    auto edgesPortal = edges.GetPortalConstControl();
-
-    auto currentEdge = edgesPortal.Get(i);
+    auto currentEdge = edges.Get(i);
     auto oppositeIndex = first.Get(currentEdge[1]);
 
     while (oppositeIndex < edges.GetNumberOfValues() &&
-           currentEdge[1] == edgesPortal.Get(oppositeIndex)[0])
+           currentEdge[1] == edges.Get(oppositeIndex)[0])
     {
-      if (currentEdge[0] == edgesPortal.Get(oppositeIndex)[1])
+      if (currentEdge[0] == edges.Get(oppositeIndex)[1])
       {
         break;
       }
@@ -118,7 +113,7 @@ public:
 
     if (NO_SUCH_ELEMENT == next.Get(oppositeIndex))
     {
-      succ.Set(i, first.Get(edges.GetPortalConstControl().Get(i)[1]));
+      succ.Set(i, first.Get(edges.Get(i)[1]));
     }
     else
     {
