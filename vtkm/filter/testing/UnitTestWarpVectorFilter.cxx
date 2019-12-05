@@ -55,12 +55,9 @@ class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
 {
 public:
   using vecType = vtkm::Vec3f;
-  struct TypeListTagWarpVectorTags
-    : vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                        vtkm::cont::ArrayHandle<vecType>::StorageTag>
-  {
-  };
-  using FieldStorageList = TypeListTagWarpVectorTags;
+  using TypeListWarpVectorTags = vtkm::List<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
+                                            vtkm::cont::ArrayHandle<vecType>::StorageTag>;
+  using FieldStorageList = TypeListWarpVectorTags;
 };
 
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_PolicyBase_h
 #define vtk_m_filter_PolicyBase_h
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/List.h>
 
 #include <vtkm/cont/CellSetListTag.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -31,7 +31,7 @@ namespace filter
 template <typename Derived>
 struct PolicyBase
 {
-  using FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG;
+  using FieldTypeList = VTKM_DEFAULT_TYPE_LIST;
   using StorageList = vtkm::ListAppend<
     VTKM_DEFAULT_STORAGE_LIST_TAG,
     vtkm::List<

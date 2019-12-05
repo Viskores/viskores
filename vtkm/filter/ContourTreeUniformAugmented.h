@@ -78,7 +78,7 @@ class MultiBlockContourTreeHelper;
 class ContourTreePPP2 : public vtkm::filter::FilterCell<ContourTreePPP2>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
   VTKM_CONT
   ContourTreePPP2(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
 

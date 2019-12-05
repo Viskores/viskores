@@ -31,7 +31,7 @@ namespace filter
 class ImageConnectivity : public vtkm::filter::FilterCell<ImageConnectivity>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT ImageConnectivity();
 

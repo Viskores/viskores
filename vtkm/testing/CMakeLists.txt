@@ -35,6 +35,7 @@ set(unit_tests
   UnitTestRange.cxx
   UnitTestTesting.cxx
   UnitTestTransform3D.cxx
+  UnitTestTypeList.cxx
   UnitTestTypeListTag.cxx
   UnitTestTypes.cxx
   UnitTestTypeTraits.cxx

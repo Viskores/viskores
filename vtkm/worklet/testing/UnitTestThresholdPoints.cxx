@@ -107,10 +107,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(
-      dataset.GetCellSet(),
-      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-      ValuesBetween(40.0f, 71.0f));
+    outCellSet =
+      threshold.Run(dataset.GetCellSet(),
+                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    ValuesBetween(40.0f, 71.0f));
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
@@ -139,10 +139,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(
-      dataset.GetCellSet(),
-      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-      ValuesAbove(1.0f));
+    outCellSet =
+      threshold.Run(dataset.GetCellSet(),
+                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    ValuesAbove(1.0f));
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -164,10 +164,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(
-      dataset.GetCellSet(),
-      dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-      ValuesBelow(50.0f));
+    outCellSet =
+      threshold.Run(dataset.GetCellSet(),
+                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    ValuesBelow(50.0f));
     outDataSet.SetCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6),

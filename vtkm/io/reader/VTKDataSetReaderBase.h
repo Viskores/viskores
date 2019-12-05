@@ -86,7 +86,7 @@ struct StreamIOType<vtkm::UInt8>
 
 // Since Fields and DataSets store data in the default VariantArrayHandle, convert
 // the data to the closest type supported by default. The following will
-// need to be updated if VariantArrayHandle or TypeListTagCommon changes.
+// need to be updated if VariantArrayHandle or TypeListCommon changes.
 template <typename T>
 struct ClosestCommonType
 {

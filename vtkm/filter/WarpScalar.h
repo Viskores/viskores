@@ -30,7 +30,7 @@ class WarpScalar : public vtkm::filter::FilterField<WarpScalar>
 {
 public:
   // WarpScalar can only applies to Float and Double Vec3 arrays
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   // WarpScalar often operates on a constant normal value
   using AdditionalFieldStorage =

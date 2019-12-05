@@ -27,7 +27,7 @@ namespace filter
 class CellSetConnectivity : public vtkm::filter::FilterDataSet<CellSetConnectivity>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
   VTKM_CONT CellSetConnectivity();
 
   void SetOutputFieldName(const std::string& name) { this->OutputFieldName = name; }

@@ -92,7 +92,7 @@ void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // anonymous namespace

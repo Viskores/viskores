@@ -32,7 +32,7 @@ class ImageMedian : public vtkm::filter::FilterField<ImageMedian>
   int Neighborhood = 1;
 
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT ImageMedian();
 

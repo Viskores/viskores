@@ -11,7 +11,6 @@
 #define vtk_m_worklet_internal_WorkletBase_h
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/TypeListTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>

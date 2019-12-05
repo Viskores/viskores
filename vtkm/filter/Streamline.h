@@ -27,7 +27,7 @@ namespace filter
 class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   Streamline();

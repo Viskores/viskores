@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
@@ -46,7 +46,7 @@ namespace cont
 /// mechanism to determine the type when running algorithms.
 ///
 /// By default, \c VariantArrayHandle will assume that the value type in the
-/// array matches one of the types specified by \c VTKM_DEFAULT_TYPE_LIST_TAG
+/// array matches one of the types specified by \c VTKM_DEFAULT_TYPE_LIST
 /// This list can be changed by using the \c ResetTypes. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
@@ -201,7 +201,7 @@ public:
   /// \c CastAndCall Attempts to cast the held array to a specific value type,
   /// then call the given functor with the cast array. The types
   /// tried in the cast are those in the lists defined by the TypeList.
-  /// By default \c VariantArrayHandle set this to \c VTKM_DEFAULT_TYPE_LIST_TAG.
+  /// By default \c VariantArrayHandle set this to \c VTKM_DEFAULT_TYPE_LIST.
   ///
   /// In addition to the value type, an \c ArrayHandle also requires a storage tag.
   /// By default, \c CastAndCall attempts to cast the array using the storage tags
@@ -296,7 +296,7 @@ private:
   VTKM_CONT void CastAndCallImpl(std::true_type, StorageTagList, Functor&& f, Args&&...) const;
 };
 
-using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG>;
+using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST>;
 
 
 //=============================================================================

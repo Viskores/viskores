@@ -13,7 +13,7 @@
 #include <vtkm/Geometry.h>
 #include <vtkm/Math.h>
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -472,13 +472,13 @@ template <typename Device>
 void RunGeometryTests()
 {
   std::cout << "Tests for rays." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryRayTests<Device>(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryRayTests<Device>(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for line segments." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryLineSegmentTests<Device>(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryLineSegmentTests<Device>(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for planes." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryPlaneTests<Device>(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryPlaneTests<Device>(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for spheres." << std::endl;
-  vtkm::testing::Testing::TryTypes(TrySphereTests<Device>(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TrySphereTests<Device>(), vtkm::TypeListFieldScalar());
 }
 
 } // namespace UnitTestGeometryNamespace

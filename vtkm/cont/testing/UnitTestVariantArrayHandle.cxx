@@ -273,7 +273,7 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
   using Storage = typename ArrayType::StorageTag;
   using StorageList = vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST_TAG, vtkm::List<Storage>>;
 
-  using TypeList = vtkm::ListAppend<VTKM_DEFAULT_TYPE_LIST_TAG, vtkm::List<ValueType>>;
+  using TypeList = vtkm::ListAppend<VTKM_DEFAULT_TYPE_LIST, vtkm::List<ValueType>>;
   using VariantArrayType = vtkm::cont::VariantArrayHandleBase<TypeList>;
 
   VariantArrayType arrayVariant = array;
@@ -442,9 +442,9 @@ struct TryBasicVTKmType
     vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
     CheckArrayVariant(
-      array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
+      array.ResetTypes(vtkm::TypeListAll()), vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
-    TryNewInstance(T(), array.ResetTypes(vtkm::TypeListTagAll()));
+    TryNewInstance(T(), array.ResetTypes(vtkm::TypeListAll()));
   }
 };
 

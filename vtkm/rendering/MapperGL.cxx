@@ -29,10 +29,7 @@ namespace rendering
 namespace
 {
 
-struct TypeListTagId4 : vtkm::ListTagBase<vtkm::Vec<Id, 4>>
-{
-};
-using Id4Type = TypeListTagId4;
+using Id4Type = TypeListId4;
 
 class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {

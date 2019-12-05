@@ -18,7 +18,7 @@
 #include <vtkm/Matrix.h>
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
@@ -422,7 +422,7 @@ public:
   //  template<typename FunctionType>
   //  static void TryAllTypes(const FunctionType &function)
   //  {
-  //    TryTypes(function, vtkm::TypeListTagAll());
+  //    TryTypes(function, vtkm::TypeListAll());
   //  }
 
   /// Runs templated \p function on all cell shapes defined in VTK-m. This is

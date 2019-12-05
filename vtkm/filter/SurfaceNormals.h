@@ -26,7 +26,7 @@ namespace filter
 class SurfaceNormals : public vtkm::filter::FilterCell<SurfaceNormals>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   /// Create SurfaceNormals filter. This calls
   /// this->SetUseCoordinateSystemAsField(true) since that is the most common

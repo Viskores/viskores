@@ -184,9 +184,8 @@ struct TryAtomicArrayType
 template <typename Device>
 void TryArrayOutTransport(Device)
 {
-  vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(), vtkm::TypeListTagCommon());
-  vtkm::testing::Testing::TryTypes(TryAtomicArrayType<Device>(),
-                                   vtkm::cont::AtomicArrayTypeListTag());
+  vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(), vtkm::TypeListCommon());
+  vtkm::testing::Testing::TryTypes(TryAtomicArrayType<Device>(), vtkm::cont::AtomicArrayTypeList());
 }
 
 void TestWholeArrayTransport()

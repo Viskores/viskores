@@ -25,7 +25,7 @@ class CylindricalCoordinateTransform
   : public vtkm::filter::FilterField<CylindricalCoordinateTransform>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   CylindricalCoordinateTransform();
@@ -46,7 +46,7 @@ private:
 class SphericalCoordinateTransform : public vtkm::filter::FilterField<SphericalCoordinateTransform>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   SphericalCoordinateTransform();

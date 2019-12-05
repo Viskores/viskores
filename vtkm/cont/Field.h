@@ -107,13 +107,13 @@ public:
   VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
   {
-    return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG());
-  };
+    return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST());
+  }
 
   VTKM_CONT void GetRange(vtkm::Range* range) const
   {
-    return this->GetRange(range, VTKM_DEFAULT_TYPE_LIST_TAG());
-  };
+    return this->GetRange(range, VTKM_DEFAULT_TYPE_LIST());
+  }
 
   template <typename T, typename StorageTag>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
@@ -248,7 +248,7 @@ namespace vtkm
 {
 namespace cont
 {
-template <typename TypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
+template <typename TypeList = VTKM_DEFAULT_TYPE_LIST>
 struct SerializableField
 {
   SerializableField() = default;

@@ -10,7 +10,6 @@
 #ifndef vtk_m_cont_ArrayHandleMultiplexer_h
 #define vtk_m_cont_ArrayHandleMultiplexer_h
 
-#include <vtkm/TypeListTag.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Variant.h>

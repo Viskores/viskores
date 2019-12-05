@@ -41,7 +41,7 @@ VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordi
   const vtkm::cont::VariantArrayHandleBase<TypeList>& array)
 {
   vtkm::cont::ArrayHandleVirtualCoordinates output;
-  vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListTagFieldVec3{}),
+  vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListFieldVec3{}),
                           MakeArrayHandleVirtualCoordinatesFunctor{},
                           output);
   return output;

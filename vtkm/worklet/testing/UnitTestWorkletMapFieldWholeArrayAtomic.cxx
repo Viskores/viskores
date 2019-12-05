@@ -47,7 +47,7 @@ struct DoTestAtomicArrayWorklet
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                      inOutArray.ResetTypes<vtkm::cont::AtomicArrayTypeListTag>());
+                      inOutArray.ResetTypes<vtkm::cont::AtomicArrayTypeList>());
   }
 
   template <typename T>
@@ -73,7 +73,7 @@ void TestWorkletMapFieldExecArgAtomic(vtkm::cont::DeviceAdapterId id)
   std::cout << "Testing Worklet with AtomicWholeArray on device adapter: " << id.GetName()
             << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
-                                   vtkm::cont::AtomicArrayTypeListTag());
+                                   vtkm::cont::AtomicArrayTypeList());
 }
 
 } // anonymous namespace

@@ -119,7 +119,7 @@ void TestClippingExplicit()
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
              clipValue,
              invertClip);
 
@@ -175,7 +175,7 @@ void TestClippingStructured()
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
              clipValue,
              invertClip);
 

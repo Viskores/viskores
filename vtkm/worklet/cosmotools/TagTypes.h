@@ -51,7 +51,7 @@
 #ifndef vtkm_worklet_cosmotools_graft_tagtypes_h
 #define vtkm_worklet_cosmotools_graft_tagtypes_h
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/List.h>
 
 namespace vtkm
 {
@@ -60,14 +60,10 @@ namespace worklet
 namespace cosmotools
 {
 
-struct UInt32TagType : vtkm::ListTagBase<vtkm::UInt32>
-{
-};
+using UInt32TagType = vtkm::List<vtkm::UInt32>;
 
 template <typename T>
-struct Vec3TagType : vtkm::ListTagBase<vtkm::Vec<T, 3>>
-{
-};
+using Vec3TagType = vtkm::List<vtkm::Vec<T, 3>>;
 }
 }
 }

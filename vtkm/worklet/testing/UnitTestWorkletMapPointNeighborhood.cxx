@@ -210,7 +210,7 @@ static void TestMaxNeighborValue()
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
   dispatcher.Invoke(
-    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
     dataSet3D.GetCellSet(),
     output);
 
@@ -225,7 +225,7 @@ static void TestMaxNeighborValue()
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet1();
   dispatcher.Invoke(
-    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
     dataSet2D.GetCellSet(),
     output);
 

@@ -25,7 +25,7 @@ namespace filter
 class Histogram : public vtkm::filter::FilterField<Histogram>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   //Construct a histogram with a default of 10 bins
   VTKM_CONT

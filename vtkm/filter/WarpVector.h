@@ -29,7 +29,7 @@ namespace filter
 class WarpVector : public vtkm::filter::FilterField<WarpVector>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
   using AdditionalFieldStorage =
     vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_32>::StorageTag,
                       vtkm::cont::ArrayHandleConstant<vtkm::Vec3f_64>::StorageTag>;

@@ -25,7 +25,7 @@ class VTKM_ALWAYS_EXPORT VectorMagnitude : public vtkm::filter::FilterField<Vect
 {
 public:
   //currently the VectorMagnitude filter only works on vector data.
-  using SupportedTypes = vtkm::TypeListTagVecCommon;
+  using SupportedTypes = vtkm::TypeListVecCommon;
 
   VTKM_FILTER_EXPORT
   VectorMagnitude();

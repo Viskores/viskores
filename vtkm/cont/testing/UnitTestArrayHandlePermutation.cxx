@@ -243,7 +243,7 @@ struct TryInputType
 
 void TestArrayHandlePermutation()
 {
-  vtkm::testing::Testing::TryTypes(TryInputType(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryInputType(), vtkm::TypeListCommon());
 }
 
 } // anonymous namespace

@@ -134,11 +134,9 @@ public:
 class PolicyRadiantDataSet : public vtkm::filter::PolicyBase<PolicyRadiantDataSet>
 {
 public:
-  struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<MakeRadiantDataSet::CellSet>
-  {
-  };
+  using TypeListRadiantCellSetTypes = vtkm::List<MakeRadiantDataSet::CellSet>;
 
-  using AllCellSetList = TypeListTagRadiantCellSetTypes;
+  using AllCellSetList = TypeListRadiantCellSetTypes;
 };
 
 inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComponent dim)

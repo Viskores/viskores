@@ -27,7 +27,7 @@ namespace filter
 class Pathline : public vtkm::filter::FilterDataSetWithField<Pathline>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   Pathline();

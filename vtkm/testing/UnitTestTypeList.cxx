@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 
 #include <vtkm/Types.h>
 
@@ -16,8 +16,6 @@
 
 #include <set>
 #include <string>
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {
@@ -88,53 +86,58 @@ void TryList(const TypeSet& expected, ListTag)
 
 void TestLists()
 {
-  std::cout << "TypeListTagId" << std::endl;
+  std::cout << "TypeListId" << std::endl;
   TypeSet id;
   id.AddExpected(vtkm::Id());
-  TryList(id, vtkm::TypeListTagId());
+  TryList(id, vtkm::TypeListId());
 
-  std::cout << "TypeListTagId2" << std::endl;
+  std::cout << "TypeListId2" << std::endl;
   TypeSet id2;
   id2.AddExpected(vtkm::Id2());
-  TryList(id2, vtkm::TypeListTagId2());
+  TryList(id2, vtkm::TypeListId2());
 
-  std::cout << "TypeListTagId3" << std::endl;
+  std::cout << "TypeListId3" << std::endl;
   TypeSet id3;
   id3.AddExpected(vtkm::Id3());
-  TryList(id3, vtkm::TypeListTagId3());
+  TryList(id3, vtkm::TypeListId3());
 
-  std::cout << "TypeListTagIndex" << std::endl;
+  std::cout << "TypeListId4" << std::endl;
+  TypeSet id4;
+  id4.AddExpected(vtkm::Id4());
+  TryList(id4, vtkm::TypeListId4());
+
+  std::cout << "TypeListIndex" << std::endl;
   TypeSet index;
   index.AddExpected(vtkm::Id());
   index.AddExpected(vtkm::Id2());
   index.AddExpected(vtkm::Id3());
-  TryList(index, vtkm::TypeListTagIndex());
+  TryList(index, vtkm::TypeListIndex());
 
-  std::cout << "TypeListTagFieldScalar" << std::endl;
+  std::cout << "TypeListFieldScalar" << std::endl;
   TypeSet scalar;
   scalar.AddExpected(vtkm::Float32());
   scalar.AddExpected(vtkm::Float64());
-  TryList(scalar, vtkm::TypeListTagFieldScalar());
+  TryList(scalar, vtkm::TypeListFieldScalar());
 
-  std::cout << "TypeListTagFieldVec2" << std::endl;
+  std::cout << "TypeListFieldVec2" << std::endl;
   TypeSet vec2;
   vec2.AddExpected(vtkm::Vec2f_32());
   vec2.AddExpected(vtkm::Vec2f_64());
-  TryList(vec2, vtkm::TypeListTagFieldVec2());
+  TryList(vec2, vtkm::TypeListFieldVec2());
 
-  std::cout << "TypeListTagFieldVec3" << std::endl;
+  std::cout << "TypeListFieldVec3" << std::endl;
   TypeSet vec3;
   vec3.AddExpected(vtkm::Vec3f_32());
   vec3.AddExpected(vtkm::Vec3f_64());
-  TryList(vec3, vtkm::TypeListTagFieldVec3());
+  TryList(vec3, vtkm::TypeListFieldVec3());
 
-  std::cout << "TypeListTagFieldVec4" << std::endl;
+  std::cout << "TypeListFieldVec4" << std::endl;
   TypeSet vec4;
   vec4.AddExpected(vtkm::Vec4f_32());
   vec4.AddExpected(vtkm::Vec4f_64());
-  TryList(vec4, vtkm::TypeListTagFieldVec4());
+  TryList(vec4, vtkm::TypeListFieldVec4());
 
-  std::cout << "TypeListTagField" << std::endl;
+  std::cout << "TypeListField" << std::endl;
   TypeSet field;
   field.AddExpected(vtkm::Float32());
   field.AddExpected(vtkm::Float64());
@@ -144,9 +147,9 @@ void TestLists()
   field.AddExpected(vtkm::Vec3f_64());
   field.AddExpected(vtkm::Vec4f_32());
   field.AddExpected(vtkm::Vec4f_64());
-  TryList(field, vtkm::TypeListTagField());
+  TryList(field, vtkm::TypeListField());
 
-  std::cout << "TypeListTagCommon" << std::endl;
+  std::cout << "TypeListCommon" << std::endl;
   TypeSet common;
   common.AddExpected(vtkm::Float32());
   common.AddExpected(vtkm::Float64());
@@ -155,9 +158,9 @@ void TestLists()
   common.AddExpected(vtkm::Int64());
   common.AddExpected(vtkm::Vec3f_32());
   common.AddExpected(vtkm::Vec3f_64());
-  TryList(common, vtkm::TypeListTagCommon());
+  TryList(common, vtkm::TypeListCommon());
 
-  std::cout << "TypeListTagScalarAll" << std::endl;
+  std::cout << "TypeListScalarAll" << std::endl;
   TypeSet scalarsAll;
   scalarsAll.AddExpected(vtkm::Float32());
   scalarsAll.AddExpected(vtkm::Float64());
@@ -169,9 +172,9 @@ void TestLists()
   scalarsAll.AddExpected(vtkm::UInt32());
   scalarsAll.AddExpected(vtkm::Int64());
   scalarsAll.AddExpected(vtkm::UInt64());
-  TryList(scalarsAll, vtkm::TypeListTagScalarAll());
+  TryList(scalarsAll, vtkm::TypeListScalarAll());
 
-  std::cout << "TypeListTagVecCommon" << std::endl;
+  std::cout << "TypeListVecCommon" << std::endl;
   TypeSet vecCommon;
   vecCommon.AddExpected(vtkm::Vec2f_32());
   vecCommon.AddExpected(vtkm::Vec2f_64());
@@ -188,9 +191,9 @@ void TestLists()
   vecCommon.AddExpected(vtkm::Vec4ui_8());
   vecCommon.AddExpected(vtkm::Vec4i_32());
   vecCommon.AddExpected(vtkm::Vec4i_64());
-  TryList(vecCommon, vtkm::TypeListTagVecCommon());
+  TryList(vecCommon, vtkm::TypeListVecCommon());
 
-  std::cout << "TypeListTagVecAll" << std::endl;
+  std::cout << "TypeListVecAll" << std::endl;
   TypeSet vecAll;
   vecAll.AddExpected(vtkm::Vec2f_32());
   vecAll.AddExpected(vtkm::Vec2f_64());
@@ -222,9 +225,9 @@ void TestLists()
   vecAll.AddExpected(vtkm::Vec4ui_16());
   vecAll.AddExpected(vtkm::Vec4ui_32());
   vecAll.AddExpected(vtkm::Vec4ui_64());
-  TryList(vecAll, vtkm::TypeListTagVecAll());
+  TryList(vecAll, vtkm::TypeListVecAll());
 
-  std::cout << "TypeListTagAll" << std::endl;
+  std::cout << "TypeListAll" << std::endl;
   TypeSet all;
   all.AddExpected(vtkm::Float32());
   all.AddExpected(vtkm::Float64());
@@ -266,14 +269,12 @@ void TestLists()
   all.AddExpected(vtkm::Vec4ui_16());
   all.AddExpected(vtkm::Vec4ui_32());
   all.AddExpected(vtkm::Vec4ui_64());
-  TryList(all, vtkm::TypeListTagAll());
+  TryList(all, vtkm::TypeListAll());
 }
 
 } // anonymous namespace
 
-int UnitTestTypeListTag(int argc, char* argv[])
+int UnitTestTypeList(int argc, char* argv[])
 {
   return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }
-
-VTKM_DEPRECATED_SUPPRESS_END

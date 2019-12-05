@@ -176,7 +176,7 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // mapfield namespace

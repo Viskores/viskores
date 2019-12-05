@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_FilterTraits_h
 #define vtk_m_filter_FilterTraits_h
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/List.h>
 
 namespace vtkm
 {

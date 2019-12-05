@@ -21,7 +21,7 @@
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <type_traits>
@@ -107,14 +107,14 @@ struct vtkmComplexCustomTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<float, 3>,
 void TestContDataTypesHaveMoveSemantics()
 {
   //verify the Vec types are triv and noexcept
-  vtkm::testing::Testing::TryTypes(IsTrivNoExcept{}, vtkm::TypeListTagVecCommon{});
+  vtkm::testing::Testing::TryTypes(IsTrivNoExcept{}, vtkm::TypeListVecCommon{});
   //verify that vtkm::Pair, Bitset, Bounds, and Range are triv and noexcept
   vtkm::testing::Testing::TryTypes(IsTrivNoExcept{}, vtkmComplexCustomTypes{});
 
 
   //verify that ArrayHandles and related portals are noexcept movable
   //allowing for efficient storage in containers such as std::vector
-  vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, vtkm::TypeListTagAll{});
+  vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, vtkm::TypeListAll{});
 
   vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, ::vtkmComplexCustomTypes{});
 

@@ -36,7 +36,7 @@ class SplitSharpEdges : public vtkm::filter::FilterDataSetWithField<SplitSharpEd
 {
 public:
   // SplitSharpEdges filter needs cell normals to decide split.
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   SplitSharpEdges();

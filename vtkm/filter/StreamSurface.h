@@ -28,7 +28,7 @@ namespace filter
 class StreamSurface : public vtkm::filter::FilterDataSetWithField<StreamSurface>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   StreamSurface();

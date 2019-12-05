@@ -44,6 +44,7 @@ set(headers
   Swap.h
   TopologyElementTag.h
   Transform3D.h
+  TypeList.h
   TypeListTag.h
   Types.h
   TypeTraits.h

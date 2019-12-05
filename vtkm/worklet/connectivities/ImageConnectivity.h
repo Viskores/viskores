@@ -165,7 +165,7 @@ public:
            const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
-    using Types = vtkm::TypeListTagScalarAll;
+    using Types = vtkm::TypeListScalarAll;
     vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
   }
 

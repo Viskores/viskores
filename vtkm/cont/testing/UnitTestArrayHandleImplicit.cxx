@@ -67,7 +67,7 @@ struct ImplicitTests
 
 void TestArrayHandleImplicit()
 {
-  vtkm::testing::Testing::TryTypes(ImplicitTests(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(ImplicitTests(), vtkm::TypeListCommon());
 }
 
 } // anonymous namespace
