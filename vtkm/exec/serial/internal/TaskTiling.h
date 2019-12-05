@@ -26,8 +26,9 @@ namespace internal
 {
 
 template <typename WType>
-void VTKM_NEVER_EXPORT
-TaskTilingSetErrorBuffer(void* w, const vtkm::exec::internal::ErrorMessageBuffer& buffer)
+VTKM_NEVER_EXPORT void TaskTilingSetErrorBuffer(
+  void* w,
+  const vtkm::exec::internal::ErrorMessageBuffer& buffer)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   WorkletType* const worklet = static_cast<WorkletType*>(w);
@@ -35,7 +36,7 @@ TaskTilingSetErrorBuffer(void* w, const vtkm::exec::internal::ErrorMessageBuffer
 }
 
 template <typename WType, typename IType>
-void VTKM_NEVER_EXPORT TaskTiling1DExecute(void* w,
+VTKM_NEVER_EXPORT void TaskTiling1DExecute(void* w,
                                            void* const v,
                                            vtkm::Id globalIndexOffset,
                                            vtkm::Id start,
@@ -63,8 +64,11 @@ void VTKM_NEVER_EXPORT TaskTiling1DExecute(void* w,
 }
 
 template <typename FType>
-void VTKM_NEVER_EXPORT
-FunctorTiling1DExecute(void* f, void* const, vtkm::Id, vtkm::Id start, vtkm::Id end)
+VTKM_NEVER_EXPORT void FunctorTiling1DExecute(void* f,
+                                              void* const,
+                                              vtkm::Id,
+                                              vtkm::Id start,
+                                              vtkm::Id end)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -76,7 +80,7 @@ FunctorTiling1DExecute(void* f, void* const, vtkm::Id, vtkm::Id start, vtkm::Id 
 }
 
 template <typename WType, typename IType>
-void VTKM_NEVER_EXPORT TaskTiling3DExecute(void* w,
+VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
                                            void* const v,
                                            vtkm::Id globalIndexOffset,
                                            vtkm::Id istart,
@@ -108,7 +112,7 @@ void VTKM_NEVER_EXPORT TaskTiling3DExecute(void* w,
 }
 
 template <typename FType>
-void VTKM_NEVER_EXPORT FunctorTiling3DExecute(void* f,
+VTKM_NEVER_EXPORT void FunctorTiling3DExecute(void* f,
                                               void* const,
                                               vtkm::Id,
                                               vtkm::Id istart,
