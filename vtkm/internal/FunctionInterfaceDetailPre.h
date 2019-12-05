@@ -612,1030 +612,172 @@ struct AtType<Index, R(ArgTypes...)>
   using type = brigand::at_c<brigand::list<R, ArgTypes...>, Index>;
 };
 
-template <typename Collection, typename NewType>
-struct AppendType;
-template <template <typename...> class L, typename T, typename NT, typename... U>
-struct AppendType<L<T, U...>, NT>
-{
-  using type = T(U..., NT);
-};
-
-template <typename Collection>
-struct AsSigType;
-template <template <typename...> class L, typename T, typename... U>
-struct AsSigType<L<T, U...>>
-{
-  using type = T(U...);
-};
-
-template <typename Components, vtkm::IdComponent ParameterIndex, typename NewType>
-class ReplaceType
-{
-  using Index = std::integral_constant<std::size_t, (std::size_t)ParameterIndex>;
-  using split = brigand::split_at<Components, Index>;
-  using front = brigand::push_back<brigand::front<split>, NewType>;
-  using back = brigand::pop_front<brigand::back<split>>;
-  using replaced = brigand::append<front, back>;
-
-public:
-  using type = typename AsSigType<replaced>::type;
-};
-
-
 //============================================================================
 
-template <int ParameterIndex>
-struct ParameterContainerAccess;
+// clang-format off
 
-template <>
-struct ParameterContainerAccess<1>
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<1>)
+  -> decltype(parameters.Parameter1) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<1, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter1;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<1, FunctionSignature>::type& value)
-  {
-    parameters.Parameter1 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter1 = std::move(src.Parameter1);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<2>
+  return parameters.Parameter1;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<2>)
+  -> decltype(parameters.Parameter2) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<2, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter2;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<2, FunctionSignature>::type& value)
-  {
-    parameters.Parameter2 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter2 = std::move(src.Parameter2);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<3>
+  return parameters.Parameter2;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<3>)
+  -> decltype(parameters.Parameter3) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<3, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter3;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<3, FunctionSignature>::type& value)
-  {
-    parameters.Parameter3 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter3 = std::move(src.Parameter3);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<4>
+  return parameters.Parameter3;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<4>)
+  -> decltype(parameters.Parameter4) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<4, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter4;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<4, FunctionSignature>::type& value)
-  {
-    parameters.Parameter4 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter4 = std::move(src.Parameter4);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<5>
+  return parameters.Parameter4;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<5>)
+  -> decltype(parameters.Parameter5) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<5, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter5;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<5, FunctionSignature>::type& value)
-  {
-    parameters.Parameter5 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter5 = std::move(src.Parameter5);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<6>
+  return parameters.Parameter5;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<6>)
+  -> decltype(parameters.Parameter6) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<6, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter6;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<6, FunctionSignature>::type& value)
-  {
-    parameters.Parameter6 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter6 = std::move(src.Parameter6);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<7>
+  return parameters.Parameter6;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<7>)
+  -> decltype(parameters.Parameter7) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<7, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter7;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<7, FunctionSignature>::type& value)
-  {
-    parameters.Parameter7 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter7 = std::move(src.Parameter7);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<8>
+  return parameters.Parameter7;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<8>)
+  -> decltype(parameters.Parameter8) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<8, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter8;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<8, FunctionSignature>::type& value)
-  {
-    parameters.Parameter8 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter8 = std::move(src.Parameter8);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<9>
+  return parameters.Parameter8;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<9>)
+  -> decltype(parameters.Parameter9) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<9, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter9;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<9, FunctionSignature>::type& value)
-  {
-    parameters.Parameter9 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter9 = std::move(src.Parameter9);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<10>
+  return parameters.Parameter9;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<10>)
+  -> decltype(parameters.Parameter10) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<10, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter10;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<10, FunctionSignature>::type& value)
-  {
-    parameters.Parameter10 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter10 = std::move(src.Parameter10);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<11>
+  return parameters.Parameter10;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<11>)
+  -> decltype(parameters.Parameter11) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<11, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter11;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<11, FunctionSignature>::type& value)
-  {
-    parameters.Parameter11 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter11 = std::move(src.Parameter11);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<12>
+  return parameters.Parameter11;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<12>)
+  -> decltype(parameters.Parameter12) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<12, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter12;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<12, FunctionSignature>::type& value)
-  {
-    parameters.Parameter12 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter12 = std::move(src.Parameter12);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<13>
+  return parameters.Parameter12;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<13>)
+  -> decltype(parameters.Parameter13) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<13, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter13;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<13, FunctionSignature>::type& value)
-  {
-    parameters.Parameter13 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter13 = std::move(src.Parameter13);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<14>
+  return parameters.Parameter13;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<14>)
+  -> decltype(parameters.Parameter14) const&
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<14, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter14;
-  }
+  return parameters.Parameter14;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<15>)
+  -> decltype(parameters.Parameter15) const&
+{
+  return parameters.Parameter15;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<16>)
+  -> decltype(parameters.Parameter16) const&
+{
+  return parameters.Parameter16;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<17>)
+  -> decltype(parameters.Parameter17) const&
+{
+  return parameters.Parameter17;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<18>)
+  -> decltype(parameters.Parameter18) const&
+{
+  return parameters.Parameter18;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<19>)
+  -> decltype(parameters.Parameter19) const&
+{
+  return parameters.Parameter19;
+}
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<20>)
+  -> decltype(parameters.Parameter20) const&
+{
+  return parameters.Parameter20;
+}
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<14, FunctionSignature>::type& value)
-  {
-    parameters.Parameter14 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter14 = std::move(src.Parameter14);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<15>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<15, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter15;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<15, FunctionSignature>::type& value)
-  {
-    parameters.Parameter15 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter15 = std::move(src.Parameter15);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<16>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<16, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter16;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<16, FunctionSignature>::type& value)
-  {
-    parameters.Parameter16 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter16 = std::move(src.Parameter16);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<17>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<17, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter17;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<17, FunctionSignature>::type& value)
-  {
-    parameters.Parameter17 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter17 = std::move(src.Parameter17);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<18>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<18, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter18;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<18, FunctionSignature>::type& value)
-  {
-    parameters.Parameter18 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter18 = std::move(src.Parameter18);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<19>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<19, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter19;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<19, FunctionSignature>::type& value)
-  {
-    parameters.Parameter19 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter19 = std::move(src.Parameter19);
-  }
-};
-
-template <>
-struct ParameterContainerAccess<20>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<20, FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter20;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<20, FunctionSignature>::type& value)
-  {
-    parameters.Parameter20 = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter20 = std::move(src.Parameter20);
-  }
-};
-
-
-//============================================================================
-template <vtkm::IdComponent NumToCopy>
-struct CopyAllParameters;
-
-
-template <>
-struct CopyAllParameters<1>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-  }
-};
-template <>
-struct CopyAllParameters<2>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-  }
-};
-template <>
-struct CopyAllParameters<3>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-  }
-};
-template <>
-struct CopyAllParameters<4>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-  }
-};
-template <>
-struct CopyAllParameters<5>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-  }
-};
-template <>
-struct CopyAllParameters<6>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-  }
-};
-template <>
-struct CopyAllParameters<7>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-  }
-};
-template <>
-struct CopyAllParameters<8>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-  }
-};
-template <>
-struct CopyAllParameters<9>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-  }
-};
-template <>
-struct CopyAllParameters<10>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-  }
-};
-template <>
-struct CopyAllParameters<11>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-  }
-};
-template <>
-struct CopyAllParameters<12>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-  }
-};
-template <>
-struct CopyAllParameters<13>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-  }
-};
-template <>
-struct CopyAllParameters<14>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-  }
-};
-template <>
-struct CopyAllParameters<15>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-  }
-};
-template <>
-struct CopyAllParameters<16>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-    dest.Parameter16 = src.Parameter16;
-  }
-};
-template <>
-struct CopyAllParameters<17>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-    dest.Parameter16 = src.Parameter16;
-    dest.Parameter17 = src.Parameter17;
-  }
-};
-template <>
-struct CopyAllParameters<18>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-    dest.Parameter16 = src.Parameter16;
-    dest.Parameter17 = src.Parameter17;
-    dest.Parameter18 = src.Parameter18;
-  }
-};
-template <>
-struct CopyAllParameters<19>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-    dest.Parameter16 = src.Parameter16;
-    dest.Parameter17 = src.Parameter17;
-    dest.Parameter18 = src.Parameter18;
-    dest.Parameter19 = src.Parameter19;
-  }
-};
-template <>
-struct CopyAllParameters<20>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-    dest.Parameter1 = src.Parameter1;
-    dest.Parameter2 = src.Parameter2;
-    dest.Parameter3 = src.Parameter3;
-    dest.Parameter4 = src.Parameter4;
-    dest.Parameter5 = src.Parameter5;
-    dest.Parameter6 = src.Parameter6;
-    dest.Parameter7 = src.Parameter7;
-    dest.Parameter8 = src.Parameter8;
-    dest.Parameter9 = src.Parameter9;
-    dest.Parameter10 = src.Parameter10;
-    dest.Parameter11 = src.Parameter11;
-    dest.Parameter12 = src.Parameter12;
-    dest.Parameter13 = src.Parameter13;
-    dest.Parameter14 = src.Parameter14;
-    dest.Parameter15 = src.Parameter15;
-    dest.Parameter16 = src.Parameter16;
-    dest.Parameter17 = src.Parameter17;
-    dest.Parameter18 = src.Parameter18;
-    dest.Parameter19 = src.Parameter19;
-    dest.Parameter20 = src.Parameter20;
-  }
-};
-
-template <>
-struct CopyAllParameters<0>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>&,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>&)
-  {
-    // Nothing to copy.
-  }
-};
-
+// clang-format on
 
 //============================================================================
 
@@ -1645,70 +787,59 @@ struct FunctionInterfaceStaticTransformType;
 // clang-format off
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
-          typename OriginalR,
-          typename TransformedR>
-VTKM_CONT void DoStaticTransformCont(
+template <typename Result,
+          typename Transform,
+          typename OriginalR>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR()>& originalParameters,
-  ParameterContainer<TransformedR()>& transformedParameters)
+  ParameterContainer<OriginalR()>& originalParameters)
 {
   (void)transform;
   (void)originalParameters;
-  (void)transformedParameters;
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
-          typename OriginalP1,
-          typename TransformedR,
-          typename TransformedP1>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP1>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>())
   };
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
-          typename OriginalP2,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP2>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>())
   };
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
-          typename OriginalP3,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP3>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>())
@@ -1716,23 +847,18 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
           typename OriginalP3,
-          typename OriginalP4,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP4>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1741,25 +867,19 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
           typename OriginalP3,
           typename OriginalP4,
-          typename OriginalP5,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP5>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1769,27 +889,20 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
           typename OriginalP3,
           typename OriginalP4,
           typename OriginalP5,
-          typename OriginalP6,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP6>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1800,7 +913,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -1808,21 +922,12 @@ template <typename Transform,
           typename OriginalP4,
           typename OriginalP5,
           typename OriginalP6,
-          typename OriginalP7,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP7>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1834,7 +939,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -1843,22 +949,12 @@ template <typename Transform,
           typename OriginalP5,
           typename OriginalP6,
           typename OriginalP7,
-          typename OriginalP8,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP8>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1871,7 +967,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -1881,23 +978,12 @@ template <typename Transform,
           typename OriginalP6,
           typename OriginalP7,
           typename OriginalP8,
-          typename OriginalP9,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP9>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1911,7 +997,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -1922,24 +1009,12 @@ template <typename Transform,
           typename OriginalP7,
           typename OriginalP8,
           typename OriginalP9,
-          typename OriginalP10,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP10>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -1954,7 +1029,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -1966,25 +1042,12 @@ template <typename Transform,
           typename OriginalP8,
           typename OriginalP9,
           typename OriginalP10,
-          typename OriginalP11,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP11>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2000,7 +1063,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2013,26 +1077,12 @@ template <typename Transform,
           typename OriginalP9,
           typename OriginalP10,
           typename OriginalP11,
-          typename OriginalP12,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP12>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2049,7 +1099,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2063,27 +1114,12 @@ template <typename Transform,
           typename OriginalP10,
           typename OriginalP11,
           typename OriginalP12,
-          typename OriginalP13,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP13>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2101,7 +1137,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2116,28 +1153,12 @@ template <typename Transform,
           typename OriginalP11,
           typename OriginalP12,
           typename OriginalP13,
-          typename OriginalP14,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP14>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2156,7 +1177,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2172,29 +1194,12 @@ template <typename Transform,
           typename OriginalP12,
           typename OriginalP13,
           typename OriginalP14,
-          typename OriginalP15,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14,
-          typename TransformedP15>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP15>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2214,7 +1219,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2231,30 +1237,12 @@ template <typename Transform,
           typename OriginalP13,
           typename OriginalP14,
           typename OriginalP15,
-          typename OriginalP16,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14,
-          typename TransformedP15,
-          typename TransformedP16>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP16>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2275,7 +1263,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2293,31 +1282,12 @@ template <typename Transform,
           typename OriginalP14,
           typename OriginalP15,
           typename OriginalP16,
-          typename OriginalP17,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14,
-          typename TransformedP15,
-          typename TransformedP16,
-          typename TransformedP17>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP17>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2339,7 +1309,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2358,32 +1329,12 @@ template <typename Transform,
           typename OriginalP15,
           typename OriginalP16,
           typename OriginalP17,
-          typename OriginalP18,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14,
-          typename TransformedP15,
-          typename TransformedP16,
-          typename TransformedP17,
-          typename TransformedP18>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP18>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
@@ -2406,7 +1357,8 @@ VTKM_CONT void DoStaticTransformCont(
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
+template <typename Result,
+          typename Transform,
           typename OriginalR,
           typename OriginalP1,
           typename OriginalP2,
@@ -2426,33 +1378,12 @@ template <typename Transform,
           typename OriginalP16,
           typename OriginalP17,
           typename OriginalP18,
-          typename OriginalP19,
-          typename TransformedR,
-          typename TransformedP1,
-          typename TransformedP2,
-          typename TransformedP3,
-          typename TransformedP4,
-          typename TransformedP5,
-          typename TransformedP6,
-          typename TransformedP7,
-          typename TransformedP8,
-          typename TransformedP9,
-          typename TransformedP10,
-          typename TransformedP11,
-          typename TransformedP12,
-          typename TransformedP13,
-          typename TransformedP14,
-          typename TransformedP15,
-          typename TransformedP16,
-          typename TransformedP17,
-          typename TransformedP18,
-          typename TransformedP19>
-VTKM_CONT void DoStaticTransformCont(
+          typename OriginalP19>
+VTKM_CONT Result DoStaticTransformCont(
   const Transform& transform,
-  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
-  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18, TransformedP19)>& transformedParameters)
+  ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters)
 {
-  transformedParameters = {
+  return Result{
     transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>()),
     transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>()),
     transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>()),
