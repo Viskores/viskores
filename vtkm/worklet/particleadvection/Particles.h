@@ -34,7 +34,6 @@ public:
   {
   }
 
-  //DRP add a reference ??
   ParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Particle> particleArray, vtkm::Id maxSteps)
   {
     Particles = particleArray.PrepareForInPlace(Device());
@@ -144,7 +143,6 @@ public:
   {
   }
 
-  //DRP add a reference ??
   StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Particle> pArray,
                                         vtkm::cont::ArrayHandle<vtkm::Vec3f> historyArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
@@ -166,7 +164,6 @@ public:
     if (p.NumSteps == 0)
     {
       vtkm::Id loc = idx * Length;
-      //std::cout<<"PreStepUpdate "<<idx<<": loc= "<<loc<<" "<<p.Pos<<std::endl;
       this->History.Set(loc, p.Pos);
       this->ValidPoint.Set(loc, 1);
       this->StepCount.Set(idx, 1);
@@ -178,13 +175,10 @@ public:
   {
     this->ParticleExecutionObject<Device>::StepUpdate(idx, time, pt);
 
-    //vtkm::Particle p = this->ParticleExecutionObject<Device>::GetParticle(idx);
-
     //local step count.
     vtkm::Id stepCount = this->StepCount.Get(idx);
 
     vtkm::Id loc = idx * Length + stepCount;
-    //std::cout<<"StepUpdate "<<idx<<": loc= "<<loc<<" "<<pt<<std::endl;
     this->History.Set(loc, pt);
     this->ValidPoint.Set(loc, 1);
     this->StepCount.Set(idx, stepCount + 1);
@@ -205,6 +199,17 @@ protected:
 class StateRecordingParticles : vtkm::cont::ExecutionObjectBase
 {
 public:
+  //Helper functor for compacting history
+  struct IsOne
+  {
+    template <typename T>
+    VTKM_EXEC_CONT bool operator()(const T& x) const
+    {
+      return x == T(1);
+    }
+  };
+
+
   template <typename Device>
   VTKM_CONT vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device>
     PrepareForExecution(Device) const
@@ -256,15 +261,6 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Particle> ParticleArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StepCountArray;
   vtkm::cont::ArrayHandle<vtkm::Id> ValidPointArray;
-
-  struct IsOne
-  {
-    template <typename T>
-    VTKM_EXEC_CONT bool operator()(const T& x) const
-    {
-      return x == T(1);
-    }
-  };
 };
 
 
