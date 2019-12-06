@@ -767,7 +767,8 @@ void TestWorkletsBasic()
       auto portal = res.Particles.GetPortalConstControl();
       for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
       {
-        VTKM_TEST_ASSERT(portal.Get(i).Pos == endPts[i], "Particle advection point is wrong");
+        VTKM_TEST_ASSERT(portal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
+                         "Particle advection point is wrong");
         VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps,
                          "Particle advection NumSteps is wrong");
         VTKM_TEST_ASSERT(vtkm::Abs(portal.Get(i).Time - endT) < stepSize / 100,
@@ -792,7 +793,8 @@ void TestWorkletsBasic()
       auto parPortal = res.Particles.GetPortalConstControl();
       for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
       {
-        VTKM_TEST_ASSERT(parPortal.Get(i).Pos == endPts[i], "Streamline end point is wrong");
+        VTKM_TEST_ASSERT(parPortal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
+                         "Streamline end point is wrong");
         VTKM_TEST_ASSERT(parPortal.Get(i).NumSteps == maxSteps, "Streamline NumSteps is wrong");
         VTKM_TEST_ASSERT(vtkm::Abs(parPortal.Get(i).Time - endT) < stepSize / 100,
                          "Streamline Time is wrong");
@@ -803,7 +805,8 @@ void TestWorkletsBasic()
 
       auto posPortal = res.Positions.GetPortalConstControl();
       for (vtkm::Id i = 0; i < res.Positions.GetNumberOfValues(); i++)
-        VTKM_TEST_ASSERT(posPortal.Get(i) == samplePts[i], "Streamline points do not match");
+        VTKM_TEST_ASSERT(posPortal.Get(i) == samplePts[static_cast<std::size_t>(i)],
+                         "Streamline points do not match");
 
       vtkm::Id numCells = res.PolyLines.GetNumberOfCells();
       VTKM_TEST_ASSERT(numCells == static_cast<vtkm::Id>(pts.size()),
