@@ -152,7 +152,7 @@ void CosmoTools<T, StorageType>::HaloFinder(vtkm::cont::ArrayHandle<vtkm::Id>& r
                             rootedStar);   // output (whole array)
 
     // If all vertices are in rooted stars, algorithm is complete
-    bool allStars = DeviceAlgorithm::Reduce(rootedStar, true, vtkm::BitwiseAnd());
+    bool allStars = DeviceAlgorithm::Reduce(rootedStar, true, vtkm::LogicalAnd());
     if (allStars)
     {
       break;
