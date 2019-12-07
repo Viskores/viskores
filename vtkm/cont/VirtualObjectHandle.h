@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_VirtualObjectHandle_h
 #define vtk_m_cont_VirtualObjectHandle_h
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>

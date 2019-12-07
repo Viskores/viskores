@@ -17,7 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 #include <cassert>

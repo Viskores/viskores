@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 

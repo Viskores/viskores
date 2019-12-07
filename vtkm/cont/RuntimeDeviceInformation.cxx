@@ -9,9 +9,9 @@
 //============================================================================
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 
 //Bring in each device adapters runtime class

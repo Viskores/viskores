@@ -150,10 +150,10 @@ void TestLists()
   VTKM_TEST_ASSERT(vtkm::internal::IsList<vtkm::ListEmpty>::value);
   VTKM_TEST_ASSERT(vtkm::internal::IsList<vtkm::ListUniversal>::value);
 
-  std::cout << "ListTagEmpty" << std::endl;
+  std::cout << "ListEmpty" << std::endl;
   CheckList(vtkm::List<>{}, vtkm::ListEmpty{});
 
-  std::cout << "ListTagAppend" << std::endl;
+  std::cout << "ListAppend" << std::endl;
   CheckList(vtkm::List<TestClass<31>,
                        TestClass<32>,
                        TestClass<33>,
@@ -164,7 +164,7 @@ void TestLists()
                              vtkm::List<TestClass<11>>,
                              vtkm::List<TestClass<21>, TestClass<22>>>{});
 
-  std::cout << "ListTagIntersect" << std::endl;
+  std::cout << "ListIntersect" << std::endl;
   CheckList(vtkm::List<TestClass<3>, TestClass<5>>{},
             vtkm::ListIntersect<
               vtkm::List<TestClass<1>, TestClass<2>, TestClass<3>, TestClass<4>, TestClass<5>>,

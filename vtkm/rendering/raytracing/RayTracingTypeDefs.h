@@ -11,13 +11,13 @@
 #define vtk_m_rendering_raytracing_RayTracingTypeDefs_h
 
 #include <type_traits>
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 

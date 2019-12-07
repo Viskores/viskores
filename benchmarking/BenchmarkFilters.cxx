@@ -10,7 +10,6 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>

@@ -13,13 +13,13 @@
 
 #include <vtkm/List.h>
 
-#include <vtkm/cont/CellSetListTag.h>
+#include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/StorageListTag.h>
+#include <vtkm/cont/StorageList.h>
 
 #include <vtkm/filter/FilterTraits.h>
 

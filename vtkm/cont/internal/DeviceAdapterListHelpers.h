@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterListHelpers_h
 #define vtk_m_cont_internal_DeviceAdapterListHelpers_h
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 

@@ -21,7 +21,7 @@
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/cont/StorageListTag.h>
+#include <vtkm/cont/StorageList.h>
 
 #include <vtkm/cont/internal/VariantArrayHandleContainer.h>
 
@@ -205,7 +205,7 @@ public:
   ///
   /// In addition to the value type, an \c ArrayHandle also requires a storage tag.
   /// By default, \c CastAndCall attempts to cast the array using the storage tags
-  /// listed in \c VTKM_DEFAULT_STORAGE_LIST_TAG. You can optionally give a custom
+  /// listed in \c VTKM_DEFAULT_STORAGE_LIST. You can optionally give a custom
   /// list of storage tags as the second argument. If the storage of the underlying
   /// array does not match any of the storage tags given, then the array will
   /// be cast to an \c ArrayHandleVirtual, which can hold any array given the

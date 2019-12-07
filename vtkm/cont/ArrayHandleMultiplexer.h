@@ -18,7 +18,6 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/StorageListTag.h>
 
 namespace vtkm
 {

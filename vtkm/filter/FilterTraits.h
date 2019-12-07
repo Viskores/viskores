@@ -24,7 +24,7 @@ class Filter;
 //namespace detail
 //{
 //// template<typename T> vtkm::List<T> as_list(T);
-//vtkm::ListUniversal as_list(vtkm::ListTagUniversal);
+//vtkm::ListUniversal as_list(vtkm::ListUniversal);
 //template <typename... T>
 //vtkm::List<T...> as_list(vtkm::List<T...>);
 //}

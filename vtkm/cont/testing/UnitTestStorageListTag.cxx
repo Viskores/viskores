@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+// This tests deprecated code until it is deleted.
+
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/testing/Testing.h>

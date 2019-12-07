@@ -10,7 +10,7 @@
 #ifndef vtk_m_exec_AtomicArrayExecutionObject_h
 #define vtk_m_exec_AtomicArrayExecutionObject_h
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/internal/AtomicInterfaceExecution.h>

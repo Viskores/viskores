@@ -11,7 +11,6 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
-#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/TryExecute.h>

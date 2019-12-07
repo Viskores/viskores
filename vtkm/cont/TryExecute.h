@@ -165,7 +165,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
 ///
-/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
+/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST
 /// is used.
 ///
 template <typename Functor>
@@ -231,7 +231,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
 ///
-/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
+/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST
 /// is used.
 ///
 template <typename Functor, typename... Args>

@@ -20,7 +20,7 @@
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
 #include <vtkm/cont/CellSetExtrude.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/filter/PolicyDefault.h>
 
 namespace vtkm

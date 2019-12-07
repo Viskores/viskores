@@ -50,11 +50,11 @@ void CheckSame(const vtkm::Vec<TypeId, N>& expected, const std::vector<TypeId>& 
   }
 }
 
-template <vtkm::IdComponent N, typename ListTag>
-void TryList(const vtkm::Vec<TypeId, N>& expected, ListTag)
+template <vtkm::IdComponent N, typename List>
+void TryList(const vtkm::Vec<TypeId, N>& expected, List)
 {
   TestFunctor functor;
-  vtkm::ListForEach(functor, ListTag());
+  vtkm::ListForEach(functor, List());
   CheckSame(expected, functor.FoundTypes);
 }
 

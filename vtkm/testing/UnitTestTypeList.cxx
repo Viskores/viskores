@@ -76,11 +76,11 @@ struct TestFunctor
   }
 };
 
-template <typename ListTag>
-void TryList(const TypeSet& expected, ListTag)
+template <typename List>
+void TryList(const TypeSet& expected, List)
 {
   TestFunctor functor(expected);
-  vtkm::ListForEach(functor, ListTag());
+  vtkm::ListForEach(functor, List());
   functor.ExpectedTypes.CheckFound();
 }
 

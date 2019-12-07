@@ -20,7 +20,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/CellSetListTag.h>
+#include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>

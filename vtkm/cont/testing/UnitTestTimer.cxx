@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
