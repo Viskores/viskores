@@ -63,12 +63,7 @@ struct replace
   template <typename T, vtkm::IdComponent Index>
   struct ReturnType
   {
-    using type = T;
-  };
-  template <typename T>
-  struct ReturnType<T, IndexToReplace>
-  {
-    using type = U;
+    using type = typename std::conditional<Index == IndexToReplace, U, T>::type;
   };
 
   template <typename T, vtkm::IdComponent Index>
