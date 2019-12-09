@@ -376,6 +376,7 @@ namespace detail
 
 // We want to use an initializer list as a trick to call a function once for each type, but
 // an initializer list needs a type, so create wrapper function that returns a value.
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename Functor, typename... Args>
 VTKM_EXEC_CONT inline bool ListForEachCallThrough(Functor&& f, Args&&... args)
 {
@@ -383,6 +384,7 @@ VTKM_EXEC_CONT inline bool ListForEachCallThrough(Functor&& f, Args&&... args)
   return false; // Return value does not matter. Hopefully just thrown away.
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename Functor, typename... Ts, typename... Args>
 VTKM_EXEC_CONT void ListForEachImpl(Functor&& f, vtkm::List<Ts...>, Args&&... args)
 {
