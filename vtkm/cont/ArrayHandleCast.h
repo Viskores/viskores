@@ -62,6 +62,13 @@ public:
     this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
   }
 
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  ~ArrayHandleCast() {}
+
 private:
   // Log warnings if type cast is valid but lossy:
   template <typename SrcValueType>
