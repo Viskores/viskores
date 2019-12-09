@@ -63,7 +63,6 @@ set(headers
   IndexTag.h
   IndicesExtrude.h
   Invocation.h
-  ListTagDetail.h
   Unreachable.h
   Variant.h
   VariantDetail.h

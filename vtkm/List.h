@@ -275,7 +275,7 @@ struct ListHasImpl<vtkm::ListUniversal, T>
 /// Becomes `std::true_type` if the `T` is in `List`. `std::false_type` otherwise.
 ///
 template <typename List, typename T>
-using ListHas = typename detail::ListHasImpl<List, T>::type;
+using ListHas = typename detail::ListHasImpl<internal::AsList<List>, T>::type;
 
 /// Concatinates a set of lists into a single list.
 ///
