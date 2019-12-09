@@ -863,11 +863,11 @@ public:
     struct VertexData
     {
       long long distance;
-      long long index;
+      unsigned long index;
     };
 
     std::vector<VertexData> vertexData(static_cast<unsigned long>(supernodes.GetNumberOfValues()),
-                                       { -1, -1 });
+                                       { -1, 0 });
     for (unsigned long i = 0; i < vertexData.size(); i++)
     {
       vertexData[i].index = i;
