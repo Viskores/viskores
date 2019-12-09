@@ -110,8 +110,8 @@ struct ListTagAsBrigandListImpl
 {
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_IS_LIST_TAG(ListTag);
-  VTKM_DEPRECATED_SUPPRESS_END
   using type = typename ListTag::list;
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 
 } // namespace detail
@@ -205,7 +205,7 @@ template <typename ListTag, typename Type>
 struct VTKM_DEPRECATED(1.6,
                        "ListTagAppend<List, Type> replaced by ListAppend<List, vtkm::List<Type>. "
                        "Note that ListAppend cannot be subclassed.") ListTagAppend
-  : vtkm::ListTagJoin<ListTag, vtkm::List<Type>>
+  : vtkm::internal::ListAsListTag<vtkm::ListAppend<ListTag, vtkm::List<Type>>>
 {
 };
 
@@ -213,9 +213,10 @@ struct VTKM_DEPRECATED(1.6,
 /// No checks are performed to see if \c ListTag itself has only unique elements.
 template <typename ListTag, typename Type>
 struct VTKM_DEPRECATED(1.6) ListTagAppendUnique
-  : std::conditional<vtkm::ListHas<ListTag, Type>::value,
-                     vtkm::internal::ListAsListTag<vtkm::internal::AsList<ListTag>>,
-                     vtkm::ListTagAppend<ListTag, Type>>::type
+  : std::conditional<
+      vtkm::ListHas<ListTag, Type>::value,
+      vtkm::internal::ListAsListTag<vtkm::internal::AsList<ListTag>>,
+      vtkm::internal::ListAsListTag<vtkm::ListAppend<ListTag, vtkm::List<Type>>>>::type
 {
 };
 
