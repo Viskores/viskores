@@ -277,11 +277,33 @@ struct ListHasImpl<vtkm::ListUniversal, T>
 template <typename List, typename T>
 using ListHas = typename detail::ListHasImpl<internal::AsList<List>, T>::type;
 
+#if defined(VTKM_MSVC) && (_MSC_VER < 1911)
+
+// Alternate definition of ListAppend to get around an apparent issue with
+// Visual Studio 2015.
+namespace detail
+{
+
+template <typename... Lists>
+struct ListAppendImpl
+{
+  using type = brigand::append<internal::AsList<Lists>...>;
+};
+
+} // namespace detail
+
+template <typename... Lists>
+using ListAppend = typename detail::ListAppendImpl<Lists...>::type;
+
+#else // Normal definition
+
 /// Concatinates a set of lists into a single list.
 ///
 /// Note that this does not work correctly with `vtkm::ListUniversal`.
 template <typename... Lists>
 using ListAppend = brigand::append<internal::AsList<Lists>...>;
+
+#endif
 
 namespace detail
 {
