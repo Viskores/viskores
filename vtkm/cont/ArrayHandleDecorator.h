@@ -26,11 +26,15 @@
 #include <type_traits>
 #include <utility>
 
-// MSVC and CUDA and Xcode < 10 and Clang < 5 have issues with tao integer sequences
-#if defined(VTKM_MSVC) || defined(VTKM_CUDA_DEVICE_PASS) ||                                        \
-  (defined(__apple_build_version__) && (__apple_build_version__ < 10000000)) ||                    \
-  (defined(VTKM_CLANG) && (__clang_major__ < 5))
-#define VTKM_USE_BRIGAND_SEQ
+// Some compilers like brigand's integer sequences.
+// Some compilers prefer tao's.
+// Brigand seems to have more support, so we'll use that as default and fallback
+// to tao when brigand fails. With C++14, we'll be able to just use the STL.
+#if !defined(VTKM_CUDA_DEVICE_PASS) &&                                                             \
+  (defined(VTKM_GCC) ||                                                                            \
+   (defined(__apple_build_version__) && (__apple_build_version__ >= 10000000)) ||                  \
+   (defined(VTKM_CLANG) && (__clang_major__ >= 5)))
+#define VTKM_USE_TAO_SEQ
 #endif
 
 namespace vtkm
@@ -359,11 +363,11 @@ struct DecoratorStorageTraits
   using ArrayTupleType = vtkmstd::tuple<ArrayTs...>;
 
 // size_t integral constants that index ArrayTs:
-#ifdef VTKM_USE_BRIGAND_SEQ
+#ifndef VTKM_USE_TAO_SEQ
   using IndexList = brigand::make_sequence<brigand::size_t<0>, sizeof...(ArrayTs)>;
-#else // VTKM_USE_BRIGAND_SEQ
+#else  // VTKM_USE_TAO_SEQ
   using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
-#endif // VTKM_USE_BRIGAND_SEQ
+#endif // VTKM_USE_TAO_SEQ
 
   // Portal lists:
   // NOTE we have to pass the parameter pack here instead of using ArrayList
@@ -442,7 +446,7 @@ struct DecoratorStorageTraits
     return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
   }
 
-#ifdef VTKM_USE_BRIGAND_SEQ
+#ifndef VTKM_USE_TAO_SEQ
   // Portal construction methods. These actually create portals.
   template <template <typename...> class List, typename... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
@@ -523,7 +527,7 @@ struct DecoratorStorageTraits
       GetPortalOutput(vtkmstd::get<Indices{}.value>(arrays), dev)...);
   }
 
-#else  // VTKM_USE_BRIGAND_SEQ
+#else  // VTKM_USE_TAO_SEQ
   // Portal construction methods. These actually create portals.
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
@@ -577,7 +581,7 @@ struct DecoratorStorageTraits
     return CreatePortalDecorator<PortalExecutionType<Device>>(
       numValues, impl, GetPortalOutput(vtkmstd::get<Indices>(arrays), dev)...);
   }
-#endif // VTKM_USE_BRIGAND_SEQ
+#endif // VTKM_USE_TAO_SEQ
 };
 
 } // end namespace decor
@@ -894,6 +898,8 @@ make_ArrayHandleDecorator(vtkm::Id numValues, DecoratorImplT&& f, ArrayTs&&... a
 }
 } // namespace vtkm::cont
 
-#undef VTKM_USE_BRIGAND_SEQ
+#ifdef VTKM_USE_TAO_SEQ
+#undef VTKM_USE_TAO_SEQ
+#endif
 
 #endif //vtk_m_ArrayHandleDecorator_h
