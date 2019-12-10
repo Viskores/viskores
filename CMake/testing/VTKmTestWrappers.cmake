@@ -102,6 +102,9 @@ function(vtkm_unit_tests)
   # For Testing Purposes, we will set the default logging level to INFO
   list(APPEND vtkm_default_test_log_level "-v" "INFO")
 
+  # Add the path to the data directory so tests can find and use data files for testing
+  list(APPEND VTKm_UT_TEST_ARGS "-path=${VTKm_SOURCE_DIR}/data")
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")
