@@ -21,20 +21,10 @@ namespace filter
 template <typename Derived>
 class Filter;
 
-//namespace detail
-//{
-//// template<typename T> vtkm::List<T> as_list(T);
-//vtkm::ListUniversal as_list(vtkm::ListUniversal);
-//template <typename... T>
-//vtkm::List<T...> as_list(vtkm::List<T...>);
-//}
-
 
 template <typename Filter>
 struct FilterTraits
 {
-  //  using InputFieldTypeList =
-  //    decltype(detail::as_list(std::declval<typename Filter::SupportedTypes>()));
   using InputFieldTypeList = typename Filter::SupportedTypes;
   using AdditionalFieldStorage = typename Filter::AdditionalFieldStorage;
 };
