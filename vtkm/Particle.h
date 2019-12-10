@@ -25,27 +25,27 @@ public:
     this->ClearTerminate();
   }
 
-  VTKM_EXEC_CONT void SetOk() { this->set(SUCCESS_BIT); }
-  VTKM_EXEC_CONT bool CheckOk() const { return this->test(SUCCESS_BIT); }
+  VTKM_EXEC_CONT void SetOk() { this->set(this->SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckOk() const { return this->test(this->SUCCESS_BIT); }
 
-  VTKM_EXEC_CONT void SetFail() { this->reset(SUCCESS_BIT); }
-  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(SUCCESS_BIT); }
+  VTKM_EXEC_CONT void SetFail() { this->reset(this->SUCCESS_BIT); }
+  VTKM_EXEC_CONT bool CheckFail() const { return !this->test(this->SUCCESS_BIT); }
 
-  VTKM_EXEC_CONT void SetTerminate() { this->set(TERMINATE_BIT); }
-  VTKM_EXEC_CONT void ClearTerminate() { this->reset(TERMINATE_BIT); }
-  VTKM_EXEC_CONT bool CheckTerminate() const { return this->test(TERMINATE_BIT); }
+  VTKM_EXEC_CONT void SetTerminate() { this->set(this->TERMINATE_BIT); }
+  VTKM_EXEC_CONT void ClearTerminate() { this->reset(this->TERMINATE_BIT); }
+  VTKM_EXEC_CONT bool CheckTerminate() const { return this->test(this->TERMINATE_BIT); }
 
-  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(SPATIAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT void ClearSpatialBounds() { this->reset(SPATIAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void SetSpatialBounds() { this->set(this->SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void ClearSpatialBounds() { this->reset(this->SPATIAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckSpatialBounds() const { return this->test(this->SPATIAL_BOUNDS_BIT); }
 
-  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(TEMPORAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT void ClearTemporalBounds() { this->reset(TEMPORAL_BOUNDS_BIT); }
-  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void SetTemporalBounds() { this->set(this->TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT void ClearTemporalBounds() { this->reset(this->TEMPORAL_BOUNDS_BIT); }
+  VTKM_EXEC_CONT bool CheckTemporalBounds() const { return this->test(this->TEMPORAL_BOUNDS_BIT); }
 
-  VTKM_EXEC_CONT void SetTookAnySteps() { this->set(TOOK_ANY_STEPS_BIT); }
-  VTKM_EXEC_CONT void ClearTookAnySteps() { this->reset(TOOK_ANY_STEPS_BIT); }
-  VTKM_EXEC_CONT bool CheckTookAnySteps() const { return this->test(TOOK_ANY_STEPS_BIT); }
+  VTKM_EXEC_CONT void SetTookAnySteps() { this->set(this->TOOK_ANY_STEPS_BIT); }
+  VTKM_EXEC_CONT void ClearTookAnySteps() { this->reset(this->TOOK_ANY_STEPS_BIT); }
+  VTKM_EXEC_CONT bool CheckTookAnySteps() const { return this->test(this->TOOK_ANY_STEPS_BIT); }
 
 private:
   static constexpr vtkm::Id SUCCESS_BIT = 0;
