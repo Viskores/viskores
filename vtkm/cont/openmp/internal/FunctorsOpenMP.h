@@ -148,12 +148,12 @@ static void CopyHelper(InPortalT inPortal,
         numVals, omp_get_num_threads(), 8, sizeof(InValueT), numChunks, valuesPerChunk);
     }
 
-VTKM_OPENMP_DIRECTIVE(for schedule(static))
-for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
-{
-  vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
-  DoCopy(inIter + i, outIter + i, chunkSize, isSame);
-}
+    VTKM_OPENMP_DIRECTIVE(for schedule(static))
+    for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
+    {
+      vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
+      DoCopy(inIter + i, outIter + i, chunkSize, isSame);
+    }
   }
 }
 
