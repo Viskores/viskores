@@ -722,7 +722,7 @@ void TestWorkletsBasic()
 
   vtkm::Id maxSteps = 83;
   std::vector<std::string> workletTypes = { "particleAdvection", "streamline" };
-  vtkm::FloatDefault endT = stepSize * maxSteps;
+  vtkm::FloatDefault endT = stepSize * static_cast<vtkm::FloatDefault>(maxSteps);
 
   for (auto w : workletTypes)
   {

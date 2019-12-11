@@ -41,7 +41,7 @@ struct Bitset
 
   VTKM_EXEC_CONT void reset(vtkm::Id bitIndex)
   {
-    this->Mask = this->Mask & ~(static_cast<MaskType>(1) << bitIndex);
+    this->Mask = static_cast<MaskType>(this->Mask & ~(static_cast<MaskType>(1) << bitIndex));
   }
 
   VTKM_EXEC_CONT void toggle(vtkm::Id bitIndex)
