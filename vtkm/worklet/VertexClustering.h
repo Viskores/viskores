@@ -265,9 +265,7 @@ struct VertexClustering
     }
   };
 
-  struct TypeInt64 : vtkm::ListTagBase<vtkm::Int64>
-  {
-  };
+  using TypeInt64 = vtkm::List<vtkm::Int64>;
 
   class Cid3HashWorklet : public vtkm::worklet::WorkletMapField
   {

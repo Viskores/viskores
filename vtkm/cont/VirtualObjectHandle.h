@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_VirtualObjectHandle_h
 #define vtk_m_cont_VirtualObjectHandle_h
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
@@ -71,7 +71,7 @@ public:
   }
 
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT explicit VirtualObjectHandle(VirtualDerivedType* derived,
                                          bool acquireOwnership = true,
                                          DeviceAdapterList devices = DeviceAdapterList())
@@ -95,7 +95,7 @@ public:
 
   /// Reset the underlying derived type object
   template <typename VirtualDerivedType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   VTKM_CONT void Reset(VirtualDerivedType* derived,
                        bool acquireOwnership = true,
                        DeviceAdapterList devices = DeviceAdapterList())

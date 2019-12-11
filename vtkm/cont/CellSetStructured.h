@@ -119,6 +119,11 @@ public:
 
   void PrintSummary(std::ostream& out) const override;
 
+  // Cannot use the default implementation of the destructure because the CUDA compiler
+  // will attempt to create it for device, and then it will fail when it tries to call
+  // the destructor of the superclass.
+  ~CellSetStructured() override {}
+
 private:
   InternalsType Structure;
 };

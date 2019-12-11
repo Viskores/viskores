@@ -28,7 +28,7 @@ public:
   ImplicitFunctionHandle() = default;
 
   template <typename ImplicitFunctionType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   explicit ImplicitFunctionHandle(ImplicitFunctionType* function,
                                   bool acquireOwnership = true,
                                   DeviceAdapterList devices = DeviceAdapterList())
@@ -38,7 +38,7 @@ public:
 };
 
 template <typename ImplicitFunctionType,
-          typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+          typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
 VTKM_CONT ImplicitFunctionHandle
 make_ImplicitFunctionHandle(ImplicitFunctionType&& func,
                             DeviceAdapterList devices = DeviceAdapterList())
@@ -53,7 +53,7 @@ VTKM_CONT ImplicitFunctionHandle make_ImplicitFunctionHandle(Args&&... args)
 {
   return ImplicitFunctionHandle(new ImplicitFunctionType(std::forward<Args>(args)...),
                                 true,
-                                VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+                                VTKM_DEFAULT_DEVICE_ADAPTER_LIST());
 }
 
 template <typename ImplicitFunctionType, typename DeviceAdapterList, typename... Args>
@@ -82,7 +82,7 @@ public:
   }
 
   template <typename ImplicitFunctionType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   explicit ImplicitFunctionValueHandle(ImplicitFunctionType* function,
                                        bool acquireOwnership = true,
                                        DeviceAdapterList devices = DeviceAdapterList())
@@ -105,7 +105,7 @@ public:
 };
 
 template <typename ImplicitFunctionType,
-          typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+          typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
 VTKM_CONT ImplicitFunctionValueHandle
 make_ImplicitFunctionValueHandle(ImplicitFunctionType&& func,
                                  DeviceAdapterList devices = DeviceAdapterList())
@@ -120,7 +120,7 @@ VTKM_CONT ImplicitFunctionValueHandle make_ImplicitFunctionValueHandle(Args&&...
 {
   return ImplicitFunctionValueHandle(new ImplicitFunctionType(std::forward<Args>(args)...),
                                      true,
-                                     VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+                                     VTKM_DEFAULT_DEVICE_ADAPTER_LIST());
 }
 
 template <typename ImplicitFunctionType, typename DeviceAdapterList, typename... Args>

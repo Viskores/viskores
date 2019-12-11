@@ -221,10 +221,10 @@ void TestWithExplicitData()
 
 struct SplitSharpTestPolicy : public vtkm::filter::PolicyBase<SplitSharpTestPolicy>
 {
-  using StructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListTagJoin<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::ListTagBase<vtkm::FloatDefault, vtkm::Vec3f>;
+  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
+  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
+  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
+  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec3f>;
 };
 
 

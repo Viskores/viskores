@@ -10,7 +10,6 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
@@ -133,14 +132,14 @@ static bool ReducedOptions;
 
 // Limit the filter executions to only consider the following types, otherwise
 // compile times and binary sizes are nuts.
-using FieldTypes = vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
-using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
+using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
 
 using UnstructuredCellList =
-  vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
+  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
 
-using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
+using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
 
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
@@ -690,7 +689,7 @@ public:
   static VTKM_CONT int Run(int benches, vtkm::cont::DeviceAdapterId id)
   {
     // This has no influence on the benchmarks. See issue #286.
-    auto dummyTypes = vtkm::ListTagBase<vtkm::Int32>{};
+    auto dummyTypes = vtkm::List<vtkm::Int32>{};
 
     std::cout << DIVIDER << "\nRunning Filter benchmarks\n";
 

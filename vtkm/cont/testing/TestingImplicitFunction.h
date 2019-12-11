@@ -11,7 +11,7 @@
 #define vtk_m_cont_testing_TestingImplicitFunction_h
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>

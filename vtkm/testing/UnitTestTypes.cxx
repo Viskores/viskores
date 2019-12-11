@@ -860,18 +860,16 @@ struct TypeTestFunctor
   }
 };
 
-struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExemplarTypes,
-                                       vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 6>,
-                                                         vtkm::Id4,
-                                                         vtkm::Vec<unsigned char, 4>,
-                                                         vtkm::Vec<vtkm::Id, 1>,
-                                                         vtkm::Id2,
-                                                         vtkm::Vec<vtkm::Float64, 1>,
-                                                         vtkm::Vec<vtkm::Id2, 3>,
-                                                         vtkm::Vec<vtkm::Vec2f_32, 3>,
-                                                         vtkm::Vec<vtkm::Vec2f_32, 5>>>
-{
-};
+using TypesToTest = vtkm::ListAppend<vtkm::testing::Testing::TypeListExemplarTypes,
+                                     vtkm::List<vtkm::Vec<vtkm::FloatDefault, 6>,
+                                                vtkm::Id4,
+                                                vtkm::Vec<unsigned char, 4>,
+                                                vtkm::Vec<vtkm::Id, 1>,
+                                                vtkm::Id2,
+                                                vtkm::Vec<vtkm::Float64, 1>,
+                                                vtkm::Vec<vtkm::Id2, 3>,
+                                                vtkm::Vec<vtkm::Vec2f_32, 3>,
+                                                vtkm::Vec<vtkm::Vec2f_32, 5>>>;
 
 void TestTypes()
 {

@@ -40,13 +40,13 @@ static constexpr vtkm::Id NumWrites = 33554432; // 2^25
   VTKM_MAKE_BENCHMARK(Name##1048576, Class, 1048576)
 
 #define RUN_ATOMIC_BENCHMARKS(Name, id)                                                            \
-  VTKM_RUN_BENCHMARK(Name##1, vtkm::cont::AtomicArrayTypeListTag{}, id);                           \
-  VTKM_RUN_BENCHMARK(Name##8, vtkm::cont::AtomicArrayTypeListTag{}, id);                           \
-  VTKM_RUN_BENCHMARK(Name##32, vtkm::cont::AtomicArrayTypeListTag{}, id);                          \
-  VTKM_RUN_BENCHMARK(Name##512, vtkm::cont::AtomicArrayTypeListTag{}, id);                         \
-  VTKM_RUN_BENCHMARK(Name##2048, vtkm::cont::AtomicArrayTypeListTag{}, id);                        \
-  VTKM_RUN_BENCHMARK(Name##32768, vtkm::cont::AtomicArrayTypeListTag{}, id);                       \
-  VTKM_RUN_BENCHMARK(Name##1048576, vtkm::cont::AtomicArrayTypeListTag{}, id)
+  VTKM_RUN_BENCHMARK(Name##1, vtkm::cont::AtomicArrayTypeList{}, id);                              \
+  VTKM_RUN_BENCHMARK(Name##8, vtkm::cont::AtomicArrayTypeList{}, id);                              \
+  VTKM_RUN_BENCHMARK(Name##32, vtkm::cont::AtomicArrayTypeList{}, id);                             \
+  VTKM_RUN_BENCHMARK(Name##512, vtkm::cont::AtomicArrayTypeList{}, id);                            \
+  VTKM_RUN_BENCHMARK(Name##2048, vtkm::cont::AtomicArrayTypeList{}, id);                           \
+  VTKM_RUN_BENCHMARK(Name##32768, vtkm::cont::AtomicArrayTypeList{}, id);                          \
+  VTKM_RUN_BENCHMARK(Name##1048576, vtkm::cont::AtomicArrayTypeList{}, id)
 
 class BenchmarkAtomicArray
 {

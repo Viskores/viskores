@@ -276,7 +276,7 @@ void TryStructuredPointCoordinates()
 
 void TestArrayTopologyMapIn()
 {
-  vtkm::testing::Testing::TryTypes(TryType(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryType(), vtkm::TypeListCommon());
 
   TryStructuredPointCoordinates();
 }

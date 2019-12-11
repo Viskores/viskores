@@ -703,6 +703,13 @@ public:
     : Superclass(StorageType(handle, functor, inverseFunctor))
   {
   }
+
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  ~ArrayHandleTransform() {}
 };
 
 template <typename HandleType, typename FunctorType, typename InverseFunctorType>

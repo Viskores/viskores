@@ -22,7 +22,7 @@ namespace filter
 
 struct GhostCellRemovePolicy : vtkm::filter::PolicyBase<GhostCellRemovePolicy>
 {
-  using FieldTypeList = vtkm::ListTagBase<vtkm::UInt8>;
+  using FieldTypeList = vtkm::List<vtkm::UInt8>;
 };
 
 /// \brief Removes ghost cells
@@ -31,7 +31,7 @@ class GhostCellRemove : public vtkm::filter::FilterDataSetWithField<GhostCellRem
 {
 public:
   //currently the GhostCellRemove filter only works on uint8 data.
-  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8>;
+  using SupportedTypes = vtkm::List<vtkm::UInt8>;
 
   VTKM_CONT
   GhostCellRemove();

@@ -831,7 +831,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
     }
     else
     {
@@ -846,7 +846,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                 rays.MinDistance,
                 rays.MaxDistance,
                 rays.Buffers.at(0).Buffer,
-                ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+                ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
     }
   }
   else
@@ -869,7 +869,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                rays.MinDistance,
                                rays.MaxDistance,
                                rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
     }
     else
     {
@@ -887,7 +887,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
         rays.MinDistance,
         rays.MaxDistance,
         rays.Buffers.at(0).Buffer,
-        ScalarField->GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+        ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
     }
   }
 

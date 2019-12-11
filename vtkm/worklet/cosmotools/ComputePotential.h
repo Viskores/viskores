@@ -65,9 +65,7 @@ template <typename T>
 class ComputePotential : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn index,                // (input) particle Id
                                 WholeArrayIn partId,          // (input) first particle in halo

@@ -268,12 +268,12 @@ struct ArgToTemplateType
 
 void Launch()
 {
-  using Types = vtkm::ListTagBase<vtkm::UInt8,
-                                  vtkm::Vec<vtkm::UInt8, 3>,
-                                  vtkm::Float32,
-                                  vtkm::Vec<vtkm::Float32, 4>,
-                                  vtkm::Float64,
-                                  vtkm::Vec<vtkm::Float64, 4>>;
+  using Types = vtkm::List<vtkm::UInt8,
+                           vtkm::Vec<vtkm::UInt8, 3>,
+                           vtkm::Float32,
+                           vtkm::Vec<vtkm::Float32, 4>,
+                           vtkm::Float64,
+                           vtkm::Vec<vtkm::Float64, 4>>;
   vtkm::testing::Testing::TryTypes(ArgToTemplateType(), Types());
 }
 

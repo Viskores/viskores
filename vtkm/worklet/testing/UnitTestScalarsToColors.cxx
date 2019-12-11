@@ -339,51 +339,46 @@ struct TestToRGBA
 #endif
 
 
-struct TypeListTagScalarColorTypes : vtkm::ListTagBase<vtkm::Float32,
-                                                       vtkm::Float64,
-                                                       vtkm::Vec2f_32,
-                                                       vtkm::Vec2f_64,
-                                                       vtkm::Vec3f_32,
-                                                       vtkm::Vec3f_64,
-                                                       vtkm::Vec4f_32,
-                                                       vtkm::Vec4f_64>
-{
-};
+using TypeListScalarColorTypes = vtkm::List<vtkm::Float32,
+                                            vtkm::Float64,
+                                            vtkm::Vec2f_32,
+                                            vtkm::Vec2f_64,
+                                            vtkm::Vec3f_32,
+                                            vtkm::Vec3f_64,
+                                            vtkm::Vec4f_32,
+                                            vtkm::Vec4f_64>;
 
-struct TypeListTagUIntColorTypes
-  : vtkm::ListTagBase<vtkm::UInt8, vtkm::Vec2ui_8, vtkm::Vec3ui_8, vtkm::Vec4ui_8>
-{
-};
+using TypeListUIntColorTypes =
+  vtkm::List<vtkm::UInt8, vtkm::Vec2ui_8, vtkm::Vec3ui_8, vtkm::Vec4ui_8>;
 
 
 void TestScalarsToColors()
 {
   std::cout << "Test ConvertToRGB with UInt8 types" << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGB(), TypeListTagUIntColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGB(), TypeListUIntColorTypes());
   std::cout << "Test ConvertToRGB with Scalar types" << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGB(0.0f, 1.0f), TypeListTagScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGB(0.0f, 1.0f), TypeListScalarColorTypes());
   std::cout << "Test ShiftScaleToRGB with scalar types and varying range" << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGB(1024.0f, 4096.0f), TypeListTagScalarColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGB(-2048.0f, 1024.0f), TypeListTagScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGB(1024.0f, 4096.0f), TypeListScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGB(-2048.0f, 1024.0f), TypeListScalarColorTypes());
 
   std::cout << "Test ConvertToRGBA with UInt8 types and alpha values=[1.0, 0.5, 0.0]" << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGBA(), TypeListTagUIntColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 255.0f, 0.5f), TypeListTagUIntColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 255.0f, 0.0f), TypeListTagUIntColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(), TypeListUIntColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 255.0f, 0.5f), TypeListUIntColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 255.0f, 0.0f), TypeListUIntColorTypes());
 
   std::cout << "Test ConvertToRGBA with Scalar types and alpha values=[0.3, 0.6, 1.0]" << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 0.3f), TypeListTagScalarColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 0.6f), TypeListTagScalarColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 1.0f), TypeListTagScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 0.3f), TypeListScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 0.6f), TypeListScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 1.0f, 1.0f), TypeListScalarColorTypes());
 
   std::cout
     << "Test ConvertToRGBA with Scalar types and varying range with alpha values=[0.25, 0.5, 0.75]"
     << std::endl;
-  vtkm::testing::Testing::TryTypes(TestToRGBA(-0.075f, -0.025f, 0.25f),
-                                   TypeListTagScalarColorTypes());
-  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 2048.0f, 0.5f), TypeListTagScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(-0.075f, -0.025f, 0.25f), TypeListScalarColorTypes());
+  vtkm::testing::Testing::TryTypes(TestToRGBA(0.0f, 2048.0f, 0.5f), TypeListScalarColorTypes());
   vtkm::testing::Testing::TryTypes(TestToRGBA(-2048.0f, 2048.0f, 0.75f),
-                                   TypeListTagScalarColorTypes());
+                                   TypeListScalarColorTypes());
 }
 }
 

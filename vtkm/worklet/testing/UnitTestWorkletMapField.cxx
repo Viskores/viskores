@@ -129,9 +129,9 @@ struct DoVariantTestWorklet
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
       vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
-      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
-                        outputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
-                        inoutVariant.ResetTypes(vtkm::ListTagBase<T>{}));
+      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::List<T>{}),
+                        outputVariant.ResetTypes(vtkm::List<T>{}),
+                        inoutVariant.ResetTypes(vtkm::List<T>{}));
       CheckPortal(outputHandle.GetPortalConstControl());
       CheckPortal(inoutHandle.GetPortalConstControl());
     }
@@ -176,7 +176,7 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // mapfield namespace

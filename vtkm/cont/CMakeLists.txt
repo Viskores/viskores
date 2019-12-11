@@ -59,6 +59,7 @@ set(headers
   CellSet.h
   CellSetExplicit.h
   CellSetExtrude.h
+  CellSetList.h
   CellSetListTag.h
   CellSetPermutation.h
   CellSetSingleType.h
@@ -73,6 +74,7 @@ set(headers
   DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
+  DeviceAdapterList.h
   DeviceAdapterListTag.h
   DeviceAdapterTag.h
   DynamicCellSet.h
@@ -104,6 +106,7 @@ set(headers
   StorageBasic.h
   StorageExtrude.h
   StorageImplicit.h
+  StorageList.h
   StorageListTag.h
   StorageVirtual.h
   Timer.h

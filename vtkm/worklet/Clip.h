@@ -218,13 +218,9 @@ class Clip
 {
   // Add support for invert
 public:
-  struct TypeClipStats : vtkm::ListTagBase<ClipStats>
-  {
-  };
+  using TypeClipStats = vtkm::List<ClipStats>;
 
-  struct TypeEdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
-  {
-  };
+  using TypeEdgeInterp = vtkm::List<EdgeInterpolation>;
 
   class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
@@ -757,9 +753,7 @@ public:
   {
   public:
     using ValueType = typename ArrayHandleType::ValueType;
-    struct TypeMappedValue : vtkm::ListTagBase<ValueType>
-    {
-    };
+    using TypeMappedValue = vtkm::List<ValueType>;
 
     InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolationArray,
                      vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationKeys,

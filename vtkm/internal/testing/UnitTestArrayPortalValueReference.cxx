@@ -293,8 +293,8 @@ void DoTest()
   // simply doing a += (or similar) operation on them automatically creates a conversion warning
   // on some compilers. Since we want to test these operators, just remove the short types from
   // the list to avoid the warning.
-  vtkm::testing::Testing::TryTypes(
-    DoTestForType(), vtkm::ListTagBase<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
+  vtkm::testing::Testing::TryTypes(DoTestForType(),
+                                   vtkm::List<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
 }
 
 } // anonymous namespace

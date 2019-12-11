@@ -25,9 +25,7 @@ namespace gradient
 {
 
 template <typename T>
-struct CellGradientInType : vtkm::ListTagBase<T>
-{
-};
+using CellGradientInType = vtkm::List<T>;
 
 template <typename T>
 struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints

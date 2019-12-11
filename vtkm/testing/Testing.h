@@ -13,11 +13,12 @@
 #include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
+#include <vtkm/List.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
@@ -148,6 +149,34 @@ struct TypeName<vtkm::Bitset<T>>
     stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
     return stream.str();
   }
+};
+
+template <typename T0, typename... Ts>
+struct TypeName<vtkm::List<T0, Ts...>>
+{
+  static std::string Name()
+  {
+    std::initializer_list<std::string> subtypeStrings = { TypeName<Ts>::Name()... };
+
+    std::stringstream stream;
+    stream << "vtkm::List<" << TypeName<T0>::Name();
+    for (auto&& subtype : subtypeStrings)
+    {
+      stream << ", " << subtype;
+    }
+    stream << ">";
+    return stream.str();
+  }
+};
+template <>
+struct TypeName<vtkm::ListEmpty>
+{
+  static std::string Name() { return "vtkm::ListEmpty"; }
+};
+template <>
+struct TypeName<vtkm::ListUniversal>
+{
+  static std::string Name() { return "vtkm::ListUniversal"; }
 };
 
 namespace detail
@@ -375,15 +404,13 @@ public:
     vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function), TypeList());
   }
 
-  struct TypeListTagExemplarTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>
-  {
-  };
+  using TypeListExemplarTypes =
+    vtkm::List<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>;
 
   template <typename FunctionType>
   static void TryTypes(const FunctionType& function)
   {
-    TryTypes(function, TypeListTagExemplarTypes());
+    TryTypes(function, TypeListExemplarTypes());
   }
 
   // Disabled: This very long list results is very long compile times.
@@ -395,7 +422,7 @@ public:
   //  template<typename FunctionType>
   //  static void TryAllTypes(const FunctionType &function)
   //  {
-  //    TryTypes(function, vtkm::TypeListTagAll());
+  //    TryTypes(function, vtkm::TypeListAll());
   //  }
 
   /// Runs templated \p function on all cell shapes defined in VTK-m. This is

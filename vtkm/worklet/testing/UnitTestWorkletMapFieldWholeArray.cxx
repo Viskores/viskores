@@ -75,10 +75,9 @@ struct DoTestWholeArrayWorklet
     outHandle.Allocate(ARRAY_SIZE);
 
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(
-      vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::ListTagBase<T>{}),
-      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::ListTagBase<T>{}),
-      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::ListTagBase<T>{}));
+    dispatcher.Invoke(vtkm::cont::VariantArrayHandle(inHandle).ResetTypes(vtkm::List<T>{}),
+                      vtkm::cont::VariantArrayHandle(inOutHandle).ResetTypes(vtkm::List<T>{}),
+                      vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::List<T>{}));
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.GetPortalConstControl());
@@ -92,7 +91,7 @@ void TestWorkletMapFieldExecArg(vtkm::cont::DeviceAdapterId id)
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // anonymous namespace

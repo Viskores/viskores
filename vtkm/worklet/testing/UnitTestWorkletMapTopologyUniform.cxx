@@ -110,15 +110,14 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(
-    dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
-    // We know that the cell set is a structured 2D grid and
-    // The worklet does not work with general types because
-    // of the way we get cell indices. We need to make that
-    // part more flexible.
-    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
-    result);
+  dispatcher.Invoke(dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    // We know that the cell set is a structured 2D grid and
+                    // The worklet does not work with general types because
+                    // of the way we get cell indices. We need to make that
+                    // part more flexible.
+                    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
+                    result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
@@ -135,7 +134,7 @@ static void TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D());
+  auto cellset = dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D());
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
@@ -161,7 +160,7 @@ static void TestAvgPointToCell()
       // The worklet does not work with general types because
       // of the way we get cell indices. We need to make that
       // part more flexible.
-      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
       dataSet.GetField("cellvar"), // should be pointvar
       result);
   }
@@ -188,7 +187,7 @@ static void TestAvgCellToPoint()
     // The worklet does not work with general types because
     // of the way we get cell indices. We need to make that
     // part more flexible.
-    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
     dataSet.GetField("cellvar"),
     result);
 
@@ -206,7 +205,7 @@ static void TestAvgCellToPoint()
       // The worklet does not work with general types because
       // of the way we get cell indices. We need to make that
       // part more flexible.
-      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
       dataSet.GetField("pointvar"), // should be cellvar
       result);
   }

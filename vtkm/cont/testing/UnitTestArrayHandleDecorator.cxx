@@ -391,7 +391,7 @@ struct DecoratorTests
 
 void TestArrayHandleDecorator()
 {
-  vtkm::testing::Testing::TryTypes(DecoratorTests{}, vtkm::TypeListTagScalarAll{});
+  vtkm::testing::Testing::TryTypes(DecoratorTests{}, vtkm::TypeListScalarAll{});
 }
 
 } // anonymous namespace

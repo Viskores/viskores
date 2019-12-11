@@ -10,28 +10,40 @@
 #ifndef vtk_m_cont_DeviceAdapterListTag_h
 #define vtk_m_cont_DeviceAdapterListTag_h
 
+// Everything in this header file is deprecated and movded to DeviceAdapterList.h.
+
 #ifndef VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
-#define VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG ::vtkm::cont::DeviceAdapterListTagCommon
+#define VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG ::vtkm::cont::detail::DeviceAdapterListTagDefault
 #endif
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 
 namespace vtkm
 {
 namespace cont
 {
 
-struct DeviceAdapterListTagCommon : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
-                                                      vtkm::cont::DeviceAdapterTagTBB,
-                                                      vtkm::cont::DeviceAdapterTagOpenMP,
-                                                      vtkm::cont::DeviceAdapterTagSerial>
+struct VTKM_DEPRECATED(1.6,
+                       "DeviceAdapterListTagCommon replaced by DeviceAdapterListCommon. "
+                       "Note that the new DeviceAdapterListCommon cannot be subclassed.")
+  DeviceAdapterListTagCommon : vtkm::internal::ListAsListTag<DeviceAdapterListCommon>
 {
 };
+
+namespace detail
+{
+
+struct VTKM_DEPRECATED(
+  1.6,
+  "VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG replaced by VTKM_DEFAULT_DEVICE_ADAPTER_LIST. "
+  "Note that the new VTKM_DEFAULT_DEVICE_ADAPTER_LIST cannot be subclassed.")
+  DeviceAdapterListTagDefault : vtkm::internal::ListAsListTag<VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
+{
+};
+
+} // namespace detail
 }
 } // namespace vtkm::cont
 

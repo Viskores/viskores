@@ -73,7 +73,7 @@ namespace filter
 class ContourTreeMesh2D : public vtkm::filter::FilterCell<ContourTreeMesh2D>
 {
 public:
-  using SupportedTypes = TypeListTagScalarAll;
+  using SupportedTypes = TypeListScalarAll;
 
   VTKM_CONT
   ContourTreeMesh2D();
@@ -95,7 +95,7 @@ public:
 class ContourTreeMesh3D : public vtkm::filter::FilterCell<ContourTreeMesh3D>
 {
 public:
-  using SupportedTypes = TypeListTagScalarAll;
+  using SupportedTypes = TypeListScalarAll;
 
   VTKM_CONT
   ContourTreeMesh3D();

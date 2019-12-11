@@ -1473,24 +1473,16 @@ private:
     }
   };
 
-  struct ScalarTypesToTest : vtkm::ListTagBase<vtkm::UInt8, vtkm::FloatDefault>
-  {
-  };
+  using ScalarTypesToTest = vtkm::List<vtkm::UInt8, vtkm::FloatDefault>;
 
-  struct ZipTypesToTest : vtkm::ListTagBase<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
-                                            vtkm::Pair<vtkm::Float64, vtkm::Vec4ui_8>,
-                                            vtkm::Pair<vtkm::Vec3f_32, vtkm::Vec4i_8>>
-  {
-  };
+  using ZipTypesToTest = vtkm::List<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
+                                    vtkm::Pair<vtkm::Float64, vtkm::Vec4ui_8>,
+                                    vtkm::Pair<vtkm::Vec3f_32, vtkm::Vec4i_8>>;
 
-  struct HandleTypesToTest
-    : vtkm::ListTagBase<vtkm::Id, vtkm::Vec2i_32, vtkm::FloatDefault, vtkm::Vec3f_64>
-  {
-  };
+  using HandleTypesToTest =
+    vtkm::List<vtkm::Id, vtkm::Vec2i_32, vtkm::FloatDefault, vtkm::Vec3f_64>;
 
-  struct CastTypesToTest : vtkm::ListTagBase<vtkm::Int32, vtkm::UInt32>
-  {
-  };
+  using CastTypesToTest = vtkm::List<vtkm::Int32, vtkm::UInt32>;
 
   struct TestAll
   {

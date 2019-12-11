@@ -43,7 +43,7 @@ class AtomicInterfaceExecution
   /// operations.
   using WordTypePreferred = FastestWordTypeForDevice;
 
-  using WordTypes = vtkm::ListTagBase<vtkm::WordTypeDefault, WordTypePreferred>;
+  using WordTypes = vtkm::List<vtkm::WordTypeDefault, WordTypePreferred>;
 
   /// Atomically load a value from memory while enforcing, at minimum, "acquire"
   /// memory ordering.

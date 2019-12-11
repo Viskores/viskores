@@ -338,13 +338,9 @@ BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexerN(const Arr
   return BMArrayHandleMultiplexer<ArrayHandleType>(ArrayHandlePassThrough<ArrayHandleType>(array));
 }
 
-struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
-{
-};
+using ValueTypes = vtkm::List<vtkm::Float32, vtkm::Float64>;
 
-struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Vec3f_32>
-{
-};
+using InterpValueTypes = vtkm::List<vtkm::Float32, vtkm::Vec3f_32>;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations
@@ -1106,7 +1102,7 @@ public:
 
     if (benchmarks & IMPLICIT_FUNCTION)
     {
-      using FloatDefaultType = vtkm::ListTagBase<vtkm::FloatDefault>;
+      using FloatDefaultType = vtkm::List<vtkm::FloatDefault>;
 
       std::cout << "\nBenchmarking Implicit Function\n";
       VTKM_RUN_BENCHMARK(ImplicitFunction, FloatDefaultType(), id);

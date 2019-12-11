@@ -17,7 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 #include <cassert>
@@ -61,16 +61,16 @@ struct BitFieldTraits
   /// Require an unsigned integral type that is <= BlockSize bytes, and is
   /// is supported by the specified AtomicInterface.
   template <typename WordType, typename AtomicInterface>
-  using IsValidWordTypeAtomic = std::integral_constant<
-    bool,
-    /* is unsigned */
-    std::is_unsigned<WordType>::value &&
-      /* doesn't exceed blocksize */
-      sizeof(WordType) <= static_cast<size_t>(BlockSize) &&
-      /* BlockSize is a multiple of WordType */
-      static_cast<size_t>(BlockSize) % sizeof(WordType) == 0 &&
-      /* Supported by atomic interface */
-      vtkm::ListContains<typename AtomicInterface::WordTypes, WordType>::value>;
+  using IsValidWordTypeAtomic =
+    std::integral_constant<bool,
+                           /* is unsigned */
+                           std::is_unsigned<WordType>::value &&
+                             /* doesn't exceed blocksize */
+                             sizeof(WordType) <= static_cast<size_t>(BlockSize) &&
+                             /* BlockSize is a multiple of WordType */
+                             static_cast<size_t>(BlockSize) % sizeof(WordType) == 0 &&
+                             /* Supported by atomic interface */
+                             vtkm::ListHas<typename AtomicInterface::WordTypes, WordType>::value>;
 };
 
 /// Identifies a bit in a BitField by Word and BitOffset. Note that these

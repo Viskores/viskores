@@ -23,9 +23,7 @@ namespace gradient
 {
 
 template <typename T>
-struct StructuredPointGradientInType : vtkm::ListTagBase<T>
-{
-};
+using StructuredPointGradientInType = vtkm::List<T>;
 
 template <typename T>
 struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood

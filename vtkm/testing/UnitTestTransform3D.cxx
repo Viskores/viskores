@@ -197,7 +197,7 @@ void TestTransforms()
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
-  vtkm::testing::Testing::TryTypes(TryTransformsFunctor(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryTransformsFunctor(), vtkm::TypeListFieldScalar());
 }
 
 } // anonymous namespace

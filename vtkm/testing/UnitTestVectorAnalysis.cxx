@@ -245,9 +245,9 @@ struct TestVectorFunctor
 
 void TestVectorAnalysis()
 {
-  vtkm::testing::Testing::TryTypes(TestLinearFunctor(), vtkm::TypeListTagField());
-  vtkm::testing::Testing::TryTypes(TestCrossFunctor(), vtkm::TypeListTagFieldVec3());
-  vtkm::testing::Testing::TryTypes(TestVectorFunctor(), vtkm::TypeListTagFloatVec());
+  vtkm::testing::Testing::TryTypes(TestLinearFunctor(), vtkm::TypeListField());
+  vtkm::testing::Testing::TryTypes(TestCrossFunctor(), vtkm::TypeListFieldVec3());
+  vtkm::testing::Testing::TryTypes(TestVectorFunctor(), vtkm::TypeListFloatVec());
 }
 
 } // anonymous namespace

@@ -79,6 +79,7 @@ set(unit_tests
   UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
+  UnitTestStorageList.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
   UnitTestTryExecute.cxx

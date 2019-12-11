@@ -165,7 +165,7 @@ public:
            const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
-    using Types = vtkm::TypeListTagScalarAll;
+    using Types = vtkm::TypeListScalarAll;
     vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
   }
 
@@ -182,7 +182,7 @@ public:
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
-    input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
+    input.ResetCellSetList(vtkm::cont::CellSetListStructured())
       .CastAndCall(ResolveDynamicCellSet(), pixels, componentsOut);
   }
 };

@@ -207,7 +207,7 @@ public:
   /// Intepolate the input point field data at the points of the geometry
   template <typename T,
             typename Storage,
-            typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+            typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST>
   vtkm::cont::ArrayHandle<T> ProcessPointField(
     const vtkm::cont::ArrayHandle<T, Storage>& field,
     InputCellSetTypeList icsTypes = InputCellSetTypeList()) const

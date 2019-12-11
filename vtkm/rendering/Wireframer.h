@@ -542,7 +542,7 @@ private:
     vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
     plotterDispatcher.SetDevice(DeviceTag());
     plotterDispatcher.Invoke(
-      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
 
     BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);

@@ -118,10 +118,7 @@ public:
   }
 };
 
-struct ValueTypes
-  : vtkm::ListTagBase<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>
-{
-};
+using ValueTypes = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of different field operations

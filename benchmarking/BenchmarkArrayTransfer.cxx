@@ -539,7 +539,7 @@ struct BenchmarkArrayTransfer
 
   //----------- Benchmark caller -----------------------------------------------
 
-  using TestTypes = vtkm::ListTagBase<vtkm::Float32>;
+  using TestTypes = vtkm::List<vtkm::Float32>;
 
   static VTKM_CONT bool Run(vtkm::cont::DeviceAdapterId id)
   {

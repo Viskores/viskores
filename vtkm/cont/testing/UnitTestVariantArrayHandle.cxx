@@ -57,9 +57,7 @@ namespace
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-struct TypeListTagString : vtkm::ListTagBase<std::string>
-{
-};
+using TypeListString = vtkm::List<std::string>;
 
 template <typename T>
 struct UnusualPortal
@@ -187,8 +185,7 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
   calledBasic = false;
   calledUnusual = false;
   calledVirtual = false;
-  array.CastAndCall(
-    vtkm::ListTagEmpty(), CheckFunctor(), calledBasic, calledUnusual, calledVirtual);
+  array.CastAndCall(vtkm::ListEmpty(), CheckFunctor(), calledBasic, calledUnusual, calledVirtual);
   VTKM_TEST_ASSERT(
     calledBasic || calledUnusual || calledVirtual,
     "The functor was never called (and apparently a bad value exception not thrown).");
@@ -199,9 +196,9 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
   calledBasic = false;
   calledUnusual = false;
   calledVirtual = false;
-  array.CastAndCall(vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
-                                      ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
-                                      ArrayHandleWithUnusualStorage<std::string>::StorageTag>(),
+  array.CastAndCall(vtkm::List<vtkm::cont::StorageTagBasic,
+                               ArrayHandleWithUnusualStorage<vtkm::Id>::StorageTag,
+                               ArrayHandleWithUnusualStorage<std::string>::StorageTag>(),
                     CheckFunctor(),
                     calledBasic,
                     calledUnusual,
@@ -274,9 +271,9 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
   static constexpr vtkm::IdComponent NumComps = VTraits::NUM_COMPONENTS;
 
   using Storage = typename ArrayType::StorageTag;
-  using StorageList = vtkm::ListTagAppendUnique<VTKM_DEFAULT_STORAGE_LIST_TAG, Storage>;
+  using StorageList = vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST, vtkm::List<Storage>>;
 
-  using TypeList = vtkm::ListTagAppendUnique<VTKM_DEFAULT_TYPE_LIST_TAG, ValueType>;
+  using TypeList = vtkm::ListAppend<VTKM_DEFAULT_TYPE_LIST, vtkm::List<ValueType>>;
   using VariantArrayType = vtkm::cont::VariantArrayHandleBase<TypeList>;
 
   VariantArrayType arrayVariant = array;
@@ -445,9 +442,9 @@ struct TryBasicVTKmType
     vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
     CheckArrayVariant(
-      array.ResetTypes(vtkm::TypeListTagAll()), vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
+      array.ResetTypes(vtkm::TypeListAll()), vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
-    TryNewInstance(T(), array.ResetTypes(vtkm::TypeListTagAll()));
+    TryNewInstance(T(), array.ResetTypes(vtkm::TypeListAll()));
   }
 };
 
@@ -466,7 +463,7 @@ void TryUnusualType()
     std::cout << "  Caught exception for unrecognized type." << std::endl;
   }
 
-  CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1, true, false);
+  CheckArrayVariant(array.ResetTypes(TypeListString()), 1, true, false);
   std::cout << "  Found type when type list was reset." << std::endl;
 }
 
@@ -500,7 +497,7 @@ void TryUnusualTypeAndStorage()
 
   try
   {
-    CheckArrayVariant(array.ResetTypes(TypeListTagString()), 1, false, true);
+    CheckArrayVariant(array.ResetTypes(TypeListString()), 1, false, true);
   }
   catch (...)
   {

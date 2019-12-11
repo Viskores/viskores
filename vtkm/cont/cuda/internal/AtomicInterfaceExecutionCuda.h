@@ -14,7 +14,7 @@
 
 #include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 namespace vtkm
@@ -31,7 +31,7 @@ class AtomicInterfaceExecution<DeviceAdapterTagCuda>
 public:
   // Note: There are 64-bit atomics available, but not on all devices. Stick
   // with 32-bit only until we require compute capability 3.5+
-  using WordTypes = vtkm::ListTagBase<vtkm::UInt32>;
+  using WordTypes = vtkm::List<vtkm::UInt32>;
   using WordTypePreferred = vtkm::UInt32;
 
 #define VTKM_ATOMIC_OPS_FOR_TYPE(type)                                                             \

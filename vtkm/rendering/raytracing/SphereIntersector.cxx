@@ -360,7 +360,7 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            scalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
             PointIds);
 }
 

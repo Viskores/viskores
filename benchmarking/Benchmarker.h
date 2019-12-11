@@ -11,7 +11,6 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
-#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/TryExecute.h>
@@ -65,7 +64,7 @@
  * // We can now run our benchmark using VTKM_RUN_BENCHMARK, passing the
  * // benchmark name and type list to run on
  * int main(int, char**){
- *   VTKM_RUN_BENCHMARK(Silly, vtkm::ListTagBase<vtkm::Float32>());
+ *   VTKM_RUN_BENCHMARK(Silly, vtkm::List<vtkm::Float32>());
  *   return 0;
  * }
  *

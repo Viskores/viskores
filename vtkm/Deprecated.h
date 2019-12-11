@@ -45,7 +45,7 @@
 /// Do not use a semicolon after this macro.
 ///
 
-/// \def VTKM_DEPRECATED_SUPPRESS_ENDS
+/// \def VTKM_DEPRECATED_SUPPRESS_END
 ///
 /// Ends a region of code in which warnings about using deprecated code are ignored.
 /// Any use of `VTKM_DEPRECATED_SUPPRESS_BEGIN` must be paired with a

@@ -30,6 +30,7 @@ set(headers
   Geometry.h
   Hash.h
   ImplicitFunction.h
+  List.h
   ListTag.h
   Math.h
   Matrix.h
@@ -43,6 +44,7 @@ set(headers
   Swap.h
   TopologyElementTag.h
   Transform3D.h
+  TypeList.h
   TypeListTag.h
   Types.h
   TypeTraits.h

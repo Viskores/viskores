@@ -266,8 +266,7 @@ void SphereExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
   Radii.Allocate(this->PointIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(
-      this->PointIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+    .Invoke(this->PointIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
 }
 
 vtkm::cont::ArrayHandle<vtkm::Id> SphereExtractor::GetPointIds()
