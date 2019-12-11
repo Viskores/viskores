@@ -27,16 +27,19 @@ namespace detail
 class CopyToParticle : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn pt, FieldIn time, FieldIn step, FieldOut particle);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ControlSignature =
+    void(FieldIn pt, FieldIn id, FieldIn time, FieldIn step, FieldOut particle);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   VTKM_EXEC void operator()(const vtkm::Vec3f& pt,
+                            const vtkm::Id& id,
                             const vtkm::FloatDefault& time,
                             const vtkm::Id& step,
                             vtkm::Particle& particle) const
   {
     particle.Pos = pt;
+    particle.ID = id;
     particle.Time = time;
     particle.NumSteps = step;
     particle.Status.SetOk();
@@ -71,6 +74,33 @@ public:
                               vtkm::Id MaxSteps)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
+
+    worklet.Run(it, particles, MaxSteps);
+    return ParticleAdvectionResult(particles);
+  }
+
+  template <typename IntegratorType, typename PointStorage>
+  ParticleAdvectionResult Run(const IntegratorType& it,
+                              const vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage>& points,
+                              vtkm::Id MaxSteps)
+  {
+    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
+
+    vtkm::cont::ArrayHandle<vtkm::Particle> particles;
+    vtkm::cont::ArrayHandle<vtkm::Id> step, ids;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> time;
+    vtkm::cont::Invoker invoke;
+
+    vtkm::Id numPts = points.GetNumberOfValues();
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> s(0, numPts);
+    vtkm::cont::ArrayHandleConstant<vtkm::FloatDefault> t(0, numPts);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> id(0, 1, numPts);
+
+    //Copy input to vtkm::Particle
+    vtkm::cont::ArrayCopy(s, step);
+    vtkm::cont::ArrayCopy(t, time);
+    vtkm::cont::ArrayCopy(id, ids);
+    invoke(detail::CopyToParticle{}, points, ids, time, step, particles);
 
     worklet.Run(it, particles, MaxSteps);
     return ParticleAdvectionResult(particles);

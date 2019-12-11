@@ -36,7 +36,7 @@ set(unit_tests
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
-#  UnitTestLagrangianStructuresFilter.cxx
+  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
