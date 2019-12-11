@@ -32,8 +32,8 @@
 #include <string.h>
 
 static vtkm::Id cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Vec3f_64> BasisParticlesOriginal;
+static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticles;
+static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
 namespace
@@ -41,8 +41,8 @@ namespace
 class ValidityCheck : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn end_point, FieldIn steps, FieldInOut output);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn end_point, FieldInOut output);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   ValidityCheck(vtkm::Bounds b)
@@ -50,16 +50,15 @@ public:
   {
   }
 
-  template <typename PosType, typename StepType, typename ValidityType>
-  VTKM_EXEC void operator()(const PosType& end_point,
-                            const StepType& steps,
-                            ValidityType& res) const
+  template <typename ValidityType>
+  VTKM_EXEC void operator()(const vtkm::Particle& end_point, ValidityType& res) const
   {
+    vtkm::Id steps = end_point.NumSteps;
     if (steps > 0 && res == 1)
     {
-      if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
-          end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
-          end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+      if (end_point.Pos[0] >= bounds.X.Min && end_point.Pos[0] <= bounds.X.Max &&
+          end_point.Pos[1] >= bounds.Y.Min && end_point.Pos[1] <= bounds.Y.Max &&
+          end_point.Pos[2] >= bounds.Z.Min && end_point.Pos[2] <= bounds.Z.Max)
       {
         res = 1;
       }
@@ -178,7 +177,7 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
   auto portal1 = BasisParticles.GetPortalControl();
   auto portal2 = BasisParticlesValidity.GetPortalControl();
 
-  vtkm::Id count = 0;
+  vtkm::Id count = 0, id = 0;
   for (int x = 0; x < this->SeedRes[0]; x++)
   {
     for (int y = 0; y < this->SeedRes[1]; y++)
@@ -186,11 +185,13 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
       for (int z = 0; z < this->SeedRes[2]; z++)
       {
         portal1.Set(count,
-                    vtkm::Vec3f_64(bounds.X.Min + (x * x_spacing),
-                                   bounds.Y.Min + (y * y_spacing),
-                                   bounds.Z.Min + (z * z_spacing)));
+                    vtkm::Particle(Vec3f(bounds.X.Min + (x * x_spacing),
+                                         bounds.Y.Min + (y * y_spacing),
+                                         bounds.Z.Min + (z * z_spacing)),
+                                   id));
         portal2.Set(count, 1);
         count++;
+        id++;
       }
     }
   }
@@ -223,7 +224,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     throw vtkm::cont::ErrorFilterExecution(
       "Write frequency can not be 0. Use SetWriteFrequency().");
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> basisParticleArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> basisParticleArray;
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
@@ -240,15 +241,13 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
   GridEvalType gridEval(coords, cells, field);
   RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
+
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
 
-  auto particle_positions = res.Positions;
-  auto particle_stepstaken = res.stepsTaken;
+  auto particles = res.Particles;
+  auto particlePortal = particles.GetPortalControl();
 
   auto start_position = BasisParticlesOriginal.GetPortalControl();
-  auto end_position = particle_positions.GetPortalControl();
-
-  auto portal_stepstaken = particle_stepstaken.GetPortalControl();
   auto portal_validity = BasisParticlesValidity.GetPortalControl();
 
   vtkm::cont::DataSet outputData;
@@ -262,11 +261,11 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     std::vector<vtkm::UInt8> shapes;
     std::vector<vtkm::IdComponent> numIndices;
 
-    for (vtkm::Id index = 0; index < res.positions.GetNumberOfValues(); index++)
+    for (vtkm::Id index = 0; index < particlePortal.GetNumberOfValues(); index++)
     {
       auto start_point = start_position.Get(index);
-      auto end_point = end_position.Get(index);
-      auto steps = portal_stepstaken.Get(index);
+      auto end_point = particlePortal.Get(index).Pos;
+      auto steps = particlePortal.Get(index).NumSteps;
 
       if (steps > 0 && portal_validity.Get(index) == 1)
       {
@@ -277,8 +276,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
           connectivity.push_back(connectivity_index);
           connectivity.push_back(connectivity_index + 1);
           connectivity_index += 2;
-          pointCoordinates.push_back(
-            vtkm::Vec<T, 3>((float)start_point[0], (float)start_point[1], (float)start_point[2]));
+          pointCoordinates.push_back(vtkm::Vec<T, 3>(
+            (float)start_point.Pos[0], (float)start_point.Pos[1], (float)start_point.Pos[2]));
           pointCoordinates.push_back(
             vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
           shapes.push_back(vtkm::CELL_SHAPE_LINE);
@@ -308,14 +307,14 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     }
     else
     {
-      vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
+      vtkm::cont::ArrayCopy(particles, BasisParticles);
     }
   }
   else
   {
     ValidityCheck check(bounds);
-    this->Invoke(check, particle_positions, particle_stepstaken, BasisParticlesValidity);
-    vtkm::cont::ArrayCopy(particle_positions, BasisParticles);
+    this->Invoke(check, particles, BasisParticlesValidity);
+    vtkm::cont::ArrayCopy(particles, BasisParticles);
   }
 
   return outputData;

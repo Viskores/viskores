@@ -68,7 +68,7 @@ public:
   template <typename IntegratorType, typename ParticleStorage>
   ParticleAdvectionResult Run(const IntegratorType& it,
                               vtkm::cont::ArrayHandle<vtkm::Particle, ParticleStorage>& particles,
-                              vtkm::Id& MaxSteps)
+                              vtkm::Id MaxSteps)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType> worklet;
 
@@ -108,7 +108,7 @@ public:
   template <typename IntegratorType, typename ParticleStorage>
   StreamlineResult Run(const IntegratorType& it,
                        vtkm::cont::ArrayHandle<vtkm::Particle, ParticleStorage>& particles,
-                       vtkm::Id& MaxSteps)
+                       vtkm::Id MaxSteps)
   {
     vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType> worklet;
 
