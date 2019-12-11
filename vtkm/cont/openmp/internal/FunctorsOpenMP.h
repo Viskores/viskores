@@ -136,7 +136,8 @@ static void CopyHelper(InPortalT inPortal,
   auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outPortal) + outStart;
   vtkm::Id valuesPerChunk;
 
-  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals))
+  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals)
+                          VTKM_OPENMP_SHARED_CONST(isSame))
   {
 
     VTKM_OPENMP_DIRECTIVE(single)
