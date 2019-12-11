@@ -242,7 +242,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
 
-  auto particle_positions = res.positions;
+  auto particle_positions = res.Positions;
   auto particle_stepstaken = res.stepsTaken;
 
   auto start_position = BasisParticlesOriginal.GetPortalControl();

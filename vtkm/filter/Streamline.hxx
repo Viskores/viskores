@@ -30,7 +30,7 @@ inline VTKM_CONT Streamline::Streamline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds)
+inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
 {
   this->Seeds = seeds;
 }
@@ -67,7 +67,7 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 
   vtkm::worklet::StreamlineResult res;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 

@@ -35,8 +35,8 @@ set(unit_tests
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
   UnitTestImageMedianFilter.cxx
-  UnitTestLagrangianFilter.cxx
-  UnitTestLagrangianStructuresFilter.cxx
+#  UnitTestLagrangianFilter.cxx
+#  UnitTestLagrangianStructuresFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx
@@ -50,7 +50,7 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
-  UnitTestStreamSurfaceFilter.cxx
+#  UnitTestStreamSurfaceFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx

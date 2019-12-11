@@ -32,7 +32,7 @@ inline VTKM_CONT Pathline::Pathline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds)
+inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
 {
   this->Seeds = seeds;
 }
@@ -77,13 +77,13 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult res;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
   vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
-  outData.SetCellSet(res.polyLines);
+  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.Positions);
+  outData.SetCellSet(res.PolyLines);
   outData.AddCoordinateSystem(outputCoords);
 
   return outData;

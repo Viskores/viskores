@@ -168,4 +168,4 @@ target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
 add_subdirectory(internal)
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(testing)
+add_subdirectory(testing)
