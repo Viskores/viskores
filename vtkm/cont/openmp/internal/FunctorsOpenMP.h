@@ -136,7 +136,8 @@ static void CopyHelper(InPortalT inPortal,
   auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outPortal) + outStart;
   vtkm::Id valuesPerChunk;
 
-  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals))
+  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals)
+                          VTKM_OPENMP_SHARED_CONST(isSame))
   {
 
     VTKM_OPENMP_DIRECTIVE(single)
@@ -148,12 +149,12 @@ static void CopyHelper(InPortalT inPortal,
         numVals, omp_get_num_threads(), 8, sizeof(InValueT), numChunks, valuesPerChunk);
     }
 
-VTKM_OPENMP_DIRECTIVE(for schedule(static))
-for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
-{
-  vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
-  DoCopy(inIter + i, outIter + i, chunkSize, isSame);
-}
+    VTKM_OPENMP_DIRECTIVE(for schedule(static))
+    for (vtkm::Id i = 0; i < numVals; i += valuesPerChunk)
+    {
+      vtkm::Id chunkSize = std::min(numVals - i, valuesPerChunk);
+      DoCopy(inIter + i, outIter + i, chunkSize, isSame);
+    }
   }
 }
 
