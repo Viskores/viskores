@@ -38,7 +38,13 @@ public:
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
-    vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::Strict);
+    vtkm::cont::Initialize(argc, argv);
+
+    //Parse any remaining arguments that initialize did not recognize
+    for (int i = 0; i < argc; i++)
+    {
+      printf("after initialize arg :: %s\n", argv[i]);
+    }
 
     try
     {
