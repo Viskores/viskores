@@ -180,14 +180,17 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
   vtkm::Id count = 0, id = 0;
   for (int x = 0; x < this->SeedRes[0]; x++)
   {
+    vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
     for (int y = 0; y < this->SeedRes[1]; y++)
     {
+      vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
       for (int z = 0; z < this->SeedRes[2]; z++)
       {
+        vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
         portal1.Set(count,
-                    vtkm::Particle(Vec3f(bounds.X.Min + (x * x_spacing),
-                                         bounds.Y.Min + (y * y_spacing),
-                                         bounds.Z.Min + (z * z_spacing)),
+                    vtkm::Particle(Vec3f(static_cast<vtkm::FloatDefault>(bounds.X.Min) + xi,
+                                         static_cast<vtkm::FloatDefault>(bounds.Y.Min) + yi,
+                                         static_cast<vtkm::FloatDefault>(bounds.Z.Min) + zi),
                                    id));
         portal2.Set(count, 1);
         count++;
@@ -269,17 +272,18 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
       if (steps > 0 && portal_validity.Get(index) == 1)
       {
-        if (end_point[0] >= bounds.X.Min && end_point[0] <= bounds.X.Max &&
-            end_point[1] >= bounds.Y.Min && end_point[1] <= bounds.Y.Max &&
-            end_point[2] >= bounds.Z.Min && end_point[2] <= bounds.Z.Max)
+        if (bounds.Contains(end_point))
         {
           connectivity.push_back(connectivity_index);
           connectivity.push_back(connectivity_index + 1);
           connectivity_index += 2;
-          pointCoordinates.push_back(vtkm::Vec<T, 3>(
-            (float)start_point.Pos[0], (float)start_point.Pos[1], (float)start_point.Pos[2]));
           pointCoordinates.push_back(
-            vtkm::Vec<T, 3>((float)end_point[0], (float)end_point[1], (float)end_point[2]));
+            vtkm::Vec3f(static_cast<vtkm::FloatDefault>(start_point.Pos[0]),
+                        static_cast<vtkm::FloatDefault>(start_point.Pos[1]),
+                        static_cast<vtkm::FloatDefault>(start_point.Pos[2])));
+          pointCoordinates.push_back(vtkm::Vec3f(static_cast<vtkm::FloatDefault>(end_point[0]),
+                                                 static_cast<vtkm::FloatDefault>(end_point[1]),
+                                                 static_cast<vtkm::FloatDefault>(end_point[2])));
           shapes.push_back(vtkm::CELL_SHAPE_LINE);
           numIndices.push_back(2);
         }
