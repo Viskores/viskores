@@ -158,15 +158,47 @@ struct RangeId3
   {
     return ((this->X != range.X) || (this->Y != range.Y) || (this->Z != range.Z));
   }
-};
+  VTKM_EXEC_CONT
+  vtkm::RangeId& operator[](IdComponent c) noexcept
+  {
+    if (c <= 0)
+    {
+      return this->X;
+    }
+    else if (c == 1)
+    {
+      return this->Y;
+    }
+    else
+    {
+      return this->Z;
+    }
+  }
 
-} // namespace vtkm
+  VTKM_EXEC_CONT
+  const vtkm::RangeId& operator[](IdComponent c) const noexcept
+  {
+    if (c <= 0)
+    {
+      return this->X;
+    }
+    else if (c == 1)
+    {
+      return this->Y;
+    }
+    else
+    {
+      return this->Z;
+    }
+  }
+};
 
 /// Helper function for printing range during testing
 ///
-static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::RangeId3& range)
+inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::RangeId3& range)
 {
   return stream << "{ X:" << range.X << ", Y:" << range.Y << ", Z:" << range.Z << " }";
-}
+} // Declared inside of vtkm namespace so that the operator work with ADL lookup
+} // namespace vtkm
 
 #endif //vtk_m_RangeId3_h

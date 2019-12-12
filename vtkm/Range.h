@@ -177,7 +177,7 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Rang
 {
   return stream << "[" << range.Min << ".." << range.Max << "]";
 } // Declared inside of vtkm namespace so that the operator work with ADL lookup
-
 } // namespace vtkm
+
 
 #endif //vtk_m_Range_h
