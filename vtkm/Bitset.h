@@ -22,7 +22,8 @@ namespace vtkm
 /// \brief A bitmap to serve different needs.
 /// Ex. Editing particular bits in a byte(s), checkint if particular bit values
 /// are present or not. Once Cuda supports std::bitset, we should use the
-/// standard one if possible
+/// standard one if possible. Additional cast in logical operations are required
+/// to avoid compiler warnings when using 16 or 8 bit MaskType.
 template <typename MaskType>
 struct Bitset
 {
