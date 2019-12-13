@@ -51,6 +51,13 @@ namespace cont
 /// (e.g., ArrayHandleCast may be casting a read-only OR read-write array), the
 /// Set method may be conditionally removed using SFINAE.
 ///
+/// The ArrayPortalToIterators utilities wrap ArrayPortals in STL-style
+/// iterators. If an ArrayPortal implementation wishes to provide a custom
+/// iterator type, it may define an IteratorType type alias along with the
+/// methods `IteratorType GetIteratorBegin()` and
+/// `IteratorType GetIteratorEnd()`. These are not required members, but if
+/// present, will allow additional optimizations for certain portals.
+///
 template <typename T>
 class ArrayPortal
 {

@@ -74,12 +74,6 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return this->Functor(index); }
 
-  using IteratorType =
-    vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalImplicit<FunctorType>>;
-
-  VTKM_CONT
-  IteratorType GetIteratorBegin() const { return IteratorType(*this); }
-
 private:
   FunctorType Functor;
   vtkm::Id NumberOfValues;

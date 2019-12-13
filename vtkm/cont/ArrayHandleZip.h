@@ -39,7 +39,6 @@ public:
   using T = typename ValueType::FirstType;
   using U = typename ValueType::SecondType;
 
-  using IteratorType = ValueType_;
   using PortalTypeFirst = PortalTypeFirst_;
   using PortalTypeSecond = PortalTypeSecond_;
 
