@@ -29,7 +29,7 @@ public:
   using PortalType = P;
   using ValueType = typename PortalType::ValueType;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalStreaming()
     : InputPortal()
     , BlockIndex(0)
@@ -38,7 +38,7 @@ public:
   {
   }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ArrayPortalStreaming(const PortalType& inputPortal,
                        vtkm::Id blockIndex,
                        vtkm::Id blockSize,
@@ -51,7 +51,7 @@ public:
   }
 
   template <typename OtherP>
-  VTKM_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
+  VTKM_EXEC_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
     : InputPortal(src.GetPortal())
     , BlockIndex(src.GetBlockIndex())
     , BlockSize(src.GetBlockSize())
@@ -59,10 +59,10 @@ public:
   {
   }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->CurBlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     return this->InputPortal.Get(this->BlockIndex * this->BlockSize + index);
@@ -70,30 +70,30 @@ public:
 
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
-  VTKM_CONT void Set(vtkm::Id index, const ValueType& value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->InputPortal.Set(this->BlockIndex * this->BlockSize + index, value);
   }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   const PortalType& GetPortal() const { return this->InputPortal; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetBlockSize(vtkm::Id blockSize) { this->BlockSize = blockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetBlockIndex(vtkm::Id blockIndex) { this->BlockIndex = blockIndex; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetCurBlockSize(vtkm::Id curBlockSize) { this->CurBlockSize = curBlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetBlockSize() { return this->BlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetBlockIndex() { return this->BlockIndex; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetCurBlockSize() { return this->CurBlockSize; }
 
 private:
