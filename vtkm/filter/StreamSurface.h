@@ -40,7 +40,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds) { this->Seeds = seeds; }
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) { this->Seeds = seeds; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -59,7 +59,7 @@ public:
 
 private:
   vtkm::Id NumberOfSteps;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
   vtkm::FloatDefault StepSize;
   vtkm::worklet::StreamSurface Worklet;
 };

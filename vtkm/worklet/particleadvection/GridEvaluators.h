@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_particleadvection_GridEvaluators_h
 #define vtk_m_worklet_particleadvection_GridEvaluators_h
 
+#include <vtkm/Bitset.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -23,7 +24,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
-#include <vtkm/worklet/particleadvection/EvaluatorStatus.h>
+#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
@@ -81,22 +82,28 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos,
-                                     vtkm::FloatDefault vtkmNotUsed(time),
-                                     Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
+                                         vtkm::FloatDefault vtkmNotUsed(time),
+                                         Point& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point& point, Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point, Point& out) const
   {
     vtkm::Id cellId;
     Point parametric;
     vtkm::exec::FunctorBase tmp;
+    GridEvaluatorStatus status;
+
     Locator->FindCell(point, cellId, parametric, tmp);
     if (cellId == -1)
-      return EvaluatorStatus::OUTSIDE_SPATIAL_BOUNDS;
+    {
+      status.SetFail();
+      status.SetSpatialBounds();
+      return status;
+    }
 
     vtkm::UInt8 cellShape;
     vtkm::IdComponent nVerts;
@@ -108,7 +115,8 @@ public:
       fieldValues.Append(Field.Get(ptIndices[i]));
     out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
 
-    return EvaluatorStatus::SUCCESS;
+    status.SetOk();
+    return status;
   }
 
 private:

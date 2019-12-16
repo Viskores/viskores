@@ -11,6 +11,7 @@
 #ifndef vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
 #define vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
 
+#include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 
 namespace vtkm
@@ -68,23 +69,34 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC EvaluatorStatus Evaluate(const Point& pos, vtkm::FloatDefault time, Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
+                                         vtkm::FloatDefault time,
+                                         Point& out) const
   {
     // Validate time is in bounds for the current two slices.
+    GridEvaluatorStatus status;
+
     if (!(time >= TimeOne && time <= TimeTwo))
-      return EvaluatorStatus::OUTSIDE_TEMPORAL_BOUNDS;
-    EvaluatorStatus eval;
+    {
+      status.SetFail();
+      status.SetTemporalBounds();
+      return status;
+    }
+
     Point one, two;
-    eval = this->EvaluatorOne.Evaluate(pos, one);
-    if (eval != EvaluatorStatus::SUCCESS)
-      return eval;
-    eval = this->EvaluatorTwo.Evaluate(pos, two);
-    if (eval != EvaluatorStatus::SUCCESS)
-      return eval;
+    status = this->EvaluatorOne.Evaluate(pos, one);
+    if (status.CheckFail())
+      return status;
+    status = this->EvaluatorTwo.Evaluate(pos, two);
+    if (status.CheckFail())
+      return status;
+
     // LERP between the two values of calculated fields to obtain the new value
     vtkm::FloatDefault proportion = (time - this->TimeOne) / this->TimeDiff;
     out = vtkm::Lerp(one, two, proportion);
-    return EvaluatorStatus::SUCCESS;
+
+    status.SetOk();
+    return status;
   }
 
 private:

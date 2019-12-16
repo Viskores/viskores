@@ -36,6 +36,7 @@ set(headers
   Matrix.h
   NewtonsMethod.h
   Pair.h
+  Particle.h
   Range.h
   RangeId.h
   RangeId2.h
