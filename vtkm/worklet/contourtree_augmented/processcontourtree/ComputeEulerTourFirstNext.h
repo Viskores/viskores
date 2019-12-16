@@ -50,72 +50,66 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
+#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_compute_first_next_h
+#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_compute_first_next_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
-
+/*
+* This code is written by Petar Hristov in 09.2019
+*
+* This worklet performs the first step in computing an Euler tour.
+* That is computing two auxiliary array, from which we can compute the linked edge list of the Euler tour.
+* See https://en.wikipedia.org/wiki/Euler_tour_technique for details
+*
+*/
 namespace vtkm
 {
 namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace process_contourtree_inc
 {
-
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure3D
+class ComputeEulerTourFirstNext : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_EXEC_CONT
-  MeshStructure3D()
-    : nCols(0)
-    , nRows(0)
-    , nSlices(0)
+  typedef void ControlSignature(WholeArrayIn edges, WholeArrayOut first, WholeArrayOut next);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using InputDomain = _1;
+
+  // Default Constructor
+  VTKM_EXEC_CONT ComputeEulerTourFirstNext() {}
+
+  template <typename EdgesArrayPortalType, typename OutputArrayPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id i,
+                            const EdgesArrayPortalType& edges,
+                            const OutputArrayPortalType& first,
+                            const OutputArrayPortalType& next) const
   {
+    if (i == 0)
+    {
+      first.Set(0, 0);
+    }
+    else
+    {
+      if (edges.Get(i)[0] != edges.Get(i - 1)[0])
+      {
+        first.Set(edges.Get(i)[0], i);
+      }
+      else
+      {
+        next.Set(i - 1, i);
+      }
+    }
   }
-
-  VTKM_EXEC_CONT
-  MeshStructure3D(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices)
-    : nCols(ncols)
-    , nRows(nrows)
-    , nSlices(nslices)
-  {
-  }
-
-  // number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols * this->nSlices); }
-
-  // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
-  VTKM_EXEC
-  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
-
-  // vertex column -- integer modulus by columns
-  VTKM_EXEC
-  vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  // vertex slice -- integer divide by (nRows*nCols)
-  VTKM_EXEC
-  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (nRows * nCols); }
-
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
-  {
-    return (s * nRows + r) * nCols + c;
-  }
-
-  vtkm::Id nCols, nRows, nSlices;
-
-}; // Mesh_DEM_2D_ExecutionObject
-
-} // namespace mesh_dem_triangulation_worklets
+}; // ComputeEulerTourFirstNext
+} // process_contourtree_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm
+
 
 #endif

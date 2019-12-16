@@ -13,6 +13,11 @@ set(headers
   PiecewiseLinearFunction.h
   SuperArcVolumetricComparator.h
   SuperNodeBranchComparator.h
+  ComputeBestUpDown.h
+  ComputeEulerTourFirstNext.h
+  ComputeEulerTourList.h
+  ComputeMinMaxValues.h
+  SetTriangleSuperarcId.h
   )
 
 #-----------------------------------------------------------------------------

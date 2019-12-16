@@ -107,8 +107,8 @@ public:
 
   // Main constructore used in the code
   MeshStructureMarchingCubes(
-    vtkm::Id nrows,
     vtkm::Id ncols,
+    vtkm::Id nrows,
     vtkm::Id nslices,
     bool getmax,
     const IdArrayType& sortIndices,
@@ -119,7 +119,7 @@ public:
     const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsEighteenIn,
     const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsSixIn,
     const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsEighteenIn)
-    : mesh_dem::MeshStructure3D<DeviceAdapter>(nrows, ncols, nslices)
+    : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
     , getMax(getmax)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());

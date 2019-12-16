@@ -50,72 +50,81 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
+#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
+#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
 
-#include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
-
+/*
+* This code is written by Petar Hristov in 09.2019
+*
+* This worklet performs the second step in computing an Euler tour.
+* That is computing the adjacency list of the euler edge tour.
+* See https://en.wikipedia.org/wiki/Euler_tour_technique for details
+*
+*/
 namespace vtkm
 {
 namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace process_contourtree_inc
 {
-
-// Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructure3D
+class ComputeEulerTourList : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_EXEC_CONT
-  MeshStructure3D()
-    : nCols(0)
-    , nRows(0)
-    , nSlices(0)
+  typedef void ControlSignature(WholeArrayIn next,
+                                WholeArrayIn first,
+                                WholeArrayIn edges,
+                                WholeArrayOut succ);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _1;
+
+  template <typename NextArrayPortalType,
+            typename FirstArrayPortalType,
+            typename EdgesArrayPortalType,
+            typename OutputArrayPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id i,
+                            const NextArrayPortalType& next,
+                            const FirstArrayPortalType& first,
+                            const EdgesArrayPortalType& edges,
+                            const OutputArrayPortalType& succ) const
   {
+    // For edge (a, b) find the opposite edge (b, a) in the sorted list of edges
+    // This relies on the fact that in the contour tree nodes have bounded degree.
+    // This comes from the fact that vertices in a 2D/3D mesh have a bounded degree.
+    auto currentEdge = edges.Get(i);
+    auto oppositeIndex = first.Get(currentEdge[1]);
+
+    while (oppositeIndex < edges.GetNumberOfValues() &&
+           currentEdge[1] == edges.Get(oppositeIndex)[0])
+    {
+      if (currentEdge[0] == edges.Get(oppositeIndex)[1])
+      {
+        break;
+      }
+
+      oppositeIndex++;
+    }
+
+    if (NO_SUCH_ELEMENT == next.Get(oppositeIndex))
+    {
+      succ.Set(i, first.Get(edges.Get(i)[1]));
+    }
+    else
+    {
+      succ.Set(i, next.Get(oppositeIndex));
+    }
   }
-
-  VTKM_EXEC_CONT
-  MeshStructure3D(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices)
-    : nCols(ncols)
-    , nRows(nrows)
-    , nSlices(nslices)
-  {
-  }
-
-  // number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols * this->nSlices); }
-
-  // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
-  VTKM_EXEC
-  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
-
-  // vertex column -- integer modulus by columns
-  VTKM_EXEC
-  vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
-
-  // vertex slice -- integer divide by (nRows*nCols)
-  VTKM_EXEC
-  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (nRows * nCols); }
-
-  //vertex ID - row * ncols + col
-  VTKM_EXEC
-  vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
-  {
-    return (s * nRows + r) * nCols + c;
-  }
-
-  vtkm::Id nCols, nRows, nSlices;
-
-}; // Mesh_DEM_2D_ExecutionObject
-
-} // namespace mesh_dem_triangulation_worklets
+}; // ComputeEulerTourList
+} // process_contourtree_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm
+
 
 #endif

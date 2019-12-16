@@ -72,15 +72,15 @@ class MeshStructure2D
 public:
   VTKM_EXEC_CONT
   MeshStructure2D()
-    : nRows(0)
-    , nCols(0)
+    : nCols(0)
+    , nRows(0)
   {
   }
 
   VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id nrows, vtkm::Id ncols)
-    : nRows(nrows)
-    , nCols(ncols)
+  MeshStructure2D(vtkm::Id ncols, vtkm::Id nrows)
+    : nCols(ncols)
+    , nRows(nrows)
   {
   }
 
@@ -100,7 +100,7 @@ public:
   VTKM_EXEC
   inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
 
-  vtkm::Id nRows, nCols;
+  vtkm::Id nCols, nRows;
 
 }; // MeshStructure2D
 

@@ -505,16 +505,16 @@ int main(int argc, char* argv[])
     if (nDims == 2)
     {
       vtkm::Id2 vdims;
-      vdims[0] = static_cast<vtkm::Id>(dims[0]);
-      vdims[1] = static_cast<vtkm::Id>(dims[1]);
+      vdims[0] = static_cast<vtkm::Id>(dims[1]);
+      vdims[1] = static_cast<vtkm::Id>(dims[0]);
       inDataSet = dsb.Create(vdims);
     }
     // 3D data
     else
     {
       vtkm::Id3 vdims;
-      vdims[0] = static_cast<vtkm::Id>(dims[0]);
-      vdims[1] = static_cast<vtkm::Id>(dims[1]);
+      vdims[0] = static_cast<vtkm::Id>(dims[1]);
+      vdims[1] = static_cast<vtkm::Id>(dims[0]);
       vdims[2] = static_cast<vtkm::Id>(dims[2]);
       inDataSet = dsb.Create(vdims);
     }

@@ -20,6 +20,7 @@ set(headers
   PrintVectors.h
   ProcessContourTree.h
   Types.h
+  EulerTour.h
   )
 #-----------------------------------------------------------------------------
 add_subdirectory(mesh_dem)

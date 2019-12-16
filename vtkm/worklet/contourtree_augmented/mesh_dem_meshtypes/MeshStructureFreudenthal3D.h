@@ -100,8 +100,8 @@ public:
 
   // Main constructore used in the code
   MeshStructureFreudenthal3D(
-    vtkm::Id nrows,
     vtkm::Id ncols,
+    vtkm::Id nrows,
     vtkm::Id nslices,
     vtkm::Id nincident_edges,
     bool getmax,
@@ -110,7 +110,7 @@ public:
     const m3d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
     const m3d_freudenthal::neighbourOffsetsType& neighbourOffsetsIn,
     const m3d_freudenthal::linkComponentCaseTableType& linkComponentCaseTableIn)
-    : mesh_dem::MeshStructure3D<DeviceAdapter>(nrows, ncols, nslices)
+    : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
     , getMax(getmax)
     , nIncidentEdges(nincident_edges)
   {
