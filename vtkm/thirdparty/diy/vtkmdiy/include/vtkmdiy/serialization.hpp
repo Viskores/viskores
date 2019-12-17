@@ -95,10 +95,13 @@ namespace diy
 // GCC release date mapping
 // 20160726 == 4.9.4
 // 20150626 == 4.9.3
+// 20150623 == 4.8.5
 // 20150422 == 5.1
 // 20141030 == 4.9.2
 // See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html#abi.versioning.__GLIBCXX__
-#if defined(__GLIBCXX__) && (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626)
+#if defined(__GLIBCXX__) &&                                                                        \
+  (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626 ||                 \
+   __GLIBCXX__ == 20150623)
 #define VTKMDIY_USING_GLIBCXX_4
 #endif
 
