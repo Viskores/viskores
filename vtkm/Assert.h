@@ -13,7 +13,7 @@
 
 #include <vtkm/internal/Configure.h>
 
-#include <assert.h>
+#include <cassert>
 
 /// \def VTKM_ASSERT(condition)
 ///
