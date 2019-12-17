@@ -105,6 +105,9 @@ function(vtkm_unit_tests)
   # Add the path to the data directory so tests can find and use data files for testing
   list(APPEND VTKm_UT_TEST_ARGS "--path=${VTKm_SOURCE_DIR}/data")
 
+  # Add the path to the location where regression test images are to be stored
+  list(APPEND VTKm_UT_TEST_ARGS "--images=${VTKm_SOURCE_DIR}")
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")

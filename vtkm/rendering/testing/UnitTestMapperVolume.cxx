@@ -67,12 +67,5 @@ void RenderTests()
 
 int UnitTestMapperVolume(int argc, char* argv[])
 {
-  std::cerr << "argc count: " << argc << std::endl;
-
-  for (int i = 0; i < argc; i++)
-  {
-    printf("arg :: %s\n", argv[i]);
-  }
-
   return vtkm::cont::testing::Testing::Run(RenderTests, argc, argv);
 }
