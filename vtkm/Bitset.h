@@ -11,7 +11,7 @@
 #ifndef vtk_m_Bitset_h
 #define vtk_m_Bitset_h
 
-#include <assert.h>
+#include <cassert>
 #include <limits>
 #include <vtkm/Types.h>
 #include <vtkm/internal/ExportMacros.h>
