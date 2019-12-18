@@ -382,8 +382,8 @@ public:
 
   VTKM_CONT
   Storage(const ArrayHandleType& array,
-          const FunctorType& functor,
-          const InverseFunctorType& inverseFunctor)
+          const FunctorType& functor = FunctorType(),
+          const InverseFunctorType& inverseFunctor = InverseFunctorType())
     : Array(array)
     , Functor(functor)
     , InverseFunctor(inverseFunctor)

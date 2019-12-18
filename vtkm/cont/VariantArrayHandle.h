@@ -489,7 +489,7 @@ private:
     this->FetchArrayExact(targetArray, self, foundArray);
   }
 
-  // Special condition for transformed arrays (including cast arrays). Instead of pulling out the
+  // Special condition for transformed arrays. Instead of pulling out the
   // transform, pull out the array that is being transformed.
   template <typename T,
             typename SrcArray,
@@ -519,6 +519,36 @@ private:
       {
         targetArray =
           vtkm::cont::ArrayHandleTransform<SrcArray, ForwardTransform, ReverseTransform>(srcArray);
+      }
+    }
+  }
+
+  // Special condition for cast arrays. Instead of pulling out an ArrayHandleCast, pull out
+  // the array that is being cast.
+  template <typename TargetT, typename SourceT, typename SourceStorage, typename... TypeList>
+  VTKM_CONT void FetchArray(
+    vtkm::cont::ArrayHandle<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>&
+      targetArray,
+    const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+    bool& foundArray,
+    bool foundArrayInPreviousCall) const
+  {
+    // Attempt to get the array itself first
+    this->FetchArrayExact(targetArray, self, foundArray);
+
+    // Try to get the array to be transformed first, but only do so if the array was not already
+    // found in another call to this functor. This is to give precedence to getting the array
+    // exactly rather than creating our own transform.
+    if (!foundArray && !foundArrayInPreviousCall)
+    {
+      using SrcArray = vtkm::cont::ArrayHandle<SourceT, SourceStorage>;
+      SrcArray srcArray;
+      this->FetchArray(srcArray, self, foundArray, foundArrayInPreviousCall);
+      if (foundArray)
+      {
+        targetArray =
+          vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>(
+            srcArray);
       }
     }
   }
