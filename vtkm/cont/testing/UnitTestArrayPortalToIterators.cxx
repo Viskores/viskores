@@ -163,9 +163,68 @@ struct TestFunctor
   }
 };
 
+// Defines minimal API needed for ArrayPortalToIterators to detect and
+// use custom iterators:
+struct SpecializedIteratorAPITestPortal
+{
+  using IteratorType = int;
+  IteratorType GetIteratorBegin() const { return 32; }
+  IteratorType GetIteratorEnd() const { return 13; }
+};
+
+void TestCustomIterator()
+{
+  std::cout << "  Testing custom iterator detection." << std::endl;
+
+  // Dummy portal type for this test:
+  using PortalType = SpecializedIteratorAPITestPortal;
+  using ItersType = vtkm::cont::ArrayPortalToIterators<PortalType>;
+
+  PortalType portal;
+  ItersType iters{ portal };
+
+  VTKM_TEST_ASSERT(
+    std::is_same<typename ItersType::IteratorType, typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(
+    std::is_same<decltype(iters.GetBegin()), typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(
+    std::is_same<decltype(iters.GetEnd()), typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(iters.GetBegin() == 32);
+  VTKM_TEST_ASSERT(iters.GetEnd() == 13);
+
+  // Convenience API, too:
+  VTKM_TEST_ASSERT(std::is_same<decltype(vtkm::cont::ArrayPortalToIteratorBegin(portal)),
+                                typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(std::is_same<decltype(vtkm::cont::ArrayPortalToIteratorEnd(portal)),
+                                typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) == 32);
+  VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) == 13);
+}
+
+void TestBasicStorageSpecialization()
+{
+  // Control iterators from basic storage arrays should just be pointers:
+  vtkm::cont::ArrayHandle<int> handle;
+  handle.Allocate(1);
+
+  auto portal = handle.GetPortalControl();
+  auto portalConst = handle.GetPortalConstControl();
+
+  auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+  auto iterConst = vtkm::cont::ArrayPortalToIteratorBegin(portalConst);
+
+  (void)iter;
+  (void)iterConst;
+
+  VTKM_TEST_ASSERT(std::is_same<decltype(iter), int*>::value);
+  VTKM_TEST_ASSERT(std::is_same<decltype(iterConst), int const*>::value);
+}
+
 void TestArrayPortalToIterators()
 {
   vtkm::testing::Testing::TryTypes(TestFunctor());
+  TestCustomIterator();
+  TestBasicStorageSpecialization();
 }
 
 } // Anonymous namespace

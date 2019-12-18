@@ -35,12 +35,14 @@ public:
 
   using iter = IteratorFromArrayPortal<ArrayPortalType>;
 
+  VTKM_EXEC_CONT
   IteratorFromArrayPortal()
     : Portal()
     , Index(0)
   {
   }
 
+  VTKM_EXEC_CONT
   explicit IteratorFromArrayPortal(const ArrayPortalType& portal, vtkm::Id index = 0)
     : Portal(portal)
     , Index(index)
@@ -49,15 +51,19 @@ public:
     VTKM_ASSERT(index <= portal.GetNumberOfValues());
   }
 
+  VTKM_EXEC_CONT
   reference operator*() const { return reference(this->Portal, this->Index); }
 
+  VTKM_EXEC_CONT
   reference operator->() const { return reference(this->Portal, this->Index); }
 
+  VTKM_EXEC_CONT
   reference operator[](difference_type idx) const
   {
     return reference(this->Portal, this->Index + static_cast<vtkm::Id>(idx));
   }
 
+  VTKM_EXEC_CONT
   iter& operator++()
   {
     this->Index++;
@@ -65,8 +71,10 @@ public:
     return *this;
   }
 
+  VTKM_EXEC_CONT
   iter operator++(int) { return iter(this->Portal, this->Index++); }
 
+  VTKM_EXEC_CONT
   iter& operator--()
   {
     this->Index--;
@@ -74,8 +82,10 @@ public:
     return *this;
   }
 
+  VTKM_EXEC_CONT
   iter operator--(int) { return iter(this->Portal, this->Index--); }
 
+  VTKM_EXEC_CONT
   iter& operator+=(difference_type n)
   {
     this->Index += static_cast<vtkm::Id>(n);
@@ -83,6 +93,7 @@ public:
     return *this;
   }
 
+  VTKM_EXEC_CONT
   iter& operator-=(difference_type n)
   {
     this->Index += static_cast<vtkm::Id>(n);
@@ -90,6 +101,7 @@ public:
     return *this;
   }
 
+  VTKM_EXEC_CONT
   iter operator-(difference_type n) const
   {
     return iter(this->Portal, this->Index - static_cast<vtkm::Id>(n));
@@ -100,68 +112,71 @@ public:
 };
 
 template <class ArrayPortalType>
-IteratorFromArrayPortal<ArrayPortalType> make_IteratorBegin(const ArrayPortalType& portal)
+VTKM_EXEC_CONT IteratorFromArrayPortal<ArrayPortalType> make_IteratorBegin(
+  const ArrayPortalType& portal)
 {
   return IteratorFromArrayPortal<ArrayPortalType>(portal, 0);
 }
 
 template <class ArrayPortalType>
-IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(const ArrayPortalType& portal)
+VTKM_EXEC_CONT IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
+  const ArrayPortalType& portal)
 {
   return IteratorFromArrayPortal<ArrayPortalType>(portal, portal.GetNumberOfValues());
 }
 
 template <typename PortalType>
-bool operator==(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator==(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index == rhs.Index;
 }
 
 template <typename PortalType>
-bool operator!=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator!=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index != rhs.Index;
 }
 
 template <typename PortalType>
-bool operator<(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator<(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                              vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index < rhs.Index;
 }
 
 template <typename PortalType>
-bool operator<=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator<=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index <= rhs.Index;
 }
 
 template <typename PortalType>
-bool operator>(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator>(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                              vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index > rhs.Index;
 }
 
 template <typename PortalType>
-bool operator>=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT bool operator>=(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+                               vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index >= rhs.Index;
 }
 
 template <typename PortalType>
-std::ptrdiff_t operator-(vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                         vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VTKM_EXEC_CONT std::ptrdiff_t operator-(
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index - rhs.Index;
 }
 
 template <typename PortalType>
-vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
+VTKM_EXEC_CONT vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
   vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter,
   std::ptrdiff_t n)
 {
@@ -170,7 +185,7 @@ vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
 }
 
 template <typename PortalType>
-vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
+VTKM_EXEC_CONT vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
   std::ptrdiff_t n,
   vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter)
 {

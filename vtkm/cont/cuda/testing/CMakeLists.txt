@@ -24,6 +24,7 @@ set(unit_tests
   UnitTestCudaDeviceAdapter.cu
   UnitTestCudaGeometry.cu
   UnitTestCudaImplicitFunction.cu
+  UnitTestCudaIterators.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorUniformGrid.cu
