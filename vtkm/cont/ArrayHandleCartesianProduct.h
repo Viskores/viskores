@@ -154,54 +154,68 @@ namespace vtkm
 namespace cont
 {
 
-namespace internal
-{
-
-template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct
+template <typename StorageTag1, typename StorageTag2, typename StorageTag3>
+struct StorageTagCartesianProduct
 {
 };
+
+namespace internal
+{
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
 ///
-template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+template <typename AH1, typename AH2, typename AH3>
 struct ArrayHandleCartesianProductTraits
 {
+  VTKM_IS_ARRAY_HANDLE(AH1);
+  VTKM_IS_ARRAY_HANDLE(AH2);
+  VTKM_IS_ARRAY_HANDLE(AH3);
+
+  using ComponentType = typename AH1::ValueType;
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<ComponentType, typename AH2::ValueType>::value),
+    "All arrays for ArrayHandleCartesianProduct must have the same value type. "
+    "Use ArrayHandleCast as necessary to make types match.");
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<ComponentType, typename AH3::ValueType>::value),
+    "All arrays for ArrayHandleCartesianProduct must have the same value type. "
+    "Use ArrayHandleCast as necessary to make types match.");
+
   /// The ValueType (a pair containing the value types of the two arrays).
   ///
-  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
+  using ValueType = vtkm::Vec<ComponentType, 3>;
 
   /// The appropriately templated tag.
   ///
-  using Tag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
+  using Tag = vtkm::cont::StorageTagCartesianProduct<typename AH1::StorageTag,
+                                                     typename AH2::StorageTag,
+                                                     typename AH3::StorageTag>;
 
   /// The superclass for ArrayHandleCartesianProduct.
   ///
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-class Storage<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
-              StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
+template <typename T, typename ST1, typename ST2, typename ST3>
+class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
 {
-  VTKM_IS_ARRAY_HANDLE(FirstHandleType);
-  VTKM_IS_ARRAY_HANDLE(SecondHandleType);
-  VTKM_IS_ARRAY_HANDLE(ThirdHandleType);
+  using AH1 = vtkm::cont::ArrayHandle<T, ST1>;
+  using AH2 = vtkm::cont::ArrayHandle<T, ST2>;
+  using AH3 = vtkm::cont::ArrayHandle<T, ST3>;
 
 public:
-  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
+  using ValueType = vtkm::Vec<typename AH1::ValueType, 3>;
 
-  using PortalType =
-    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                      typename FirstHandleType::PortalControl,
-                                                      typename SecondHandleType::PortalControl,
-                                                      typename ThirdHandleType::PortalControl>;
+  using PortalType = vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
+                                                                       typename AH1::PortalControl,
+                                                                       typename AH2::PortalControl,
+                                                                       typename AH3::PortalControl>;
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                      typename FirstHandleType::PortalConstControl,
-                                                      typename SecondHandleType::PortalConstControl,
-                                                      typename ThirdHandleType::PortalConstControl>;
+                                                      typename AH1::PortalConstControl,
+                                                      typename AH2::PortalConstControl,
+                                                      typename AH3::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -212,9 +226,7 @@ public:
   }
 
   VTKM_CONT
-  Storage(const FirstHandleType& array1,
-          const SecondHandleType& array2,
-          const ThirdHandleType& array3)
+  Storage(const AH1& array1, const AH2& array2, const AH3& array3)
     : FirstArray(array1)
     , SecondArray(array2)
     , ThirdArray(array3)
@@ -264,33 +276,32 @@ public:
   }
 
   VTKM_CONT
-  const FirstHandleType& GetFirstArray() const { return this->FirstArray; }
+  const AH1& GetFirstArray() const { return this->FirstArray; }
 
   VTKM_CONT
-  const SecondHandleType& GetSecondArray() const { return this->SecondArray; }
+  const AH2& GetSecondArray() const { return this->SecondArray; }
 
   VTKM_CONT
-  const ThirdHandleType& GetThirdArray() const { return this->ThirdArray; }
+  const AH3& GetThirdArray() const { return this->ThirdArray; }
 
 private:
-  FirstHandleType FirstArray;
-  SecondHandleType SecondArray;
-  ThirdHandleType ThirdArray;
+  AH1 FirstArray;
+  AH2 SecondArray;
+  AH3 ThirdArray;
 };
 
-template <typename FirstHandleType,
-          typename SecondHandleType,
-          typename ThirdHandleType,
-          typename Device>
-class ArrayTransfer<vtkm::Vec<typename FirstHandleType::ValueType, 3>,
-                    StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
-                    Device>
+template <typename T, typename ST1, typename ST2, typename ST3, typename Device>
+class ArrayTransfer<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>, Device>
 {
 public:
-  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
+  using ValueType = vtkm::Vec<T, 3>;
 
 private:
-  using StorageTag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
+  using AH1 = vtkm::cont::ArrayHandle<T, ST1>;
+  using AH2 = vtkm::cont::ArrayHandle<T, ST2>;
+  using AH3 = vtkm::cont::ArrayHandle<T, ST3>;
+
+  using StorageTag = vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
@@ -299,15 +310,15 @@ public:
 
   using PortalExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,
-    typename FirstHandleType::template ExecutionTypes<Device>::Portal,
-    typename SecondHandleType::template ExecutionTypes<Device>::Portal,
-    typename ThirdHandleType::template ExecutionTypes<Device>::Portal>;
+    typename AH1::template ExecutionTypes<Device>::Portal,
+    typename AH2::template ExecutionTypes<Device>::Portal,
+    typename AH3::template ExecutionTypes<Device>::Portal>;
 
   using PortalConstExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,
-    typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
-    typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,
-    typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst>;
+    typename AH1::template ExecutionTypes<Device>::PortalConst,
+    typename AH2::template ExecutionTypes<Device>::PortalConst,
+    typename AH3::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -371,9 +382,9 @@ public:
   }
 
 private:
-  FirstHandleType FirstArray;
-  SecondHandleType SecondArray;
-  ThirdHandleType ThirdArray;
+  AH1 FirstArray;
+  AH2 SecondArray;
+  AH3 ThirdArray;
 };
 } // namespace internal
 
@@ -456,11 +467,12 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, 
   }
 };
 
-template <typename AH1, typename AH2, typename AH3>
+template <typename T, typename ST1, typename ST2, typename ST3>
 struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
-                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, ST1>,
+                                                                   vtkm::cont::ArrayHandle<T, ST2>,
+                                                                   vtkm::cont::ArrayHandle<T, ST3>>>
 {
 };
 }
@@ -499,11 +511,12 @@ public:
   }
 };
 
-template <typename AH1, typename AH2, typename AH3>
+template <typename T, typename ST1, typename ST2, typename ST3>
 struct Serialization<
-  vtkm::cont::ArrayHandle<vtkm::Vec<typename AH1::ValueType, 3>,
-                          vtkm::cont::internal::StorageTagCartesianProduct<AH1, AH2, AH3>>>
-  : Serialization<vtkm::cont::ArrayHandleCartesianProduct<AH1, AH2, AH3>>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
+  : Serialization<vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, ST1>,
+                                                          vtkm::cont::ArrayHandle<T, ST2>,
+                                                          vtkm::cont::ArrayHandle<T, ST3>>>
 {
 };
 } // diy

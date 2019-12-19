@@ -29,6 +29,23 @@ New Storage:
 vtkm::cont::StorageTagCast<SourceT, SourceStorage>
 ```
 
+(Developer's note: Implementing this change to `ArrayHandleCast` was a much bigger PITA than expected.)
+
+#### `ArrayHandleCartesianProduct<AH1, AH2, AH3>
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagCartesianProduct<
+  vtkm::cont::ArrayHandle<ValueType, StorageTag1,
+  vtkm::cont::ArrayHandle<ValueType, StorageTag2,
+  vtkm::cont::ArrayHandle<ValueType, StorageTag3>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagCartesianProduct<StorageTag1, StorageTag2, StorageTag3>
+```
+
 #### `ArrayHandleUniformPointCoordinates
 
 Old storage:
