@@ -25,7 +25,18 @@ vtkm::cont::internal::StorageTagTransform<
 ```
 
 New Storage:
-
 ``` cpp
 vtkm::cont::StorageTagCast<SourceT, SourceStorage>
+```
+
+#### `ArrayHandleUniformPointCoordinates
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>
+```
+
+New Storage:
+``` cpp
+vtkm::cont::StorageTagUniformPoints
 ```
