@@ -11,6 +11,7 @@
 #define vtk_m_ArrayHandleDecorator_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/StaticAssert.h>
@@ -135,6 +136,44 @@ private:
 
 public:
   using type = decltype(InverseExistsTest<DecoratorImplT>(0));
+};
+
+// Tests whether DecoratorImplT has an AllocateSourceArrays(size, Arrays...) method.
+template <typename DecoratorImplT, typename ArrayList>
+struct IsDecoratorAllocatableImpl;
+
+template <typename DecoratorImplT, template <typename...> class List, typename... ArrayTs>
+struct IsDecoratorAllocatableImpl<DecoratorImplT, List<ArrayTs...>>
+{
+private:
+  template <
+    typename T,
+    typename U = decltype(std::declval<T>().AllocateSourceArrays(0, std::declval<ArrayTs&>()...))>
+  static std::true_type Exists(int);
+  template <typename T>
+  static std::false_type Exists(...);
+
+public:
+  using type = decltype(Exists<DecoratorImplT>(0));
+};
+
+// Tests whether DecoratorImplT has a ShrinkSourceArrays(size, Arrays...) method.
+template <typename DecoratorImplT, typename ArrayList>
+struct IsDecoratorShrinkableImpl;
+
+template <typename DecoratorImplT, template <typename...> class List, typename... ArrayTs>
+struct IsDecoratorShrinkableImpl<DecoratorImplT, List<ArrayTs...>>
+{
+private:
+  template <
+    typename T,
+    typename U = decltype(std::declval<T>().ShrinkSourceArrays(0, std::declval<ArrayTs&>()...))>
+  static std::true_type Exists(int);
+  template <typename T>
+  static std::false_type Exists(...);
+
+public:
+  using type = decltype(Exists<DecoratorImplT>(0));
 };
 
 // Deduces the type returned by DecoratorImplT::CreateFunctor when given
@@ -299,6 +338,18 @@ template <typename DecoratorImplT, typename PortalList>
 using IsFunctorInvertible =
   typename detail::IsFunctorInvertibleImpl<DecoratorImplT, PortalList>::type;
 
+// Set to std::true_type if DecoratorImplT::AllocateSourceArrays can be called
+// with the supplied arrays, or std::false_type otherwise.
+template <typename DecoratorImplT, typename ArrayList>
+using IsDecoratorAllocatable =
+  typename detail::IsDecoratorAllocatableImpl<DecoratorImplT, ArrayList>::type;
+
+// Set to std::true_type if DecoratorImplT::ShrinkSourceArrays can be called
+// with the supplied arrays, or std::false_type otherwise.
+template <typename DecoratorImplT, typename ArrayList>
+using IsDecoratorShrinkable =
+  typename detail::IsDecoratorShrinkableImpl<DecoratorImplT, ArrayList>::type;
+
 // std::true_type/std::false_type depending on whether the decorator impl has a
 // CreateInversePortal method AND any of the arrays are writable.
 template <typename DecoratorImplT, typename PortalList>
@@ -367,6 +418,10 @@ struct DecoratorStorageTraits
 #else  // VTKM_USE_TAO_SEQ
   using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
 #endif // VTKM_USE_TAO_SEQ
+
+  // true_type/false_type depending on whether the decorator supports Allocate/Shrink:
+  using IsAllocatable = IsDecoratorAllocatable<DecoratorImplT, ArrayList>;
+  using IsShrinkable = IsDecoratorShrinkable<DecoratorImplT, ArrayList>;
 
   // Portal lists:
   // NOTE we have to pass the parameter pack here instead of using ArrayList
@@ -444,6 +499,41 @@ struct DecoratorStorageTraits
   { // Portal is read/write:
     return { impl.CreateFunctor(portals...), impl.CreateInverseFunctor(portals...), numVals };
   }
+
+  // Static dispatch for calling AllocateSourceArrays on supported implementations:
+  VTKM_CONT[[noreturn]] static void CallAllocate(std::false_type,
+                                                 const DecoratorImplT&,
+                                                 vtkm::Id,
+                                                 ArrayTs&...)
+  {
+    throw vtkm::cont::ErrorBadType("Allocate not supported by this ArrayHandleDecorator.");
+  }
+
+  VTKM_CONT static void CallAllocate(std::true_type,
+                                     const DecoratorImplT& impl,
+                                     vtkm::Id newSize,
+                                     ArrayTs&... arrays)
+  {
+    impl.AllocateSourceArrays(newSize, arrays...);
+  }
+
+  // Static dispatch for calling ShrinkSourceArrays on supported implementations.
+  VTKM_CONT[[noreturn]] static void CallShrink(std::false_type,
+                                               const DecoratorImplT&,
+                                               vtkm::Id,
+                                               ArrayTs&...)
+  {
+    throw vtkm::cont::ErrorBadType("Shrink not supported by this ArrayHandleDecorator.");
+  }
+
+  VTKM_CONT static void CallShrink(std::true_type,
+                                   const DecoratorImplT& impl,
+                                   vtkm::Id newSize,
+                                   ArrayTs&... arrays)
+  {
+    impl.ShrinkSourceArrays(newSize, arrays...);
+  }
+
 
 #ifndef VTKM_USE_TAO_SEQ
   // Portal construction methods. These actually create portals.
@@ -526,7 +616,26 @@ struct DecoratorStorageTraits
       GetPortalOutput(vtkmstd::get<Indices{}.value>(arrays), dev)...);
   }
 
-#else  // VTKM_USE_TAO_SEQ
+  template <template <typename...> class List, typename... Indices>
+  VTKM_CONT static void AllocateSourceArrays(const DecoratorImplT& impl,
+                                             ArrayTupleType& arrays,
+                                             vtkm::Id numValues,
+                                             List<Indices...>)
+  {
+    CallAllocate(IsAllocatable{}, impl, numValues, vtkmstd::get<Indices{}.value>(arrays)...);
+  }
+
+  template <template <typename...> class List, typename... Indices>
+  VTKM_CONT static void ShrinkSourceArrays(const DecoratorImplT& impl,
+                                           ArrayTupleType& arrays,
+                                           vtkm::Id numValues,
+                                           List<Indices...>)
+  {
+    CallShrink(IsShrinkable{}, impl, numValues, vtkmstd::get<Indices{}.value>(arrays)...);
+  }
+
+#else // VTKM_USE_TAO_SEQ
+
   // Portal construction methods. These actually create portals.
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
@@ -580,6 +689,25 @@ struct DecoratorStorageTraits
     return CreatePortalDecorator<PortalExecutionType<Device>>(
       numValues, impl, GetPortalOutput(vtkmstd::get<Indices>(arrays), dev)...);
   }
+
+  template <template <typename, std::size_t...> class List, std::size_t... Indices>
+  VTKM_CONT static void AllocateSourceArrays(const DecoratorImplT& impl,
+                                             ArrayTupleType& arrays,
+                                             vtkm::Id numValues,
+                                             List<std::size_t, Indices...>)
+  {
+    CallAllocate(IsAllocatable{}, impl, numValues, vtkmstd::get<Indices>(arrays)...);
+  }
+
+  template <template <typename, std::size_t...> class List, std::size_t... Indices>
+  VTKM_CONT static void ShrinkSourceArrays(const DecoratorImplT& impl,
+                                           ArrayTupleType& arrays,
+                                           vtkm::Id numValues,
+                                           List<std::size_t, Indices...>)
+  {
+    CallShrink(IsShrinkable{}, impl, numValues, vtkmstd::get<Indices>(arrays)...);
+  }
+
 #endif // VTKM_USE_TAO_SEQ
 };
 
@@ -642,18 +770,21 @@ public:
   }
 
   VTKM_CONT
-  void Allocate(vtkm::Id)
+  void Allocate(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    // No-op. I suppose eventually we could pass numValues down to the
-    // implementation class and let it do something intelligent.
+    Traits::AllocateSourceArrays(this->Implementation, this->ArrayTuple, numValues, IndexList{});
+    // If the above call doesn't throw, update our state.
+    this->NumberOfValues = numValues;
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id)
+  void Shrink(vtkm::Id numValues)
   {
     VTKM_ASSERT(this->Valid);
-    // No-op. Again, could eventually be passed down to the implementation.
+    Traits::ShrinkSourceArrays(this->Implementation, this->ArrayTuple, numValues, IndexList{});
+    // If the above call doesn't throw, update our state.
+    this->NumberOfValues = numValues;
   }
 
   VTKM_CONT
@@ -778,10 +909,7 @@ public:
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id)
-  {
-    // no-op
-  }
+  void Shrink(vtkm::Id numValues) { this->Storage->Shrink(numValues); }
 
 
   VTKM_CONT
@@ -844,6 +972,31 @@ private:
 ///   VTKM_CONT
 ///   SomeInverseFunctor CreateInverseFunctor(Portal1Type portal1,
 ///                                           Portal2Type portal2) const;
+///
+///   // Given a set of ArrayHandles and a size, implement what should happen
+///   // to the source ArrayHandles when Allocate() is called on the decorator
+///   // handle.
+///   //
+///   // AllocateSourceArrays is optional; if not provided, the
+///   // ArrayHandleDecorator will throw if its Allocate method is called. If
+///   // an implementation is present and doesn't throw, the
+///   // ArrayHandleDecorator's internal state is updated to show `size` as the
+///   // number of values.
+///   template <typename Array1Type, typename Array2Type>
+///   VTKM_CONT
+///   void AllocateSourceArrays(vtkm::Id size, Array1Type array1, Array2Type array2) const;
+///
+///   // Given a set of ArrayHandles and a size, implement what should happen to
+///   // the source ArrayHandles when Shrink() is called on the decorator handle.
+///   //
+///   // ShrinkSourceArrays is optional; if not provided, the
+///   // ArrayHandleDecorator will throw if its Shrink method is called. If
+///   // an implementation is present and doesn't throw, the
+///   // ArrayHandleDecorator's internal state is updated to show `size` as the
+///   // number of values.
+///   template <typename Array1Type, typename Array2Type>
+///   VTKM_CONT
+///   void ShrinkSourceArrays(vtkm::Id size, Array1Type array1, Array2Type array2) const;
 ///
 /// };
 /// ```
