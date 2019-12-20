@@ -46,6 +46,24 @@ New storage:
 vtkm::cont::StorageTagCartesianProduct<StorageTag1, StorageTag2, StorageTag3>
 ```
 
+#### `ArrayHandleCompositeVector<AH1, AH2, ...>`
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagCompositeVector<
+  tao::tuple<
+    vtkm::cont::ArrayHandle<ValueType, StorageType1>, 
+	vtkm::cont::ArrayHandle<ValueType, StorageType2>,
+	...
+  >
+>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagCompositeVec<StorageType1, StorageType2>
+```
+
 #### `ArrayHandleUniformPointCoordinates
 
 Old storage:
