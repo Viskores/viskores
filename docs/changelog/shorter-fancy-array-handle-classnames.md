@@ -12,6 +12,8 @@ The fix was for these classes to declare their own `Storage` tag and then
 implement their `Storage` and `ArrayTransport` classes as trivial
 subclasses of the generic `ArrayHandleImplicit` or `ArrayHandleTransport`.
 
+As an added bonus, a lot of this shortening also means that storage that relies on other array handles now are just typed by to storage of the decorated type, not the array itself. This should make the types a little more robust.
+
 Here is a list of classes that were updated.
 
 #### `ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceStorage>>`
@@ -31,7 +33,7 @@ vtkm::cont::StorageTagCast<SourceT, SourceStorage>
 
 (Developer's note: Implementing this change to `ArrayHandleCast` was a much bigger PITA than expected.)
 
-#### `ArrayHandleCartesianProduct<AH1, AH2, AH3>
+#### `ArrayHandleCartesianProduct<AH1, AH2, AH3>`
 
 Old storage:
 ``` cpp
@@ -64,7 +66,40 @@ New storage:
 vtkm::cont::StorageTagCompositeVec<StorageType1, StorageType2>
 ```
 
-#### `ArrayHandleUniformPointCoordinates
+#### `ArrayHandleConcatinate`
+
+First an example with two simple types.
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagConcatenate<
+  vtkm::cont::ArrayHandle<ValueType, StorageTag1>,
+  vtkm::cont::ArrayHandle<ValueType, StorageTag2> >
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagConcatenate<StorageTag1, StorageTag2>
+```
+
+Now a more specific example taken from the unit test of a concatination of a concatination.
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagConcatenate<
+  vtkm::cont::ArrayHandleConcatenate<
+    vtkm::cont::ArrayHandle<ValueType, StorageTag1>,
+	vtkm::cont::ArrayHandle<ValueType, StorageTag2>>,
+  vtkm::cont::ArrayHandle<ValueType, StorageTag3>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagConcatenate<
+  vtkm::cont::StorageTagConcatenate<StorageTag1, StorageTag2>, StorageTag3>
+```
+
+#### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
 ``` cpp
