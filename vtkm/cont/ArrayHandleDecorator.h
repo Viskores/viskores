@@ -812,7 +812,7 @@ private:
 ///   // Takes one portal for each source array handle (only two shown).
 ///   // Returns a functor that defines:
 ///   //
-///   // ValueType operator()(vtkm::Id id) const;
+///   // VTKM_EXEC_CONT ValueType operator()(vtkm::Id id) const;
 ///   //
 ///   // which takes an index and returns a value which should be produced by
 ///   // the source arrays somehow. This ValueType will be the ValueType of the
@@ -821,12 +821,13 @@ private:
 ///   // Both SomeFunctor::operator() and CreateFunctor must be const.
 ///   //
 ///   template <typename Portal1Type, typename Portal2Type>
+///   VTKM_CONT
 ///   SomeFunctor CreateFunctor(Portal1Type portal1, Portal2Type portal2) const;
 ///
 ///   // Takes one portal for each source array handle (only two shown).
 ///   // Returns a functor that defines:
 ///   //
-///   // void operator()(vtkm::Id id, ValueType val) const;
+///   // VTKM_EXEC_CONT void operator()(vtkm::Id id, ValueType val) const;
 ///   //
 ///   // which takes an index and a value, which should be used to modify one
 ///   // or more of the source arrays.
@@ -840,6 +841,7 @@ private:
 ///   // const.
 ///   //
 ///   template <typename Portal1Type, typename Portal2Type>
+///   VTKM_CONT
 ///   SomeInverseFunctor CreateInverseFunctor(Portal1Type portal1,
 ///                                           Portal2Type portal2) const;
 ///
