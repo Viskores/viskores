@@ -125,11 +125,9 @@ template <typename DecoratorImplT, template <typename...> class List, typename..
 struct IsFunctorInvertibleImpl<DecoratorImplT, List<PortalTs...>>
 {
 private:
-  using PortalList = brigand::list<typename std::decay<PortalTs>::type...>;
-
   template <
     typename T,
-    typename U = decltype(std::declval<T>().CreateInverseFunctor(std::declval<PortalTs>()...))>
+    typename U = decltype(std::declval<T>().CreateInverseFunctor(std::declval<PortalTs&&>()...))>
   static std::true_type InverseExistsTest(int);
 
   template <typename T>
@@ -147,7 +145,8 @@ struct GetFunctorTypeImpl;
 template <typename DecoratorImplT, template <typename...> class List, typename... PortalTs>
 struct GetFunctorTypeImpl<DecoratorImplT, List<PortalTs...>>
 {
-  using type = decltype(std::declval<DecoratorImplT>().CreateFunctor(std::declval<PortalTs>()...));
+  using type =
+    decltype(std::declval<DecoratorImplT>().CreateFunctor(std::declval<PortalTs&&>()...));
 };
 
 // Deduces the type returned by DecoratorImplT::CreateInverseFunctor when given
@@ -160,7 +159,7 @@ template <typename DecoratorImplT, template <typename...> class List, typename..
 struct GetInverseFunctorTypeImpl<std::true_type, DecoratorImplT, List<PortalTs...>>
 {
   using type =
-    decltype(std::declval<DecoratorImplT>().CreateInverseFunctor(std::declval<PortalTs>()...));
+    decltype(std::declval<DecoratorImplT>().CreateInverseFunctor(std::declval<PortalTs&&>()...));
 };
 
 template <typename DecoratorImplT, typename PortalList>
@@ -328,19 +327,19 @@ using GetInverseFunctorType =
 // - So we jump through some decltype/declval hoops here to get this to work:
 template <typename... ArrayTs>
 using GetPortalConstControlList =
-  brigand::list<decltype((GetPortalConstControl(std::declval<ArrayTs>())))...>;
+  brigand::list<decltype((GetPortalConstControl(std::declval<ArrayTs&>())))...>;
 
 template <typename Device, typename... ArrayTs>
 using GetPortalConstExecutionList =
-  brigand::list<decltype((GetPortalInput(std::declval<ArrayTs>(), Device{})))...>;
+  brigand::list<decltype((GetPortalInput(std::declval<ArrayTs&>(), Device{})))...>;
 
 template <typename... ArrayTs>
 using GetPortalControlList =
-  brigand::list<decltype((GetPortalControl(std::declval<ArrayTs>())))...>;
+  brigand::list<decltype((GetPortalControl(std::declval<ArrayTs&>())))...>;
 
 template <typename Device, typename... ArrayTs>
 using GetPortalExecutionList =
-  brigand::list<decltype((GetPortalInPlace(std::declval<ArrayTs>(), Device{})))...>;
+  brigand::list<decltype((GetPortalInPlace(std::declval<ArrayTs&>(), Device{})))...>;
 
 template <typename DecoratorImplT, typename... ArrayTs>
 struct DecoratorStorageTraits
