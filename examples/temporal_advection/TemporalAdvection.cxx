@@ -70,8 +70,21 @@ int main(int argc, char** argv)
   vtkm::cont::DataSet ds2 = reader2.ReadDataSet();
 
   // Use the coordinate system as seeds for performing advection
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> seeds;
-  vtkm::cont::ArrayCopy(ds1.GetCoordinateSystem().GetData(), seeds);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
+  vtkm::cont::ArrayCopy(ds1.GetCoordinateSystem().GetData(), pts);
+  vtkm::cont::ArrayHandle<vtkm::Particle> seeds;
+
+  vtkm::Id numPts = pts.GetNumberOfValues();
+  seeds.Allocate(numPts);
+  auto ptsPortal = pts.GetPortalConstControl();
+  auto seedPortal = seeds.GetPortalConstControl();
+  for (vtkm::Id i = 0; i < numPts; i++)
+  {
+    vtkm::Particle p;
+    p.Pos = ptsPortal.Get(i);
+    p.ID = i;
+    seedPortal.Set(i, p);
+  }
 
   // Instantiate the filter by providing necessary parameters.
   // Necessary parameters are :
