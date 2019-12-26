@@ -8,23 +8,19 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/TypeTraits.h>
-
 #include "Benchmarker.h"
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/internal/Configure.h>
 
 #include <vtkm/testing/Testing.h>
 
-#include <iomanip>
-#include <iostream>
+#include <vtkm/List.h>
+
 #include <sstream>
 
 #ifdef VTKM_ENABLE_TBB
@@ -34,145 +30,78 @@
 // For the TBB implementation, the number of threads can be customized using a
 // "NumThreads [numThreads]" argument.
 
-namespace vtkm
-{
-namespace benchmarking
-{
-
-const vtkm::UInt64 COPY_SIZE_MIN = (1 << 10); // 1 KiB
-const vtkm::UInt64 COPY_SIZE_MAX = (1 << 29); // 512 MiB
-const vtkm::UInt64 COPY_SIZE_INC = 1;         // Used as 'size <<= INC'
-
-const size_t COL_WIDTH = 32;
-
-template <typename ValueType, typename DeviceAdapter>
-struct MeasureCopySpeed
-{
-  using Algo = vtkm::cont::Algorithm;
-
-  vtkm::cont::ArrayHandle<ValueType> Source;
-  vtkm::cont::ArrayHandle<ValueType> Destination;
-  vtkm::UInt64 NumBytes;
-
-  VTKM_CONT
-  MeasureCopySpeed(vtkm::UInt64 bytes)
-    : NumBytes(bytes)
-  {
-    vtkm::Id numValues = static_cast<vtkm::Id>(bytes / sizeof(ValueType));
-    this->Source.Allocate(numValues);
-  }
-
-  VTKM_CONT vtkm::Float64 operator()()
-  {
-    vtkm::cont::Timer timer{ DeviceAdapter() };
-    timer.Start();
-    Algo::Copy(this->Source, this->Destination);
-
-    return timer.GetElapsedTime();
-  }
-
-  VTKM_CONT std::string Description() const
-  {
-    vtkm::UInt64 actualSize = sizeof(ValueType);
-    actualSize *= static_cast<vtkm::UInt64>(this->Source.GetNumberOfValues());
-    std::ostringstream out;
-    out << "Copying " << vtkm::cont::GetHumanReadableSize(this->NumBytes)
-        << " (actual=" << vtkm::cont::GetHumanReadableSize(actualSize) << ") of "
-        << vtkm::testing::TypeName<ValueType>::Name() << "\n";
-    return out.str();
-  }
-};
-
-void PrintRow(std::ostream& out, const std::string& label, const std::string& data)
-{
-  out << "| " << std::setw(COL_WIDTH) << label << " | " << std::setw(COL_WIDTH) << data << " |"
-      << std::endl;
-}
-
-void PrintDivider(std::ostream& out)
-{
-  const std::string fillStr(COL_WIDTH, '-');
-
-  out << "|-" << fillStr << "-|-" << fillStr << "-|" << std::endl;
-}
-
-template <typename ValueType, typename DeviceAdapter>
-void BenchmarkValueType(vtkm::cont::DeviceAdapterId id)
-{
-  PrintRow(std::cout, vtkm::testing::TypeName<ValueType>::Name(), id.GetName());
-
-  PrintDivider(std::cout);
-
-  Benchmarker bench(15, 100);
-  for (vtkm::UInt64 size = COPY_SIZE_MIN; size <= COPY_SIZE_MAX; size <<= COPY_SIZE_INC)
-  {
-    MeasureCopySpeed<ValueType, DeviceAdapter> functor(size);
-    bench.Reset();
-
-    std::string speedStr;
-
-    try
-    {
-      bench.GatherSamples(functor);
-      vtkm::Float64 speed = static_cast<Float64>(size) / stats::Mean(bench.GetSamples());
-      speedStr = vtkm::cont::GetHumanReadableSize(static_cast<UInt64>(speed)) + std::string("/s");
-    }
-    catch (vtkm::cont::ErrorBadAllocation&)
-    {
-      speedStr = "[allocation too large]";
-    }
-
-    PrintRow(std::cout, vtkm::cont::GetHumanReadableSize(size), speedStr);
-  }
-
-  std::cout << "\n";
-}
-}
-} // end namespace vtkm::benchmarking
-
 namespace
 {
-using namespace vtkm::benchmarking;
 
-struct BenchmarkValueTypeFunctor
+// Make this global so benchmarks can access the current device id:
+vtkm::cont::InitializeResult Config;
+
+const vtkm::UInt64 COPY_SIZE_MIN = (1 << 10); // 1 KiB
+const vtkm::UInt64 COPY_SIZE_MAX = (1 << 30); // 1 GiB
+
+using TypeList = vtkm::List<vtkm::UInt8,
+                            vtkm::Vec2ui_8,
+                            vtkm::Vec3ui_8,
+                            vtkm::Vec4ui_8,
+                            vtkm::UInt32,
+                            vtkm::Vec2ui_32,
+                            vtkm::UInt64,
+                            vtkm::Vec2ui_64,
+                            vtkm::Float32,
+                            vtkm::Vec2f_32,
+                            vtkm::Float64,
+                            vtkm::Vec2f_64,
+                            vtkm::Pair<vtkm::UInt32, vtkm::Float32>,
+                            vtkm::Pair<vtkm::UInt32, vtkm::Float64>,
+                            vtkm::Pair<vtkm::UInt64, vtkm::Float32>,
+                            vtkm::Pair<vtkm::UInt64, vtkm::Float64>>;
+
+template <typename ValueType>
+void CopySpeed(benchmark::State& state)
 {
-  template <typename DeviceAdapter>
-  bool operator()(DeviceAdapter id)
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(state.range(0));
+  const vtkm::Id numValues = static_cast<vtkm::Id>(numBytes / sizeof(ValueType));
+
+  state.SetLabel(vtkm::cont::GetHumanReadableSize(numBytes));
+
+  vtkm::cont::ArrayHandle<ValueType> src;
+  vtkm::cont::ArrayHandle<ValueType> dst;
+  src.Allocate(numValues);
+  dst.Allocate(numValues);
+
+  vtkm::cont::Timer timer(device);
+  for (auto _ : state)
   {
-    BenchmarkValueType<vtkm::UInt8, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec2ui_8, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec3ui_8, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec4ui_8, DeviceAdapter>(id);
+    (void)_;
+    timer.Start();
+    vtkm::cont::Algorithm::Copy(device, src, dst);
+    timer.Stop();
 
-    BenchmarkValueType<vtkm::UInt32, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec2ui_32, DeviceAdapter>(id);
-
-    BenchmarkValueType<vtkm::UInt64, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec2ui_64, DeviceAdapter>(id);
-
-    BenchmarkValueType<vtkm::Float32, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec2f_32, DeviceAdapter>(id);
-
-    BenchmarkValueType<vtkm::Float64, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Vec2f_64, DeviceAdapter>(id);
-
-    BenchmarkValueType<vtkm::Pair<vtkm::UInt32, vtkm::Float32>, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Pair<vtkm::UInt32, vtkm::Float64>, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Pair<vtkm::UInt64, vtkm::Float32>, DeviceAdapter>(id);
-    BenchmarkValueType<vtkm::Pair<vtkm::UInt64, vtkm::Float64>, DeviceAdapter>(id);
-
-    return true;
+    state.SetIterationTime(timer.GetElapsedTime());
   }
-};
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
+  state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
+VTKM_BENCHMARK_TEMPLATES_OPTS(CopySpeed,
+                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                ->ArgName("Bytes"),
+                              TypeList);
+
+} // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice |
-    vtkm::cont::InitializeOptions::ErrorOnBadOption | vtkm::cont::InitializeOptions::AddHelp;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  // Parse VTK-m options:
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
+  Config = vtkm::cont::Initialize(argc, argv, opts);
 
+  // Setup device:
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
 
+// Handle NumThreads command-line arg:
 #ifdef VTKM_ENABLE_TBB
   int numThreads = tbb::task_scheduler_init::automatic;
 #endif // TBB
@@ -196,6 +125,6 @@ int main(int argc, char* argv[])
   tbb::task_scheduler_init init(numThreads);
 #endif // TBB
 
-  BenchmarkValueTypeFunctor functor;
-  vtkm::cont::TryExecuteOnDevice(config.Device, functor);
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS(argc, argv);
 }

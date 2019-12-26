@@ -22,6 +22,35 @@ namespace vtkm
 namespace exec
 {
 
+namespace detail
+{
+// Clang-7 as host compiler under nvcc returns types from std::make_unsigned
+// that are not compatible with the AtomicInterface API, so we define our own
+// mapping. This must exist for every entry in vtkm::cont::AtomicArrayTypeList.
+template <typename>
+struct MakeUnsigned;
+template <>
+struct MakeUnsigned<vtkm::UInt32>
+{
+  using type = vtkm::UInt32;
+};
+template <>
+struct MakeUnsigned<vtkm::Int32>
+{
+  using type = vtkm::UInt32;
+};
+template <>
+struct MakeUnsigned<vtkm::UInt64>
+{
+  using type = vtkm::UInt64;
+};
+template <>
+struct MakeUnsigned<vtkm::Int64>
+{
+  using type = vtkm::UInt64;
+};
+}
+
 template <typename T, typename Device>
 class AtomicArrayExecutionObject
 {
@@ -66,7 +95,7 @@ public:
     // We only support 32/64 bit signed/unsigned ints, and AtomicInterface
     // currently only provides API for unsigned types.
     // We'll cast the signed types to unsigned to work around this.
-    using APIType = typename std::make_unsigned<ValueType>::type;
+    using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
     return static_cast<T>(
       AtomicInterface::Load(reinterpret_cast<const APIType*>(this->Data + index)));
@@ -89,7 +118,7 @@ public:
     // This is safe, since the only difference between signed/unsigned types
     // is how overflow works, and signed overflow is already undefined. We also
     // document that overflow is undefined for this operation.
-    using APIType = typename std::make_unsigned<ValueType>::type;
+    using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
     return static_cast<T>(AtomicInterface::Add(reinterpret_cast<APIType*>(this->Data + index),
                                                static_cast<APIType>(value)));
@@ -116,7 +145,7 @@ public:
     // This is safe, since the only difference between signed/unsigned types
     // is how overflow works, and signed overflow is already undefined. We also
     // document that overflow is undefined for this operation.
-    using APIType = typename std::make_unsigned<ValueType>::type;
+    using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
     AtomicInterface::Store(reinterpret_cast<APIType*>(this->Data + index),
                            static_cast<APIType>(value));
@@ -169,7 +198,7 @@ public:
     // We'll cast the signed types to unsigned to work around this.
     // This is safe, since the only difference between signed/unsigned types
     // is how overflow works, and signed overflow is already undefined.
-    using APIType = typename std::make_unsigned<ValueType>::type;
+    using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
     return static_cast<T>(
       AtomicInterface::CompareAndSwap(reinterpret_cast<APIType*>(this->Data + index),

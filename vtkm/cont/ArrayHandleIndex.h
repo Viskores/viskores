@@ -68,6 +68,13 @@ public:
   {
   }
 };
+
+/// A convenience function for creating an ArrayHandleIndex. It takes the
+/// size of the array and generates an array holding vtkm::Id from [0, size - 1]
+VTKM_CONT inline vtkm::cont::ArrayHandleIndex make_ArrayHandleIndex(vtkm::Id length)
+{
+  return vtkm::cont::ArrayHandleIndex(length);
+}
 }
 } // namespace vtkm::cont
 
