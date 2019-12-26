@@ -1293,7 +1293,7 @@ private:
                      "Got bad value from Reduce with pair comparison object");
 
 
-    std::cout << "  Reduce bool array with vtkm::BitwiseAnd to see if all values are true."
+    std::cout << "  Reduce bool array with vtkm::LogicalAnd to see if all values are true."
               << std::endl;
     //construct an array of bools and verify that they aren't all true
     constexpr vtkm::Id inputLength = 60;
@@ -1304,8 +1304,8 @@ private:
       true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true
     };
     auto barray = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
-    bool all_true = Algorithm::Reduce(barray, true, vtkm::BitwiseAnd());
-    VTKM_TEST_ASSERT(all_true == false, "reduction with vtkm::BitwiseAnd should return false");
+    bool all_true = Algorithm::Reduce(barray, true, vtkm::LogicalAnd());
+    VTKM_TEST_ASSERT(all_true == false, "reduction with vtkm::LogicalAnd should return false");
 
     std::cout << "  Reduce with custom value type and custom comparison operator." << std::endl;
     //test with a custom value type with the reduction value being a vtkm::Vec<float,2>

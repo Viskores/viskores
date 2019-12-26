@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_internal_FunctorsGeneral_h
 #define vtk_m_cont_internal_FunctorsGeneral_h
 
+#include <vtkm/Algorithms.h>
 #include <vtkm/BinaryOperators.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
@@ -667,7 +668,7 @@ struct LowerBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::lower_bound(
+    auto resultPos = vtkm::LowerBound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
     vtkm::Id resultIndex =
@@ -715,7 +716,7 @@ struct LowerBoundsComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::lower_bound(inputIterators.GetBegin(),
+    auto resultPos = vtkm::LowerBound(inputIterators.GetBegin(),
                                       inputIterators.GetEnd(),
                                       this->ValuesPortal.Get(index),
                                       this->CompareFunctor);
@@ -1018,7 +1019,7 @@ struct UpperBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::upper_bound(
+    auto resultPos = vtkm::UpperBound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
     vtkm::Id resultIndex =
@@ -1066,7 +1067,7 @@ struct UpperBoundsKernelComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    auto resultPos = std::upper_bound(inputIterators.GetBegin(),
+    auto resultPos = vtkm::UpperBound(inputIterators.GetBegin(),
                                       inputIterators.GetEnd(),
                                       this->ValuesPortal.Get(index),
                                       this->CompareFunctor);

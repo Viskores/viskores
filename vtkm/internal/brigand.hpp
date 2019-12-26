@@ -34,6 +34,10 @@
 #define BRIGAND_COMP_CUDA_9PLUS
 #endif
 
+#if __CUDACC_VER_MAJOR__ > 10 || (__CUDACC_VER_MAJOR__ == 10 && __CUDACC_VER_MINOR__ >= 2)
+#define BRIGAND_COMP_CUDA_10_2PLUS
+#endif
+
 #define BRIGAND_COMP_CUDA
 #endif
 
@@ -910,7 +914,7 @@ namespace detail
 #include <initializer_list>
 namespace brigand
 {
-#if defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
+#if (defined(BRIGAND_COMP_CUDA) && !defined(BRIGAND_COMP_CUDA_10_2PLUS)) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
     template<class P, class T>

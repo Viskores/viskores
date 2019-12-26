@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestCudaAlgorithms.cu
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaArrayHandleMultiplexer.cu

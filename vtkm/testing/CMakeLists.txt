@@ -10,6 +10,7 @@
 
 set(headers
   Testing.h
+  TestingAlgorithms.h
   TestingMath.h
   TestingGeometry.h
   VecTraitsTests.h
@@ -18,6 +19,7 @@ set(headers
 VTKM_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestAlgorithms.cxx
   UnitTestBinaryPredicates.cxx
   UnitTestBinaryOperators.cxx
   UnitTestBounds.cxx

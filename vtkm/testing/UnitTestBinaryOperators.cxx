@@ -136,31 +136,32 @@ void TestBinaryOperators()
 {
   vtkm::testing::Testing::TryTypes(BinaryOperatorTestFunctor());
 
+  vtkm::UInt32 v1 = 0xccccccccu;
+  vtkm::UInt32 v2 = 0xffffffffu;
+  vtkm::UInt32 v3 = 0x0u;
+
   //test BitwiseAnd
   {
     vtkm::BitwiseAnd bitwise_and;
-    VTKM_TEST_ASSERT(bitwise_and(true, true) == true, "bitwise_and true wrong.");
-    VTKM_TEST_ASSERT(bitwise_and(true, false) == false, "bitwise_and true wrong.");
-    VTKM_TEST_ASSERT(bitwise_and(false, true) == false, "bitwise_and true wrong.");
-    VTKM_TEST_ASSERT(bitwise_and(false, false) == false, "bitwise_and true wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(v1, v2) == (v1 & v2), "bitwise_and wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(v1, v3) == (v1 & v3), "bitwise_and wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(v2, v3) == (v2 & v3), "bitwise_and wrong.");
   }
 
   //test BitwiseOr
   {
     vtkm::BitwiseOr bitwise_or;
-    VTKM_TEST_ASSERT(bitwise_or(true, true) == true, "bitwise_or true wrong.");
-    VTKM_TEST_ASSERT(bitwise_or(true, false) == true, "bitwise_or true wrong.");
-    VTKM_TEST_ASSERT(bitwise_or(false, true) == true, "bitwise_or true wrong.");
-    VTKM_TEST_ASSERT(bitwise_or(false, false) == false, "bitwise_or true wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(v1, v2) == (v1 | v2), "bitwise_or wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(v1, v3) == (v1 | v3), "bitwise_or wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(v2, v3) == (v2 | v3), "bitwise_or wrong.");
   }
 
   //test BitwiseXor
   {
     vtkm::BitwiseXor bitwise_xor;
-    VTKM_TEST_ASSERT(bitwise_xor(true, true) == false, "bitwise_xor true wrong.");
-    VTKM_TEST_ASSERT(bitwise_xor(true, false) == true, "bitwise_xor true wrong.");
-    VTKM_TEST_ASSERT(bitwise_xor(false, true) == true, "bitwise_xor true wrong.");
-    VTKM_TEST_ASSERT(bitwise_xor(false, false) == false, "bitwise_xor true wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(v1, v2) == (v1 ^ v2), "bitwise_xor wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(v1, v3) == (v1 ^ v3), "bitwise_xor wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(v2, v3) == (v2 ^ v3), "bitwise_xor wrong.");
   }
 }
 

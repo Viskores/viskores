@@ -29,25 +29,47 @@ namespace vtkm
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns sum (addition) of the two values.
-/// Note: Requires Type \p T implement the + operator.
+/// @note Requires a suitable definition of `operator+(T, U)`.
 struct Sum
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT auto operator()(const T& x, const U& y) const -> decltype(x + y)
   {
     return x + y;
+  }
+
+  // If both types are the same integral type, explicitly cast the result to
+  // type T to avoid narrowing conversion warnings from operations that promote
+  // to int (e.g. `int operator+(char, char)`)
+  template <typename T>
+  VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(const T& x, const T& y) const
+  {
+    return static_cast<T>(x + y);
   }
 };
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns product (multiplication) of the two values.
-/// Note: Requires Type \p T implement the * operator.
+/// @note Requires a suitable definition of `operator*(T, U)`.
 struct Product
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT auto operator()(const T& x, const U& y) const -> decltype(x * y)
   {
     return x * y;
+  }
+
+  // If both types are the same integral type, explicitly cast the result to
+  // type T to avoid narrowing conversion warnings from operations that promote
+  // to int (e.g. `int operator+(char, char)`)
+  template <typename T>
+  VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(const T& x, const T& y) const
+  {
+    return static_cast<T>(x * y);
   }
 };
 
@@ -57,12 +79,13 @@ struct Product
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the \c x if x > y otherwise returns \c y.
-/// Note: Requires Type \p T implement the < operator.
+/// @note Requires a suitable definition of `bool operator<(T, U)` and that
+/// `T` and `U` share a common type.
 //needs to be full length to not clash with vtkm::math function Max.
 struct Maximum
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT typename std::common_type<T, U>::type operator()(const T& x, const U& y) const
   {
     return x < y ? y : x;
   }
@@ -70,19 +93,20 @@ struct Maximum
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the \c x if x < y otherwise returns \c y.
-/// Note: Requires Type \p T implement the < operator.
+/// @note Requires a suitable definition of `bool operator<(T, U)` and that
+/// `T` and `U` share a common type.
 //needs to be full length to not clash with vtkm::math function Min.
 struct Minimum
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT typename std::common_type<T, U>::type operator()(const T& x, const U& y) const
   {
     return x < y ? x : y;
   }
 };
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
-/// returns a vtkm::Vec<T,2> that represents the minimum and maximum values
+/// returns a vtkm::Vec<T,2> that represents the minimum and maximum values.
 /// Note: Requires Type \p T implement the vtkm::Min and vtkm::Max functions.
 template <typename T>
 struct MinAndMax
@@ -117,37 +141,70 @@ struct MinAndMax
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the bitwise operation <tt>x&y</tt>
-/// Note: Requires Type \p T implement the & operator.
+/// @note Requires a suitable definition of `operator&(T, U)`.
 struct BitwiseAnd
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT auto operator()(const T& x, const U& y) const -> decltype(x & y)
   {
     return x & y;
+  }
+
+  // If both types are the same integral type, explicitly cast the result to
+  // type T to avoid narrowing conversion warnings from operations that promote
+  // to int (e.g. `int operator+(char, char)`)
+  template <typename T>
+  VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(const T& x, const T& y) const
+  {
+    return static_cast<T>(x & y);
   }
 };
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the bitwise operation <tt>x|y</tt>
-/// Note: Requires Type \p T implement the | operator.
+/// @note Requires a suitable definition of `operator&(T, U)`.
 struct BitwiseOr
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT auto operator()(const T& x, const U& y) const -> decltype(x | y)
   {
     return x | y;
+  }
+
+  // If both types are the same integral type, explicitly cast the result to
+  // type T to avoid narrowing conversion warnings from operations that promote
+  // to int (e.g. `int operator+(char, char)`)
+  template <typename T>
+  VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(const T& x, const T& y) const
+  {
+    return static_cast<T>(x | y);
   }
 };
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the bitwise operation <tt>x^y</tt>
-/// Note: Requires Type \p T implement the ^ operator.
+/// @note Requires a suitable definition of `operator&(T, U)`.
 struct BitwiseXor
 {
-  template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT auto operator()(const T& x, const U& y) const -> decltype(x ^ y)
   {
     return x ^ y;
+  }
+
+  // If both types are the same integral type, explicitly cast the result to
+  // type T to avoid narrowing conversion warnings from operations that promote
+  // to int (e.g. `int operator+(char, char)`)
+  template <typename T>
+  VTKM_EXEC_CONT
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) < sizeof(int), T>::type
+    operator()(const T& x, const T& y) const
+  {
+    return static_cast<T>(x ^ y);
   }
 };
 
