@@ -125,6 +125,19 @@ New storage:
 vtkm::cont::StorageTagCounting
 ```
 
+#### `ArrayHandleGroupVec`
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagGroupVec<
+  vtkm::cont::ArrayHandle<ValueType, StorageTag>, N>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagGroupVec<StorageTag, N>
+```
+
 #### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
