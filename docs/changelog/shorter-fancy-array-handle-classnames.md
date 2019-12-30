@@ -105,12 +105,24 @@ Old storage:
 ``` cpp
 vtkm::cont::StorageTagImplicit<
   vtkm::cont::detail::ArrayPortalImplicit<
-    vtkm::cont::detail::ConstantFunctor<float>>>
+    vtkm::cont::detail::ConstantFunctor<ValueType>>>
 ```
 
 New storage:
 ``` cpp
 vtkm::cont::StorageTagConstant
+```
+
+#### `ArrayHandleCounting`
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ValueType>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagCounting
 ```
 
 #### `ArrayHandleUniformPointCoordinates`

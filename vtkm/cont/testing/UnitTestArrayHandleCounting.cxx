@@ -77,9 +77,7 @@ struct TemplatedTests
 {
   using ArrayHandleType = vtkm::cont::ArrayHandleCounting<ValueType>;
 
-  using ArrayHandleType2 = vtkm::cont::ArrayHandle<
-    ValueType,
-    typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>;
+  using ArrayHandleType2 = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagCounting>;
 
   using PortalType = typename ArrayHandleType::PortalConstControl;
 

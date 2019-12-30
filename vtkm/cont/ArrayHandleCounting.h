@@ -20,6 +20,10 @@ namespace vtkm
 namespace cont
 {
 
+struct StorageTagCounting
+{
+};
+
 namespace internal
 {
 
@@ -87,12 +91,23 @@ private:
   vtkm::Id NumberOfValues;
 };
 
-/// A convenience class that provides a typedef to the appropriate tag for
-/// a counting storage.
-template <typename ValueType>
-struct ArrayHandleCountingTraits
+template <typename T>
+using StorageTagCountingSuperclass =
+  vtkm::cont::StorageTagImplicit<internal::ArrayPortalCounting<T>>;
+
+template <typename T>
+struct Storage<T, vtkm::cont::StorageTagCounting> : Storage<T, StorageTagCountingSuperclass<T>>
 {
-  using Tag = vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ValueType>>;
+  using Superclass = Storage<T, StorageTagCountingSuperclass<T>>;
+  using Superclass::Superclass;
+};
+
+template <typename T, typename Device>
+struct ArrayTransfer<T, vtkm::cont::StorageTagCounting, Device>
+  : ArrayTransfer<T, StorageTagCountingSuperclass<T>, Device>
+{
+  using Superclass = ArrayTransfer<T, StorageTagCountingSuperclass<T>, Device>;
+  using Superclass::Superclass;
 };
 
 } // namespace internal
@@ -101,17 +116,13 @@ struct ArrayHandleCountingTraits
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length
 template <typename CountingValueType>
-class ArrayHandleCounting : public vtkm::cont::ArrayHandle<
-                              CountingValueType,
-                              typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>
+class ArrayHandleCounting
+  : public vtkm::cont::ArrayHandle<CountingValueType, vtkm::cont::StorageTagCounting>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleCounting,
-    (ArrayHandleCounting<CountingValueType>),
-    (vtkm::cont::ArrayHandle<
-      CountingValueType,
-      typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>));
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleCounting,
+                             (ArrayHandleCounting<CountingValueType>),
+                             (vtkm::cont::ArrayHandle<CountingValueType, StorageTagCounting>));
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
@@ -150,8 +161,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 };
 
 template <typename T>
-struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>>
   : SerializableTypeString<vtkm::cont::ArrayHandleCounting<T>>
 {
 };
@@ -191,8 +201,7 @@ public:
 };
 
 template <typename T>
-struct Serialization<
-  vtkm::cont::ArrayHandle<T, typename vtkm::cont::ArrayHandleCounting<T>::StorageTag>>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>>
   : Serialization<vtkm::cont::ArrayHandleCounting<T>>
 {
 };
