@@ -74,7 +74,7 @@ Old storage:
 ``` cpp
 vtkm::cont::StorageTagConcatenate<
   vtkm::cont::ArrayHandle<ValueType, StorageTag1>,
-  vtkm::cont::ArrayHandle<ValueType, StorageTag2> >
+  vtkm::cont::ArrayHandle<ValueType, StorageTag2>>
 ```
 
 New storage:
@@ -97,6 +97,20 @@ New storage:
 ``` cpp
 vtkm::cont::StorageTagConcatenate<
   vtkm::cont::StorageTagConcatenate<StorageTag1, StorageTag2>, StorageTag3>
+```
+
+#### `ArrayHandleConstant`
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagImplicit<
+  vtkm::cont::detail::ArrayPortalImplicit<
+    vtkm::cont::detail::ConstantFunctor<float>>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagConstant
 ```
 
 #### `ArrayHandleUniformPointCoordinates`

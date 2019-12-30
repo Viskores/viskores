@@ -70,9 +70,8 @@ void TryCopy()
   }
 
   { // implicit -> implicit (base->derived, constant)
-    vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::ConstantFunctor<int>> input{
-      vtkm::cont::detail::ConstantFunctor<int>(41), ARRAY_SIZE
-    };
+    vtkm::cont::ArrayHandle<int, vtkm::cont::StorageTagConstant> input =
+      vtkm::cont::make_ArrayHandleConstant<int>(41, ARRAY_SIZE);
     vtkm::cont::ArrayHandleConstant<int> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
