@@ -161,23 +161,28 @@ namespace vtkm
 namespace cont
 {
 
-namespace internal
-{
-
-template <typename SourceArrayHandleType, typename OffsetsArrayHandleType>
+template <typename SourceStorageTag, typename OffsetsStorageTag>
 struct VTKM_ALWAYS_EXPORT StorageTagGroupVecVariable
 {
 };
 
-template <typename SourceArrayHandleType, typename OffsetsArrayHandleType>
-class Storage<
-  vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
-  vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType, OffsetsArrayHandleType>>
+namespace internal
 {
-  using ComponentType = typename SourceArrayHandleType::ValueType;
+
+template <typename SourcePortal, typename SourceStorageTag, typename OffsetsStorageTag>
+class Storage<vtkm::VecFromPortal<SourcePortal>,
+              vtkm::cont::StorageTagGroupVecVariable<SourceStorageTag, OffsetsStorageTag>>
+{
+  using ComponentType = typename SourcePortal::ValueType;
+  using SourceArrayHandleType = vtkm::cont::ArrayHandle<ComponentType, SourceStorageTag>;
+  using OffsetsArrayHandleType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>;
+
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<SourcePortal, typename SourceArrayHandleType::PortalControl>::value),
+    "Used invalid SourcePortal type with expected SourceStorageTag.");
 
 public:
-  using ValueType = vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>;
+  using ValueType = vtkm::VecFromPortal<SourcePortal>;
 
   using PortalType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalControl,
@@ -266,20 +271,24 @@ private:
   bool Valid;
 };
 
-template <typename SourceArrayHandleType, typename OffsetsArrayHandleType, typename Device>
-class ArrayTransfer<
-  vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
-  vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType, OffsetsArrayHandleType>,
-  Device>
+template <typename SourcePortal,
+          typename SourceStorageTag,
+          typename OffsetsStorageTag,
+          typename Device>
+class ArrayTransfer<vtkm::VecFromPortal<SourcePortal>,
+                    vtkm::cont::StorageTagGroupVecVariable<SourceStorageTag, OffsetsStorageTag>,
+                    Device>
 {
 public:
-  using ComponentType = typename SourceArrayHandleType::ValueType;
-  using ValueType = vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>;
+  using ComponentType = typename SourcePortal::ValueType;
+  using ValueType = vtkm::VecFromPortal<SourcePortal>;
 
 private:
-  using StorageTag =
-    vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType, OffsetsArrayHandleType>;
+  using StorageTag = vtkm::cont::StorageTagGroupVecVariable<SourceStorageTag, OffsetsStorageTag>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+
+  using SourceArrayHandleType = vtkm::cont::ArrayHandle<ComponentType, SourceStorageTag>;
+  using OffsetsArrayHandleType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>;
 
 public:
   using PortalControl = typename StorageType::PortalType;
@@ -387,11 +396,15 @@ template <typename SourceArrayHandleType, typename OffsetsArrayHandleType>
 class ArrayHandleGroupVecVariable
   : public vtkm::cont::ArrayHandle<
       vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
-      vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType,
-                                                       OffsetsArrayHandleType>>
+      vtkm::cont::StorageTagGroupVecVariable<typename SourceArrayHandleType::StorageTag,
+                                             typename OffsetsArrayHandleType::StorageTag>>
 {
   VTKM_IS_ARRAY_HANDLE(SourceArrayHandleType);
   VTKM_IS_ARRAY_HANDLE(OffsetsArrayHandleType);
+
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<vtkm::Id, typename OffsetsArrayHandleType::ValueType>::value),
+    "ArrayHandleGroupVecVariable's offsets array must contain vtkm::Id values.");
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
@@ -399,8 +412,8 @@ public:
     (ArrayHandleGroupVecVariable<SourceArrayHandleType, OffsetsArrayHandleType>),
     (vtkm::cont::ArrayHandle<
       vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
-      vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType,
-                                                       OffsetsArrayHandleType>>));
+      vtkm::cont::StorageTagGroupVecVariable<typename SourceArrayHandleType::StorageTag,
+                                             typename OffsetsArrayHandleType::StorageTag>>));
 
   using ComponentType = typename SourceArrayHandleType::ValueType;
 
@@ -516,11 +529,13 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
   }
 };
 
-template <typename SAH, typename OAH>
+template <typename SP, typename SST, typename OST>
 struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
-                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<SP>,
+                          vtkm::cont::StorageTagGroupVecVariable<SST, OST>>>
+  : SerializableTypeString<
+      vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<typename SP::ValueType, SST>,
+                                              vtkm::cont::ArrayHandle<vtkm::Id, OST>>>
 {
 };
 }
@@ -555,11 +570,12 @@ public:
   }
 };
 
-template <typename SAH, typename OAH>
-struct Serialization<
-  vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SAH::PortalControl>,
-                          vtkm::cont::internal::StorageTagGroupVecVariable<SAH, OAH>>>
-  : Serialization<vtkm::cont::ArrayHandleGroupVecVariable<SAH, OAH>>
+template <typename SP, typename SST, typename OST>
+struct Serialization<vtkm::cont::ArrayHandle<vtkm::VecFromPortal<SP>,
+                                             vtkm::cont::StorageTagGroupVecVariable<SST, OST>>>
+  : Serialization<
+      vtkm::cont::ArrayHandleGroupVecVariable<vtkm::cont::ArrayHandle<typename SP::ValueType, SST>,
+                                              vtkm::cont::ArrayHandle<vtkm::Id, OST>>>
 {
 };
 } // diy

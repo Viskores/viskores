@@ -138,6 +138,20 @@ New storage:
 vtkm::cont::StorageTagGroupVec<StorageTag, N>
 ```
 
+#### `ArrayHandleGroupVecVariable`
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagGroupVecVariable<
+  vtkm::cont::ArrayHandle<ValueType, StorageTag1>, 
+  vtkm::cont::ArrayHandle<vtkm::Id, StorageTag2>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagGroupVecVariable<StorageTag1, StorageTag2>
+```
+
 #### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
