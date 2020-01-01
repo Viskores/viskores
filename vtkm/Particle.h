@@ -66,24 +66,7 @@ class Particle
 {
 public:
   VTKM_EXEC_CONT
-  Particle()
-    : Pos()
-    , ID(-1)
-    , NumSteps(0)
-    , Status()
-    , Time(0)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  Particle(const vtkm::Particle& p)
-    : Pos(p.Pos)
-    , ID(p.ID)
-    , NumSteps(p.NumSteps)
-    , Status(p.Status)
-    , Time(p.Time)
-  {
-  }
+  Particle() {}
 
   VTKM_EXEC_CONT
   Particle(const vtkm::Vec3f& p,
@@ -99,11 +82,23 @@ public:
   {
   }
 
+  VTKM_EXEC_CONT
+  Particle(const vtkm::Particle& p)
+    : Pos(p.Pos)
+    , ID(p.ID)
+    , NumSteps(p.NumSteps)
+    , Status(p.Status)
+    , Time(p.Time)
+  {
+  }
+
+  vtkm::Particle& operator=(const vtkm::Particle& p) = default;
+
   vtkm::Vec3f Pos;
-  vtkm::Id ID;
-  vtkm::Id NumSteps;
+  vtkm::Id ID = -1;
+  vtkm::Id NumSteps = 0;
   vtkm::ParticleStatus Status;
-  vtkm::FloatDefault Time;
+  vtkm::FloatDefault Time = 0;
 };
 }
 
