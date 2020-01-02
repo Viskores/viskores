@@ -165,6 +165,20 @@ New storage:
 vtkm::cont::StorageTagIndex
 ```
 
+#### `ArrayHandlePermutation`
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagPermutation<
+  vtkm::cont::ArrayHandle<vtkm::Id, StorageTag1>,
+  vtkm::cont::ArrayHandle<ValueType, StorageTag2>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagPermutation<StorageTag1, StorageTag2>
+```
+
 #### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
