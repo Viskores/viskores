@@ -152,6 +152,19 @@ New storage:
 vtkm::cont::StorageTagGroupVecVariable<StorageTag1, StorageTag2>
 ```
 
+#### `ArrayHandleIndex`
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagImplicit<
+  vtkm::cont::detail::ArrayPortalImplicit<vtkm::cont::detail::IndexFunctor>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagIndex
+```
+
 #### `ArrayHandleUniformPointCoordinates`
 
 Old storage:
