@@ -155,7 +155,7 @@ namespace cont
 {
 
 template <typename StorageTag1, typename StorageTag2, typename StorageTag3>
-struct StorageTagCartesianProduct
+struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct
 {
 };
 

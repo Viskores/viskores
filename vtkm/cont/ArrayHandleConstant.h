@@ -17,7 +17,7 @@ namespace vtkm
 namespace cont
 {
 
-struct StorageTagConstant
+struct VTKM_ALWAYS_EXPORT StorageTagConstant
 {
 };
 

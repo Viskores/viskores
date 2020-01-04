@@ -82,7 +82,7 @@ private:
 } // namespace internal
 
 template <typename ArrayHandleType>
-struct StorageTagView
+struct VTKM_ALWAYS_EXPORT StorageTagView
 {
 };
 

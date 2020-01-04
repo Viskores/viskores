@@ -20,7 +20,7 @@ namespace vtkm
 namespace cont
 {
 
-struct StorageTagCounting
+struct VTKM_ALWAYS_EXPORT StorageTagCounting
 {
 };
 

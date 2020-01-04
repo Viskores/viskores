@@ -25,7 +25,7 @@ namespace cont
 {
 
 template <typename SourceT, typename SourceStorage>
-struct StorageTagCast
+struct VTKM_ALWAYS_EXPORT StorageTagCast
 {
 };
 
@@ -124,7 +124,7 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, true>
 } // namespace detail
 
 template <typename TargetT, typename SourceT, typename SourceStorage>
-struct Storage<TargetT, StorageTagCast<SourceT, SourceStorage>>
+struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>
   : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass
 {
   using Superclass =
@@ -134,7 +134,7 @@ struct Storage<TargetT, StorageTagCast<SourceT, SourceStorage>>
 };
 
 template <typename TargetT, typename SourceT, typename SourceStorage, typename Device>
-struct ArrayTransfer<TargetT, StorageTagCast<SourceT, SourceStorage>, Device>
+struct ArrayTransfer<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>, Device>
   : detail::ArrayHandleCastTraits<TargetT,
                                   SourceT,
                                   SourceStorage>::template ArrayTransferSuperclass<Device>

@@ -19,7 +19,7 @@ namespace vtkm
 namespace cont
 {
 
-struct StorageTagUniformPoints
+struct VTKM_ALWAYS_EXPORT StorageTagUniformPoints
 {
 };
 

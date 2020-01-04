@@ -71,7 +71,7 @@ private:
 }
 
 template <typename ArrayHandleType>
-class StorageTagReverse
+class VTKM_ALWAYS_EXPORT StorageTagReverse
 {
 };
 

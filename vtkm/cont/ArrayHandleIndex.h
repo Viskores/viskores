@@ -17,7 +17,7 @@ namespace vtkm
 namespace cont
 {
 
-struct StorageTagIndex
+struct VTKM_ALWAYS_EXPORT StorageTagIndex
 {
 };
 
@@ -34,14 +34,14 @@ using StorageTagIndexSuperclass =
   typename vtkm::cont::ArrayHandleImplicit<IndexFunctor>::StorageTag;
 
 template <>
-struct Storage<vtkm::Id, StorageTagIndex> : Storage<vtkm::Id, StorageTagIndexSuperclass>
+struct Storage<vtkm::Id, vtkm::cont::StorageTagIndex> : Storage<vtkm::Id, StorageTagIndexSuperclass>
 {
   using Superclass = Storage<vtkm::Id, StorageTagIndexSuperclass>;
   using Superclass::Superclass;
 };
 
 template <typename Device>
-struct ArrayTransfer<vtkm::Id, StorageTagIndex, Device>
+struct ArrayTransfer<vtkm::Id, vtkm::cont::StorageTagIndex, Device>
   : ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>
 {
   using Superclass = ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>;

@@ -102,7 +102,7 @@ private:
 } // namespace internal
 
 template <typename StorageTag1, typename StorageTag2>
-class StorageTagConcatenate
+class VTKM_ALWAYS_EXPORT StorageTagConcatenate
 {
 };
 
