@@ -118,6 +118,11 @@ public:
   }
 };
 
+template <>
+struct Serialization<vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>>
+  : Serialization<vtkm::cont::ArrayHandleIndex>
+{
+};
 } // diy
 /// @endcond SERIALIZATION
 

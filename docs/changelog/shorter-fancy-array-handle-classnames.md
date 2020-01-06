@@ -12,7 +12,10 @@ The fix was for these classes to declare their own `Storage` tag and then
 implement their `Storage` and `ArrayTransport` classes as trivial
 subclasses of the generic `ArrayHandleImplicit` or `ArrayHandleTransport`.
 
-As an added bonus, a lot of this shortening also means that storage that relies on other array handles now are just typed by to storage of the decorated type, not the array itself. This should make the types a little more robust.
+As an added bonus, a lot of this shortening also means that storage that
+relies on other array handles now are just typed by the storage of the
+decorated type, not the array itself. This should make the types a little
+more robust.
 
 Here is a list of classes that were updated.
 
@@ -213,4 +216,19 @@ vtkm::cont::StorageTagView<vtkm::cont::ArrayHandle<ValueType, StorageTag>>
 New storage:
 ``` cpp
 'vtkm::cont::StorageTagView<StorageTag>
+```
+
+
+#### `ArrayPortalZip`
+
+Old storage:
+``` cpp
+vtkm::cont::internal::StorageTagZip<
+  vtkm::cont::ArrayHandle<ValueType1, StorageTag1>,
+  vtkm::cont::ArrayHandle<ValueType2, StorageTag2>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagZip<StorageTag1, StorageTag2>
 ```

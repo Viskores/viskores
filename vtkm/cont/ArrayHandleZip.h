@@ -105,13 +105,13 @@ namespace vtkm
 namespace cont
 {
 
-namespace internal
-{
-
-template <typename FirstHandleType, typename SecondHandleType>
+template <typename ST1, typename ST2>
 struct VTKM_ALWAYS_EXPORT StorageTagZip
 {
 };
+
+namespace internal
+{
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
@@ -126,23 +126,22 @@ struct ArrayHandleZipTraits
 
   /// The appropriately templated tag.
   ///
-  using Tag = StorageTagZip<FirstHandleType, SecondHandleType>;
+  using Tag =
+    StorageTagZip<typename FirstHandleType::StorageTag, typename SecondHandleType::StorageTag>;
 
   /// The superclass for ArrayHandleZip.
   ///
   using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
-template <typename FirstHandleType, typename SecondHandleType>
-class Storage<vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
-              StorageTagZip<FirstHandleType, SecondHandleType>>
+template <typename T1, typename T2, typename ST1, typename ST2>
+class Storage<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>
 {
-  VTKM_IS_ARRAY_HANDLE(FirstHandleType);
-  VTKM_IS_ARRAY_HANDLE(SecondHandleType);
+  using FirstHandleType = vtkm::cont::ArrayHandle<T1, ST1>;
+  using SecondHandleType = vtkm::cont::ArrayHandle<T2, ST2>;
 
 public:
-  using ValueType =
-    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
+  using ValueType = vtkm::Pair<T1, T2>;
 
   using PortalType = vtkm::exec::internal::ArrayPortalZip<ValueType,
                                                           typename FirstHandleType::PortalControl,
@@ -218,21 +217,18 @@ private:
   SecondHandleType SecondArray;
 };
 
-template <typename FirstHandleType, typename SecondHandleType, typename Device>
-class ArrayTransfer<
-  vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>,
-  StorageTagZip<FirstHandleType, SecondHandleType>,
-  Device>
+template <typename T1, typename T2, typename ST1, typename ST2, typename Device>
+class ArrayTransfer<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>, Device>
 {
-public:
-  using ValueType =
-    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
+  using StorageTag = vtkm::cont::StorageTagZip<ST1, ST2>;
+  using StorageType = vtkm::cont::internal::Storage<vtkm::Pair<T1, T2>, StorageTag>;
 
-private:
-  using StorageTag = StorageTagZip<FirstHandleType, SecondHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+  using FirstHandleType = vtkm::cont::ArrayHandle<T1, ST1>;
+  using SecondHandleType = vtkm::cont::ArrayHandle<T2, ST2>;
 
 public:
+  using ValueType = vtkm::Pair<T1, T2>;
+
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -374,11 +370,11 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
   }
 };
 
-template <typename AH1, typename AH2>
+template <typename T1, typename T2, typename ST1, typename ST2>
 struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
-                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  vtkm::cont::ArrayHandle<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<T1, ST1>,
+                                                      vtkm::cont::ArrayHandle<T2, ST2>>>
 {
 };
 }
@@ -414,11 +410,11 @@ public:
   }
 };
 
-template <typename AH1, typename AH2>
+template <typename T1, typename T2, typename ST1, typename ST2>
 struct Serialization<
-  vtkm::cont::ArrayHandle<vtkm::Pair<typename AH1::ValueType, typename AH2::ValueType>,
-                          vtkm::cont::internal::StorageTagZip<AH1, AH2>>>
-  : Serialization<vtkm::cont::ArrayHandleZip<AH1, AH2>>
+  vtkm::cont::ArrayHandle<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>>
+  : Serialization<vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<T1, ST1>,
+                                             vtkm::cont::ArrayHandle<T2, ST2>>>
 {
 };
 
