@@ -202,3 +202,15 @@ New Storage:
 ``` cpp
 vtkm::cont::StorageTagUniformPoints
 ```
+
+#### `ArrayHandleView`
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagView<vtkm::cont::ArrayHandle<ValueType, StorageTag>>
+```
+
+New storage:
+``` cpp
+'vtkm::cont::StorageTagView<StorageTag>
+```
