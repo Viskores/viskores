@@ -179,6 +179,18 @@ New storage:
 vtkm::cont::StorageTagPermutation<StorageTag1, StorageTag2>
 ```
 
+#### `ArrayHandleReverse`
+
+Old storage:
+``` cpp
+vtkm::cont::StorageTagReverse<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTag>>
+```
+
+New storage:
+``` cpp
+vtkm::cont::StorageTagReverse<StorageTag>
+```
+
 #### `ArrayHandleUniformPointCoordinates`
 
 Old storage:

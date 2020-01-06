@@ -123,13 +123,18 @@ struct ConcatinateTypeArgImpl<T, Storage, false>
 };
 
 template <typename T, typename Array>
-struct VTKM_DEPRECATED(1.6, "Use storage tags instead of array handles in StorageTagConcatenate")
-  ConcatinateTypeArgImpl<T, Array, true>
+struct ConcatinateTypeArgImpl<T, Array, true>
 {
   VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
                          "Used array with wrong type in ArrayHandleConcatinate.");
-  using StorageTag = typename Array::StorageTag;
-  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
+  using StorageTag VTKM_DEPRECATED(
+    1.6,
+    "Use storage tags instead of array handles in StorageTagConcatenate.") =
+    typename Array::StorageTag;
+  using ArrayHandle VTKM_DEPRECATED(
+    1.6,
+    "Use storage tags instead of array handles in StorageTagConcatenate.") =
+    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
 };
 
 template <typename T, typename ArrayOrStorage>
