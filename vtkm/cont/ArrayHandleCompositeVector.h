@@ -543,8 +543,8 @@ public:
     }
   }
 
-  template <typename... Arrays>
-  VTKM_CONT Storage(const Arrays&... arrays)
+  template <typename... ArrayTypes>
+  VTKM_CONT Storage(const ArrayTypes&... arrays)
     : Arrays(arrays...)
     , Valid(true)
   {
