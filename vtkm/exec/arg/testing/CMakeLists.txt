@@ -16,6 +16,7 @@ vtkm_declare_headers(${headers})
 set(unit_tests
   UnitTestExecutionSignatureTag.cxx
   UnitTestFetchArrayDirectIn.cxx
+  UnitTestFetchArrayDirectIn3d.cxx
   UnitTestFetchArrayDirectInOut.cxx
   UnitTestFetchArrayDirectOut.cxx
   UnitTestFetchArrayNeighborhoodIn.cxx

@@ -71,6 +71,7 @@ set(unit_tests
   UnitTestTube.cxx
   UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapField3d.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
   UnitTestWorkletMapFieldWholeArrayAtomic.cxx

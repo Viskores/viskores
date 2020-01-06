@@ -57,23 +57,19 @@ class ThreadIndicesPointNeighborhood
 public:
   template <vtkm::IdComponent Dimension>
   VTKM_EXEC ThreadIndicesPointNeighborhood(
-    const vtkm::Id3& outIndex,
+    const vtkm::Id3& threadIndex3D,
+    vtkm::Id threadIndex1D,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
                                              Dimension>& connectivity,
     vtkm::Id globalThreadIndexOffset = 0)
-    : State(outIndex, detail::To3D(connectivity.GetPointDimensions()))
+    : State(threadIndex3D, detail::To3D(connectivity.GetPointDimensions()))
+    , ThreadIndex(threadIndex1D)
+    , InputIndex(threadIndex1D)
+    , OutputIndex(threadIndex1D)
+    , VisitIndex(0)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
-    using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                                vtkm::TopologyElementTagCell,
-                                                                Dimension>;
-    using ConnRangeType = typename ConnectivityType::SchedulingRangeType;
-    const ConnRangeType index = detail::Deflate(outIndex, ConnRangeType());
-    this->ThreadIndex = connectivity.LogicalToFlatToIndex(index);
-    this->InputIndex = this->ThreadIndex;
-    this->VisitIndex = 0;
-    this->OutputIndex = this->ThreadIndex;
   }
 
   template <vtkm::IdComponent Dimension>

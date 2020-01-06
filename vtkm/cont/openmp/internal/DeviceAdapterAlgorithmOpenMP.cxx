@@ -132,7 +132,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagOpenMP>::ScheduleTask(
     {
       for (vtkm::Id j = startIJK[1]; j < endIJK[1]; ++j)
       {
-        functor(startIJK[0], endIJK[0], j, k);
+        functor(size, startIJK[0], endIJK[0], j, k);
       }
     }
   }

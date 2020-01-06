@@ -222,6 +222,7 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
+    const vtkm::Id3& vtkmNotUsed(iterationSpace),
     const vtkm::Id3& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -271,6 +272,7 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
             typename InputDomainType,
             typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
+    const vtkm::Id3& vtkmNotUsed(iterationSpace),
     const vtkm::Id3& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -403,8 +405,8 @@ void Test3DNormalTaskTilingInvoke()
     for (vtkm::Id j = 0; j < 8; j += 2)
     {
       //verify that order is not required
-      task1(0, 8, j + 1, k);
-      task1(0, 8, j, k);
+      task1(vtkm::Id3{ 8, 8, 8 }, 0, 8, j + 1, k);
+      task1(vtkm::Id3{ 8, 8, 8 }, 0, 8, j, k);
     }
   }
 
@@ -431,7 +433,7 @@ void Test3DNormalTaskTilingInvoke()
     {
       for (vtkm::Id k = 0; k < 8; ++k)
       {
-        task2(i, i + 1, j, k);
+        task2(vtkm::Id3{ 8, 8, 8 }, i, i + 1, j, k);
       }
     }
   }
@@ -471,7 +473,7 @@ void Test3DErrorTaskTilingInvoke()
   {
     for (vtkm::Id j = 0; j < 8; ++j)
     {
-      task1(0, 8, j, k);
+      task1(vtkm::Id3{ 8, 8, 8 }, 0, 8, j, k);
     }
   }
 

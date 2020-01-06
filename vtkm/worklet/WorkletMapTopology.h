@@ -185,7 +185,8 @@ public:
             typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
-    const vtkm::Id3& threadIndex,
+    vtkm::Id threadIndex1D,
+    const vtkm::Id3& threadIndex3D,
     const OutToInArrayType& vtkmNotUsed(outToIn),
     const VisitArrayType& vtkmNotUsed(visit),
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
@@ -200,7 +201,7 @@ public:
                            "Scheduling on 3D topologies only works with default MaskNone.");
 
     return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
-      threadIndex, connectivity, globalThreadIndexOffset);
+      threadIndex3D, threadIndex1D, connectivity, globalThreadIndexOffset);
   }
 };
 

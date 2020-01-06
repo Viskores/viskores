@@ -123,7 +123,7 @@ struct FetchArrayNeighborhoodInTests
           for (vtkm::Id i = 0; i < POINT_DIMS[0]; i++, index++)
           {
             index3d[0] = i;
-            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, connectivity);
+            vtkm::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, index, connectivity);
 
             auto neighbors = fetch.Load(indices, execObject);
 
