@@ -145,38 +145,18 @@ struct AllCastArraysForStorageImpl<TargetT,
 };
 
 template <typename T, typename S1, typename S2, typename S3>
-struct AllCastArraysForStorageImpl<
-  vtkm::Vec<T, 3>,
-  vtkm::cont::internal::StorageTagCartesianProduct<vtkm::cont::ArrayHandle<T, S1>,
-                                                   vtkm::cont::ArrayHandle<T, S2>,
-                                                   vtkm::cont::ArrayHandle<T, S3>>,
-  true>
+struct AllCastArraysForStorageImpl<vtkm::Vec<T, 3>,
+                                   vtkm::cont::StorageTagCartesianProduct<S1, S2, S3>,
+                                   true>
 {
   using type = vtkm::List<vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, S1>,
                                                                   vtkm::cont::ArrayHandle<T, S2>,
                                                                   vtkm::cont::ArrayHandle<T, S3>>>;
 };
-template <typename TargetT, typename SourceT, typename S1, typename S2, typename S3>
-struct AllCastArraysForStorageImpl<
-  vtkm::Vec<TargetT, 3>,
-  vtkm::cont::internal::StorageTagCartesianProduct<vtkm::cont::ArrayHandle<SourceT, S1>,
-                                                   vtkm::cont::ArrayHandle<SourceT, S2>,
-                                                   vtkm::cont::ArrayHandle<SourceT, S3>>,
-  false>
-{
-  using type = vtkm::List<vtkm::cont::ArrayHandleCast<
-    vtkm::Vec<TargetT, 3>,
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<SourceT, S1>,
-                                            vtkm::cont::ArrayHandle<SourceT, S2>,
-                                            vtkm::cont::ArrayHandle<SourceT, S3>>>>;
-};
-template <typename TargetT, typename SourceT, typename S1, typename S2, typename S3>
-struct AllCastArraysForStorageImpl<
-  TargetT,
-  vtkm::cont::internal::StorageTagCartesianProduct<vtkm::cont::ArrayHandle<SourceT, S1>,
-                                                   vtkm::cont::ArrayHandle<SourceT, S2>,
-                                                   vtkm::cont::ArrayHandle<SourceT, S3>>,
-  false>
+template <typename TargetT, typename S1, typename S2, typename S3>
+struct AllCastArraysForStorageImpl<TargetT,
+                                   vtkm::cont::StorageTagCartesianProduct<S1, S2, S3>,
+                                   false>
 {
   using type = vtkm::ListEmpty;
 };

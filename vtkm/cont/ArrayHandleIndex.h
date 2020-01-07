@@ -17,7 +17,11 @@ namespace vtkm
 namespace cont
 {
 
-namespace detail
+struct VTKM_ALWAYS_EXPORT StorageTagIndex
+{
+};
+
+namespace internal
 {
 
 struct VTKM_ALWAYS_EXPORT IndexFunctor
@@ -26,7 +30,25 @@ struct VTKM_ALWAYS_EXPORT IndexFunctor
   vtkm::Id operator()(vtkm::Id index) const { return index; }
 };
 
-} // namespace detail
+using StorageTagIndexSuperclass =
+  typename vtkm::cont::ArrayHandleImplicit<IndexFunctor>::StorageTag;
+
+template <>
+struct Storage<vtkm::Id, vtkm::cont::StorageTagIndex> : Storage<vtkm::Id, StorageTagIndexSuperclass>
+{
+  using Superclass = Storage<vtkm::Id, StorageTagIndexSuperclass>;
+  using Superclass::Superclass;
+};
+
+template <typename Device>
+struct ArrayTransfer<vtkm::Id, vtkm::cont::StorageTagIndex, Device>
+  : ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>
+{
+  using Superclass = ArrayTransfer<vtkm::Id, StorageTagIndexSuperclass, Device>;
+  using Superclass::Superclass;
+};
+
+} // namespace internal
 
 /// \brief An implicit array handle containing the its own indices.
 ///
@@ -34,15 +56,15 @@ struct VTKM_ALWAYS_EXPORT IndexFunctor
 /// 0, 1, 2, 3,... to a specified size. Every value in the array is the same
 /// as the index to that value.
 ///
-class ArrayHandleIndex : public vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>
+class ArrayHandleIndex : public vtkm::cont::ArrayHandle<vtkm::Id, StorageTagIndex>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleIndex,
-                                (vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>));
+                                (vtkm::cont::ArrayHandle<vtkm::Id, StorageTagIndex>));
 
   VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)
-    : Superclass(detail::IndexFunctor(), length)
+    : Superclass(typename Superclass::PortalConstControl(internal::IndexFunctor{}, length))
   {
   }
 };
@@ -59,14 +81,14 @@ namespace cont
 {
 
 template <>
-struct SerializableTypeString<vtkm::cont::detail::IndexFunctor>
+struct SerializableTypeString<vtkm::cont::ArrayHandleIndex>
 {
-  static VTKM_CONT const std::string Get() { return "AH_IndexFunctor"; }
+  static VTKM_CONT const std::string Get() { return "AH_Index"; }
 };
 
 template <>
-struct SerializableTypeString<vtkm::cont::ArrayHandleIndex>
-  : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleIndex>
 {
 };
 }
@@ -76,19 +98,31 @@ namespace mangled_diy_namespace
 {
 
 template <>
-struct Serialization<vtkm::cont::detail::IndexFunctor>
+struct Serialization<vtkm::cont::ArrayHandleIndex>
 {
-  static VTKM_CONT void save(BinaryBuffer&, const vtkm::cont::detail::IndexFunctor&) {}
+private:
+  using BaseType = vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>;
 
-  static VTKM_CONT void load(BinaryBuffer&, vtkm::cont::detail::IndexFunctor&) {}
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    vtkmdiy::save(bb, obj.GetNumberOfValues());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    vtkm::Id length = 0;
+    vtkmdiy::load(bb, length);
+
+    obj = vtkm::cont::ArrayHandleIndex(length);
+  }
 };
 
 template <>
-struct Serialization<vtkm::cont::ArrayHandleIndex>
-  : Serialization<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+struct Serialization<vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>>
+  : Serialization<vtkm::cont::ArrayHandleIndex>
 {
 };
-
 } // diy
 /// @endcond SERIALIZATION
 

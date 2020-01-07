@@ -166,11 +166,11 @@ private:
   using InShapesArrayType = typename BaseCellSetType::ShapesArrayType;
   using InNumIndicesArrayType = typename BaseCellSetType::NumIndicesArrayType;
 
-  using ShapesStorageTag = StorageTagPermutation<PermutationArrayHandleType, InShapesArrayType>;
   using ConnectivityStorageTag = vtkm::cont::ArrayHandle<vtkm::Id>::StorageTag;
   using OffsetsStorageTag = vtkm::cont::ArrayHandle<vtkm::Id>::StorageTag;
   using NumIndicesStorageTag =
-    StorageTagPermutation<PermutationArrayHandleType, InNumIndicesArrayType>;
+    typename vtkm::cont::ArrayHandlePermutation<PermutationArrayHandleType,
+                                                InNumIndicesArrayType>::StorageTag;
 
 
 public:
@@ -278,6 +278,12 @@ template <typename OriginalCellSetType_,
             vtkm::cont::ArrayHandle<vtkm::Id, VTKM_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG>>
 class CellSetPermutation : public CellSet
 {
+  VTKM_IS_CELL_SET(OriginalCellSetType_);
+  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType_);
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<vtkm::Id, typename PermutationArrayHandleType_::ValueType>::value),
+    "Must use ArrayHandle with value type of Id for permutation array.");
+
 public:
   using OriginalCellSetType = OriginalCellSetType_;
   using PermutationArrayHandleType = PermutationArrayHandleType_;
