@@ -109,6 +109,14 @@ public:
     return value;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS __device__ static void Store(vtkm::UInt64* addr, vtkm::UInt64 value)
+  {
+    volatile vtkm::UInt64* vaddr = addr; /* volatile to bypass cache */
+    /* fence to ensure that previous non-atomic stores are visible to other threads */
+    __threadfence();
+    *vaddr = value;
+  }
+
   VTKM_SUPPRESS_EXEC_WARNINGS __device__ static vtkm::UInt64 Add(vtkm::UInt64* addr,
                                                                  vtkm::UInt64 arg)
   {
