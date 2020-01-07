@@ -151,22 +151,70 @@ namespace detail
 template <vtkm::IdComponent NumSearched, typename Target, typename... Remaining>
 struct FindFirstOfType;
 
-// Not found;
+// Not found
 template <vtkm::IdComponent NumSearched, typename Target>
 struct FindFirstOfType<NumSearched, Target> : std::integral_constant<vtkm::IdComponent, -1>
 {
 };
 
 // Basic search next one
+template <bool NextIsTarget, vtkm::IdComponent NumSearched, typename Target, typename... Remaining>
+struct FindFirstOfCheckHead;
+
+template <vtkm::IdComponent NumSearched, typename Target, typename... Ts>
+struct FindFirstOfCheckHead<true, NumSearched, Target, Ts...>
+  : std::integral_constant<vtkm::IdComponent, NumSearched>
+{
+};
+
+template <vtkm::IdComponent NumSearched, typename Target, typename Next, typename... Remaining>
+struct FindFirstOfCheckHead<false, NumSearched, Target, Next, Remaining...>
+  : FindFirstOfCheckHead<std::is_same<Target, Next>::value, NumSearched + 1, Target, Remaining...>
+{
+};
+
+// Not found
+template <vtkm::IdComponent NumSearched, typename Target>
+struct FindFirstOfCheckHead<false, NumSearched, Target>
+  : std::integral_constant<vtkm::IdComponent, -1>
+{
+};
+
 template <vtkm::IdComponent NumSearched, typename Target, typename Next, typename... Remaining>
 struct FindFirstOfType<NumSearched, Target, Next, Remaining...>
-  : std::conditional<std::is_same<Target, Next>::value,
-                     std::integral_constant<vtkm::IdComponent, NumSearched>,
-                     FindFirstOfType<NumSearched + 1, Target, Remaining...>>::type
+  : FindFirstOfCheckHead<std::is_same<Target, Next>::value, NumSearched, Target, Remaining...>
 {
 };
 
 // If there are at least 6 entries, check the first 4 to quickly narrow down
+template <bool OneInFirst4Matches, vtkm::IdComponent NumSearched, typename Target, typename... Ts>
+struct FindFirstOfSplit4;
+
+template <vtkm::IdComponent NumSearched,
+          typename Target,
+          typename T0,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename... Ts>
+struct FindFirstOfSplit4<true, NumSearched, Target, T0, T1, T2, T3, Ts...>
+  : FindFirstOfCheckHead<std::is_same<Target, T0>::value, NumSearched, Target, T1, T2, T3>
+{
+};
+
+template <vtkm::IdComponent NumSearched,
+          typename Target,
+          typename T0,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
+          typename... Ts>
+struct FindFirstOfSplit4<false, NumSearched, Target, T0, T1, T2, T3, T4, Ts...>
+  : FindFirstOfCheckHead<std::is_same<Target, T4>::value, NumSearched + 4, Target, Ts...>
+{
+};
+
 template <vtkm::IdComponent NumSearched,
           typename Target,
           typename T0,
@@ -176,16 +224,70 @@ template <vtkm::IdComponent NumSearched,
           typename T4,
           typename T5,
           typename... Ts>
-struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T3, T4, T5, Ts...>
-  : std::conditional<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                      std::is_same<Target, T2>::value ||
-                      std::is_same<Target, T3>::value),
-                     FindFirstOfType<NumSearched, Target, T0, T1, T2, T3>,
-                     FindFirstOfType<NumSearched + 4, Target, T4, T5, Ts...>>::type
+struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, Ts...>
+  : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
+                       std::is_same<Target, T2>::value ||
+                       std::is_same<Target, T3>::value),
+                      NumSearched,
+                      Target,
+                      T0,
+                      T1,
+                      T2,
+                      T3,
+                      T4,
+                      T5,
+                      Ts...>
 {
 };
 
 // If there are at least 12 entries, check the first 8 to quickly narrow down
+template <bool OneInFirst8Matches, vtkm::IdComponent NumSearched, typename Target, typename... Ts>
+struct FindFirstOfSplit8;
+
+template <vtkm::IdComponent NumSearched,
+          typename Target,
+          typename T0,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
+          typename T5,
+          typename T6,
+          typename T7,
+          typename... Ts>
+struct FindFirstOfSplit8<true, NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, Ts...>
+  : FindFirstOfSplit4<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
+                       std::is_same<Target, T2>::value ||
+                       std::is_same<Target, T3>::value),
+                      NumSearched,
+                      Target,
+                      T0,
+                      T1,
+                      T2,
+                      T3,
+                      T4,
+                      T5,
+                      T6,
+                      T7>
+{
+};
+
+template <vtkm::IdComponent NumSearched,
+          typename Target,
+          typename T0,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
+          typename T5,
+          typename T6,
+          typename T7,
+          typename... Ts>
+struct FindFirstOfSplit8<false, NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, Ts...>
+  : FindFirstOfType<NumSearched + 8, Target, Ts...>
+{
+};
+
 template <vtkm::IdComponent NumSearched,
           typename Target,
           typename T0,
@@ -201,31 +303,29 @@ template <vtkm::IdComponent NumSearched,
           typename T10,
           typename T11,
           typename... Ts>
-struct FindFirstOfType<NumSearched,
-                       Target,
-                       T0,
-                       T1,
-                       T2,
-                       T3,
-                       T3,
-                       T4,
-                       T5,
-                       T6,
-                       T7,
-                       T8,
-                       T9,
-                       T10,
-                       T11,
-                       Ts...>
-  : std::conditional<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
-                      std::is_same<Target, T2>::value ||
-                      std::is_same<Target, T3>::value ||
-                      std::is_same<Target, T4>::value ||
-                      std::is_same<Target, T5>::value ||
-                      std::is_same<Target, T6>::value ||
-                      std::is_same<Target, T7>::value),
-                     FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7>,
-                     FindFirstOfType<NumSearched + 4, Target, T8, T9, T10, T11, Ts...>>::type
+struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Ts...>
+  : FindFirstOfSplit8<(std::is_same<Target, T0>::value || std::is_same<Target, T1>::value ||
+                       std::is_same<Target, T2>::value ||
+                       std::is_same<Target, T3>::value ||
+                       std::is_same<Target, T4>::value ||
+                       std::is_same<Target, T5>::value ||
+                       std::is_same<Target, T6>::value ||
+                       std::is_same<Target, T7>::value),
+                      NumSearched,
+                      Target,
+                      T0,
+                      T1,
+                      T2,
+                      T3,
+                      T4,
+                      T5,
+                      T6,
+                      T7,
+                      T8,
+                      T9,
+                      T10,
+                      T11,
+                      Ts...>
 {
 };
 
@@ -308,12 +408,25 @@ using ListAppend = brigand::append<internal::AsList<Lists>...>;
 namespace detail
 {
 
+template <bool Has, typename State, typename Element>
+struct ListIntersectTagsChoose;
+
+template <typename State, typename Element>
+struct ListIntersectTagsChoose<true, State, Element>
+{
+  using type = brigand::push_back<State, Element>;
+};
+
+template <typename State, typename Element>
+struct ListIntersectTagsChoose<false, State, Element>
+{
+  using type = State;
+};
+
 template <class State, class Element, class List>
 struct ListIntersectTags
+  : ListIntersectTagsChoose<vtkm::ListHas<List, Element>::value, State, Element>
 {
-  using has_u = vtkm::ListHas<List, Element>;
-  using type =
-    typename std::conditional<has_u::value, brigand::push_back<State, Element>, State>::type;
 };
 
 template <typename List1, typename List2>
