@@ -41,6 +41,8 @@ public:
   template <typename Invocation>
   VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
+    using namespace vtkm::worklet::internal;
+
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
 
@@ -52,7 +54,7 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    auto numInstances = internal::scheduling_range(inputDomain);
+    auto numInstances = scheduling_range(inputDomain);
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.

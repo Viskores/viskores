@@ -214,6 +214,8 @@ public:
   template <typename Invocation>
   VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
+    using namespace vtkm::worklet::internal;
+
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
 
@@ -225,15 +227,15 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id fullSize = internal::scheduling_range(inputDomain);
+    vtkm::Id fullSize = scheduling_range(inputDomain);
     vtkm::Id blockSize = fullSize / NumberOfBlocks;
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
 
-    using TransformFunctorType =
-      detail::DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface>;
-    using TransferFunctorType =
-      detail::DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface>;
+    using TransformFunctorType = vtkm::worklet::detail::DispatcherStreamingMapFieldTransformFunctor<
+      typename Invocation::ControlInterface>;
+    using TransferFunctorType = vtkm::worklet::detail::DispatcherStreamingMapFieldTransferFunctor<
+      typename Invocation::ControlInterface>;
 
     for (vtkm::Id block = 0; block < NumberOfBlocks; block++)
     {

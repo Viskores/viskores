@@ -45,6 +45,8 @@ public:
   template <typename Invocation>
   void DoInvoke(Invocation& invocation) const
   {
+    using namespace vtkm::worklet::internal;
+
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
 
@@ -56,7 +58,7 @@ public:
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
     const InputDomainType& inputDomain = invocation.GetInputDomain();
-    auto inputRange = internal::scheduling_range(inputDomain, vtkm::TopologyElementTagPoint{});
+    auto inputRange = scheduling_range(inputDomain, vtkm::TopologyElementTagPoint{});
 
     // This is pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
