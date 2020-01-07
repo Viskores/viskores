@@ -24,11 +24,6 @@
 namespace
 {
 
-std::string get_working_path()
-{
-  char temp[1024];
-  return (getcwd(temp, sizeof(temp)) ? std::string(temp) : std::string(""));
-}
 
 void RenderTests()
 {
@@ -40,18 +35,24 @@ void RenderTests()
   colorTable.AddPointAlpha(0.0, .01f);
   colorTable.AddPointAlpha(1.0, .01f);
 
-  vtkm::cont::DataSet ds;
-  const char* fname = "../data/magField.vtk";
-  vtkm::io::reader::VTKDataSetReader reader(fname);
+  vtkm::cont::DataSet rectDS, regDS;
+  std::string basePath = vtkm::cont::testing::Testing::GetTestDataPath();
+  std::string rectfname = basePath + "/magField.vtk";
+  std::string regfname = basePath + "/magField.vtk";
+  vtkm::io::reader::VTKDataSetReader rectReader(rectfname);
+  vtkm::io::reader::VTKDataSetReader regReader(regfname);
 
   try
   {
-    ds = reader.ReadDataSet();
+    rectDS = rectReader.ReadDataSet();
+    regDS = regReader.ReadDataSet();
   }
   catch (vtkm::io::ErrorIO& e)
   {
     std::string message("Error reading: ");
-    message += fname;
+    message += rectfname;
+    message += ", and ";
+    message += regfname;
     message += ", ";
     message += e.GetMessage();
 
@@ -59,8 +60,8 @@ void RenderTests()
   }
 
 
-  vtkm::rendering::testing::Render<M, C, V3>(ds, "vec_magnitude", colorTable, "reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(ds, "vec_magnitude", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(regDS, "vec_magnitude", colorTable, "reg3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(rectDS, "vec_magnitude", colorTable, "rect3D.pnm");
 }
 
 } //namespace

@@ -160,6 +160,68 @@ struct VtkmArg : public opt::Arg
   }
 };
 
+
+enum TestOptionsIndex
+{
+  TEST_UNKNOWN,
+  DATADIR, // base dir containing test data files
+  IMGDIR   // base dir for saving regression test images
+};
+
+struct TestVtkmArg : public opt::Arg
+{
+  static opt::ArgStatus Required(const opt::Option& option, bool msg)
+  {
+    if (option.arg == nullptr)
+    {
+      if (msg)
+      {
+        VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
+                          "Missing argument after option '"
+                            << std::string(option.name, static_cast<size_t>(option.namelen))
+                            << "'.\n");
+      }
+      return opt::ARG_ILLEGAL;
+    }
+    else
+    {
+      return opt::ARG_OK;
+    }
+  }
+
+  // Method used for guessing whether an option that do not support (perhaps that calling
+  // program knows about it) has an option attached to it (which should also be ignored).
+  static opt::ArgStatus Unknown(const opt::Option& option, bool msg)
+  {
+    // If we don't have an arg, obviously we don't have an arg.
+    if (option.arg == nullptr)
+    {
+      return opt::ARG_NONE;
+    }
+
+    // The opt::Arg::Optional method will return that the ARG is OK if and only if
+    // the argument is attached to the option (e.g. --foo=bar). If that is the case,
+    // then we definitely want to report that the argument is OK.
+    if (opt::Arg::Optional(option, msg) == opt::ARG_OK)
+    {
+      return opt::ARG_OK;
+    }
+
+    // Now things get tricky. Maybe the next argument is an option or maybe it is an
+    // argument for this option. We will guess that if the next argument does not
+    // look like an option, we will treat it as such.
+    if (option.arg[0] == '-')
+    {
+      return opt::ARG_NONE;
+    }
+    else
+    {
+      return opt::ARG_OK;
+    }
+  }
+};
+
+
 } // end anon namespace
 
 namespace vtkm
@@ -357,6 +419,103 @@ InitializeResult Initialize()
 {
   vtkm::cont::InitLogging();
   return InitializeResult{};
+}
+
+
+namespace // anonymous namespace to protect private testing variables
+{
+std::string TestDataBasePath;
+std::string RegressionTestImageBasePath;
+}
+
+// Method to parse the extra arguments given to unit tests
+VTKM_CONT
+void ParseAdditionalTestArgs(int& argc, char* argv[])
+{
+  { // Parse test arguments
+    std::vector<opt::Descriptor> usage;
+
+    usage.push_back(
+      { DATADIR,
+        0,
+        "p",
+        "path",
+        TestVtkmArg::Required,
+        "  --path, -p <path> \tPath to the base data directory in the VTK-m src dir." });
+    usage.push_back({ IMGDIR,
+                      0,
+                      "i",
+                      "images",
+                      TestVtkmArg::Required,
+                      "  --images, -i <path> \tPath to the base dir for regression test images" });
+    // Required to collect unknown arguments when help is off.
+    usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
+    usage.push_back({ 0, 0, 0, 0, 0, 0 });
+
+
+    // Remove argv[0] (executable name) if present:
+    int vtkmArgc = argc > 0 ? argc - 1 : 0;
+    char** vtkmArgv = vtkmArgc > 0 ? argv + 1 : argv;
+
+    opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
+    std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
+    std::unique_ptr<opt::Option[]> buffer{ new opt::Option[stats.buffer_max] };
+    opt::Parser parse(usage.data(), vtkmArgc, vtkmArgv, options.get(), buffer.get());
+
+    if (parse.error())
+    {
+      std::cerr << "Internal Initialize parser error" << std::endl;
+      exit(1);
+    }
+
+    if (options[DATADIR])
+    {
+      std::cerr << "found the data dir arg :: " << options[DATADIR].arg << std::endl;
+      TestDataBasePath = options[DATADIR].arg;
+    }
+
+    if (options[IMGDIR])
+    {
+      std::cerr << "found the data image arg :: " << options[IMGDIR].arg << std::endl;
+      RegressionTestImageBasePath = options[IMGDIR].arg;
+    }
+
+    for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Unknown option to internal Initialize: " << opt->name << "\n");
+      if ((InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
+      {
+        std::cerr << "Unknown internal option: " << opt->name << std::endl;
+        exit(1);
+      }
+    }
+
+    for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
+      if ((InitializeOptions::ErrorOnBadArgument) != InitializeOptions::None)
+      {
+        std::cerr << "Unknown internal argument: " << parse.nonOption(nonOpt) << std::endl;
+        exit(1);
+      }
+    }
+  }
+}
+
+// method to access the path to the data directory in the VTK-M repository
+VTKM_CONT
+std::string getTestDataBasePath()
+{
+  return TestDataBasePath;
+}
+
+// method to access the path to the directory where regression test images are stored
+VTKM_CONT
+std::string getRegressionTestImageBasePath()
+{
+  return RegressionTestImageBasePath;
 }
 }
 } // end namespace vtkm::cont

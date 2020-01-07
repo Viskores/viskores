@@ -35,150 +35,21 @@ namespace cont
 namespace testing
 {
 
-enum TestOptionsIndex
-{
-  UNKNOWN,
-  DATADIR, // base dir containing test data files
-  IMGDIR   // base dir for saving regression test images
-};
-
-struct VtkmArg : public opt::Arg
-{
-  static opt::ArgStatus Required(const opt::Option& option, bool msg)
-  {
-    if (option.arg == nullptr)
-    {
-      if (msg)
-      {
-        VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
-                          "Missing argument after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\n");
-      }
-      return opt::ARG_ILLEGAL;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-
-  // Method used for guessing whether an option that do not support (perhaps that calling
-  // program knows about it) has an option attached to it (which should also be ignored).
-  static opt::ArgStatus Unknown(const opt::Option& option, bool msg)
-  {
-    // If we don't have an arg, obviously we don't have an arg.
-    if (option.arg == nullptr)
-    {
-      return opt::ARG_NONE;
-    }
-
-    // The opt::Arg::Optional method will return that the ARG is OK if and only if
-    // the argument is attached to the option (e.g. --foo=bar). If that is the case,
-    // then we definitely want to report that the argument is OK.
-    if (opt::Arg::Optional(option, msg) == opt::ARG_OK)
-    {
-      return opt::ARG_OK;
-    }
-
-    // Now things get tricky. Maybe the next argument is an option or maybe it is an
-    // argument for this option. We will guess that if the next argument does not
-    // look like an option, we will treat it as such.
-    if (option.arg[0] == '-')
-    {
-      return opt::ARG_NONE;
-    }
-    else
-    {
-      return opt::ARG_OK;
-    }
-  }
-};
-
 struct Testing
 {
 public:
+  static VTKM_CONT const std::string GetTestDataPath() { return vtkm::cont::getTestDataBasePath(); }
+
+  static VTKM_CONT const std::string GetRegressionTestImageBasePath()
+  {
+    return vtkm::cont::getRegressionTestImageBasePath();
+  }
+
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
     vtkm::cont::Initialize(argc, argv);
-
-    //Parse any remaining arguments that initialize did not recognize
-    for (int i = 0; i < argc; i++)
-    {
-      printf("after initialize arg :: %s\n", argv[i]);
-    }
-
-    { // Parse test arguments
-      std::vector<opt::Descriptor> usage;
-
-      usage.push_back(
-        { DATADIR,
-          0,
-          "p",
-          "path",
-          VtkmArg::Required,
-          "  --path, -p <path> \tPath to the base data directory in the VTK-m src dir." });
-      usage.push_back(
-        { IMGDIR,
-          0,
-          "i",
-          "images",
-          VtkmArg::Required,
-          "  --images, -i <path> \tPath to the base dir for regression test images" });
-      // Required to collect unknown arguments when help is off.
-      usage.push_back({ UNKNOWN, 0, "", "", VtkmArg::Unknown, "" });
-      usage.push_back({ 0, 0, 0, 0, 0, 0 });
-
-
-      // Remove argv[0] (executable name) if present:
-      int vtkmArgc = argc > 0 ? argc - 1 : 0;
-      char** vtkmArgv = vtkmArgc > 0 ? argv + 1 : argv;
-
-      opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
-      std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
-      std::unique_ptr<opt::Option[]> buffer{ new opt::Option[stats.buffer_max] };
-      opt::Parser parse(usage.data(), vtkmArgc, vtkmArgv, options.get(), buffer.get());
-
-      if (parse.error())
-      {
-        std::cerr << "Internal Initialize parser error" << std::endl;
-        exit(1);
-      }
-
-      if (options[DATADIR])
-      {
-        std::cerr << "found the data dir arg :: " << options[DATADIR].arg << std::endl;
-      }
-
-      if (options[IMGDIR])
-      {
-        std::cerr << "found the data image arg :: " << options[IMGDIR].arg << std::endl;
-      }
-
-      for (const opt::Option* opt = options[UNKNOWN]; opt != nullptr; opt = opt->next())
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Unknown option to internal Initialize: " << opt->name << "\n");
-        if ((InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
-        {
-          std::cerr << "Unknown internal option: " << opt->name << std::endl;
-          exit(1);
-        }
-      }
-
-      for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
-      {
-        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                   "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
-        if ((InitializeOptions::ErrorOnBadArgument) != InitializeOptions::None)
-        {
-          std::cerr << "Unknown internal argument: " << parse.nonOption(nonOpt) << std::endl;
-          exit(1);
-        }
-      }
-    }
-
+    vtkm::cont::ParseAdditionalTestArgs(argc, argv);
 
     try
     {
