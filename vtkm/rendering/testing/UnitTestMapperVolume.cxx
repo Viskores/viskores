@@ -59,7 +59,6 @@ void RenderTests()
     VTKM_TEST_FAIL(message.c_str());
   }
 
-
   vtkm::rendering::testing::Render<M, C, V3>(regDS, "vec_magnitude", colorTable, "reg3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(rectDS, "vec_magnitude", colorTable, "rect3D.pnm");
 }

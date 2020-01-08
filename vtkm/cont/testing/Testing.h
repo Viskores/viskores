@@ -14,6 +14,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/internal/OptionParser.h>
+#include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/testing/Testing.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 

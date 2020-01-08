@@ -470,13 +470,11 @@ void ParseAdditionalTestArgs(int& argc, char* argv[])
 
     if (options[DATADIR])
     {
-      std::cerr << "found the data dir arg :: " << options[DATADIR].arg << std::endl;
       TestDataBasePath = options[DATADIR].arg;
     }
 
     if (options[IMGDIR])
     {
-      std::cerr << "found the data image arg :: " << options[IMGDIR].arg << std::endl;
       RegressionTestImageBasePath = options[IMGDIR].arg;
     }
 
