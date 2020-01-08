@@ -83,27 +83,66 @@ namespace testing
 template <typename T>
 struct TypeName;
 
-#define VTK_M_BASIC_TYPE(type)                                                                     \
+#define VTK_M_BASIC_TYPE(type, name)                                                               \
   template <>                                                                                      \
   struct TypeName<type>                                                                            \
   {                                                                                                \
-    static std::string Name() { return #type; }                                                    \
+    static std::string Name() { return #name; }                                                    \
   }
 
-VTK_M_BASIC_TYPE(vtkm::Float32);
-VTK_M_BASIC_TYPE(vtkm::Float64);
-VTK_M_BASIC_TYPE(vtkm::Int8);
-VTK_M_BASIC_TYPE(vtkm::UInt8);
-VTK_M_BASIC_TYPE(vtkm::Int16);
-VTK_M_BASIC_TYPE(vtkm::UInt16);
-VTK_M_BASIC_TYPE(vtkm::Int32);
-VTK_M_BASIC_TYPE(vtkm::UInt32);
-VTK_M_BASIC_TYPE(vtkm::Int64);
-VTK_M_BASIC_TYPE(vtkm::UInt64);
-VTK_M_BASIC_TYPE(char);
+VTK_M_BASIC_TYPE(vtkm::Float32, F32);
+VTK_M_BASIC_TYPE(vtkm::Float64, F64);
+VTK_M_BASIC_TYPE(vtkm::Int8, I8);
+VTK_M_BASIC_TYPE(vtkm::UInt8, UI8);
+VTK_M_BASIC_TYPE(vtkm::Int16, I16);
+VTK_M_BASIC_TYPE(vtkm::UInt16, UI16);
+VTK_M_BASIC_TYPE(vtkm::Int32, I32);
+VTK_M_BASIC_TYPE(vtkm::UInt32, UI32);
+VTK_M_BASIC_TYPE(vtkm::Int64, I64);
+VTK_M_BASIC_TYPE(vtkm::UInt64, UI64);
 
-VTK_M_BASIC_TYPE(vtkm::Bounds);
-VTK_M_BASIC_TYPE(vtkm::Range);
+// types without vtkm::typedefs:
+VTK_M_BASIC_TYPE(char, char);
+VTK_M_BASIC_TYPE(long, long);
+VTK_M_BASIC_TYPE(unsigned long, unsigned long);
+
+#define VTK_M_BASIC_TYPE_HELPER(type) VTK_M_BASIC_TYPE(vtkm::type, type)
+
+// Special containers:
+VTK_M_BASIC_TYPE_HELPER(Bounds);
+VTK_M_BASIC_TYPE_HELPER(Range);
+
+// Special Vec types:
+VTK_M_BASIC_TYPE_HELPER(Vec2f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_64);
 
 #undef VTK_M_BASIC_TYPE
 
@@ -113,7 +152,7 @@ struct TypeName<vtkm::Vec<T, Size>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Vec< " << TypeName<T>::Name() << ", " << Size << " >";
+    stream << "Vec<" << TypeName<T>::Name() << ", " << Size << ">";
     return stream.str();
   }
 };
@@ -124,7 +163,7 @@ struct TypeName<vtkm::Matrix<T, numRows, numCols>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Matrix< " << TypeName<T>::Name() << ", " << numRows << ", " << numCols << " >";
+    stream << "Matrix<" << TypeName<T>::Name() << ", " << numRows << ", " << numCols << ">";
     return stream.str();
   }
 };
@@ -135,7 +174,7 @@ struct TypeName<vtkm::Pair<T, U>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Pair< " << TypeName<T>::Name() << ", " << TypeName<U>::Name() << " >";
+    stream << "Pair<" << TypeName<T>::Name() << ", " << TypeName<U>::Name() << ">";
     return stream.str();
   }
 };
@@ -146,7 +185,7 @@ struct TypeName<vtkm::Bitset<T>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
+    stream << "Bitset<" << TypeName<T>::Name() << ">";
     return stream.str();
   }
 };
@@ -159,7 +198,7 @@ struct TypeName<vtkm::List<T0, Ts...>>
     std::initializer_list<std::string> subtypeStrings = { TypeName<Ts>::Name()... };
 
     std::stringstream stream;
-    stream << "vtkm::List<" << TypeName<T0>::Name();
+    stream << "List<" << TypeName<T0>::Name();
     for (auto&& subtype : subtypeStrings)
     {
       stream << ", " << subtype;
@@ -171,12 +210,12 @@ struct TypeName<vtkm::List<T0, Ts...>>
 template <>
 struct TypeName<vtkm::ListEmpty>
 {
-  static std::string Name() { return "vtkm::ListEmpty"; }
+  static std::string Name() { return "ListEmpty"; }
 };
 template <>
 struct TypeName<vtkm::ListUniversal>
 {
-  static std::string Name() { return "vtkm::ListUniversal"; }
+  static std::string Name() { return "ListUniversal"; }
 };
 
 namespace detail

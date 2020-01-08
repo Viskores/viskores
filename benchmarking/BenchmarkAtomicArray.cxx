@@ -13,574 +13,504 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AtomicArray.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-#include <iomanip>
+#include <vtkm/TypeTraits.h>
+
 #include <sstream>
 #include <string>
 
-namespace vtkm
+namespace
 {
-namespace benchmarking
-{
+
+// Provide access to the requested device to the benchmark functions:
+vtkm::cont::InitializeResult Config;
+
+// Range for array sizes
+static constexpr vtkm::Id ARRAY_SIZE_MIN = 1;
+static constexpr vtkm::Id ARRAY_SIZE_MAX = 1 << 20;
 
 // This is 32x larger than the largest array size.
-static constexpr vtkm::Id NumWrites = 33554432; // 2^25
+static constexpr vtkm::Id NUM_WRITES = 33554432; // 2^25
 
-#define MAKE_ATOMIC_BENCHMARKS(Name, Class)                                                        \
-  VTKM_MAKE_BENCHMARK(Name##1, Class, 1);                                                          \
-  VTKM_MAKE_BENCHMARK(Name##8, Class, 8);                                                          \
-  VTKM_MAKE_BENCHMARK(Name##32, Class, 32);                                                        \
-  VTKM_MAKE_BENCHMARK(Name##512, Class, 512);                                                      \
-  VTKM_MAKE_BENCHMARK(Name##2048, Class, 2048);                                                    \
-  VTKM_MAKE_BENCHMARK(Name##32768, Class, 32768);                                                  \
-  VTKM_MAKE_BENCHMARK(Name##1048576, Class, 1048576)
+static constexpr vtkm::Id STRIDE = 32;
 
-#define RUN_ATOMIC_BENCHMARKS(Name, id)                                                            \
-  VTKM_RUN_BENCHMARK(Name##1, vtkm::cont::AtomicArrayTypeList{}, id);                              \
-  VTKM_RUN_BENCHMARK(Name##8, vtkm::cont::AtomicArrayTypeList{}, id);                              \
-  VTKM_RUN_BENCHMARK(Name##32, vtkm::cont::AtomicArrayTypeList{}, id);                             \
-  VTKM_RUN_BENCHMARK(Name##512, vtkm::cont::AtomicArrayTypeList{}, id);                            \
-  VTKM_RUN_BENCHMARK(Name##2048, vtkm::cont::AtomicArrayTypeList{}, id);                           \
-  VTKM_RUN_BENCHMARK(Name##32768, vtkm::cont::AtomicArrayTypeList{}, id);                          \
-  VTKM_RUN_BENCHMARK(Name##1048576, vtkm::cont::AtomicArrayTypeList{}, id)
-
-class BenchmarkAtomicArray
+// Benchmarks AtomicArray::Add such that each work index writes to adjacent indices.
+struct AddSeqWorker : public vtkm::worklet::WorkletMapField
 {
-public:
-  using Algo = vtkm::cont::Algorithm;
-  using Timer = vtkm::cont::Timer;
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
 
-  // Benchmarks AtomicArray::Add such that each work index writes to adjacent
-  // indices.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchAddSeq
+  template <typename T, typename AtomicPortal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, AtomicPortal& portal) const
   {
-    vtkm::Id ArraySize;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, PortalType portal)
-        : ArraySize(arraySize)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const { this->Portal.Add(i % this->ArraySize, 1); }
-    };
-
-    BenchAddSeq(vtkm::Id arraySize)
-      : ArraySize(arraySize)
-    {
-      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Add (Seq, Atomic, " << std::setw(7) << std::setfill('0') << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(AddSeq, BenchAddSeq);
-
-  // Provides a non-atomic baseline for BenchAddSeq
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchAddSeqBaseline
-  {
-    vtkm::Id ArraySize;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, PortalType portal)
-        : ArraySize(arraySize)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = i % this->ArraySize;
-        this->Portal.Set(idx, this->Portal.Get(idx) + 1);
-      }
-    };
-
-    BenchAddSeqBaseline(vtkm::Id arraySize)
-      : ArraySize(arraySize)
-    {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Add (Seq, Baseline, " << std::setw(7) << std::setfill('0') << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(AddSeqBase, BenchAddSeqBaseline);
-
-  // Benchmarks AtomicArray::Add such that each work index writes to a strided
-  // index ( floor(i / stride) + stride * (i % stride)
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchAddStride
-  {
-    vtkm::Id ArraySize;
-    vtkm::Id Stride;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      vtkm::Id Stride;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, vtkm::Id stride, PortalType portal)
-        : ArraySize(arraySize)
-        , Stride(stride)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % this->ArraySize;
-        this->Portal.Add(idx % this->ArraySize, 1);
-      }
-    };
-
-    BenchAddStride(vtkm::Id arraySize, vtkm::Id stride = 32)
-      : ArraySize(arraySize)
-      , Stride(stride)
-    {
-      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Add (Stride=" << this->Stride << ", Atomic, " << std::setw(7) << std::setfill('0')
-           << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(AddStride, BenchAddStride);
-
-  // Non-atomic baseline for AddStride
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchAddStrideBaseline
-  {
-    vtkm::Id ArraySize;
-    vtkm::Id Stride;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      vtkm::Id Stride;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, vtkm::Id stride, PortalType portal)
-        : ArraySize(arraySize)
-        , Stride(stride)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % this->ArraySize;
-        this->Portal.Set(idx, this->Portal.Get(idx) + 1);
-      }
-    };
-
-    BenchAddStrideBaseline(vtkm::Id arraySize, vtkm::Id stride = 32)
-      : ArraySize(arraySize)
-      , Stride(stride)
-    {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Add (Stride=" << this->Stride << ", Baseline, " << std::setw(7) << std::setfill('0')
-           << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(AddStrideBase, BenchAddStrideBaseline);
-
-  // Benchmarks AtomicArray::CompareAndSwap such that each work index writes to adjacent
-  // indices.
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchCASSeq
-  {
-    vtkm::Id ArraySize;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, PortalType portal)
-        : ArraySize(arraySize)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = i % this->ArraySize;
-        ValueType val = static_cast<ValueType>(i);
-        // Get the old val with a no-op
-        ValueType oldVal = this->Portal.Get(idx);
-        ValueType assumed = static_cast<ValueType>(0);
-        do
-        {
-          assumed = oldVal;
-          oldVal = this->Portal.CompareAndSwap(idx, assumed + val, assumed);
-        } while (assumed != oldVal);
-      }
-    };
-
-    BenchCASSeq(vtkm::Id arraySize)
-      : ArraySize(arraySize)
-    {
-      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "CAS (Seq, Atomic, " << std::setw(7) << std::setfill('0') << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(CASSeq, BenchCASSeq);
-
-  // Provides a non-atomic baseline for BenchCASSeq
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchCASSeqBaseline
-  {
-    vtkm::Id ArraySize;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, PortalType portal)
-        : ArraySize(arraySize)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = i % this->ArraySize;
-        ValueType val = static_cast<ValueType>(i);
-        ValueType oldVal = this->Portal.Get(idx);
-        this->Portal.Set(idx, oldVal + val);
-      }
-    };
-
-    BenchCASSeqBaseline(vtkm::Id arraySize)
-      : ArraySize(arraySize)
-    {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "CAS (Seq, Baseline, " << std::setw(7) << std::setfill('0') << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(CASSeqBase, BenchCASSeqBaseline);
-
-  // Benchmarks AtomicArray::CompareAndSwap such that each work index writes to
-  // a strided index:
-  // ( floor(i / stride) + stride * (i % stride)
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchCASStride
-  {
-    vtkm::Id ArraySize;
-    vtkm::Id Stride;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      vtkm::Id Stride;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, vtkm::Id stride, PortalType portal)
-        : ArraySize(arraySize)
-        , Stride(stride)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % this->ArraySize;
-        ValueType val = static_cast<ValueType>(i);
-        // Get the old val with a no-op
-        ValueType oldVal = this->Portal.Get(idx);
-        ValueType assumed = static_cast<ValueType>(0);
-        do
-        {
-          assumed = oldVal;
-          oldVal = this->Portal.CompareAndSwap(idx, assumed + val, assumed);
-        } while (assumed != oldVal);
-      }
-    };
-
-    BenchCASStride(vtkm::Id arraySize, vtkm::Id stride = 32)
-      : ArraySize(arraySize)
-      , Stride(stride)
-    {
-      this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      vtkm::cont::AtomicArray<ValueType> array(this->Data);
-      auto portal = array.PrepareForExecution(DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "CAS (Stride=" << this->Stride << ", Atomic, " << std::setw(7) << std::setfill('0')
-           << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(CASStride, BenchCASStride);
-
-  // Non-atomic baseline for CASStride
-  template <typename ValueType, typename DeviceAdapter>
-  struct BenchCASStrideBaseline
-  {
-    vtkm::Id ArraySize;
-    vtkm::Id Stride;
-    vtkm::cont::ArrayHandle<ValueType> Data;
-
-    template <typename PortalType>
-    struct Worker : public vtkm::exec::FunctorBase
-    {
-      vtkm::Id ArraySize;
-      vtkm::Id Stride;
-      PortalType Portal;
-
-      VTKM_CONT
-      Worker(vtkm::Id arraySize, vtkm::Id stride, PortalType portal)
-        : ArraySize(arraySize)
-        , Stride(stride)
-        , Portal(portal)
-      {
-      }
-
-      VTKM_EXEC
-      void operator()(vtkm::Id i) const
-      {
-        vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % this->ArraySize;
-        ValueType val = static_cast<ValueType>(i);
-        ValueType oldVal = this->Portal.Get(idx);
-        this->Portal.Set(idx, oldVal + val);
-      }
-    };
-
-    BenchCASStrideBaseline(vtkm::Id arraySize, vtkm::Id stride = 32)
-      : ArraySize(arraySize)
-      , Stride(stride)
-    {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      auto portal = this->Data.PrepareForOutput(this->ArraySize, DeviceAdapter());
-      Worker<decltype(portal)> worker{ this->ArraySize, this->Stride, portal };
-
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      Algo::Schedule(worker, NumWrites);
-
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "CAS (Stride=" << this->Stride << ", Baseline, " << std::setw(7) << std::setfill('0')
-           << this->ArraySize << ")";
-      return desc.str();
-    }
-  };
-  MAKE_ATOMIC_BENCHMARKS(CASStrideBase, BenchCASStrideBaseline);
-
-  static void Run(vtkm::cont::DeviceAdapterId id)
-  {
-    RUN_ATOMIC_BENCHMARKS(AddSeq, id);
-    RUN_ATOMIC_BENCHMARKS(AddSeqBase, id);
-    RUN_ATOMIC_BENCHMARKS(AddStride, id);
-    RUN_ATOMIC_BENCHMARKS(AddStrideBase, id);
-
-    RUN_ATOMIC_BENCHMARKS(CASSeq, id);
-    RUN_ATOMIC_BENCHMARKS(CASSeqBase, id);
-    RUN_ATOMIC_BENCHMARKS(CASStride, id);
-    RUN_ATOMIC_BENCHMARKS(CASStrideBase, id);
+    portal.Add(i % portal.GetNumberOfValues(), val);
   }
 };
+
+template <typename ValueType>
+void BenchAddSeq(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> atomicArray;
+  vtkm::cont::Algorithm::Fill(
+    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(AddSeqWorker{}, ones, atomicArray);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
 }
-} // end namespace vtkm::benchmarking
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchAddSeq,
+                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                           { NUM_WRITES, NUM_WRITES } })
+                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                              vtkm::cont::AtomicArrayTypeList);
+
+// Provides a non-atomic baseline for BenchAddSeq
+struct AddSeqBaselineWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, WholeArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  template <typename T, typename Portal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, Portal& portal) const
+  {
+    const vtkm::Id j = i % portal.GetNumberOfValues();
+    portal.Set(j, portal.Get(j) + val);
+  }
+};
+
+template <typename ValueType>
+void BenchAddSeqBaseline(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> array;
+  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(AddSeqBaselineWorker{}, ones, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchAddSeqBaseline,
+                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                           { NUM_WRITES, NUM_WRITES } })
+                                ->ArgNames({ "Values", "Ops" }),
+                              vtkm::cont::AtomicArrayTypeList);
+
+// Benchmarks AtomicArray::Add such that each work index writes to a strided
+// index ( floor(i / stride) + stride * (i % stride)
+struct AddStrideWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  vtkm::Id Stride;
+
+  AddStrideWorker(vtkm::Id stride)
+    : Stride{ stride }
+  {
+  }
+
+  template <typename T, typename AtomicPortal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, AtomicPortal& portal) const
+  {
+    const vtkm::Id numVals = portal.GetNumberOfValues();
+    const vtkm::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    portal.Add(j, val);
+  }
+};
+
+template <typename ValueType>
+void BenchAddStride(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> atomicArray;
+  vtkm::cont::Algorithm::Fill(
+    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(AddStrideWorker{ stride }, ones, atomicArray);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(
+  BenchAddStride,
+    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
+    ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
+  vtkm::cont::AtomicArrayTypeList);
+
+// Non-atomic baseline for AddStride
+struct AddStrideBaselineWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, WholeArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  vtkm::Id Stride;
+
+  AddStrideBaselineWorker(vtkm::Id stride)
+    : Stride{ stride }
+  {
+  }
+
+  template <typename T, typename Portal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, Portal& portal) const
+  {
+    const vtkm::Id numVals = portal.GetNumberOfValues();
+    const vtkm::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    portal.Set(j, portal.Get(j) + val);
+  }
+};
+
+template <typename ValueType>
+void BenchAddStrideBaseline(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> array;
+  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(AddStrideBaselineWorker{ stride }, ones, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(
+  BenchAddStrideBaseline,
+    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
+    ->ArgNames({ "Values", "Ops", "Stride" }),
+  vtkm::cont::AtomicArrayTypeList);
+
+// Benchmarks AtomicArray::CompareAndSwap such that each work index writes to adjacent
+// indices.
+struct CASSeqWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  template <typename T, typename AtomicPortal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  {
+    const vtkm::Id idx = i % portal.GetNumberOfValues();
+    const T val = static_cast<T>(i) + in;
+    T oldVal = portal.Get(idx);
+    T assumed = static_cast<T>(0);
+    do
+    {
+      assumed = oldVal;
+      oldVal = portal.CompareAndSwap(idx, assumed + val, assumed);
+    } while (assumed != oldVal);
+  }
+};
+
+template <typename ValueType>
+void BenchCASSeq(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> atomicArray;
+  vtkm::cont::Algorithm::Fill(
+    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(CASSeqWorker{}, ones, atomicArray);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCASSeq,
+                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                           { NUM_WRITES, NUM_WRITES } })
+                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                              vtkm::cont::AtomicArrayTypeList);
+
+// Provides a non-atomic baseline for BenchCASSeq
+struct CASSeqBaselineWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, WholeArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  template <typename T, typename Portal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, Portal& portal) const
+  {
+    const vtkm::Id idx = i % portal.GetNumberOfValues();
+    const T val = static_cast<T>(i) + in;
+    const T oldVal = portal.Get(idx);
+    portal.Set(idx, oldVal + val);
+  }
+};
+
+template <typename ValueType>
+void BenchCASSeqBaseline(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> array;
+  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(CASSeqBaselineWorker{}, ones, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCASSeqBaseline,
+                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                           { NUM_WRITES, NUM_WRITES } })
+                                ->ArgNames({ "Values", "Ops" }),
+                              vtkm::cont::AtomicArrayTypeList);
+
+// Benchmarks AtomicArray::CompareAndSwap such that each work index writes to
+// a strided index:
+// ( floor(i / stride) + stride * (i % stride)
+struct CASStrideWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  vtkm::Id Stride;
+
+  CASStrideWorker(vtkm::Id stride)
+    : Stride{ stride }
+  {
+  }
+
+  template <typename T, typename AtomicPortal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  {
+    const vtkm::Id numVals = portal.GetNumberOfValues();
+    const vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const T val = static_cast<T>(i) + in;
+    T oldVal = portal.Get(idx);
+    T assumed = static_cast<T>(0);
+    do
+    {
+      assumed = oldVal;
+      oldVal = portal.CompareAndSwap(idx, assumed + val, assumed);
+    } while (assumed != oldVal);
+  }
+};
+
+template <typename ValueType>
+void BenchCASStride(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> atomicArray;
+  vtkm::cont::Algorithm::Fill(
+    atomicArray, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(CASStrideWorker{ stride }, ones, atomicArray);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(
+  BenchCASStride,
+    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
+    ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
+  vtkm::cont::AtomicArrayTypeList);
+
+// Non-atomic baseline for CASStride
+struct CASStrideBaselineWorker : public vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn, AtomicArrayInOut);
+  using ExecutionSignature = void(InputIndex, _1, _2);
+
+  vtkm::Id Stride;
+
+  CASStrideBaselineWorker(vtkm::Id stride)
+    : Stride{ stride }
+  {
+  }
+
+  template <typename T, typename AtomicPortal>
+  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  {
+    const vtkm::Id numVals = portal.GetNumberOfValues();
+    const vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const T val = static_cast<T>(i) + in;
+    T oldVal = portal.Get(idx);
+    portal.Set(idx, oldVal + val);
+  }
+};
+
+template <typename ValueType>
+void BenchCASStrideBaseline(benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+
+  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+
+  vtkm::cont::ArrayHandle<ValueType> array;
+  vtkm::cont::Algorithm::Fill(array, vtkm::TypeTraits<ValueType>::ZeroInitialization(), numValues);
+
+  vtkm::cont::Invoker invoker{ device };
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    invoker(CASStrideBaselineWorker{ stride }, ones, array);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+
+  const int64_t iterations = static_cast<int64_t>(state.iterations());
+  const int64_t valsWritten = static_cast<int64_t>(numWrites);
+  const int64_t bytesWritten = static_cast<int64_t>(sizeof(ValueType)) * valsWritten;
+  state.SetItemsProcessed(valsWritten * iterations);
+  state.SetItemsProcessed(bytesWritten * iterations);
+}
+VTKM_BENCHMARK_TEMPLATES_OPTS(
+  BenchCASStrideBaseline,
+    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
+    ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
+  vtkm::cont::AtomicArrayTypeList);
+
+} // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  // Parse VTK-m options:
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
+  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  try
-  {
-    vtkm::benchmarking::BenchmarkAtomicArray::Run(config.Device);
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Benchmark encountered an exception: " << e.what() << "\n";
-    return 1;
-  }
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
 
-  return 0;
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS(argc, argv);
 }
