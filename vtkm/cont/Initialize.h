@@ -102,30 +102,6 @@ VTKM_CONT_EXPORT
 VTKM_CONT
 InitializeResult Initialize();
 /**@}*/
-
-
-/**
- * Parses additional arguments that were not consumed by the Initialize function:
- * - Sets the path to the data directory for consumption by the unit tests
- * - Sets the path to the image directory for saving regression test images
- *
- * @note This method may call exit() on parse error.
- * @{
- */
-VTKM_CONT_EXPORT
-VTKM_CONT
-void ParseAdditionalTestArgs(int& argc, char* argv[]);
-/**@}*/
-
-// method to access the path to the data directory in the VTK-M repository
-VTKM_CONT_EXPORT
-VTKM_CONT
-std::string getTestDataBasePath();
-
-// method to access the path to the directory where regression test images are stored
-VTKM_CONT_EXPORT
-VTKM_CONT
-std::string getRegressionTestImageBasePath();
 }
 } // end namespace vtkm::cont
 

@@ -103,10 +103,10 @@ function(vtkm_unit_tests)
   list(APPEND vtkm_default_test_log_level "-v" "INFO")
 
   # Add the path to the data directory so tests can find and use data files for testing
-  list(APPEND VTKm_UT_TEST_ARGS "--path=${VTKm_SOURCE_DIR}/data")
+  list(APPEND VTKm_UT_TEST_ARGS "--data-dir=${VTKm_SOURCE_DIR}/data")
 
   # Add the path to the location where regression test images are to be stored
-  list(APPEND VTKm_UT_TEST_ARGS "--images=${VTKm_SOURCE_DIR}")
+  list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}")
 
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.

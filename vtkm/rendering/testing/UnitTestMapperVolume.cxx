@@ -36,7 +36,7 @@ void RenderTests()
   colorTable.AddPointAlpha(1.0, .01f);
 
   vtkm::cont::DataSet rectDS, regDS;
-  std::string basePath = vtkm::cont::testing::Testing::GetTestDataPath();
+  std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
   std::string rectfname = basePath + "/magField.vtk";
   std::string regfname = basePath + "/magField.vtk";
   vtkm::io::reader::VTKDataSetReader rectReader(rectfname);
