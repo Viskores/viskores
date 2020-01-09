@@ -307,8 +307,7 @@ public:
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
   template <typename T>
-  using IndexOf =
-    std::integral_constant<vtkm::IdComponent, vtkm::ListIndexOf<vtkm::List<Ts...>, T>::value>;
+  using IndexOf = vtkm::ListIndexOf<vtkm::List<Ts...>, T>;
 
   /// Returns the index for the given type (or -1 if that type is not in the list).
   ///

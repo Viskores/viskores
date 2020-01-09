@@ -141,6 +141,20 @@ void TestLists()
                               TestClass<12>,
                               TestClass<13>,
                               TestClass<14>>;
+  using RepeatList = vtkm::List<TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<1>,
+                                TestClass<14>>;
 
   TryForEach();
 
@@ -223,6 +237,10 @@ void TestLists()
   VTKM_TEST_ASSERT(vtkm::ListIndexOf<LongList, TestClass<15>>::value == -1);
   VTKM_TEST_ASSERT(vtkm::ListIndexOf<LongList, TestClass<0>>::value == -1);
 
+  VTKM_TEST_ASSERT(vtkm::ListIndexOf<RepeatList, TestClass<0>>::value == -1);
+  VTKM_TEST_ASSERT(vtkm::ListIndexOf<RepeatList, TestClass<1>>::value == 0);
+  VTKM_TEST_ASSERT(vtkm::ListIndexOf<RepeatList, TestClass<14>>::value == 13);
+
   std::cout << "ListHas" << std::endl;
   VTKM_TEST_ASSERT(vtkm::ListHas<EvenList, TestClass<2>>::value);
   VTKM_TEST_ASSERT(vtkm::ListHas<EvenList, TestClass<4>>::value);
@@ -247,6 +265,10 @@ void TestLists()
   VTKM_TEST_ASSERT(vtkm::ListHas<LongList, TestClass<14>>::value);
   VTKM_TEST_ASSERT(!vtkm::ListHas<LongList, TestClass<15>>::value);
   VTKM_TEST_ASSERT(!vtkm::ListHas<LongList, TestClass<0>>::value);
+
+  VTKM_TEST_ASSERT(!vtkm::ListHas<RepeatList, TestClass<0>>::value);
+  VTKM_TEST_ASSERT(vtkm::ListHas<RepeatList, TestClass<1>>::value);
+  VTKM_TEST_ASSERT(vtkm::ListHas<RepeatList, TestClass<14>>::value);
 }
 
 } // anonymous namespace
