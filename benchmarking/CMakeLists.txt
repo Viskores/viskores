@@ -10,7 +10,7 @@
 
 # Find Google Benchmark. Note that benchmark_DIR must be pointed at an
 # installation, not a build directory.
-find_package(benchmark)
+find_package(benchmark REQUIRED)
 
 function(add_benchmark)
   set(options)
