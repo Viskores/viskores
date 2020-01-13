@@ -226,7 +226,7 @@ VTKM_EXEC OutType CellAspectFrobeniusMetric(const vtkm::IdComponent& numPts,
   FloatType numerator = (FloatType)vtkm::Dot(TetEdges[0], TetEdges[0]);
   numerator += (FloatType)vtkm::Dot(TetEdges[1], TetEdges[1]);
   numerator += (FloatType)vtkm::Dot(TetEdges[2], TetEdges[2]);
-  numerator *= 1.5;
+  numerator *= 1.5f;
   numerator -= (FloatType)vtkm::Dot(TetEdges[0], TetEdges[1]);
   numerator -= (FloatType)vtkm::Dot(TetEdges[0], TetEdges[2]);
   numerator -= (FloatType)vtkm::Dot(TetEdges[1], TetEdges[2]);
