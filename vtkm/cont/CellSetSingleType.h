@@ -87,7 +87,7 @@ public:
     return *this;
   }
 
-  virtual ~CellSetSingleType() {}
+  virtual ~CellSetSingleType() override {}
 
   /// First method to add cells -- one at a time.
   VTKM_CONT
