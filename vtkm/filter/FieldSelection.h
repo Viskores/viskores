@@ -234,7 +234,10 @@ private:
       , Association(assoc)
     {
     }
+
+    Field(const Field&) = default;
     Field& operator=(const Field&) = default;
+
     bool operator<(const Field& other) const
     {
       return (this->Association == other.Association) ? (this->Name < other.Name)

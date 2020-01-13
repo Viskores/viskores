@@ -292,9 +292,6 @@ public:
       metaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
     }
   }
-
-private:
-  void operator=(const EdgeWeightGenerate<T>&) = delete;
 };
 
 // ---------------------------------------------------------------------------

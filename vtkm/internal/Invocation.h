@@ -112,6 +112,8 @@ struct Invocation
   {
   }
 
+  Invocation(const Invocation& src) = default;
+
   /// Defines a new \c Invocation type that is the same as this type except
   /// with the \c Parameters replaced.
   ///

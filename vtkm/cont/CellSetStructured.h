@@ -124,6 +124,13 @@ public:
   // the destructor of the superclass.
   ~CellSetStructured() override {}
 
+  CellSetStructured() = default;
+  CellSetStructured(const CellSetStructured& src) = default;
+  CellSetStructured(CellSetStructured&& src) noexcept = default;
+
+  CellSetStructured& operator=(const CellSetStructured& src) = default;
+  CellSetStructured& operator=(CellSetStructured&& src) noexcept = default;
+
 private:
   InternalsType Structure;
 };
