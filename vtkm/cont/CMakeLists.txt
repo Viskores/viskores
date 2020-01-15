@@ -110,6 +110,7 @@ set(headers
   StorageListTag.h
   StorageVirtual.h
   Timer.h
+  Token.h
   TryExecute.h
   SerializableTypeString.h
   VariantArrayHandle.h
@@ -148,6 +149,7 @@ set(sources
   Logging.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
+  Token.cxx
   TryExecute.cxx
   )
 
