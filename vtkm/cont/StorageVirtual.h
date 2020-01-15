@@ -188,7 +188,7 @@ public:
   explicit StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept;
 
   VTKM_CONT
-  ~StorageVirtualImpl() = default;
+  ~StorageVirtualImpl() override = default;
 
   const vtkm::cont::ArrayHandle<T, S>& GetHandle() const { return this->Handle; }
 

@@ -78,7 +78,7 @@ struct ArrayPortalValueReference
   void Set(const ValueType& value) const { this->Portal.Set(this->Index, value); }
 
   VTKM_CONT
-  void Swap(const ArrayPortalValueReference<ArrayPortalType>& rhs) const throw()
+  void Swap(const ArrayPortalValueReference<ArrayPortalType>& rhs) const noexcept
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure

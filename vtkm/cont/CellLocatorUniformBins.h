@@ -146,7 +146,7 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT virtual ~CellLocatorUniformBins() noexcept
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformBins() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.

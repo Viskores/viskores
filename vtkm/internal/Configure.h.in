@@ -106,13 +106,23 @@
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS
 #endif
 
-// Newer versions of clang have an unused-local-typedef warning, but not older
-// versions. This checks for the apple version of clang, which is different
-// than other clang compiled versions. If using a non-apple version of clang,
-// you might need to extend this condition.
+
 #if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072)
+// 1. Newer versions of clang have an unused-local-typedef warning, but not older
+// versions. This checks for the apple version of clang, which is different
+// than other clang compiled versions.
+// 2+. Suppress common issues found in third-party code such
+// as DIY
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
-  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"") \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
+#elif defined(VTKM_CLANG)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
 #else
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
 #endif

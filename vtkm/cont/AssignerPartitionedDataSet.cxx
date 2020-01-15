@@ -50,6 +50,11 @@ AssignerPartitionedDataSet::AssignerPartitionedDataSet(vtkm::Id num_partitions)
 }
 
 VTKM_CONT
+AssignerPartitionedDataSet::~AssignerPartitionedDataSet()
+{
+}
+
+VTKM_CONT
 void AssignerPartitionedDataSet::local_gids(int my_rank, std::vector<int>& gids) const
 {
   const size_t s_rank = static_cast<size_t>(my_rank);
