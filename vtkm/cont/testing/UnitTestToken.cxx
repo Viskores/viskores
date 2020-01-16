@@ -74,7 +74,7 @@ struct TestObject
                    "Expected object to have reference count of ",                                  \
                    (expectedRefs),                                                                 \
                    ". It actually was ",                                                           \
-                   *(object).ReferenceCount);
+                   *(object).ReferenceCount)
 
 void TestBasicAttachDetatch()
 {

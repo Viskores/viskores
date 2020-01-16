@@ -77,13 +77,17 @@ public:
   ///
   void DetachFromAll();
 
+  ///@{
   /// \brief Add an object to attach to the `Token`.
   ///
   /// To attach an object to a `Token`, you need the object itself, a pointer to
   /// a `Token::ReferenceCount` that is used to count how many `Token`s hold the
   /// object, a pointer to a `std::mutex` used to safely use the `ReferenceCount`,
   /// and a pointer to a `std::condition_variable` that other threads will wait
-  /// on if they are blocked by the `Token`.
+  /// on if they are blocked by the `Token` (using the same `mutex` in the given
+  /// `unique_lock`). The mutex can also be passed in as a
+  /// `std::unique_lock<std::mutex>` to signal whether or not the mutex is already
+  /// locked by the current thread.
   ///
   /// When the `Token` is attached, it will increment the reference count (safely
   /// with the mutex) and store away these items. Other items will be able tell
@@ -96,20 +100,31 @@ public:
   template <typename T>
   void Attach(T&& object,
               vtkm::cont::Token::ReferenceCount* referenceCountPointer,
-              std::mutex* mutexPointer,
+              std::unique_lock<std::mutex>& lock,
               std::condition_variable* conditionVariablePointer)
   {
     this->Attach(std::unique_ptr<ObjectReference>(
                    new ObjectReferenceImpl<typename std::decay<T>::type>(std::forward<T>(object))),
                  referenceCountPointer,
-                 mutexPointer,
+                 lock,
                  conditionVariablePointer);
   }
+
+  template <typename T>
+  void Attach(T&& object,
+              vtkm::cont::Token::ReferenceCount* referenceCountPoiner,
+              std::mutex* mutexPointer,
+              std::condition_variable* conditionVariablePointer)
+  {
+    std::unique_lock<std::mutex> lock(*mutexPointer, std::defer_lock);
+    this->Attach(std::forward<T>(object), referenceCountPoiner, lock, conditionVariablePointer);
+  }
+  ///@}
 
 private:
   void Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectReference,
               vtkm::cont::Token::ReferenceCount* referenceCountPointer,
-              std::mutex* mutexPointer,
+              std::unique_lock<std::mutex>& lock,
               std::condition_variable* conditionVariablePointer);
 };
 }

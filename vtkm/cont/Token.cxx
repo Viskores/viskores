@@ -78,12 +78,15 @@ void vtkm::cont::Token::DetachFromAll()
 
 void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectRef,
                                vtkm::cont::Token::ReferenceCount* referenceCountPointer,
-                               std::mutex* mutexPointer,
+                               std::unique_lock<std::mutex>& lock,
                                std::condition_variable* conditionVariablePointer)
 {
   LockType localLock = this->Internals->GetLock();
-  LockType objectLock(*mutexPointer);
+  if (!lock.owns_lock())
+  {
+    lock.lock();
+  }
   *referenceCountPointer += 1;
   this->Internals->GetHeldReferences(localLock)->emplace_back(
-    std::move(objectRef), referenceCountPointer, mutexPointer, conditionVariablePointer);
+    std::move(objectRef), referenceCountPointer, lock.mutex(), conditionVariablePointer);
 }

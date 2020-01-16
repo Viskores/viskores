@@ -48,6 +48,7 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleSwizzle.cxx
+  UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
