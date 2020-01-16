@@ -308,13 +308,11 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
       this->CheckLock(lock);
       return this->ExecutionArrayCapacity;
     }
-
     VTKM_CONT vtkm::cont::Token::ReferenceCount* GetReadCount(const LockType& lock) const
     {
       this->CheckLock(lock);
       return &this->ReadCount;
     }
-
     VTKM_CONT vtkm::cont::Token::ReferenceCount* GetWriteCount(const LockType& lock) const
     {
       this->CheckLock(lock);

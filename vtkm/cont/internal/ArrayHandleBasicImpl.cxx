@@ -283,6 +283,10 @@ bool ArrayHandleImpl::PrepareForDevice(LockType& lock,
     else
     {
       // Update the device allocator:
+      // BUG: There is a non-zero chance that while waiting for the write lock, another thread
+      // could change the ExecutionInterface, which would cause problems. In the future we should
+      // support multiple devices, in which case we would not have to delete one execution array
+      // to load another.
       this->WaitToWrite(lock); // Make sure no one is reading device array
       this->SyncControlArray(lock, sizeOfT);
       TypelessExecutionArray execArray = this->Internals->MakeTypelessExecutionArray(lock);

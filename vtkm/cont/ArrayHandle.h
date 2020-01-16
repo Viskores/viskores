@@ -23,6 +23,7 @@
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/Token.h>
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
 
@@ -394,6 +395,7 @@ public:
   void Allocate(vtkm::Id numberOfValues)
   {
     LockType lock = this->GetLock();
+    this->WaitToWrite(lock);
     this->ReleaseResourcesExecutionInternal(lock);
     this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
     this->Internals->SetControlArrayValid(lock, true);
@@ -415,6 +417,7 @@ public:
   VTKM_CONT void ReleaseResourcesExecution()
   {
     LockType lock = this->GetLock();
+    this->WaitToWrite(lock);
 
     // Save any data in the execution environment by making sure it is synced
     // with the control environment.
@@ -438,17 +441,23 @@ public:
     }
   }
 
-  // clang-format off
   /// Prepares this array to be used as an input to an operation in the
   /// execution environment. If necessary, copies data to the execution
   /// environment. Can throw an exception if this array does not yet contain
   /// any data. Returns a portal that can be used in code running in the
   /// execution environment.
   ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT
-  typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(DeviceAdapterTag) const;
-  // clang-format on
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
+    DeviceAdapterTag,
+    vtkm::cont::Token& token) const;
 
   /// Prepares (allocates) this array to be used as an output from an operation
   /// in the execution environment. The internal state of this class is set to
@@ -457,10 +466,16 @@ public:
   /// called). Returns a portal that can be used in code running in the
   /// execution environment.
   ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numberOfValues,
-    DeviceAdapterTag);
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
+  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag, vtkm::cont::Token& token);
 
   /// Prepares this array to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -468,8 +483,40 @@ public:
   /// yet contain any data. Returns a portal that can be used in code running
   /// in the execution environment.
   ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag);
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
+    DeviceAdapterTag,
+    vtkm::cont::Token& token);
+
+  // TODO: Deprecate these
+  template <typename DeviceAdapterTag>
+  VTKM_CONT
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(DeviceAdapterTag) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(DeviceAdapterTag{}, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
+    vtkm::Id numberOfValues,
+    DeviceAdapterTag)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForOutput(numberOfValues, DeviceAdapterTag{}, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInPlace(DeviceAdapterTag{}, token);
+  }
 
   /// Returns the DeviceAdapterId for the current device. If there is no device
   /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
@@ -506,6 +553,44 @@ protected:
   ///
   LockType GetLock() const { return LockType(this->Internals->Mutex); }
 
+  /// Returns true if read operations can currently be performed.
+  ///
+  VTKM_CONT bool CanRead(const LockType& lock) const
+  {
+    return (*this->Internals->GetWriteCount(lock) < 1);
+  }
+
+  //// Returns true if write operations can currently be performed.
+  ///
+  VTKM_CONT bool CanWrite(const LockType& lock) const
+  {
+    return (*this->Internals->GetWriteCount(lock) < 1) &&
+      (*this->Internals->GetReadCount(lock) < 1);
+  }
+
+  //// Will block the current thread until a read can be performed.
+  ///
+  VTKM_CONT void WaitToRead(LockType& lock) const
+  {
+    // Note that if you deadlocked here, that means that you are trying to do a read operation on
+    // an array where an object is writing to it. This could happen on the same thread. For
+    // example, if you call `GetPortalControl()` then no other operation that can result in reading
+    // or writing data in the array can happen while the resulting portal is still in scope.
+    this->Internals->ConditionVariable.wait(lock, [&lock, this] { return this->CanRead(lock); });
+  }
+
+  //// Will block the current thread until a write can be performed.
+  ///
+  VTKM_CONT void WaitToWrite(LockType& lock) const
+  {
+    // Note that if you deadlocked here, that means that you are trying to do a write operation on
+    // an array where an object is reading or writing to it. This could happen on the same thread.
+    // For example, if you call `GetPortalControl()` then no other operation that can result in
+    // reading or writing data in the array can happen while the resulting portal is still in
+    // scope.
+    this->Internals->ConditionVariable.wait(lock, [&lock, this] { return this->CanWrite(lock); });
+  }
+
   /// Gets this array handle ready to interact with the given device. If the
   /// array handle has already interacted with this device, then this method
   /// does nothing. Although the internal state of this class can change, the
@@ -529,6 +614,12 @@ protected:
   {
     if (this->Internals->IsExecutionArrayValid(lock))
     {
+      this->WaitToWrite(lock);
+      // Note that it is possible that while waiting someone else deleted the execution array.
+      // That is why we check again.
+    }
+    if (this->Internals->IsExecutionArrayValid(lock))
+    {
       this->Internals->GetExecutionArray(lock)->ReleaseResources();
       this->Internals->SetExecutionArrayValid(lock, false);
     }
@@ -542,6 +633,9 @@ protected:
     mutable std::unique_ptr<ExecutionManagerType> ExecutionArray;
     mutable bool ExecutionArrayValid = false;
 
+    mutable vtkm::cont::Token::ReferenceCount ReadCount = 0;
+    mutable vtkm::cont::Token::ReferenceCount WriteCount = 0;
+
     VTKM_CONT void CheckLock(const LockType& lock) const
     {
       VTKM_ASSERT((lock.mutex() == &this->Mutex) && (lock.owns_lock()));
@@ -549,11 +643,22 @@ protected:
 
   public:
     MutexType Mutex;
+    std::condition_variable ConditionVariable;
 
     InternalStruct() = default;
-    ~InternalStruct() = default;
     InternalStruct(const StorageType& storage);
     InternalStruct(StorageType&& storage);
+
+#ifdef VTKM_ASSERTS_CHECKED
+    ~InternalStruct()
+    {
+      // It should not be possible to destroy this array if any tokens are still attached to it.
+      LockType lock(this->Mutex);
+      VTKM_ASSERT((*this->GetReadCount(lock) == 0) && (*this->GetWriteCount(lock) == 0));
+    }
+#else
+    ~InternalStruct() = default;
+#endif
 
     // To access any feature in InternalStruct, you must have locked the mutex. You have
     // to prove it by passing in a reference to a std::unique_lock.
@@ -604,6 +709,16 @@ protected:
       this->ExecutionArray.reset(
         new vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>(
           &this->ControlArray));
+    }
+    VTKM_CONT vtkm::cont::Token::ReferenceCount* GetReadCount(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return &this->ReadCount;
+    }
+    VTKM_CONT vtkm::cont::Token::ReferenceCount* GetWriteCount(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return &this->WriteCount;
     }
   };
 

@@ -9,6 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Token.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -191,6 +193,13 @@ void DoTest()
   std::cout << "Basic array handle." << std::endl;
   vtkm::cont::ArrayHandle<ValueType> basicArray;
   DoThreadSafetyTest(basicArray);
+
+  std::cout << "Fancy array handle." << std::endl;
+  vtkm::cont::ArrayHandle<ValueType> valueArray;
+  valueArray.Allocate(ARRAY_SIZE);
+  auto fancyArray =
+    vtkm::cont::make_ArrayHandlePermutation(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), valueArray);
+  DoThreadSafetyTest(fancyArray);
 }
 
 } // anonymous namespace
