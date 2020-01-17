@@ -63,10 +63,10 @@ public:
   void UpdateSeedResolution(vtkm::cont::DataSet input);
 
   VTKM_CONT
-  void WriteDataSet(vtkm::Id cycle, const std::string& filename, vtkm::cont::DataSet dataset);
+  void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
 
   VTKM_CONT
-  void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
+  void InitializeCoordinates(const vtkm::cont::DataSet& input);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -92,6 +92,7 @@ private:
   vtkm::Id cust_res;
   vtkm::Id3 SeedRes;
   vtkm::Id writeFrequency;
+  std::vector<vtkm::Float64> xCoordinates, yCoordinates, zCoordinates;
 };
 }
 } // namespace vtkm::filter
