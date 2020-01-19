@@ -189,7 +189,7 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, std::false_type>
   ProvidedFunctorType PrepareForControl() const { return this->Functor; }
 
   template <typename Device>
-  VTKM_CONT ProvidedFunctorType PrepareForExecution(Device) const
+  VTKM_CONT ProvidedFunctorType PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     return this->Functor;
   }
@@ -202,7 +202,8 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, std::true_type>
 
   ProvidedFunctorType Functor;
   //  using FunctorType = decltype(std::declval<ProvidedFunctorType>().PrepareForControl());
-  using FunctorType = decltype(Functor.PrepareForControl());
+  //  using FunctorType = decltype(Functor.PrepareForControl());
+  using FunctorType = vtkm::cont::internal::ControlObjectType<ProvidedFunctorType>;
 
   TransformFunctorManagerImpl() = default;
 
@@ -213,16 +214,17 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, std::true_type>
   }
 
   VTKM_CONT
-  auto PrepareForControl() const -> decltype(this->Functor.PrepareForControl())
+  auto PrepareForControl() const
+    -> decltype(vtkm::cont::internal::CallPrepareForControl(this->Functor))
   {
-    return this->Functor.PrepareForControl();
+    return vtkm::cont::internal::CallPrepareForControl(this->Functor);
   }
 
   template <typename Device>
-  VTKM_CONT auto PrepareForExecution(Device device) const
-    -> decltype(this->Functor.PrepareForExecution(device))
+  VTKM_CONT auto PrepareForExecution(Device device, vtkm::cont::Token& token) const
+    -> decltype(vtkm::cont::internal::CallPrepareForExecution(this->Functor, device, token))
   {
-    return this->Functor.PrepareForExecution(device);
+    return vtkm::cont::internal::CallPrepareForExecution(this->Functor, device, token);
   }
 };
 
@@ -488,21 +490,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()),
-                                this->Functor.PrepareForExecution(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device{}, token),
+                                this->Functor.PrepareForExecution(Device{}, token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadType("ArrayHandleTransform read only. "
                                    "Cannot be used for in-place operations.");
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadType("ArrayHandleTransform read only. Cannot be used as output.");
   }
@@ -573,27 +575,27 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()),
-                                this->Functor.PrepareForExecution(Device()),
-                                this->InverseFunctor.PrepareForExecution(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device{}, token),
+                                this->Functor.PrepareForExecution(Device{}, token),
+                                this->InverseFunctor.PrepareForExecution(Device{}, token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()),
-                           this->Functor.PrepareForExecution(Device()),
-                           this->InverseFunctor.PrepareForExecution(Device()));
+    return PortalExecution(this->Array.PrepareForInPlace(Device{}, token),
+                           this->Functor.PrepareForExecution(Device{}, token),
+                           this->InverseFunctor.PrepareForExecution(Device{}, token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()),
-                           this->Functor.PrepareForExecution(Device()),
-                           this->InverseFunctor.PrepareForExecution(Device()));
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device{}, token),
+                           this->Functor.PrepareForExecution(Device{}, token),
+                           this->InverseFunctor.PrepareForExecution(Device{}, token));
   }
 
   VTKM_CONT

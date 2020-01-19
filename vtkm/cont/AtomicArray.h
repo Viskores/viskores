@@ -72,9 +72,19 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(
+    Device,
+    vtkm::cont::Token& token) const
   {
-    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
+    return vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle, token);
+  }
+
+  template <typename Device>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+    vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(device, token);
   }
 
 private:

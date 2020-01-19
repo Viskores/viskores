@@ -17,6 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 #include <vtkm/Types.h>
 
@@ -647,11 +648,21 @@ public:
   /// execution environment.
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag device) const
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::PortalConst;
-    return PortalType{ this->Internals->Data.PrepareForInput(device),
+    return PortalType{ this->Internals->Data.PrepareForInput(device, token),
                        this->Internals->NumberOfBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst
+    PrepareForInput(DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, token);
   }
 
   /// Prepares (allocates) this BitField to be used as an output from an
@@ -661,9 +672,8 @@ public:
   /// object are called). Returns a portal that can be used in code running in
   /// the execution environment.
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numBits,
-    DeviceAdapterTag device) const
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
+  PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device, vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
     const vtkm::Id numWords = this->BitsToAllocatedStorageWords(numBits);
@@ -675,9 +685,18 @@ public:
                  static_cast<vtkm::UInt64>(static_cast<size_t>(numWords) * sizeof(WordTypeDefault)))
                  .c_str());
 
-    auto portal = this->Internals->Data.PrepareForOutput(numWords, device);
+    auto portal = this->Internals->Data.PrepareForOutput(numWords, device, token);
     this->Internals->NumberOfBits = numBits;
     return PortalType{ portal, numBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForOutput(numBits, device, token);
   }
 
   /// Prepares this BitField to be used in an in-place operation (both as input
@@ -687,11 +706,21 @@ public:
   /// running in the execution environment.
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag device) const
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
-    return PortalType{ this->Internals->Data.PrepareForInPlace(device),
+    return PortalType{ this->Internals->Data.PrepareForInPlace(device, token),
                        this->Internals->NumberOfBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForInPlace(DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInPlace(device, token);
   }
 
 private:

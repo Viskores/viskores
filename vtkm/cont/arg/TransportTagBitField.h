@@ -38,10 +38,13 @@ struct Transport<vtkm::cont::arg::TransportTagBitFieldIn, vtkm::cont::BitField, 
     typename vtkm::cont::BitField::template ExecutionTypes<Device>::PortalConst;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(vtkm::cont::BitField& field, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(vtkm::cont::BitField& field,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
-    return field.PrepareForInput(Device{});
+    return field.PrepareForInput(Device{}, token);
   }
 };
 
@@ -51,12 +54,15 @@ struct Transport<vtkm::cont::arg::TransportTagBitFieldOut, vtkm::cont::BitField,
   using ExecObjectType = typename vtkm::cont::BitField::template ExecutionTypes<Device>::Portal;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(vtkm::cont::BitField& field, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(vtkm::cont::BitField& field,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
     // This behaves similarly to WholeArray tags, where "Out" maps to InPlace
     // since we don't want to reallocate or enforce size restrictions.
-    return field.PrepareForInPlace(Device{});
+    return field.PrepareForInPlace(Device{}, token);
   }
 };
 
@@ -66,10 +72,13 @@ struct Transport<vtkm::cont::arg::TransportTagBitFieldInOut, vtkm::cont::BitFiel
   using ExecObjectType = typename vtkm::cont::BitField::template ExecutionTypes<Device>::Portal;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(vtkm::cont::BitField& field, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(vtkm::cont::BitField& field,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
-    return field.PrepareForInPlace(Device{});
+    return field.PrepareForInPlace(Device{}, token);
   }
 };
 }

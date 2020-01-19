@@ -15,6 +15,7 @@
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/Token.h>
 
 #include <vtkm/cont/internal/ArrayTransfer.h>
 
@@ -120,7 +121,7 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     return this->Storage->GetPortalConst();
   }
@@ -136,14 +137,14 @@ public:
 
   VTKM_CONT
   NO_OPTIMIZE_FUNC_ATTRIBUTE
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT
   NO_OPTIMIZE_FUNC_ATTRIBUTE
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output.");
   }

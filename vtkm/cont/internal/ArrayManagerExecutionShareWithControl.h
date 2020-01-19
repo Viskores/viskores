@@ -53,7 +53,7 @@ public:
   /// Returns the constant portal from the storage.
   ///
   VTKM_CONT
-  PortalConstType PrepareForInput(bool vtkmNotUsed(uploadData)) const
+  PortalConstType PrepareForInput(bool vtkmNotUsed(uploadData), vtkm::cont::Token&) const
   {
     return this->Storage->GetPortalConst();
   }
@@ -61,12 +61,15 @@ public:
   /// Returns the read-write portal from the storage.
   ///
   VTKM_CONT
-  PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData)) { return this->Storage->GetPortal(); }
+  PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData), vtkm::cont::Token&)
+  {
+    return this->Storage->GetPortal();
+  }
 
   /// Allocates data in the storage and return the portal to that.
   ///
   VTKM_CONT
-  PortalType PrepareForOutput(vtkm::Id numberOfValues)
+  PortalType PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token&)
   {
     this->Storage->Allocate(numberOfValues);
     return this->Storage->GetPortal();

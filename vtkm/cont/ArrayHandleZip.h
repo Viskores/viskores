@@ -257,24 +257,24 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
-                                this->SecondArray.PrepareForInput(Device()));
+    return PortalConstExecution(this->FirstArray.PrepareForInput(Device(), token),
+                                this->SecondArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->FirstArray.PrepareForInPlace(Device()),
-                           this->SecondArray.PrepareForInPlace(Device()));
+    return PortalExecution(this->FirstArray.PrepareForInPlace(Device(), token),
+                           this->SecondArray.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-                           this->SecondArray.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device(), token),
+                           this->SecondArray.PrepareForOutput(numberOfValues, Device(), token));
   }
 
   VTKM_CONT

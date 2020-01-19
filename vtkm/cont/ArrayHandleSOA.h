@@ -349,27 +349,29 @@ public:
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
-  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
+  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                 vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalConstExecution>(
-      this->Storage->GetArrays(), this->GetNumberOfValues(), [](const BaseArrayType& array) {
-        return array.PrepareForInput(Device{});
+      this->Storage->GetArrays(), this->GetNumberOfValues(), [&token](const BaseArrayType& array) {
+        return array.PrepareForInput(Device{}, token);
       });
   }
 
-  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) const
+  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                              vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalExecution>(
-      this->Storage->GetArrays(), this->GetNumberOfValues(), [](BaseArrayType& array) {
-        return array.PrepareForInPlace(Device{});
+      this->Storage->GetArrays(), this->GetNumberOfValues(), [&token](BaseArrayType& array) {
+        return array.PrepareForInPlace(Device{}, token);
       });
   }
 
-  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numValues) const
+  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalExecution>(
-      this->Storage->GetArrays(), numValues, [numValues](BaseArrayType& array) {
-        return array.PrepareForOutput(numValues, Device{});
+      this->Storage->GetArrays(), numValues, [numValues, &token](BaseArrayType& array) {
+        return array.PrepareForOutput(numValues, Device{}, token);
       });
   }
 

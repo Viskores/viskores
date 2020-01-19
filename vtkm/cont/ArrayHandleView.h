@@ -242,21 +242,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumValues; }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalConstExecution(
-      this->Array.PrepareForInput(Device()), this->StartIndex, this->NumValues);
+      this->Array.PrepareForInput(Device(), token), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalExecution(
-      this->Array.PrepareForInPlace(Device()), this->StartIndex, this->NumValues);
+      this->Array.PrepareForInPlace(Device(), token), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     if (numberOfValues != this->GetNumberOfValues())
     {
@@ -277,9 +277,10 @@ public:
         "output of ArrayHandlePermutation.");
     }
 
-    return PortalExecution(this->Array.PrepareForOutput(this->Array.GetNumberOfValues(), Device()),
-                           this->StartIndex,
-                           this->NumValues);
+    return PortalExecution(
+      this->Array.PrepareForOutput(this->Array.GetNumberOfValues(), Device(), token),
+      this->StartIndex,
+      this->NumValues);
   }
 
   VTKM_CONT

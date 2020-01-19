@@ -46,9 +46,10 @@ struct Transport<vtkm::cont::arg::TransportTagArrayOut, ContObjectType, Device>
   VTKM_CONT ExecObjectType operator()(ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id vtkmNotUsed(inputRange),
-                                      vtkm::Id outputRange) const
+                                      vtkm::Id outputRange,
+                                      vtkm::cont::Token& token) const
   {
-    return object.PrepareForOutput(outputRange, Device());
+    return object.PrepareForOutput(outputRange, Device(), token);
   }
 };
 }

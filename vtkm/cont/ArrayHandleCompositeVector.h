@@ -132,27 +132,33 @@ struct ArrayTupleForEach
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInput(const ArrayTuple& arrays, PortalTuple& portals)
+  VTKM_CONT static void PrepareForInput(const ArrayTuple& arrays,
+                                        PortalTuple& portals,
+                                        vtkm::cont::Token& token)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInput(DeviceTag());
-    Next::template PrepareForInput<DeviceTag>(arrays, portals);
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInput(DeviceTag(), token);
+    Next::template PrepareForInput<DeviceTag>(arrays, portals, token);
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInPlace(ArrayTuple& arrays, PortalTuple& portals)
+  VTKM_CONT static void PrepareForInPlace(ArrayTuple& arrays,
+                                          PortalTuple& portals,
+                                          vtkm::cont::Token& token)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInPlace(DeviceTag());
-    Next::template PrepareForInPlace<DeviceTag>(arrays, portals);
+    vtkmstd::get<Index>(portals) =
+      vtkmstd::get<Index>(arrays).PrepareForInPlace(DeviceTag(), token);
+    Next::template PrepareForInPlace<DeviceTag>(arrays, portals, token);
   }
 
   template <typename DeviceTag, typename PortalTuple>
   VTKM_CONT static void PrepareForOutput(ArrayTuple& arrays,
                                          PortalTuple& portals,
-                                         vtkm::Id numValues)
+                                         vtkm::Id numValues,
+                                         vtkm::cont::Token& token)
   {
     vtkmstd::get<Index>(portals) =
-      vtkmstd::get<Index>(arrays).PrepareForOutput(numValues, DeviceTag());
-    Next::template PrepareForOutput<DeviceTag>(arrays, portals, numValues);
+      vtkmstd::get<Index>(arrays).PrepareForOutput(numValues, DeviceTag(), token);
+    Next::template PrepareForOutput<DeviceTag>(arrays, portals, numValues, token);
   }
 
   VTKM_CONT
@@ -191,17 +197,17 @@ struct ArrayTupleForEach<Index, Index, ArrayTuple>
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInput(const ArrayTuple&, PortalTuple&)
+  VTKM_CONT static void PrepareForInput(const ArrayTuple&, PortalTuple&, vtkm::cont::Token&)
   {
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInPlace(ArrayTuple&, PortalTuple&)
+  VTKM_CONT static void PrepareForInPlace(ArrayTuple&, PortalTuple&, vtkm::cont::Token&)
   {
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForOutput(ArrayTuple&, PortalTuple&, vtkm::Id)
+  VTKM_CONT static void PrepareForOutput(ArrayTuple&, PortalTuple&, vtkm::Id, vtkm::cont::Token&)
   {
   }
 
@@ -302,29 +308,30 @@ public:
 
   template <typename DeviceTag>
   VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalConstTuple PrepareForInput(
-    const ArrayTuple& arrays)
+    const ArrayTuple& arrays,
+    vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalConstTuple portals;
-    ForEachArray::template PrepareForInput<DeviceTag>(arrays, portals);
+    ForEachArray::template PrepareForInput<DeviceTag>(arrays, portals, token);
     return portals;
   }
 
   template <typename DeviceTag>
   VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple PrepareForInPlace(
-    ArrayTuple& arrays)
+    ArrayTuple& arrays,
+    vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalTuple portals;
-    ForEachArray::template PrepareForInPlace<DeviceTag>(arrays, portals);
+    ForEachArray::template PrepareForInPlace<DeviceTag>(arrays, portals, token);
     return portals;
   }
 
   template <typename DeviceTag>
-  VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple PrepareForOutput(
-    ArrayTuple& arrays,
-    vtkm::Id numValues)
+  VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple
+  PrepareForOutput(ArrayTuple& arrays, vtkm::Id numValues, vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalTuple portals;
-    ForEachArray::template PrepareForOutput<DeviceTag>(arrays, portals, numValues);
+    ForEachArray::template PrepareForOutput<DeviceTag>(arrays, portals, numValues, token);
     return portals;
   }
 };
@@ -671,24 +678,24 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token) const
   {
     return PortalConstExecution(
-      ControlTraits::template PrepareForInput<DeviceTag>(this->GetArrayTuple()));
+      ControlTraits::template PrepareForInput<DeviceTag>(this->GetArrayTuple(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalExecution(
-      ControlTraits::template PrepareForInPlace<DeviceTag>(this->GetArrayTuple()));
+      ControlTraits::template PrepareForInPlace<DeviceTag>(this->GetArrayTuple(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numValues)
+  PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token)
   {
     return PortalExecution(
-      ControlTraits::template PrepareForOutput<DeviceTag>(this->GetArrayTuple(), numValues));
+      ControlTraits::template PrepareForOutput<DeviceTag>(this->GetArrayTuple(), numValues, token));
   }
 
   VTKM_CONT

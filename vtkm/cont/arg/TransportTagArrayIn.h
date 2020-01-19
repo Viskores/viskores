@@ -43,14 +43,15 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id inputRange,
-                                      vtkm::Id vtkmNotUsed(outputRange)) const
+                                      vtkm::Id vtkmNotUsed(outputRange),
+                                      vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != inputRange)
     {
       throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
-    return object.PrepareForInput(Device());
+    return object.PrepareForInput(Device(), token);
   }
 };
 }

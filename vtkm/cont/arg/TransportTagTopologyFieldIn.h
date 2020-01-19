@@ -84,14 +84,15 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag
   ExecObjectType operator()(const ContObjectType& object,
                             const vtkm::cont::CellSet& inputDomain,
                             vtkm::Id,
-                            vtkm::Id) const
+                            vtkm::Id,
+                            vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
     {
       throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
-    return object.PrepareForInput(Device());
+    return object.PrepareForInput(Device(), token);
   }
 };
 }

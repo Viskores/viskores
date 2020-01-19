@@ -442,21 +442,26 @@ public:
                                     vtkm::TopologyElementTagCell,
                                     vtkm::TopologyElementTagPoint>::ExecObjectType
   PrepareForInput(Device device,
-                  vtkm::TopologyElementTagCell from,
-                  vtkm::TopologyElementTagPoint to) const
+                  vtkm::TopologyElementTagCell visitTopology,
+                  vtkm::TopologyElementTagPoint incidentTopology,
+                  vtkm::cont::Token& token) const
   {
     using ConnectivityType = typename ExecutionTypes<Device,
                                                      vtkm::TopologyElementTagCell,
                                                      vtkm::TopologyElementTagPoint>::ExecObjectType;
-    return ConnectivityType(this->ValidCellIds.PrepareForInput(device),
-                            this->FullCellSet.PrepareForInput(device, from, to));
+    return ConnectivityType(
+      this->ValidCellIds.PrepareForInput(device, token),
+      this->FullCellSet.PrepareForInput(device, visitTopology, incidentTopology, token));
   }
 
   template <typename Device>
   VTKM_CONT typename ExecutionTypes<Device,
                                     vtkm::TopologyElementTagPoint,
                                     vtkm::TopologyElementTagCell>::ExecObjectType
-  PrepareForInput(Device device, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell) const
+  PrepareForInput(Device device,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::cont::Token& token) const
   {
     if (!this->VisitPointsWithCells.ElementsValid)
     {
@@ -468,8 +473,17 @@ public:
     using ConnectivityType = typename ExecutionTypes<Device,
                                                      vtkm::TopologyElementTagPoint,
                                                      vtkm::TopologyElementTagCell>::ExecObjectType;
-    return ConnectivityType(this->VisitPointsWithCells.Connectivity.PrepareForInput(device),
-                            this->VisitPointsWithCells.Offsets.PrepareForInput(device));
+    return ConnectivityType(this->VisitPointsWithCells.Connectivity.PrepareForInput(device, token),
+                            this->VisitPointsWithCells.Offsets.PrepareForInput(device, token));
+  }
+
+  template <typename Device, typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+    typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(Device device, VisitTopology visitTopology, IncidentTopology incidentTopology)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
   VTKM_CONT

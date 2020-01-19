@@ -14,6 +14,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/Token.h>
 
 namespace vtkm
 {
@@ -336,7 +337,7 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
                                 this->SecondArray.PrepareForInput(Device()),
@@ -344,7 +345,7 @@ public:
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadAllocation(
       "Cannot write to an ArrayHandleCartesianProduct. It does not make "
@@ -352,7 +353,7 @@ public:
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadAllocation(
       "Cannot write to an ArrayHandleCartesianProduct. It does not make "

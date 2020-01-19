@@ -283,21 +283,21 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->array1.PrepareForInput(Device()),
-                                this->array2.PrepareForInput(Device()));
+    return PortalConstExecution(this->array1.PrepareForInput(Device(), token),
+                                this->array2.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->array1.PrepareForInPlace(Device()),
-                           this->array2.PrepareForInPlace(Device()));
+    return PortalExecution(this->array1.PrepareForInPlace(Device(), token),
+                           this->array2.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorInternal("ArrayHandleConcatenate is derived and read-only. ");
   }

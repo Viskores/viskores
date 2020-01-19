@@ -284,8 +284,10 @@ private:
     using ExecObjectParameters =
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
+    vtkm::cont::Token token;
+
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
-      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
+      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange, token));
 
     // Get the arrays used for scattering input to output.
     typename ScatterType::OutputToInputMapType outputToInputMap =

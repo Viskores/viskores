@@ -42,9 +42,11 @@ struct GradientScalarOutputExecutionObject
 
   GradientScalarOutputExecutionObject() = default;
 
-  GradientScalarOutputExecutionObject(vtkm::cont::ArrayHandle<ValueType> gradient, vtkm::Id size)
+  GradientScalarOutputExecutionObject(vtkm::cont::ArrayHandle<ValueType> gradient,
+                                      vtkm::Id size,
+                                      vtkm::cont::Token& token)
   {
-    this->GradientPortal = gradient.PrepareForOutput(size, DeviceAdapter());
+    this->GradientPortal = gradient.PrepareForOutput(size, DeviceAdapter(), token);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -65,9 +67,11 @@ struct GradientScalarOutput : public vtkm::cont::ExecutionObjectBase
   template <typename Device>
 
   VTKM_CONT vtkm::exec::GradientScalarOutputExecutionObject<T, Device> PrepareForExecution(
-    Device) const
+    Device,
+    vtkm::cont::Token& token) const
   {
-    return vtkm::exec::GradientScalarOutputExecutionObject<T, Device>(this->Gradient, this->Size);
+    return vtkm::exec::GradientScalarOutputExecutionObject<T, Device>(
+      this->Gradient, this->Size, token);
   }
 
   GradientScalarOutput() = default;
@@ -113,7 +117,8 @@ struct GradientVecOutputExecutionObject
                                    vtkm::cont::ArrayHandle<BaseTType> divergence,
                                    vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>> vorticity,
                                    vtkm::cont::ArrayHandle<BaseTType> qcriterion,
-                                   vtkm::Id size)
+                                   vtkm::Id size,
+                                   vtkm::cont::Token& token)
   {
     this->SetGradient = g;
     this->SetDivergence = d;
@@ -123,19 +128,19 @@ struct GradientVecOutputExecutionObject
     DeviceAdapter device;
     if (g)
     {
-      this->GradientPortal = gradient.PrepareForOutput(size, device);
+      this->GradientPortal = gradient.PrepareForOutput(size, device, token);
     }
     if (d)
     {
-      this->DivergencePortal = divergence.PrepareForOutput(size, device);
+      this->DivergencePortal = divergence.PrepareForOutput(size, device, token);
     }
     if (v)
     {
-      this->VorticityPortal = vorticity.PrepareForOutput(size, device);
+      this->VorticityPortal = vorticity.PrepareForOutput(size, device, token);
     }
     if (q)
     {
-      this->QCriterionPortal = qcriterion.PrepareForOutput(size, device);
+      this->QCriterionPortal = qcriterion.PrepareForOutput(size, device, token);
     }
   }
 
@@ -189,7 +194,8 @@ struct GradientVecOutput : public vtkm::cont::ExecutionObjectBase
 
   template <typename Device>
   VTKM_CONT vtkm::exec::GradientVecOutputExecutionObject<T, Device> PrepareForExecution(
-    Device) const
+    Device,
+    vtkm::cont::Token& token) const
   {
     return vtkm::exec::GradientVecOutputExecutionObject<T, Device>(this->G,
                                                                    this->D,
@@ -199,7 +205,8 @@ struct GradientVecOutput : public vtkm::cont::ExecutionObjectBase
                                                                    this->Divergence,
                                                                    this->Vorticity,
                                                                    this->Qcriterion,
-                                                                   this->Size);
+                                                                   this->Size,
+                                                                   token);
   }
 
   GradientVecOutput() = default;
@@ -276,18 +283,20 @@ struct TransportTagGradientOut
 template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagGradientOut, ContObjectType, Device>
 {
-  using ExecObjectFacotryType = vtkm::exec::GradientOutput<typename ContObjectType::ValueType>;
-  using ExecObjectType =
-    decltype(std::declval<ExecObjectFacotryType>().PrepareForExecution(Device()));
+  using ExecObjectFactoryType = vtkm::exec::GradientOutput<typename ContObjectType::ValueType>;
+  using ExecObjectType = decltype(
+    std::declval<ExecObjectFactoryType>().PrepareForExecution(Device(),
+                                                              std::declval<vtkm::cont::Token&>()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id vtkmNotUsed(inputRange),
-                                      vtkm::Id outputRange) const
+                                      vtkm::Id outputRange,
+                                      vtkm::cont::Token& token) const
   {
-    ExecObjectFacotryType ExecutionObjectFacotry = object.PrepareForOutput(outputRange);
-    return ExecutionObjectFacotry.PrepareForExecution(Device());
+    ExecObjectFactoryType ExecutionObjectFactory = object.PrepareForOutput(outputRange);
+    return ExecutionObjectFactory.PrepareForExecution(Device(), token);
   }
 };
 }

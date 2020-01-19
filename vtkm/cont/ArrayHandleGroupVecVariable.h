@@ -312,27 +312,27 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->OffsetsArray.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->SourceArray.PrepareForInput(Device()),
-                                this->OffsetsArray.PrepareForInput(Device()));
+    return PortalConstExecution(this->SourceArray.PrepareForInput(Device(), token),
+                                this->OffsetsArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->SourceArray.PrepareForInPlace(Device()),
-                           this->OffsetsArray.PrepareForInput(Device()));
+    return PortalExecution(this->SourceArray.PrepareForInPlace(Device(), token),
+                           this->OffsetsArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     // Cannot reallocate an ArrayHandleGroupVecVariable
     VTKM_ASSERT(numberOfValues == this->OffsetsArray.GetNumberOfValues());
     return PortalExecution(
-      this->SourceArray.PrepareForOutput(this->SourceArray.GetNumberOfValues(), Device()),
-      this->OffsetsArray.PrepareForInput(Device()));
+      this->SourceArray.PrepareForOutput(this->SourceArray.GetNumberOfValues(), Device(), token),
+      this->OffsetsArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT

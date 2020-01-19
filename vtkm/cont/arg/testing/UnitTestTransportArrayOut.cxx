@@ -50,9 +50,11 @@ struct TryArrayOutType
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
       transport;
 
+    vtkm::cont::Token token;
+
     TestKernelOut<PortalType> kernel;
     kernel.Portal =
-      transport(handle, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), ARRAY_SIZE, ARRAY_SIZE);
+      transport(handle, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), ARRAY_SIZE, ARRAY_SIZE, token);
 
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayOut transport did not allocate array correctly.");

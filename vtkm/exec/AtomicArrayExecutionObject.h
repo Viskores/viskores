@@ -69,11 +69,22 @@ public:
 
   AtomicArrayExecutionObject() = default;
 
+  // This constructor is deprecated in VTK-m 1.6.
   VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle)
     : Data{ handle.PrepareForInPlace(Device{}).GetIteratorBegin() }
     , NumberOfValues{ handle.GetNumberOfValues() }
   {
     using PortalType = decltype(handle.PrepareForInPlace(Device{}));
+    VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
+                           "Source portal must return a pointer from "
+                           "GetIteratorBegin().");
+  }
+
+  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle, vtkm::cont::Token& token)
+    : Data{ handle.PrepareForInPlace(Device{}, token).GetIteratorBegin() }
+    , NumberOfValues{ handle.GetNumberOfValues() }
+  {
+    using PortalType = decltype(handle.PrepareForInPlace(Device{}, token));
     VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
                            "Source portal must return a pointer from "
                            "GetIteratorBegin().");

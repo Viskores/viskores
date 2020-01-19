@@ -73,8 +73,10 @@ void TryExecObjectTransport(Device)
   vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
     transport;
 
+  vtkm::cont::Token token;
+
   TestKernel<Device> kernel;
-  kernel.Object = transport(contObject, nullptr, 1, 1);
+  kernel.Object = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
 }

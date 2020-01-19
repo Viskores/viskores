@@ -58,8 +58,10 @@ struct TryArrayInType
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
       transport;
 
+    vtkm::cont::Token token;
+
     TestKernelIn<PortalType> kernel;
-    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
+    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE, token);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
   }

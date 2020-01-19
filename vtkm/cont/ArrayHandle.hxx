@@ -235,7 +235,7 @@ ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device, vtkm::cont::Token& t
 
   this->PrepareForDevice(lock, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInput(
-    !this->Internals->IsExecutionArrayValid(lock), device);
+    !this->Internals->IsExecutionArrayValid(lock), device, token);
 
   this->Internals->SetExecutionArrayValid(lock, true);
 
@@ -263,7 +263,8 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
   this->Internals->SetControlArrayValid(lock, false);
 
   this->PrepareForDevice(lock, device);
-  auto portal = this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device);
+  auto portal =
+    this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device, token);
 
   // We are assuming that the calling code will fill the array using the
   // iterators we are returning, so go ahead and mark the execution array as
@@ -302,7 +303,7 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token&
 
   this->PrepareForDevice(lock, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInPlace(
-    !this->Internals->IsExecutionArrayValid(lock), device);
+    !this->Internals->IsExecutionArrayValid(lock), device, token);
 
   this->Internals->SetExecutionArrayValid(lock, true);
 

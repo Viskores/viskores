@@ -11,6 +11,7 @@
 #define vtk_m_cont_internal_ArrayTransfer_h
 
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/Token.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 namespace vtkm
@@ -78,9 +79,9 @@ public:
   /// Returns a constant array portal valid in the execution environment.
   ///
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool updateData)
+  PortalConstExecution PrepareForInput(bool updateData, vtkm::cont::Token& token)
   {
-    return this->ArrayManager.PrepareForInput(updateData);
+    return this->ArrayManager.PrepareForInput(updateData, token);
   }
 
   /// Prepares the data for use as both input and output in the execution
@@ -91,9 +92,9 @@ public:
   /// Returns a read-write array portal valid in the execution environment.
   ///
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool updateData)
+  PortalExecution PrepareForInPlace(bool updateData, vtkm::cont::Token& token)
   {
-    return this->ArrayManager.PrepareForInPlace(updateData);
+    return this->ArrayManager.PrepareForInPlace(updateData, token);
   }
 
   /// Allocates an array in the execution environment of the specified size. If
@@ -104,9 +105,9 @@ public:
   /// Returns a writable array portal valid in the execution environment.
   ///
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return this->ArrayManager.PrepareForOutput(numberOfValues);
+    return this->ArrayManager.PrepareForOutput(numberOfValues, token);
   }
 
   /// Allocates data in the given Storage and copies data held in the execution

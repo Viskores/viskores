@@ -412,17 +412,20 @@ struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTr
   {
   }
 
-  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                                      vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInput(Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues,
+                                                                  vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForOutput(numberOfValues, Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                                                   vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInPlace(Device());
   }

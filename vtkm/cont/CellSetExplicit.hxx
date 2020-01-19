@@ -363,7 +363,7 @@ template <typename SST, typename CST, typename OST>
 template <typename Device, typename VisitTopology, typename IncidentTopology>
 VTKM_CONT
 auto CellSetExplicit<SST, CST, OST>
-::PrepareForInput(Device, VisitTopology, IncidentTopology) const
+::PrepareForInput(Device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
 -> typename ExecutionTypes<Device,
                            VisitTopology,
                            IncidentTopology>::ExecObjectType
@@ -378,9 +378,9 @@ auto CellSetExplicit<SST, CST, OST>
                                               VisitTopology,
                                               IncidentTopology>::ExecObjectType;
 
-  return ExecObjType(connectivity.Shapes.PrepareForInput(Device{}),
-                     connectivity.Connectivity.PrepareForInput(Device{}),
-                     connectivity.Offsets.PrepareForInput(Device{}));
+  return ExecObjType(connectivity.Shapes.PrepareForInput(Device{}, token),
+                     connectivity.Connectivity.PrepareForInput(Device{}, token),
+                     connectivity.Offsets.PrepareForInput(Device{}, token));
 }
 
 //----------------------------------------------------------------------------
