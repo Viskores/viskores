@@ -66,8 +66,8 @@ class VTKM_CONT_EXPORT Token final
   };
 
 public:
-  Token();
-  ~Token();
+  VTKM_CONT Token();
+  VTKM_CONT ~Token();
 
   /// Use this type to represent counts of how many tokens are holding a resource.
   using ReferenceCount = vtkm::IdComponent;
@@ -75,7 +75,7 @@ public:
   /// Detaches this `Token` from all resources to allow them to be used elsewhere
   /// or deleted.
   ///
-  void DetachFromAll();
+  VTKM_CONT void DetachFromAll();
 
   ///@{
   /// \brief Add an object to attach to the `Token`.
@@ -98,10 +98,10 @@ public:
   /// variable.
   ///
   template <typename T>
-  void Attach(T&& object,
-              vtkm::cont::Token::ReferenceCount* referenceCountPointer,
-              std::unique_lock<std::mutex>& lock,
-              std::condition_variable* conditionVariablePointer)
+  VTKM_CONT void Attach(T&& object,
+                        vtkm::cont::Token::ReferenceCount* referenceCountPointer,
+                        std::unique_lock<std::mutex>& lock,
+                        std::condition_variable* conditionVariablePointer)
   {
     this->Attach(std::unique_ptr<ObjectReference>(
                    new ObjectReferenceImpl<typename std::decay<T>::type>(std::forward<T>(object))),
@@ -111,21 +111,31 @@ public:
   }
 
   template <typename T>
-  void Attach(T&& object,
-              vtkm::cont::Token::ReferenceCount* referenceCountPoiner,
-              std::mutex* mutexPointer,
-              std::condition_variable* conditionVariablePointer)
+  VTKM_CONT void Attach(T&& object,
+                        vtkm::cont::Token::ReferenceCount* referenceCountPoiner,
+                        std::mutex* mutexPointer,
+                        std::condition_variable* conditionVariablePointer)
   {
     std::unique_lock<std::mutex> lock(*mutexPointer, std::defer_lock);
     this->Attach(std::forward<T>(object), referenceCountPoiner, lock, conditionVariablePointer);
   }
   ///@}
 
+  /// \brief Determine if this `Token` is already attached to an object.
+  ///
+  /// Given a reference counter pointer, such as would be passed to the `Attach` method,
+  /// returns true if this `Token` is already attached, `false` otherwise.
+  ///
+  VTKM_CONT bool IsAttached(vtkm::cont::Token::ReferenceCount* referenceCountPointer) const;
+
 private:
-  void Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectReference,
-              vtkm::cont::Token::ReferenceCount* referenceCountPointer,
-              std::unique_lock<std::mutex>& lock,
-              std::condition_variable* conditionVariablePointer);
+  VTKM_CONT void Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectReference,
+                        vtkm::cont::Token::ReferenceCount* referenceCountPointer,
+                        std::unique_lock<std::mutex>& lock,
+                        std::condition_variable* conditionVariablePointer);
+
+  VTKM_CONT bool IsAttached(std::unique_lock<std::mutex>& lock,
+                            vtkm::cont::Token::ReferenceCount* referenceCountPointer) const;
 };
 }
 } // namespace vtkm::cont

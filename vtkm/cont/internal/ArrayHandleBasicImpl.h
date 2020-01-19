@@ -186,14 +186,14 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   VTKM_CONT DeviceAdapterId GetDeviceAdapterId(const LockType& lock) const;
 
   /// Returns true if read operations can currently be performed.
-  VTKM_CONT bool CanRead(const LockType& lock) const;
+  VTKM_CONT bool CanRead(const LockType& lock, const vtkm::cont::Token& token) const;
   //// Returns true if write operations can currently be performed.
-  VTKM_CONT bool CanWrite(const LockType& lock) const;
+  VTKM_CONT bool CanWrite(const LockType& lock, const vtkm::cont::Token& token) const;
 
   //// Will block the current thread until a read can be performed.
-  VTKM_CONT void WaitToRead(LockType& lock) const;
+  VTKM_CONT void WaitToRead(LockType& lock, const vtkm::cont::Token& token) const;
   //// Will block the current thread until a write can be performed.
-  VTKM_CONT void WaitToWrite(LockType& lock) const;
+  VTKM_CONT void WaitToWrite(LockType& lock, const vtkm::cont::Token& token) const;
 
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
   /// function should keep the returned lock and let it go out of scope

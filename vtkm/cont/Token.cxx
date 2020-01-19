@@ -82,6 +82,11 @@ void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReferenc
                                std::condition_variable* conditionVariablePointer)
 {
   LockType localLock = this->Internals->GetLock();
+  if (this->IsAttached(localLock, referenceCountPointer))
+  {
+    // Already attached.
+    return;
+  }
   if (!lock.owns_lock())
   {
     lock.lock();
@@ -89,4 +94,24 @@ void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReferenc
   *referenceCountPointer += 1;
   this->Internals->GetHeldReferences(localLock)->emplace_back(
     std::move(objectRef), referenceCountPointer, lock.mutex(), conditionVariablePointer);
+}
+
+inline bool vtkm::cont::Token::IsAttached(
+  LockType& lock,
+  vtkm::cont::Token::ReferenceCount* referenceCountPointer) const
+{
+  for (auto&& heldReference : *this->Internals->GetHeldReferences(lock))
+  {
+    if (referenceCountPointer == heldReference.ReferenceCountPointer)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool vtkm::cont::Token::IsAttached(vtkm::cont::Token::ReferenceCount* referenceCountPointer) const
+{
+  LockType lock = this->Internals->GetLock();
+  return this->IsAttached(lock, referenceCountPointer);
 }

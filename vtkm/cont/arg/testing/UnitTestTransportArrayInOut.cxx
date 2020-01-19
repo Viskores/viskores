@@ -62,6 +62,7 @@ struct TryArrayInOutType
     kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE, token);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
+    token.DetachFromAll();
 
     typename ArrayHandleType::PortalConstControl portal = handle.GetPortalConstControl();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,

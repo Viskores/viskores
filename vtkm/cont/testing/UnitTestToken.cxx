@@ -115,13 +115,13 @@ void TestBasicAttachDetatch()
     std::cout << "  Recursively attach outer token" << std::endl;
     object1.Attach(outerToken);
 
-    CHECK_OBJECT(object1, 3, 4);
+    CHECK_OBJECT(object1, 2, 3);
     CHECK_OBJECT(object2, 2, 3);
     CHECK_OBJECT(object3, 2, 3);
 
     std::cout << "  Detach from inner token (through scoping)" << std::endl;
   }
-  CHECK_OBJECT(object1, 2, 3);
+  CHECK_OBJECT(object1, 1, 2);
   CHECK_OBJECT(object2, 1, 2);
   CHECK_OBJECT(object3, 1, 2);
 

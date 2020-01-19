@@ -60,6 +60,7 @@ struct TryArrayOutType
                      "ArrayOut transport did not allocate array correctly.");
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
+    token.DetachFromAll();
 
     CheckPortal(handle.GetPortalConstControl());
   }

@@ -41,7 +41,7 @@ struct TestExecutionObject : public vtkm::cont::ExecutionObjectBase
   vtkm::Int32 Number;
 
   template <typename Device>
-  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     ExecutionObject<Device> object;
     object.Number = this->Number;

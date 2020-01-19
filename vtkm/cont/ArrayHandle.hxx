@@ -185,7 +185,7 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 
     if (numberOfValues < originalNumberOfValues)
     {
-      this->WaitToWrite(lock);
+      this->WaitToWrite(lock, vtkm::cont::Token{});
       if (this->Internals->IsControlArrayValid(lock))
       {
         this->Internals->GetControlArray(lock)->Shrink(numberOfValues);
@@ -223,7 +223,7 @@ ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device, vtkm::cont::Token& t
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
-  this->WaitToRead(lock);
+  this->WaitToRead(lock, token);
 
   if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
@@ -255,7 +255,7 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
-  this->WaitToWrite(lock);
+  this->WaitToWrite(lock, token);
 
   // Invalidate any control arrays.
   // Should the control array resource be released? Probably not a good
@@ -291,7 +291,7 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token&
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
-  this->WaitToWrite(lock);
+  this->WaitToWrite(lock, token);
 
   if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
@@ -340,7 +340,7 @@ void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device
       // could change the ExecutionInterface, which would cause problems. In the future we should
       // support multiple devices, in which case we would not have to delete one execution array
       // to load another.
-      this->WaitToWrite(lock); // Make sure no one is reading device array
+      this->WaitToWrite(lock, vtkm::cont::Token{}); // Make sure no one is reading device array
       this->SyncControlArray(lock);
       // Need to change some state that does not change the logical state from
       // an external point of view.
@@ -358,7 +358,11 @@ void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
 {
   if (!this->Internals->IsControlArrayValid(lock))
   {
-    this->WaitToRead(lock);
+    // It may be the case that `SyncControlArray` is called from a method that has a `Token`.
+    // However, if we are here, that `Token` should not already be attached to this array.
+    // If it were, then there should be no reason to move data arround (unless the `Token`
+    // was used when preparing for multiple devices, which it should not be used like that).
+    this->WaitToRead(lock, vtkm::cont::Token{});
 
     // Need to change some state that does not change the logical state from
     // an external point of view.

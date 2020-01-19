@@ -395,7 +395,7 @@ public:
   void Allocate(vtkm::Id numberOfValues)
   {
     LockType lock = this->GetLock();
-    this->WaitToWrite(lock);
+    this->WaitToWrite(lock, vtkm::cont::Token{});
     this->ReleaseResourcesExecutionInternal(lock);
     this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
     this->Internals->SetControlArrayValid(lock, true);
@@ -417,7 +417,7 @@ public:
   VTKM_CONT void ReleaseResourcesExecution()
   {
     LockType lock = this->GetLock();
-    this->WaitToWrite(lock);
+    this->WaitToWrite(lock, vtkm::cont::Token{});
 
     // Save any data in the execution environment by making sure it is synced
     // with the control environment.
@@ -555,40 +555,46 @@ protected:
 
   /// Returns true if read operations can currently be performed.
   ///
-  VTKM_CONT bool CanRead(const LockType& lock) const
+  VTKM_CONT bool CanRead(const LockType& lock, const vtkm::cont::Token& token) const
   {
-    return (*this->Internals->GetWriteCount(lock) < 1);
+    return ((*this->Internals->GetWriteCount(lock) < 1) ||
+            (token.IsAttached(this->Internals->GetWriteCount(lock))));
   }
 
   //// Returns true if write operations can currently be performed.
   ///
-  VTKM_CONT bool CanWrite(const LockType& lock) const
+  VTKM_CONT bool CanWrite(const LockType& lock, const vtkm::cont::Token& token) const
   {
-    return (*this->Internals->GetWriteCount(lock) < 1) &&
-      (*this->Internals->GetReadCount(lock) < 1);
+    return (((*this->Internals->GetWriteCount(lock) < 1) ||
+             (token.IsAttached(this->Internals->GetWriteCount(lock)))) &&
+            ((*this->Internals->GetReadCount(lock) < 1) ||
+             ((*this->Internals->GetReadCount(lock) == 1) &&
+              token.IsAttached(this->Internals->GetReadCount(lock)))));
   }
 
   //// Will block the current thread until a read can be performed.
   ///
-  VTKM_CONT void WaitToRead(LockType& lock) const
+  VTKM_CONT void WaitToRead(LockType& lock, const vtkm::cont::Token& token) const
   {
     // Note that if you deadlocked here, that means that you are trying to do a read operation on
     // an array where an object is writing to it. This could happen on the same thread. For
     // example, if you call `GetPortalControl()` then no other operation that can result in reading
     // or writing data in the array can happen while the resulting portal is still in scope.
-    this->Internals->ConditionVariable.wait(lock, [&lock, this] { return this->CanRead(lock); });
+    this->Internals->ConditionVariable.wait(
+      lock, [&lock, &token, this] { return this->CanRead(lock, token); });
   }
 
   //// Will block the current thread until a write can be performed.
   ///
-  VTKM_CONT void WaitToWrite(LockType& lock) const
+  VTKM_CONT void WaitToWrite(LockType& lock, const vtkm::cont::Token& token) const
   {
     // Note that if you deadlocked here, that means that you are trying to do a write operation on
     // an array where an object is reading or writing to it. This could happen on the same thread.
     // For example, if you call `GetPortalControl()` then no other operation that can result in
     // reading or writing data in the array can happen while the resulting portal is still in
     // scope.
-    this->Internals->ConditionVariable.wait(lock, [&lock, this] { return this->CanWrite(lock); });
+    this->Internals->ConditionVariable.wait(
+      lock, [&lock, &token, this] { return this->CanWrite(lock, token); });
   }
 
   /// Gets this array handle ready to interact with the given device. If the
@@ -614,7 +620,7 @@ protected:
   {
     if (this->Internals->IsExecutionArrayValid(lock))
     {
-      this->WaitToWrite(lock);
+      this->WaitToWrite(lock, vtkm::cont::Token{});
       // Note that it is possible that while waiting someone else deleted the execution array.
       // That is why we check again.
     }
