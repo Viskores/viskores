@@ -204,8 +204,8 @@ public:
 
   ~ColorTable();
 
-  ColorTable& operator=(const ColorTable& p) = default;
-  ColorTable(const ColorTable& p) = default;
+  ColorTable& operator=(const ColorTable&) = default;
+  ColorTable(const ColorTable&) = default;
 
   const std::string& GetName() const;
   void SetName(const std::string& name);
