@@ -94,13 +94,15 @@ private:
   using ArrayPortalConst =
     typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  using CoordsPortalType =
-    decltype(vtkm::cont::ArrayHandleVirtualCoordinates{}.PrepareForInput(DeviceAdapter{}));
+  using CoordsPortalType = decltype(vtkm::cont::ArrayHandleVirtualCoordinates{}.PrepareForInput(
+    DeviceAdapter{},
+    std::declval<vtkm::cont::Token&>()));
 
   using CellSetP2CExecType =
     decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},
                                                          vtkm::TopologyElementTagCell{},
-                                                         vtkm::TopologyElementTagPoint{}));
+                                                         vtkm::TopologyElementTagPoint{},
+                                                         std::declval<vtkm::cont::Token&>()));
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -132,17 +134,19 @@ public:
                                    const vtkm::cont::ArrayHandle<vtkm::Id>& cellCount,
                                    const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
                                    const CellSetType& cellSet,
-                                   const vtkm::cont::CoordinateSystem& coords)
+                                   const vtkm::cont::CoordinateSystem& coords,
+                                   vtkm::cont::Token& token)
     : TopLevel(topLevelGrid)
-    , LeafDimensions(leafDimensions.PrepareForInput(DeviceAdapter{}))
-    , LeafStartIndex(leafStartIndex.PrepareForInput(DeviceAdapter{}))
-    , CellStartIndex(cellStartIndex.PrepareForInput(DeviceAdapter{}))
-    , CellCount(cellCount.PrepareForInput(DeviceAdapter{}))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter{}))
+    , LeafDimensions(leafDimensions.PrepareForInput(DeviceAdapter{}, token))
+    , LeafStartIndex(leafStartIndex.PrepareForInput(DeviceAdapter{}, token))
+    , CellStartIndex(cellStartIndex.PrepareForInput(DeviceAdapter{}, token))
+    , CellCount(cellCount.PrepareForInput(DeviceAdapter{}, token))
+    , CellIds(cellIds.PrepareForInput(DeviceAdapter{}, token))
     , CellSet(cellSet.PrepareForInput(DeviceAdapter{},
                                       vtkm::TopologyElementTagCell{},
-                                      vtkm::TopologyElementTagPoint{}))
-    , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}))
+                                      vtkm::TopologyElementTagPoint{},
+                                      token))
+    , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}, token))
   {
   }
 
@@ -254,8 +258,8 @@ public:
 
   void PrintSummary(std::ostream& out) const;
 
-  const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const override;
+  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token) const override;
 
 private:
   VTKM_CONT void Build() override;

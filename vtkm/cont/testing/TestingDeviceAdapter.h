@@ -318,8 +318,8 @@ public:
   struct AtomicKernel
   {
     VTKM_CONT
-    AtomicKernel(const vtkm::cont::AtomicArray<T>& array)
-      : AArray(array.PrepareForExecution(DeviceAdapterTag()))
+    AtomicKernel(const vtkm::cont::AtomicArray<T>& array, vtkm::cont::Token& token)
+      : AArray(array.PrepareForExecution(DeviceAdapterTag(), token))
     {
     }
 
@@ -338,8 +338,8 @@ public:
   struct AtomicCASKernel
   {
     VTKM_CONT
-    AtomicCASKernel(const vtkm::cont::AtomicArray<T>& array)
-      : AArray(array.PrepareForExecution(DeviceAdapterTag()))
+    AtomicCASKernel(const vtkm::cont::AtomicArray<T>& array, vtkm::cont::Token& token)
+      : AArray(array.PrepareForExecution(DeviceAdapterTag(), token))
     {
     }
 
@@ -378,9 +378,11 @@ public:
       vtkm::Id Value = 0;
     };
 
-    VirtualObjectTransferKernel(const Interface* vo, IdArrayHandle& result)
+    VirtualObjectTransferKernel(const Interface* vo,
+                                IdArrayHandle& result,
+                                vtkm::cont::Token& token)
       : Virtual(vo)
-      , Result(result.PrepareForInPlace(DeviceAdapterTag()))
+      , Result(result.PrepareForInPlace(DeviceAdapterTag(), token))
     {
     }
 
@@ -527,7 +529,11 @@ private:
     // Do an operation just so we know the values are placed in the execution
     // environment and they change. We are only calling on half the array
     // because we are about to shrink.
-    Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+                          ARRAY_SIZE);
+    }
 
     // Change size.
     handle.Shrink(ARRAY_SIZE);
@@ -557,9 +563,10 @@ private:
     try
     {
       std::cout << "Do array allocation that should fail." << std::endl;
+      vtkm::cont::Token token;
       vtkm::cont::ArrayHandle<vtkm::Vec4f_32, StorageTagBasic> bigArray;
       const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
-      bigArray.PrepareForOutput(bigSize, DeviceAdapterTag{});
+      bigArray.PrepareForOutput(bigSize, DeviceAdapterTag{}, token);
       // It does not seem reasonable to get here.  The previous call should fail.
       VTKM_TEST_FAIL("A ridiculously sized allocation succeeded.  Either there "
                      "was a failure that was not reported but should have been "
@@ -620,14 +627,22 @@ private:
     target.Value = 5;
 
     Transfer transfer(&target);
-    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
+    vtkm::cont::Token transferToken;
+    const BaseType* base =
+      static_cast<const BaseType*>(transfer.PrepareForExecution(false, transferToken));
 
-    Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(VirtualObjectTransferKernel(base, result, token), 1);
+    }
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
-    target.Value = 10;
-    base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
-    Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
+    {
+      vtkm::cont::Token token;
+      target.Value = 10;
+      base = static_cast<const BaseType*>(transfer.PrepareForExecution(true, token));
+      Algorithm::Schedule(VirtualObjectTransferKernel(base, result, token), 1);
+    }
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 
     transfer.ReleaseResources();
@@ -643,10 +658,17 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(1, DeviceAdapterTag{})), 1);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(1, DeviceAdapterTag{}, token)),
+                            1);
+      }
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), 1);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)), 1);
+      }
 
       std::cout << "Checking results." << std::endl;
       for (vtkm::Id index = 0; index < 1; index++)
@@ -665,11 +687,19 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Id> handle;
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag{})),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(handle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag{}, token)),
+          ARRAY_SIZE);
+      }
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+                            ARRAY_SIZE);
+      }
 
       std::cout << "Checking results." << std::endl;
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -691,11 +721,18 @@ private:
       //size is selected to be larger than the CUDA backend can launch in a
       //single invocation when compiled for SM_2 support
       const vtkm::Id size = 8400000;
-      Algorithm::Schedule(ClearArrayKernel(handle.PrepareForOutput(size, DeviceAdapterTag{})),
-                          size);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(handle.PrepareForOutput(size, DeviceAdapterTag{}, token)), size);
+      }
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{})), size);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+                            size);
+      }
 
       std::cout << "Checking results." << std::endl;
       //Rather than testing for correctness every value of a large array,
@@ -721,14 +758,21 @@ private:
       vtkm::Id3 maxRange(DIM_SIZE);
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(
-        ClearArrayKernel(
-          handle.PrepareForOutput(DIM_SIZE * DIM_SIZE * DIM_SIZE, DeviceAdapterTag{}), maxRange),
-        maxRange);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(
+            handle.PrepareForOutput(DIM_SIZE * DIM_SIZE * DIM_SIZE, DeviceAdapterTag{}, token),
+            maxRange),
+          maxRange);
+      }
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}), maxRange),
-                          maxRange);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token), maxRange), maxRange);
+      }
 
       std::cout << "Checking results." << std::endl;
       const vtkm::Id maxId = DIM_SIZE * DIM_SIZE * DIM_SIZE;
@@ -751,17 +795,24 @@ private:
 
       // Initialize tracker with 'false' values
       std::cout << "Allocating and initializing memory" << std::endl;
-      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
-                            tracker.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag()), false),
-                          ARRAY_SIZE);
-      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
-                            valid.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag()), false),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          GenericClearArrayKernel<BoolPortal>(
+            tracker.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token), false),
+          ARRAY_SIZE);
+        Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
+                              valid.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token), false),
+                            ARRAY_SIZE);
+      }
 
       std::cout << "Running Overlap kernel." << std::endl;
-      Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag()),
-                                        valid.PrepareForInPlace(DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag(), token),
+                                          valid.PrepareForInPlace(DeviceAdapterTag(), token)),
+                            ARRAY_SIZE);
+      }
 
       std::cout << "Checking results." << std::endl;
 
@@ -788,18 +839,26 @@ private:
 
       // Initialize tracker with 'false' values
       std::cout << "Allocating and initializing memory" << std::endl;
-      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
-                            tracker.PrepareForOutput(numElems, DeviceAdapterTag()), dims, false),
-                          numElems);
-      Algorithm::Schedule(GenericClearArrayKernel<BoolPortal>(
-                            valid.PrepareForOutput(numElems, DeviceAdapterTag()), dims, false),
-                          numElems);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          GenericClearArrayKernel<BoolPortal>(
+            tracker.PrepareForOutput(numElems, DeviceAdapterTag(), token), dims, false),
+          numElems);
+        Algorithm::Schedule(
+          GenericClearArrayKernel<BoolPortal>(
+            valid.PrepareForOutput(numElems, DeviceAdapterTag(), token), dims, false),
+          numElems);
+      }
 
       std::cout << "Running Overlap kernel." << std::endl;
-      Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag()),
-                                        valid.PrepareForInPlace(DeviceAdapterTag()),
-                                        dims),
-                          dims);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(OverlapKernel(tracker.PrepareForInPlace(DeviceAdapterTag(), token),
+                                          valid.PrepareForInPlace(DeviceAdapterTag(), token),
+                                          dims),
+                            dims);
+      }
 
       std::cout << "Checking results." << std::endl;
 
@@ -823,10 +882,15 @@ private:
 
     std::cout << "  Standard call" << std::endl;
     //construct the index array
-    Algorithm::Schedule(
-      OffsetPlusIndexKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-    Algorithm::Schedule(
-      MarkOddNumbersKernel(stencil.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(
+        OffsetPlusIndexKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
+      Algorithm::Schedule(
+        MarkOddNumbersKernel(stencil.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
+    }
 
     Algorithm::CopyIf(array, stencil, result);
     VTKM_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues() / 2,
@@ -1230,8 +1294,12 @@ private:
 
     //construct the index array
     IdArrayHandle array;
-    Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                        ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(
+        ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
+    }
 
     //the output of reduce and scan inclusive should be the same
     std::cout << "  Reduce with initial value of 0." << std::endl;
@@ -1329,12 +1397,14 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
     {
+      vtkm::cont::Token token;
       IdArrayHandle keys, values;
-      Algorithm::Schedule(ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      Algorithm::Schedule(
+        ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)), ARRAY_SIZE);
 
-      Algorithm::Schedule(ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      Algorithm::Schedule(
+        ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
 
       vtkm::cont::ArrayHandleZip<IdArrayHandle, IdArrayHandle> zipped(keys, values);
 
@@ -1767,8 +1837,12 @@ private:
       std::cout << "  size " << ARRAY_SIZE << std::endl;
       //construct the index array
       IdArrayHandle array;
-      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+          ARRAY_SIZE);
+      }
 
       //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
       //let's validate that
@@ -1856,11 +1930,15 @@ private:
 
     //construct the index array
     IdArrayHandle array;
-    Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                        ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(
+        ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
+      Algorithm::Schedule(
+        AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)), ARRAY_SIZE);
+    }
 
-    Algorithm::Schedule(AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                        ARRAY_SIZE);
     //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
     //let's validate that
     IdArrayHandle result;
@@ -1897,8 +1975,12 @@ private:
       std::cout << "  size " << ARRAY_SIZE << std::endl;
       //construct the index array
       IdArrayHandle array;
-      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+          ARRAY_SIZE);
+      }
 
       // we know have an array whose sum = (OFFSET * ARRAY_SIZE),
       // let's validate that
@@ -1996,8 +2078,12 @@ private:
 
       //construct the index array
       IdArrayHandle array;
-      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
-                          ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+          ARRAY_SIZE);
+      }
 
       // we now have an array whose sum = (OFFSET * ARRAY_SIZE),
       // let's validate that
@@ -2128,9 +2214,10 @@ private:
     int nkernels = 0;
     try
     {
+      vtkm::cont::Token token;
+
       IdArrayHandle idArray;
-      idArray.Allocate(ARRAY_SIZE);
-      auto portal = idArray.PrepareForInPlace(DeviceAdapterTag{});
+      auto portal = idArray.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag{}, token);
 
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
       for (; nkernels < 100; ++nkernels)
@@ -2447,7 +2534,10 @@ private:
         vtkm::cont::make_ArrayHandle(singleElement);
 
       vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
-      Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic, token), SHORT_ARRAY_SIZE);
+      }
       vtkm::Int32 expected = vtkm::Int32(atomicCount);
       vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
       VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
@@ -2461,7 +2551,10 @@ private:
         vtkm::cont::make_ArrayHandle(singleElement);
 
       vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
-      Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic, token), SHORT_ARRAY_SIZE);
+      }
       vtkm::Int64 expected = vtkm::Int64(atomicCount);
       vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);
       VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
@@ -2475,7 +2568,10 @@ private:
         vtkm::cont::make_ArrayHandle(singleElement);
 
       vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
-      Algorithm::Schedule(AtomicCASKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AtomicCASKernel<vtkm::Int32>(atomic, token), SHORT_ARRAY_SIZE);
+      }
       vtkm::Int32 expected = vtkm::Int32(atomicCount);
       vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
       VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int32");
@@ -2489,7 +2585,10 @@ private:
         vtkm::cont::make_ArrayHandle(singleElement);
 
       vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
-      Algorithm::Schedule(AtomicCASKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(AtomicCASKernel<vtkm::Int64>(atomic, token), SHORT_ARRAY_SIZE);
+      }
       vtkm::Int64 expected = vtkm::Int64(atomicCount);
       vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);
       VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int64");

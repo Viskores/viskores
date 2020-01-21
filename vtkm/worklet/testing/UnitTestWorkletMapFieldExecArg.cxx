@@ -20,7 +20,7 @@
 struct SimpleExecObject : vtkm::cont::ExecutionObjectBase
 {
   template <typename Device>
-  Device PrepareForExecution(Device) const
+  Device PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     return Device();
   }

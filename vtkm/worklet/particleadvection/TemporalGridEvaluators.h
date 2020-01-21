@@ -37,9 +37,10 @@ public:
   ExecutionTemporalGridEvaluator(const GridEvaluator& evaluatorOne,
                                  const vtkm::FloatDefault timeOne,
                                  const GridEvaluator& evaluatorTwo,
-                                 const vtkm::FloatDefault timeTwo)
-    : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter()))
-    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter()))
+                                 const vtkm::FloatDefault timeTwo,
+                                 vtkm::cont::Token& token)
+    : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter(), token))
+    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter(), token))
     , TimeOne(timeOne)
     , TimeTwo(timeTwo)
     , TimeDiff(timeTwo - timeOne)
@@ -144,10 +145,11 @@ public:
 
   template <typename DeviceAdapter>
   VTKM_CONT ExecutionTemporalGridEvaluator<DeviceAdapter, FieldArrayType> PrepareForExecution(
-    DeviceAdapter) const
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
     return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldArrayType>(
-      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo);
+      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, token);
   }
 
 private:

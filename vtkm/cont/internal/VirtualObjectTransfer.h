@@ -14,6 +14,7 @@
 
 #include <vtkm/VirtualObjectBase.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Token.h>
 
 #include <array>
 #include <memory>
@@ -45,7 +46,8 @@ struct VirtualObjectTransfer
   /// PrepareForExecution). If the \c updateData flag is false and the object was already
   /// transferred previously, the previously created object is returned.
   ///
-  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool updateData);
+  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool updateData,
+                                                          vtkm::cont::Token& token);
 
   /// \brief Frees up any resources in the execution environment.
   ///
@@ -61,7 +63,9 @@ class VTKM_CONT_EXPORT TransferInterface
 public:
   VTKM_CONT virtual ~TransferInterface();
 
-  VTKM_CONT virtual const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::Id) = 0;
+  VTKM_CONT virtual const vtkm::VirtualObjectBase* PrepareForExecution(
+    vtkm::Id hostModifiedCount,
+    vtkm::cont::Token& token) = 0;
   VTKM_CONT virtual void ReleaseResources() = 0;
 };
 
@@ -75,10 +79,12 @@ public:
   {
   }
 
-  VTKM_CONT const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::Id hostModifiedCount) override
+  VTKM_CONT const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::Id hostModifiedCount,
+                                                               vtkm::cont::Token& token) override
   {
     bool updateData = (this->LastModifiedCount != hostModifiedCount);
-    const vtkm::VirtualObjectBase* executionObject = this->Transfer.PrepareForExecution(updateData);
+    const vtkm::VirtualObjectBase* executionObject =
+      this->Transfer.PrepareForExecution(updateData, token);
     this->LastModifiedCount = hostModifiedCount;
     return executionObject;
   }
@@ -138,12 +144,13 @@ struct VTKM_CONT_EXPORT TransferState
     }
   }
 
-  const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
+  const vtkm::VirtualObjectBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                                     vtkm::cont::Token& token) const
   {
     //make sure the device is up to date
     auto index = static_cast<std::size_t>(deviceId.GetValue());
     vtkm::Id count = this->HostPointer->GetModifiedCount();
-    return this->DeviceTransferState[index]->PrepareForExecution(count);
+    return this->DeviceTransferState[index]->PrepareForExecution(count, token);
   }
 
   vtkm::VirtualObjectBase* HostPtr() const { return this->HostPointer; }

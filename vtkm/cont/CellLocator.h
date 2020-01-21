@@ -56,7 +56,16 @@ public:
   }
 
   VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const = 0;
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const = 0;
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(device, token);
+  }
 
 protected:
   void SetModified() { this->Modified = true; }

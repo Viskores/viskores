@@ -118,20 +118,25 @@ public:
     const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsSixIn,
     const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsEighteenIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsSixIn,
-    const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn)
+    const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn,
+    vtkm::cont::Token& token)
     : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
     , GetMax(getmax)
   {
-    SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
-    EdgeBoundaryDetectionMasksPortal =
-      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
-    CubeVertexPermutationsPortal = CubeVertexPermutationsIn.PrepareForInput(DeviceAdapter());
-    LinkVertexConnectionsSixPortal = LinkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter());
-    LinkVertexConnectionsEighteenPortal =
-      LinkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
-    InCubeConnectionsSixPortal = InCubeConnectionsSixIn.PrepareForInput(DeviceAdapter());
-    InCubeConnectionsEighteenPortal = InCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
+    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
+    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeBoundaryDetectionMasksPortal =
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
+    this->CubeVertexPermutationsPortal =
+      CubeVertexPermutationsIn.PrepareForInput(DeviceAdapter(), token);
+    this->LinkVertexConnectionsSixPortal =
+      LinkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+    this->LinkVertexConnectionsEighteenPortal =
+      LinkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
+    this->InCubeConnectionsSixPortal =
+      InCubeConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+    this->InCubeConnectionsEighteenPortal =
+      InCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC

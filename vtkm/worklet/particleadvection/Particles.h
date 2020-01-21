@@ -13,6 +13,9 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/particleadvection/IntegratorStatus.h>
@@ -34,9 +37,11 @@ public:
   {
   }
 
-  ParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Particle> particleArray, vtkm::Id maxSteps)
+  ParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Particle> particleArray,
+                          vtkm::Id maxSteps,
+                          vtkm::cont::Token& token)
   {
-    Particles = particleArray.PrepareForInPlace(Device());
+    Particles = particleArray.PrepareForInPlace(Device(), token);
     MaxSteps = maxSteps;
   }
 
@@ -108,10 +113,11 @@ class Particles : public vtkm::cont::ExecutionObjectBase
 public:
   template <typename Device>
   VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<Device> PrepareForExecution(
-    Device) const
+    Device,
+    vtkm::cont::Token& token) const
   {
-    return vtkm::worklet::particleadvection::ParticleExecutionObject<Device>(this->ParticleArray,
-                                                                             this->MaxSteps);
+    return vtkm::worklet::particleadvection::ParticleExecutionObject<Device>(
+      this->ParticleArray, this->MaxSteps, token);
   }
 
   VTKM_CONT
@@ -147,14 +153,15 @@ public:
                                         vtkm::cont::ArrayHandle<vtkm::Vec3f> historyArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
                                         vtkm::cont::ArrayHandle<vtkm::Id> stepCountArray,
-                                        vtkm::Id maxSteps)
-    : ParticleExecutionObject<Device>(pArray, maxSteps)
+                                        vtkm::Id maxSteps,
+                                        vtkm::cont::Token& token)
+    : ParticleExecutionObject<Device>(pArray, maxSteps, token)
     , Length(maxSteps + 1)
   {
     vtkm::Id numPos = pArray.GetNumberOfValues();
-    History = historyArray.PrepareForOutput(numPos * Length, Device());
-    ValidPoint = validPointArray.PrepareForInPlace(Device());
-    StepCount = stepCountArray.PrepareForInPlace(Device());
+    History = historyArray.PrepareForOutput(numPos * Length, Device(), token);
+    ValidPoint = validPointArray.PrepareForInPlace(Device(), token);
+    StepCount = stepCountArray.PrepareForInPlace(Device(), token);
   }
 
   VTKM_EXEC
@@ -212,14 +219,15 @@ public:
 
   template <typename Device>
   VTKM_CONT vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device>
-    PrepareForExecution(Device) const
+  PrepareForExecution(Device, vtkm::cont::Token& token) const
   {
     return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<Device>(
       this->ParticleArray,
       this->HistoryArray,
       this->ValidPointArray,
       this->StepCountArray,
-      this->MaxSteps);
+      this->MaxSteps,
+      token);
   }
   VTKM_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Particle>& pArray, const vtkm::Id& maxSteps)

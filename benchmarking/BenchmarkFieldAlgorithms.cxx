@@ -814,8 +814,9 @@ void BenchImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto handle = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device));
+  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device, token));
   EvalWorklet eval(function);
 
   vtkm::cont::Timer timer{ device };
@@ -847,8 +848,9 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto sphere = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  EvalWorklet eval(sphere.PrepareForExecution(device));
+  EvalWorklet eval(sphere.PrepareForExecution(device, token));
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -879,10 +881,11 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto h1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto h2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device));
-  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device));
+  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device, token));
+  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device, token));
   EvalWorklet eval(f1, f2);
 
   vtkm::cont::Timer timer{ device };
@@ -914,9 +917,10 @@ void Bench2VirtualImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto s1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto s2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  EvalWorklet eval(s1.PrepareForExecution(device), s2.PrepareForExecution(device));
+  EvalWorklet eval(s1.PrepareForExecution(device, token), s2.PrepareForExecution(device, token));
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };

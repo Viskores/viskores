@@ -59,15 +59,16 @@ VTKM_CONT CheckTransformFunctor<
   typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
 make_CheckTransformFunctor(const OriginalArrayHandleType& originalArray,
                            const TransformedArrayHandleType& transformedArray,
-                           Device)
+                           Device,
+                           vtkm::cont::Token& token)
 {
   using OriginalPortalType =
     typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst;
   using TransformedPortalType =
     typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst;
   CheckTransformFunctor<OriginalPortalType, TransformedPortalType> functor;
-  functor.OriginalPortal = originalArray.PrepareForInput(Device());
-  functor.TransformedPortal = transformedArray.PrepareForInput(Device());
+  functor.OriginalPortal = originalArray.PrepareForInput(Device(), token);
+  functor.TransformedPortal = transformedArray.PrepareForInput(Device(), token);
   return functor;
 }
 
@@ -117,16 +118,20 @@ struct TransformTests
     MySquare functor;
 
     std::cout << "Test a transform handle with a counting handle as the values" << std::endl;
-    vtkm::cont::ArrayHandleCounting<InputValueType> counting = vtkm::cont::make_ArrayHandleCounting(
-      InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
-    CountingTransformHandle countingTransformed =
-      vtkm::cont::make_ArrayHandleTransform(counting, functor);
+    {
+      vtkm::cont::Token token;
+      vtkm::cont::ArrayHandleCounting<InputValueType> counting =
+        vtkm::cont::make_ArrayHandleCounting(
+          InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
+      CountingTransformHandle countingTransformed =
+        vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
-    CheckControlPortals(counting, countingTransformed);
+      CheckControlPortals(counting, countingTransformed);
 
-    std::cout << "  Verify that the execution portal works" << std::endl;
-    Algorithm::Schedule(make_CheckTransformFunctor(counting, countingTransformed, Device()),
-                        ARRAY_SIZE);
+      std::cout << "  Verify that the execution portal works" << std::endl;
+      Algorithm::Schedule(
+        make_CheckTransformFunctor(counting, countingTransformed, Device(), token), ARRAY_SIZE);
+    }
 
     std::cout << "Test a transform handle with a normal handle as the values" << std::endl;
     //we are going to connect the two handles up, and than fill
@@ -136,27 +141,38 @@ struct TransformTests
 
     using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::PortalControl;
     input.Allocate(ARRAY_SIZE);
-    Portal portal = input.GetPortalControl();
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
-      portal.Set(index, TestValue(index, InputValueType()));
+      Portal portal = input.GetPortalControl();
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, TestValue(index, InputValueType()));
+      }
     }
 
     CheckControlPortals(input, thandle);
 
     std::cout << "  Verify that the execution portal works" << std::endl;
-    Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device()), ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device(), token), ARRAY_SIZE);
+    }
 
     std::cout << "Modify array handle values to ensure transform gets updated" << std::endl;
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
-      portal.Set(index, TestValue(index * index, InputValueType()));
+      Portal portal = input.GetPortalControl();
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, TestValue(index * index, InputValueType()));
+      }
     }
 
     CheckControlPortals(input, thandle);
 
     std::cout << "  Verify that the execution portal works" << std::endl;
-    Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device()), ARRAY_SIZE);
+    {
+      vtkm::cont::Token token;
+      Algorithm::Schedule(make_CheckTransformFunctor(input, thandle, Device(), token), ARRAY_SIZE);
+    }
   }
 };
 

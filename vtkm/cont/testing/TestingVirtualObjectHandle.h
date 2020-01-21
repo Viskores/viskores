@@ -111,7 +111,9 @@ private:
 
       for (int n = 0; n < 2; ++n)
       {
-        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        vtkm::cont::Token token;
+        virtual_object_detail::TransformerFunctor tfnctr(
+          this->Handle->PrepareForExecution(device, token));
         ArrayTransform transformed(*this->Input, tfnctr);
 
         FloatArrayHandle output;
@@ -119,7 +121,7 @@ private:
         auto portal = output.GetPortalConstControl();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i * i), "\tIncorrect result");
+          VTKM_TEST_ASSERT(test_equal(portal.Get(i), i * i), "\tIncorrect result");
         }
         std::cout << "\tSuccess." << std::endl;
 
@@ -158,7 +160,9 @@ private:
       this->Mul->SetMultiplicand(2);
       for (int n = 0; n < 2; ++n)
       {
-        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        vtkm::cont::Token token;
+        virtual_object_detail::TransformerFunctor tfnctr(
+          this->Handle->PrepareForExecution(device, token));
         ArrayTransform transformed(*this->Input, tfnctr);
 
         FloatArrayHandle output;
@@ -166,7 +170,7 @@ private:
         auto portal = output.GetPortalConstControl();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i) * this->Mul->GetMultiplicand(),
+          VTKM_TEST_ASSERT(test_equal(portal.Get(i), i * this->Mul->GetMultiplicand()),
                            "\tIncorrect result");
         }
         std::cout << "\tSuccess." << std::endl;

@@ -13,6 +13,8 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VirtualObjectBase.h>
 
+#include <vtkm/cont/Token.h>
+
 namespace vtkm
 {
 namespace cont
@@ -28,7 +30,8 @@ struct VirtualObjectTransferShareWithControl
   {
   }
 
-  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool vtkmNotUsed(updateData))
+  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool vtkmNotUsed(updateData),
+                                                          vtkm::cont::Token&)
   {
     return this->VirtualObject;
   }

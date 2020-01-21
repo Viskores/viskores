@@ -26,7 +26,8 @@ public:
   VTKM_CONT ~CellLocatorRectilinearGrid() override;
 
   VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const override;
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const override;
 
 protected:
   VTKM_CONT void Build() override;

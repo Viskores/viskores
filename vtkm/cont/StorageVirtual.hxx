@@ -143,7 +143,8 @@ struct PortalWrapperToDevice
                          Handle&& handle,
                          vtkm::cont::internal::TransferInfoArray& payload) const
   {
-    auto portal = handle.PrepareForInput(device);
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInput(device, token);
     using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
     vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
     return transfer(device, payload, portal);
@@ -158,14 +159,16 @@ struct PortalWrapperToDevice
     using ACCESS_MODE = vtkm::cont::internal::detail::StorageVirtual::OutputMode;
     if (mode == ACCESS_MODE::WRITE)
     {
-      auto portal = handle.PrepareForOutput(numberOfValues, device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForOutput(numberOfValues, device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);
     }
     else
     {
-      auto portal = handle.PrepareForInPlace(device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForInPlace(device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);

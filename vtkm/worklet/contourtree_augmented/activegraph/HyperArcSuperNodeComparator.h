@@ -134,11 +134,12 @@ public:
 
   template <typename DeviceAdapter>
   VTKM_CONT HyperArcSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device) const
+    DeviceAdapter device,
+    vtkm::cont::Token& token) const
   {
     return HyperArcSuperNodeComparatorImpl<DeviceAdapter>(
-      this->Hyperparents.PrepareForInput(device),
-      this->SuperID.PrepareForInput(device),
+      this->Hyperparents.PrepareForInput(device, token),
+      this->SuperID.PrepareForInput(device, token),
       this->IsJoinTree);
   }
 

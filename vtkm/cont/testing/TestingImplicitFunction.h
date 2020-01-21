@@ -65,7 +65,8 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
 {
   using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction>;
 
-  EvaluateImplicitFunction eval(function.PrepareForExecution(device));
+  vtkm::cont::Token token;
+  EvaluateImplicitFunction eval(function.PrepareForExecution(device, token));
   EvalDispatcher dispatcher(eval);
   dispatcher.SetDevice(DeviceAdapter());
   dispatcher.Invoke(points, values, gradients);

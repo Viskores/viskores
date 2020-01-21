@@ -78,10 +78,12 @@ public:
   IdPortalType SupernodesPortal;
 
   // constructor
-  SuperNodeBranchComparatorImpl(const IdArrayType& WhichBranch, const IdArrayType& supernodes)
+  SuperNodeBranchComparatorImpl(const IdArrayType& whichBranch,
+                                const IdArrayType& supernodes,
+                                vtkm::cont::Token& token)
   { // constructor
-    WhichBranchPortal = WhichBranch.PrepareForInput(DeviceAdapter());
-    SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
+    this->WhichBranchPortal = whichBranch.PrepareForInput(DeviceAdapter(), token);
+    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -89,8 +91,8 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // retrieve which branch the supernodes are on
-    vtkm::Id branchI = MaskedIndex(WhichBranchPortal.Get(i));
-    vtkm::Id branchJ = MaskedIndex(WhichBranchPortal.Get(j));
+    vtkm::Id branchI = MaskedIndex(this->WhichBranchPortal.Get(i));
+    vtkm::Id branchJ = MaskedIndex(this->WhichBranchPortal.Get(j));
 
     // and test them
     if (branchI < branchJ)
@@ -123,9 +125,11 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT SuperNodeBranchComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT SuperNodeBranchComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token)
   {
-    return SuperNodeBranchComparatorImpl<DeviceAdapter>(this->WhichBranch, this->Supernodes);
+    return SuperNodeBranchComparatorImpl<DeviceAdapter>(this->WhichBranch, this->Supernodes, token);
   }
 
 private:

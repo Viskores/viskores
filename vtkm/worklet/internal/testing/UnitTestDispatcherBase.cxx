@@ -67,7 +67,7 @@ struct TestExecObjectType : vtkm::cont::ExecutionObjectBase
     f(*this, std::forward<Args>(args)...);
   }
   template <typename Device>
-  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     ExecutionObject<Device> object;
     object.Value = this->Value;

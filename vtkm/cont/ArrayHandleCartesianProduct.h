@@ -337,11 +337,11 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
-                                this->SecondArray.PrepareForInput(Device()),
-                                this->ThirdArray.PrepareForInput(Device()));
+    return PortalConstExecution(this->FirstArray.PrepareForInput(Device(), token),
+                                this->SecondArray.PrepareForInput(Device(), token),
+                                this->ThirdArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT

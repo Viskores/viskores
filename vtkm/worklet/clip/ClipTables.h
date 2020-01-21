@@ -2530,12 +2530,13 @@ public:
   }
 
   template <typename DeviceAdapter>
-  DevicePortal<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  DevicePortal<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     DevicePortal<DeviceAdapter> portal;
-    portal.ClipTablesDataPortal = this->ClipTablesDataArray.PrepareForInput(DeviceAdapter());
-    portal.ClipTablesIndicesPortal = this->ClipTablesIndicesArray.PrepareForInput(DeviceAdapter());
-    portal.CellEdgesPortal = this->CellEdgesArray.PrepareForInput(DeviceAdapter());
+    portal.ClipTablesDataPortal = this->ClipTablesDataArray.PrepareForInput(DeviceAdapter(), token);
+    portal.ClipTablesIndicesPortal =
+      this->ClipTablesIndicesArray.PrepareForInput(DeviceAdapter(), token);
+    portal.CellEdgesPortal = this->CellEdgesArray.PrepareForInput(DeviceAdapter(), token);
     return portal;
   }
 

@@ -141,6 +141,7 @@ private:
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
                        "Uninitialized array does not give portal with zero values.");
+      vtkm::cont::Token token;
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.Shrink(0);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
@@ -148,11 +149,11 @@ private:
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.ReleaseResources();
       arrayHandle = vtkm::cont::make_ArrayHandle(std::vector<T>());
-      arrayHandle.PrepareForInput(DeviceAdapterTag());
+      arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+      arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+      arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
     }
   };
 
@@ -177,9 +178,11 @@ private:
 
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
           executionPortal;
-        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+        token.DetachFromAll();
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -189,9 +192,11 @@ private:
 
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
           executionPortal;
-        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+        token.DetachFromAll();
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -202,9 +207,10 @@ private:
       std::cout << "Check out output." << std::endl;
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
           executionPortal;
-        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
 
         //we can't verify output contents as those aren't fetched, we
         //can just make sure the allocation didn't throw an exception
@@ -217,7 +223,9 @@ private:
         {
           //you should not be able to allocate a size larger than the
           //user provided and get the results
-          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
+          vtkm::cont::Token token;
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
+          token.DetachFromAll();
           arrayHandle.GetPortalControl();
         }
         catch (vtkm::cont::Error&)
@@ -256,9 +264,11 @@ private:
 
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
           executionPortal;
-        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+        token.DetachFromAll();
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -268,9 +278,11 @@ private:
 
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
           executionPortal;
-        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+        token.DetachFromAll();
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -281,9 +293,11 @@ private:
       std::cout << "Check out output." << std::endl;
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
+        vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
           executionPortal;
-        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
+        token.DetachFromAll();
 
         //we can't verify output contents as those aren't fetched, we
         //can just make sure the allocation didn't throw an exception
@@ -296,7 +310,9 @@ private:
         {
           //you should not be able to allocate a size larger than the
           //user provided and get the results
-          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
+          vtkm::cont::Token token;
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
+          token.DetachFromAll();
           arrayHandle.GetPortalControl();
         }
         catch (vtkm::cont::Error&)
@@ -320,10 +336,11 @@ private:
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
                        "ArrayHandle has wrong number of entries.");
       {
+        vtkm::cont::Token token;
         using ExecutionPortalType =
           typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
         ExecutionPortalType executionPortal =
-          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
 
         //we drop down to manually scheduling so that we don't need
         //need to bring in array handle counting
@@ -349,9 +366,11 @@ private:
 
       std::cout << "Try in place operation." << std::endl;
       {
+        vtkm::cont::Token token;
         using ExecutionPortalType =
           typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
-        ExecutionPortalType executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+        ExecutionPortalType executionPortal =
+          arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
 
         //in place can't be done through the dispatcher
         //instead we have to drop down to manually scheduling
@@ -396,7 +415,8 @@ private:
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 
-        a1.PrepareForInPlace(DeviceAdapterTag());
+        vtkm::cont::Token token;
+        a1.PrepareForInPlace(DeviceAdapterTag(), token);
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
       }

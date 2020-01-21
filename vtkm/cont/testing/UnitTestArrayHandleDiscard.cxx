@@ -75,18 +75,20 @@ struct Test
 
     for (vtkm::Id i = 0; i < NUM_KEYS; ++i)
     {
-      VTKM_TEST_ASSERT(outputs.Get(i) == refData[i], "Unexpected output value after ReduceByKey.");
+      VTKM_TEST_ASSERT(test_equal(outputs.Get(i), refData[i]),
+                       "Unexpected output value after ReduceByKey.");
     }
   }
 
   void TestPrepareExceptions()
   {
+    vtkm::cont::Token token;
     DiscardHandle handle;
     handle.Allocate(50);
 
     try
     {
-      handle.PrepareForInput(DeviceTag());
+      handle.PrepareForInput(DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
@@ -95,7 +97,7 @@ struct Test
 
     try
     {
-      handle.PrepareForInPlace(DeviceTag());
+      handle.PrepareForInPlace(DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {
@@ -103,7 +105,7 @@ struct Test
     }
 
     // Shouldn't fail:
-    handle.PrepareForOutput(ARRAY_SIZE, DeviceTag());
+    handle.PrepareForOutput(ARRAY_SIZE, DeviceTag(), token);
   }
 
   void operator()()

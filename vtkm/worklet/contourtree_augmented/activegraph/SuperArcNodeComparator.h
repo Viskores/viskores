@@ -78,10 +78,12 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  SuperArcNodeComparatorImpl(const IdArrayType& superparents, bool joinSweep)
+  SuperArcNodeComparatorImpl(const IdArrayType& superparents,
+                             bool joinSweep,
+                             vtkm::cont::Token& token)
     : IsJoinSweep(joinSweep)
   { // constructor
-    SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter());
+    SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -94,16 +96,16 @@ public:
 
     // now test on that
     if (superarcI < superarcJ)
-      return false ^ IsJoinSweep;
+      return false ^ this->IsJoinSweep;
     if (superarcJ < superarcI)
-      return true ^ IsJoinSweep;
+      return true ^ this->IsJoinSweep;
 
     // if that fails, we share the hyperarc, and sort on supernode index
     // since that's guaranteed to be pre-sorted
     if (i < j)
-      return false ^ IsJoinSweep;
+      return false ^ this->IsJoinSweep;
     if (j < i)
-      return true ^ IsJoinSweep;
+      return true ^ this->IsJoinSweep;
 
     // fallback just in case
     return false;
@@ -127,9 +129,11 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
-    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep);
+    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep, token);
   }
 
 private:

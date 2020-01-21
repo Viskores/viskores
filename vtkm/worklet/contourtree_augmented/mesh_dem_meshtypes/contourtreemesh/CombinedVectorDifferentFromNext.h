@@ -94,17 +94,18 @@ public:
 
   VTKM_CONT
   CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
-                                  const IdArrayType& sortOrder)
+                                  const IdArrayType& sortOrder,
+                                  vtkm::cont::Token& token)
     : DataArray(inDataArray)
   {
-    OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
+    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id i) const
   {
-    vtkm::Id currGlobalIdx = (*DataArray)[OverallSortOrderPortal.Get(i)];
-    vtkm::Id nextGlobalIdx = (*DataArray)[OverallSortOrderPortal.Get(i + 1)];
+    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
+    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
     return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
   }
 

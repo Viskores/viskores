@@ -1112,9 +1112,11 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     vtkm::Id numBits = bits.GetNumberOfBits();
-    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{});
-    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTagCuda{});
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{}, token);
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTagCuda{}, token);
 
     // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
     numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
@@ -1135,8 +1137,9 @@ public:
       output.Shrink(inSize);
       return;
     }
-    CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-               output.PrepareForOutput(inSize, DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    CopyPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+               output.PrepareForOutput(inSize, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, typename U, class SIn, class SStencil, class SOut>
@@ -1153,9 +1156,11 @@ public:
       return;
     }
 
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                                    stencil.PrepareForInput(DeviceAdapterTagCuda()),
-                                    output.PrepareForOutput(size, DeviceAdapterTagCuda()),
+    vtkm::cont::Token token;
+
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                                    stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
+                                    output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
                                     ::vtkm::NotZeroInitialized()); //yes on the stencil
     output.Shrink(newSize);
   }
@@ -1174,9 +1179,10 @@ public:
       output.Shrink(size);
       return;
     }
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                                    stencil.PrepareForInput(DeviceAdapterTagCuda()),
-                                    output.PrepareForOutput(size, DeviceAdapterTagCuda()),
+    vtk::cont::Token token;
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                                    stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
+                                    output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
                                     unary_predicate);
     output.Shrink(newSize);
   }
@@ -1230,10 +1236,11 @@ public:
         output = temp;
       }
     }
-    CopySubRangePortal(input.PrepareForInput(DeviceAdapterTagCuda()),
+    vtkm::cont::Token token;
+    CopySubRangePortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
                        inputStartIndex,
                        numberOfElementsToCopy,
-                       output.PrepareForInPlace(DeviceAdapterTagCuda()),
+                       output.PrepareForInPlace(DeviceAdapterTagCuda(), token),
                        outputIndex);
     return true;
   }
@@ -1254,9 +1261,10 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id numberOfValues = values.GetNumberOfValues();
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
@@ -1268,9 +1276,10 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id numberOfValues = values.GetNumberOfValues();
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+    vtkm::cont::Token token;
+    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                       binary_compare);
   }
 
@@ -1280,8 +1289,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    LowerBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values_output.PrepareForInPlace(DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, typename U, class SIn>
@@ -1294,7 +1304,8 @@ public:
     {
       return initialValue;
     }
-    return ReducePortal(input.PrepareForInput(DeviceAdapterTagCuda()), initialValue);
+    vtkm::cont::Token token;
+    return ReducePortal(input.PrepareForInput(DeviceAdapterTagCuda(), token), initialValue);
   }
 
   template <typename T, typename U, class SIn, class BinaryFunctor>
@@ -1309,8 +1320,9 @@ public:
     {
       return initialValue;
     }
+    vtkm::cont::Token token;
     return ReducePortal(
-      input.PrepareForInput(DeviceAdapterTagCuda()), initialValue, binary_functor);
+      input.PrepareForInput(DeviceAdapterTagCuda(), token), initialValue, binary_functor);
   }
 
   template <typename T,
@@ -1335,12 +1347,13 @@ public:
     {
       return;
     }
-    vtkm::Id reduced_size =
-      ReduceByKeyPortal(keys.PrepareForInput(DeviceAdapterTagCuda()),
-                        values.PrepareForInput(DeviceAdapterTagCuda()),
-                        keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                        values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                        binary_functor);
+    vtkm::cont::Token token;
+    vtkm::Id reduced_size = ReduceByKeyPortal(
+      keys.PrepareForInput(DeviceAdapterTagCuda(), token),
+      values.PrepareForInput(DeviceAdapterTagCuda(), token),
+      keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+      values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+      binary_functor);
 
     keys_output.Shrink(reduced_size);
     values_output.Shrink(reduced_size);
@@ -1355,7 +1368,7 @@ public:
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
@@ -1363,9 +1376,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanExclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda(), token);
+    return ScanExclusivePortal(
+      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, class SIn, class SOut, class BinaryFunctor>
@@ -1379,7 +1393,7 @@ public:
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
@@ -1387,11 +1401,13 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanExclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
-                               binary_functor,
-                               initialValue);
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda(), token);
+    return ScanExclusivePortal(
+      inputPortal,
+      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+      binary_functor,
+      initialValue);
   }
 
   template <typename T, class SIn, class SOut>
@@ -1403,7 +1419,7 @@ public:
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
@@ -1411,9 +1427,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
-    return ScanInclusivePortal(inputPortal,
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda(), token);
+    return ScanInclusivePortal(
+      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, class SIn, class SOut, class BinaryFunctor>
@@ -1426,7 +1443,7 @@ public:
     const vtkm::Id numberOfValues = input.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
@@ -1434,9 +1451,12 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagCuda(), token);
     return ScanInclusivePortal(
-      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()), binary_functor);
+      inputPortal,
+      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+      binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
@@ -1449,17 +1469,21 @@ public:
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
+      return;
     }
 
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+    vtkm::cont::Token token;
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda(), token);
     ScanInclusiveByKeyPortal(
-      keysPortal, valuesPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+      keysPortal,
+      valuesPortal,
+      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T,
@@ -1478,18 +1502,20 @@ public:
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
+      return;
     }
 
     //We need call PrepareForInput on the input argument before invoking a
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+    vtkm::cont::Token token;
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda(), token);
     ScanInclusiveByKeyPortal(keysPortal,
                              valuesPortal,
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                              ::thrust::equal_to<T>(),
                              binary_functor);
   }
@@ -1504,7 +1530,7 @@ public:
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return;
     }
 
@@ -1512,11 +1538,12 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+    vtkm::cont::Token token;
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda(), token);
     ScanExclusiveByKeyPortal(keysPortal,
                              valuesPortal,
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                              vtkm::TypeTraits<T>::ZeroInitialization(),
                              ::thrust::equal_to<T>(),
                              vtkm::Add());
@@ -1539,7 +1566,7 @@ public:
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
-      output.PrepareForOutput(0, DeviceAdapterTagCuda());
+      output.Allocate(0);
       return;
     }
 
@@ -1547,11 +1574,12 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda());
+    vtkm::cont::Token token;
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTagCuda(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTagCuda(), token);
     ScanExclusiveByKeyPortal(keysPortal,
                              valuesPortal,
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                              initialValue,
                              ::thrust::equal_to<T>(),
                              binary_functor);
@@ -1691,7 +1719,8 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, class Storage, class BinaryCompare>
@@ -1700,7 +1729,8 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
+    vtkm::cont::Token token;
+    SortPortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
@@ -1709,8 +1739,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
-                    values.PrepareForInPlace(DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda(), token),
+                    values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
@@ -1720,8 +1751,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda()),
-                    values.PrepareForInPlace(DeviceAdapterTagCuda()),
+    vtkm::cont::Token token;
+    SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTagCuda(), token),
+                    values.PrepareForInPlace(DeviceAdapterTagCuda(), token),
                     binary_compare);
   }
 
@@ -1730,7 +1762,8 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
 
     values.Shrink(newSize);
   }
@@ -1741,8 +1774,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
     vtkm::Id newSize =
-      UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda()), binary_compare);
+      UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
 
     values.Shrink(newSize);
   }
@@ -1755,9 +1789,10 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id numberOfValues = values.GetNumberOfValues();
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token));
   }
 
   template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
@@ -1769,9 +1804,10 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::Id numberOfValues = values.GetNumberOfValues();
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values.PrepareForInput(DeviceAdapterTagCuda()),
-                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda()),
+    vtkm::cont::Token token;
+    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                       binary_compare);
   }
 
@@ -1781,8 +1817,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda()),
-                      values_output.PrepareForInPlace(DeviceAdapterTagCuda()));
+    vtkm::cont::Token token;
+    UpperBoundsPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                      values_output.PrepareForInPlace(DeviceAdapterTagCuda(), token));
   }
 
   VTKM_CONT static void Synchronize()

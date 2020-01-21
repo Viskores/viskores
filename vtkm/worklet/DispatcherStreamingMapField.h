@@ -300,13 +300,14 @@ private:
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
-    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
-                           .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device))
-                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
-                         outputRange,
-                         globalIndexOffset,
-                         device);
+    this->InvokeSchedule(
+      invocation.ChangeParameters(execObjectParameters)
+        .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device, token))
+        .ChangeVisitArray(visitArray.PrepareForInput(device, token))
+        .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device, token)),
+      outputRange,
+      globalIndexOffset,
+      device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>

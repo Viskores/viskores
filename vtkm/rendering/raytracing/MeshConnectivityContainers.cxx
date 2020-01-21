@@ -38,9 +38,10 @@ VTKM_CONT void MeshConnContainer::FindEntryImpl(Ray<T>& rays)
   Intersector.IntersectRays(rays, getCellIndex);
 }
 
-MeshWrapper MeshConnContainer::PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId)
+MeshWrapper MeshConnContainer::PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId,
+                                                   vtkm::cont::Token& token)
 {
-  return MeshWrapper(const_cast<MeshConnectivityBase*>(this->Construct(deviceId)));
+  return MeshWrapper(const_cast<MeshConnectivityBase*>(this->Construct(deviceId, token)));
 }
 
 void MeshConnContainer::FindEntry(Ray<vtkm::Float32>& rays)
@@ -80,7 +81,8 @@ UnstructuredContainer::UnstructuredContainer(const vtkm::cont::CellSetExplicit<>
 UnstructuredContainer::~UnstructuredContainer(){};
 
 const MeshConnectivityBase* UnstructuredContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId)
+  const vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token)
 {
   switch (deviceId.GetValue())
   {
@@ -92,10 +94,11 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
                                        this->FaceOffsets,
                                        this->CellConn,
                                        this->CellOffsets,
-                                       this->Shapes);
+                                       this->Shapes,
+                                       token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(OMP());
+      return Handle.PrepareForExecution(OMP(), token);
 #endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
@@ -105,10 +108,11 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
                                        this->FaceOffsets,
                                        this->CellConn,
                                        this->CellOffsets,
-                                       this->Shapes);
+                                       this->Shapes,
+                                       token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(TBB());
+      return Handle.PrepareForExecution(TBB(), token);
 #endif
 #ifdef VTKM_ENABLE_CUDA
     case VTKM_DEVICE_ADAPTER_CUDA:
@@ -118,10 +122,11 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
                                         this->FaceOffsets,
                                         this->CellConn,
                                         this->CellOffsets,
-                                        this->Shapes);
+                                        this->Shapes,
+                                        token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(CUDA());
+      return Handle.PrepareForExecution(CUDA(), token);
 #endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;
@@ -132,10 +137,11 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
                                           this->FaceOffsets,
                                           this->CellConn,
                                           this->CellOffsets,
-                                          this->Shapes);
+                                          this->Shapes,
+                                          token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(SERIAL());
+      return Handle.PrepareForExecution(SERIAL(), token);
   }
 }
 
@@ -187,7 +193,8 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
 }
 
 const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId)
+  const vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token)
 {
   switch (deviceId.GetValue())
   {
@@ -200,10 +207,11 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
                                      this->CellOffsets,
                                      this->ShapeId,
                                      this->NumIndices,
-                                     this->NumFaces);
+                                     this->NumFaces,
+                                     token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(OMP());
+      return Handle.PrepareForExecution(OMP(), token);
 #endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
@@ -214,10 +222,11 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
                                      this->CellOffsets,
                                      this->ShapeId,
                                      this->NumIndices,
-                                     this->NumFaces);
+                                     this->NumFaces,
+                                     token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(TBB());
+      return Handle.PrepareForExecution(TBB(), token);
 #endif
 #ifdef VTKM_ENABLE_CUDA
     case VTKM_DEVICE_ADAPTER_CUDA:
@@ -228,10 +237,11 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
                                       this->CellOffsets,
                                       this->ShapeId,
                                       this->NumIndices,
-                                      this->NumFaces);
+                                      this->NumFaces,
+                                      token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(CUDA());
+      return Handle.PrepareForExecution(CUDA(), token);
 #endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;
@@ -243,10 +253,11 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
                                         this->CellOffsets,
                                         this->ShapeId,
                                         this->NumIndices,
-                                        this->NumFaces);
+                                        this->NumFaces,
+                                        token);
         Handle = make_MeshConnHandle(conn);
       }
-      return Handle.PrepareForExecution(SERIAL());
+      return Handle.PrepareForExecution(SERIAL(), token);
   }
 }
 
@@ -267,7 +278,8 @@ StructuredContainer::StructuredContainer(const vtkm::cont::CellSetStructured<3>&
 }
 
 const MeshConnectivityBase* StructuredContainer::Construct(
-  const vtkm::cont::DeviceAdapterId deviceId)
+  const vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token)
 {
 
   MeshConnStructured conn(CellDims, PointDims);
@@ -277,20 +289,20 @@ const MeshConnectivityBase* StructuredContainer::Construct(
   {
 #ifdef VTKM_ENABLE_OPENMP
     case VTKM_DEVICE_ADAPTER_OPENMP:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagOpenMP());
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagOpenMP(), token);
 #endif
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagTBB());
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagTBB(), token);
 #endif
 #ifdef VTKM_ENABLE_CUDA
     case VTKM_DEVICE_ADAPTER_CUDA:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagCuda());
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagCuda(), token);
 #endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;
     default:
-      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial());
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial(), token);
   }
 }
 }

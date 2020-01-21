@@ -57,11 +57,13 @@ protected:
 
 public:
   RectilinearLocator(const CartesianArrayHandle& coordinates,
-                     vtkm::cont::CellSetStructured<3>& cellset)
-    : Coordinates(coordinates.PrepareForInput(Device()))
+                     vtkm::cont::CellSetStructured<3>& cellset,
+                     vtkm::cont::Token& token)
+    : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
-                                   vtkm::TopologyElementTagPoint()))
+                                   vtkm::TopologyElementTagPoint(),
+                                   token))
   {
     CoordPortals[0] = Coordinates.GetFirstPortal();
     CoordPortals[1] = Coordinates.GetSecondPortal();
@@ -199,11 +201,14 @@ protected:
     Conn;
 
 public:
-  UniformLocator(const UniformArrayHandle& coordinates, vtkm::cont::CellSetStructured<3>& cellset)
-    : Coordinates(coordinates.PrepareForInput(Device()))
+  UniformLocator(const UniformArrayHandle& coordinates,
+                 vtkm::cont::CellSetStructured<3>& cellset,
+                 vtkm::cont::Token& token)
+    : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
-                                   vtkm::TopologyElementTagPoint()))
+                                   vtkm::TopologyElementTagPoint(),
+                                   token))
   {
     Origin = Coordinates.GetOrigin();
     PointDimensions = Conn.GetPointDimensions();
@@ -310,8 +315,9 @@ public:
           const vtkm::Float32& minScalar,
           const vtkm::Float32& maxScalar,
           const vtkm::Float32& sampleDistance,
-          const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
+          const LocatorType& locator,
+          vtkm::cont::Token& token)
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -503,8 +509,9 @@ public:
                    const vtkm::Float32& minScalar,
                    const vtkm::Float32& maxScalar,
                    const vtkm::Float32& sampleDistance,
-                   const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
+                   const LocatorType& locator,
+                   vtkm::cont::Token& token)
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -813,9 +820,10 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   if (IsUniformDataSet)
   {
+    vtkm::cont::Token token;
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
     vertices = Coordinates.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    UniformLocator<Device> locator(vertices, Cellset);
+    UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
     {
@@ -824,7 +832,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 vtkm::Float32(ScalarRange.Min),
                                                 vtkm::Float32(ScalarRange.Max),
                                                 SampleDistance,
-                                                locator));
+                                                locator,
+                                                token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
                                rays.Origin,
@@ -840,7 +849,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                          vtkm::Float32(ScalarRange.Min),
                                                          vtkm::Float32(ScalarRange.Max),
                                                          SampleDistance,
-                                                         locator))
+                                                         locator,
+                                                         token))
         .Invoke(rays.Dir,
                 rays.Origin,
                 rays.MinDistance,
@@ -851,9 +861,10 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   }
   else
   {
+    vtkm::cont::Token token;
     CartesianArrayHandle vertices;
     vertices = Coordinates.Cast<CartesianArrayHandle>();
-    RectilinearLocator<Device> locator(vertices, Cellset);
+    RectilinearLocator<Device> locator(vertices, Cellset, token);
     if (isAssocPoints)
     {
       vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocator<Device>>>
@@ -862,7 +873,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                       vtkm::Float32(ScalarRange.Min),
                                                       vtkm::Float32(ScalarRange.Max),
                                                       SampleDistance,
-                                                      locator));
+                                                      locator,
+                                                      token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
                                rays.Origin,
@@ -879,7 +891,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                                vtkm::Float32(ScalarRange.Min),
                                                                vtkm::Float32(ScalarRange.Max),
                                                                SampleDistance,
-                                                               locator));
+                                                               locator,
+                                                               token));
       rectilinearLocatorDispatcher.SetDevice(Device());
       rectilinearLocatorDispatcher.Invoke(
         rays.Dir,

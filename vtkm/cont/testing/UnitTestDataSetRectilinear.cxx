@@ -76,14 +76,18 @@ static void TwoDimRectilinearTest()
     VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_QUAD, "Incorrect element type.");
   }
 
+  vtkm::cont::Token token;
+
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 2>
     pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
                                           vtkm::TopologyElementTagCell(),
-                                          vtkm::TopologyElementTagPoint());
+                                          vtkm::TopologyElementTagPoint(),
+                                          token);
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 2>
     cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
                                           vtkm::TopologyElementTagPoint(),
-                                          vtkm::TopologyElementTagCell());
+                                          vtkm::TopologyElementTagCell(),
+                                          token);
 
   vtkm::Id cells[2][4] = { { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
   for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
@@ -161,10 +165,12 @@ static void ThreeDimRectilinearTest()
   }
 
   //Test regular connectivity.
+  vtkm::cont::Token token;
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
     pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
                                           vtkm::TopologyElementTagCell(),
-                                          vtkm::TopologyElementTagPoint());
+                                          vtkm::TopologyElementTagPoint(),
+                                          token);
   vtkm::Id expectedPointIds[8] = { 0, 1, 4, 3, 6, 7, 10, 9 };
   vtkm::Vec<vtkm::Id, 8> retrievedPointIds = pointToCell.GetIndices(vtkm::Id3(0));
   for (vtkm::IdComponent localPointIndex = 0; localPointIndex < 8; localPointIndex++)
@@ -176,7 +182,8 @@ static void ThreeDimRectilinearTest()
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
     cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
                                           vtkm::TopologyElementTagPoint(),
-                                          vtkm::TopologyElementTagCell());
+                                          vtkm::TopologyElementTagCell(),
+                                          token);
   vtkm::Id retrievedCellIds[6] = { 0, -1, -1, -1, -1, -1 };
   vtkm::VecVariable<vtkm::Id, 6> expectedCellIds = cellToPoint.GetIndices(vtkm::Id3(0));
   VTKM_TEST_ASSERT(expectedCellIds.GetNumberOfComponents() <= 6,

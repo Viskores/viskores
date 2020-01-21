@@ -90,14 +90,6 @@ struct ValidateNormals
   using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
   using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().GetPortalConstControl());
-  using ConnType =
-    decltype(std::declval<CellSetType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                                         vtkm::TopologyElementTagCell{},
-                                                         vtkm::TopologyElementTagPoint{}));
-  using RConnType =
-    decltype(std::declval<CellSetType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                                         vtkm::TopologyElementTagPoint{},
-                                                         vtkm::TopologyElementTagCell{}));
   using PointsType =
     decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().GetPortalConstControl());
 
@@ -105,8 +97,6 @@ struct ValidateNormals
   CellSetType Cells;
 
   PointsType Points;
-  ConnType Conn;
-  RConnType RConn;
 
   NormalsArrayType PointNormalsArray;
   NormalsPortalType PointNormals;
@@ -169,12 +159,6 @@ struct ValidateNormals
                                      vtkm::TopologyElementTagPoint{});
     this->Cells.GetConnectivityArray(vtkm::TopologyElementTagCell{},
                                      vtkm::TopologyElementTagPoint{});
-    this->Conn = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                             vtkm::TopologyElementTagCell{},
-                                             vtkm::TopologyElementTagPoint{});
-    this->RConn = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
-                                              vtkm::TopologyElementTagPoint{},
-                                              vtkm::TopologyElementTagCell{});
 
     if (this->CheckPoints)
     {
@@ -254,6 +238,16 @@ private:
     queue.emplace_back(startPtIdx, startRefNormal);
     this->VisitedPoints.SetBit(startPtIdx, true);
 
+    vtkm::cont::Token token;
+    auto connections = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
+                                                   vtkm::TopologyElementTagCell{},
+                                                   vtkm::TopologyElementTagPoint{},
+                                                   token);
+    auto reverseConnections = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
+                                                          vtkm::TopologyElementTagPoint{},
+                                                          vtkm::TopologyElementTagCell{},
+                                                          token);
+
     while (!queue.empty())
     {
       const vtkm::Id curPtIdx = queue.back().first;
@@ -278,7 +272,7 @@ private:
       }
 
       // Lookup and visit neighbor cells:
-      const auto neighborCells = this->RConn.GetIndices(curPtIdx);
+      const auto neighborCells = reverseConnections.GetIndices(curPtIdx);
       const auto numNeighborCells = neighborCells.GetNumberOfComponents();
       for (vtkm::IdComponent nCellIdx = 0; nCellIdx < numNeighborCells; ++nCellIdx)
       {
@@ -307,7 +301,7 @@ private:
         }
 
         // Lookup and visit points in this cell:
-        const auto neighborPoints = this->Conn.GetIndices(curCellIdx);
+        const auto neighborPoints = connections.GetIndices(curCellIdx);
         const auto numNeighborPoints = neighborPoints.GetNumberOfComponents();
         for (vtkm::IdComponent nPtIdx = 0; nPtIdx < numNeighborPoints; ++nPtIdx)
         {

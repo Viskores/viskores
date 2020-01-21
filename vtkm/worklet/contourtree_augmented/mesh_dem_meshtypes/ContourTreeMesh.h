@@ -123,7 +123,8 @@ public:
 
   template <typename DeviceTag>
   contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag> PrepareForExecution(
-    DeviceTag) const;
+    DeviceTag,
+    vtkm::cont::Token& token) const;
 
   ContourTreeMesh() {}
 
@@ -457,10 +458,10 @@ void ContourTreeMesh<FieldType>::SetPrepareForExecutionBehavior(bool getMax)
 template <typename FieldType>
 template <typename DeviceTag>
 contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag>
-  ContourTreeMesh<FieldType>::PrepareForExecution(DeviceTag) const
+ContourTreeMesh<FieldType>::PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
 {
   return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag>(
-    this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax);
+    this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax, token);
 }
 
 struct NotNoSuchElement
@@ -478,12 +479,13 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
   other.DebugPrint("OTHER ContourTreeMesh", __FILE__, __LINE__);
 #endif
 
+  vtkm::cont::Token allToken;
   mesh_dem_contourtree_mesh_inc::CombinedVectorExecObj<vtkm::Id> allGlobalIndicesExecObj(
     this->GlobalMeshIndex, other.GlobalMeshIndex);
-  auto allGlobalIndices = allGlobalIndicesExecObj.PrepareForExecution(DeviceTag());
+  auto allGlobalIndices = allGlobalIndicesExecObj.PrepareForExecution(DeviceTag(), allToken);
   mesh_dem_contourtree_mesh_inc::CombinedVectorExecObj<FieldType> allSortedValuesExecObj(
     this->SortedValues, other.SortedValues);
-  auto allSortedValues = allSortedValuesExecObj.PrepareForExecution(DeviceTag());
+  auto allSortedValues = allSortedValuesExecObj.PrepareForExecution(DeviceTag(), allToken);
   //auto allGlobalIndices = CombinedVector<FieldType(this->thisGlobalMeshIndex, other.GlobalMeshIndex);
 
   // Create combined sort order
@@ -515,9 +517,10 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
   IdArrayType overallSortIndex;
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
+    vtkm::cont::Token token;
     // Functor return 0,1 for each element of a CombinedVector depending on whethern the current value is different from the next
     mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext<vtkm::Id, DeviceTag>
-      differentFromNextFunctor(&allGlobalIndices, overallSortOrder);
+      differentFromNextFunctor(&allGlobalIndices, overallSortOrder, token);
     auto differentFromNextArr = vtkm::cont::make_ArrayHandleTransform(
       vtkm::cont::ArrayHandleIndex(overallSortIndex.GetNumberOfValues() - 1),
       differentFromNextFunctor);

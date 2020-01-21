@@ -466,7 +466,8 @@ template <typename T, typename Device>
 class VTKM_ALWAYS_EXPORT ArrayTransfer<T, internal::StorageTagExtrude, Device>
 {
   using BaseT = typename VecTraits<T>::BaseComponentType;
-  using TPortalType = decltype(vtkm::cont::ArrayHandle<BaseT>{}.PrepareForInput(Device{}));
+  using TPortalType = decltype(
+    vtkm::cont::ArrayHandle<BaseT>{}.PrepareForInput(Device{}, std::declval<vtkm::cont::Token&>()));
 
 public:
   using ValueType = T;

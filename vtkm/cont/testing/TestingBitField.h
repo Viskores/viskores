@@ -462,9 +462,10 @@ struct TestingBitField
   VTKM_CONT
   static void TestExecutionPortals()
   {
+    vtkm::cont::Token token;
     auto field = RandomBitField();
-    auto portal = field.PrepareForInPlace(DeviceAdapterTag{});
-    auto portalConst = field.PrepareForInput(DeviceAdapterTag{});
+    auto portal = field.PrepareForInPlace(DeviceAdapterTag{}, token);
+    auto portalConst = field.PrepareForInput(DeviceAdapterTag{}, token);
 
     HelpTestPortalsExecution(portal, portalConst);
   }
@@ -581,10 +582,13 @@ struct TestingBitField
                      " got: ",
                      numBits);
 
+    vtkm::cont::Token token;
     Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), false }, numBits);
-    Algo::Schedule(ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), true },
-                   numBits);
+      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
+      numBits);
+    Algo::Schedule(
+      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
+      numBits);
   }
 
   VTKM_CONT

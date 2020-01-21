@@ -37,7 +37,8 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(Device()));
+  using ExecObjectType = decltype(
+    std::declval<ContObjectType>().PrepareForInput(Device(), std::declval<vtkm::cont::Token&>()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,

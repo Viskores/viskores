@@ -549,9 +549,10 @@ struct PrepareForInput
     CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
     mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
 
+    vtkm::cont::Token token;
     this->Timer.Start();
     auto result = cellSet.PrepareForInput(
-      DeviceTag{}, vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+      DeviceTag{}, vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}, token);
     ::benchmark::DoNotOptimize(result);
     this->Timer.Stop();
 

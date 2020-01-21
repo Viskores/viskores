@@ -792,9 +792,10 @@ struct StructuredTrianglesFunctor
                             vtkm::cont::CellSetStructured<3>& cellSet) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::worklet::DispatcherMapField<StructuredExternalTriangles> dispatch(
       StructuredExternalTriangles(cellSet.PrepareForInput(
-        Device(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())));
+        Device(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint(), token)));
 
     dispatch.SetDevice(Device());
     dispatch.Invoke(counting, triangles);

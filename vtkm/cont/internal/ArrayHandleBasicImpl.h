@@ -403,25 +403,25 @@ public:
     DeviceAdapterTag device,
     vtkm::cont::Token& token);
 
-  // TODO: Deprecate these
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag device) const
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst
+    PrepareForInput(DeviceAdapterTag device) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, token);
   }
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numVals,
-    DeviceAdapterTag device)
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForOutput(vtkm::Id numVals, DeviceAdapterTag device)
   {
     vtkm::cont::Token token;
     return this->PrepareForOutput(numVals, device, token);
   }
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag device)
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag device)
   {
     vtkm::cont::Token token;
     return this->PrepareForInPlace(device, token);

@@ -27,12 +27,11 @@ namespace cont
 namespace detail
 {
 template <typename Device, typename T>
-inline auto DoPrepareArgForExec(T&& object, vtkm::cont::Token& token, std::true_type)
-  -> decltype(std::declval<T>().PrepareForExecution(Device()))
+inline auto DoPrepareArgForExec(T&& object, vtkm::cont::Token& token, std::true_type) -> decltype(
+  vtkm::cont::internal::CallPrepareForExecution(std::forward<T>(object), Device{}, token))
 {
   VTKM_IS_EXECUTION_OBJECT(T);
-  return vtkm::cont::internal::CallPrepareForExecution(object, Device{}, token);
-  return object.PrepareForExecution(Device{});
+  return vtkm::cont::internal::CallPrepareForExecution(std::forward<T>(object), Device{}, token);
 }
 
 template <typename Device, typename T>

@@ -289,35 +289,36 @@ public:
       return; //nothing to do
 
     rays.NumRays = newSize;
+    vtkm::cont::Token token;
 
     if (rays.IntersectionDataEnabled)
     {
-      rays.IntersectionX.PrepareForOutput(rays.NumRays, Device());
-      rays.IntersectionY.PrepareForOutput(rays.NumRays, Device());
-      rays.IntersectionZ.PrepareForOutput(rays.NumRays, Device());
-      rays.U.PrepareForOutput(rays.NumRays, Device());
-      rays.V.PrepareForOutput(rays.NumRays, Device());
-      rays.Scalar.PrepareForOutput(rays.NumRays, Device());
+      rays.IntersectionX.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.IntersectionY.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.IntersectionZ.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.U.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.V.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.Scalar.PrepareForOutput(rays.NumRays, Device(), token);
 
-      rays.NormalX.PrepareForOutput(rays.NumRays, Device());
-      rays.NormalY.PrepareForOutput(rays.NumRays, Device());
-      rays.NormalZ.PrepareForOutput(rays.NumRays, Device());
+      rays.NormalX.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.NormalY.PrepareForOutput(rays.NumRays, Device(), token);
+      rays.NormalZ.PrepareForOutput(rays.NumRays, Device(), token);
     }
 
-    rays.OriginX.PrepareForOutput(rays.NumRays, Device());
-    rays.OriginY.PrepareForOutput(rays.NumRays, Device());
-    rays.OriginZ.PrepareForOutput(rays.NumRays, Device());
+    rays.OriginX.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.OriginY.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.OriginZ.PrepareForOutput(rays.NumRays, Device(), token);
 
-    rays.DirX.PrepareForOutput(rays.NumRays, Device());
-    rays.DirY.PrepareForOutput(rays.NumRays, Device());
-    rays.DirZ.PrepareForOutput(rays.NumRays, Device());
+    rays.DirX.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.DirY.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.DirZ.PrepareForOutput(rays.NumRays, Device(), token);
 
-    rays.Distance.PrepareForOutput(rays.NumRays, Device());
-    rays.MinDistance.PrepareForOutput(rays.NumRays, Device());
-    rays.MaxDistance.PrepareForOutput(rays.NumRays, Device());
-    rays.Status.PrepareForOutput(rays.NumRays, Device());
-    rays.HitIdx.PrepareForOutput(rays.NumRays, Device());
-    rays.PixelIdx.PrepareForOutput(rays.NumRays, Device());
+    rays.Distance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.MinDistance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.MaxDistance.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.Status.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.HitIdx.PrepareForOutput(rays.NumRays, Device(), token);
+    rays.PixelIdx.PrepareForOutput(rays.NumRays, Device(), token);
 
     const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)

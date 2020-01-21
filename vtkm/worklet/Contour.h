@@ -152,11 +152,12 @@ public:
                vtkm::cont::ArrayHandle<vtkm::FloatDefault>& interpWeights,
                vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
                vtkm::cont::ArrayHandle<vtkm::Id>& interpCellIds,
-               vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId)
-      : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, DeviceAdapter()))
-      , InterpIdPortal(interpIds.PrepareForOutput(3 * size, DeviceAdapter()))
-      , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, DeviceAdapter()))
-      , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, DeviceAdapter()))
+               vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
+               vtkm::cont::Token& token)
+      : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, DeviceAdapter(), token))
+      , InterpIdPortal(interpIds.PrepareForOutput(3 * size, DeviceAdapter(), token))
+      , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, DeviceAdapter(), token))
+      , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, DeviceAdapter(), token))
     {
       // Interp needs to be 3 times longer than size as they are per point of the
       // output triangle
@@ -182,10 +183,14 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
-    return ExecObject<DeviceAdapter>(
-      this->Size, this->InterpWeights, this->InterpIds, this->InterpCellIds, this->InterpContourId);
+    return ExecObject<DeviceAdapter>(this->Size,
+                                     this->InterpWeights,
+                                     this->InterpIds,
+                                     this->InterpCellIds,
+                                     this->InterpContourId,
+                                     token);
   }
 
 private:

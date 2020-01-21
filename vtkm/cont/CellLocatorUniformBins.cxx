@@ -457,6 +457,7 @@ struct CellLocatorUniformBins::MakeExecObject
   template <typename CellSetType, typename DeviceAdapter>
   VTKM_CONT void operator()(const CellSetType& cellSet,
                             DeviceAdapter,
+                            vtkm::cont::Token& token,
                             const CellLocatorUniformBins& self) const
   {
     auto execObject =
@@ -467,7 +468,8 @@ struct CellLocatorUniformBins::MakeExecObject
                                                                          self.CellCount,
                                                                          self.CellIds,
                                                                          cellSet,
-                                                                         self.GetCoordinates());
+                                                                         self.GetCoordinates(),
+                                                                         token);
     self.ExecutionObjectHandle.Reset(execObject);
   }
 };
@@ -475,21 +477,24 @@ struct CellLocatorUniformBins::MakeExecObject
 struct CellLocatorUniformBins::PrepareForExecutionFunctor
 {
   template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter, const CellLocatorUniformBins& self) const
+  VTKM_CONT bool operator()(DeviceAdapter,
+                            vtkm::cont::Token& token,
+                            const CellLocatorUniformBins& self) const
   {
-    self.GetCellSet().CastAndCall(MakeExecObject{}, DeviceAdapter{}, self);
+    self.GetCellSet().CastAndCall(MakeExecObject{}, DeviceAdapter{}, token, self);
     return true;
   }
 };
 
 VTKM_CONT const vtkm::exec::CellLocator* CellLocatorUniformBins::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
-  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), *this))
+  if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), token, *this))
   {
     throwFailedRuntimeDeviceTransfer("CellLocatorUniformBins", device);
   }
-  return this->ExecutionObjectHandle.PrepareForExecution(device);
+  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
 }
 
 //----------------------------------------------------------------------------

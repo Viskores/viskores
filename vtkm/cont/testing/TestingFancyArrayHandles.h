@@ -188,9 +188,10 @@ struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
   };
 
   template <typename DeviceAdapterTag>
-  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device) const
+  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device,
+                                               vtkm::cont::Token& token) const
   {
-    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device));
+    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device, token));
   }
 
   VTKM_CONT FunctorWrapper PrepareForControl() const

@@ -52,9 +52,11 @@ struct CheckPrepareForExecution
 
 struct CheckPrepareForExecutionDeprecated
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T>
   static auto check(T* p)
     -> decltype(p->PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial{}), std::true_type());
+  VTKM_DEPRECATED_SUPPRESS_END
 
   template <typename T>
   static auto check(...) -> std::false_type;
@@ -64,7 +66,7 @@ struct CheckPrepareForExecutionDeprecated
 
 template <typename T>
 using IsExecutionObjectBase =
-  std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>;
+  typename std::is_base_of<vtkm::cont::ExecutionObjectBase, typename std::decay<T>::type>::type;
 
 template <typename T>
 struct HasPrepareForExecution
@@ -88,37 +90,6 @@ struct HasPrepareForExecutionDeprecated
                   ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value,     \
                 "Provided type does not have requisite PrepareForExecution method.")
 
-namespace detail
-{
-
-template <typename T, typename Device>
-VTKM_CONT auto CallPrepareForExecutionImpl(T&& execObject,
-                                           Device device,
-                                           vtkm::cont::Token& token,
-                                           std::true_type,
-                                           std::false_type)
-  -> decltype(execObject.PrepareForExecution(device, token))
-{
-  return execObject.PrepareForExecution(device, token);
-}
-
-template <typename T, typename Device>
-VTKM_DEPRECATED(
-  1.6,
-  "ExecutionObjects now require a PrepareForExecution that takes a vtkm::cont::Token object."
-  "PrepareForExecution(Device) is deprecated. Implement PrepareForExecution(Device, Token).")
-VTKM_CONT auto CallPrepareForExecutionImpl(T&& execObject,
-                                           Device device,
-                                           vtkm::cont::Token&,
-                                           std::false_type,
-                                           std::true_type)
-  -> decltype(execObject.PrepareForExecution(device))
-{
-  return execObject.PrepareForExecution(device);
-}
-
-} // namespace detail
-
 /// \brief Gets the object to use in the execution environment from an ExecutionObject.
 ///
 /// An execution object (that is, an object inheriting from `vtkm::cont::ExecutionObjectBase`) is
@@ -128,20 +99,36 @@ VTKM_CONT auto CallPrepareForExecutionImpl(T&& execObject,
 ///
 template <typename T, typename Device>
 VTKM_CONT auto CallPrepareForExecution(T&& execObject, Device device, vtkm::cont::Token& token)
-  -> decltype(detail::CallPrepareForExecutionImpl(std::forward<T>(execObject),
-                                                  device,
-                                                  token,
-                                                  HasPrepareForExecution<T>{},
-                                                  HasPrepareForExecutionDeprecated<T>{}))
+  -> decltype(execObject.PrepareForExecution(device, token))
 {
   VTKM_IS_EXECUTION_OBJECT(T);
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-  return detail::CallPrepareForExecutionImpl(std::forward<T>(execObject),
-                                             device,
-                                             token,
-                                             HasPrepareForExecution<T>{},
-                                             HasPrepareForExecutionDeprecated<T>{});
+  return execObject.PrepareForExecution(device, token);
+}
+
+// If you get a deprecation warning at this function, it means that an ExecutionObject is using the
+// old style PrepareForExecution. Update its PrepareForExecution method to accept both a device and
+// a token.
+//
+// Developer note: the third template argument, TokenType, is expected to be a vtkm::cont::Token
+// (which is ignored). The reason why it is a template argument instead of just the type expected
+// is so that ExecObjects that implement both versions of PrepareForExecution (for backward
+// compatibility) will match the non-deprecated version instead of being ambiguous.
+template <typename T, typename Device, typename TokenType>
+VTKM_CONT VTKM_DEPRECATED(
+  1.6,
+  "ExecutionObjects now require a PrepareForExecution that takes a vtkm::cont::Token object. "
+  "PrepareForExecution(Device) is deprecated. Implement PrepareForExecution(Device, "
+  "Token).") auto CallPrepareForExecution(T&& execObject, Device device, TokenType&)
+  -> decltype(execObject.PrepareForExecution(device))
+{
+  VTKM_IS_EXECUTION_OBJECT(T);
+  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+  VTKM_STATIC_ASSERT(
+    (std::is_same<vtkm::cont::Token, typename std::decay<TokenType>::type>::value));
+
+  return execObject.PrepareForExecution(device);
 }
 
 /// \brief Gets the type of the execution-side object for an ExecutionObject.

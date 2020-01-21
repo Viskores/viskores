@@ -141,17 +141,18 @@ public:
       return;
     }
 
+    vtkm::cont::Token token;
     IntersectionDataEnabled = true;
-    IntersectionX.PrepareForOutput(NumRays, Device());
-    IntersectionY.PrepareForOutput(NumRays, Device());
-    IntersectionZ.PrepareForOutput(NumRays, Device());
-    U.PrepareForOutput(NumRays, Device());
-    V.PrepareForOutput(NumRays, Device());
-    Scalar.PrepareForOutput(NumRays, Device());
+    IntersectionX.PrepareForOutput(NumRays, Device(), token);
+    IntersectionY.PrepareForOutput(NumRays, Device(), token);
+    IntersectionZ.PrepareForOutput(NumRays, Device(), token);
+    U.PrepareForOutput(NumRays, Device(), token);
+    V.PrepareForOutput(NumRays, Device(), token);
+    Scalar.PrepareForOutput(NumRays, Device(), token);
 
-    NormalX.PrepareForOutput(NumRays, Device());
-    NormalY.PrepareForOutput(NumRays, Device());
-    NormalZ.PrepareForOutput(NumRays, Device());
+    NormalX.PrepareForOutput(NumRays, Device(), token);
+    NormalY.PrepareForOutput(NumRays, Device(), token);
+    NormalZ.PrepareForOutput(NumRays, Device(), token);
   }
 
   void DisableIntersectionData()
@@ -206,39 +207,40 @@ public:
   VTKM_CONT void Resize(const vtkm::Int32 size, Device)
   {
     NumRays = size;
+    vtkm::cont::Token token;
 
     if (IntersectionDataEnabled)
     {
-      IntersectionX.PrepareForOutput(NumRays, Device());
-      IntersectionY.PrepareForOutput(NumRays, Device());
-      IntersectionZ.PrepareForOutput(NumRays, Device());
+      IntersectionX.PrepareForOutput(NumRays, Device(), token);
+      IntersectionY.PrepareForOutput(NumRays, Device(), token);
+      IntersectionZ.PrepareForOutput(NumRays, Device(), token);
 
-      U.PrepareForOutput(NumRays, Device());
-      V.PrepareForOutput(NumRays, Device());
+      U.PrepareForOutput(NumRays, Device(), token);
+      V.PrepareForOutput(NumRays, Device(), token);
 
-      Scalar.PrepareForOutput(NumRays, Device());
+      Scalar.PrepareForOutput(NumRays, Device(), token);
 
-      NormalX.PrepareForOutput(NumRays, Device());
-      NormalY.PrepareForOutput(NumRays, Device());
-      NormalZ.PrepareForOutput(NumRays, Device());
+      NormalX.PrepareForOutput(NumRays, Device(), token);
+      NormalY.PrepareForOutput(NumRays, Device(), token);
+      NormalZ.PrepareForOutput(NumRays, Device(), token);
     }
 
-    OriginX.PrepareForOutput(NumRays, Device());
-    OriginY.PrepareForOutput(NumRays, Device());
-    OriginZ.PrepareForOutput(NumRays, Device());
+    OriginX.PrepareForOutput(NumRays, Device(), token);
+    OriginY.PrepareForOutput(NumRays, Device(), token);
+    OriginZ.PrepareForOutput(NumRays, Device(), token);
 
-    DirX.PrepareForOutput(NumRays, Device());
-    DirY.PrepareForOutput(NumRays, Device());
-    DirZ.PrepareForOutput(NumRays, Device());
+    DirX.PrepareForOutput(NumRays, Device(), token);
+    DirY.PrepareForOutput(NumRays, Device(), token);
+    DirZ.PrepareForOutput(NumRays, Device(), token);
 
-    Distance.PrepareForOutput(NumRays, Device());
+    Distance.PrepareForOutput(NumRays, Device(), token);
 
-    MinDistance.PrepareForOutput(NumRays, Device());
-    MaxDistance.PrepareForOutput(NumRays, Device());
-    Status.PrepareForOutput(NumRays, Device());
+    MinDistance.PrepareForOutput(NumRays, Device(), token);
+    MaxDistance.PrepareForOutput(NumRays, Device(), token);
+    Status.PrepareForOutput(NumRays, Device(), token);
 
-    HitIdx.PrepareForOutput(NumRays, Device());
-    PixelIdx.PrepareForOutput(NumRays, Device());
+    HitIdx.PrepareForOutput(NumRays, Device(), token);
+    PixelIdx.PrepareForOutput(NumRays, Device(), token);
 
     Intersection =
       vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);

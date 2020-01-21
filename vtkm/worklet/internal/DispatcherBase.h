@@ -757,14 +757,14 @@ private:
                                typename Invocation::ControlInterface,
                                typename Invocation::ExecutionInterface,
                                Invocation::InputDomainIndex,
-                               decltype(outputToInputMap.PrepareForInput(device)),
-                               decltype(visitArray.PrepareForInput(device)),
-                               decltype(threadToOutputMap.PrepareForInput(device)),
+                               decltype(outputToInputMap.PrepareForInput(device, token)),
+                               decltype(visitArray.PrepareForInput(device, token)),
+                               decltype(threadToOutputMap.PrepareForInput(device, token)),
                                DeviceAdapter>
       changedInvocation(execObjectParameters,
-                        outputToInputMap.PrepareForInput(device),
-                        visitArray.PrepareForInput(device),
-                        threadToOutputMap.PrepareForInput(device));
+                        outputToInputMap.PrepareForInput(device, token),
+                        visitArray.PrepareForInput(device, token),
+                        threadToOutputMap.PrepareForInput(device, token));
 
     this->InvokeSchedule(changedInvocation, threadRange, device);
   }

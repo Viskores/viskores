@@ -725,6 +725,7 @@ struct LeafChainsToContourTree
   template <typename DeviceAdapter, typename... Args>
   bool operator()(DeviceAdapter device, Args&&... args) const
   {
+    vtkm::cont::Token token;
     contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree<DeviceAdapter> worklet(
       this->NumIterations, // (input)
       this->IsJoin,        // (input)
@@ -732,7 +733,8 @@ struct LeafChainsToContourTree
       this->Indegree,      // (input)
       this->Outbound,      // (input)
       this->Inbound,       // (input)
-      this->Inwards);      // (input)
+      this->Inwards,       // (input)
+      token);
     vtkm::worklet::DispatcherMapField<decltype(worklet)> dispatcher(worklet);
     dispatcher.SetDevice(device);
     dispatcher.Invoke(std::forward<Args>(args)...);

@@ -49,11 +49,12 @@ public:
                              const vtkm::Id rowSize,
                              const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                              const RectilinearType& coords,
-                             DeviceAdapter)
+                             DeviceAdapter,
+                             vtkm::cont::Token& token)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
-    , Coords(coords.PrepareForInput(DeviceAdapter()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
     , PointDimensions(cellSet.GetPointDimensions())
   {
     this->AxisPortals[0] = this->Coords.GetFirstPortal();

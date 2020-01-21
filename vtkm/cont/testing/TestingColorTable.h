@@ -476,10 +476,13 @@ public:
     auto samples = vtkm::cont::make_ArrayHandle(data, nvals);
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
-    TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}));
-    vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
-    dispatcher.SetDevice(DeviceAdapterTag());
-    dispatcher.Invoke(samples, colors);
+    {
+      vtkm::cont::Token token;
+      TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}, token));
+      vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
+      dispatcher.SetDevice(DeviceAdapterTag());
+      dispatcher.Invoke(samples, colors);
+    }
 
     const vtkm::Vec4ui_8 correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
                                                             { 21, 150, 21, 255 },

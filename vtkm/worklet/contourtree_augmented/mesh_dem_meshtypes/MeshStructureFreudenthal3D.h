@@ -109,17 +109,19 @@ public:
     const IdArrayType& sortOrder,
     const m3d_freudenthal::EdgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
     const m3d_freudenthal::NeighbourOffsetsType& neighbourOffsetsIn,
-    const m3d_freudenthal::LinkComponentCaseTableType& linkComponentCaseTableIn)
+    const m3d_freudenthal::LinkComponentCaseTableType& linkComponentCaseTableIn,
+    vtkm::cont::Token& token)
     : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
     , GetMax(getmax)
     , NumIncidentEdge(nincident_edges)
   {
-    SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
-    EdgeBoundaryDetectionMasksPortal =
-      edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
-    NeighbourOffsetsPortal = neighbourOffsetsIn.PrepareForInput(DeviceAdapter());
-    LinkComponentCaseTablePortal = linkComponentCaseTableIn.PrepareForInput(DeviceAdapter());
+    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
+    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeBoundaryDetectionMasksPortal =
+      edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
+    this->NeighbourOffsetsPortal = neighbourOffsetsIn.PrepareForInput(DeviceAdapter(), token);
+    this->LinkComponentCaseTablePortal =
+      linkComponentCaseTableIn.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC
