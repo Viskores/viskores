@@ -305,6 +305,23 @@ public:
   {
   }
 
+  ~CellSetPermutation() override {}
+
+  CellSetPermutation(const CellSetPermutation& src)
+    : CellSet()
+    , ValidCellIds(src.ValidCellIds)
+    , FullCellSet(src.FullCellSet)
+  {
+  }
+
+
+  CellSetPermutation& operator=(const CellSetPermutation& src)
+  {
+    this->ValidCellIds = src.ValidCellIds;
+    this->FullCellSet = src.FullCellSet;
+    return *this;
+  }
+
   VTKM_CONT
   const OriginalCellSetType& GetFullCellSet() const { return this->FullCellSet; }
 
@@ -500,6 +517,8 @@ public:
   {
   }
 
+  ~CellSetPermutation() override {}
+
   VTKM_CONT
   void Fill(const PermutationArrayHandleType2& validCellIds,
             const CellSetPermutation<CellSetType, PermutationArrayHandleType1>& cellset)
@@ -508,7 +527,10 @@ public:
     this->FullCellSet = cellset.GetFullCellSet();
   }
 
-  std::shared_ptr<CellSet> NewInstance() const { return std::make_shared<CellSetPermutation>(); }
+  std::shared_ptr<CellSet> NewInstance() const override
+  {
+    return std::make_shared<CellSetPermutation>();
+  }
 };
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>
