@@ -65,6 +65,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
@@ -182,6 +183,14 @@ int main(int argc, char* argv[])
   int rank = 0;
 #endif
 
+  // initialize vtkm-m (e.g., logging via -v and device via the -d option)
+  vtkm::cont::InitializeOptions vtkm_initialize_options =
+    vtkm::cont::InitializeOptions::RequireDevice;
+  vtkm::cont::InitializeResult vtkm_config =
+    vtkm::cont::Initialize(argc, argv, vtkm_initialize_options);
+  auto device = vtkm_config.Device;
+
+  // Setup timing
   vtkm::Float64 prevTime = 0;
   vtkm::Float64 currTime = 0;
   vtkm::cont::Timer totalTime;
@@ -220,53 +229,24 @@ int main(int argc, char* argv[])
     computeBranchDecomposition = false;
   }
 
-  std::string device("default");
-  if (parser.hasOption("--device"))
-  {
-    device = parser.getOption("--device");
-    auto& rtTracker = vtkm::cont::GetRuntimeDeviceTracker();
-    if (device == "serial" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
-    }
-    else if (device == "openmp" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
-    }
-    else if (device == "tbb" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
-    }
-    else if (device == "cuda" && rtTracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda()))
-    {
-      rtTracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
-    }
-    else
-    {
-      std::cout << "Invalid or unavialable device adapter: " << device << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
 
 #ifdef ENABLE_SET_NUM_THREADS
   int numThreads = tbb::task_scheduler_init::default_num_threads();
   if (parser.hasOption("--numThreads"))
   {
-    if (device == "default" &&
-        vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(vtkm::cont::DeviceAdapterTagTBB()))
+    // Print warning about mismatch between the --numThreads and -d/--device opton
+    if (device != vtkm::cont::DeviceAdapterTagTBB)
     {
-      std::cout << "--numThreads specified without device. Forcing device as tbb.";
-      device = "tbb";
-      vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
+      std::cout << "WARNING: Mismatch between --numThreads and -d/--device option."
+                   "numThreads option requires the use of TBB as device. "
+                   "Ignoring the numThread option.";
     }
-
-    numThreads = std::stoi(parser.getOption("--numThreads"));
-    if (device != "tbb")
+    else
     {
-      std::cout << "numThreads will be ignored for devices other than tbb";
+      numThreads = std::stoi(parser.getOption("--numThreads"));
+      tbb::task_scheduler_init schedulerInit(numThreads);
     }
   }
-  tbb::task_scheduler_init schedulerInit(numThreads);
 #endif
 
   // Iso value selection parameters
@@ -310,8 +290,13 @@ int main(int argc, char* argv[])
     std::cout << "  - xdim ydim integers for 2D or" << std::endl;
     std::cout << "  - xdim ydim zdim integers for 3D" << std::endl;
     std::cout << "followed by vector data last dimension varying fastest" << std::endl;
-
     std::cout << std::endl;
+    std::cout << "----------------------------- VTKM Options -----------------------------"
+              << std::endl;
+    std::cout << vtkm_config.Usage << std::endl;
+    std::cout << std::endl;
+    std::cout << "------------------------- Contour Tree Options -------------------------"
+              << std::endl;
     std::cout << "Options: (Bool options are give via int, i.e. =0 for False and =1 for True)"
               << std::endl;
     std::cout << "--mc              Use marching cubes interpolation for contour tree calculation. "
@@ -328,14 +313,13 @@ int main(int argc, char* argv[])
                  "Requires --augmentTree (Default=True)"
               << std::endl;
     std::cout << "--printCT         Print the contour tree. (Default=False)" << std::endl;
-    std::cout << "--device          Set the device to use (serial, openmp, tbb, cuda). "
-                 "Use the default device if unspecified"
-              << std::endl;
 #ifdef ENABLE_SET_NUM_THREADS
     std::cout << "--numThreads      Specifiy the number of threads to use. Available only with TBB."
               << std::endl;
 #endif
     std::cout << std::endl;
+    std::cout << "---------------------- Isovalue Selection Options ----------------------"
+              << std::endl;
     std::cout << "Isovalue selection options: (require --branchDecomp=1 and augmentTree=1)"
               << std::endl;
     std::cout << "--levels=<int>  Number of iso-contour levels to be used (default=0, i.e., "
@@ -352,6 +336,8 @@ int main(int argc, char* argv[])
               << std::endl;
     std::cout << "--method=<int>  Method used for selecting relevant iso-values. (default=0)"
               << std::endl;
+    std::cout << std::endl;
+
 #ifdef WITH_MPI
     MPI_Finalize();
 #endif
@@ -362,7 +348,7 @@ int main(int argc, char* argv[])
   {
     std::cout << "Settings:" << std::endl;
     std::cout << "    filename=" << filename << std::endl;
-    std::cout << "    device=" << device << std::endl;
+    std::cout << "    device=" << device.GetName() << std::endl;
     std::cout << "    mc=" << useMarchingCubes << std::endl;
     std::cout << "    augmentTree=" << computeRegularStructure << std::endl;
     std::cout << "    branchDecomp=" << computeBranchDecomposition << std::endl;
