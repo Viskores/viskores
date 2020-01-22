@@ -98,8 +98,6 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <utility>
 #include <vector>
 
-#define DEBUG_TIMING
-
 using ValueType = vtkm::Float32;
 using BranchType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<ValueType>;
 
@@ -672,23 +670,21 @@ int main(int argc, char* argv[])
   ////////////////////////////////////////////
   if (rank == 0 && computeBranchDecomposition && computeRegularStructure)
   {
-#ifdef DEBUG_TIMING
+    // Time branch decompostion
     vtkm::cont::Timer branchDecompTimer;
     branchDecompTimer.Start();
-#endif
     // compute the volume for each hyperarc and superarc
     cppp2_ns::IdArrayType superarcIntrinsicWeight;
     cppp2_ns::IdArrayType superarcDependentWeight;
     cppp2_ns::IdArrayType supernodeTransferWeight;
     cppp2_ns::IdArrayType hyperarcDependentWeight;
-
     cppp2_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
                                                        filter.GetNumIterations(),
                                                        superarcIntrinsicWeight,  // (output)
                                                        superarcDependentWeight,  // (output)
                                                        supernodeTransferWeight,  // (output)
                                                        hyperarcDependentWeight); // (output)
-#ifdef DEBUG_TIMING
+    // Record the timings for the branch decomposition
     std::stringstream timingsStream; // Use a string stream to log in one message
     timingsStream << std::endl;
     timingsStream << "    --------------- Branch Decomposition Timings " << rank
@@ -696,14 +692,13 @@ int main(int argc, char* argv[])
     timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Weights"
                   << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     branchDecompTimer.Start();
-#endif
+
     // compute the branch decomposition by volume
     cppp2_ns::IdArrayType whichBranch;
     cppp2_ns::IdArrayType branchMinimum;
     cppp2_ns::IdArrayType branchMaximum;
     cppp2_ns::IdArrayType branchSaddle;
     cppp2_ns::IdArrayType branchParent;
-
     cppp2_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
                                                                    superarcDependentWeight,
                                                                    superarcIntrinsicWeight,
@@ -712,11 +707,10 @@ int main(int argc, char* argv[])
                                                                    branchMaximum, // (output)
                                                                    branchSaddle,  // (output)
                                                                    branchParent); // (output)
-#ifdef DEBUG_TIMING
+    // Record and log the branch decompostion timings
     timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Branch Decomposition"
                   << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, timingsStream.str());
-#endif
 
     //----main branch decompostion end
     //----Isovalue seleciton start
@@ -818,7 +812,6 @@ int main(int argc, char* argv[])
     cppp2_ns::printEdgePairArray(saddlePeak);
   }
 
-#ifdef DEBUG_TIMING
 #ifdef WITH_MPI
   // Force a simple round-robin on the ranks for the summary prints. Its not perfect for MPI but
   // it works well enough to sort the summaries from the ranks for small-scale debugging.
@@ -949,7 +942,6 @@ int main(int argc, char* argv[])
     MPI_Send(&message, 1, MPI_INT, (rank + 1), 0, comm);
   }
 #endif
-#endif // DEBUG_TIMING
 
 #ifdef WITH_MPI
   MPI_Finalize();
