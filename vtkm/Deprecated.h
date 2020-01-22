@@ -63,7 +63,11 @@
 #if __cplusplus >= 201402L
 
 // C++14 and better supports [[deprecated]]
+// Except in these cases:
+//   - nvcc on visual studio
+#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
+#endif
 
 #elif defined(VTKM_GCC)
 
@@ -81,7 +85,7 @@
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif // __has_cpp_attribute(deprecated)
 
-#elif defined(VTKM_MSVC) && _MSC_VER >= 1900
+#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900) && !defined(VTKM_CUDA)
 
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 
