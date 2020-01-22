@@ -54,8 +54,8 @@
 #define vtk_m_worklet_ContourTreeUniformAugmented_h
 
 
+#include <sstream>
 #include <utility>
-#include <vector>
 
 // VTKM includes
 #include <vtkm/Math.h>
@@ -98,7 +98,6 @@ public:
   void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType>
              fieldArray, // TODO: We really should not need this
            contourtree_augmented::ContourTreeMesh<FieldType>& mesh,
-           std::vector<std::pair<std::string, vtkm::Float64>>& timings,
            contourtree_augmented::ContourTree& contourTree,
            contourtree_augmented::IdArrayType sortOrder,
            vtkm::Id& nIterations,
@@ -107,7 +106,6 @@ public:
   {
     RunContourTree(
       fieldArray, // Just a place-holder to fill the required field. Used when calling SortData on the contour tree which is a no-op
-      timings,
       contourTree,
       sortOrder,
       nIterations,
@@ -128,7 +126,6 @@ public:
    */
   template <typename FieldType, typename StorageType>
   void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-           std::vector<std::pair<std::string, vtkm::Float64>>& timings,
            contourtree_augmented::ContourTree& contourTree,
            contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
@@ -146,7 +143,6 @@ public:
       Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
-                     timings,
                      contourTree,
                      sortOrder,
                      nIterations,
@@ -162,7 +158,6 @@ public:
       Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
-                     timings,
                      contourTree,
                      sortOrder,
                      nIterations,
@@ -178,7 +173,6 @@ public:
       Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
-                     timings,
                      contourTree,
                      sortOrder,
                      nIterations,
@@ -213,7 +207,6 @@ private:
             typename MeshClass,
             typename MeshBoundaryClass>
   void RunContourTree(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-                      std::vector<std::pair<std::string, vtkm::Float64>>& timings,
                       contourtree_augmented::ContourTree& contourTree,
                       contourtree_augmented::IdArrayType& sortOrder,
                       vtkm::Id& nIterations,
@@ -230,24 +223,31 @@ private:
     // Start the timer for the mesh sort
     vtkm::cont::Timer timer;
     timer.Start();
+    std::stringstream timingsStream; // Use a string stream to log in one message
+    timingsStream << std::endl;
+    timingsStream << "    ------------------- Contour Tree Worklet Timings ----------------------"
+                  << std::endl;
+
+    // Sort the mesh data
     mesh.SortData(fieldArray);
-    timings.push_back(std::pair<std::string, vtkm::Float64>("Sort Data", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Sort Data"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
     // Stage 3: Assign every mesh vertex to a peak
     MeshExtrema extrema(mesh.nVertices);
     extrema.SetStarts(mesh, true);
     extrema.BuildRegularChains(true);
-    timings.push_back(
-      std::pair<std::string, vtkm::Float64>("Join Tree Regular Chains", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Join Tree Regular Chains"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
     // Stage 4: Identify join saddles & construct Active Join Graph
     MergeTree joinTree(mesh.nVertices, true);
     ActiveGraph joinGraph(true);
     joinGraph.Initialise(mesh, extrema);
-    timings.push_back(std::pair<std::string, vtkm::Float64>("Join Tree Initialize Active Graph",
-                                                            timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Join Tree Initialize Active Graph"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 
 #ifdef DEBUG_PRINT
     joinGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
@@ -256,8 +256,8 @@ private:
 
     // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
     joinGraph.MakeMergeTree(joinTree, extrema);
-    timings.push_back(
-      std::pair<std::string, vtkm::Float64>("Join Tree Compute", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Join Tree Compute"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 #ifdef DEBUG_PRINT
     joinTree.DebugPrint("Join tree Computed", __FILE__, __LINE__);
     joinTree.DebugPrintTree("Join tree", __FILE__, __LINE__, mesh);
@@ -267,16 +267,16 @@ private:
     // Stage 6: Assign every mesh vertex to a pit
     extrema.SetStarts(mesh, false);
     extrema.BuildRegularChains(false);
-    timings.push_back(
-      std::pair<std::string, vtkm::Float64>("Spit Tree Regular Chains", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Split Tree Regular Chains"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
     // Stage 7:     Identify split saddles & construct Active Split Graph
     MergeTree splitTree(mesh.nVertices, false);
     ActiveGraph splitGraph(false);
     splitGraph.Initialise(mesh, extrema);
-    timings.push_back(std::pair<std::string, vtkm::Float64>("Split Tree Initialize Active Graph",
-                                                            timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Splot Tree Initialize Active Graph"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 #ifdef DEBUG_PRINT
     splitGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);
 #endif
@@ -284,8 +284,8 @@ private:
 
     // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
     splitGraph.MakeMergeTree(splitTree, extrema);
-    timings.push_back(
-      std::pair<std::string, vtkm::Float64>("Split Tree Compute", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left << "Split Tree Compute"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 #ifdef DEBUG_PRINT
     splitTree.DebugPrint("Split tree Computed", __FILE__, __LINE__);
     // Debug split and join tree
@@ -299,23 +299,26 @@ private:
     ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();
-    timings.push_back(std::pair<std::string, vtkm::Float64>(
-      "Contour Tree Hyper and Super Structure", timer.GetElapsedTime()));
+    timingsStream << "    " << std::setw(38) << std::left
+                  << "Contour Tree Hyper and Super Structure"
+                  << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
     // 9.2 Then we compute the regular structure
     if (computeRegularStructure == 1) // augment with all vertices
     {
       treeMaker.ComputeRegularStructure(extrema);
-      timings.push_back(std::pair<std::string, vtkm::Float64>("Contour Tree Regular Structure",
-                                                              timer.GetElapsedTime()));
+      timingsStream << "    " << std::setw(38) << std::left << "Contour Tree Regular Structure"
+                    << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     }
     else if (computeRegularStructure == 2) // augment by the mesh boundary
     {
       treeMaker.ComputeBoundaryRegularStructure(extrema, mesh, meshBoundary);
-      timings.push_back(std::pair<std::string, vtkm::Float64>(
-        "Contour Tree Boundary Regular Structure", timer.GetElapsedTime()));
+      timingsStream << "    " << std::setw(38) << std::left
+                    << "Contour Tree Boundary Regular Structure"
+                    << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     }
+    timer.Start();
 
     // Collect the output data
     nIterations = treeMaker.nIterations;
@@ -323,6 +326,9 @@ private:
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.sortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.sortOrder);
     // contourTree.PrintDotSuperStructure();
+
+    // Log the collected timing results in one coherent log entry
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, timingsStream.str());
   }
 };
 

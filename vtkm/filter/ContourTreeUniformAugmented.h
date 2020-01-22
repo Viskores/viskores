@@ -121,7 +121,6 @@ public:
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
   const vtkm::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;
   vtkm::Id GetNumIterations() const;
-  const std::vector<std::pair<std::string, vtkm::Float64>>& GetTimings() const;
 
 private:
   // Given the input dataset determine the number of rows, cols, and slices
@@ -133,8 +132,6 @@ private:
   bool UseMarchingCubes;
   // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
   unsigned int ComputeRegularStructure;
-  // Store timings about the contour tree computation
-  std::vector<std::pair<std::string, vtkm::Float64>> Timings;
 
   // TODO Should the additional fields below be add to the vtkm::filter::ResultField and what is the best way to represent them
   // Additional result fields not included in the vtkm::filter::ResultField returned by DoExecute

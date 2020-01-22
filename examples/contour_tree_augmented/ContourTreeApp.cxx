@@ -376,24 +376,29 @@ int main(int argc, char* argv[])
                  "    computeIsovalues=" << (numLevels > 0));
     VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info,
                   numLevels > 0,
-                  "    levels=" << numLevels << std::endl
-                                << "    eps="
-                                << eps
-                                << std::endl
-                                << "    comp"
-                                << numComp
-                                << std::endl
-                                << "    type="
-                                << contourType
-                                << std::endl
-                                << "    method="
-                                << contourSelectMethod
-                                << std::endl
-                                << "    mc="
-                                << useMarchingCubes
-                                << std::endl
-                                << "    use"
-                                << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
+                  std::endl
+                    << "    ------------ Settings Isolevel Selection -----------"
+                    << std::endl
+                    << "    levels="
+                    << numLevels
+                    << std::endl
+                    << "    eps="
+                    << eps
+                    << std::endl
+                    << "    comp"
+                    << numComp
+                    << std::endl
+                    << "    type="
+                    << contourType
+                    << std::endl
+                    << "    method="
+                    << contourSelectMethod
+                    << std::endl
+                    << "    mc="
+                    << useMarchingCubes
+                    << std::endl
+                    << "    use"
+                    << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
   }
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 startUpTime = currTime - prevTime;
@@ -466,7 +471,7 @@ int main(int argc, char* argv[])
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                std::endl
-                 << "    ---------------- Input Mesh Propoerties --------------"
+                 << "    ---------------- Input Mesh Properties --------------"
                  << std::endl
                  << "    Number of dimensions: "
                  << nDims
@@ -662,23 +667,6 @@ int main(int argc, char* argv[])
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
   prevTime = currTime;
 
-#ifdef DEBUG_TIMING
-  std::stringstream timingsStream; // Use a string stream to log in one message
-  timingsStream << std::endl;
-  timingsStream << "    ------------------- Contour Tree Timings " << rank
-                << " ----------------------" << std::endl;
-  // Get the timings from the contour tree computation
-  const std::vector<std::pair<std::string, vtkm::Float64>>& contourTreeTimings =
-    filter.GetTimings();
-  for (std::size_t i = 0; i < contourTreeTimings.size(); ++i)
-  {
-    timingsStream << "    " << std::setw(38) << std::left << contourTreeTimings[i].first << ": "
-                  << contourTreeTimings[i].second << " seconds" << std::endl;
-  }
-  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info, rank == 0, timingsStream.str());
-  timingsStream.str(std::string()); // Reset the string stream so we can reuse it
-#endif
-
   ////////////////////////////////////////////
   // Compute the branch decomposition
   ////////////////////////////////////////////
@@ -701,6 +689,7 @@ int main(int argc, char* argv[])
                                                        supernodeTransferWeight,  // (output)
                                                        hyperarcDependentWeight); // (output)
 #ifdef DEBUG_TIMING
+    std::stringstream timingsStream; // Use a string stream to log in one message
     timingsStream << std::endl;
     timingsStream << "    --------------- Branch Decomposition Timings " << rank
                   << " --------------" << std::endl;
@@ -881,6 +870,7 @@ int main(int argc, char* argv[])
                << ": "
                << computeBranchDecompTime
                << " seconds"
+               << std::endl
                << std::setw(42)
                << std::left
                << "    Total Time"

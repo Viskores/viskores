@@ -95,7 +95,6 @@ public:
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
-    std::vector<std::pair<std::string, vtkm::Float64>> timings;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
@@ -103,7 +102,6 @@ public:
     const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
-                           timings,
                            contourTree,
                            meshSortOrder,
                            numIterations,
@@ -168,7 +166,6 @@ public:
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
-    std::vector<std::pair<std::string, vtkm::Float64>> timings;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
@@ -176,7 +173,6 @@ public:
     const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
-                           timings,
                            contourTree,
                            meshSortOrder,
                            numIterations,
@@ -248,7 +244,6 @@ public:
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
-    std::vector<std::pair<std::string, vtkm::Float64>> timings;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
@@ -256,7 +251,6 @@ public:
     const int computeRegularStructure = 1;
 
     contourTreeWorklet.Run(field,
-                           timings,
                            contourTree,
                            meshSortOrder,
                            numIterations,

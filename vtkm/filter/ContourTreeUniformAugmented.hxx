@@ -469,7 +469,6 @@ void merge_block_functor(
       else // If we are a block that will continue to be merged then we need compute the contour tree here
       {
         // Compute the contour tree from our merged mesh
-        std::vector<std::pair<std::string, vtkm::Float64>> currTimings;
         vtkm::Id currNumIterations;
         vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
         vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
@@ -487,7 +486,6 @@ void merge_block_functor(
         worklet.Run(
           contourTreeMeshOut.sortedValues, // Unused param. Provide something to keep the API happy
           contourTreeMeshOut,
-          currTimings,
           currContourTree,
           currSortOrder,
           currNumIterations,
@@ -550,7 +548,6 @@ ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes, unsigned int computeRegu
   : vtkm::filter::FilterCell<ContourTreePPP2>()
   , UseMarchingCubes(useMarchingCubes)
   , ComputeRegularStructure(computeRegularStructure)
-  , Timings()
   , MultiBlockTreeHelper(nullptr)
 {
   this->SetOutputFieldName("resultData");
@@ -587,11 +584,6 @@ vtkm::Id ContourTreePPP2::GetNumIterations() const
   return this->NumIterations;
 }
 
-const std::vector<std::pair<std::string, vtkm::Float64>>& ContourTreePPP2::GetTimings() const
-{
-  return this->Timings;
-}
-
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
@@ -599,11 +591,8 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
                                                const vtkm::filter::FieldMetadata& fieldMeta,
                                                vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  // TODO: This should be switched to use the logging macros defined in vtkm/cont/logging.h
-  // Start the timer
   vtkm::cont::Timer timer;
   timer.Start();
-  Timings.clear();
 
   // Check that the field is Ok
   if (fieldMeta.IsPointField() == false)
@@ -638,7 +627,6 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
 
   // Run the worklet
   worklet.Run(field,
-              this->Timings,
               MultiBlockTreeHelper ? MultiBlockTreeHelper->mLocalContourTrees[blockIndex]
                                    : this->ContourTreeData,
               MultiBlockTreeHelper ? MultiBlockTreeHelper->mLocalSortOrders[blockIndex]
@@ -649,13 +637,6 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
               nSlices,
               this->UseMarchingCubes,
               compRegularStruct);
-
-  // Update the total timings
-  vtkm::Float64 totalTimeWorklet = 0;
-  for (std::vector<std::pair<std::string, vtkm::Float64>>::size_type i = 0; i < Timings.size(); i++)
-    totalTimeWorklet += Timings[i].second;
-  Timings.push_back(std::pair<std::string, vtkm::Float64>(
-    "Others (ContourTreePPP2 Filter): ", timer.GetElapsedTime() - totalTimeWorklet));
 
   // If we run in parallel but with only one global block, then we need set our outputs correctly
   // here to match the expected behavior in parallel
@@ -679,6 +660,17 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
       return result;
     }
   }
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             std::endl
+               << "    "
+               << std::setw(38)
+               << std::left
+               << "Contour Tree Filter DoExecute"
+               << ": "
+               << timer.GetElapsedTime()
+               << " seconds");
+
   // Construct the expected result for serial execution. Note, in serial the result currently
   // not actually being used, but in parallel we need the sorted mesh values as output
   // This part is being hit when we run in serial or parallel with more then one rank
@@ -851,7 +843,6 @@ VTKM_CONT void ContourTreePPP2::DoPostExecute(
   if (rank == 0)
   {
     // Now run the contour tree algorithm on the last block to compute the final tree
-    std::vector<std::pair<std::string, vtkm::Float64>> currTimings;
     vtkm::Id currNumIterations;
     vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
@@ -881,7 +872,6 @@ VTKM_CONT void ContourTreePPP2::DoPostExecute(
     worklet.Run(
       contourTreeMeshOut.sortedValues, // Unused param. Provide something to keep API happy
       contourTreeMeshOut,
-      currTimings,
       this->ContourTreeData,
       this->MeshSortOrder,
       currNumIterations,
@@ -930,6 +920,8 @@ inline VTKM_CONT void ContourTreePPP2::PostExecute(
 {
   if (this->MultiBlockTreeHelper)
   {
+    vtkm::cont::Timer timer;
+    timer.Start();
     // We are running in parallel and need to merge the contour tree in PostExecute
     if (MultiBlockTreeHelper->getGlobalNumberOfBlocks() == 1)
     {
@@ -950,6 +942,15 @@ inline VTKM_CONT void ContourTreePPP2::PostExecute(
 
     delete this->MultiBlockTreeHelper;
     this->MultiBlockTreeHelper = nullptr;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               std::endl
+                 << "    "
+                 << std::setw(38)
+                 << std::left
+                 << "Contour Tree Filter PostExecute"
+                 << ": "
+                 << timer.GetElapsedTime()
+                 << " seconds");
   }
 }
 
