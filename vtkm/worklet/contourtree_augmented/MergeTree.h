@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_mergetree_h
-#define vtkm_worklet_contourtree_augmented_mergetree_h
+#ifndef vtk_m_worklet_contourtree_augmented_mergetree_h
+#define vtk_m_worklet_contourtree_augmented_mergetree_h
 
 #include <iomanip>
 

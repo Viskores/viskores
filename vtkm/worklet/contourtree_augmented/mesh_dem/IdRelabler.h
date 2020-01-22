@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
-#define vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

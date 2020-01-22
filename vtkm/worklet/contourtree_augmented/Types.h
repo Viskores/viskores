@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_types_h
-#define vtkm_worklet_contourtree_augmented_types_h
+#ifndef vtk_m_worklet_contourtree_augmented_types_h
+#define vtk_m_worklet_contourtree_augmented_types_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>

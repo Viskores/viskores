@@ -51,8 +51,8 @@
 //==============================================================================
 
 // include guard
-#ifndef vtkm_worklet_contourtree_augmented_array_transforms_h
-#define vtkm_worklet_contourtree_augmented_array_transforms_h
+#ifndef vtk_m_worklet_contourtree_augmented_array_transforms_h
+#define vtk_m_worklet_contourtree_augmented_array_transforms_h
 
 // global libraries
 #include <vtkm/cont/Algorithm.h>

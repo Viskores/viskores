@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_h
 
 // global includes
 #include <algorithm>

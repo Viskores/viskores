@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>

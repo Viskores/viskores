@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

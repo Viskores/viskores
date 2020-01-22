@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>

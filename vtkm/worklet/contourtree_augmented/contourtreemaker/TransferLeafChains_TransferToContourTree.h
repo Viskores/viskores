@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_transfer_to_contour_tree_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_transfer_to_contour_tree_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_transfer_to_contour_tree_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_transfer_leaf_chains_transfer_to_contour_tree_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_supernode_branch_comperator_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_supernode_branch_comperator_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_supernode_branch_comperator_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_supernode_branch_comperator_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>

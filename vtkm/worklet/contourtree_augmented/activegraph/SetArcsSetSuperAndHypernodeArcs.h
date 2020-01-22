@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
-#define vtkm_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_set_super_and_hypernode_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

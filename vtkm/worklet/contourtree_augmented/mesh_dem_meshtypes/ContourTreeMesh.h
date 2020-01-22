@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_contour_tree_mesh_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_contour_tree_mesh_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_contour_tree_mesh_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_contour_tree_mesh_h
 
 #include <cstdlib>
 #include <fstream>

@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
 
 #include <cstdlib>
 #include <vtkm/Types.h>

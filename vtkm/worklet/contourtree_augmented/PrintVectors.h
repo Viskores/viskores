@@ -51,8 +51,8 @@
 //==============================================================================
 
 // include guard
-#ifndef vtkm_worklet_contourtree_augmented_print_vectors_h
-#define vtkm_worklet_contourtree_augmented_print_vectors_h
+#ifndef vtk_m_worklet_contourtree_augmented_print_vectors_h
+#define vtk_m_worklet_contourtree_augmented_print_vectors_h
 
 // global libraries
 #include <iomanip>

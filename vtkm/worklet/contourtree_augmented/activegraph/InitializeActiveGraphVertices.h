@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 

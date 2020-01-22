@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

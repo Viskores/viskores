@@ -70,8 +70,8 @@
 
 
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_h
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>

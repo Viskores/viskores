@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_pointer_doubling_h
-#define vtkm_worklet_contourtree_augmented_pointer_doubling_h
+#ifndef vtk_m_worklet_contourtree_augmented_pointer_doubling_h
+#define vtk_m_worklet_contourtree_augmented_pointer_doubling_h
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>

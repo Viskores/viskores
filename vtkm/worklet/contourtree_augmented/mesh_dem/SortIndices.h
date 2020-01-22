@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_sort_indices_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_sort_indices_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 

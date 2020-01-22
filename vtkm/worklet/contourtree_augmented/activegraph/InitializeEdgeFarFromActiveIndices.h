@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_edge_far_from_active_indices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

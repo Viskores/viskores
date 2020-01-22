@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/worklet/WorkletMapField.h>

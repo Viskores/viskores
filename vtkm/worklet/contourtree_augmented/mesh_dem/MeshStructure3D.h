@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_3d_h
 
 #include <vtkm/Types.h>
 

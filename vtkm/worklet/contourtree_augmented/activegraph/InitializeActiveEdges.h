@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
 
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/worklet/WorkletMapField.h>

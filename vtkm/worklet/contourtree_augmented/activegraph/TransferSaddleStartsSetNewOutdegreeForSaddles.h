@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_set_new_outdegree_for_saddles_h
-#define vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_set_new_outdegree_for_saddles_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_set_new_outdegree_for_saddles_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_set_new_outdegree_for_saddles_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_inc_hyper_arc_super_node_comparator_h
-#define vtkm_worklet_contourtree_augmented_active_graph_inc_hyper_arc_super_node_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_inc_hyper_arc_super_node_comparator_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_inc_hyper_arc_super_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>

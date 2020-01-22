@@ -56,8 +56,8 @@
 // class and an ExectionObject class with the PrepareForInput function that
 // VTKm expects to generate the object for the execution environment.
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_boundary_h
-#define vtkm_worklet_contourtree_augmented_mesh_boundary_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_h
+#define vtk_m_worklet_contourtree_augmented_mesh_boundary_h
 
 #include <cstdlib>
 

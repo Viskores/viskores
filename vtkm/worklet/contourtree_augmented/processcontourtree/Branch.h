@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_branch_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_branch_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_branch_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_branch_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
