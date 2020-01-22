@@ -232,12 +232,14 @@ struct PermutationTests
     std::cout << "Try in place operation" << std::endl;
     Algorithm::Schedule(make_InPlacePermutationFunctor(permutationArray, Device(), token),
                         ARRAY_SIZE);
+    token.DetachFromAll();
     CheckInPlaceResult(valueArray.GetPortalControl());
     CheckInPlaceResult(valueArray.GetPortalConstControl());
 
     std::cout << "Try output operation" << std::endl;
     Algorithm::Schedule(make_OutputPermutationFunctor(permutationArray, Device(), token),
                         ARRAY_SIZE);
+    token.DetachFromAll();
     CheckOutputResult(valueArray.GetPortalConstControl());
     CheckOutputResult(valueArray.GetPortalControl());
   }

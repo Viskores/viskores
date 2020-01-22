@@ -322,9 +322,12 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
-    vtkm::cont::Token token;
-    vtkm::Id outputSize =
-      tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB(), token), binary_compare);
+    vtkm::Id outputSize;
+    {
+      vtkm::cont::Token token;
+      outputSize =
+        tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB(), token), binary_compare);
+    }
     values.Shrink(outputSize);
   }
 

@@ -110,23 +110,25 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::Id inputSize = input.GetNumberOfValues();
-    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
-
-    vtkm::cont::Token token;
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
-    auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial(), token);
-    auto outputPortal = output.PrepareForOutput(inputSize, DeviceAdapterTagSerial(), token);
-
-    vtkm::Id readPos = 0;
     vtkm::Id writePos = 0;
 
-    for (; readPos < inputSize; ++readPos)
     {
-      if (predicate(stencilPortal.Get(readPos)))
+      vtkm::cont::Token token;
+
+      vtkm::Id inputSize = input.GetNumberOfValues();
+      VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+
+      auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial(), token);
+      auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial(), token);
+      auto outputPortal = output.PrepareForOutput(inputSize, DeviceAdapterTagSerial(), token);
+
+      for (vtkm::Id readPos = 0; readPos < inputSize; ++readPos)
       {
-        outputPortal.Set(writePos, inputPortal.Get(readPos));
-        ++writePos;
+        if (predicate(stencilPortal.Get(readPos)))
+        {
+          outputPortal.Set(writePos, inputPortal.Get(readPos));
+          ++writePos;
+        }
       }
     }
 
@@ -240,51 +242,53 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::cont::Token token;
-
-    auto keysPortalIn = keys.PrepareForInput(Device(), token);
-    auto valuesPortalIn = values.PrepareForInput(Device(), token);
-    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
-
-    VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
-    if (numberOfKeys == 0)
-    {
-      keys_output.Shrink(0);
-      values_output.Shrink(0);
-      return;
-    }
-
-    auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device(), token);
-    auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device(), token);
-
     vtkm::Id writePos = 0;
     vtkm::Id readPos = 0;
 
-    T currentKey = keysPortalIn.Get(readPos);
-    U currentValue = valuesPortalIn.Get(readPos);
-
-    for (++readPos; readPos < numberOfKeys; ++readPos)
     {
-      while (readPos < numberOfKeys && currentKey == keysPortalIn.Get(readPos))
+      vtkm::cont::Token token;
+
+      auto keysPortalIn = keys.PrepareForInput(Device(), token);
+      auto valuesPortalIn = values.PrepareForInput(Device(), token);
+      const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+      VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
+      if (numberOfKeys == 0)
       {
-        currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
-        ++readPos;
+        keys_output.Shrink(0);
+        values_output.Shrink(0);
+        return;
       }
 
-      if (readPos < numberOfKeys)
-      {
-        keysPortalOut.Set(writePos, currentKey);
-        valuesPortalOut.Set(writePos, currentValue);
-        ++writePos;
+      auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device(), token);
+      auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device(), token);
 
-        currentKey = keysPortalIn.Get(readPos);
-        currentValue = valuesPortalIn.Get(readPos);
+      T currentKey = keysPortalIn.Get(readPos);
+      U currentValue = valuesPortalIn.Get(readPos);
+
+      for (++readPos; readPos < numberOfKeys; ++readPos)
+      {
+        while (readPos < numberOfKeys && currentKey == keysPortalIn.Get(readPos))
+        {
+          currentValue = binary_functor(currentValue, valuesPortalIn.Get(readPos));
+          ++readPos;
+        }
+
+        if (readPos < numberOfKeys)
+        {
+          keysPortalOut.Set(writePos, currentKey);
+          valuesPortalOut.Set(writePos, currentValue);
+          ++writePos;
+
+          currentKey = keysPortalIn.Get(readPos);
+          currentValue = valuesPortalIn.Get(readPos);
+        }
       }
+
+      //now write out the last set of values
+      keysPortalOut.Set(writePos, currentKey);
+      valuesPortalOut.Set(writePos, currentValue);
     }
-
-    //now write out the last set of values
-    keysPortalOut.Set(writePos, currentKey);
-    valuesPortalOut.Set(writePos, currentValue);
 
     //now we need to shrink to the correct number of keys/values
     //writePos is zero-based so add 1 to get correct length

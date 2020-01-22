@@ -1397,14 +1397,18 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
     {
-      vtkm::cont::Token token;
       IdArrayHandle keys, values;
-      Algorithm::Schedule(
-        ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)), ARRAY_SIZE);
 
-      Algorithm::Schedule(
-        ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
-        ARRAY_SIZE);
+      {
+        vtkm::cont::Token token;
+        Algorithm::Schedule(
+          ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+          ARRAY_SIZE);
+
+        Algorithm::Schedule(
+          ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+          ARRAY_SIZE);
+      }
 
       vtkm::cont::ArrayHandleZip<IdArrayHandle, IdArrayHandle> zipped(keys, values);
 

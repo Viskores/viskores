@@ -39,7 +39,7 @@ namespace cont
 namespace internal
 {
 
-/// \brief
+/// \brief General implementations of device adapter algorithms.
 ///
 /// This struct provides algorithms that implement "general" device adapter
 /// algorithms. If a device adapter provides implementations for Schedule,
@@ -93,24 +93,26 @@ struct DeviceAdapterAlgorithmGeneral
   //--------------------------------------------------------------------------
   // Get Execution Value
   // This method is used internally to get a single element from the execution
-  // array. Might want to expose this and/or allow actual device adapter
-  // implementations to provide one.
+  // array. Normally you would just use ArrayGetValue, but that functionality
+  // relies on the device adapter algorithm and would create a circular
+  // dependency.
 private:
   template <typename T, class CIn>
   VTKM_CONT static T GetExecutionValue(const vtkm::cont::ArrayHandle<T, CIn>& input, vtkm::Id index)
   {
-    using OutputArrayType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> output;
 
-    vtkm::cont::Token token;
+    {
+      vtkm::cont::Token token;
 
-    OutputArrayType output;
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
-    auto outputPortal = output.PrepareForOutput(1, DeviceAdapterTag(), token);
+      auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+      auto outputPortal = output.PrepareForOutput(1, DeviceAdapterTag(), token);
 
-    CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(
-      inputPortal, outputPortal, index);
+      CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(
+        inputPortal, outputPortal, index);
 
-    DerivedAlgorithm::Schedule(kernel, 1);
+      DerivedAlgorithm::Schedule(kernel, 1);
+    }
 
     return output.GetPortalConstControl().Get(0);
   }
@@ -938,24 +940,26 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
-    vtkm::cont::Token token;
-
-    auto portal = output.PrepareForInPlace(DeviceAdapterTag(), token);
-    using ScanKernelType = ScanKernel<decltype(portal), BinaryFunctor>;
-
-
-    vtkm::Id stride;
-    for (stride = 2; stride - 1 < numValues; stride *= 2)
     {
-      ScanKernelType kernel(portal, binary_functor, stride, stride / 2 - 1);
-      DerivedAlgorithm::Schedule(kernel, numValues / stride);
-    }
+      vtkm::cont::Token token;
 
-    // Do reverse operation on odd indices. Start at stride we were just at.
-    for (stride /= 2; stride > 1; stride /= 2)
-    {
-      ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
-      DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      auto portal = output.PrepareForInPlace(DeviceAdapterTag(), token);
+      using ScanKernelType = ScanKernel<decltype(portal), BinaryFunctor>;
+
+
+      vtkm::Id stride;
+      for (stride = 2; stride - 1 < numValues; stride *= 2)
+      {
+        ScanKernelType kernel(portal, binary_functor, stride, stride / 2 - 1);
+        DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      }
+
+      // Do reverse operation on odd indices. Start at stride we were just at.
+      for (stride /= 2; stride > 1; stride /= 2)
+      {
+        ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
+        DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      }
     }
 
     return GetExecutionValue(output, numValues - 1);

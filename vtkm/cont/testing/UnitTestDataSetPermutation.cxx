@@ -12,7 +12,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -104,17 +103,6 @@ void TestDataSet_Explicit()
 
   subset.PrintSummary(std::cout);
 
-  using ExecObjectType = SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
-                                                    vtkm::TopologyElementTagCell,
-                                                    vtkm::TopologyElementTagPoint>::ExecObjectType;
-
-  vtkm::cont::Token token;
-  ExecObjectType execConnectivity;
-  execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                            vtkm::TopologyElementTagCell(),
-                                            vtkm::TopologyElementTagPoint(),
-                                            token);
-
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
@@ -151,14 +139,6 @@ void TestDataSet_Structured2D()
 
   subset.PrintSummary(std::cout);
 
-  //verify that we can call PrepareForInput on CellSetSingleType
-  using DeviceAdapterTag = vtkm::cont::DeviceAdapterTagSerial;
-
-  //verify that PrepareForInput exists
-  vtkm::cont::Token token;
-  subset.PrepareForInput(
-    DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint(), token);
-
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
@@ -193,13 +173,6 @@ void TestDataSet_Structured3D()
   subset.Fill(validCellIds, cellSet);
 
   subset.PrintSummary(std::cout);
-
-  //verify that PrepareForInput exists
-  vtkm::cont::Token token;
-  subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                         vtkm::TopologyElementTagCell(),
-                         vtkm::TopologyElementTagPoint(),
-                         token);
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
