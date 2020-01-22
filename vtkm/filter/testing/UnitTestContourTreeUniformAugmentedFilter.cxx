@@ -77,13 +77,13 @@ public:
   //
   void TestContourTree_Mesh2D_Freudenthal() const
   {
-    std::cout << "Testing ContourTree_PPP2 2D Mesh" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 2D Mesh" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
     bool useMarchingCubes = false;
     bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
+    vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
     filter.SetActiveField("pointvar");
     auto result = filter.Execute(dataSet);
 
@@ -125,7 +125,7 @@ public:
 
   void TestContourTree_Mesh3D_Freudenthal() const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -133,7 +133,7 @@ public:
     // Execute the filter
     bool useMarchingCubes = false;
     bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
+    vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
     filter.SetActiveField("pointvar");
     auto result = filter.Execute(dataSet);
 
@@ -182,7 +182,7 @@ public:
 
   void TestContourTree_Mesh3D_MarchingCubes() const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh Marching Cubes" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -190,7 +190,7 @@ public:
     // Execute the filter
     bool useMarchingCubes = true;
     bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
+    vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
     filter.SetActiveField("pointvar");
     auto result = filter.Execute(dataSet);
 

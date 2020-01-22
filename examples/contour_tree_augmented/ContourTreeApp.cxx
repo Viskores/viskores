@@ -101,7 +101,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 using ValueType = vtkm::Float32;
 using BranchType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<ValueType>;
 
-namespace cppp2_ns = vtkm::worklet::contourtree_augmented;
+namespace ctaug_ns = vtkm::worklet::contourtree_augmented;
 
 // Simple helper class for parsing the command line options
 class ParseCL
@@ -649,7 +649,7 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
+  vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
 
 #ifdef WITH_MPI
   filter.SetSpatialDecomposition(
@@ -674,11 +674,11 @@ int main(int argc, char* argv[])
     vtkm::cont::Timer branchDecompTimer;
     branchDecompTimer.Start();
     // compute the volume for each hyperarc and superarc
-    cppp2_ns::IdArrayType superarcIntrinsicWeight;
-    cppp2_ns::IdArrayType superarcDependentWeight;
-    cppp2_ns::IdArrayType supernodeTransferWeight;
-    cppp2_ns::IdArrayType hyperarcDependentWeight;
-    cppp2_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
+    ctaug_ns::IdArrayType superarcIntrinsicWeight;
+    ctaug_ns::IdArrayType superarcDependentWeight;
+    ctaug_ns::IdArrayType supernodeTransferWeight;
+    ctaug_ns::IdArrayType hyperarcDependentWeight;
+    ctaug_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
                                                        filter.GetNumIterations(),
                                                        superarcIntrinsicWeight,  // (output)
                                                        superarcDependentWeight,  // (output)
@@ -694,12 +694,12 @@ int main(int argc, char* argv[])
     branchDecompTimer.Start();
 
     // compute the branch decomposition by volume
-    cppp2_ns::IdArrayType whichBranch;
-    cppp2_ns::IdArrayType branchMinimum;
-    cppp2_ns::IdArrayType branchMaximum;
-    cppp2_ns::IdArrayType branchSaddle;
-    cppp2_ns::IdArrayType branchParent;
-    cppp2_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
+    ctaug_ns::IdArrayType whichBranch;
+    ctaug_ns::IdArrayType branchMinimum;
+    ctaug_ns::IdArrayType branchMaximum;
+    ctaug_ns::IdArrayType branchSaddle;
+    ctaug_ns::IdArrayType branchParent;
+    ctaug_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
                                                                    superarcDependentWeight,
                                                                    superarcIntrinsicWeight,
                                                                    whichBranch,   // (output)
@@ -730,7 +730,7 @@ int main(int argc, char* argv[])
 
       // create explicit representation of the branch decompostion from the array representation
       BranchType* branchDecompostionRoot =
-        cppp2_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
+        ctaug_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
           filter.GetContourTree().superparents,
           filter.GetContourTree().supernodes,
           whichBranch,
@@ -806,10 +806,10 @@ int main(int argc, char* argv[])
   {
     std::cout << "Contour Tree" << std::endl;
     std::cout << "============" << std::endl;
-    cppp2_ns::EdgePairArray saddlePeak;
-    cppp2_ns::ProcessContourTree::CollectSortedSuperarcs(
+    ctaug_ns::EdgePairArray saddlePeak;
+    ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
-    cppp2_ns::printEdgePairArray(saddlePeak);
+    ctaug_ns::printEdgePairArray(saddlePeak);
   }
 
 #ifdef WITH_MPI
@@ -871,7 +871,7 @@ int main(int argc, char* argv[])
                << currTime
                << " seconds");
 
-  const cppp2_ns::ContourTree& ct = filter.GetContourTree();
+  const ctaug_ns::ContourTree& ct = filter.GetContourTree();
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
                << "    ---------------- Contour Tree Array Sizes ---------------------"

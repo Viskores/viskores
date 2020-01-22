@@ -75,12 +75,12 @@ class MultiBlockContourTreeHelper;
 } // namespace detail
 
 
-class ContourTreePPP2 : public vtkm::filter::FilterCell<ContourTreePPP2>
+class ContourTreeAugmented : public vtkm::filter::FilterCell<ContourTreeAugmented>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
   VTKM_CONT
-  ContourTreePPP2(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
+  ContourTreeAugmented(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
 
   // Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
   VTKM_CONT

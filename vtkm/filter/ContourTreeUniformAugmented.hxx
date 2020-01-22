@@ -156,7 +156,7 @@ struct PostExecuteCaller
 {
   template <typename T, typename S, typename DerivedPolicy>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>&,
-                            ContourTreePPP2* self,
+                            ContourTreeAugmented* self,
                             const vtkm::cont::PartitionedDataSet& input,
                             vtkm::cont::PartitionedDataSet& output,
                             const vtkm::filter::FieldMetadata& fieldMeta,
@@ -472,7 +472,7 @@ void merge_block_functor(
         vtkm::Id currNumIterations;
         vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
         vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
-        vtkm::worklet::ContourTreePPP2 worklet;
+        vtkm::worklet::ContourTreeAugmented worklet;
         vtkm::cont::ArrayHandle<FieldType> currField;
         vtkm::Id3 maxIdx(currBlockOrigin[0] + currBlockSize[0] - 1,
                          currBlockOrigin[1] + currBlockSize[1] - 1,
@@ -544,8 +544,9 @@ void merge_block_functor(
 
 
 //-----------------------------------------------------------------------------
-ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes, unsigned int computeRegularStructure)
-  : vtkm::filter::FilterCell<ContourTreePPP2>()
+ContourTreeAugmented::ContourTreeAugmented(bool useMarchingCubes,
+                                           unsigned int computeRegularStructure)
+  : vtkm::filter::FilterCell<ContourTreeAugmented>()
   , UseMarchingCubes(useMarchingCubes)
   , ComputeRegularStructure(computeRegularStructure)
   , MultiBlockTreeHelper(nullptr)
@@ -553,7 +554,7 @@ ContourTreePPP2::ContourTreePPP2(bool useMarchingCubes, unsigned int computeRegu
   this->SetOutputFieldName("resultData");
 }
 
-void ContourTreePPP2::SetSpatialDecomposition(
+void ContourTreeAugmented::SetSpatialDecomposition(
   vtkm::Id3 blocksPerDim,
   vtkm::Id3 globalSize,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
@@ -569,27 +570,29 @@ void ContourTreePPP2::SetSpatialDecomposition(
     blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
 }
 
-const vtkm::worklet::contourtree_augmented::ContourTree& ContourTreePPP2::GetContourTree() const
+const vtkm::worklet::contourtree_augmented::ContourTree& ContourTreeAugmented::GetContourTree()
+  const
 {
   return this->ContourTreeData;
 }
 
-const vtkm::worklet::contourtree_augmented::IdArrayType& ContourTreePPP2::GetSortOrder() const
+const vtkm::worklet::contourtree_augmented::IdArrayType& ContourTreeAugmented::GetSortOrder() const
 {
   return this->MeshSortOrder;
 }
 
-vtkm::Id ContourTreePPP2::GetNumIterations() const
+vtkm::Id ContourTreeAugmented::GetNumIterations() const
 {
   return this->NumIterations;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
-                                               const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                               const vtkm::filter::FieldMetadata& fieldMeta,
-                                               vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   vtkm::cont::Timer timer;
   timer.Start();
@@ -601,7 +604,7 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   }
 
   // Use the GetRowsColsSlices struct defined in the header to collect the nRows, nCols, and nSlices information
-  vtkm::worklet::ContourTreePPP2 worklet;
+  vtkm::worklet::ContourTreeAugmented worklet;
   vtkm::Id nRows;
   vtkm::Id nCols;
   vtkm::Id nSlices = 1;
@@ -675,13 +678,14 @@ vtkm::cont::DataSet ContourTreePPP2::DoExecute(const vtkm::cont::DataSet& input,
   // not actually being used, but in parallel we need the sorted mesh values as output
   // This part is being hit when we run in serial or parallel with more then one rank
   return CreateResultFieldPoint(input, ContourTreeData.arcs, this->GetOutputFieldName());
-} // ContourTreePPP2::DoExecute
+} // ContourTreeAugmented::DoExecute
 
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreePPP2::PreExecute(const vtkm::cont::PartitionedDataSet& input,
-                                                  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline VTKM_CONT void ContourTreeAugmented::PreExecute(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //if( input.GetNumberOfBlocks() != 1){
   //  throw vtkm::cont::ErrorBadValue("Expected MultiBlock data with 1 block per rank ");
@@ -701,14 +705,14 @@ inline VTKM_CONT void ContourTreePPP2::PreExecute(const vtkm::cont::PartitionedD
     }
   } //else
   //{
-  //  throw vtkm::cont::ErrorFilterExecution("Spatial decomposition not defined for MultiBlock execution. Use ContourTreePPP2::SetSpatialDecompoistion to define the domain decomposition.");
+  //  throw vtkm::cont::ErrorFilterExecution("Spatial decomposition not defined for MultiBlock execution. Use ContourTreeAugmented::SetSpatialDecompoistion to define the domain decomposition.");
   //}
 }
 
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-VTKM_CONT void ContourTreePPP2::DoPostExecute(
+VTKM_CONT void ContourTreeAugmented::DoPostExecute(
   const vtkm::cont::PartitionedDataSet& input,
   vtkm::cont::PartitionedDataSet& output,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -846,7 +850,7 @@ VTKM_CONT void ContourTreePPP2::DoPostExecute(
     vtkm::Id currNumIterations;
     vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
-    vtkm::worklet::ContourTreePPP2 worklet;
+    vtkm::worklet::ContourTreeAugmented worklet;
     vtkm::cont::ArrayHandle<T> currField;
     // Construct the contour tree mesh from the last block
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
@@ -913,7 +917,7 @@ VTKM_CONT void ContourTreePPP2::DoPostExecute(
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreePPP2::PostExecute(
+inline VTKM_CONT void ContourTreeAugmented::PostExecute(
   const vtkm::cont::PartitionedDataSet& input,
   vtkm::cont::PartitionedDataSet& result,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
@@ -931,7 +935,7 @@ inline VTKM_CONT void ContourTreePPP2::PostExecute(
       input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     vtkm::filter::FieldMetadata metaData(field);
 
-    vtkm::filter::FilterTraits<ContourTreePPP2> traits;
+    vtkm::filter::FilterTraits<ContourTreeAugmented> traits;
     vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
                             detail::PostExecuteCaller{},
                             this,

@@ -83,7 +83,7 @@ namespace vtkm
 namespace worklet
 {
 
-class ContourTreePPP2
+class ContourTreeAugmented
 {
 public:
   /*!

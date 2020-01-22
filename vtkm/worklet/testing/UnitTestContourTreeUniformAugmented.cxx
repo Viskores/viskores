@@ -77,7 +77,7 @@ public:
   //
   void TestContourTree_Mesh2D_Freudenthal() const
   {
-    std::cout << "Testing ContourTree_PPP2 2D Mesh" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 2D Mesh" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
@@ -94,7 +94,7 @@ public:
     dataSet.GetField("pointvar").GetData().CopyTo(field);
 
     // Create the worklet and run it
-    vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
+    vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
@@ -148,7 +148,7 @@ public:
 
   void TestContourTree_Mesh3D_Freudenthal() const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -165,7 +165,7 @@ public:
     dataSet.GetField("pointvar").GetData().CopyTo(field);
 
     // Create the worklet and run it
-    vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
+    vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
@@ -226,7 +226,7 @@ public:
 
   void TestContourTree_Mesh3D_MarchingCubes() const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh Marching Cubes" << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes" << std::endl;
 
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -243,7 +243,7 @@ public:
     dataSet.GetField("pointvar").GetData().CopyTo(field);
 
     // Create the worklet and run it
-    vtkm::worklet::ContourTreePPP2 contourTreeWorklet;
+    vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
     vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     vtkm::worklet::contourtree_augmented::IdArrayType meshSortOrder;
     vtkm::Id numIterations;
