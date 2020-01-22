@@ -743,11 +743,11 @@ int main(int argc, char* argv[])
           dataFieldIsSorted);
 
 #ifdef DEBUG_PRINT
-      branchDecompostionRoot->print(std::cout);
+      branchDecompostionRoot->PrintBranchDecomposition(std::cout);
 #endif
 
       // Simplify the contour tree of the branch decompostion
-      branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
+      branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
 
       // Compute the relevant iso-values
       std::vector<ValueType> isoValues;
@@ -756,7 +756,7 @@ int main(int argc, char* argv[])
         default:
         case 0:
         {
-          branchDecompostionRoot->getRelevantValues(static_cast<int>(contourType), eps, isoValues);
+          branchDecompostionRoot->GetRelevantValues(static_cast<int>(contourType), eps, isoValues);
         }
         break;
         case 1:
@@ -764,7 +764,7 @@ int main(int argc, char* argv[])
           vtkm::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<
             ValueType>
             plf;
-          branchDecompostionRoot->accumulateIntervals(static_cast<int>(contourType), eps, plf);
+          branchDecompostionRoot->AccumulateIntervals(static_cast<int>(contourType), eps, plf);
           isoValues = plf.nLargest(static_cast<unsigned int>(numLevels));
         }
         break;
