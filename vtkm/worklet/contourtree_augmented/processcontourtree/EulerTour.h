@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_euler_tour_h
-#define vtk_m_worklet_contourtree_augmented_euler_tour_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_euler_tour_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_euler_tour_h
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/Invoker.h>
@@ -66,6 +66,9 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
+namespace process_contourtree_inc
+{
+
 class EulerTour
 {
 
@@ -174,6 +177,7 @@ public:
     }
   }
 }; // class EulerTour
+} // namespace process_contourtree_inc
 } // namespace contourtree_augmented
 } // worklet
 } // vtkm

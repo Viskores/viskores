@@ -82,7 +82,7 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
 
-#include <vtkm/worklet/contourtree_augmented/EulerTour.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 
 
 
@@ -944,7 +944,7 @@ public:
     maxTourEdges.Allocate(2 * (nSupernodes - 1));
 
     // Compute the Euler Tour
-    vtkm::worklet::contourtree_augmented::EulerTour tour;
+    process_contourtree_inc_ns::EulerTour tour;
     tour.computeEulerTour(contourTree.superarcs.GetPortalConstControl());
 
     // Reroot the Euler Tour at the global min
