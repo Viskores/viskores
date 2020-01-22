@@ -125,17 +125,31 @@ public:
     return this->Storage->GetPortalConst();
   }
 
+#if defined(VTKM_GCC) && defined(VTKM_ENABLE_OPENMP) && (__GNUC__ == 6 && __GNUC_MINOR__ == 1)
+// When using GCC 6.1 with OpenMP enabled we cause a compiler ICE that is
+// an identified compiler regression (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71210)
+// The easiest way to work around this is to make sure we aren't building with >= O2
+#define NO_OPTIMIZE_FUNC_ATTRIBUTE __attribute__((optimize(1)))
+#else // gcc 6.1 openmp compiler ICE workaround
+#define NO_OPTIMIZE_FUNC_ATTRIBUTE
+#endif
+
   VTKM_CONT
+  NO_OPTIMIZE_FUNC_ATTRIBUTE
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT
+  NO_OPTIMIZE_FUNC_ATTRIBUTE
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output.");
   }
+
+#undef NO_OPTIMIZE_FUNC_ATTRIBUTE
+
   VTKM_CONT
   void RetrieveOutputData(StorageType* vtkmNotUsed(controlArray)) const
   {
