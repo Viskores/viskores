@@ -284,9 +284,9 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
             vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.GetPortalControl()) + 1);
     */
   IdArrayType inverseIndex;
-  onefIfCritical oneIfCriticalFunctor;
+  OnefIfCritical oneIfCriticalFunctor;
   auto oneIfCriticalArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfCritical>(outDegrees, oneIfCriticalFunctor);
+    vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfCritical>(outDegrees, oneIfCriticalFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
@@ -645,8 +645,8 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
             vtkm::cont::ArrayPortalToIteratorBegin(newSupernodePosition.GetPortalControl()) + 1);*/
 
   IdArrayType newSupernodePosition;
-  onefIfSupernode oneIfSupernodeFunctor;
-  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfSupernode>(
+  OnefIfSupernode oneIfSupernodeFunctor;
+  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfSupernode>(
     hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
@@ -668,8 +668,8 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
              vtkm::cont::ArrayPortalToIteratorBegin(newHypernodePosition.GetPortalControl()) + 1);
     */
   IdArrayType newHypernodePosition;
-  onefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfHypernode>(
+  OnefIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
     hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
@@ -919,13 +919,13 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Active Vertex Arrays
   IdArrayType activeIndices;
-  permuteArray<vtkm::Id>(globalIndex, activeVertices, activeIndices);
+  PermuteArray<vtkm::Id>(globalIndex, activeVertices, activeIndices);
   IdArrayType activeFirst;
-  permuteArray<vtkm::Id>(firstEdge, activeVertices, activeFirst);
+  PermuteArray<vtkm::Id>(firstEdge, activeVertices, activeFirst);
   IdArrayType activeOutdegree;
-  permuteArray<vtkm::Id>(outdegree, activeVertices, activeOutdegree);
+  PermuteArray<vtkm::Id>(outdegree, activeVertices, activeOutdegree);
   IdArrayType activeHyperarcs;
-  permuteArray<vtkm::Id>(hyperarcs, activeVertices, activeHyperarcs);
+  PermuteArray<vtkm::Id>(hyperarcs, activeVertices, activeHyperarcs);
   std::cout << "Active Vertex Arrays - Size: " << activeVertices.GetNumberOfValues() << std::endl;
   printHeader(activeVertices.GetNumberOfValues());
   PrintIndices("Active Vertices", activeVertices);
@@ -937,9 +937,9 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Full Edge Arrays
   IdArrayType farIndices;
-  permuteArray<vtkm::Id>(globalIndex, edgeFar, farIndices);
+  PermuteArray<vtkm::Id>(globalIndex, edgeFar, farIndices);
   IdArrayType nearIndices;
-  permuteArray<vtkm::Id>(globalIndex, edgeNear, nearIndices);
+  PermuteArray<vtkm::Id>(globalIndex, edgeNear, nearIndices);
   std::cout << "Full Edge Arrays - Size:     " << edgeNear.GetNumberOfValues() << std::endl;
   printHeader(edgeFar.GetNumberOfValues());
   PrintIndices("Near", edgeNear);
@@ -950,9 +950,9 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Active Edge Arrays
   IdArrayType activeFarIndices;
-  permuteArray<vtkm::Id>(edgeFar, activeEdges, activeFarIndices);
+  PermuteArray<vtkm::Id>(edgeFar, activeEdges, activeFarIndices);
   IdArrayType activeNearIndices;
-  permuteArray<vtkm::Id>(edgeNear, activeEdges, activeNearIndices);
+  PermuteArray<vtkm::Id>(edgeNear, activeEdges, activeNearIndices);
   std::cout << "Active Edge Arrays - Size:   " << activeEdges.GetNumberOfValues() << std::endl;
   printHeader(activeEdges.GetNumberOfValues());
   PrintIndices("Active Edges", activeEdges);
@@ -962,9 +962,9 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Edge Sorter Array
   IdArrayType sortedFarIndices;
-  permuteArray<vtkm::Id>(edgeFar, edgeSorter, sortedFarIndices);
+  PermuteArray<vtkm::Id>(edgeFar, edgeSorter, sortedFarIndices);
   IdArrayType sortedNearIndices;
-  permuteArray<vtkm::Id>(edgeNear, edgeSorter, sortedNearIndices);
+  PermuteArray<vtkm::Id>(edgeNear, edgeSorter, sortedNearIndices);
   std::cout << "Edge Sorter - Size:          " << edgeSorter.GetNumberOfValues() << std::endl;
   printHeader(edgeSorter.GetNumberOfValues());
   PrintIndices("Edge Sorter", edgeSorter);

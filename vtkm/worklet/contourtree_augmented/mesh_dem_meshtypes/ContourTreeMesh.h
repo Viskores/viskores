@@ -366,9 +366,9 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
   // Find target indices for valid arcs in neighbours array ...
   IdArrayType arcTargetIndex;
   arcTargetIndex.Allocate(arcs.GetNumberOfValues());
-  oneIfArcValid oneIfArcValidFunctor;
+  OneIfArcValid oneIfArcValidFunctor;
   auto oneIfArcValidArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, oneIfArcValid>(arcs, oneIfArcValidFunctor);
+    vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfArcValid>(arcs, oneIfArcValidFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfArcValidArrayHandle, arcTargetIndex);
   vtkm::Id nValidArcs =
     arcTargetIndex.GetPortalConstControl().Get(arcTargetIndex.GetNumberOfValues() - 1) +
@@ -494,7 +494,7 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
 
   { // Create a new scope so that the following two vectors get deleted when leaving the scope
     auto thisIndices = vtkm::cont::ArrayHandleIndex(this->nVertices); // A regular index array
-    markOther markOtherFunctor;
+    MarkOther markOtherFunctor;
     auto otherIndices = vtkm::cont::make_ArrayHandleTransform(
       vtkm::cont::ArrayHandleIndex(other.nVertices), markOtherFunctor);
     contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType, DeviceTag>

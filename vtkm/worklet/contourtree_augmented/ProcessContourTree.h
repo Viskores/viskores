@@ -666,11 +666,11 @@ public:
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.supernodes));
     IdArrayType permutedBranches;
     permutedBranches.Allocate(nSupernodes);
-    permuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
+    PermuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
 
     IdArrayType permutedRegularID;
     permutedRegularID.Allocate(nSupernodes);
-    permuteArray<vtkm::Id>(contourTree.supernodes, supernodeSorter, permutedRegularID);
+    PermuteArray<vtkm::Id>(contourTree.supernodes, supernodeSorter, permutedRegularID);
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;

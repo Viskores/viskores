@@ -249,11 +249,11 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // we have to permute a bunch of arrays, so let's have some temporaries to store them
   IdArrayType permutedHyperparents;
-  permuteArray<vtkm::Id>(contourTree.hyperparents, contourTree.hypernodes, permutedHyperparents);
+  PermuteArray<vtkm::Id>(contourTree.hyperparents, contourTree.hypernodes, permutedHyperparents);
   IdArrayType permutedSupernodes;
-  permuteArray<vtkm::Id>(contourTree.supernodes, contourTree.hypernodes, permutedSupernodes);
+  PermuteArray<vtkm::Id>(contourTree.supernodes, contourTree.hypernodes, permutedSupernodes);
   IdArrayType permutedSuperarcs;
-  permuteArray<vtkm::Id>(contourTree.superarcs, contourTree.hypernodes, permutedSuperarcs);
+  PermuteArray<vtkm::Id>(contourTree.superarcs, contourTree.hypernodes, permutedSuperarcs);
 
   // now we establish the reverse index array
   IdArrayType superSortIndex;
@@ -291,20 +291,20 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // we will permute the hyperarcs & copy them back with the new supernode target IDs
   IdArrayType permutedHyperarcs;
-  permuteArray<vtkm::Id>(contourTree.hyperarcs, contourTree.hypernodes, permutedHyperarcs);
+  PermuteArray<vtkm::Id>(contourTree.hyperarcs, contourTree.hypernodes, permutedHyperarcs);
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs permuteHyperarcsWorklet;
   this->Invoke(permuteHyperarcsWorklet, permutedHyperarcs, superSortIndex, contourTree.hyperarcs);
 
   // now swizzle the whenTransferred value
   IdArrayType permutedWhenTransferred;
-  permuteArray<vtkm::Id>(
+  PermuteArray<vtkm::Id>(
     contourTree.whenTransferred, contourTree.hypernodes, permutedWhenTransferred);
   vtkm::cont::Algorithm::Copy(permutedWhenTransferred, contourTree.whenTransferred);
 
   // now we compress both the hypernodes & hyperarcs
   IdArrayType newHypernodePosition;
-  onefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfHypernode>(
+  OnefIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
     contourTree.whenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
