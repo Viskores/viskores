@@ -627,9 +627,7 @@ private:
     target.Value = 5;
 
     Transfer transfer(&target);
-    vtkm::cont::Token transferToken;
-    const BaseType* base =
-      static_cast<const BaseType*>(transfer.PrepareForExecution(false, transferToken));
+    const BaseType* base = static_cast<const BaseType*>(transfer.PrepareForExecution(false));
 
     {
       vtkm::cont::Token token;
@@ -640,7 +638,7 @@ private:
     {
       vtkm::cont::Token token;
       target.Value = 10;
-      base = static_cast<const BaseType*>(transfer.PrepareForExecution(true, token));
+      base = static_cast<const BaseType*>(transfer.PrepareForExecution(true));
       Algorithm::Schedule(VirtualObjectTransferKernel(base, result, token), 1);
     }
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");

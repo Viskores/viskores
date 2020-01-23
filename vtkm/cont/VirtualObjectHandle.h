@@ -134,7 +134,7 @@ public:
   /// 3. Reset or ReleaseResources is called
   ///
   VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
-                                                       vtkm::cont::Token& token) const
+                                                       vtkm::cont::Token&) const
   {
     const bool validId = this->Internals->DeviceIdIsValid(deviceId);
     if (!validId)
@@ -143,8 +143,7 @@ public:
       return nullptr;
     }
 
-    return static_cast<const VirtualBaseType*>(
-      this->Internals->PrepareForExecution(deviceId, token));
+    return static_cast<const VirtualBaseType*>(this->Internals->PrepareForExecution(deviceId));
   }
 
   VTKM_CONT
