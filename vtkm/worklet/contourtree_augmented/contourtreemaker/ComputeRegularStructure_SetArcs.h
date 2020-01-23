@@ -118,14 +118,14 @@ public:
       // retrieve the superarc's far end
       vtkm::Id superarcEnd = contourTreeSuperarcsPortal.Get(superparent);
       // this only happens for the root of the tree, but is still needed
-      if (noSuchElement(superarcEnd))
+      if (NoSuchElement(superarcEnd))
       {
         contourTreeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       }
       else
       {
         contourTreeArcsPortal.Set(nodeID,
-                                  contourTreeSupernodesPortal.Get(maskedIndex(superarcEnd)) |
+                                  contourTreeSupernodesPortal.Get(MaskedIndex(superarcEnd)) |
                                     (superarcEnd & IS_ASCENDING));
       }
     } // last on superarc
@@ -158,10 +158,10 @@ public:
               // retrieve the superarc's far end
               vtkm::Id superarcEnd = contourTree.superarcs[superparent];
               // this only happens for the root of the tree, but is still needed
-              if (noSuchElement(superarcEnd))
+              if (NoSuchElement(superarcEnd))
                 contourTree.arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                contourTree.arcs[nodeID] = contourTree.supernodes[maskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
+                contourTree.arcs[nodeID] = contourTree.supernodes[MaskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
             } // last on superarc
           else
             { // not last on superarc
@@ -231,7 +231,7 @@ public:
       // retrieve the superarc's far end
       vtkm::Id superarcEnd = contourTreeSuperarcsPortal.Get(superparent);
       // this only happens for the root of the tree, but is still needed
-      if (noSuchElement(superarcEnd))
+      if (NoSuchElement(superarcEnd))
       {
         contourTreeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       }
@@ -239,7 +239,7 @@ public:
       {
         contourTreeArcsPortal.Set(
           nodeID,
-          toCompressedPortal.Get(contourTreeSupernodesPortal.Get(maskedIndex(superarcEnd))) |
+          toCompressedPortal.Get(contourTreeSupernodesPortal.Get(MaskedIndex(superarcEnd))) |
             (superarcEnd & IS_ASCENDING));
       }
     } // last on superarc

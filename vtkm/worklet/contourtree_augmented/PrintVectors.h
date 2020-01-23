@@ -130,7 +130,7 @@ inline void printDataType(T value)
 // routine to print out a single index
 inline void printIndexType(vtkm::Id index)
 { // printIndexType
-  std::cout << std::setw(PRINT_WIDTH - 6) << maskedIndex(index) << " " << flagString(index);
+  std::cout << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
 } // printIndexType
 
 // print blank of width PRINT_WIDTH
@@ -336,7 +336,7 @@ inline void printByLine(IdArrayType& block)
   auto portal = block.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < block.GetNumberOfValues(); entry++)
   { // per entry
-    if (noSuchElement(portal.Get(entry)))
+    if (NoSuchElement(portal.Get(entry)))
     {
       std::cout << std::to_string(-1L) << "\n";
     }

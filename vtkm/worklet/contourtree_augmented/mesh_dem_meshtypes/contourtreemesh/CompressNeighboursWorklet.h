@@ -95,7 +95,7 @@ public:
                             vtkm::Id& arcTargetIndexFrom,
                             const OutFieldPortalType& neighboursPortal) const
   {
-    if (!noSuchElement(to))
+    if (!NoSuchElement(to))
     {
       neighboursPortal.Set(2 * arcTargetIndexFrom + 0, 2 * from + 0);
       neighboursPortal.Set(2 * arcTargetIndexFrom + 1, 2 * from + 1);
@@ -106,9 +106,9 @@ public:
     // for (indexVector::size_type from = 0; from < arcs.size(); ++from)
     //  {
     //    indexType to = arcs[from];
-    //    if (!noSuchElement(to))
+    //    if (!NoSuchElement(to))
     //      {
-    //         assert(maskedIndex(to) != from);
+    //         assert(MaskedIndex(to) != from);
     //         neighbours[2*arcTargetIndex[from]+0] = 2*from+0;
     //         neighbours[2*arcTargetIndex[from]+1] = 2*from+1;
     //      }

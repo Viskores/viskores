@@ -108,7 +108,7 @@ public:
       // set the first edge and outDegrees for it
       outdegree.Set(activeIndex, outDegrees.Get(sortIndex));
       // store the vertex as a merge tree ID, remembering to suppress flags
-      hyperarcs.Set(activeIndex, maskedIndex(extrema.Get(sortIndex)));
+      hyperarcs.Set(activeIndex, MaskedIndex(extrema.Get(sortIndex)));
       // and store the vertex in the active vertex array
       activeVertices.Set(activeIndex, activeIndex);
     }
@@ -126,7 +126,7 @@ public:
     //                     // set the first edge and outDegrees for it
     //                     outdegree[activeIndex] = outDegrees[sortIndex];
     //                     // store the vertex as a merge tree ID, remembering to suppress flags
-    //                     hyperarcs[activeIndex] = maskedIndex(extrema[sortIndex]);
+    //                     hyperarcs[activeIndex] = MaskedIndex(extrema[sortIndex]);
     //                     // and store the vertex in the active vertex array
     //                     activeVertices[activeIndex] = activeIndex;
     //                     }

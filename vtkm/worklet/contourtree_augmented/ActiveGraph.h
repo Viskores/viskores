@@ -634,7 +634,7 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 
   // compute new node positions
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
-  /*auto oneIfSupernode = [](vtkm::Id v) { return isSupernode(v) ? 1 : 0; };
+  /*auto oneIfSupernode = [](vtkm::Id v) { return IsSupernode(v) ? 1 : 0; };
     IdArrayType newSupernodePosition;
     newSupernodePosition.Allocate(hyperarcs.GetNumberOfValues());
     newSupernodePosition.GetPortalControl().Set(0, 0);
@@ -658,7 +658,7 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
   /*
-    auto oneIfHypernode = [](vtkm::Id v) { return isHypernode(v) ? 1 : 0; };
+    auto oneIfHypernode = [](vtkm::Id v) { return IsHypernode(v) ? 1 : 0; };
     IdArrayType newHypernodePosition;
     newHypernodePosition.Allocate(hyperarcs.GetNumberOfValues());
     newHypernodePosition.GetPortalControl().Set(0, 0);

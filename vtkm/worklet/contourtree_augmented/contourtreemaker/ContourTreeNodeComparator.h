@@ -100,7 +100,7 @@ public:
 
     // the parents are equal, so we compare the nodes, which are sort indices & indicate value
     // but we need to flip for ascending edges - we retrieve this information from the superarcs array
-    bool isAscendingSuperarc = isAscending(superarcsPortal.Get(leftSuperparent));
+    bool isAscendingSuperarc = IsAscending(superarcsPortal.Get(leftSuperparent));
     if (leftNode < rightNode)
       return isAscendingSuperarc;
     else if (leftNode > rightNode)

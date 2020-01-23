@@ -258,7 +258,7 @@ void ContourTree::PrintDotSuperStructure()
   // colour the nodes by the iteration they transfer (mod # of colors) - paired iterations have similar colors RGBCMY
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
-    vtkm::Id iteration = maskedIndex(whenTransferredPortal.Get(supernode));
+    vtkm::Id iteration = MaskedIndex(whenTransferredPortal.Get(supernode));
     printf("\tnode s%lli [style=filled,fillcolor=%s]\n",
            (vtkm::Int64)supernodesPortal.Get(supernode),
            nodeColors[iteration % N_NODE_COLORS]);
@@ -268,18 +268,18 @@ void ContourTree::PrintDotSuperStructure()
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     // skip the global root
-    if (noSuchElement(superarcsPortal.Get(supernode)))
+    if (NoSuchElement(superarcsPortal.Get(supernode)))
       continue;
 
-    if (isAscending(superarcsPortal.Get(supernode)))
+    if (IsAscending(superarcsPortal.Get(supernode)))
       printf("\tedge s%lli -> s%lli[label=S%lli,dir=back]\n",
-             (vtkm::Int64)supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
+             (vtkm::Int64)supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode))),
              (vtkm::Int64)supernodesPortal.Get(supernode),
              (vtkm::Int64)supernode);
     else
       printf("\tedge s%lli -> s%lli[label=S%lli]\n",
              (vtkm::Int64)supernodesPortal.Get(supernode),
-             (vtkm::Int64)supernodesPortal.Get(maskedIndex(superarcsPortal.Get(supernode))),
+             (vtkm::Int64)supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode))),
              (vtkm::Int64)supernode);
   } // per supernode
 
@@ -287,14 +287,14 @@ void ContourTree::PrintDotSuperStructure()
   for (vtkm::Id hypernode = 0; hypernode < hypernodes.GetNumberOfValues(); hypernode++)
   { // per hypernode
     // skip the global root
-    if (noSuchElement(hyperarcsPortal.Get(hypernode)))
+    if (NoSuchElement(hyperarcsPortal.Get(hypernode)))
       continue;
 
     printf("\ts%lli -> s%lli [constraint=false][width=5.0][label=\"H%lli\\nW%lli\"]\n",
            (vtkm::Int64)supernodesPortal.Get(hypernodesPortal.Get(hypernode)),
-           (vtkm::Int64)supernodesPortal.Get(maskedIndex(hyperarcsPortal.Get(hypernode))),
+           (vtkm::Int64)supernodesPortal.Get(MaskedIndex(hyperarcsPortal.Get(hypernode))),
            (vtkm::Int64)hypernode,
-           (vtkm::Int64)maskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode))));
+           (vtkm::Int64)MaskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode))));
   } // per hypernode
 
   // now add the hyperparents

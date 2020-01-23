@@ -120,10 +120,10 @@ public:
       // this needs to point to the supernode at the "bottom" end of the hyperarc
       vtkm::Id prunesTo = hyperarcsPortal.Get(hyperparent);
 
-      if (noSuchElement(prunesTo))
+      if (NoSuchElement(prunesTo))
         treeSuperarcsPortal.Set(supernode, (vtkm::Id)NO_SUCH_ELEMENT);
       else
-        treeSuperarcsPortal.Set(supernode, superIDPortal.Get(maskedIndex(prunesTo)));
+        treeSuperarcsPortal.Set(supernode, superIDPortal.Get(MaskedIndex(prunesTo)));
 
       // we also need to set the first superchild for the hypergraph
       treeFirstSuperchildPortal.Set(hyperIDPortal.Get(hyperparent), supernode);
@@ -167,10 +167,10 @@ public:
             // this needs to point to the supernode at the "bottom" end of the hyperarc
             indexType prunesTo = hyperarcs[hyperparent];
 
-            if (noSuchElement(prunesTo))
+            if (NoSuchElement(prunesTo))
               tree.superarcs[supernode] = NO_SUCH_ELEMENT;
             else
-              tree.superarcs[supernode] = superID[maskedIndex(prunesTo)];
+              tree.superarcs[supernode] = superID[MaskedIndex(prunesTo)];
 
             // we also need to set the first superchild for the hypergraph
             tree.firstSuperchild[hyperID[hyperparent]] = supernode;

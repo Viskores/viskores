@@ -106,14 +106,14 @@ public:
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
-    if (noSuchElement(contourTreeSuperparentsPortal.Get(node)))
+    if (NoSuchElement(contourTreeSuperparentsPortal.Get(node)))
     { // regular nodes only
       // we will need to prune top and bottom until one of them prunes past the node
       vtkm::Id top = meshExtremaPeaksPortal.Get(node);
       vtkm::Id bottom = meshExtremaPitsPortal.Get(node);
       // these are the regular IDs of supernodes, so their superparents are already set
-      vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(maskedIndex(top));
-      vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(maskedIndex(bottom));
+      vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(top));
+      vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(bottom));
       // and we can also find out when they transferred
       vtkm::Id topWhen = contourTreeWhenTransferredPortal.Get(topSuperparent);
       vtkm::Id bottomWhen = contourTreeWhenTransferredPortal.Get(bottomSuperparent);
@@ -125,16 +125,16 @@ public:
 
       // now we loop until one of them goes past the vertex
       // the invariant here is that the first direction to prune past the vertex prunes it
-      while (noSuchElement(hyperparent))
+      while (NoSuchElement(hyperparent))
       { // loop to find pruner
         // we test the one that prunes first
-        if (maskedIndex(topWhen) < maskedIndex(bottomWhen))
+        if (MaskedIndex(topWhen) < MaskedIndex(bottomWhen))
         { // top pruned first
           // we prune down to the bottom of the hyperarc in either case, by updating the top superparent
-          topSuperparent = contourTreeHyperarcsPortal.Get(maskedIndex(topHyperparent));
-          top = contourTreeSupernodesPortal.Get(maskedIndex(topSuperparent));
+          topSuperparent = contourTreeHyperarcsPortal.Get(MaskedIndex(topHyperparent));
+          top = contourTreeSupernodesPortal.Get(MaskedIndex(topSuperparent));
 
-          topWhen = contourTreeWhenTransferredPortal.Get(maskedIndex(topSuperparent));
+          topWhen = contourTreeWhenTransferredPortal.Get(MaskedIndex(topSuperparent));
           // test to see if we've passed the node
           if (top < node)
           { // just pruned past
@@ -143,15 +143,15 @@ public:
           // == is not possible, since node is regular
           else // top < node
           {    // not pruned past
-            topHyperparent = contourTreeHyperparentsPortal.Get(maskedIndex(topSuperparent));
+            topHyperparent = contourTreeHyperparentsPortal.Get(MaskedIndex(topSuperparent));
           } // not pruned past
         }   // top pruned first
-        else if (maskedIndex(topWhen) > maskedIndex(bottomWhen))
+        else if (MaskedIndex(topWhen) > MaskedIndex(bottomWhen))
         { // bottom pruned first
           // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
-          bottomSuperparent = contourTreeHyperarcsPortal.Get(maskedIndex(bottomHyperparent));
-          bottom = contourTreeSupernodesPortal.Get(maskedIndex(bottomSuperparent));
-          bottomWhen = contourTreeWhenTransferredPortal.Get(maskedIndex(bottomSuperparent));
+          bottomSuperparent = contourTreeHyperarcsPortal.Get(MaskedIndex(bottomHyperparent));
+          bottom = contourTreeSupernodesPortal.Get(MaskedIndex(bottomSuperparent));
+          bottomWhen = contourTreeWhenTransferredPortal.Get(MaskedIndex(bottomSuperparent));
           // test to see if we've passed the node
           if (bottom > node)
           { // just pruned past
@@ -160,7 +160,7 @@ public:
           // == is not possible, since node is regular
           else // bottom > node
           {    // not pruned past
-            bottomHyperparent = contourTreeHyperparentsPortal.Get(maskedIndex(bottomSuperparent));
+            bottomHyperparent = contourTreeHyperparentsPortal.Get(MaskedIndex(bottomSuperparent));
           } // not pruned past
         }   // bottom pruned first
         else
@@ -171,17 +171,17 @@ public:
         } // both prune simultaneously
       }   // loop to find pruner
       // we have now set the hyperparent correctly, so we retrieve it's hyperarc to find whether it ascends or descends
-      if (isAscending(contourTreeHyperarcsPortal.Get(hyperparent)))
+      if (IsAscending(contourTreeHyperarcsPortal.Get(hyperparent)))
       { // ascending hyperarc
         // the supernodes on the hyperarc are in sorted low-high order
         vtkm::Id lowSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id highSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (maskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == numHypernodes - 1)
           highSupernode = numSupernodes - 1;
         // otherwise, take the supernode just before the next hypernode
         else
-          highSupernode = contourTreeHypernodesPortal.Get(maskedIndex(hyperparent) + 1) - 1;
+          highSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
         // now, the high supernode may be lower than the element, because the node belongs
         // between it and the high end of the hyperarc
         if (contourTreeSupernodesPortal.Get(highSupernode) < node)
@@ -212,14 +212,14 @@ public:
         vtkm::Id highSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id lowSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (maskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == numHypernodes - 1)
         { // last hyperarc
           lowSupernode = numSupernodes - 1;
         } // last hyperarc
         // otherwise, take the supernode just before the next hypernode
         else
         { // other hyperarc
-          lowSupernode = contourTreeHypernodesPortal.Get(maskedIndex(hyperparent) + 1) - 1;
+          lowSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
         } // other hyperarc
         // now, the low supernode may be higher than the element, because the node belongs
         // between it and the low end of the hyperarc
@@ -250,7 +250,7 @@ public:
     for (indexType node = 0; node < contourTree.arcs.size(); node++)
     { // per node
         // if the superparent is already set, it's a supernode, so skip it.
-        if (noSuchElement(contourTree.superparents[node]))
+        if (NoSuchElement(contourTree.superparents[node]))
         { // regular nodes only
             // we will need to prune top and bottom until one of them prunes past the node
             indexType top = meshExtrema.peaks[node];
@@ -270,17 +270,17 @@ public:
 
             // now we loop until one of them goes past the vertex
             // the invariant here is that the first direction to prune past the vertex prunes it
-            while (noSuchElement(hyperparent))
+            while (NoSuchElement(hyperparent))
             { // loop to find pruner
 
                 // we test the one that prunes first
-                if (maskedIndex(topWhen) < maskedIndex(bottomWhen))
+                if (MaskedIndex(topWhen) < MaskedIndex(bottomWhen))
                 { // top pruned first
                     // we prune down to the bottom of the hyperarc in either case, by updating the top superparent
-                    topSuperparent = contourTree.hyperarcs[maskedIndex(topHyperparent)];
-                    top = contourTree.supernodes[maskedIndex(topSuperparent)];
+                    topSuperparent = contourTree.hyperarcs[MaskedIndex(topHyperparent)];
+                    top = contourTree.supernodes[MaskedIndex(topSuperparent)];
 
-                    topWhen = contourTree.whenTransferred[maskedIndex(topSuperparent)];
+                    topWhen = contourTree.whenTransferred[MaskedIndex(topSuperparent)];
                     // test to see if we've passed the node
                     if (top < node)
                     { // just pruned past
@@ -289,15 +289,15 @@ public:
                     // == is not possible, since node is regular
                     else // top < node
                     { // not pruned past
-                        topHyperparent = contourTree.hyperparents[maskedIndex(topSuperparent)];
+                        topHyperparent = contourTree.hyperparents[MaskedIndex(topSuperparent)];
                     } // not pruned past
                 } // top pruned first
-                else if (maskedIndex(topWhen) > maskedIndex(bottomWhen))
+                else if (MaskedIndex(topWhen) > MaskedIndex(bottomWhen))
                 { // bottom pruned first
                     // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
-                    bottomSuperparent = contourTree.hyperarcs[maskedIndex(bottomHyperparent)];
-                    bottom = contourTree.supernodes[maskedIndex(bottomSuperparent)];
-                    bottomWhen = contourTree.whenTransferred[maskedIndex(bottomSuperparent)];
+                    bottomSuperparent = contourTree.hyperarcs[MaskedIndex(bottomHyperparent)];
+                    bottom = contourTree.supernodes[MaskedIndex(bottomSuperparent)];
+                    bottomWhen = contourTree.whenTransferred[MaskedIndex(bottomSuperparent)];
                     // test to see if we've passed the node
                     if (bottom > node)
                     { // just pruned past
@@ -306,7 +306,7 @@ public:
                     // == is not possible, since node is regular
                     else // bottom > node
                     { // not pruned past
-                        bottomHyperparent = contourTree.hyperparents[maskedIndex(bottomSuperparent)];
+                        bottomHyperparent = contourTree.hyperparents[MaskedIndex(bottomSuperparent)];
                     } // not pruned past
                 } // bottom pruned first
                 else
@@ -319,17 +319,17 @@ public:
 
 
             // we have now set the hyperparent correctly, so we retrieve it's hyperarc to find whether it ascends or descends
-            if (isAscending(contourTree.hyperarcs[hyperparent]))
+            if (IsAscending(contourTree.hyperarcs[hyperparent]))
             { // ascending hyperarc
                 // the supernodes on the hyperarc are in sorted low-high order
                 indexType lowSupernode = contourTree.hypernodes[hyperparent];
                 indexType highSupernode;
                 // if it's at the right hand end, take the last supernode in the array
-                if (maskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
+                if (MaskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
                     highSupernode = contourTree.supernodes.size() - 1;
                 // otherwise, take the supernode just before the next hypernode
                 else
-                    highSupernode = contourTree.hypernodes[maskedIndex(hyperparent) + 1] - 1;
+                    highSupernode = contourTree.hypernodes[MaskedIndex(hyperparent) + 1] - 1;
                 // now, the high supernode may be lower than the element, because the node belongs
                 // between it and the high end of the hyperarc
                 if (contourTree.supernodes[highSupernode] < node)
@@ -359,14 +359,14 @@ public:
                 indexType highSupernode = contourTree.hypernodes[hyperparent];
                 indexType lowSupernode;
                 // if it's at the right hand end, take the last supernode in the array
-                if (maskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
+                if (MaskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
                 { // last hyperarc
                     lowSupernode = contourTree.supernodes.size() - 1;
                 } // last hyperarc
                 // otherwise, take the supernode just before the next hypernode
                 else
                 { // other hyperarc
-                    lowSupernode = contourTree.hypernodes[maskedIndex(hyperparent) + 1] - 1;
+                    lowSupernode = contourTree.hypernodes[MaskedIndex(hyperparent) + 1] - 1;
                 } // other hyperarc
                 // now, the low supernode may be higher than the element, because the node belongs
                 // between it and the low end of the hyperarc
@@ -448,14 +448,14 @@ public:
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
-    if (noSuchElement(contourTreeSuperparentsPortal.Get(node)) && meshBoundary.liesOnBoundary(node))
+    if (NoSuchElement(contourTreeSuperparentsPortal.Get(node)) && meshBoundary.liesOnBoundary(node))
     { // regular nodes only
       // we will need to prune top and bottom until one of them prunes past the node
       vtkm::Id top = meshExtremaPeaksPortal.Get(node);
       vtkm::Id bottom = meshExtremaPitsPortal.Get(node);
       // these are the regular IDs of supernodes, so their superparents are already set
-      vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(maskedIndex(top));
-      vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(maskedIndex(bottom));
+      vtkm::Id topSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(top));
+      vtkm::Id bottomSuperparent = contourTreeSuperparentsPortal.Get(MaskedIndex(bottom));
       // and we can also find out when they transferred
       vtkm::Id topWhen = contourTreeWhenTransferredPortal.Get(topSuperparent);
       vtkm::Id bottomWhen = contourTreeWhenTransferredPortal.Get(bottomSuperparent);
@@ -467,16 +467,16 @@ public:
 
       // now we loop until one of them goes past the vertex
       // the invariant here is that the first direction to prune past the vertex prunes it
-      while (noSuchElement(hyperparent))
+      while (NoSuchElement(hyperparent))
       { // loop to find pruner
         // we test the one that prunes first
-        if (maskedIndex(topWhen) < maskedIndex(bottomWhen))
+        if (MaskedIndex(topWhen) < MaskedIndex(bottomWhen))
         { // top pruned first
           // we prune down to the bottom of the hyperarc in either case, by updating the top superparent
-          topSuperparent = contourTreeHyperarcsPortal.Get(maskedIndex(topHyperparent));
-          top = contourTreeSupernodesPortal.Get(maskedIndex(topSuperparent));
+          topSuperparent = contourTreeHyperarcsPortal.Get(MaskedIndex(topHyperparent));
+          top = contourTreeSupernodesPortal.Get(MaskedIndex(topSuperparent));
 
-          topWhen = contourTreeWhenTransferredPortal.Get(maskedIndex(topSuperparent));
+          topWhen = contourTreeWhenTransferredPortal.Get(MaskedIndex(topSuperparent));
           // test to see if we've passed the node
           if (top < node)
           { // just pruned past
@@ -485,15 +485,15 @@ public:
           // == is not possible, since node is regular
           else // top < node
           {    // not pruned past
-            topHyperparent = contourTreeHyperparentsPortal.Get(maskedIndex(topSuperparent));
+            topHyperparent = contourTreeHyperparentsPortal.Get(MaskedIndex(topSuperparent));
           } // not pruned past
         }   // top pruned first
-        else if (maskedIndex(topWhen) > maskedIndex(bottomWhen))
+        else if (MaskedIndex(topWhen) > MaskedIndex(bottomWhen))
         { // bottom pruned first
           // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
-          bottomSuperparent = contourTreeHyperarcsPortal.Get(maskedIndex(bottomHyperparent));
-          bottom = contourTreeSupernodesPortal.Get(maskedIndex(bottomSuperparent));
-          bottomWhen = contourTreeWhenTransferredPortal.Get(maskedIndex(bottomSuperparent));
+          bottomSuperparent = contourTreeHyperarcsPortal.Get(MaskedIndex(bottomHyperparent));
+          bottom = contourTreeSupernodesPortal.Get(MaskedIndex(bottomSuperparent));
+          bottomWhen = contourTreeWhenTransferredPortal.Get(MaskedIndex(bottomSuperparent));
           // test to see if we've passed the node
           if (bottom > node)
           { // just pruned past
@@ -502,7 +502,7 @@ public:
           // == is not possible, since node is regular
           else // bottom > node
           {    // not pruned past
-            bottomHyperparent = contourTreeHyperparentsPortal.Get(maskedIndex(bottomSuperparent));
+            bottomHyperparent = contourTreeHyperparentsPortal.Get(MaskedIndex(bottomSuperparent));
           } // not pruned past
         }   // bottom pruned first
         else
@@ -513,17 +513,17 @@ public:
         } // both prune simultaneously
       }   // loop to find pruner
       // we have now set the hyperparent correctly, so we retrieve it's hyperarc to find whether it ascends or descends
-      if (isAscending(contourTreeHyperarcsPortal.Get(hyperparent)))
+      if (IsAscending(contourTreeHyperarcsPortal.Get(hyperparent)))
       { // ascending hyperarc
         // the supernodes on the hyperarc are in sorted low-high order
         vtkm::Id lowSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id highSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (maskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == numHypernodes - 1)
           highSupernode = numSupernodes - 1;
         // otherwise, take the supernode just before the next hypernode
         else
-          highSupernode = contourTreeHypernodesPortal.Get(maskedIndex(hyperparent) + 1) - 1;
+          highSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
         // now, the high supernode may be lower than the element, because the node belongs
         // between it and the high end of the hyperarc
         if (contourTreeSupernodesPortal.Get(highSupernode) < node)
@@ -554,14 +554,14 @@ public:
         vtkm::Id highSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id lowSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (maskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == numHypernodes - 1)
         { // last hyperarc
           lowSupernode = numSupernodes - 1;
         } // last hyperarc
         // otherwise, take the supernode just before the next hypernode
         else
         { // other hyperarc
-          lowSupernode = contourTreeHypernodesPortal.Get(maskedIndex(hyperparent) + 1) - 1;
+          lowSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
         } // other hyperarc
         // now, the low supernode may be higher than the element, because the node belongs
         // between it and the low end of the hyperarc
@@ -592,7 +592,7 @@ public:
     for (indexType node = 0; node < contourTree.arcs.size(); node++)
     { // per node
         // if the superparent is already set, it's a supernode, so skip it.
-        if (noSuchElement(contourTree.superparents[node]) && mesh.liesOnBoundary(node))
+        if (NoSuchElement(contourTree.superparents[node]) && mesh.liesOnBoundary(node))
         { // regular nodes only
             // we will need to prune top and bottom until one of them prunes past the node
             indexType top = meshExtrema.peaks[node];
@@ -612,17 +612,17 @@ public:
 
             // now we loop until one of them goes past the vertex
             // the invariant here is that the first direction to prune past the vertex prunes it
-            while (noSuchElement(hyperparent))
+            while (NoSuchElement(hyperparent))
             { // loop to find pruner
 
                 // we test the one that prunes first
-                if (maskedIndex(topWhen) < maskedIndex(bottomWhen))
+                if (MaskedIndex(topWhen) < MaskedIndex(bottomWhen))
                 { // top pruned first
                     // we prune down to the bottom of the hyperarc in either case, by updating the top superparent
-                    topSuperparent = contourTree.hyperarcs[maskedIndex(topHyperparent)];
-                    top = contourTree.supernodes[maskedIndex(topSuperparent)];
+                    topSuperparent = contourTree.hyperarcs[MaskedIndex(topHyperparent)];
+                    top = contourTree.supernodes[MaskedIndex(topSuperparent)];
 
-                    topWhen = contourTree.whenTransferred[maskedIndex(topSuperparent)];
+                    topWhen = contourTree.whenTransferred[MaskedIndex(topSuperparent)];
                     // test to see if we've passed the node
                     if (top < node)
                     { // just pruned past
@@ -631,15 +631,15 @@ public:
                     // == is not possible, since node is regular
                     else // top < node
                     { // not pruned past
-                        topHyperparent = contourTree.hyperparents[maskedIndex(topSuperparent)];
+                        topHyperparent = contourTree.hyperparents[MaskedIndex(topSuperparent)];
                     } // not pruned past
                 } // top pruned first
-                else if (maskedIndex(topWhen) > maskedIndex(bottomWhen))
+                else if (MaskedIndex(topWhen) > MaskedIndex(bottomWhen))
                 { // bottom pruned first
                     // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
-                    bottomSuperparent = contourTree.hyperarcs[maskedIndex(bottomHyperparent)];
-                    bottom = contourTree.supernodes[maskedIndex(bottomSuperparent)];
-                    bottomWhen = contourTree.whenTransferred[maskedIndex(bottomSuperparent)];
+                    bottomSuperparent = contourTree.hyperarcs[MaskedIndex(bottomHyperparent)];
+                    bottom = contourTree.supernodes[MaskedIndex(bottomSuperparent)];
+                    bottomWhen = contourTree.whenTransferred[MaskedIndex(bottomSuperparent)];
                     // test to see if we've passed the node
                     if (bottom > node)
                     { // just pruned past
@@ -648,7 +648,7 @@ public:
                     // == is not possible, since node is regular
                     else // bottom > node
                     { // not pruned past
-                        bottomHyperparent = contourTree.hyperparents[maskedIndex(bottomSuperparent)];
+                        bottomHyperparent = contourTree.hyperparents[MaskedIndex(bottomSuperparent)];
                     } // not pruned past
                 } // bottom pruned first
                 else
@@ -661,17 +661,17 @@ public:
 
 
             // we have now set the hyperparent correctly, so we retrieve it's hyperarc to find whether it ascends or descends
-            if (isAscending(contourTree.hyperarcs[hyperparent]))
+            if (IsAscending(contourTree.hyperarcs[hyperparent]))
             { // ascending hyperarc
                 // the supernodes on the hyperarc are in sorted low-high order
                 indexType lowSupernode = contourTree.hypernodes[hyperparent];
                 indexType highSupernode;
                 // if it's at the right hand end, take the last supernode in the array
-                if (maskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
+                if (MaskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
                     highSupernode = contourTree.supernodes.size() - 1;
                 // otherwise, take the supernode just before the next hypernode
                 else
-                    highSupernode = contourTree.hypernodes[maskedIndex(hyperparent) + 1] - 1;
+                    highSupernode = contourTree.hypernodes[MaskedIndex(hyperparent) + 1] - 1;
                 // now, the high supernode may be lower than the element, because the node belongs
                 // between it and the high end of the hyperarc
                 if (contourTree.supernodes[highSupernode] < node)
@@ -701,14 +701,14 @@ public:
                 indexType highSupernode = contourTree.hypernodes[hyperparent];
                 indexType lowSupernode;
                 // if it's at the right hand end, take the last supernode in the array
-                if (maskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
+                if (MaskedIndex(hyperparent) == contourTree.hypernodes.size() - 1)
                 { // last hyperarc
                     lowSupernode = contourTree.supernodes.size() - 1;
                 } // last hyperarc
                 // otherwise, take the supernode just before the next hypernode
                 else
                 { // other hyperarc
-                    lowSupernode = contourTree.hypernodes[maskedIndex(hyperparent) + 1] - 1;
+                    lowSupernode = contourTree.hypernodes[MaskedIndex(hyperparent) + 1] - 1;
                 } // other hyperarc
                 // now, the low supernode may be higher than the element, because the node belongs
                 // between it and the low end of the hyperarc

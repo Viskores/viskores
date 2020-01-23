@@ -135,7 +135,7 @@ public:
 
         // now set the low and high ends
         edgeNear.Set(edgeID, activeIndex);
-        edgeFar.Set(edgeID, maskedIndex(extrema.Get(neigbourComponents[edge])));
+        edgeFar.Set(edgeID, MaskedIndex(extrema.Get(neigbourComponents[edge])));
 
         // and save the edge itself
         activeEdges.Set(edgeID, edgeID);
@@ -177,7 +177,7 @@ public:
 
                 // now set the low and high ends
                 edgeNear[edgeID] = activeIndex;
-                edgeFar[edgeID] = maskedIndex(extrema[neigbourComponents[edge]]);
+                edgeFar[edgeID] = MaskedIndex(extrema[neigbourComponents[edge]]);
 
                 // and save the edge itself
                 activeEdges[edgeID] = edgeID;

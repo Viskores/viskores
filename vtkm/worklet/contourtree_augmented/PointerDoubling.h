@@ -86,7 +86,7 @@ public:
     // get the neighbour's ID
     vtkm::Id neighbour = chains.Get(vertexID);
     // if this is not a terminal vertex
-    if (!isTerminalElement(neighbour))
+    if (!IsTerminalElement(neighbour))
     {
       // then double-step
       chains.Set(vertexID, chains.Get(neighbour));

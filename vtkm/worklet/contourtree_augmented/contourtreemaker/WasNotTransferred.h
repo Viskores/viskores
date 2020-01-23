@@ -78,7 +78,7 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id whenValue) const
   { // operator ()
-    return (noSuchElement(whenValue));
+    return (NoSuchElement(whenValue));
   } // operator ()
 };  // class WasNotTransferred
 

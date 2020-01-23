@@ -86,12 +86,12 @@ public:
   {
     contourTreeHyperparentsPortal.Set(
       supernode,
-      superSortIndexPortal.Get(maskedIndex(contourTreeHyperparentsPortal.Get(supernode))));
+      superSortIndexPortal.Get(MaskedIndex(contourTreeHyperparentsPortal.Get(supernode))));
 
     // In serial this worklet implements the following operation
     /*
       for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-          contourTree.hyperparents[supernode] = superSortIndex[maskedIndex(contourTree.hyperparents[supernode])];
+          contourTree.hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.hyperparents[supernode])];
         } // per supernode
       */
   }

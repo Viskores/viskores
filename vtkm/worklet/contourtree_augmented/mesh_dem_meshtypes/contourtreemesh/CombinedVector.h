@@ -91,13 +91,13 @@ public:
     this->otherVectorPortal = otherVector.PrepareForInput(DeviceAdapter());
   }
 
-  // See contourtree_augmented/Types.h for definitions of isThis() and CV_OTHER_FLAG
+  // See contourtree_augmented/Types.h for definitions of IsThis() and CV_OTHER_FLAG
 
   VTKM_EXEC_CONT
   T operator[](vtkm::Id idx) const
   {
-    return isThis(idx) ? this->thisVectorPortal.Get(maskedIndex(idx))
-                       : this->otherVectorPortal.Get(maskedIndex(idx));
+    return IsThis(idx) ? this->thisVectorPortal.Get(MaskedIndex(idx))
+                       : this->otherVectorPortal.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT

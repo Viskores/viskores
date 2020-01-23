@@ -96,9 +96,9 @@ void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& outpu
   // The following is equivalent to doing the following in serial
   //
   // for (vtkm::Id entry = 0; entry < permute.size(); entry++)
-  //     output[entry] = input[maskedIndex(permute[entry])];
+  //     output[entry] = input[MaskedIndex(permute[entry])];
   //
-  // Apply the maskedIndex functor to the permute array. ArrayHandleTransform is a fancy vtkm array, i.e.,
+  // Apply the MaskedIndex functor to the permute array. ArrayHandleTransform is a fancy vtkm array, i.e.,
   // the function is applied on-the-fly without creating a copy of the array.
   transform_type maskedPermuteIndex =
     vtkm::cont::make_ArrayHandleTransform(permute, MaskedIndexFunctor<ValueType>());
@@ -128,7 +128,7 @@ struct oneIfArcValid
   oneIfArcValid() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id a) const { return noSuchElement(a) ? 0 : 1; }
+  vtkm::Id operator()(vtkm::Id a) const { return NoSuchElement(a) ? 0 : 1; }
 };
 
 // transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
@@ -158,7 +158,7 @@ struct onefIfSupernode
   onefIfSupernode() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id x) const { return isSupernode(x) ? 1 : 0; }
+  vtkm::Id operator()(vtkm::Id x) const { return IsSupernode(x) ? 1 : 0; }
 };
 
 // transform functor needed for ScanExclusive calculation in FindSuperAndHyperNodes. Return 1 if vertex is a hypernode, else 0.
@@ -168,7 +168,7 @@ struct onefIfHypernode
   onefIfHypernode() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id x) const { return isHypernode(x) ? 1 : 0; }
+  vtkm::Id operator()(vtkm::Id x) const { return IsHypernode(x) ? 1 : 0; }
 };
 
 

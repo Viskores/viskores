@@ -100,7 +100,7 @@ public:
     { // left edge
       vtkm::Id superarc = treeSuperarcsPortal.Get(superparent);
       // explicit check for global minimum
-      if (noSuchElement(superarc))
+      if (NoSuchElement(superarc))
         treeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       else
         treeArcsPortal.Set(nodeID, treeSupernodesPortal.Get(treeSuperarcsPortal.Get(superparent)));
@@ -109,7 +109,7 @@ public:
     { // any other transition
       vtkm::Id superarc = treeSuperarcsPortal.Get(superparent);
       // explicit check for global minimum
-      if (noSuchElement(superarc))
+      if (NoSuchElement(superarc))
         treeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       else
         treeArcsPortal.Set(nodeID, treeSupernodesPortal.Get(treeSuperarcsPortal.Get(superparent)));
@@ -130,7 +130,7 @@ public:
             { // left edge
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
-              if (noSuchElement(superarc))
+              if (NoSuchElement(superarc))
                       tree.arcs[nodeID] = NO_SUCH_ELEMENT;
               else
                       tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];
@@ -139,7 +139,7 @@ public:
             { // any other transition
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
-              if (noSuchElement(superarc))
+              if (NoSuchElement(superarc))
                       tree.arcs[nodeID] = NO_SUCH_ELEMENT;
               else
                       tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];

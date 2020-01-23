@@ -89,8 +89,8 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // retrieve which branch the supernodes are on
-    vtkm::Id branchI = maskedIndex(whichBranchPortal.Get(i));
-    vtkm::Id branchJ = maskedIndex(whichBranchPortal.Get(j));
+    vtkm::Id branchI = MaskedIndex(whichBranchPortal.Get(i));
+    vtkm::Id branchJ = MaskedIndex(whichBranchPortal.Get(j));
 
     // and test them
     if (branchI < branchJ)

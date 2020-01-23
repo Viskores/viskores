@@ -367,7 +367,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // do a separate loop to reset the hyperparent's ID
   // This does the following
   // for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-  //    contourTree.hyperparents[supernode] = superSortIndex[maskedIndex(contourTree.hyperparents[supernode])];
+  //    contourTree.hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.hyperparents[supernode])];
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_ResetHyperparentsId
     resetHyperparentsIdWorklet;
   this->Invoke(resetHyperparentsIdWorklet, superSortIndex, contourTree.hyperparents);
@@ -429,7 +429,7 @@ struct ContourTreeNoSuchElementSuperParents
   template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x) const
   {
-    return (!noSuchElement(x));
+    return (!NoSuchElement(x));
   }
 };
 

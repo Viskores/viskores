@@ -92,7 +92,7 @@ public:
                             const OutFieldPortalType& upOrDownDegreePortal) const
   {
     vtkm::Id whichJoinOrSplit = inNeighbourPortal.Get(joinOrSplitIndex);
-    if (!noSuchElement(whichJoinOrSplit))
+    if (!NoSuchElement(whichJoinOrSplit))
     { // an actual neighbour
       // RHE always computes - this may be redundant, since NO_SUCH_ELEMENT should sort high
       if (joinOrSplitIndex == (nActiveSupernodes - 1))
@@ -106,7 +106,7 @@ public:
       for (vtkm::Id joinIndex = 0; joinIndex < nActiveSupernodes; joinIndex++)
         { // per in edge index
           vtkm::Id whichJoin = inNeighbour[joinIndex];
-          if (!noSuchElement(whichJoin))
+          if (!NoSuchElement(whichJoin))
                   { // an actual neighbour
                   // RHE always computes - this may be redundant, since NO_SUCH_ELEMENT should sort high
                   if (joinIndex == (nActiveSupernodes-1))

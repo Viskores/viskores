@@ -88,7 +88,7 @@ public:
                             const OutFieldPortalType& upOrDownDegreePortal) const
   {
     vtkm::Id whichJoinOrSplit = inNeighbourPortal.Get(joinOrSplitIndex);
-    if (!noSuchElement(whichJoinOrSplit))
+    if (!NoSuchElement(whichJoinOrSplit))
     { // an actual neighbour
       // zero is always the LHE of a segment
       if (joinOrSplitIndex == 0)
@@ -104,7 +104,7 @@ public:
         for (vtkm::Id joinIndex = 0; joinIndex < nActiveSupernodes; joinIndex++)
           { // per in edge index
             vtkm::Id whichJoin = inNeighbour[joinIndex];
-            if (!noSuchElement(whichJoin))
+            if (!NoSuchElement(whichJoin))
                     { // an actual neighbour
                     // zero is always the LHE of a segment
                     if (joinIndex == 0)

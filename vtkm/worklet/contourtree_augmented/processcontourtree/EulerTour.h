@@ -97,7 +97,7 @@ public:
     int counter = 0;
     for (int i = 0; i < superarcs.GetNumberOfValues(); i++)
     {
-      Id j = maskedIndex(superarcs.Get(i));
+      Id j = MaskedIndex(superarcs.Get(i));
 
       if (j != 0)
       {

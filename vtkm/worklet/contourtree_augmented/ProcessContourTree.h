@@ -124,11 +124,11 @@ public:
       vtkm::Id arcTo = arcsPortal.Get(node);
 
       // if this is true, it is the last pruned vertex & is omitted
-      if (noSuchElement(arcTo))
+      if (NoSuchElement(arcTo))
         continue;
 
       // otherwise, strip out the flags
-      arcTo = maskedIndex(arcTo);
+      arcTo = MaskedIndex(arcTo);
 
       // now convert to mesh IDs from sort IDs
       // otherwise, we need to convert the IDs to regular mesh IDs
@@ -174,17 +174,17 @@ public:
       vtkm::Id superTo = superarcsPortal.Get(supernode);
 
       // if this is true, it is the last pruned vertex & is omitted
-      if (noSuchElement(superTo))
+      if (NoSuchElement(superTo))
         continue;
 
       // otherwise, strip out the flags
-      superTo = maskedIndex(superTo);
+      superTo = MaskedIndex(superTo);
 
       // otherwise, we need to convert the IDs to regular mesh IDs
-      vtkm::Id regularID = sortOrderPortal.Get(maskedIndex(sortID));
+      vtkm::Id regularID = sortOrderPortal.Get(MaskedIndex(sortID));
 
       // retrieve the regular ID for it
-      vtkm::Id regularTo = sortOrderPortal.Get(maskedIndex(supernodesPortal.Get(superTo)));
+      vtkm::Id regularTo = sortOrderPortal.Get(MaskedIndex(supernodesPortal.Get(superTo)));
 
       // how we print depends on which end has lower ID
       if (regularID < regularTo)
@@ -269,12 +269,12 @@ public:
     for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.GetNumberOfValues();
          supernode++)
     { // per supernode
-      vtkm::Id when = maskedIndex(whenTransferredPortal.Get(supernode));
+      vtkm::Id when = MaskedIndex(whenTransferredPortal.Get(supernode));
       if (supernode == 0)
       { // zeroth supernode
         firstSupernodePerIterationPortal.Set(when, supernode);
       } // zeroth supernode
-      else if (when != maskedIndex(whenTransferredPortal.Get(supernode - 1)))
+      else if (when != MaskedIndex(whenTransferredPortal.Get(supernode - 1)))
       { // non-matching supernode
         firstSupernodePerIterationPortal.Set(when, supernode);
       } // non-matching supernode
@@ -381,7 +381,7 @@ public:
                                           superarcDependentWeightPortal.Get(lastSuperarc));
 
         // note that in parallel, this will have to be split out as a sort & partial sum in another array
-        vtkm::Id hyperarcTarget = maskedIndex(hyperarcsPortal.Get(hypernode));
+        vtkm::Id hyperarcTarget = MaskedIndex(hyperarcsPortal.Get(hypernode));
         supernodeTransferWeightPortal.Set(hyperarcTarget,
                                           supernodeTransferWeightPortal.Get(hyperarcTarget) +
                                             hyperarcDependentWeightPortal.Get(hypernode));
@@ -440,10 +440,10 @@ public:
     // so we can easily skip it by not indexing to the full size
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      if (isAscending(superarcsPortal.Get(superarc)))
+      if (IsAscending(superarcsPortal.Get(superarc)))
       { // ascending superarc
         superarcListPortal.Set(superarc,
-                               EdgePair(superarc, maskedIndex(superarcsPortal.Get(superarc))));
+                               EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
         upWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -454,7 +454,7 @@ public:
       else
       { // descending superarc
         superarcListPortal.Set(superarc,
-                               EdgePair(maskedIndex(superarcsPortal.Get(superarc)), superarc));
+                               EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
         downWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -573,7 +573,7 @@ public:
     for (vtkm::Id supernode = 0; supernode != nSupernodes; supernode++)
     { // per supernode
       vtkm::Id bestUp = bestUpwardPortal.Get(supernode);
-      if (noSuchElement(bestUp))
+      if (NoSuchElement(bestUp))
         // flag it as an upper leaf
         whichBranchPortal.Set(supernode, TERMINAL_ELEMENT | supernode);
       else if (bestDownwardPortal.Get(bestUp) == supernode)
@@ -600,7 +600,7 @@ public:
     { // per iteration
       // loop through the vertices, updating the chaining array
       for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-        if (!isTerminalElement(whichBranchPortal.Get(supernode)))
+        if (!IsTerminalElement(whichBranchPortal.Get(supernode)))
           whichBranchPortal.Set(supernode, whichBranchPortal.Get(whichBranchPortal.Get(supernode)));
     } // per iteration
 
@@ -622,7 +622,7 @@ public:
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
       // test whether the supernode points to itself to find the top ends
-      if (maskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+      if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
       {
         chainToBranchPortal.Set(supernode, nBranches++);
       }
@@ -684,7 +684,7 @@ public:
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
       whichBranchPortal.Set(supernode,
-                            chainToBranchPortal.Get(maskedIndex(whichBranchPortal.Get(supernode))));
+                            chainToBranchPortal.Get(MaskedIndex(whichBranchPortal.Get(supernode))));
     }
 
     // VI C.  For each segment, the highest element sets up the upper end, the lowest element sets the low end
@@ -734,18 +734,18 @@ public:
     { // per branch
       vtkm::Id branchMax = branchMaximumPortal.Get(branchID);
       // check whether the maximum is NOT a leaf
-      if (!noSuchElement(bestUpwardPortal.Get(branchMax)))
+      if (!NoSuchElement(bestUpwardPortal.Get(branchMax)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, maskedIndex(bestUpwardPortal.Get(branchMax)));
+        branchSaddlePortal.Set(branchID, MaskedIndex(bestUpwardPortal.Get(branchMax)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
         branchParentPortal.Set(branchID, whichBranchPortal.Get(bestUpwardPortal.Get(branchMax)));
       } // points to a saddle
       // now do the same with the branch minimum
       vtkm::Id branchMin = branchMinimumPortal.Get(branchID);
       // test whether NOT a lower leaf
-      if (!noSuchElement(bestDownwardPortal.Get(branchMin)))
+      if (!NoSuchElement(bestDownwardPortal.Get(branchMin)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, maskedIndex(bestDownwardPortal.Get(branchMin)));
+        branchSaddlePortal.Set(branchID, MaskedIndex(bestDownwardPortal.Get(branchMin)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
         branchParentPortal.Set(branchID, whichBranchPortal.Get(bestDownwardPortal.Get(branchMin)));
       } // points to a saddle
@@ -901,8 +901,8 @@ public:
       Id vertex = static_cast<Id>(vertexData[i].index);
       Id parent = parents.Get(vertex);
 
-      Id vertexValue = maskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));
-      Id parentValue = maskedIndex(supernodes.Get(minMaxIndex.Get(parent)));
+      Id vertexValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));
+      Id parentValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(parent)));
 
       if ((true == isMin && vertexValue < parentValue) ||
           (false == isMin && vertexValue > parentValue))
@@ -948,11 +948,11 @@ public:
     tour.computeEulerTour(contourTree.superarcs.GetPortalConstControl());
 
     // Reroot the Euler Tour at the global min
-    tour.getTourAtRoot(maskedIndex(contourTree.superparents.GetPortalConstControl().Get(0)),
+    tour.getTourAtRoot(MaskedIndex(contourTree.superparents.GetPortalConstControl().Get(0)),
                        minTourEdges.GetPortalControl());
 
     // Reroot the Euler Tour at the global max
-    tour.getTourAtRoot(maskedIndex(contourTree.superparents.GetPortalConstControl().Get(
+    tour.getTourAtRoot(MaskedIndex(contourTree.superparents.GetPortalConstControl().Get(
                          contourTree.nodes.GetNumberOfValues() - 1)),
                        maxTourEdges.GetPortalControl());
 

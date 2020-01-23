@@ -176,14 +176,14 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   // Reconstruct explicit branch decomposition from array representation
   for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
-    if (!noSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
+    if (!NoSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
-      branches[branchID]->Saddle = maskedIndex(
-        supernodesPortal.Get(maskedIndex(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID)))));
-      vtkm::Id branchMin = maskedIndex(supernodesPortal.Get(
-        maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID)))));
-      vtkm::Id branchMax = maskedIndex(supernodesPortal.Get(
-        maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID)))));
+      branches[branchID]->Saddle = MaskedIndex(
+        supernodesPortal.Get(MaskedIndex(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMin = MaskedIndex(supernodesPortal.Get(
+        MaskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID)))));
+      vtkm::Id branchMax = MaskedIndex(supernodesPortal.Get(
+        MaskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID)))));
       if (branchMin < branches[branchID]->Saddle)
         branches[branchID]->Extremum = branchMin;
       else if (branchMax > branches[branchID]->Saddle)
@@ -197,9 +197,9 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     else
     {
       branches[branchID]->Saddle =
-        supernodesPortal.Get(maskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID))));
+        supernodesPortal.Get(MaskedIndex(branchMinimumPortal.Get(static_cast<vtkm::Id>(branchID))));
       branches[branchID]->Extremum =
-        supernodesPortal.Get(maskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID))));
+        supernodesPortal.Get(MaskedIndex(branchMaximumPortal.Get(static_cast<vtkm::Id>(branchID))));
     }
 
     if (dataFieldIsSorted)
@@ -218,14 +218,14 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     branches[branchID]->Saddle = sortOrderPortal.Get(branches[branchID]->Saddle);
     branches[branchID]->Extremum = sortOrderPortal.Get(branches[branchID]->Extremum);
 
-    if (noSuchElement(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))
+    if (NoSuchElement(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       root = branches[branchID]; // No parent -> this is the root branch
     }
     else
     {
       branches[branchID]->Parent = branches[static_cast<size_t>(
-        maskedIndex(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))];
+        MaskedIndex(branchParentPortal.Get(static_cast<vtkm::Id>(branchID))))];
       branches[branchID]->Parent->Children.push_back(branches[branchID]);
     }
   }
@@ -237,7 +237,7 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   for (vtkm::Id i = 0; i < contourTreeSuperparents.GetNumberOfValues(); i++)
   {
     branches[static_cast<size_t>(
-               maskedIndex(whichBranchPortal.Get(maskedIndex(superparentsPortal.Get(i)))))]
+               MaskedIndex(whichBranchPortal.Get(MaskedIndex(superparentsPortal.Get(i)))))]
       ->Volume++; // Increment Volume
   }
   if (root)

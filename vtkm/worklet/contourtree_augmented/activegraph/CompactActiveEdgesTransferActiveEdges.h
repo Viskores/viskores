@@ -125,7 +125,7 @@ public:
       vtkm::Id hyperFar = hyperarcsPortal.Get(farEnd);
 
       // now get rid of the mask to find the real ID
-      farEnd = maskedIndex(hyperFar);
+      farEnd = MaskedIndex(hyperFar);
 
       // we want to ignore edges that lead back to this vertex
       if (farEnd != vertexId)
@@ -179,7 +179,7 @@ public:
           indexType hyperFar = hyperarcs[farEnd];
 
           // now get rid of the mask to find the real ID
-          farEnd = maskedIndex(hyperFar);
+          farEnd = MaskedIndex(hyperFar);
 
           // we want to ignore edges that lead back to this vertex
           if (farEnd != vertexID)

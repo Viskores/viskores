@@ -99,10 +99,10 @@ public:
     {
       vtkm::Id prevFrom = (neighboursPortal.Get(sortedArcNo - 1) % 2 == 0)
         ? neighboursPortal.Get(sortedArcNo - 1) / 2
-        : maskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo - 1) / 2));
+        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo - 1) / 2));
       vtkm::Id currFrom = (neighboursPortal.Get(sortedArcNo) % 2 == 0)
         ? neighboursPortal.Get(sortedArcNo) / 2
-        : maskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo) / 2));
+        : MaskedIndex(arcsPortal.Get(neighboursPortal.Get(sortedArcNo) / 2));
       if (currFrom != prevFrom)
       {
         firstNeighbourPortal.Set(currFrom, sortedArcNo);
@@ -117,8 +117,8 @@ public:
     // #pragma omp parallel for
     // for (indexVector::size_type sortedArcNo = 1; sortedArcNo < neighbours.size(); ++sortedArcNo)
     //   {
-    //      indexType prevFrom = (neighbours[sortedArcNo-1] % 2 == 0) ? neighbours[sortedArcNo-1]/2 : maskedIndex(arcs[neighbours[sortedArcNo-1]/2]);
-    //      indexType currFrom = (neighbours[sortedArcNo  ] % 2 == 0) ? neighbours[sortedArcNo  ]/2 : maskedIndex(arcs[neighbours[sortedArcNo  ]/2]);
+    //      indexType prevFrom = (neighbours[sortedArcNo-1] % 2 == 0) ? neighbours[sortedArcNo-1]/2 : MaskedIndex(arcs[neighbours[sortedArcNo-1]/2]);
+    //      indexType currFrom = (neighbours[sortedArcNo  ] % 2 == 0) ? neighbours[sortedArcNo  ]/2 : MaskedIndex(arcs[neighbours[sortedArcNo  ]/2]);
     //      if (currFrom != prevFrom)
     //       {
     //          assert(currFrom < firstNeighbour.size());

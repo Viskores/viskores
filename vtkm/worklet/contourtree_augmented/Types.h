@@ -82,47 +82,47 @@ using EdgePairArray = vtkm::cont::ArrayHandle<EdgePair>; // Array of edge pairs
 
 // inline functions for retrieving flags or index
 VTKM_EXEC_CONT
-inline bool noSuchElement(vtkm::Id flaggedIndex)
-{ // noSuchElement()
+inline bool NoSuchElement(vtkm::Id flaggedIndex)
+{ // NoSuchElement()
   return ((flaggedIndex & (vtkm::Id)NO_SUCH_ELEMENT) != 0);
-} // noSuchElement()
+} // NoSuchElement()
 
 VTKM_EXEC_CONT
-inline bool isTerminalElement(vtkm::Id flaggedIndex)
-{ // isTerminalElement()
+inline bool IsTerminalElement(vtkm::Id flaggedIndex)
+{ // IsTerminalElement()
   return ((flaggedIndex & TERMINAL_ELEMENT) != 0);
-} // isTerminalElement()
+} // IsTerminalElement()
 
 VTKM_EXEC_CONT
-inline bool isSupernode(vtkm::Id flaggedIndex)
-{ // isSupernode()
+inline bool IsSupernode(vtkm::Id flaggedIndex)
+{ // IsSupernode()
   return ((flaggedIndex & IS_SUPERNODE) != 0);
-} // isSupernode()
+} // IsSupernode()
 
 VTKM_EXEC_CONT
-inline bool isHypernode(vtkm::Id flaggedIndex)
-{ // isHypernode()
+inline bool IsHypernode(vtkm::Id flaggedIndex)
+{ // IsHypernode()
   return ((flaggedIndex & IS_HYPERNODE) != 0);
-} // isHypernode()
+} // IsHypernode()
 
 VTKM_EXEC_CONT
-inline bool isAscending(vtkm::Id flaggedIndex)
-{ // isAscending()
+inline bool IsAscending(vtkm::Id flaggedIndex)
+{ // IsAscending()
   return ((flaggedIndex & IS_ASCENDING) != 0);
-} // isAscending()
+} // IsAscending()
 
 VTKM_EXEC_CONT
-inline vtkm::Id maskedIndex(vtkm::Id flaggedIndex)
-{ // maskedIndex()
+inline vtkm::Id MaskedIndex(vtkm::Id flaggedIndex)
+{ // MaskedIndex()
   return (flaggedIndex & INDEX_MASK);
-} // maskedIndex()
+} // MaskedIndex()
 
 // Used in the context of CombinedVector class used in ContourTreeMesh to merge the mesh of contour trees
 VTKM_EXEC_CONT
-inline bool isThis(vtkm::Id flaggedIndex)
-{ // isThis
+inline bool IsThis(vtkm::Id flaggedIndex)
+{ // IsThis
   return ((flaggedIndex & CV_OTHER_FLAG) == 0);
-} // isThis
+} // IsThis
 
 template <typename T>
 struct MaskedIndexFunctor
@@ -132,19 +132,19 @@ struct MaskedIndexFunctor
   MaskedIndexFunctor() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(T x) const { return maskedIndex(x); }
+  vtkm::Id operator()(T x) const { return MaskedIndex(x); }
 };
 
-inline std::string flagString(vtkm::Id flaggedIndex)
-{ // flagString()
+inline std::string FlagString(vtkm::Id flaggedIndex)
+{ // FlagString()
   std::string fString("");
-  fString += (noSuchElement(flaggedIndex) ? "n" : ".");
-  fString += (isTerminalElement(flaggedIndex) ? "t" : ".");
-  fString += (isSupernode(flaggedIndex) ? "s" : ".");
-  fString += (isHypernode(flaggedIndex) ? "h" : ".");
-  fString += (isAscending(flaggedIndex) ? "a" : ".");
+  fString += (NoSuchElement(flaggedIndex) ? "n" : ".");
+  fString += (IsTerminalElement(flaggedIndex) ? "t" : ".");
+  fString += (IsSupernode(flaggedIndex) ? "s" : ".");
+  fString += (IsHypernode(flaggedIndex) ? "h" : ".");
+  fString += (IsAscending(flaggedIndex) ? "a" : ".");
   return fString;
-} // flagString()
+} // FlagString()
 
 
 

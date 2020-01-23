@@ -98,7 +98,7 @@ public:
 
     // deal with hypernodes
     // must do this first, else supernode ID is incorrect
-    if (isHypernode(graphTarget))
+    if (IsHypernode(graphTarget))
     { // hypernode
       // set the IDs for later
       hyperIdPortal.Set(graphVertex, newHypernodePositionPortal.Get(graphVertex));
@@ -109,7 +109,7 @@ public:
       hyperIdPortal.Set(graphVertex, (vtkm::Id)NO_SUCH_ELEMENT);
 
     // supernode IDs
-    if (isSupernode(graphTarget))
+    if (IsSupernode(graphTarget))
     { // supernode
       // set the supernode indices up
       treeSupernodesPortal.Set(newSupernodePositionPortal.Get(graphVertex), graphVertex);
@@ -124,7 +124,7 @@ public:
 
           // deal with hypernodes
           // must do this first, else supernode ID is incorrect
-          if (isHypernode(graphTarget))
+          if (IsHypernode(graphTarget))
             { // hypernode
               // set the IDs for later
               hyperID[graphVertex] = newHypernodePosition[graphVertex];
@@ -135,7 +135,7 @@ public:
             hyperID[graphVertex] = NO_SUCH_ELEMENT;
 
           // supernode IDs
-          if (isSupernode(graphTarget))
+          if (IsSupernode(graphTarget))
             { // supernode
               // set the supernode indices up
               tree.supernodes[newSupernodePosition[graphVertex]] = graphVertex;

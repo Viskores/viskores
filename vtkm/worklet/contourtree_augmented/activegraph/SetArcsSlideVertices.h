@@ -101,7 +101,7 @@ public:
                             const InOutFieldPortalType& treeSuperparentsPortal) const
   {
     // ignore if the flag is already set
-    if (isSupernode(treeArcsPortal.Get(nodeID)))
+    if (IsSupernode(treeArcsPortal.Get(nodeID)))
     {
       return;
     }
@@ -110,19 +110,19 @@ public:
     vtkm::Id fromID = meshExtremaPortal.Get(nodeID);
 
     // get the "bottom" end from arcs array (it's a peak, so it's set already)
-    vtkm::Id toID = treeArcsPortal.Get(maskedIndex(fromID));
+    vtkm::Id toID = treeArcsPortal.Get(MaskedIndex(fromID));
 
     // loop to bottom or until to node is "below" this node
-    while (!noSuchElement(toID) && (isJoinGraph ? (maskedIndex(toID) > maskedIndex(nodeID))
-                                                : (maskedIndex(toID) < maskedIndex(nodeID))))
+    while (!NoSuchElement(toID) && (isJoinGraph ? (MaskedIndex(toID) > MaskedIndex(nodeID))
+                                                : (MaskedIndex(toID) < MaskedIndex(nodeID))))
     { // sliding loop
       fromID = toID;
-      toID = treeArcsPortal.Get(maskedIndex(fromID));
+      toID = treeArcsPortal.Get(MaskedIndex(fromID));
     } // sliding loop
 
     // now we've found a hyperarc, we need to search to place ourselves on a superarc
     // it's a binary search!  first we get the hyperarc ID, which we've stored in superparents.
-    vtkm::Id hyperID = treeSuperparentsPortal.Get(maskedIndex(fromID));
+    vtkm::Id hyperID = treeSuperparentsPortal.Get(MaskedIndex(fromID));
     vtkm::Id leftSupernodeID = treeFirstSuperchildPortal.Get(hyperID);
     vtkm::Id leftNodeID = treeSupernodesPortal.Get(leftSupernodeID);
 
@@ -184,26 +184,26 @@ public:
       for (indexType nodeID = 0; nodeID < tree.arcs.size(); nodeID++)
         { // per node
           // ignore if the flag is already set
-          if (isSupernode(tree.arcs[nodeID]))
+          if (IsSupernode(tree.arcs[nodeID]))
             continue;
 
           // start at the "top" end, retrieved from initial extremal array
           vtkm::Id fromID = extrema[nodeID];
 
           // get the "bottom" end from arcs array (it's a peak, so it's set already)
-          vtkm::Id toID = tree.arcs[maskedIndex(fromID)];
+          vtkm::Id toID = tree.arcs[MaskedIndex(fromID)];
 
           // loop to bottom or until to node is "below" this node
-          while (!noSuchElement(toID) && (isJoinGraph ?
-                  (maskedIndex(toID) > maskedIndex(nodeID)): (maskedIndex(toID) < maskedIndex(nodeID))))
+          while (!NoSuchElement(toID) && (isJoinGraph ?
+                  (MaskedIndex(toID) > MaskedIndex(nodeID)): (MaskedIndex(toID) < MaskedIndex(nodeID))))
             { // sliding loop
               fromID = toID;
-              toID = tree.arcs[maskedIndex(fromID)];
+              toID = tree.arcs[MaskedIndex(fromID)];
             } // sliding loop
 
           // now we've found a hyperarc, we need to search to place ourselves on a superarc
           // it's a binary search!  first we get the hyperarc ID, which we've stored in superparents.
-          indexType hyperID = tree.superparents[maskedIndex(fromID)];
+          indexType hyperID = tree.superparents[MaskedIndex(fromID)];
           indexType leftSupernodeID = tree.firstSuperchild[hyperID];
           indexType leftNodeID = tree.supernodes[leftSupernodeID];
 

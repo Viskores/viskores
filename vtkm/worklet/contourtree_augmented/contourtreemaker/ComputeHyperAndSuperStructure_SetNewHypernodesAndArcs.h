@@ -94,7 +94,7 @@ public:
                             const OutFieldPortalType& newHypernodesPortal,
                             const OutFieldPortalType& newHyperarcsPortal) const
   {
-    bool isAHypernode = isHypernode(contourTreeWhenTransferredPortal.Get(supernode));
+    bool isAHypernode = IsHypernode(contourTreeWhenTransferredPortal.Get(supernode));
     // ignore non-hypernodes
     // all others (including the root hypernode) are kept
     if (isAHypernode)
@@ -109,7 +109,7 @@ public:
     /*
       for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
         { // per supernode
-          bool isAHypernode = isHypernode(contourTree.whenTransferred[supernode]);
+          bool isAHypernode = IsHypernode(contourTree.whenTransferred[supernode]);
 
           // ignore non-hypernodes
           // all others (including the root hypernode) are kept

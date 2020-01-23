@@ -90,12 +90,12 @@ public:
     vtkm::Id graphTarget = hyperarcsPortal.Get(graphVertex);
 
     // hypernodes use themselves
-    if (isHypernode(graphTarget))
+    if (IsHypernode(graphTarget))
       treeHyperparentsPortal.Set(supernode, graphVertex);
     // otherwise the hyperarc shows the hyperparent
     else
       // store the superarc's hyperparent
-      treeHyperparentsPortal.Set(supernode, maskedIndex(graphTarget));
+      treeHyperparentsPortal.Set(supernode, MaskedIndex(graphTarget));
 
     // In serial this worklet implements the following operation
     /*
@@ -108,12 +108,12 @@ public:
           indexType graphTarget = hyperarcs[graphVertex];
 
           // hypernodes use themselves
-          if (isHypernode(graphTarget))
+          if (IsHypernode(graphTarget))
                   tree.hyperparents[supernode] = graphVertex;
           // otherwise the hyperarc shows the hyperparent
           else
                   // store the superarc's hyperparent
-                  tree.hyperparents[supernode] = maskedIndex(graphTarget);
+                  tree.hyperparents[supernode] = MaskedIndex(graphTarget);
         } // per graph vertex
       */
   }

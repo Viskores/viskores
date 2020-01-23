@@ -86,14 +86,14 @@ public:
     // retrieve neighbour's ID
     vtkm::Id neighbour = hyperarcsPortal.Get(vertexId);
     // test for terminal vertex
-    if (isTerminalElement(neighbour))
+    if (IsTerminalElement(neighbour))
     {
       return;
     }
     // retrieve supernode flags
     vtkm::Id supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
     // remove the mask to get a raw index
-    neighbour = maskedIndex(neighbour);
+    neighbour = MaskedIndex(neighbour);
     // otherwise, retrieve the double neighbour
     vtkm::Id doubleNeighbour = hyperarcsPortal.Get(neighbour);
     // remove it's supernode & hypernode flags, but preserve the terminal flag
@@ -110,12 +110,12 @@ public:
           // retrieve neighbour's ID
           indexType neighbour = hyperarcs[vertexID];
           // test for terminal vertex
-          if (isTerminalElement(neighbour))
+          if (IsTerminalElement(neighbour))
             continue;
           // retrieve supernode flags
           indexType supernodeFlag = neighbour & (IS_SUPERNODE | IS_HYPERNODE);
           // remove the mask to get a raw index
-          neighbour = maskedIndex(neighbour);
+          neighbour = MaskedIndex(neighbour);
           // otherwise, retrieve the double neighbour
           indexType doubleNeighbour = hyperarcs[neighbour];
           // remove it's supernode & hypernode flags, but preserve the terminal flag

@@ -112,8 +112,8 @@ public:
     {
       Id vertex = tourEdges.Get(j)[1];
 
-      Id vertexValue = maskedIndex(supernodes.Get(vertex));
-      Id optimalValue = maskedIndex(supernodes.Get(optimal));
+      Id vertexValue = MaskedIndex(supernodes.Get(vertex));
+      Id optimalValue = MaskedIndex(supernodes.Get(optimal));
 
       if ((true == isMin && vertexValue < optimalValue) ||
           (false == isMin && vertexValue > optimalValue))

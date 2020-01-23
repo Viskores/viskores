@@ -98,7 +98,7 @@ public:
 
     // set the hyperparent's first superchild
     if (isFirstSuperchild)
-      contourTreeHypernodesPortal.Set(superSortIndexPortal.Get(maskedIndex(hyperparent)),
+      contourTreeHypernodesPortal.Set(superSortIndexPortal.Get(MaskedIndex(hyperparent)),
                                       supernode);
 
     // In serial this worklet implements the following operation
@@ -116,7 +116,7 @@ public:
 
           // set the hyperparent's first superchild
           if (isFirstSuperchild)
-                  contourTree.hypernodes[superSortIndex[maskedIndex(hyperparent)]] = supernode;
+                  contourTree.hypernodes[superSortIndex[MaskedIndex(hyperparent)]] = supernode;
         } // per supernode
       */
   }

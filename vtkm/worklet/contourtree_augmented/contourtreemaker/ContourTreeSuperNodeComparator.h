@@ -95,19 +95,19 @@ public:
   bool operator()(const vtkm::Id& leftComparand, const vtkm::Id& rightComparand) const
   { // operator()
     // first compare the iteration when they were transferred
-    vtkm::Id leftWhen = maskedIndex(whenTransferredPortal.Get(leftComparand));
-    vtkm::Id rightWhen = maskedIndex(whenTransferredPortal.Get(rightComparand));
+    vtkm::Id leftWhen = MaskedIndex(whenTransferredPortal.Get(leftComparand));
+    vtkm::Id rightWhen = MaskedIndex(whenTransferredPortal.Get(rightComparand));
     if (leftWhen < rightWhen)
       return true;
     if (leftWhen > rightWhen)
       return false;
 
     // next compare the left & right hyperparents
-    vtkm::Id leftHyperparent = hyperparentsPortal.Get(maskedIndex(leftComparand));
-    vtkm::Id rightHyperparent = hyperparentsPortal.Get(maskedIndex(rightComparand));
-    if (maskedIndex(leftHyperparent) < maskedIndex(rightHyperparent))
+    vtkm::Id leftHyperparent = hyperparentsPortal.Get(MaskedIndex(leftComparand));
+    vtkm::Id rightHyperparent = hyperparentsPortal.Get(MaskedIndex(rightComparand));
+    if (MaskedIndex(leftHyperparent) < MaskedIndex(rightHyperparent))
       return true;
-    if (maskedIndex(leftHyperparent) > maskedIndex(rightHyperparent))
+    if (MaskedIndex(leftHyperparent) > MaskedIndex(rightHyperparent))
       return false;
 
     // the parents are equal, so we compare the nodes, which are sort indices and thus indicate value
@@ -115,9 +115,9 @@ public:
     vtkm::Id leftSupernode = supernodesPortal.Get(leftComparand);
     vtkm::Id rightSupernode = supernodesPortal.Get(rightComparand);
     if (leftSupernode < rightSupernode)
-      return isAscending(leftHyperparent);
+      return IsAscending(leftHyperparent);
     else if (leftSupernode > rightSupernode)
-      return !isAscending(leftHyperparent);
+      return !IsAscending(leftHyperparent);
     else
       return false;
   } // operator()

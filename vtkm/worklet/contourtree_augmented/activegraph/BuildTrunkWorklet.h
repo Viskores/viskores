@@ -86,7 +86,7 @@ public:
   {
     // retrieve the corresponding chain extremum
     vtkm::Id hypernode = hyperarcsPortal.Get(vertexId);
-    vtkm::Id hypernodeId = maskedIndex(hypernode);
+    vtkm::Id hypernodeId = MaskedIndex(hypernode);
     vtkm::Id supernodeFlag = hypernode & IS_SUPERNODE;
 
     // the far end prunes to nothing
@@ -109,7 +109,7 @@ public:
 
           // retrieve the corresponding chain extremum
           indexType hypernode = hyperarcs[vertexID];
-          indexType hypernodeID = maskedIndex(hypernode);
+          indexType hypernodeID = MaskedIndex(hypernode);
           indexType supernodeFlag = hypernode & IS_SUPERNODE;
 
           // the far end prunes to nothing

@@ -94,14 +94,14 @@ public:
     vtkm::Id joinNeighbour = augmentedJoinSuperarcsPortal.Get(superID);
 
     //      if j actually exists (not infinite root) and j has a contour superarc set
-    if (!noSuchElement(joinNeighbour))
+    if (!NoSuchElement(joinNeighbour))
     { // not pointing to infinite root
       // if the superarc is already set, then we jump past it to the next one
-      if (!noSuchElement(contourTreeSuperarcsPortal.Get(maskedIndex(joinNeighbour))))
+      if (!NoSuchElement(contourTreeSuperarcsPortal.Get(MaskedIndex(joinNeighbour))))
       {
         // reset the vertex' join neighbour
         augmentedJoinSuperarcsPortal.Set(
-          superID, augmentedJoinSuperarcsPortal.Get(maskedIndex(joinNeighbour)));
+          superID, augmentedJoinSuperarcsPortal.Get(MaskedIndex(joinNeighbour)));
       }
     } // not pointing to infinite root
 
@@ -109,14 +109,14 @@ public:
     vtkm::Id splitNeighbour = augmentedSplitSuperarcsPortal.Get(superID);
 
     //      if s actually exists (not infinite root) and s has a contour superarc set
-    if (!noSuchElement(splitNeighbour))
+    if (!NoSuchElement(splitNeighbour))
     { // not pointing to infinite root
       // if the superarc is already set, then we jump past it to the next one
-      if (!noSuchElement(contourTreeSuperarcsPortal.Get(maskedIndex(splitNeighbour))))
+      if (!NoSuchElement(contourTreeSuperarcsPortal.Get(MaskedIndex(splitNeighbour))))
       {
         // reset the vertex' join neighbour
         augmentedSplitSuperarcsPortal.Set(
-          superID, augmentedSplitSuperarcsPortal.Get(maskedIndex(splitNeighbour)));
+          superID, augmentedSplitSuperarcsPortal.Get(MaskedIndex(splitNeighbour)));
       }
     } // not pointing to infinite root
 
@@ -131,24 +131,24 @@ public:
             vtkm::Id joinNeighbour = augmentedJoinSuperarcs[superID];
 
             //      if j actually exists (not infinite root) and j has a contour superarc set
-            if (!noSuchElement(joinNeighbour))
+            if (!NoSuchElement(joinNeighbour))
               { // not pointing to infinite root
                 // if the superarc is already set, then we jump past it to the next one
-                if (!noSuchElement(contourTree.superarcs[maskedIndex(joinNeighbour)]))
+                if (!NoSuchElement(contourTree.superarcs[MaskedIndex(joinNeighbour)]))
                   // reset the vertex' join neighbour
-                  augmentedJoinSuperarcs[superID] = augmentedJoinSuperarcs[maskedIndex(joinNeighbour)];
+                  augmentedJoinSuperarcs[superID] = augmentedJoinSuperarcs[MaskedIndex(joinNeighbour)];
               } // not pointing to infinite root
 
             //      retrieve it's split neighbour s
             vtkm::Id splitNeighbour = augmentedSplitSuperarcs[superID];
 
             //      if s actually exists (not infinite root) and s has a contour superarc set
-            if (!noSuchElement(splitNeighbour))
+            if (!NoSuchElement(splitNeighbour))
               { // not pointing to infinite root
                 // if the superarc is already set, then we jump past it to the next one
-                if (!noSuchElement(contourTree.superarcs[maskedIndex(splitNeighbour)]))
+                if (!NoSuchElement(contourTree.superarcs[MaskedIndex(splitNeighbour)]))
                         // reset the vertex' join neighbour
-                        augmentedSplitSuperarcs[superID] = augmentedSplitSuperarcs[maskedIndex(splitNeighbour)];
+                        augmentedSplitSuperarcs[superID] = augmentedSplitSuperarcs[MaskedIndex(splitNeighbour)];
               } // not pointing to infinite root
           } // per active supernode
 

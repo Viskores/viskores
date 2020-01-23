@@ -114,7 +114,7 @@ public:
 
     // if the inbound neighbour is regular, we want to set its outbound link
     // check whether it's the root in the tree (points to infinite root)
-    if (!noSuchElement(inNeighbour))
+    if (!NoSuchElement(inNeighbour))
     { // inwards exists
       // if the inwards neighbour is regular, set the reverse link
       if ((outdegreePortal.Get(inNeighbour) == 1) && (indegreePortal.Get(inNeighbour) == 1))
@@ -151,7 +151,7 @@ public:
 
           // if the inbound neighbour is regular, we want to set its outbound link
           // check whether it's the root in the tree (points to infinite root)
-          if (!noSuchElement(inNeighbour))
+          if (!NoSuchElement(inNeighbour))
             { // inwards exists
               // if the inwards neighbour is regular, set the reverse link
               if ((outdegree[inNeighbour] == 1) && (indegree[inNeighbour] == 1))

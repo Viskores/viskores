@@ -242,7 +242,7 @@ inline void MergeTree::DebugPrintTree(const char* message,
   {
     vtkm::Id sortIndex = mesh.sortIndices.GetPortalConstControl().Get(entry);
     vtkm::Id arc = this->arcs.GetPortalConstControl().Get(sortIndex);
-    if (noSuchElement(arc))
+    if (NoSuchElement(arc))
     {
       std::cout << "-1" << std::endl;
     }

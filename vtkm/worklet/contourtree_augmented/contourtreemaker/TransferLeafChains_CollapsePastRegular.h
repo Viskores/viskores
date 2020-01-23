@@ -93,11 +93,11 @@ public:
     vtkm::Id inNeighbour = inboundPortal.Get(superID);
 
     // if the outbound is terminal, we're done, otherwise update
-    if (!isTerminalElement(outNeighbour))
+    if (!IsTerminalElement(outNeighbour))
       outboundPortal.Set(superID, outboundPortal.Get(outNeighbour));
 
     // if the inNeighbour is not terminal, update
-    if (!isTerminalElement(inNeighbour))
+    if (!IsTerminalElement(inNeighbour))
       inboundPortal.Set(superID, inboundPortal.Get(inNeighbour));
 
     // In serial this worklet implements the following operation
@@ -109,11 +109,11 @@ public:
             vtkm::Id inNeighbour = inbound[superID];
 
             // if the outbound is terminal, we're done, otherwise update
-            if (!isTerminalElement(outNeighbour))
+            if (!IsTerminalElement(outNeighbour))
                     outbound[superID] = outbound[outNeighbour];
 
             // if the inNeighbour is not terminal, update
-            if (!isTerminalElement(inNeighbour))
+            if (!IsTerminalElement(inNeighbour))
                     inbound[superID] = inbound[inNeighbour];
           } // per active vertex
 

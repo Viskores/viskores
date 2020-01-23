@@ -86,13 +86,13 @@ public:
                             const InFieldPortalType& hyperarcsPortal,
                             const InOutFieldPortalType& edgeFarPortal) const
   {
-    edgeFarPortal.Set(edgeId, maskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId))));
+    edgeFarPortal.Set(edgeId, MaskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId))));
 
     // In serial this worklet implements the following operation
     //for (vtkm::Id edge = 0; edge < activeEdges.size(); edge++)
     //    { // per edge
     //    indexType edgeID = activeEdges[edge];
-    //    edgeFar[edgeID] = maskedIndex(hyperarcs[edgeFar[edgeID]]);
+    //    edgeFar[edgeID] = MaskedIndex(hyperarcs[edgeFar[edgeID]]);
     //    } // per edge
   }
 

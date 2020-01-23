@@ -106,7 +106,7 @@ public:
     { // per edge
       // retrieve the edge ID and the far end of the edge
       vtkm::Id edgeId = activeEdgesPortal.Get(edge);
-      vtkm::Id nbrFar = maskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId)));
+      vtkm::Id nbrFar = MaskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId)));
 
       // skip looping edges
       if (nbrFar == vertexId)
@@ -151,7 +151,7 @@ public:
                     { // per edge
                     // retrieve the edge ID and the far end of the edge
                     indexType edgeID = activeEdges[edge];
-                    indexType nbrFar = maskedIndex(hyperarcs[edgeFar[edgeID]]);
+                    indexType nbrFar = MaskedIndex(hyperarcs[edgeFar[edgeID]]);
 
                     // skip looping edges
                     if (nbrFar == vertexID)

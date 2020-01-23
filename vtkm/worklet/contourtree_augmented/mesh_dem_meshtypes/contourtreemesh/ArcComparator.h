@@ -96,16 +96,16 @@ public:
   VTKM_EXEC
   bool operator()(const vtkm::Id& x, const vtkm::Id& y) const
   { // operator()
-    vtkm::Id from1 = (x % 2 == 0) ? x / 2 : maskedIndex(arcsPortal.Get(x / 2));
-    vtkm::Id from2 = (y % 2 == 0) ? y / 2 : maskedIndex(arcsPortal.Get(y / 2));
+    vtkm::Id from1 = (x % 2 == 0) ? x / 2 : MaskedIndex(arcsPortal.Get(x / 2));
+    vtkm::Id from2 = (y % 2 == 0) ? y / 2 : MaskedIndex(arcsPortal.Get(y / 2));
     if (from1 != from2)
     {
       return from1 < from2;
     }
     else
     {
-      vtkm::Id to1 = (x % 2 == 0) ? maskedIndex(arcsPortal.Get(x / 2)) : x / 2;
-      vtkm::Id to2 = (y % 2 == 0) ? maskedIndex(arcsPortal.Get(y / 2)) : y / 2;
+      vtkm::Id to1 = (x % 2 == 0) ? MaskedIndex(arcsPortal.Get(x / 2)) : x / 2;
+      vtkm::Id to2 = (y % 2 == 0) ? MaskedIndex(arcsPortal.Get(y / 2)) : y / 2;
       return to1 < to2;
     }
   } // operator()

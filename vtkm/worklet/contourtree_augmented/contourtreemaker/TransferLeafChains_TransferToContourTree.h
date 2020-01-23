@@ -132,15 +132,15 @@ public:
     { // a leaf
       contourTreeHyperparentsPortal.Set(superID, superID | (isJoin ? 0 : IS_ASCENDING));
       contourTreeHyperarcsPortal.Set(
-        superID, maskedIndex(inboundPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+        superID, MaskedIndex(inboundPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
       contourTreeSuperarcsPortal.Set(
-        superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+        superID, MaskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
       contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_HYPERNODE);
     } // a leaf
     else
     { // not a leaf
       // retrieve the out neighbour
-      vtkm::Id outNeighbour = maskedIndex(outboundPortal.Get(superID));
+      vtkm::Id outNeighbour = MaskedIndex(outboundPortal.Get(superID));
 
       // test whether outneighbour is a leaf
       if ((outdegreePortal.Get(outNeighbour) != 0) || (indegreePortal.Get(outNeighbour) != 1))
@@ -150,7 +150,7 @@ public:
       {
         // set superarc, &c.
         contourTreeSuperarcsPortal.Set(
-          superID, maskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+          superID, MaskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
         contourTreeHyperparentsPortal.Set(superID, outNeighbour | (isJoin ? 0 : IS_ASCENDING));
         contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_SUPERNODE);
       }
@@ -168,21 +168,21 @@ public:
         if ((outdegree[superID] == 0) && (indegree[superID] == 1))
                 { // a leaf
                 contourTree.hyperparents[superID] = superID | (isJoin ? 0 : IS_ASCENDING);
-                contourTree.hyperarcs[superID] = maskedIndex(inbound[superID]) | (isJoin ? 0 : IS_ASCENDING);
-                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.hyperarcs[superID] = MaskedIndex(inbound[superID]) | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.superarcs[superID] = MaskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.whenTransferred[superID] = nIterations | IS_HYPERNODE;
                 } // a leaf
         else
                 { // not a leaf
                 // retrieve the out neighbour
-                vtkm::Id outNeighbour = maskedIndex(outbound[superID]);
+                vtkm::Id outNeighbour = MaskedIndex(outbound[superID]);
 
                 // test whether outneighbour is a leaf
                 if ((outdegree[outNeighbour] != 0) || (indegree[outNeighbour] != 1))
                         continue;
 
                 // set superarc, &c.
-                contourTree.superarcs[superID] = maskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
+                contourTree.superarcs[superID] = MaskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.hyperparents[superID] = outNeighbour | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.whenTransferred[superID] = nIterations | IS_SUPERNODE;
                 } // not a leaf

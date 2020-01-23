@@ -85,11 +85,11 @@ public:
                             const InFieldPortalType& shSortIndexPortal,
                             const OutFieldPortalType& contourTreeSHArcsPortal) const
   {
-    if (noSuchElement(sharc))
+    if (NoSuchElement(sharc))
       contourTreeSHArcsPortal.Set(supernode, (vtkm::Id)NO_SUCH_ELEMENT);
     else
       contourTreeSHArcsPortal.Set(
-        supernode, shSortIndexPortal.Get(maskedIndex(sharc)) | (sharc & IS_ASCENDING));
+        supernode, shSortIndexPortal.Get(MaskedIndex(sharc)) | (sharc & IS_ASCENDING));
 
     // In serial this worklet implements the following operation
     /*
@@ -97,10 +97,10 @@ public:
                 { // per node
                 vtkm::Id superarc = permutedSuperarcs[supernode];
 
-                if (noSuchElement(superarc))
+                if (NoSuchElement(superarc))
                         contourTree.superarcs[supernode] = NO_SUCH_ELEMENT;
                 else
-                        contourTree.superarcs[supernode] = superSortIndex[maskedIndex(superarc)] | (superarc & IS_ASCENDING);
+                        contourTree.superarcs[supernode] = superSortIndex[MaskedIndex(superarc)] | (superarc & IS_ASCENDING);
                 } // per node
       */
   }

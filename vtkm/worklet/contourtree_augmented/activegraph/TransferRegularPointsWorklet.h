@@ -100,14 +100,14 @@ public:
     // FindGoverningSaddles() set the hyperarcs of the extrema already
     // to ignore them, we check the IS_HYPERNODE flag
     vtkm::Id hyperarcId = hyperarcsPortal.Get(vertexId);
-    if (isHypernode(hyperarcId))
+    if (IsHypernode(hyperarcId))
       return;
 
     // we know it isn't a hypernode/pseudo-extrema, so we take the index
-    vtkm::Id hypernode = maskedIndex(hyperarcId);
+    vtkm::Id hypernode = MaskedIndex(hyperarcId);
 
     // since we know it points to a pseudo-extremum, we follow it's hyperarc
-    vtkm::Id saddleId = maskedIndex(hyperarcsPortal.Get(hypernode));
+    vtkm::Id saddleId = MaskedIndex(hyperarcsPortal.Get(hypernode));
 
     // now, we test whether the saddle is below this vertex
     // since in this version we have an invariant that the IDs are allocated in
@@ -130,14 +130,14 @@ public:
                 // FindGoverningSaddles() set the hyperarcs of the extrema already
                 // to ignore them, we check the IS_HYPERNODE flag
                 indexType hyperarcID = hyperarcs[vertexID];
-                if (isHypernode(hyperarcID))
+                if (IsHypernode(hyperarcID))
                         continue;
 
                 // we know it isn't a hypernode/pseudo-extrema, so we take the index
-                indexType hypernode = maskedIndex(hyperarcID);
+                indexType hypernode = MaskedIndex(hyperarcID);
 
                 // since we know it points to a pseudo-extremum, we follow it's hyperarc
-                indexType saddleID = maskedIndex(hyperarcs[hypernode]);
+                indexType saddleID = MaskedIndex(hyperarcs[hypernode]);
 
                 // now, we test whether the saddle is below this vertex
                 // since in this version we have an invariant that the IDs are allocated in
