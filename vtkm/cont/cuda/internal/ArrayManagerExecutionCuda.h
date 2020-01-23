@@ -251,7 +251,8 @@ private:
   {
     try
     {
-      this->PrepareForOutput(this->Storage->GetNumberOfValues());
+      vtkm::cont::Token token;
+      this->PrepareForOutput(this->Storage->GetNumberOfValues(), token);
 
       VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
                  "Copying host --> CUDA dev: %s.",

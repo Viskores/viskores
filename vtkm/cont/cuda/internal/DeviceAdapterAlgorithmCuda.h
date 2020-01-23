@@ -20,6 +20,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Token.h>
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
@@ -1112,14 +1113,16 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::cont::Token token;
-
     vtkm::Id numBits = bits.GetNumberOfBits();
-    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{}, token);
-    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTagCuda{}, token);
 
-    // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
-    numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
+    {
+      vtkm::cont::Token token;
+      auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{}, token);
+      auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTagCuda{}, token);
+
+      // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
+      numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
+    }
 
     indices.Shrink(numBits);
     return numBits;
@@ -1156,12 +1159,17 @@ public:
       return;
     }
 
-    vtkm::cont::Token token;
+    vtkm::Id newSize;
 
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
-                                    stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
-                                    output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
-                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
+    {
+      vtkm::cont::Token token;
+
+      newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                             stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
+                             output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
+                             ::vtkm::NotZeroInitialized()); //yes on the stencil
+    }
+
     output.Shrink(newSize);
   }
 
@@ -1179,11 +1187,17 @@ public:
       output.Shrink(size);
       return;
     }
-    vtk::cont::Token token;
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
-                                    stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
-                                    output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
-                                    unary_predicate);
+
+    vtkm::Id newSize;
+
+    {
+      vtkm::cont::Token token;
+      newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTagCuda(), token),
+                             stencil.PrepareForInput(DeviceAdapterTagCuda(), token),
+                             output.PrepareForOutput(size, DeviceAdapterTagCuda(), token),
+                             unary_predicate);
+    }
+
     output.Shrink(newSize);
   }
 
@@ -1248,7 +1262,8 @@ public:
   VTKM_CONT static vtkm::Id CountSetBits(const vtkm::cont::BitField& bits)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{});
+    vtkm::cont::Token token;
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTagCuda{}, token);
     // Use a uint64 for accumulator, as atomicAdd does not support signed int64.
     return CountSetBitsPortal<vtkm::UInt64>(bitsPortal);
   }
@@ -1347,13 +1362,17 @@ public:
     {
       return;
     }
-    vtkm::cont::Token token;
-    vtkm::Id reduced_size = ReduceByKeyPortal(
-      keys.PrepareForInput(DeviceAdapterTagCuda(), token),
-      values.PrepareForInput(DeviceAdapterTagCuda(), token),
-      keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
-      values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
-      binary_functor);
+
+    vtkm::Id reduced_size;
+    {
+      vtkm::cont::Token token;
+      reduced_size = ReduceByKeyPortal(
+        keys.PrepareForInput(DeviceAdapterTagCuda(), token),
+        values.PrepareForInput(DeviceAdapterTagCuda(), token),
+        keys_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+        values_output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
+        binary_functor);
+    }
 
     keys_output.Shrink(reduced_size);
     values_output.Shrink(reduced_size);
@@ -1762,8 +1781,12 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::cont::Token token;
-    vtkm::Id newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
+    vtkm::Id newSize;
+
+    {
+      vtkm::cont::Token token;
+      newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
+    }
 
     values.Shrink(newSize);
   }
@@ -1774,9 +1797,12 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::cont::Token token;
-    vtkm::Id newSize =
-      UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
+    vtkm::Id newSize;
+    {
+      vtkm::cont::Token token;
+      newSize =
+        UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
+    }
 
     values.Shrink(newSize);
   }
