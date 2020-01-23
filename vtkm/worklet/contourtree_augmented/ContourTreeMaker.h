@@ -400,8 +400,8 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
                contourTree.hyperarcs,       // (input)
                contourTree.hypernodes,      // (input)
                contourTree.supernodes,      // (input)
-               meshExtrema.peaks,           // (input)
-               meshExtrema.pits);           // (input)
+               meshExtrema.Peaks,           // (input)
+               meshExtrema.Pits);           // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(contourTree.arcs.GetNumberOfValues()),
@@ -470,8 +470,8 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
                contourTree.hyperarcs,       // (input)
                contourTree.hypernodes,      // (input)
                contourTree.supernodes,      // (input)
-               meshExtrema.peaks,           // (input)
-               meshExtrema.pits,            // (input)
+               meshExtrema.Peaks,           // (input)
+               meshExtrema.Pits,            // (input)
                meshBoundaryExecObj);        // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs

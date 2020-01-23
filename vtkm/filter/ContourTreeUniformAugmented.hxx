@@ -86,7 +86,7 @@ struct ContourTreeBlockData
   static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
 
   // ContourTreeMesh data
-  vtkm::Id nVertices;
+  vtkm::Id NumVertices;
   vtkm::worklet::contourtree_augmented::IdArrayType
     sortOrder; // TODO we should be able to remove this one, but we need to figure out what we need to return in the worklet instead
   vtkm::cont::ArrayHandle<FieldType> sortedValues;
@@ -111,7 +111,7 @@ struct Serialization<ContourTreeBlockData<FieldType>>
 {
   static void save(vtkmdiy::BinaryBuffer& bb, const ContourTreeBlockData<FieldType>& block)
   {
-    vtkmdiy::save(bb, block.nVertices);
+    vtkmdiy::save(bb, block.NumVertices);
     vtkmdiy::save(bb, block.sortOrder);
     vtkmdiy::save(bb, block.sortedValues);
     vtkmdiy::save(bb, block.globalMeshIndex);
@@ -126,7 +126,7 @@ struct Serialization<ContourTreeBlockData<FieldType>>
 
   static void load(vtkmdiy::BinaryBuffer& bb, ContourTreeBlockData<FieldType>& block)
   {
-    vtkmdiy::load(bb, block.nVertices);
+    vtkmdiy::load(bb, block.NumVertices);
     vtkmdiy::load(bb, block.sortOrder);
     vtkmdiy::load(bb, block.sortedValues);
     vtkmdiy::load(bb, block.globalMeshIndex);
@@ -414,7 +414,7 @@ void merge_block_functor(
 
       // Construct the two contour tree mesh by assignign the block data
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshIn;
-      contourTreeMeshIn.nVertices = recvblock.nVertices;
+      contourTreeMeshIn.NumVertices = recvblock.NumVertices;
       contourTreeMeshIn.sortOrder = recvblock.sortOrder;
       contourTreeMeshIn.sortedValues = recvblock.sortedValues;
       contourTreeMeshIn.globalMeshIndex = recvblock.globalMeshIndex;
@@ -423,7 +423,7 @@ void merge_block_functor(
       contourTreeMeshIn.maxNeighbours = recvblock.maxNeighbours;
 
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
-      contourTreeMeshOut.nVertices = block->nVertices;
+      contourTreeMeshOut.NumVertices = block->NumVertices;
       contourTreeMeshOut.sortOrder = block->sortOrder;
       contourTreeMeshOut.sortedValues = block->sortedValues;
       contourTreeMeshOut.globalMeshIndex = block->globalMeshIndex;
@@ -455,7 +455,7 @@ void merge_block_functor(
       if (selfid == 0)
       {
         // Save the data from our block for the next iteration
-        block->nVertices = contourTreeMeshOut.nVertices;
+        block->NumVertices = contourTreeMeshOut.NumVertices;
         block->sortOrder = contourTreeMeshOut.sortOrder;
         block->sortedValues = contourTreeMeshOut.sortedValues;
         block->globalMeshIndex = contourTreeMeshOut.globalMeshIndex;
@@ -512,7 +512,7 @@ void merge_block_functor(
         }
 
         // Copy the data from newContourTreeMesh into  block
-        block->nVertices = newContourTreeMesh->nVertices;
+        block->NumVertices = newContourTreeMesh->NumVertices;
         block->sortOrder = newContourTreeMesh->sortOrder;
         block->sortedValues = newContourTreeMesh->sortedValues;
         block->globalMeshIndex = newContourTreeMesh->globalMeshIndex;
@@ -762,7 +762,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     localContourTreeMeshes[bi] = currContourTreeMesh;
     // create the local data block structure
     localDataBlocks[bi] = new ContourTreeBlockData<T>();
-    localDataBlocks[bi]->nVertices = currContourTreeMesh->nVertices;
+    localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
     localDataBlocks[bi]->sortOrder = currContourTreeMesh->sortOrder;
     localDataBlocks[bi]->sortedValues = currContourTreeMesh->sortedValues;
     localDataBlocks[bi]->globalMeshIndex = currContourTreeMesh->globalMeshIndex;
@@ -856,7 +856,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     vtkm::cont::ArrayHandle<T> currField;
     // Construct the contour tree mesh from the last block
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
-    contourTreeMeshOut.nVertices = localDataBlocks[0]->nVertices;
+    contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
     contourTreeMeshOut.sortOrder = localDataBlocks[0]->sortOrder;
     contourTreeMeshOut.sortedValues = localDataBlocks[0]->sortedValues;
     contourTreeMeshOut.globalMeshIndex = localDataBlocks[0]->globalMeshIndex;

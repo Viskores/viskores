@@ -253,8 +253,8 @@ public:
         if (NoSuchElement(contourTree.superparents[node]))
         { // regular nodes only
             // we will need to prune top and bottom until one of them prunes past the node
-            indexType top = meshExtrema.peaks[node];
-            indexType bottom = meshExtrema.pits[node];
+            indexType top = meshExtrema.Peaks[node];
+            indexType bottom = meshExtrema.Pits[node];
             // these are the regular IDs of supernodes, so their superparents are already set
             indexType topSuperparent = contourTree.superparents[top];
             indexType bottomSuperparent = contourTree.superparents[bottom];
@@ -595,8 +595,8 @@ public:
         if (NoSuchElement(contourTree.superparents[node]) && mesh.liesOnBoundary(node))
         { // regular nodes only
             // we will need to prune top and bottom until one of them prunes past the node
-            indexType top = meshExtrema.peaks[node];
-            indexType bottom = meshExtrema.pits[node];
+            indexType top = meshExtrema.Peaks[node];
+            indexType bottom = meshExtrema.Pits[node];
             // these are the regular IDs of supernodes, so their superparents are already set
             indexType topSuperparent = contourTree.superparents[top];
             indexType bottomSuperparent = contourTree.superparents[bottom];

@@ -106,7 +106,7 @@ public:
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
   // size of the mesh
-  vtkm::Id nRows, nCols, nVertices, nLogSteps;
+  vtkm::Id nRows, nCols, NumVertices, nLogSteps;
 
   // Array with neighbourhood masks
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
@@ -129,10 +129,10 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetStarts(vtkm::cont::ArrayHandle
                                                          bool ascending)
 {
   // create the neighbourhood mask
-  neighbourhoodMask.Allocate(nVertices);
+  neighbourhoodMask.Allocate(NumVertices);
 
   // For each vertex set the next vertex in the chain
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
   Mesh2D_DEM_VertexStarter<T> vertexStarter(nRows, nCols, ascending);
   vtkm::worklet::DispatcherMapField<Mesh2D_DEM_VertexStarter<T>> vertexStarterDispatcher(
     vertexStarter);
@@ -153,11 +153,11 @@ Mesh2D_DEM_Triangulation<T, StorageType>::Mesh2D_DEM_Triangulation(
   , nRows(NRows)
   , nCols(NCols)
 {
-  nVertices = nRows * nCols;
+  NumVertices = nRows * nCols;
 
-  // compute the number of log-jumping steps (i.e. lg_2 (nVertices))
+  // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
   nLogSteps = 1;
-  for (vtkm::Id shifter = nVertices; shifter > 0; shifter >>= 1)
+  for (vtkm::Id shifter = NumVertices; shifter > 0; shifter >>= 1)
     nLogSteps++;
 }
 
@@ -171,11 +171,11 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   vtkm::cont::ArrayHandle<vtkm::Id> inverseIndex;
   vtkm::cont::ArrayHandle<vtkm::Id> isCritical;
   vtkm::cont::ArrayHandle<vtkm::Id> outdegree;
-  inverseIndex.Allocate(nVertices);
-  isCritical.Allocate(nVertices);
-  outdegree.Allocate(nVertices);
+  inverseIndex.Allocate(NumVertices);
+  isCritical.Allocate(NumVertices);
+  outdegree.Allocate(NumVertices);
 
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
   Mesh2D_DEM_VertexOutdegreeStarter vertexOutdegreeStarter(nRows, nCols, ascending);
   vtkm::worklet::DispatcherMapField<Mesh2D_DEM_VertexOutdegreeStarter>
     vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter);
@@ -189,8 +189,8 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   vtkm::cont::Algorithm::ScanExclusive(isCritical, inverseIndex);
 
   // now we can compute how many critical points we carry forward
-  vtkm::Id nCriticalPoints = vtkm::cont::ArrayGetValue(nVertices - 1, inverseIndex) +
-    vtkm::cont::ArrayGetValue(nVertices - 1, isCritical);
+  vtkm::Id nCriticalPoints = vtkm::cont::ArrayGetValue(NumVertices - 1, inverseIndex) +
+    vtkm::cont::ArrayGetValue(NumVertices - 1, isCritical);
 
   // allocate space for the join graph vertex arrays
   mergeGraph.AllocateVertexArrays(nCriticalPoints);

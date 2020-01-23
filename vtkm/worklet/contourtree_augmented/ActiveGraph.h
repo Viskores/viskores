@@ -240,7 +240,7 @@ template <class Mesh>
 void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 { // InitialiseActiveGraph()
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.peaks : meshExtrema.pits;
+  const IdArrayType& extrema = isJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // For every vertex, work out whether it is critical
   // We do so by computing outdegree in the mesh & suppressing the vertex if outdegree is 1
@@ -251,13 +251,13 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
   // Neighbourhood mask (one bit set per connected component in neighbourhood
   IdArrayType neighbourhoodMasks;
-  neighbourhoodMasks.Allocate(mesh.nVertices);
+  neighbourhoodMasks.Allocate(mesh.NumVertices);
   IdArrayType outDegrees; // TODO Should we change this to an unsigned type
-  outDegrees.Allocate(mesh.nVertices);
+  outDegrees.Allocate(mesh.NumVertices);
 
   // Initialize the nerighborhoodMasks and outDegrees arrays
   mesh.setPrepareForExecutionBehavior(isJoinGraph);
-  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.nVertices);
+  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
     isJoinGraph);
 
@@ -275,7 +275,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
     // we need a temporary inverse index to change vertex IDs
     IdArrayType inverseIndex;
-    inverseIndex.Allocate(mesh.nVertices);
+    inverseIndex.Allocate(mesh.NumVertices);
     inverseIndex.GetPortalControl().Set(0,0);
 
     std::partial_sum(
@@ -303,9 +303,9 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // activeIndex gets the next available ID in the active graph (was called nearIndex before)
   // globalIndex stores the index in the join tree for later access
   IdArrayType activeIndices;
-  activeIndices.Allocate(mesh.nVertices);
+  activeIndices.Allocate(mesh.NumVertices);
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
-                                                               mesh.nVertices);
+                                                               mesh.NumVertices);
   vtkm::cont::Algorithm::Copy(noSuchElementArray, activeIndices);
 
   active_graph_inc_ns::InitializeActiveGraphVertices initActiveGraphVerticesWorklet;
@@ -798,7 +798,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.peaks : meshExtrema.pits;
+  const IdArrayType& extrema = isJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // 1.   Set the arcs for the super/hypernodes based on where they prune to
   active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs setSuperAndHypernodeArcsWorklet;
@@ -817,7 +817,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
     isJoinGraph, nSupernodes, nHypernodes);
   this->Invoke(slideVerticesWorklet,
                tree.arcs,            // (input)
-               extrema,              // (input)  i.e,. meshExtrema.peaks or meshExtrema.pits
+               extrema,              // (input)  i.e,. meshExtrema.Peaks or meshExtrema.Pits
                tree.firstSuperchild, // (input)
                tree.supernodes,      // (input)
                tree.superparents);   // (input/output)

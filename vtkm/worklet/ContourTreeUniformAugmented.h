@@ -235,7 +235,7 @@ private:
     timer.Start();
 
     // Stage 3: Assign every mesh vertex to a peak
-    MeshExtrema extrema(mesh.nVertices);
+    MeshExtrema extrema(mesh.NumVertices);
     extrema.SetStarts(mesh, true);
     extrema.BuildRegularChains(true);
     timingsStream << "    " << std::setw(38) << std::left << "Join Tree Regular Chains"
@@ -243,7 +243,7 @@ private:
     timer.Start();
 
     // Stage 4: Identify join saddles & construct Active Join Graph
-    MergeTree joinTree(mesh.nVertices, true);
+    MergeTree joinTree(mesh.NumVertices, true);
     ActiveGraph joinGraph(true);
     joinGraph.Initialise(mesh, extrema);
     timingsStream << "    " << std::setw(38) << std::left << "Join Tree Initialize Active Graph"
@@ -272,7 +272,7 @@ private:
     timer.Start();
 
     // Stage 7:     Identify split saddles & construct Active Split Graph
-    MergeTree splitTree(mesh.nVertices, false);
+    MergeTree splitTree(mesh.NumVertices, false);
     ActiveGraph splitGraph(false);
     splitGraph.Initialise(mesh, extrema);
     timingsStream << "    " << std::setw(38) << std::left << "Splot Tree Initialize Active Graph"
@@ -295,7 +295,7 @@ private:
     timer.Start();
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
-    contourTree.Init(mesh.nVertices);
+    contourTree.Init(mesh.NumVertices);
     ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();

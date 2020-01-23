@@ -102,7 +102,7 @@ class Mesh_DEM_Triangulation
 {
 public:
   // common mesh size parameters
-  vtkm::Id nVertices, nLogSteps;
+  vtkm::Id NumVertices, nLogSteps;
 
   // Define dimensionality of the mesh
   vtkm::Id nDims;
@@ -116,14 +116,14 @@ public:
 
   //empty constructor
   Mesh_DEM_Triangulation()
-    : nVertices(0)
+    : NumVertices(0)
     , nLogSteps(0)
     , nDims(2)
   {
   }
 
-  // Getter function for nVertices
-  vtkm::Id GetNumberOfVertices() const { return nVertices; }
+  // Getter function for NumVertices
+  vtkm::Id GetNumberOfVertices() const { return NumVertices; }
 
   // sorts the data and initializes the sortIndex & indexReverse
   void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);
@@ -162,11 +162,11 @@ public:
     , nRows(nrows)
   {
     this->nDims = 2;
-    this->nVertices = nRows * nCols;
+    this->NumVertices = nRows * nCols;
 
-    // compute the number of log-jumping steps (i.e. lg_2 (nVertices))
+    // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
     this->nLogSteps = 1;
-    for (vtkm::Id shifter = this->nVertices; shifter > 0; shifter >>= 1)
+    for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
       this->nLogSteps++;
   }
 
@@ -203,11 +203,11 @@ public:
     , nSlices(nslices)
   {
     this->nDims = 3;
-    this->nVertices = nRows * nCols * nSlices;
+    this->NumVertices = nRows * nCols * nSlices;
 
-    // compute the number of log-jumping steps (i.e. lg_2 (nVertices))
+    // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
     this->nLogSteps = 1;
-    for (vtkm::Id shifter = this->nVertices; shifter > 0; shifter >>= 1)
+    for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
       this->nLogSteps++;
   }
 
@@ -226,18 +226,18 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem;
 
   // Make sure that the values have the correct size
-  assert(values.GetNumberOfValues() == nVertices);
+  assert(values.GetNumberOfValues() == NumVertices);
 
   // Just in case, make sure that everything is cleaned up
   sortIndices.ReleaseResources();
   sortOrder.ReleaseResources();
 
   // allocate memory for the sort arrays
-  sortOrder.Allocate(nVertices);
-  sortIndices.Allocate(nVertices);
+  sortOrder.Allocate(NumVertices);
+  sortIndices.Allocate(NumVertices);
 
   // now sort the sort order vector by the values, i.e,. initialize the sortOrder member variable
-  vtkm::cont::ArrayHandleIndex initVertexIds(nVertices); // create sequence 0, 1, .. nVertices
+  vtkm::cont::ArrayHandleIndex initVertexIds(NumVertices); // create sequence 0, 1, .. NumVertices
   vtkm::cont::ArrayCopy(initVertexIds, sortOrder);
 
   vtkm::cont::Algorithm::Sort(sortOrder,
@@ -245,7 +245,7 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
 
   // now set the index lookup, i.e., initialize the sortIndices member variable
   // In serial this would be
-  //  for (indexType vertex = 0; vertex < nVertices; vertex++)
+  //  for (indexType vertex = 0; vertex < NumVertices; vertex++)
   //            sortIndices[sortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
   vtkm::cont::Invoker invoke;
@@ -270,8 +270,8 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
   std::cout << "Mesh Contains:                                        " << std::endl;
   std::cout << "------------------------------------------------------" << std::endl;
   //DebugPrintExtents();
-  printLabel("nVertices");
-  printIndexType(nVertices);
+  printLabel("NumVertices");
+  printIndexType(NumVertices);
   std::cout << std::endl;
   printLabel("nLogSteps");
   printIndexType(nLogSteps);

@@ -238,7 +238,7 @@ inline void MergeTree::DebugPrintTree(const char* message,
 
   std::cout << "==========" << std::endl;
 
-  for (vtkm::Id entry = 0; entry < mesh.nVertices; entry++)
+  for (vtkm::Id entry = 0; entry < mesh.NumVertices; entry++)
   {
     vtkm::Id sortIndex = mesh.sortIndices.GetPortalConstControl().Get(entry);
     vtkm::Id arc = this->arcs.GetPortalConstControl().Get(sortIndex);

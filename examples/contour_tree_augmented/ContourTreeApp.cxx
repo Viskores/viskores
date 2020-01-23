@@ -461,7 +461,7 @@ int main(int argc, char* argv[])
 
   // Compute the number of vertices, i.e., xdim * ydim * zdim
   unsigned short nDims = static_cast<unsigned short>(dims.size());
-  std::size_t nVertices = static_cast<std::size_t>(
+  std::size_t numVertices = static_cast<std::size_t>(
     std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<std::size_t>()));
 
   // Print the mesh metadata
@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
                  << nDims
                  << std::endl
                  << "    Number of mesh vertices: "
-                 << nVertices
+                 << numVertices
                  << std::endl);
   }
 
@@ -504,8 +504,8 @@ int main(int argc, char* argv[])
   }
 
   // Read data
-  std::vector<ValueType> values(nVertices);
-  for (std::size_t vertex = 0; vertex < nVertices; ++vertex)
+  std::vector<ValueType> values(numVertices);
+  for (std::size_t vertex = 0; vertex < numVertices; ++vertex)
   {
     inFile >> values[vertex];
   }
