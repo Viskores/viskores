@@ -256,7 +256,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   outDegrees.Allocate(mesh.NumVertices);
 
   // Initialize the nerighborhoodMasks and outDegrees arrays
-  mesh.setPrepareForExecutionBehavior(isJoinGraph);
+  mesh.SetPrepareForExecutionBehavior(isJoinGraph);
   vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
     isJoinGraph);

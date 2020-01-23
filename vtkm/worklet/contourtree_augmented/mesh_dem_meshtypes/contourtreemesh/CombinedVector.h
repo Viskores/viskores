@@ -84,11 +84,11 @@ public:
   typedef typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst
     TArrayPortalType;
   VTKM_CONT
-  CombinedVector(const vtkm::cont::ArrayHandle<T>& thisVector,
-                 const vtkm::cont::ArrayHandle<T>& otherVector)
+  CombinedVector(const vtkm::cont::ArrayHandle<T>& ThisVector,
+                 const vtkm::cont::ArrayHandle<T>& OtherVector)
   {
-    this->thisVectorPortal = thisVector.PrepareForInput(DeviceAdapter());
-    this->otherVectorPortal = otherVector.PrepareForInput(DeviceAdapter());
+    this->ThisVectorPortal = ThisVector.PrepareForInput(DeviceAdapter());
+    this->OtherVectorPortal = OtherVector.PrepareForInput(DeviceAdapter());
   }
 
   // See contourtree_augmented/Types.h for definitions of IsThis() and CV_OTHER_FLAG
@@ -96,19 +96,19 @@ public:
   VTKM_EXEC_CONT
   T operator[](vtkm::Id idx) const
   {
-    return IsThis(idx) ? this->thisVectorPortal.Get(MaskedIndex(idx))
-                       : this->otherVectorPortal.Get(MaskedIndex(idx));
+    return IsThis(idx) ? this->ThisVectorPortal.Get(MaskedIndex(idx))
+                       : this->OtherVectorPortal.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
-    return thisVectorPortal.GetNumberOfValues() + otherVectorPortal.GetNumberOfValues();
+    return ThisVectorPortal.GetNumberOfValues() + OtherVectorPortal.GetNumberOfValues();
   }
 
 private:
-  TArrayPortalType thisVectorPortal;
-  TArrayPortalType otherVectorPortal;
+  TArrayPortalType ThisVectorPortal;
+  TArrayPortalType OtherVectorPortal;
 }; // class CombinedVector
 
 
@@ -117,25 +117,25 @@ class CombinedVectorExecObj : public vtkm::cont::ExecutionObjectBase
 {
 public:
   CombinedVectorExecObj(const vtkm::cont::ArrayHandle<T>& tV, const vtkm::cont::ArrayHandle<T>& oV)
-    : thisVector(tV)
-    , otherVector(oV)
+    : ThisVector(tV)
+    , OtherVector(oV)
   {
   }
 
   template <typename DeviceTag>
   CombinedVector<T, DeviceTag> PrepareForExecution(DeviceTag) const
   {
-    return CombinedVector<T, DeviceTag>(this->thisVector, this->otherVector);
+    return CombinedVector<T, DeviceTag>(this->ThisVector, this->OtherVector);
   }
 
   vtkm::Id GetNumberOfValues() const
   {
-    return thisVector.GetNumberOfValues() + otherVector.GetNumberOfValues();
+    return ThisVector.GetNumberOfValues() + OtherVector.GetNumberOfValues();
   }
 
 private:
-  const vtkm::cont::ArrayHandle<T>& thisVector;
-  const vtkm::cont::ArrayHandle<T>& otherVector;
+  const vtkm::cont::ArrayHandle<T>& ThisVector;
+  const vtkm::cont::ArrayHandle<T>& OtherVector;
 
 }; // class CombinedVectorExecObj
 

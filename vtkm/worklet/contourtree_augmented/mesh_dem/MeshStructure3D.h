@@ -95,19 +95,19 @@ public:
 
   // vertex row - integer modulus by (NumRows&NumColumns) and integer divide by columns
   VTKM_EXEC
-  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (NumRows * NumColumns)) / NumColumns; }
+  vtkm::Id VertexRow(vtkm::Id v) const { return (v % (NumRows * NumColumns)) / NumColumns; }
 
   // vertex column -- integer modulus by columns
   VTKM_EXEC
-  vtkm::Id vertexColumn(vtkm::Id v) const { return v % NumColumns; }
+  vtkm::Id VertexColumn(vtkm::Id v) const { return v % NumColumns; }
 
   // vertex slice -- integer divide by (NumRows*NumColumns)
   VTKM_EXEC
-  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (NumRows * NumColumns); }
+  vtkm::Id VertexSlice(vtkm::Id v) const { return v / (NumRows * NumColumns); }
 
   //vertex ID - row * ncols + col
   VTKM_EXEC
-  vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
+  vtkm::Id VertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
   {
     return (s * NumRows + r) * NumColumns + c;
   }

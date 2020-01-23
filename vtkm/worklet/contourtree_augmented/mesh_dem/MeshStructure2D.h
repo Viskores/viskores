@@ -90,15 +90,15 @@ public:
 
   // vertex row - integer divide by columns
   VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / NumColumns; }
+  inline vtkm::Id VertexRow(vtkm::Id v) const { return v / NumColumns; }
 
   // verteck column -- integer modulus by columns
   VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % NumColumns; }
+  inline vtkm::Id VertexColumn(vtkm::Id v) const { return v % NumColumns; }
 
   //vertex ID - row * ncols + col
   VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * NumColumns + c; }
+  inline vtkm::Id VertexId(vtkm::Id r, vtkm::Id c) const { return r * NumColumns + c; }
 
   vtkm::Id NumColumns, NumRows;
 

@@ -73,35 +73,35 @@ template <typename DeviceAdapter>
 class MeshStructureMarchingCubes : public mesh_dem::MeshStructure3D<DeviceAdapter>
 {
 public:
-  // edgeBoundaryDetectionMasks types
-  using edgeBoundaryDetectionMasksPortalType =
-    typename m3d_marchingcubes::edgeBoundaryDetectionMasksType::template ExecutionTypes<
+  // EdgeBoundaryDetectionMasks types
+  using EdgeBoundaryDetectionMasksPortalType =
+    typename m3d_marchingcubes::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
   // Sort indicies types
   using SortIndicesPortalType =
     typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  // cubeVertexPermutations types
-  using cubeVertexPermutationsPortalType =
-    typename m3d_marchingcubes::cubeVertexPermutationsType::template ExecutionTypes<
+  // CubeVertexPermutations types
+  using CubeVertexPermutationsPortalType =
+    typename m3d_marchingcubes::CubeVertexPermutationsType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
   // linkVertexConnection types
-  using linkVertexConnectionsPortalType =
-    typename m3d_marchingcubes::linkVertexConnectionsType::template ExecutionTypes<
+  using LinkVertexConnectionsPortalType =
+    typename m3d_marchingcubes::LinkVertexConnectionsType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
   // inCubeConnection types
 
-  using inCubeConnectionsPortalType =
-    typename m3d_marchingcubes::inCubeConnectionsType::template ExecutionTypes<
+  using InCubeConnectionsPortalType =
+    typename m3d_marchingcubes::InCubeConnectionsType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
     : mesh_dem::MeshStructure3D<DeviceAdapter>()
-    , getMax(false)
+    , GetMax(false)
   {
   }
 
@@ -113,25 +113,25 @@ public:
     bool getmax,
     const IdArrayType& sortIndices,
     const IdArrayType& sortOrder,
-    const m3d_marchingcubes::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
-    const m3d_marchingcubes::cubeVertexPermutationsType& cubeVertexPermutationsIn,
-    const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsSixIn,
-    const m3d_marchingcubes::linkVertexConnectionsType& linkVertexConnectionsEighteenIn,
-    const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsSixIn,
-    const m3d_marchingcubes::inCubeConnectionsType& inCubeConnectionsEighteenIn)
+    const m3d_marchingcubes::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn,
+    const m3d_marchingcubes::CubeVertexPermutationsType& CubeVertexPermutationsIn,
+    const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsSixIn,
+    const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsEighteenIn,
+    const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsSixIn,
+    const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn)
     : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
-    , getMax(getmax)
+    , GetMax(getmax)
   {
-    sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
-    edgeBoundaryDetectionMasksPortal =
-      edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
-    cubeVertexPermutationsPortal = cubeVertexPermutationsIn.PrepareForInput(DeviceAdapter());
-    linkVertexConnectionsSixPortal = linkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter());
-    linkVertexConnectionsEighteenPortal =
-      linkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
-    inCubeConnectionsSixPortal = inCubeConnectionsSixIn.PrepareForInput(DeviceAdapter());
-    inCubeConnectionsEighteenPortal = inCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
+    SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
+    SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
+    EdgeBoundaryDetectionMasksPortal =
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
+    CubeVertexPermutationsPortal = CubeVertexPermutationsIn.PrepareForInput(DeviceAdapter());
+    LinkVertexConnectionsSixPortal = LinkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter());
+    LinkVertexConnectionsEighteenPortal =
+      LinkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
+    InCubeConnectionsSixPortal = InCubeConnectionsSixIn.PrepareForInput(DeviceAdapter());
+    InCubeConnectionsEighteenPortal = InCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter());
   }
 
   VTKM_EXEC
@@ -144,82 +144,82 @@ public:
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id nbrNo) const
   {
     using namespace m3d_marchingcubes;
-    vtkm::Id meshIndex = this->sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = this->SortOrderPortal.Get(sortIndex);
     // GetNeighbourIndex
     switch (nbrNo)
     {
       // Edge connected neighbours
       case 0:
-        return sortIndicesPortal.Get(meshIndex -
+        return SortIndicesPortal.Get(meshIndex -
                                      (this->NumRows * this->NumColumns)); // { -1,  0,  0 }
       case 1:
-        return sortIndicesPortal.Get(meshIndex - this->NumColumns); // {  0, -1,  0 }
+        return SortIndicesPortal.Get(meshIndex - this->NumColumns); // {  0, -1,  0 }
       case 2:
-        return sortIndicesPortal.Get(meshIndex - 1); // {  0,  0, -1 }
+        return SortIndicesPortal.Get(meshIndex - 1); // {  0,  0, -1 }
       case 3:
-        return sortIndicesPortal.Get(meshIndex + 1); // {  0,  0,  1 }
+        return SortIndicesPortal.Get(meshIndex + 1); // {  0,  0,  1 }
       case 4:
-        return sortIndicesPortal.Get(meshIndex + this->NumColumns); // {  0,  1,  0 }
+        return SortIndicesPortal.Get(meshIndex + this->NumColumns); // {  0,  1,  0 }
       // Face connected neighbours
       case 5:
-        return sortIndicesPortal.Get(meshIndex +
+        return SortIndicesPortal.Get(meshIndex +
                                      (this->NumRows * this->NumColumns)); // {  1,  0,  0 }
       case 6:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
                                      this->NumColumns); // { -1, -1,  0 }
       case 7:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
                                      1); // { -1,  0, -1 }
       case 8:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
                                      1); // { -1,  0,  1 }
       case 9:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
                                      this->NumColumns); // { -1,  1,  0 }
       case 10:
-        return sortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // {  0, -1, -1 }
+        return SortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // {  0, -1, -1 }
       case 11:
-        return sortIndicesPortal.Get(meshIndex - this->NumColumns + 1); // {  0, -1,  1 }
+        return SortIndicesPortal.Get(meshIndex - this->NumColumns + 1); // {  0, -1,  1 }
       case 12:
-        return sortIndicesPortal.Get(meshIndex + this->NumColumns - 1); // {  0,  1, -1 }
+        return SortIndicesPortal.Get(meshIndex + this->NumColumns - 1); // {  0,  1, -1 }
       case 13:
-        return sortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // {  0,  1,  1 }
+        return SortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // {  0,  1,  1 }
       case 14:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
                                      this->NumColumns); // {  1, -1,  0 }
       case 15:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
                                      1); // {  1,  0, -1 }
       case 16:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
                                      1); // {  1,  0,  1 }
       case 17:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
                                      this->NumColumns); // {  1,  1,  0 }
       // Diagonal connected neighbours
       case 18:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
                                      this->NumColumns - 1); // { -1, -1, -1 }
       case 19:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
                                      this->NumColumns + 1); // { -1, -1,  1 }
       case 20:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
                                      this->NumColumns - 1); // { -1,  1, -1 }
       case 21:
-        return sortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
                                      this->NumColumns + 1); // { -1,  1,  1 }
       case 22:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
                                      this->NumColumns - 1); // {  1, -1, -1 }
       case 23:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
                                      this->NumColumns + 1); // {  1, -1,  1 }
       case 24:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
                                      this->NumColumns - 1); // {  1,  1, -1 }
       case 25:
-        return sortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
+        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
                                      this->NumColumns + 1); // {  1,  1,  1 }
       default:
         VTKM_ASSERT(false);
@@ -244,27 +244,27 @@ public:
     using namespace m3d_marchingcubes;
     // GetExtremalNeighbour()
     // convert to a sort index
-    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->vertexSlice(meshIndex);
-    vtkm::Id row = this->vertexRow(meshIndex);
-    vtkm::Id col = this->vertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
-      ((slice == this->NumSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
-      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->NumRows - 1) ? bottomBit : 0);
+    vtkm::Id slice = this->VertexSlice(meshIndex);
+    vtkm::Id row = this->VertexRow(meshIndex);
+    vtkm::Id col = this->VertexColumn(meshIndex);
+    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
+      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
+      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
+      ((row == this->NumRows - 1) ? BottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     // loop downwards so that we pick the same edges as previous versions
-    const int nNeighbours = (!getMax ? N_FACE_NEIGHBOURS : N_EDGE_NEIGHBOURS);
+    const int nNeighbours = (!GetMax ? N_FACE_NEIGHBOURS : N_EDGE_NEIGHBOURS);
     for (vtkm::Id nbrNo = 0; nbrNo < nNeighbours; ++nbrNo)
     {
       // only consider valid edges
-      if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(nbrNo)))
+      if (!(boundaryConfig & EdgeBoundaryDetectionMasksPortal.Get(nbrNo)))
       {
         vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, nbrNo);
         // explicit test allows reversal between join and split trees
-        if (getMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
+        if (GetMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         { // valid edge and outbound
           return nbrSortIndex;
         } // valid edge and outbound
@@ -282,15 +282,15 @@ public:
     using namespace m3d_marchingcubes;
     // GetNeighbourComponentsMaskAndDegree()
     // convert to a sort index
-    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->vertexSlice(meshIndex);
-    vtkm::Id row = this->vertexRow(meshIndex);
-    vtkm::Id col = this->vertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
-      ((slice == this->NumSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
-      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->NumRows - 1) ? bottomBit : 0);
+    vtkm::Id slice = this->VertexSlice(meshIndex);
+    vtkm::Id row = this->VertexRow(meshIndex);
+    vtkm::Id col = this->VertexColumn(meshIndex);
+    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
+      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
+      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
+      ((row == this->NumRows - 1) ? BottomBit : 0);
 
     // Initialize "union find"
     int parentId[N_ALL_NEIGHBOURS];
@@ -298,7 +298,7 @@ public:
     // Compute components of upper link
     for (int edgeNo = 0; edgeNo < N_ALL_NEIGHBOURS; ++edgeNo)
     {
-      if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
+      if (!(boundaryConfig & EdgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
         vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
 
@@ -317,14 +317,14 @@ public:
       }
     } // for each edge
 
-    for (vtkm::UInt8 permIndex = 0; permIndex < cubeVertexPermutations_NumPermutations; permIndex++)
+    for (vtkm::UInt8 permIndex = 0; permIndex < CubeVertexPermutations_NumPermutations; permIndex++)
     {
       // Combpute connection configuration in each of the eight cubes
       // surrounding a vertex
       vtkm::UInt8 caseNo = 0;
       for (int vtxNo = 0; vtxNo < 7; ++vtxNo)
       {
-        if (parentId[cubeVertexPermutationsPortal.Get(permIndex)[vtxNo]] != -1)
+        if (parentId[CubeVertexPermutationsPortal.Get(permIndex)[vtxNo]] != -1)
         {
           caseNo |= (vtkm::UInt8)(1 << vtxNo);
         }
@@ -333,14 +333,14 @@ public:
       {
         for (int edgeNo = 0; edgeNo < 3; ++edgeNo)
         {
-          if (inCubeConnectionsSixPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
+          if (InCubeConnectionsSixPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = cubeVertexPermutationsPortal.Get(
-              permIndex)[linkVertexConnectionsSixPortal.Get(edgeNo)[0]];
+            int root0 = CubeVertexPermutationsPortal.Get(
+              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[0]];
             while (parentId[root0] != root0)
               root0 = parentId[root0];
-            int root1 = cubeVertexPermutationsPortal.Get(
-              permIndex)[linkVertexConnectionsSixPortal.Get(edgeNo)[1]];
+            int root1 = CubeVertexPermutationsPortal.Get(
+              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[1]];
             while (parentId[root1] != root1)
               root1 = parentId[root1];
             if (root0 != root1)
@@ -352,14 +352,14 @@ public:
       {
         for (int edgeNo = 0; edgeNo < 15; ++edgeNo)
         {
-          if (inCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
+          if (InCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = cubeVertexPermutationsPortal.Get(
-              permIndex)[linkVertexConnectionsEighteenPortal.Get(edgeNo)[0]];
+            int root0 = CubeVertexPermutationsPortal.Get(
+              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[0]];
             while (parentId[root0] != root0)
               root0 = parentId[root0];
-            int root1 = cubeVertexPermutationsPortal.Get(
-              permIndex)[linkVertexConnectionsEighteenPortal.Get(edgeNo)[1]];
+            int root1 = CubeVertexPermutationsPortal.Get(
+              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[1]];
             while (parentId[root1] != root1)
               root1 = parentId[root1];
             if (root0 != root1)
@@ -393,15 +393,15 @@ public:
 
 
 private:
-  SortIndicesPortalType sortIndicesPortal;
-  SortIndicesPortalType sortOrderPortal;
-  edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
-  cubeVertexPermutationsPortalType cubeVertexPermutationsPortal;
-  linkVertexConnectionsPortalType linkVertexConnectionsSixPortal;
-  linkVertexConnectionsPortalType linkVertexConnectionsEighteenPortal;
-  inCubeConnectionsPortalType inCubeConnectionsSixPortal;
-  inCubeConnectionsPortalType inCubeConnectionsEighteenPortal;
-  bool getMax;
+  SortIndicesPortalType SortIndicesPortal;
+  SortIndicesPortalType SortOrderPortal;
+  EdgeBoundaryDetectionMasksPortalType EdgeBoundaryDetectionMasksPortal;
+  CubeVertexPermutationsPortalType CubeVertexPermutationsPortal;
+  LinkVertexConnectionsPortalType LinkVertexConnectionsSixPortal;
+  LinkVertexConnectionsPortalType LinkVertexConnectionsEighteenPortal;
+  InCubeConnectionsPortalType InCubeConnectionsSixPortal;
+  InCubeConnectionsPortalType InCubeConnectionsEighteenPortal;
+  bool GetMax;
 
 
 }; // MeshStructureMarchingCubes

@@ -368,7 +368,7 @@ public:
 
 }; // end MultiBlockContourTreeHelper
 
-// Functor needed so we can discover the FieldType and DeviceAdapter template parameters to call mergeWith
+// Functor needed so we can discover the FieldType and DeviceAdapter template parameters to call MergeWith
 struct MergeFunctor
 {
   template <typename DeviceAdapterTag, typename FieldType>
@@ -376,7 +376,7 @@ struct MergeFunctor
                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& in,
                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& out) const
   {
-    out.template mergeWith<DeviceAdapterTag>(in);
+    out.template MergeWith<DeviceAdapterTag>(in);
     return true;
   }
 };
@@ -416,20 +416,20 @@ void MergeBlockFunctor(
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshIn;
       contourTreeMeshIn.NumVertices = recvblock.NumVertices;
       contourTreeMeshIn.SortOrder = recvblock.SortOrder;
-      contourTreeMeshIn.sortedValues = recvblock.SortedValue;
-      contourTreeMeshIn.globalMeshIndex = recvblock.GlobalMeshIndex;
-      contourTreeMeshIn.neighbours = recvblock.Neighbours;
-      contourTreeMeshIn.firstNeighbour = recvblock.FirstNeighbour;
-      contourTreeMeshIn.maxNeighbours = recvblock.MaxNeighbours;
+      contourTreeMeshIn.SortedValues = recvblock.SortedValue;
+      contourTreeMeshIn.GlobalMeshIndex = recvblock.GlobalMeshIndex;
+      contourTreeMeshIn.Neighbours = recvblock.Neighbours;
+      contourTreeMeshIn.FirstNeighbour = recvblock.FirstNeighbour;
+      contourTreeMeshIn.MaxNeighbours = recvblock.MaxNeighbours;
 
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
       contourTreeMeshOut.NumVertices = block->NumVertices;
       contourTreeMeshOut.SortOrder = block->SortOrder;
-      contourTreeMeshOut.sortedValues = block->SortedValue;
-      contourTreeMeshOut.globalMeshIndex = block->GlobalMeshIndex;
-      contourTreeMeshOut.neighbours = block->Neighbours;
-      contourTreeMeshOut.firstNeighbour = block->FirstNeighbour;
-      contourTreeMeshOut.maxNeighbours = block->MaxNeighbours;
+      contourTreeMeshOut.SortedValues = block->SortedValue;
+      contourTreeMeshOut.GlobalMeshIndex = block->GlobalMeshIndex;
+      contourTreeMeshOut.Neighbours = block->Neighbours;
+      contourTreeMeshOut.FirstNeighbour = block->FirstNeighbour;
+      contourTreeMeshOut.MaxNeighbours = block->MaxNeighbours;
       // Merge the two contour tree meshes
       vtkm::cont::TryExecute(MergeFunctor{}, contourTreeMeshIn, contourTreeMeshOut);
 
@@ -457,11 +457,11 @@ void MergeBlockFunctor(
         // Save the data from our block for the next iteration
         block->NumVertices = contourTreeMeshOut.NumVertices;
         block->SortOrder = contourTreeMeshOut.SortOrder;
-        block->SortedValue = contourTreeMeshOut.sortedValues;
-        block->GlobalMeshIndex = contourTreeMeshOut.globalMeshIndex;
-        block->Neighbours = contourTreeMeshOut.neighbours;
-        block->FirstNeighbour = contourTreeMeshOut.firstNeighbour;
-        block->MaxNeighbours = contourTreeMeshOut.maxNeighbours;
+        block->SortedValue = contourTreeMeshOut.SortedValues;
+        block->GlobalMeshIndex = contourTreeMeshOut.GlobalMeshIndex;
+        block->Neighbours = contourTreeMeshOut.Neighbours;
+        block->FirstNeighbour = contourTreeMeshOut.FirstNeighbour;
+        block->MaxNeighbours = contourTreeMeshOut.MaxNeighbours;
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
         block->GlobalSize = globalSize;
@@ -484,7 +484,7 @@ void MergeBlockFunctor(
                                                             maxIdx           // maxIdx
                                                             );
         worklet.Run(
-          contourTreeMeshOut.sortedValues, // Unused param. Provide something to keep the API happy
+          contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep the API happy
           contourTreeMeshOut,
           currContourTree,
           currSortOrder,
@@ -514,11 +514,11 @@ void MergeBlockFunctor(
         // Copy the data from newContourTreeMesh into  block
         block->NumVertices = newContourTreeMesh->NumVertices;
         block->SortOrder = newContourTreeMesh->SortOrder;
-        block->SortedValue = newContourTreeMesh->sortedValues;
-        block->GlobalMeshIndex = newContourTreeMesh->globalMeshIndex;
-        block->Neighbours = newContourTreeMesh->neighbours;
-        block->FirstNeighbour = newContourTreeMesh->firstNeighbour;
-        block->MaxNeighbours = newContourTreeMesh->maxNeighbours;
+        block->SortedValue = newContourTreeMesh->SortedValues;
+        block->GlobalMeshIndex = newContourTreeMesh->GlobalMeshIndex;
+        block->Neighbours = newContourTreeMesh->Neighbours;
+        block->FirstNeighbour = newContourTreeMesh->FirstNeighbour;
+        block->MaxNeighbours = newContourTreeMesh->MaxNeighbours;
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
         block->GlobalSize = globalSize;
@@ -766,11 +766,11 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     localDataBlocks[bi] = new ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
     localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
-    localDataBlocks[bi]->SortedValue = currContourTreeMesh->sortedValues;
-    localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->globalMeshIndex;
-    localDataBlocks[bi]->Neighbours = currContourTreeMesh->neighbours;
-    localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->firstNeighbour;
-    localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->maxNeighbours;
+    localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
+    localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->GlobalMeshIndex;
+    localDataBlocks[bi]->Neighbours = currContourTreeMesh->Neighbours;
+    localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->FirstNeighbour;
+    localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->MaxNeighbours;
     localDataBlocks[bi]->BlockOrigin =
       this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins
         .GetPortalConstControl()
@@ -863,11 +863,11 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
     contourTreeMeshOut.SortOrder = localDataBlocks[0]->SortOrder;
-    contourTreeMeshOut.sortedValues = localDataBlocks[0]->SortedValue;
-    contourTreeMeshOut.globalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
-    contourTreeMeshOut.neighbours = localDataBlocks[0]->Neighbours;
-    contourTreeMeshOut.firstNeighbour = localDataBlocks[0]->FirstNeighbour;
-    contourTreeMeshOut.maxNeighbours = localDataBlocks[0]->MaxNeighbours;
+    contourTreeMeshOut.SortedValues = localDataBlocks[0]->SortedValue;
+    contourTreeMeshOut.GlobalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
+    contourTreeMeshOut.Neighbours = localDataBlocks[0]->Neighbours;
+    contourTreeMeshOut.FirstNeighbour = localDataBlocks[0]->FirstNeighbour;
+    contourTreeMeshOut.MaxNeighbours = localDataBlocks[0]->MaxNeighbours;
     // Construct the mesh boundary exectuion object needed for boundary augmentation
     vtkm::Id3 minIdx(0, 0, 0);
     vtkm::Id3 maxIdx = this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;
@@ -881,7 +881,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
       maxIdx);
     // Run the worklet to compute the final contour tree
     worklet.Run(
-      contourTreeMeshOut.sortedValues, // Unused param. Provide something to keep API happy
+      contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep API happy
       contourTreeMeshOut,
       this->ContourTreeData,
       this->MeshSortOrder,
@@ -890,7 +890,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
       meshBoundaryExecObj);
 
     // Set the final mesh sort order we need to use
-    this->MeshSortOrder = contourTreeMeshOut.globalMeshIndex;
+    this->MeshSortOrder = contourTreeMeshOut.GlobalMeshIndex;
     // Remeber the number of iterations for the output
     this->NumIterations = currNumIterations;
 
@@ -899,7 +899,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     vtkm::cont::DataSet temp;
     vtkm::cont::Field rfield(this->GetOutputFieldName(),
                              vtkm::cont::Field::Association::WHOLE_MESH,
-                             contourTreeMeshOut.sortedValues);
+                             contourTreeMeshOut.SortedValues);
     temp.AddField(rfield);
     output = vtkm::cont::PartitionedDataSet(temp);
   }

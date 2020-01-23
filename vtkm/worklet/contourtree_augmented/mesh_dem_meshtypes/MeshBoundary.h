@@ -92,15 +92,15 @@ public:
   MeshBoundary2D(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
   {
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
-    vtkm::Id meshSortOrderValue = this->sortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.vertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.vertexColumn(meshSortOrderValue);
+    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
+    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
 
     return (row == 0) || (col == 0) || (row == MeshStructure.NumRows - 1) ||
       (col == MeshStructure.NumColumns - 1);
@@ -109,7 +109,7 @@ public:
 private:
   // 2D Mesh size parameters
   mesh_dem::MeshStructure2D<DeviceTag> MeshStructure;
-  SortOrderPortalType sortOrderPortal;
+  SortOrderPortalType SortOrderPortal;
 };
 
 class MeshBoundary2DExec : public vtkm::cont::ExecutionObjectBase
@@ -155,16 +155,16 @@ public:
   MeshBoundary3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure3D<DeviceTag>(nrows, ncols, nslices))
   {
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
-    vtkm::Id meshSortOrderValue = this->sortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.vertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.vertexColumn(meshSortOrderValue);
-    const vtkm::Id sli = MeshStructure.vertexSlice(meshSortOrderValue);
+    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
+    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
+    const vtkm::Id sli = MeshStructure.VertexSlice(meshSortOrderValue);
     return (row == 0) || (col == 0) || (sli == 0) || (row == MeshStructure.NumRows - 1) ||
       (col == MeshStructure.NumColumns - 1) || (sli == MeshStructure.NumSlices - 1);
   }
@@ -172,7 +172,7 @@ public:
 protected:
   // 3D Mesh size parameters
   mesh_dem::MeshStructure3D<DeviceTag> MeshStructure;
-  SortOrderPortalType sortOrderPortal;
+  SortOrderPortalType SortOrderPortal;
 };
 
 

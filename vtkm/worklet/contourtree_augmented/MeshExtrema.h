@@ -150,7 +150,7 @@ inline void MeshExtrema::BuildRegularChains(bool isMaximal)
 template <class MeshType>
 inline void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 {
-  mesh.setPrepareForExecutionBehavior(isMaximal);
+  mesh.SetPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
   vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   if (isMaximal)
