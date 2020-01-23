@@ -102,28 +102,28 @@ class Mesh_DEM_Triangulation
 {
 public:
   // common mesh size parameters
-  vtkm::Id NumVertices, nLogSteps;
+  vtkm::Id NumVertices, NumLogSteps;
 
   // Define dimensionality of the mesh
-  vtkm::Id nDims;
+  vtkm::Id NumDims;
 
   // Array with the sorted order of the mesh vertices
-  IdArrayType sortOrder;
+  IdArrayType SortOrder;
 
   // Array with the sort index for each vertex
-  // i.e. the inverse permutation for sortOrder
-  IdArrayType sortIndices;
+  // i.e. the inverse permutation for SortOrder
+  IdArrayType SortIndices;
 
   //empty constructor
   Mesh_DEM_Triangulation()
     : NumVertices(0)
-    , nLogSteps(0)
-    , nDims(2)
+    , NumLogSteps(0)
+    , NumDims(2)
   {
   }
 
   // Getter function for NumVertices
-  vtkm::Id GetNumberOfVertices() const { return NumVertices; }
+  vtkm::Id GetNumberOfVertices() const { return this->NumVertices; }
 
   // sorts the data and initializes the sortIndex & indexReverse
   void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);
@@ -141,7 +141,7 @@ class Mesh_DEM_Triangulation_2D : public Mesh_DEM_Triangulation<T, StorageType>
 {
 public:
   // 2D mesh size parameters
-  vtkm::Id nCols, nRows;
+  vtkm::Id NumColumns, NumRows;
 
   // Maximum outdegree
   static constexpr int MAX_OUTDEGREE = 3;
@@ -149,25 +149,25 @@ public:
   // empty constructor
   Mesh_DEM_Triangulation_2D()
     : Mesh_DEM_Triangulation<T, StorageType>()
-    , nCols(0)
-    , nRows(0)
+    , NumColumns(0)
+    , NumRows(0)
   {
-    this->nDims = 2;
+    this->NumDims = 2;
   }
 
   // base constructor
   Mesh_DEM_Triangulation_2D(vtkm::Id ncols, vtkm::Id nrows)
     : Mesh_DEM_Triangulation<T, StorageType>()
-    , nCols(ncols)
-    , nRows(nrows)
+    , NumColumns(ncols)
+    , NumRows(nrows)
   {
-    this->nDims = 2;
-    this->NumVertices = nRows * nCols;
+    this->NumDims = 2;
+    this->NumVertices = NumRows * NumColumns;
 
     // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
-    this->nLogSteps = 1;
+    this->NumLogSteps = 1;
     for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
-      this->nLogSteps++;
+      this->NumLogSteps++;
   }
 
 protected:
@@ -180,7 +180,7 @@ class Mesh_DEM_Triangulation_3D : public Mesh_DEM_Triangulation<T, StorageType>
 {
 public:
   // 2D mesh size parameters
-  vtkm::Id nCols, nRows, nSlices;
+  vtkm::Id NumColumns, NumRows, NumSlices;
 
   // Maximum outdegree
   static constexpr int MAX_OUTDEGREE = 6; // True for Freudenthal and Marching Cubes
@@ -188,27 +188,27 @@ public:
   // empty constructor
   Mesh_DEM_Triangulation_3D()
     : Mesh_DEM_Triangulation<T, StorageType>()
-    , nCols(0)
-    , nRows(0)
-    , nSlices(0)
+    , NumColumns(0)
+    , NumRows(0)
+    , NumSlices(0)
   {
-    this->nDims = 3;
+    this->NumDims = 3;
   }
 
   // base constructor
   Mesh_DEM_Triangulation_3D(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices)
     : Mesh_DEM_Triangulation<T, StorageType>()
-    , nCols(ncols)
-    , nRows(nrows)
-    , nSlices(nslices)
+    , NumColumns(ncols)
+    , NumRows(nrows)
+    , NumSlices(nslices)
   {
-    this->nDims = 3;
-    this->NumVertices = nRows * nCols * nSlices;
+    this->NumDims = 3;
+    this->NumVertices = NumRows * NumColumns * NumSlices;
 
     // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
-    this->nLogSteps = 1;
+    this->NumLogSteps = 1;
     for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
-      this->nLogSteps++;
+      this->NumLogSteps++;
   }
 
 protected:
@@ -217,7 +217,7 @@ protected:
 }; // class Mesh_DEM_Triangulation_3D
 
 
-// sorts the data and initialises the sortIndices & sortOrder
+// sorts the data and initialises the SortIndices & SortOrder
 template <typename T, typename StorageType>
 void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
@@ -229,27 +229,27 @@ void Mesh_DEM_Triangulation<T, StorageType>::SortData(
   assert(values.GetNumberOfValues() == NumVertices);
 
   // Just in case, make sure that everything is cleaned up
-  sortIndices.ReleaseResources();
-  sortOrder.ReleaseResources();
+  SortIndices.ReleaseResources();
+  SortOrder.ReleaseResources();
 
   // allocate memory for the sort arrays
-  sortOrder.Allocate(NumVertices);
-  sortIndices.Allocate(NumVertices);
+  SortOrder.Allocate(NumVertices);
+  SortIndices.Allocate(NumVertices);
 
-  // now sort the sort order vector by the values, i.e,. initialize the sortOrder member variable
+  // now sort the sort order vector by the values, i.e,. initialize the SortOrder member variable
   vtkm::cont::ArrayHandleIndex initVertexIds(NumVertices); // create sequence 0, 1, .. NumVertices
-  vtkm::cont::ArrayCopy(initVertexIds, sortOrder);
+  vtkm::cont::ArrayCopy(initVertexIds, SortOrder);
 
-  vtkm::cont::Algorithm::Sort(sortOrder,
+  vtkm::cont::Algorithm::Sort(SortOrder,
                               mesh_dem::SimulatedSimplicityIndexComparator<T, StorageType>(values));
 
-  // now set the index lookup, i.e., initialize the sortIndices member variable
+  // now set the index lookup, i.e., initialize the SortIndices member variable
   // In serial this would be
   //  for (indexType vertex = 0; vertex < NumVertices; vertex++)
-  //            sortIndices[sortOrder[vertex]] = vertex;
+  //            SortIndices[SortOrder[vertex]] = vertex;
   mesh_dem_worklets::SortIndices sortIndicesWorklet;
   vtkm::cont::Invoker invoke;
-  invoke(sortIndicesWorklet, sortOrder, sortIndices);
+  invoke(sortIndicesWorklet, SortOrder, SortIndices);
 
   // Debug print statement
   DebugPrint("Data Sorted", __FILE__, __LINE__);
@@ -273,11 +273,11 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
   PrintLabel("NumVertices");
   PrintIndexType(NumVertices);
   std::cout << std::endl;
-  PrintLabel("nLogSteps");
-  PrintIndexType(nLogSteps);
+  PrintLabel("NumLogSteps");
+  PrintIndexType(this->NumLogSteps);
   std::cout << std::endl;
-  PrintIndices("Sort Indices", sortIndices);
-  PrintIndices("Sort Order", sortOrder);
+  PrintIndices("Sort Indices", SortIndices);
+  PrintIndices("Sort Order", SortOrder);
   std::cout << std::endl;
 #else
   // Avoid unused parameter warning
@@ -291,11 +291,11 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
 template <typename T, typename StorageType>
 void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintExtends()
 {
-  PrintLabel("nRows");
-  PrintIndexType(nRows);
+  PrintLabel("NumRows");
+  PrintIndexType(NumRows);
   std::cout << std::endl;
-  PrintLabel("nCols");
-  PrintIndexType(nCols);
+  PrintLabel("NumColumns");
+  PrintIndexType(NumColumns);
   std::cout << std::endl;
 } // DebugPrintExtends for 2D
 
@@ -303,14 +303,14 @@ void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintExtends()
 template <typename T, typename StorageType>
 void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintExtends()
 {
-  PrintLabel("nRows");
-  PrintIndexType(nRows);
+  PrintLabel("NumRows");
+  PrintIndexType(NumRows);
   std::cout << std::endl;
-  PrintLabel("nCols");
-  PrintIndexType(nCols);
+  PrintLabel("NumColumns");
+  PrintIndexType(NumColumns);
   std::cout << std::endl;
-  PrintLabel("nSlices");
-  PrintIndexType(nSlices);
+  PrintLabel("NumSlices");
+  PrintIndexType(NumSlices);
   std::cout << std::endl;
 }
 
@@ -319,10 +319,10 @@ void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintValues(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
-  if (nCols > 0)
+  if (NumColumns > 0)
   {
-    PrintLabelledDataBlock<T, StorageType>("Value", values, nCols);
-    PrintSortedValues("Sorted Values", values, this->sortOrder);
+    PrintLabelledDataBlock<T, StorageType>("Value", values, NumColumns);
+    PrintSortedValues("Sorted Values", values, this->SortOrder);
   }
   PrintHeader(values.GetNumberOfValues());
 #else
@@ -336,9 +336,9 @@ void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
   const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
-  if (nCols > 0)
+  if (NumColumns > 0)
   {
-    PrintLabelledDataBlock<T, StorageType>("Value", values, nCols);
+    PrintLabelledDataBlock<T, StorageType>("Value", values, NumColumns);
   }
   PrintHeader(values.GetNumberOfValues());
 #else

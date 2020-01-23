@@ -74,7 +74,7 @@ template <typename DeviceAdapter>
 class MeshStructureFreudenthal3D : public mesh_dem::MeshStructure3D<DeviceAdapter>
 {
 public:
-  using sortIndicesPortalType =
+  using SortIndicesPortalType =
     typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   using edgeBoundaryDetectionMasksPortalType =
@@ -131,9 +131,9 @@ public:
   { // GetNeighbourIndex
     vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
     return sortIndicesPortal.Get(meshIndex +
-                                 (neighbourOffsetsPortal.Get(edgeNo)[0] * this->nRows +
+                                 (neighbourOffsetsPortal.Get(edgeNo)[0] * this->NumRows +
                                   neighbourOffsetsPortal.Get(edgeNo)[1]) *
-                                   this->nCols +
+                                   this->NumColumns +
                                  neighbourOffsetsPortal.Get(edgeNo)[2]);
   } // GetNeighbourIndex
 
@@ -162,9 +162,9 @@ public:
     vtkm::Id col = this->vertexColumn(meshIndex);
 
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
-      ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+      ((slice == this->NumSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
+      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->NumRows - 1) ? bottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     // loop downwards so that we pick the same edges as previous versions
@@ -201,9 +201,9 @@ public:
     vtkm::Id row = this->vertexRow(meshIndex);
     vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((slice == 0) ? frontBit : 0) |
-      ((slice == this->nSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+      ((slice == this->NumSlices - 1) ? backBit : 0) | ((col == 0) ? leftBit : 0) |
+      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->NumRows - 1) ? bottomBit : 0);
 
     // Initialize "union find"
     vtkm::Id caseNo = 0;
@@ -243,8 +243,8 @@ public:
 
 
 private:
-  sortIndicesPortalType sortIndicesPortal;
-  sortIndicesPortalType sortOrderPortal;
+  SortIndicesPortalType sortIndicesPortal;
+  SortIndicesPortalType sortOrderPortal;
   edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
   neighbourOffsetsPortalType neighbourOffsetsPortal;
   linkComponentCaseTablePortalType linkComponentCaseTablePortal;

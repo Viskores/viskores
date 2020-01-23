@@ -591,12 +591,12 @@ public:
 
     // STAGE IV: Use pointer-doubling on whichBranch to propagate branches
     // Compute the number of log steps required in this pass
-    vtkm::Id nLogSteps = 1;
+    vtkm::Id numLogSteps = 1;
     for (vtkm::Id shifter = nSupernodes; shifter != 0; shifter >>= 1)
-      nLogSteps++;
+      numLogSteps++;
 
     // use pointer-doubling to build the branches
-    for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
+    for (vtkm::Id iteration = 0; iteration < numLogSteps; iteration++)
     { // per iteration
       // loop through the vertices, updating the chaining array
       for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)

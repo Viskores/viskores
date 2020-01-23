@@ -183,7 +183,7 @@ public:
 
   vtkm::Id NumVertices;
   // TODO we should be able to remove this one, but we need to figure out what we need to return in the worklet instead
-  IdArrayType sortOrder;
+  IdArrayType SortOrder;
   vtkm::cont::ArrayHandle<FieldType> sortedValues;
   IdArrayType globalMeshIndex;
   // neighbours stores for each vertex the indices of its neighbours. For each vertex
@@ -245,7 +245,7 @@ void ContourTreeMesh<FieldType>::DebugPrint(const char* message, const char* fil
   std::cout << std::endl;
 
   PrintHeader(this->NumVertices);
-  PrintIndices("sortOrder", sortOrder);
+  PrintIndices("SortOrder", SortOrder);
   PrintValues("sortedValues", sortedValues);
   PrintIndices("globalMeshIndex", globalMeshIndex);
   PrintIndices("neighbours", neighbours);
@@ -269,15 +269,15 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
                                             const IdArrayType& inSortOrder,
                                             const vtkm::cont::ArrayHandle<FieldType>& values,
                                             const IdArrayType& inGlobalMeshIndex)
-  : sortOrder(inSortOrder)
+  : SortOrder(inSortOrder)
   , sortedValues()
   , globalMeshIndex(inGlobalMeshIndex)
   , neighbours()
   , firstNeighbour()
 {
-  this->NumVertices = this->sortOrder.GetNumberOfValues();
-  // values permuted by sortOrder to sort the values
-  auto permutedValues = vtkm::cont::make_ArrayHandlePermutation(this->sortOrder, values);
+  this->NumVertices = this->SortOrder.GetNumberOfValues();
+  // values permuted by SortOrder to sort the values
+  auto permutedValues = vtkm::cont::make_ArrayHandlePermutation(this->SortOrder, values);
   // TODO check if we actually need to make this copy here. we could just store the permutedValues array to save memory
   vtkm::cont::Algorithm::Copy(permutedValues, this->sortedValues);
   this->InitialiseNeighboursFromArcs(arcs);
@@ -298,7 +298,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   , neighbours()
   , firstNeighbour()
 {
-  // Initialize the sortedValues array the values permutted by the sortOrder permutted by the nodes, i.e.,
+  // Initialize the sortedValues array the values permutted by the SortOrder permutted by the nodes, i.e.,
   // this->sortedValues[v] = values[inSortOrder[nodes[v]]];
   vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedSortOrder(nodes,
                                                                                  inSortOrder);
@@ -307,7 +307,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   vtkm::cont::Algorithm::Copy(
     permutedSortOrder,
     this
-      ->sortOrder); // TODO Check if the sortOrder needs to be set form the input or the permutted sortOrder
+      ->SortOrder); // TODO Check if the SortOrder needs to be set form the input or the permutted SortOrder
   this->NumVertices = this->sortedValues.GetNumberOfValues();
   this->InitialiseNeighboursFromArcs(arcs);
 #ifdef DEBUG_PRINT
@@ -319,7 +319,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 template <typename FieldType>
 ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
                                             const ContourTreeMesh<FieldType>& mesh)
-  : sortOrder(mesh.sortOrder)
+  : SortOrder(mesh.SortOrder)
   , sortedValues(mesh.sortedValues)
   , globalMeshIndex(mesh.globalMeshIndex)
   , neighbours()
@@ -338,7 +338,7 @@ template <typename FieldType>
 ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
                                             const IdArrayType& arcs,
                                             const ContourTreeMesh<FieldType>& mesh)
-  : sortOrder(mesh.sortOrder)
+  : SortOrder(mesh.SortOrder)
   , neighbours()
   , firstNeighbour()
 {
@@ -733,7 +733,7 @@ template <typename FieldType>
 void ContourTreeMesh<FieldType>::save(const char* filename) const
 {
   std::ofstream os(filename);
-  saveVector(os, this->sortOrder);
+  saveVector(os, this->SortOrder);
   saveVector(os, this->sortedValues);
   saveVector(os, this->globalMeshIndex);
   saveVector(os, this->neighbours);
@@ -744,7 +744,7 @@ template <typename FieldType>
 void ContourTreeMesh<FieldType>::load(const char* filename)
 {
   std::ifstream is(filename);
-  loadVector(is, this->sortOrder);
+  loadVector(is, this->SortOrder);
   loadVector(is, this->sortedValues);
   loadVector(is, this->globalMeshIndex);
   loadVector(is, this->neighbours);

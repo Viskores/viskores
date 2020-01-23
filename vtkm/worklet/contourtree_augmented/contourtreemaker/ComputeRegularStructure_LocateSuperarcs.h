@@ -423,8 +423,7 @@ public:
   vtkm::Id numHypernodes; // contourTree.hypernodes.GetNumberOfValues()
   vtkm::Id numSupernodes; // contourTree.supernodes.GetNumberOfValues()
 
-  vtkm::Id nRows, nCols, nSlices; // Mesh 2D or 3D - nRows, nCols, nSlices
-  vtkm::Id nDims;                 // Mesh 2D or 3D - 2 or 3
+  vtkm::Id NumRows, NumColumns, NumSlices; // Mesh 2D or 3D - NumRows, NumColumns, NumSlices
 
   // Default Constructor
   VTKM_EXEC_CONT

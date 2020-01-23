@@ -764,16 +764,16 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
   DebugPrint("Init in and outbound -- Step 1", __FILE__, __LINE__);
 
   // Compute the number of log steps required in this pass
-  vtkm::Id nLogSteps = 1;
+  vtkm::Id numLogSteps = 1;
   for (vtkm::Id shifter = activeSupernodes.GetNumberOfValues(); shifter != 0; shifter >>= 1)
   {
-    nLogSteps++;
+    numLogSteps++;
   }
 
 
   // loop to find the now-regular vertices and collapse past them without altering
   // the existing join & split arcs
-  for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
+  for (vtkm::Id iteration = 0; iteration < numLogSteps; iteration++)
   { // per iteration
     // loop through the vertices, updating outbound
     contourtree_maker_inc_ns::TransferLeafChains_CollapsePastRegular collapsePastRegularWorklet;
@@ -828,14 +828,14 @@ void ContourTreeMaker::CompressTrees()
 { // ContourTreeMaker::CompressTrees()
 
   // Compute the number of log steps required in this pass
-  vtkm::Id nLogSteps = 1;
+  vtkm::Id numLogSteps = 1;
   for (vtkm::Id shifter = activeSupernodes.GetNumberOfValues(); shifter != 0; shifter >>= 1)
   {
-    nLogSteps++;
+    numLogSteps++;
   }
 
   // loop to update the merge trees
-  for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
+  for (vtkm::Id logStep = 0; logStep < numLogSteps; logStep++)
   { // iteration log times
     contourtree_maker_inc_ns::CompressTrees_Step compressTreesStepWorklet;
     this->Invoke(compressTreesStepWorklet,

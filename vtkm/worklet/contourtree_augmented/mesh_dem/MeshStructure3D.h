@@ -72,44 +72,47 @@ class MeshStructure3D
 public:
   VTKM_EXEC_CONT
   MeshStructure3D()
-    : nCols(0)
-    , nRows(0)
-    , nSlices(0)
+    : NumColumns(0)
+    , NumRows(0)
+    , NumSlices(0)
   {
   }
 
   VTKM_EXEC_CONT
   MeshStructure3D(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices)
-    : nCols(ncols)
-    , nRows(nrows)
-    , nSlices(nslices)
+    : NumColumns(ncols)
+    , NumRows(nrows)
+    , NumSlices(nslices)
   {
   }
 
   // number of mesh vertices
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols * this->nSlices); }
+  vtkm::Id GetNumberOfVertices() const
+  {
+    return (this->NumRows * this->NumColumns * this->NumSlices);
+  }
 
-  // vertex row - integer modulus by (nRows&nCols) and integer divide by columns
+  // vertex row - integer modulus by (NumRows&NumColumns) and integer divide by columns
   VTKM_EXEC
-  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (nRows * nCols)) / nCols; }
+  vtkm::Id vertexRow(vtkm::Id v) const { return (v % (NumRows * NumColumns)) / NumColumns; }
 
   // vertex column -- integer modulus by columns
   VTKM_EXEC
-  vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
+  vtkm::Id vertexColumn(vtkm::Id v) const { return v % NumColumns; }
 
-  // vertex slice -- integer divide by (nRows*nCols)
+  // vertex slice -- integer divide by (NumRows*NumColumns)
   VTKM_EXEC
-  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (nRows * nCols); }
+  vtkm::Id vertexSlice(vtkm::Id v) const { return v / (NumRows * NumColumns); }
 
   //vertex ID - row * ncols + col
   VTKM_EXEC
   vtkm::Id vertexId(vtkm::Id s, vtkm::Id r, vtkm::Id c) const
   {
-    return (s * nRows + r) * nCols + c;
+    return (s * NumRows + r) * NumColumns + c;
   }
 
-  vtkm::Id nCols, nRows, nSlices;
+  vtkm::Id NumColumns, NumRows, NumSlices;
 
 }; // Mesh_DEM_2D_ExecutionObject
 

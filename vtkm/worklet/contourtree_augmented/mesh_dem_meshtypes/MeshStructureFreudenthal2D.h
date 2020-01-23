@@ -73,7 +73,7 @@ template <typename DeviceAdapter>
 class MeshStructureFreudenthal2D : public mesh_dem::MeshStructure2D<DeviceAdapter>
 {
 public:
-  using sortIndicesPortalType =
+  using SortIndicesPortalType =
     typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using edgeBoundaryDetectionMasksPortalType =
     typename m2d_freudenthal::edgeBoundaryDetectionMasksType::template ExecutionTypes<
@@ -95,14 +95,14 @@ public:
     vtkm::Int32 nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
-    const IdArrayType& sortOrder,
+    const IdArrayType& SortOrder,
     const m2d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
     : mesh_dem::MeshStructure2D<DeviceAdapter>(ncols, nrows)
     , getMax(getmax)
     , nIncidentEdges(nincident_edges)
   {
     sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
+    sortOrderPortal = SortOrder.PrepareForInput(DeviceAdapter());
     edgeBoundaryDetectionMasksPortal =
       edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
   }
@@ -119,15 +119,15 @@ public:
       case 0:
         return this->sortIndicesPortal.Get(meshIndex + 1); // row    , col + 1
       case 1:
-        return this->sortIndicesPortal.Get(meshIndex + this->nCols + 1); // row + 1, col + 1
+        return this->sortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // row + 1, col + 1
       case 2:
-        return this->sortIndicesPortal.Get(meshIndex + this->nCols); // row + 1, col
+        return this->sortIndicesPortal.Get(meshIndex + this->NumColumns); // row + 1, col
       case 3:
         return this->sortIndicesPortal.Get(meshIndex - 1); // row    , col - 1
       case 4:
-        return this->sortIndicesPortal.Get(meshIndex - this->nCols - 1); // row - 1, col - 1
+        return this->sortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // row - 1, col - 1
       case 5:
-        return this->sortIndicesPortal.Get(meshIndex - this->nCols); // row - 1, col
+        return this->sortIndicesPortal.Get(meshIndex - this->NumColumns); // row - 1, col
       default:
         return -1; // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
     }
@@ -156,8 +156,8 @@ public:
     vtkm::Id row = this->vertexRow(meshIndex);
     vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->NumRows - 1) ? bottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     for (vtkm::Id edgeNo = 0; edgeNo < this->nIncidentEdges; edgeNo++)
@@ -196,8 +196,8 @@ public:
     vtkm::Id row = this->vertexRow(meshIndex);
     vtkm::Id col = this->vertexColumn(meshIndex);
     vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+      ((col == this->NumColumns - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
+      ((row == this->NumRows - 1) ? bottomBit : 0);
 
     // and initialise the mask
     vtkm::Id neighbourhoodMask = 0;
@@ -269,8 +269,8 @@ public:
 #endif // gcc || clang
 
 private:
-  sortIndicesPortalType sortIndicesPortal;
-  sortIndicesPortalType sortOrderPortal;
+  SortIndicesPortalType sortIndicesPortal;
+  SortIndicesPortalType sortOrderPortal;
   edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
   bool getMax;
   vtkm::Id nIncidentEdges;

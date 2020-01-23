@@ -123,12 +123,6 @@ public:
   vtkm::Id GetNumIterations() const;
 
 private:
-  // Given the input dataset determine the number of rows, cols, and slices
-  void getDims(const vtkm::cont::DataSet& input,
-               vtkm::Id& nrows,
-               vtkm::Id& ncols,
-               vtkm::Id nslices) const;
-
   bool UseMarchingCubes;
   // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
   unsigned int ComputeRegularStructure;

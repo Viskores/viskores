@@ -128,13 +128,13 @@ template <typename DeviceTag>
 MeshStructureFreudenthal3D<DeviceTag>
   Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
-  return MeshStructureFreudenthal3D<DeviceTag>(this->nCols,
-                                               this->nRows,
-                                               this->nSlices,
+  return MeshStructureFreudenthal3D<DeviceTag>(this->NumColumns,
+                                               this->NumRows,
+                                               this->NumSlices,
                                                m3d_freudenthal::N_INCIDENT_EDGES,
                                                this->useGetMax,
-                                               this->sortIndices,
-                                               this->sortOrder,
+                                               this->SortIndices,
+                                               this->SortOrder,
                                                edgeBoundaryDetectionMasks,
                                                neighbourOffsets,
                                                linkComponentCaseTable);
@@ -145,7 +145,7 @@ template <typename T, typename StorageType>
 MeshBoundary3DExec
 Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->nCols, this->nRows, this->nSlices, this->sortOrder);
+  return MeshBoundary3DExec(this->NumColumns, this->NumRows, this->NumSlices, this->SortOrder);
 }
 
 } // namespace contourtree_augmented

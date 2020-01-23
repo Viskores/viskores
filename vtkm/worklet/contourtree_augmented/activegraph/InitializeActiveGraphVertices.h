@@ -113,9 +113,9 @@ public:
       activeVertices.Set(activeIndex, activeIndex);
     }
     // This operator implements the following loop from the serial code
-    //       for (indexType vertex = 0; vertex < mesh.sortIndices.size(); ++vertex)
+    //       for (indexType vertex = 0; vertex < mesh.SortIndices.size(); ++vertex)
     //             {
-    //             indexType sortIndex = mesh.sortIndices[vertex];
+    //             indexType sortIndex = mesh.SortIndices[vertex];
     //             if (outDegrees[sortIndex] != 1)
     //                     {
     //                     indexType activeIndex = inverseIndex[sortIndex];

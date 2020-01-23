@@ -156,12 +156,12 @@ template <typename DeviceTag>
 MeshStructureMarchingCubes<DeviceTag>
   Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::PrepareForExecution(DeviceTag) const
 {
-  return MeshStructureMarchingCubes<DeviceTag>(this->nCols,
-                                               this->nRows,
-                                               this->nSlices,
+  return MeshStructureMarchingCubes<DeviceTag>(this->NumColumns,
+                                               this->NumRows,
+                                               this->NumSlices,
                                                this->useGetMax,
-                                               this->sortIndices,
-                                               this->sortOrder,
+                                               this->SortIndices,
+                                               this->SortOrder,
                                                edgeBoundaryDetectionMasks,
                                                cubeVertexPermutations,
                                                linkVertexConnectionsSix,
@@ -174,7 +174,7 @@ template <typename T, typename StorageType>
 MeshBoundary3DExec
 Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->nCols, this->nRows, this->nSlices, this->sortOrder);
+  return MeshBoundary3DExec(this->NumColumns, this->NumRows, this->NumSlices, this->SortOrder);
 }
 
 } // namespace contourtree_augmented

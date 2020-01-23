@@ -415,7 +415,7 @@ void MergeBlockFunctor(
       // Construct the two contour tree mesh by assignign the block data
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshIn;
       contourTreeMeshIn.NumVertices = recvblock.NumVertices;
-      contourTreeMeshIn.sortOrder = recvblock.SortOrder;
+      contourTreeMeshIn.SortOrder = recvblock.SortOrder;
       contourTreeMeshIn.sortedValues = recvblock.SortedValue;
       contourTreeMeshIn.globalMeshIndex = recvblock.GlobalMeshIndex;
       contourTreeMeshIn.neighbours = recvblock.Neighbours;
@@ -424,7 +424,7 @@ void MergeBlockFunctor(
 
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
       contourTreeMeshOut.NumVertices = block->NumVertices;
-      contourTreeMeshOut.sortOrder = block->SortOrder;
+      contourTreeMeshOut.SortOrder = block->SortOrder;
       contourTreeMeshOut.sortedValues = block->SortedValue;
       contourTreeMeshOut.globalMeshIndex = block->GlobalMeshIndex;
       contourTreeMeshOut.neighbours = block->Neighbours;
@@ -456,7 +456,7 @@ void MergeBlockFunctor(
       {
         // Save the data from our block for the next iteration
         block->NumVertices = contourTreeMeshOut.NumVertices;
-        block->SortOrder = contourTreeMeshOut.sortOrder;
+        block->SortOrder = contourTreeMeshOut.SortOrder;
         block->SortedValue = contourTreeMeshOut.sortedValues;
         block->GlobalMeshIndex = contourTreeMeshOut.globalMeshIndex;
         block->Neighbours = contourTreeMeshOut.neighbours;
@@ -513,7 +513,7 @@ void MergeBlockFunctor(
 
         // Copy the data from newContourTreeMesh into  block
         block->NumVertices = newContourTreeMesh->NumVertices;
-        block->SortOrder = newContourTreeMesh->sortOrder;
+        block->SortOrder = newContourTreeMesh->SortOrder;
         block->SortedValue = newContourTreeMesh->sortedValues;
         block->GlobalMeshIndex = newContourTreeMesh->globalMeshIndex;
         block->Neighbours = newContourTreeMesh->neighbours;
@@ -765,7 +765,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // create the local data block structure
     localDataBlocks[bi] = new ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
-    localDataBlocks[bi]->SortOrder = currContourTreeMesh->sortOrder;
+    localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
     localDataBlocks[bi]->SortedValue = currContourTreeMesh->sortedValues;
     localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->globalMeshIndex;
     localDataBlocks[bi]->Neighbours = currContourTreeMesh->neighbours;
@@ -862,7 +862,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // Construct the contour tree mesh from the last block
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
-    contourTreeMeshOut.sortOrder = localDataBlocks[0]->SortOrder;
+    contourTreeMeshOut.SortOrder = localDataBlocks[0]->SortOrder;
     contourTreeMeshOut.sortedValues = localDataBlocks[0]->SortedValue;
     contourTreeMeshOut.globalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
     contourTreeMeshOut.neighbours = localDataBlocks[0]->Neighbours;

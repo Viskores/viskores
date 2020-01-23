@@ -114,7 +114,7 @@ inline MeshExtrema::MeshExtrema(vtkm::Id meshSize)
   // Compute the number of log steps required in this pass
   NumLogSteps = 1;
   for (vtkm::Id shifter = NumVertices; shifter != 0; shifter >>= 1)
-    NumLogSteps++;
+    this->NumLogSteps++;
 
   // Allocate memory for the peaks and pits
   Peaks.Allocate(NumVertices);

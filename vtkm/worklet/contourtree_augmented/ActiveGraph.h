@@ -599,13 +599,13 @@ void ActiveGraph::CompactActiveEdges()
 void ActiveGraph::BuildChains()
 { // BuildChains()
   // 1. compute the number of log steps required in this pass
-  vtkm::Id nLogSteps = 1;
+  vtkm::Id numLogSteps = 1;
   for (vtkm::Id shifter = activeVertices.GetNumberOfValues(); shifter != 0; shifter >>= 1)
-    nLogSteps++;
+    numLogSteps++;
 
   // 2.   Use path compression / step doubling to collect vertices along chains
   //              until every vertex has been assigned to *an* extremum
-  for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
+  for (vtkm::Id logStep = 0; logStep < numLogSteps; logStep++)
   { // per log step
     active_graph_inc_ns::BuildChainsWorklet buildChainsWorklet;
     this->Invoke(buildChainsWorklet, activeVertices, hyperarcs);

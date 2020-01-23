@@ -322,9 +322,9 @@ private:
 
     // Collect the output data
     nIterations = treeMaker.nIterations;
-    sortOrder = mesh.sortOrder;
-    // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.sortOrder, saddlePeak);
-    // contourTree.SortedArcPrint(mesh.sortOrder);
+    sortOrder = mesh.SortOrder;
+    // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
+    // contourTree.SortedArcPrint(mesh.SortOrder);
     // contourTree.PrintDotSuperStructure();
 
     // Log the collected timing results in one coherent log entry
