@@ -75,18 +75,14 @@ public:
   using IdArrayPortalType =
     typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  IdArrayPortalType treeHyperparentsPortal;
-  IdArrayPortalType graphSuperIDPortal;
-  bool isJoinTree;
-
   // constructor - takes vectors as parameters
   VTKM_CONT
   HyperArcSuperNodeComparatorImpl(const IdArrayPortalType& hyperparents,
                                   const IdArrayPortalType& superID,
                                   bool IsJoinTree)
-    : treeHyperparentsPortal(hyperparents)
-    , graphSuperIDPortal(superID)
-    , isJoinTree(IsJoinTree)
+    : TreeHyperparentsPortal(hyperparents)
+    , GraphSuperIDPortal(superID)
+    , IsJoinTree(IsJoinTree)
   { // constructor
   } // constructor
 
@@ -95,26 +91,32 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // first make sure we have the "top" end set correctly
-    vtkm::Id hyperarcI = treeHyperparentsPortal.Get(graphSuperIDPortal.Get(i));
-    vtkm::Id hyperarcJ = treeHyperparentsPortal.Get(graphSuperIDPortal.Get(j));
+    vtkm::Id hyperarcI = TreeHyperparentsPortal.Get(GraphSuperIDPortal.Get(i));
+    vtkm::Id hyperarcJ = TreeHyperparentsPortal.Get(GraphSuperIDPortal.Get(j));
 
     // now test on that
     if (hyperarcI < hyperarcJ)
-      return false ^ isJoinTree;
+      return false ^ IsJoinTree;
     if (hyperarcJ < hyperarcI)
-      return true ^ isJoinTree;
+      return true ^ IsJoinTree;
 
     // if that fails, we share the hyperarc, and sort on supernode index
     // since that's guaranteed to be pre-sorted
     if (i < j)
-      return false ^ isJoinTree;
+      return false ^ IsJoinTree;
     if (j < i)
-      return true ^ isJoinTree;
+      return true ^ IsJoinTree;
 
     // fallback just in case
     return false;
   } // operator()
-};  // SimulatedSimplicityIndexComparator
+
+private:
+  IdArrayPortalType TreeHyperparentsPortal;
+  IdArrayPortalType GraphSuperIDPortal;
+  bool IsJoinTree;
+
+}; // SimulatedSimplicityIndexComparator
 
 class HyperArcSuperNodeComparator : public vtkm::cont::ExecutionObjectBase
 {
@@ -123,10 +125,10 @@ public:
   VTKM_CONT
   HyperArcSuperNodeComparator(const IdArrayType& hyperparents,
                               const IdArrayType& superID,
-                              bool isJoinTree)
+                              bool IsJoinTree)
     : Hyperparents(hyperparents)
     , SuperID(superID)
-    , IsJoinTree(isJoinTree)
+    , IsJoinTree(IsJoinTree)
   {
   }
 

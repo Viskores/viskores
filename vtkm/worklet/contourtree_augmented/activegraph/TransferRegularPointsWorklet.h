@@ -81,13 +81,13 @@ public:
   // Default Constructor
   VTKM_EXEC_CONT
   TransferRegularPointsWorklet()
-    : isJoinGraph(true)
+    : IsJoinGraph(true)
   {
   }
 
   VTKM_EXEC_CONT
   TransferRegularPointsWorklet(bool joinGraph)
-    : isJoinGraph(joinGraph)
+    : IsJoinGraph(joinGraph)
   {
   }
 
@@ -112,7 +112,7 @@ public:
     // now, we test whether the saddle is below this vertex
     // since in this version we have an invariant that the IDs are allocated in
     // strict sorted order, we just test indices (flipping for type of tree)
-    if (isJoinGraph ? (saddleId < vertexId) : (saddleId > vertexId))
+    if (IsJoinGraph ? (saddleId < vertexId) : (saddleId > vertexId))
     { // regular point to be pruned
       // at this point, the hyperarc is already correctly set, although
       // it will have a terminal flag set. We will do a lazy transfer of this
@@ -142,7 +142,7 @@ public:
                 // now, we test whether the saddle is below this vertex
                 // since in this version we have an invariant that the IDs are allocated in
                 // strict sorted order, we just test indices (flipping for type of tree)
-                if (isJoinGraph ? (saddleID < vertexID) : (saddleID > vertexID))
+                if (IsJoinGraph ? (saddleID < vertexID) : (saddleID > vertexID))
                         { // regular point to be pruned
                         // at this point, the hyperarc is already correctly set, although
                         // it will have a terminal flag set. We will do a lazy transfer of this
@@ -154,7 +154,7 @@ public:
   }
 
 private:
-  bool isJoinGraph; // join graph or split graph?
+  bool IsJoinGraph; // join graph or split graph?
 
 }; // TransferRegularPointsWorklet
 

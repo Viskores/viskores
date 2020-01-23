@@ -79,16 +79,12 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  bool isJoinGraph;
-  vtkm::Id nSupernodes;
-  vtkm::Id nHypernodes;
-
   // Default Constructor
   VTKM_EXEC_CONT
-  SetArcsSlideVertices(bool IsJoinGraph, vtkm::Id NumSupernodes, vtkm::Id NumHypernodes)
-    : isJoinGraph(IsJoinGraph)
-    , nSupernodes(NumSupernodes)
-    , nHypernodes(NumHypernodes)
+  SetArcsSlideVertices(bool IsJoinGraph, vtkm::Id nSupernodes, vtkm::Id nHypernodes)
+    : IsJoinGraph(IsJoinGraph)
+    , NumSupernodes(nSupernodes)
+    , NumHypernodes(nHypernodes)
   {
   }
 
@@ -113,7 +109,7 @@ public:
     vtkm::Id toID = treeArcsPortal.Get(MaskedIndex(fromID));
 
     // loop to bottom or until to node is "below" this node
-    while (!NoSuchElement(toID) && (isJoinGraph ? (MaskedIndex(toID) > MaskedIndex(nodeID))
+    while (!NoSuchElement(toID) && (IsJoinGraph ? (MaskedIndex(toID) > MaskedIndex(nodeID))
                                                 : (MaskedIndex(toID) < MaskedIndex(nodeID))))
     { // sliding loop
       fromID = toID;
@@ -137,7 +133,7 @@ public:
     // that the highest node ID is still at the left-hand end
 
     // special case for the left-hand edge
-    if (isJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
+    if (IsJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
     { // below left hand end
       treeSuperparentsPortal.Set(nodeID, leftSupernodeID);
     } // below left hand end
@@ -146,17 +142,17 @@ public:
       vtkm::Id rightSupernodeID;
       // the test depends on which tree we are computing
       // because the ID numbers are in reverse order in the split tree
-      if (isJoinGraph)
+      if (IsJoinGraph)
       { // join graph
-        if (hyperID == nHypernodes - 1)
-          rightSupernodeID = nSupernodes - 1;
+        if (hyperID == NumHypernodes - 1)
+          rightSupernodeID = NumSupernodes - 1;
         else
           rightSupernodeID = treeFirstSuperchildPortal[hyperID + 1] - 1;
       } // join graph
       else
       { // split graph
         if (hyperID == 0)
-          rightSupernodeID = nSupernodes - 1;
+          rightSupernodeID = NumSupernodes - 1;
         else
           rightSupernodeID = treeFirstSuperchildPortal[hyperID - 1] - 1;
       } // split graph
@@ -169,7 +165,7 @@ public:
         vtkm::Id midSupernodeID = (leftSupernodeID + rightSupernodeID) / 2;
         vtkm::Id midNodeID = treeSupernodesPortal[midSupernodeID];
         // this is NEVER equal, because nodeID cannot be a supernode
-        if (isJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
+        if (IsJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
           rightSupernodeID = midSupernodeID;
         else
           leftSupernodeID = midSupernodeID;
@@ -194,7 +190,7 @@ public:
           vtkm::Id toID = tree.arcs[MaskedIndex(fromID)];
 
           // loop to bottom or until to node is "below" this node
-          while (!NoSuchElement(toID) && (isJoinGraph ?
+          while (!NoSuchElement(toID) && (IsJoinGraph ?
                   (MaskedIndex(toID) > MaskedIndex(nodeID)): (MaskedIndex(toID) < MaskedIndex(nodeID))))
             { // sliding loop
               fromID = toID;
@@ -218,7 +214,7 @@ public:
           // that the highest node ID is still at the left-hand end
 
           // special case for the left-hand edge
-          if (isJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
+          if (IsJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
             { // below left hand end
               tree.superparents[nodeID] = leftSupernodeID;
             } // below left hand ned
@@ -227,17 +223,17 @@ public:
               vtkm::Id rightSupernodeID;
               // the test depends on which tree we are computing
               // because the ID numbers are in reverse order in the split tree
-              if (isJoinGraph)
+              if (IsJoinGraph)
                 { // join graph
-                  if (hyperID == nHypernodes - 1)
-                    rightSupernodeID = nSupernodes - 1;
+                  if (hyperID == NumHypernodes - 1)
+                    rightSupernodeID = NumSupernodes - 1;
                   else
                     rightSupernodeID = tree.firstSuperchild[hyperID + 1] - 1;
                 } // join graph
               else
                 { // split graph
                   if (hyperID == 0)
-                    rightSupernodeID = nSupernodes - 1;
+                    rightSupernodeID = NumSupernodes - 1;
                   else
                     rightSupernodeID = tree.firstSuperchild[hyperID - 1] - 1;
                 } // split graph
@@ -252,7 +248,7 @@ public:
                   vtkm::Id midNodeID = tree.supernodes[midSupernodeID];
                   // std::cout << "Mid Node ID:          " << midNodeID << std::endl;
                   // this is NEVER equal, because nodeID cannot be a supernode
-                  if (isJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
+                  if (IsJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
                           rightSupernodeID = midSupernodeID;
                   else
                           leftSupernodeID = midSupernodeID;
@@ -264,6 +260,11 @@ public:
         } // per node
       */
   }
+
+private:
+  bool IsJoinGraph;
+  vtkm::Id NumSupernodes;
+  vtkm::Id NumHypernodes;
 
 }; // SetArcsSlideVertices
 
