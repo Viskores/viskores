@@ -80,9 +80,6 @@ namespace contourtree_augmented
 constexpr int PRINT_WIDTH = 12;
 constexpr int PREFIX_WIDTH = 24;
 
-// and we store a debug value for the number of printing columns
-constexpr vtkm::Id printCols = 10;
-
 template <typename T, typename StorageType>
 void printValues(std::string label,
                  const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
@@ -105,6 +102,7 @@ inline void printLabel(std::string label)
   std::cout << std::right << "|";
 } // printLabel()
 
+
 inline void printSeparatingBar(vtkm::Id howMany)
 { // printSeparatingBar()
   // print out the front end
@@ -120,6 +118,7 @@ inline void printSeparatingBar(vtkm::Id howMany)
   std::cout << std::setfill(' ') << std::endl;
 } // printSeparatingBar()
 
+
 // routine to print out a single value
 template <typename T>
 inline void printDataType(T value)
@@ -127,11 +126,13 @@ inline void printDataType(T value)
   std::cout << std::setw(PRINT_WIDTH) << value;
 } // printDataType
 
+
 // routine to print out a single index
 inline void printIndexType(vtkm::Id index)
 { // printIndexType
   std::cout << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
 } // printIndexType
+
 
 // print blank of width PRINT_WIDTH
 inline void printBlank()
@@ -139,11 +140,13 @@ inline void printBlank()
   std::cout << std::setw(PRINT_WIDTH) << "";
 } // printBlank()
 
+
 // print text with PRINT_WIDTH indent
 inline void printText(std::string text)
 { // printText()
   std::cout << std::setw(PRINT_WIDTH) << text;
 } // printText()
+
 
 // header line
 inline void printHeader(vtkm::Id howMany)
@@ -189,6 +192,7 @@ inline void printValues(std::string label,
   std::cout << std::endl;
 } // printValues()
 
+
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
 inline void printSortedValues(std::string label,
@@ -217,6 +221,7 @@ inline void printSortedValues(std::string label,
 } // printValues()
 
 
+// routine for printing index arrays
 inline void printIndices(std::string label,
                          const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                          vtkm::Id nIndices)
@@ -237,6 +242,7 @@ inline void printIndices(std::string label,
   // and the std::endl
   std::cout << std::endl;
 } // printIndices()
+
 
 // routines for printing indices & data in blocks
 template <typename T, typename StorageType>
@@ -259,6 +265,7 @@ inline void printNakedDataBlock(const vtkm::cont::ArrayHandle<T, StorageType>& d
   // and a final std::endl
   std::cout << std::endl;
 } // printNakedDataBlock()
+
 
 inline void printNakedIndexBlock(IdArrayType& iVec, vtkm::Id nColumns)
 { // printNakedIndexBlock()
@@ -304,7 +311,6 @@ inline void printLabelledDataBlock(std::string label,
   // and a final std::endl
   std::cout << std::endl;
 } // printLabelledDataBlock()
-
 
 
 inline void printLabelledIndexBlock(std::string label, IdArrayType& iVec, vtkm::Id nColumns)
