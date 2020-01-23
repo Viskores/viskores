@@ -76,7 +76,7 @@ public:
     WholeArrayIn superId,               // (input) superID from the active graph
     WholeArrayIn hyperId,               // (input) hyperID from the active graph
     WholeArrayOut treeSuperarcs,        // (output) superarcs from the tree
-    WholeArrayOut treeFirstSuperchild); // (output) firstSuperchild from the tree
+    WholeArrayOut treeFirstSuperchild); // (output) FirstSuperchild from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
@@ -140,7 +140,7 @@ public:
       for (indexType supernode = 0; supernode < nSupernodes; supernode++)
       { // per supernode
         // retrieve the actual supernode ID in the graph
-        indexType graphIndex = tree.supernodes[supernode];
+        indexType graphIndex = tree.Supernodes[supernode];
         // retrieve the hyperparent (which is still a graph index, not a hypernode index)
         indexType hyperparent = tree.hyperparents[supernode];
 
@@ -173,7 +173,7 @@ public:
               tree.superarcs[supernode] = superID[MaskedIndex(prunesTo)];
 
             // we also need to set the first superchild for the hypergraph
-            tree.firstSuperchild[hyperID[hyperparent]] = supernode;
+            tree.FirstSuperchild[hyperID[hyperparent]] = supernode;
           } // first supernode
         // all others just point to their neighbour
         else

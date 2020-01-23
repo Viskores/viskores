@@ -110,28 +110,28 @@ public:
   IdArrayType nodes;
 
   // vector of (regular) arcs in the merge tree
-  IdArrayType arcs;
+  IdArrayType Arcs;
 
   // vector storing which superarc owns each node
-  IdArrayType superparents;
+  IdArrayType Superparents;
 
   // VECTORS INDEXED ON T = SIZE OF TREE
 
   // vector storing the list of supernodes by ID
   // WARNING: THESE ARE NOT SORTED BY INDEX
   // Instead, they are sorted by hyperarc, secondarily on index
-  IdArrayType supernodes;
+  IdArrayType Supernodes;
 
   // vector of superarcs in the merge tree
   // stored as supernode indices
-  IdArrayType superarcs;
+  IdArrayType Superarcs;
 
   // for boundary augmented contour tree (note: these use the same convention as supernodes/superarcs)
   IdArrayType augmentnodes;
   IdArrayType augmentarcs;
 
-  // vector of hyperarcs to which each supernode/arc belongs
-  IdArrayType hyperparents;
+  // vector of Hyperarcs to which each supernode/arc belongs
+  IdArrayType Hyperparents;
 
   // vector tracking which superarc was transferred on which iteration
   IdArrayType whenTransferred;
@@ -139,18 +139,18 @@ public:
   // VECTORS INDEXED ON H = SIZE OF HYPERTREE
 
   // vector of sort indices for the hypernodes
-  IdArrayType hypernodes;
+  IdArrayType Hypernodes;
 
-  // vector of hyperarcs in the merge tree
+  // vector of Hyperarcs in the merge tree
   // NOTE: These are supernode IDs, not hypernode IDs
-  // because not all hyperarcs lead to hypernodes
-  IdArrayType hyperarcs;
+  // because not all Hyperarcs lead to hypernodes
+  IdArrayType Hyperarcs;
 
 
   // THIS ONE HAS BEEN DELETED BECAUSE IT'S THE SAME AS THE HYPERNODE ID
   // ALTHOUGH THIS IS NOT NECESSARY, IT'S THE RESULT OF THE CONSTRUCTION
   // vector to find the first child superarc
-  // IdArrayType firstSuperchild;
+  // IdArrayType FirstSuperchild;
 
   // ROUTINES
 
@@ -176,13 +176,13 @@ public:
 
 
 ContourTree::ContourTree()
-  : arcs()
-  , superparents()
-  , supernodes()
-  , superarcs()
-  , hyperparents()
-  , hypernodes()
-  , hyperarcs()
+  : Arcs()
+  , Superparents()
+  , Supernodes()
+  , Superarcs()
+  , Hyperparents()
+  , Hypernodes()
+  , Hyperarcs()
 { // ContourTree()
 } // ContourTree()
 
@@ -191,26 +191,26 @@ ContourTree::ContourTree()
 void ContourTree::Init(vtkm::Id dataSize)
 { // Init()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, dataSize);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, arcs);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, superparents);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, this->Arcs);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, this->Superparents);
 } // Init()
 
 
 inline void ContourTree::PrintContent() const
 {
-  PrintHeader(arcs.GetNumberOfValues());
-  PrintIndices("Arcs", arcs);
-  PrintIndices("Superparents", superparents);
+  PrintHeader(this->Arcs.GetNumberOfValues());
+  PrintIndices("Arcs", this->Arcs);
+  PrintIndices("Superparents", this->Superparents);
   std::cout << std::endl;
-  PrintHeader(supernodes.GetNumberOfValues());
-  PrintIndices("Supernodes", supernodes);
-  PrintIndices("Superarcs", superarcs);
-  PrintIndices("Hyperparents", hyperparents);
+  PrintHeader(this->Supernodes.GetNumberOfValues());
+  PrintIndices("Supernodes", this->Supernodes);
+  PrintIndices("Superarcs", this->Superarcs);
+  PrintIndices("Hyperparents", this->Hyperparents);
   PrintIndices("When Xferred", whenTransferred);
   std::cout << std::endl;
-  PrintHeader(hypernodes.GetNumberOfValues());
-  PrintIndices("Hypernodes", hypernodes);
-  PrintIndices("Hyperarcs", hyperarcs);
+  PrintHeader(this->Hypernodes.GetNumberOfValues());
+  PrintIndices("Hypernodes", this->Hypernodes);
+  PrintIndices("Hyperarcs", this->Hyperarcs);
   PrintHeader(augmentnodes.GetNumberOfValues());
   PrintIndices("Augmentnodes", augmentnodes);
   PrintIndices("Augmentarcs", augmentarcs);
@@ -249,14 +249,14 @@ void ContourTree::PrintDotSuperStructure()
   printf("\tsize=\"6.5, 9\"\n\tratio=\"fill\"\n");
 
   auto whenTransferredPortal = whenTransferred.GetPortalConstControl();
-  auto supernodesPortal = supernodes.GetPortalConstControl();
-  auto superarcsPortal = superarcs.GetPortalConstControl();
-  auto hypernodesPortal = hypernodes.GetPortalConstControl();
-  auto hyperparentsPortal = hyperparents.GetPortalConstControl();
-  auto hyperarcsPortal = hyperarcs.GetPortalConstControl();
+  auto supernodesPortal = this->Supernodes.GetPortalConstControl();
+  auto superarcsPortal = this->Superarcs.GetPortalConstControl();
+  auto hypernodesPortal = this->Hypernodes.GetPortalConstControl();
+  auto hyperparentsPortal = this->Hyperparents.GetPortalConstControl();
+  auto hyperarcsPortal = this->Hyperarcs.GetPortalConstControl();
 
   // colour the nodes by the iteration they transfer (mod # of colors) - paired iterations have similar colors RGBCMY
-  for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
+  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     vtkm::Id iteration = MaskedIndex(whenTransferredPortal.Get(supernode));
     printf("\tnode s%lli [style=filled,fillcolor=%s]\n",
@@ -265,7 +265,7 @@ void ContourTree::PrintDotSuperStructure()
   } // per supernode
 
   // loop through supernodes
-  for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
+  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     // skip the global root
     if (NoSuchElement(superarcsPortal.Get(supernode)))
@@ -284,7 +284,7 @@ void ContourTree::PrintDotSuperStructure()
   } // per supernode
 
   // now loop through hypernodes to show hyperarcs
-  for (vtkm::Id hypernode = 0; hypernode < hypernodes.GetNumberOfValues(); hypernode++)
+  for (vtkm::Id hypernode = 0; hypernode < this->Hypernodes.GetNumberOfValues(); hypernode++)
   { // per hypernode
     // skip the global root
     if (NoSuchElement(hyperarcsPortal.Get(hypernode)))
@@ -298,7 +298,7 @@ void ContourTree::PrintDotSuperStructure()
   } // per hypernode
 
   // now add the hyperparents
-  for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
+  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
     printf(
       "\ts%lli -> s%lli [constraint=false][style=dotted]\n",
@@ -307,11 +307,11 @@ void ContourTree::PrintDotSuperStructure()
   } // per supernode
 
   // now use the hyperstructure to define subgraphs
-  for (vtkm::Id hypernode = 0; hypernode < hypernodes.GetNumberOfValues(); hypernode++)
+  for (vtkm::Id hypernode = 0; hypernode < this->Hypernodes.GetNumberOfValues(); hypernode++)
   { // per hypernode
     vtkm::Id firstChild = hypernodesPortal.Get(hypernode);
-    vtkm::Id childSentinel = (hypernode == hypernodes.GetNumberOfValues() - 1)
-      ? supernodes.GetNumberOfValues()
+    vtkm::Id childSentinel = (hypernode == this->Hypernodes.GetNumberOfValues() - 1)
+      ? this->Supernodes.GetNumberOfValues()
       : hypernodesPortal.Get(hypernode + 1);
     printf("\tsubgraph H%lli{ ", (vtkm::Int64)hypernode);
     for (vtkm::Id supernode = firstChild; supernode < childSentinel; supernode++)

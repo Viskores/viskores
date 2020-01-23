@@ -85,7 +85,7 @@ public:
                                      const IdArrayType& supernodes,
                                      const IdArrayType& whenTransferred)
   {
-    HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
+    this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
     SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
     WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter());
   }
@@ -103,8 +103,8 @@ public:
       return false;
 
     // next compare the left & right hyperparents
-    vtkm::Id leftHyperparent = HyperparentsPortal.Get(MaskedIndex(leftComparand));
-    vtkm::Id rightHyperparent = HyperparentsPortal.Get(MaskedIndex(rightComparand));
+    vtkm::Id leftHyperparent = this->HyperparentsPortal.Get(MaskedIndex(leftComparand));
+    vtkm::Id rightHyperparent = this->HyperparentsPortal.Get(MaskedIndex(rightComparand));
     if (MaskedIndex(leftHyperparent) < MaskedIndex(rightHyperparent))
       return true;
     if (MaskedIndex(leftHyperparent) > MaskedIndex(rightHyperparent))

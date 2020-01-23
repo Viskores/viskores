@@ -89,7 +89,7 @@ public:
   VTKM_CONT
   ArcComparatorImpl(const IdArrayType& ct_arcs)
   { // constructor
-    ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
+    this->ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
   } // constructor
 
   // () operator - gets called to do comparison

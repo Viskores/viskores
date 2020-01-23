@@ -731,8 +731,8 @@ int main(int argc, char* argv[])
       // create explicit representation of the branch decompostion from the array representation
       BranchType* branchDecompostionRoot =
         ctaug_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
-          filter.GetContourTree().superparents,
-          filter.GetContourTree().supernodes,
+          filter.GetContourTree().Superparents,
+          filter.GetContourTree().Supernodes,
           whichBranch,
           branchMinimum,
           branchMaximum,
@@ -886,31 +886,31 @@ int main(int argc, char* argv[])
                << std::left
                << "    #Arcs"
                << ": "
-               << ct.arcs.GetNumberOfValues()
+               << ct.Arcs.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
                << "    #Superparents"
                << ": "
-               << ct.superparents.GetNumberOfValues()
+               << ct.Superparents.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
                << "    #Superarcs"
                << ": "
-               << ct.superarcs.GetNumberOfValues()
+               << ct.Superarcs.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
                << "    #Supernodes"
                << ": "
-               << ct.supernodes.GetNumberOfValues()
+               << ct.Supernodes.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
                << "    #Hyperparents"
                << ": "
-               << ct.hyperparents.GetNumberOfValues()
+               << ct.Hyperparents.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
@@ -922,13 +922,13 @@ int main(int argc, char* argv[])
                << std::left
                << "    #Hypernodes"
                << ": "
-               << ct.hypernodes.GetNumberOfValues()
+               << ct.Hypernodes.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
                << "    #Hyperarcs"
                << ": "
-               << ct.hyperarcs.GetNumberOfValues()
+               << ct.Hyperarcs.GetNumberOfValues()
                << std::endl);
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;

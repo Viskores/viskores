@@ -90,7 +90,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
           contourTree.hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.hyperparents[supernode])];
         } // per supernode
       */

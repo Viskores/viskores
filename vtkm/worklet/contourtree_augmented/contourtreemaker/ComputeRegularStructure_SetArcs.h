@@ -77,7 +77,7 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  vtkm::Id NumArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.Arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -138,19 +138,19 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id sortedNode = 0; sortedNode < contourTree.arcs.size(); sortedNode++)
+      for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.size(); sortedNode++)
         { // per node
           // convert arcSorter to node ID
           vtkm::Id nodeID = arcSorter[sortedNode];
-          vtkm::Id superparent = contourTree.superparents[nodeID];
+          vtkm::Id superparent = contourTree.Superparents[nodeID];
 
           // the end element is always the last
           bool isLastOnSuperarc = false;
-          if (sortedNode == contourTree.arcs.size()-1)
+          if (sortedNode == contourTree.Arcs.size()-1)
              isLastOnSuperarc = true;
           // otherwise look for a change in the superparent
           else
-             isLastOnSuperarc = (superparent != contourTree.superparents[arcSorter[sortedNode + 1]]);
+             isLastOnSuperarc = (superparent != contourTree.Superparents[arcSorter[sortedNode + 1]]);
 
           // if it's the last on the superarc
           if (isLastOnSuperarc)
@@ -159,14 +159,14 @@ public:
               vtkm::Id superarcEnd = contourTree.superarcs[superparent];
               // this only happens for the root of the tree, but is still needed
               if (NoSuchElement(superarcEnd))
-                contourTree.arcs[nodeID] = NO_SUCH_ELEMENT;
+                contourTree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                contourTree.arcs[nodeID] = contourTree.supernodes[MaskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
+                contourTree.Arcs[nodeID] = contourTree.Supernodes[MaskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
             } // last on superarc
           else
             { // not last on superarc
               vtkm::Id neighbour = arcSorter[sortedNode+1];
-              contourTree.arcs[nodeID] = neighbour | ((neighbour > nodeID) ? IS_ASCENDING : 0);
+              contourTree.Arcs[nodeID] = neighbour | ((neighbour > nodeID) ? IS_ASCENDING : 0);
             } // not last on superarc
 
         } // per node
@@ -189,7 +189,7 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  vtkm::Id NumArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.Arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT

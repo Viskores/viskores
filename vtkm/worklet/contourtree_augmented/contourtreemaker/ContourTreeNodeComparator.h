@@ -82,8 +82,8 @@ public:
   VTKM_CONT
   ContourTreeNodeComparatorImpl(const IdArrayType& superparents, const IdArrayType& superarcs)
   {
-    SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter());
-    SuperarcsPortal = superarcs.PrepareForInput(DeviceAdapter());
+    this->SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter());
+    this->SuperarcsPortal = superarcs.PrepareForInput(DeviceAdapter());
   }
 
   // () operator - gets called to do comparison
@@ -91,8 +91,8 @@ public:
   bool operator()(const vtkm::Id& leftNode, const vtkm::Id& rightNode) const
   { // operator()
     // first compare the left & right superparents
-    vtkm::Id leftSuperparent = SuperparentsPortal.Get(leftNode);
-    vtkm::Id rightSuperparent = SuperparentsPortal.Get(rightNode);
+    vtkm::Id leftSuperparent = this->SuperparentsPortal.Get(leftNode);
+    vtkm::Id rightSuperparent = this->SuperparentsPortal.Get(rightNode);
     if (leftSuperparent < rightSuperparent)
       return true;
     else if (leftSuperparent > rightSuperparent)
@@ -100,7 +100,7 @@ public:
 
     // the parents are equal, so we compare the nodes, which are sort indices & indicate value
     // but we need to flip for ascending edges - we retrieve this information from the superarcs array
-    bool isAscendingSuperarc = IsAscending(SuperarcsPortal.Get(leftSuperparent));
+    bool isAscendingSuperarc = IsAscending(this->SuperarcsPortal.Get(leftSuperparent));
     if (leftNode < rightNode)
       return isAscendingSuperarc;
     else if (leftNode > rightNode)

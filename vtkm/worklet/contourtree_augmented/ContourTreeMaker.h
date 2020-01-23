@@ -223,56 +223,56 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   if (activeSupernodes.GetNumberOfValues() == 1)
   { // meet at a vertex
     vtkm::Id superID = activeSupernodes.GetPortalControl().Get(0);
-    contourTree.superarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
-    contourTree.hyperarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
-    contourTree.hyperparents.GetPortalControl().Set(superID, superID);
+    contourTree.Superarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
+    contourTree.Hyperarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
+    contourTree.Hyperparents.GetPortalControl().Set(superID, superID);
     contourTree.whenTransferred.GetPortalControl().Set(superID, nIterations | IS_HYPERNODE);
   } // meet at a vertex
   DebugPrint("Contour Tree Constructed. Now Swizzling", __FILE__, __LINE__);
 
 
   // next, we have to set up the hyper and super structure arrays one at a time
-  // at present, all superarcs / hyperarcs are expressed in terms of supernode IDs
+  // at present, all superarcs / Hyperarcs are expressed in terms of supernode IDs
   // but we will want to move supernodes around.
   // the first step is therefore to find the new order of supernodes by sorting
   // we will use the hypernodes array for this, as we will want a copy to end up there
   vtkm::cont::ArrayHandleIndex initContourTreeHypernodes(
-    contourTree.supernodes
+    contourTree.Supernodes
       .GetNumberOfValues()); // create linear sequence of numbers 0, 1, .. nSupernodes
-  vtkm::cont::Algorithm::Copy(initContourTreeHypernodes, contourTree.hypernodes);
+  vtkm::cont::Algorithm::Copy(initContourTreeHypernodes, contourTree.Hypernodes);
 
   // now we sort hypernodes array with a comparator
   vtkm::cont::Algorithm::Sort(
-    contourTree.hypernodes,
+    contourTree.Hypernodes,
     contourtree_maker_inc_ns::ContourTreeSuperNodeComparator(
-      contourTree.hyperparents, contourTree.supernodes, contourTree.whenTransferred));
+      contourTree.Hyperparents, contourTree.Supernodes, contourTree.whenTransferred));
 
   // we have to permute a bunch of arrays, so let's have some temporaries to store them
   IdArrayType permutedHyperparents;
-  PermuteArray<vtkm::Id>(contourTree.hyperparents, contourTree.hypernodes, permutedHyperparents);
+  PermuteArray<vtkm::Id>(contourTree.Hyperparents, contourTree.Hypernodes, permutedHyperparents);
   IdArrayType permutedSupernodes;
-  PermuteArray<vtkm::Id>(contourTree.supernodes, contourTree.hypernodes, permutedSupernodes);
+  PermuteArray<vtkm::Id>(contourTree.Supernodes, contourTree.Hypernodes, permutedSupernodes);
   IdArrayType permutedSuperarcs;
-  PermuteArray<vtkm::Id>(contourTree.superarcs, contourTree.hypernodes, permutedSuperarcs);
+  PermuteArray<vtkm::Id>(contourTree.Superarcs, contourTree.Hypernodes, permutedSuperarcs);
 
   // now we establish the reverse index array
   IdArrayType superSortIndex;
-  superSortIndex.Allocate(contourTree.supernodes.GetNumberOfValues());
+  superSortIndex.Allocate(contourTree.Supernodes.GetNumberOfValues());
   // The following copy is equivalent to
-  // for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-  //   superSortIndex[contourTree.hypernodes[supernode]] = supernode;
+  // for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
+  //   superSortIndex[contourTree.Hypernodes[supernode]] = supernode;
 
   //typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, vtkm::cont::ArrayHandleIndex> PermuteArrayHandleIndex;
   vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedSuperSortIndex(
-    contourTree.hypernodes, // index array
+    contourTree.Hypernodes, // index array
     superSortIndex);        // value array
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleIndex(contourTree.supernodes.GetNumberOfValues()), // source value array
+    vtkm::cont::ArrayHandleIndex(contourTree.Supernodes.GetNumberOfValues()), // source value array
     permutedSuperSortIndex);                                                  // target array
 
   // we then copy the supernodes & hyperparents back to the main array
-  vtkm::cont::Algorithm::Copy(permutedSupernodes, contourTree.supernodes);
-  vtkm::cont::Algorithm::Copy(permutedHyperparents, contourTree.hyperparents);
+  vtkm::cont::Algorithm::Copy(permutedSupernodes, contourTree.Supernodes);
+  vtkm::cont::Algorithm::Copy(permutedHyperparents, contourTree.Hyperparents);
 
 
   // we need an extra permutation to get the superarcs correct
@@ -280,28 +280,28 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   this->Invoke(permuteSuperarcsWorklet,
                permutedSuperarcs,      // (input)
                superSortIndex,         // (input)
-               contourTree.superarcs); // (output)
+               contourTree.Superarcs); // (output)
 
-  // PrintIndices("Sorted", contourTree.hypernodes);
-  // PrintIndices("Hyperparents", contourTree.hyperparents);
-  // PrintIndices("Supernodes", contourTree.supernodes);
-  // PrintIndices("Superarcs", contourTree.superarcs);
+  // PrintIndices("Sorted", contourTree.Hypernodes);
+  // PrintIndices("Hyperparents", contourTree.Hyperparents);
+  // PrintIndices("Supernodes", contourTree.Supernodes);
+  // PrintIndices("Superarcs", contourTree.Superarcs);
   // PrintIndices("Perm Superarcs", permutedSuperarcs);
   // PrintIndices("SuperSortIndex", superSortIndex);
 
   // we will permute the hyperarcs & copy them back with the new supernode target IDs
   IdArrayType permutedHyperarcs;
-  PermuteArray<vtkm::Id>(contourTree.hyperarcs, contourTree.hypernodes, permutedHyperarcs);
+  PermuteArray<vtkm::Id>(contourTree.Hyperarcs, contourTree.Hypernodes, permutedHyperarcs);
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs permuteHyperarcsWorklet;
-  this->Invoke(permuteHyperarcsWorklet, permutedHyperarcs, superSortIndex, contourTree.hyperarcs);
+  this->Invoke(permuteHyperarcsWorklet, permutedHyperarcs, superSortIndex, contourTree.Hyperarcs);
 
   // now swizzle the whenTransferred value
   IdArrayType permutedWhenTransferred;
   PermuteArray<vtkm::Id>(
-    contourTree.whenTransferred, contourTree.hypernodes, permutedWhenTransferred);
+    contourTree.whenTransferred, contourTree.Hypernodes, permutedWhenTransferred);
   vtkm::cont::Algorithm::Copy(permutedWhenTransferred, contourTree.whenTransferred);
 
-  // now we compress both the hypernodes & hyperarcs
+  // now we compress both the hypernodes & Hyperarcs
   IdArrayType newHypernodePosition;
   OnefIfHypernode oneIfHypernodeFunctor;
   auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
@@ -328,49 +328,49 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs
     setNewHypernodesAndArcsWorklet;
   this->Invoke(setNewHypernodesAndArcsWorklet,
-               contourTree.supernodes,
+               contourTree.Supernodes,
                contourTree.whenTransferred,
-               contourTree.hypernodes,
-               contourTree.hyperarcs,
+               contourTree.Hypernodes,
+               contourTree.Hyperarcs,
                newHypernodePosition,
                newHypernodes,
                newHyperarcs);
   // swap in the new computed arrays.
   // vtkm ArrayHandles are smart so we can just swap the new data in here rather than copy
-  //vtkm::cont::Algorithm::Copy(newHypernodes, contourTree.hypernodes);
-  //vtkm::cont::Algorithm::Copy(newHyperarcs, contourTree.hyperarcs);
-  contourTree.hypernodes.ReleaseResources();
-  contourTree.hypernodes = newHypernodes;
-  contourTree.hyperarcs.ReleaseResources();
-  contourTree.hyperarcs = newHyperarcs;
+  //vtkm::cont::Algorithm::Copy(newHypernodes, contourTree.Hypernodes);
+  //vtkm::cont::Algorithm::Copy(newHyperarcs, contourTree.Hyperarcs);
+  contourTree.Hypernodes.ReleaseResources();
+  contourTree.Hypernodes = newHypernodes;
+  contourTree.Hyperarcs.ReleaseResources();
+  contourTree.Hyperarcs = newHyperarcs;
 
 
   // now reuse the superSortIndex array for hypernode IDs
   // The following copy is equivalent to
-  // for (vtkm::Id hypernode = 0; hypernode < contourTree.hypernodes.size(); hypernode++)
-  //            superSortIndex[contourTree.hypernodes[hypernode]] = hypernode;
-  // source data array is a simple linear index from 0 to #hypernodes
-  vtkm::cont::ArrayHandleIndex tempHypernodeIndexArray(contourTree.hypernodes.GetNumberOfValues());
-  // target data array for the copy operation is superSortIndex permuted by contourTree.hypernodes
+  // for (vtkm::Id hypernode = 0; hypernode < contourTree.Hypernodes.size(); hypernode++)
+  //            superSortIndex[contourTree.Hypernodes[hypernode]] = hypernode;
+  // source data array is a simple linear index from 0 to #Hypernodes
+  vtkm::cont::ArrayHandleIndex tempHypernodeIndexArray(contourTree.Hypernodes.GetNumberOfValues());
+  // target data array for the copy operation is superSortIndex permuted by contourTree.Hypernodes
   permutedSuperSortIndex = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>(
-    contourTree.hypernodes, superSortIndex);
+    contourTree.Hypernodes, superSortIndex);
   vtkm::cont::Algorithm::Copy(tempHypernodeIndexArray, permutedSuperSortIndex);
 
   // loop through the hyperparents array, setting the first one for each
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_HypernodesSetFirstSuperchild
     hypernodesSetFirstSuperchildWorklet;
   this->Invoke(hypernodesSetFirstSuperchildWorklet,
-               contourTree.hyperparents,
+               contourTree.Hyperparents,
                superSortIndex,
-               contourTree.hypernodes);
+               contourTree.Hypernodes);
 
   // do a separate loop to reset the hyperparent's ID
   // This does the following
-  // for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-  //    contourTree.hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.hyperparents[supernode])];
+  // for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
+  //    contourTree.Hyperparents[supernode] = superSortIndex[MaskedIndex(contourTree.Hyperparents[supernode])];
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_ResetHyperparentsId
     resetHyperparentsIdWorklet;
-  this->Invoke(resetHyperparentsIdWorklet, superSortIndex, contourTree.hyperparents);
+  this->Invoke(resetHyperparentsIdWorklet, superSortIndex, contourTree.Hyperparents);
 
   DebugPrint("Contour Tree Super Structure Constructed", __FILE__, __LINE__);
 } // ComputeHyperAndSuperStructure()
@@ -381,45 +381,45 @@ void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
 { // ComputeRegularStructure()
   // First step - use the superstructure to set the superparent for all supernodes
   auto supernodesIndex = vtkm::cont::ArrayHandleIndex(
-    contourTree.supernodes.GetNumberOfValues()); // Counting array of length #supernodes to
+    contourTree.Supernodes.GetNumberOfValues()); // Counting array of length #supernodes to
   auto permutedSuperparents = vtkm::cont::make_ArrayHandlePermutation(
-    contourTree.supernodes,
-    contourTree.superparents); // superparents array permmuted by the supernodes array
+    contourTree.Supernodes,
+    contourTree.Superparents); // superparents array permmuted by the supernodes array
   vtkm::cont::Algorithm::Copy(supernodesIndex, permutedSuperparents);
   // The above copy is equivlant to
   // for (indexType supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-  //    contourTree.superparents[contourTree.supernodes[supernode]] = supernode;
+  //    contourTree.superparents[contourTree.Supernodes[supernode]] = supernode;
 
   // Second step - for all remaining (regular) nodes, locate the superarc to which they belong
   contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcs locateSuperarcsWorklet(
-    contourTree.hypernodes.GetNumberOfValues(), contourTree.supernodes.GetNumberOfValues());
+    contourTree.Hypernodes.GetNumberOfValues(), contourTree.Supernodes.GetNumberOfValues());
   this->Invoke(locateSuperarcsWorklet,
-               contourTree.superparents,    // (input/output)
+               contourTree.Superparents,    // (input/output)
                contourTree.whenTransferred, // (input)
-               contourTree.hyperparents,    // (input)
-               contourTree.hyperarcs,       // (input)
-               contourTree.hypernodes,      // (input)
-               contourTree.supernodes,      // (input)
+               contourTree.Hyperparents,    // (input)
+               contourTree.Hyperarcs,       // (input)
+               contourTree.Hypernodes,      // (input)
+               contourTree.Supernodes,      // (input)
                meshExtrema.Peaks,           // (input)
                meshExtrema.Pits);           // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
-  vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(contourTree.arcs.GetNumberOfValues()),
+  vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(contourTree.Arcs.GetNumberOfValues()),
                               contourTree.nodes);
 
   vtkm::cont::Algorithm::Sort(contourTree.nodes,
                               contourtree_maker_inc_ns::ContourTreeNodeComparator(
-                                contourTree.superparents, contourTree.superarcs));
+                                contourTree.Superparents, contourTree.Superarcs));
 
   // now set the arcs based on the array
   contourtree_maker_inc_ns::ComputeRegularStructure_SetArcs setArcsWorklet(
-    contourTree.arcs.GetNumberOfValues());
+    contourTree.Arcs.GetNumberOfValues());
   this->Invoke(setArcsWorklet,
                contourTree.nodes,        // (input) arcSorter array
-               contourTree.superparents, // (input)
-               contourTree.superarcs,    // (input)
-               contourTree.supernodes,   // (input)
-               contourTree.arcs);        // (output)
+               contourTree.Superparents, // (input)
+               contourTree.Superarcs,    // (input)
+               contourTree.Supernodes,   // (input)
+               contourTree.Arcs);        // (output)
 
   DebugPrint("Regular Structure Computed", __FILE__, __LINE__);
 } // ComputeRegularStructure()
@@ -448,28 +448,28 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
   const MeshBoundaryExecObj& meshBoundaryExecObj)
 { // ComputeRegularStructure()
   // First step - use the superstructure to set the superparent for all supernodes
-  auto supernodesIndex = vtkm::cont::ArrayHandleIndex(contourTree.supernodes.GetNumberOfValues());
+  auto supernodesIndex = vtkm::cont::ArrayHandleIndex(contourTree.Supernodes.GetNumberOfValues());
   IdArrayType superparents;
   InitIdArrayTypeNoSuchElement(superparents, mesh.GetNumberOfVertices());
   // superparents array permmuted by the supernodes array
   auto permutedSuperparents =
-    vtkm::cont::make_ArrayHandlePermutation(contourTree.supernodes, superparents);
+    vtkm::cont::make_ArrayHandlePermutation(contourTree.Supernodes, superparents);
   vtkm::cont::Algorithm::Copy(supernodesIndex, permutedSuperparents);
   // The above copy is equivlant to
-  // for (indexType supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
-  //    superparents[contourTree.supernodes[supernode]] = supernode;
+  // for (indexType supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
+  //    superparents[contourTree.Supernodes[supernode]] = supernode;
 
   // Second step - for all remaining (regular) nodes, locate the superarc to which they belong
   contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcsOnBoundary
-    locateSuperarcsOnBoundaryWorklet(contourTree.hypernodes.GetNumberOfValues(),
-                                     contourTree.supernodes.GetNumberOfValues());
+    locateSuperarcsOnBoundaryWorklet(contourTree.Hypernodes.GetNumberOfValues(),
+                                     contourTree.Supernodes.GetNumberOfValues());
   this->Invoke(locateSuperarcsOnBoundaryWorklet,
                superparents,                // (input/output)
                contourTree.whenTransferred, // (input)
-               contourTree.hyperparents,    // (input)
-               contourTree.hyperarcs,       // (input)
-               contourTree.hypernodes,      // (input)
-               contourTree.supernodes,      // (input)
+               contourTree.Hyperparents,    // (input)
+               contourTree.Hyperarcs,       // (input)
+               contourTree.Hypernodes,      // (input)
+               contourTree.Supernodes,      // (input)
                meshExtrema.Peaks,           // (input)
                meshExtrema.Pits,            // (input)
                meshBoundaryExecObj);        // (input)
@@ -508,7 +508,7 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
   // use a comparator to do the sort
   vtkm::cont::Algorithm::Sort(
     augmentnodes_sorted,
-    contourtree_maker_inc_ns::ContourTreeNodeComparator(superparents, contourTree.superarcs));
+    contourtree_maker_inc_ns::ContourTreeNodeComparator(superparents, contourTree.Superarcs));
   // now set the arcs based on the array
   InitIdArrayTypeNoSuchElement(contourTree.augmentarcs,
                                contourTree.augmentnodes.GetNumberOfValues());
@@ -517,8 +517,8 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
   this->Invoke(setAugmentArcsWorklet,
                augmentnodes_sorted,      // (input) arcSorter array
                superparents,             // (input)
-               contourTree.superarcs,    // (input)
-               contourTree.supernodes,   // (input)
+               contourTree.Superarcs,    // (input)
+               contourTree.Supernodes,   // (input)
                toCompressed,             // (input)
                contourTree.augmentarcs); // (output)
   DebugPrint("Regular Boundary Structure Computed", __FILE__, __LINE__);
@@ -539,25 +539,25 @@ void ContourTreeMaker::AugmentMergeTrees()
   /*
     // 1. Allocate an array that is guaranteed to be big enough
     //  - the sum of the sizes of the trees or the total size of the data
-    vtkm::Id nJoinSupernodes = joinTree.supernodes.GetNumberOfValues();
-    vtkm::Id nSplitSupernodes = splitTree.supernodes.GetNumberOfValues();
+    vtkm::Id nJoinSupernodes = joinTree.Supernodes.GetNumberOfValues();
+    vtkm::Id nSplitSupernodes = splitTree.Supernodes.GetNumberOfValues();
     vtkm::Id nSupernodes = nJoinSupernodes + nSplitSupernodes;
-    if (nSupernodes > joinTree.arcs.GetNumberOfValues())
-      nSupernodes = joinTree.arcs.GetNumberOfValues();
-    contourTree.supernodes.Allocate(nSupernodes);
+    if (nSupernodes > joinTree.Arcs.GetNumberOfValues())
+      nSupernodes = joinTree.Arcs.GetNumberOfValues();
+    contourTree.Supernodes.Allocate(nSupernodes);
 
     // 2. Make copies of the lists of join & split supernodes & sort them
     IdArrayType joinSort;
     joinSort.Allocate(nJoinSupernodes);
-    vtkm::cont::Algorithm::Copy(joinTree.supernodes, joinSort);
+    vtkm::cont::Algorithm::Copy(joinTree.Supernodes, joinSort);
     vtkm::cont::Algorithm::Sort(joinSort);
     IdArrayType splitSort;
     splitSort.Allocate(nSplitSupernodes);
-    vtkm::cont::Algorithm::Copy(splitTree.supernodes, splitSort);
+    vtkm::cont::Algorithm::Copy(splitTree.Supernodes, splitSort);
     vtkm::cont::Algorithm::Sort(splitSort);
 
     // 3. Use set_union to combine the lists
-    auto contTreeSuperNodesBegin = vtkm::cont::ArrayPortalToIteratorBegin(contourTree.supernodes.GetPortalControl());
+    auto contTreeSuperNodesBegin = vtkm::cont::ArrayPortalToIteratorBegin(contourTree.Supernodes.GetPortalControl());
     auto tail = std::set_union(vtkm::cont::ArrayPortalToIteratorBegin(joinSort.GetPortalControl()),
                                vtkm::cont::ArrayPortalToIteratorEnd(joinSort.GetPortalControl()),
                                vtkm::cont::ArrayPortalToIteratorBegin(splitSort.GetPortalControl()),
@@ -570,27 +570,27 @@ void ContourTreeMaker::AugmentMergeTrees()
     splitSort.ReleaseResources();
 
     // 4. Resize the supernode array accordingly
-    contourTree.supernodes.Shrink(nSupernodes);
+    contourTree.Supernodes.Shrink(nSupernodes);
     */
 
   // 1. Allocate an array that is guaranteed to be big enough
   //  - the sum of the sizes of the trees or the total size of the data
-  vtkm::Id nJoinSupernodes = joinTree.supernodes.GetNumberOfValues();
-  vtkm::Id nSplitSupernodes = splitTree.supernodes.GetNumberOfValues();
+  vtkm::Id nJoinSupernodes = joinTree.Supernodes.GetNumberOfValues();
+  vtkm::Id nSplitSupernodes = splitTree.Supernodes.GetNumberOfValues();
   vtkm::Id nSupernodes = nJoinSupernodes + nSplitSupernodes;
 
   // TODO Check whether this replacement for Step 2 to 4 is a problem in terms of performance
   //  Step 2 - 4 in original PPP2. Create a sorted list of all unique supernodes from the Join and Split tree.
-  contourTree.supernodes.Allocate(nSupernodes);
+  contourTree.Supernodes.Allocate(nSupernodes);
   vtkm::cont::Algorithm::CopySubRange(
-    joinTree.supernodes, 0, nJoinSupernodes, contourTree.supernodes, 0);
+    joinTree.Supernodes, 0, nJoinSupernodes, contourTree.Supernodes, 0);
   vtkm::cont::Algorithm::CopySubRange(
-    splitTree.supernodes, 0, nSplitSupernodes, contourTree.supernodes, nJoinSupernodes);
+    splitTree.Supernodes, 0, nSplitSupernodes, contourTree.Supernodes, nJoinSupernodes);
 
   // Need to sort before Unique because VTKM only guarantees to find neighboring duplicates
-  vtkm::cont::Algorithm::Sort(contourTree.supernodes);
-  vtkm::cont::Algorithm::Unique(contourTree.supernodes);
-  nSupernodes = contourTree.supernodes.GetNumberOfValues();
+  vtkm::cont::Algorithm::Sort(contourTree.Supernodes);
+  vtkm::cont::Algorithm::Unique(contourTree.Supernodes);
+  nSupernodes = contourTree.Supernodes.GetNumberOfValues();
 
   // 5. Create lookup arrays for the join & split supernodes' new IDs
   IdArrayType newJoinID;
@@ -609,11 +609,11 @@ void ContourTreeMaker::AugmentMergeTrees()
   contourtree_maker_inc_ns::AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents
     initNewJoinSplitIDAndSuperparentsWorklet;
   this->Invoke(initNewJoinSplitIDAndSuperparentsWorklet,
-               contourTree.supernodes, //input
-               joinTree.superparents,  //input
-               splitTree.superparents, //input
-               joinTree.supernodes,    //input
-               splitTree.supernodes,   //input
+               contourTree.Supernodes, //input
+               joinTree.Superparents,  //input
+               splitTree.Superparents, //input
+               joinTree.Supernodes,    //input
+               splitTree.Supernodes,   //input
                joinSuperparents,       //output
                splitSuperparents,      //output
                newJoinID,              //output
@@ -628,7 +628,7 @@ void ContourTreeMaker::AugmentMergeTrees()
   //      the augmented superarcs. We start with the join superarcs
   vtkm::cont::Algorithm::Sort(
     activeSupernodes,
-    active_graph_inc_ns::SuperArcNodeComparator(joinSuperparents, joinTree.isJoinTree));
+    active_graph_inc_ns::SuperArcNodeComparator(joinSuperparents, joinTree.IsJoinTree));
 
   // 9.   Set the augmented join superarcs
   augmentedJoinSuperarcs.Allocate(nSupernodes);
@@ -636,7 +636,7 @@ void ContourTreeMaker::AugmentMergeTrees()
   this->Invoke(setAugmentedJoinArcsWorklet,
                activeSupernodes,        // (input domain)
                joinSuperparents,        // (input)
-               joinTree.superarcs,      // (input)
+               joinTree.Superarcs,      // (input)
                newJoinID,               // (input)
                augmentedJoinSuperarcs); // (output)
 
@@ -645,7 +645,7 @@ void ContourTreeMaker::AugmentMergeTrees()
   // now sort by the split superparent
   vtkm::cont::Algorithm::Sort(
     activeSupernodes,
-    active_graph_inc_ns::SuperArcNodeComparator(splitSuperparents, splitTree.isJoinTree));
+    active_graph_inc_ns::SuperArcNodeComparator(splitSuperparents, splitTree.IsJoinTree));
 
   // 11.  Set the augmented split superarcs
   augmentedSplitSuperarcs.Allocate(nSupernodes);
@@ -653,17 +653,17 @@ void ContourTreeMaker::AugmentMergeTrees()
   this->Invoke(setAugmentedSplitArcsWorklet,
                activeSupernodes,         // (input domain)
                splitSuperparents,        // (input)
-               splitTree.superarcs,      // (input)
+               splitTree.Superarcs,      // (input)
                newSplitID,               // (input)
                augmentedSplitSuperarcs); // (output)
 
   // 12. Lastly, we can initialise all of the remaining arrays
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
                                                                nSupernodes);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.superarcs);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.hyperparents);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.hypernodes);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.hyperarcs);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.Superarcs);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.Hyperparents);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.Hypernodes);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.Hyperarcs);
   vtkm::cont::Algorithm::Copy(noSuchElementArray, contourTree.whenTransferred);
 
   // TODO We should only need to allocate the updegree/downdegree arrays. We initialize them with 0 here to ensure consistency of debug output
@@ -735,13 +735,13 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
   // TODO below we initialize the outbound and inbound arrays with 0 to ensure consistency of debug output. Check if this is needed.
   IdArrayType outbound;
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.supernodes.GetNumberOfValues()),
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Supernodes.GetNumberOfValues()),
     outbound);
-  //outbound.Allocate(contourTree.supernodes.GetNumberOfValues());
+  //outbound.Allocate(contourTree.Supernodes.GetNumberOfValues());
   IdArrayType inbound;
-  //inbound.Allocate(contourTree.supernodes.GetNumberOfValues());
+  //inbound.Allocate(contourTree.Supernodes.GetNumberOfValues());
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.supernodes.GetNumberOfValues()),
+    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Supernodes.GetNumberOfValues()),
     inbound);
 
 
@@ -812,9 +812,9 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
                                        inwards);    // (input)
   vtkm::cont::TryExecute(task,
                          activeSupernodes,             // (input)
-                         contourTree.hyperparents,     // (output)
-                         contourTree.hyperarcs,        // (output)
-                         contourTree.superarcs,        // (output)
+                         contourTree.Hyperparents,     // (output)
+                         contourTree.Hyperarcs,        // (output)
+                         contourTree.Superarcs,        // (output)
                          contourTree.whenTransferred); // (output)
 
   DebugPrint(isJoin ? "Upper Regular Chains Transferred" : "Lower Regular Chains Transferred",
@@ -823,7 +823,7 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
 } // ContourTreeMaker::TransferLeafChains()
 
 
-// routine to compress trees by removing regular vertices as well as hypernodes
+// routine to compress trees by removing regular vertices as well as Hypernodes
 void ContourTreeMaker::CompressTrees()
 { // ContourTreeMaker::CompressTrees()
 
@@ -840,7 +840,7 @@ void ContourTreeMaker::CompressTrees()
     contourtree_maker_inc_ns::CompressTrees_Step compressTreesStepWorklet;
     this->Invoke(compressTreesStepWorklet,
                  activeSupernodes,       // (input)
-                 contourTree.superarcs,  // (input)
+                 contourTree.Superarcs,  // (input)
                  augmentedJoinSuperarcs, // (input/output)
                  augmentedSplitSuperarcs // (input/output)
                  );

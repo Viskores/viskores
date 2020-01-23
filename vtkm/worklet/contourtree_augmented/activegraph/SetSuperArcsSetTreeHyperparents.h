@@ -102,7 +102,7 @@ public:
       for (indexType supernode = 0; supernode < nSupernodes; supernode++)
         { // per graph vertex
           // retrieve the graph index
-          indexType graphVertex = tree.supernodes[supernode];
+          indexType graphVertex = tree.Supernodes[supernode];
 
           // retrieve the ID stored in the hyperarcs array
           indexType graphTarget = hyperarcs[graphVertex];

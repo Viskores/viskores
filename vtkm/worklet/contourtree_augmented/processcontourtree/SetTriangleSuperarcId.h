@@ -96,8 +96,8 @@ public:
     ExecutionSignature(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14);
   using InputDomain = _1;
 
-  vtkm::Id numHypernodes; // contourTree.hypernodes.GetNumberOfValues()
-  vtkm::Id numSupernodes; // contourTree.supernodes.GetNumberOfValues()
+  vtkm::Id numHypernodes; // contourTree.Hypernodes.GetNumberOfValues()
+  vtkm::Id numSupernodes; // contourTree.Supernodes.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT

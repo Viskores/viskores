@@ -121,7 +121,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (indexType node = 0; node < tree.arcs.size(); node++)
+      for (indexType node = 0; node < tree.Arcs.size(); node++)
         { // per node
           indexType nodeID = nodes[node];
           // work out whether we have the first node on the superarc
@@ -131,21 +131,21 @@ public:
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
               if (NoSuchElement(superarc))
-                      tree.arcs[nodeID] = NO_SUCH_ELEMENT;
+                      tree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                      tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];
+                      tree.Arcs[nodeID] = tree.Supernodes[tree.superarcs[superparent]];
             } // left edge
-          else if (superparent != tree.superparents[nodes[node-1]])
+          else if (superparent != tree.Superparents[nodes[node-1]])
             { // any other transition
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
               if (NoSuchElement(superarc))
-                      tree.arcs[nodeID] = NO_SUCH_ELEMENT;
+                      tree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                      tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];
+                      tree.Arcs[nodeID] = tree.Supernodes[tree.superarcs[superparent]];
             } // any other transition
           else
-            tree.arcs[nodeID] = nodes[node-1];
+            tree.Arcs[nodeID] = nodes[node-1];
         } // per node
         */
   }

@@ -73,7 +73,7 @@ public:
     WholeArrayIn treeArcs, // (input) arcs from the tree
     WholeArrayIn
       meshExtrema, // (input) extrema from the mesh (i.e, pits or peaks depending on if we have a join or split tree)
-    WholeArrayIn treeFirstSuperchild,  // (input) firstSuperchild from the tree
+    WholeArrayIn treeFirstSuperchild,  // (input) FirstSuperchild from the tree
     WholeArrayIn treeSupernodes,       // (input) supernodes from the tree
     WholeArrayInOut treeSuperparents); // (input/output) superparents from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
@@ -177,31 +177,31 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (indexType nodeID = 0; nodeID < tree.arcs.size(); nodeID++)
+      for (indexType nodeID = 0; nodeID < tree.Arcs.size(); nodeID++)
         { // per node
           // ignore if the flag is already set
-          if (IsSupernode(tree.arcs[nodeID]))
+          if (IsSupernode(tree.Arcs[nodeID]))
             continue;
 
           // start at the "top" end, retrieved from initial extremal array
           vtkm::Id fromID = extrema[nodeID];
 
           // get the "bottom" end from arcs array (it's a peak, so it's set already)
-          vtkm::Id toID = tree.arcs[MaskedIndex(fromID)];
+          vtkm::Id toID = tree.Arcs[MaskedIndex(fromID)];
 
           // loop to bottom or until to node is "below" this node
           while (!NoSuchElement(toID) && (IsJoinGraph ?
                   (MaskedIndex(toID) > MaskedIndex(nodeID)): (MaskedIndex(toID) < MaskedIndex(nodeID))))
             { // sliding loop
               fromID = toID;
-              toID = tree.arcs[MaskedIndex(fromID)];
+              toID = tree.Arcs[MaskedIndex(fromID)];
             } // sliding loop
 
           // now we've found a hyperarc, we need to search to place ourselves on a superarc
           // it's a binary search!  first we get the hyperarc ID, which we've stored in superparents.
-          indexType hyperID = tree.superparents[MaskedIndex(fromID)];
-          indexType leftSupernodeID = tree.firstSuperchild[hyperID];
-          indexType leftNodeID = tree.supernodes[leftSupernodeID];
+          indexType hyperID = tree.Superparents[MaskedIndex(fromID)];
+          indexType leftSupernodeID = tree.FirstSuperchild[hyperID];
+          indexType leftNodeID = tree.Supernodes[leftSupernodeID];
 
           // the idea here is to compare the node ID against the node IDs for supernodes along the hyperarc
           // however, the "low" end - i.e. the end to which it is pruned, is not stored explicitly.
@@ -216,7 +216,7 @@ public:
           // special case for the left-hand edge
           if (IsJoinGraph ? (nodeID < leftNodeID) : (nodeID > leftNodeID))
             { // below left hand end
-              tree.superparents[nodeID] = leftSupernodeID;
+              tree.Superparents[nodeID] = leftSupernodeID;
             } // below left hand ned
           else
             { // not below the left hand end
@@ -228,14 +228,14 @@ public:
                   if (hyperID == NumHypernodes - 1)
                     rightSupernodeID = NumSupernodes - 1;
                   else
-                    rightSupernodeID = tree.firstSuperchild[hyperID + 1] - 1;
+                    rightSupernodeID = tree.FirstSuperchild[hyperID + 1] - 1;
                 } // join graph
               else
                 { // split graph
                   if (hyperID == 0)
                     rightSupernodeID = NumSupernodes - 1;
                   else
-                    rightSupernodeID = tree.firstSuperchild[hyperID - 1] - 1;
+                    rightSupernodeID = tree.FirstSuperchild[hyperID - 1] - 1;
                 } // split graph
 
               // the right end is guaranteed to be the hypernode at the top, which is not
@@ -245,7 +245,7 @@ public:
                 { // binary search
                   vtkm::Id midSupernodeID = (leftSupernodeID + rightSupernodeID) / 2;
                   // std::cout << "Mid Supernode ID:     " << midSupernodeID << std::endl;
-                  vtkm::Id midNodeID = tree.supernodes[midSupernodeID];
+                  vtkm::Id midNodeID = tree.Supernodes[midSupernodeID];
                   // std::cout << "Mid Node ID:          " << midNodeID << std::endl;
                   // this is NEVER equal, because nodeID cannot be a supernode
                   if (IsJoinGraph ? (midNodeID > nodeID) : (midNodeID < nodeID))
@@ -255,7 +255,7 @@ public:
                 } // binary search
 
                 // we have now found the supernode/arc to which the vertex belongs
-                tree.superparents[nodeID] = rightSupernodeID;
+                tree.Superparents[nodeID] = rightSupernodeID;
             } // not below the left hand end
         } // per node
       */

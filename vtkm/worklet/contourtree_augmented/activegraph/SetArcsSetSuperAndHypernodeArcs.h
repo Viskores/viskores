@@ -129,17 +129,17 @@ public:
           indexType nodeID = globalIndex[graphVertex];
           if (NoSuchElement(graphTarget))
             { // trunk hypernode
-              tree.arcs[nodeID] = NO_SUCH_ELEMENT | IS_HYPERNODE | IS_SUPERNODE;
-              tree.superparents[nodeID] = hyperID[graphVertex];
+              tree.Arcs[nodeID] = NO_SUCH_ELEMENT | IS_HYPERNODE | IS_SUPERNODE;
+              tree.Superparents[nodeID] = hyperID[graphVertex];
             } // trunk hypernode
           else if (IsHypernode(graphTarget))
             { // hypernode
-              tree.arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_HYPERNODE | IS_SUPERNODE;
-              tree.superparents[nodeID] = hyperID[graphVertex];
+              tree.Arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_HYPERNODE | IS_SUPERNODE;
+              tree.Superparents[nodeID] = hyperID[graphVertex];
             } // hypernode
           else
             { // supernode
-              tree.arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_SUPERNODE;
+              tree.Arcs[nodeID] = globalIndex[MaskedIndex(graphTarget)] | IS_SUPERNODE;
             } // supernode
 
         } // per graph vertex

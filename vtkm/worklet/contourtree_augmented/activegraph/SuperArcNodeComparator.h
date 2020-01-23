@@ -89,8 +89,8 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // first make sure we have the "top" end set correctly
-    vtkm::Id superarcI = SuperparentsPortal.Get(i);
-    vtkm::Id superarcJ = SuperparentsPortal.Get(j);
+    vtkm::Id superarcI = this->SuperparentsPortal.Get(i);
+    vtkm::Id superarcJ = this->SuperparentsPortal.Get(j);
 
     // now test on that
     if (superarcI < superarcJ)

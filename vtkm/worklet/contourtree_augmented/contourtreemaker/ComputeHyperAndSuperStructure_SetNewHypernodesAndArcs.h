@@ -107,7 +107,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
         { // per supernode
           bool isAHypernode = IsHypernode(contourTree.whenTransferred[supernode]);
 

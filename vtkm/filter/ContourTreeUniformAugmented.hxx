@@ -331,7 +331,7 @@ public:
       vtkm::cont::Algorithm::Copy(transformedIndex, localGlobalMeshIndex);
       // Compute the local contour tree mesh
       auto localContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>(
-        contourTree.arcs, sortOrder, field, localGlobalMeshIndex);
+        contourTree.Arcs, sortOrder, field, localGlobalMeshIndex);
       return localContourTreeMesh;
     }
     else if (computeRegularStructure == 2)
@@ -496,7 +496,7 @@ void MergeBlockFunctor(
         {
           // If we have the fully augmented contour tree
           newContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
-            currContourTree.arcs, contourTreeMeshOut);
+            currContourTree.Arcs, contourTreeMeshOut);
         }
         else if (block->ComputeRegularStructure == 2)
         {
@@ -679,7 +679,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
   // Construct the expected result for serial execution. Note, in serial the result currently
   // not actually being used, but in parallel we need the sorted mesh values as output
   // This part is being hit when we run in serial or parallel with more then one rank
-  return CreateResultFieldPoint(input, ContourTreeData.arcs, this->GetOutputFieldName());
+  return CreateResultFieldPoint(input, ContourTreeData.Arcs, this->GetOutputFieldName());
 } // ContourTreeAugmented::DoExecute
 
 

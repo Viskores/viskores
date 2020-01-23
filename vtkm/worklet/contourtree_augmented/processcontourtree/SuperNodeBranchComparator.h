@@ -74,14 +74,14 @@ class SuperNodeBranchComparatorImpl
 public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  IdPortalType whichBranchPortal;
-  IdPortalType supernodesPortal;
+  IdPortalType WhichBranchPortal;
+  IdPortalType SupernodesPortal;
 
   // constructor
-  SuperNodeBranchComparatorImpl(const IdArrayType& WhichBranch, const IdArrayType& Supernodes)
+  SuperNodeBranchComparatorImpl(const IdArrayType& WhichBranch, const IdArrayType& supernodes)
   { // constructor
-    whichBranchPortal = WhichBranch.PrepareForInput(DeviceAdapter());
-    supernodesPortal = Supernodes.PrepareForInput(DeviceAdapter());
+    WhichBranchPortal = WhichBranch.PrepareForInput(DeviceAdapter());
+    SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
   } // constructor
 
   // () operator - gets called to do comparison
@@ -89,8 +89,8 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // retrieve which branch the supernodes are on
-    vtkm::Id branchI = MaskedIndex(whichBranchPortal.Get(i));
-    vtkm::Id branchJ = MaskedIndex(whichBranchPortal.Get(j));
+    vtkm::Id branchI = MaskedIndex(WhichBranchPortal.Get(i));
+    vtkm::Id branchJ = MaskedIndex(WhichBranchPortal.Get(j));
 
     // and test them
     if (branchI < branchJ)
@@ -99,8 +99,8 @@ public:
       return false;
 
     // now fall back on regular ID
-    vtkm::Id regularI = supernodesPortal.Get(i);
-    vtkm::Id regularJ = supernodesPortal.Get(j);
+    vtkm::Id regularI = this->SupernodesPortal.Get(i);
+    vtkm::Id regularJ = this->SupernodesPortal.Get(j);
 
     if (regularI < regularJ)
       return true;

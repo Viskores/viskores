@@ -71,7 +71,7 @@ class BuildTrunkWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn activeVertices,     // (input) activeVertices
-                                WholeArrayInOut hyperacrs); // (input/output) hyperarcs
+                                WholeArrayInOut hyperarcs); // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 
