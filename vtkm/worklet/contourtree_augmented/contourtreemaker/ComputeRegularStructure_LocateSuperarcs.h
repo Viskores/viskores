@@ -82,14 +82,14 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
-  vtkm::Id numHypernodes; // contourTree.hypernodes.GetNumberOfValues()
-  vtkm::Id numSupernodes; // contourTree.supernodes.GetNumberOfValues()
+  vtkm::Id NumHypernodes; // contourTree.hypernodes.GetNumberOfValues()
+  vtkm::Id NumSupernodes; // contourTree.supernodes.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_LocateSuperarcs(vtkm::Id NumHypernodes, vtkm::Id NumSupernodes)
-    : numHypernodes(NumHypernodes)
-    , numSupernodes(NumSupernodes)
+  ComputeRegularStructure_LocateSuperarcs(vtkm::Id numHypernodes, vtkm::Id numSupernodes)
+    : NumHypernodes(numHypernodes)
+    , NumSupernodes(numSupernodes)
   {
   }
 
@@ -177,8 +177,8 @@ public:
         vtkm::Id lowSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id highSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (MaskedIndex(hyperparent) == numHypernodes - 1)
-          highSupernode = numSupernodes - 1;
+        if (MaskedIndex(hyperparent) == NumHypernodes - 1)
+          highSupernode = NumSupernodes - 1;
         // otherwise, take the supernode just before the next hypernode
         else
           highSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
@@ -212,9 +212,9 @@ public:
         vtkm::Id highSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id lowSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (MaskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == NumHypernodes - 1)
         { // last hyperarc
-          lowSupernode = numSupernodes - 1;
+          lowSupernode = NumSupernodes - 1;
         } // last hyperarc
         // otherwise, take the supernode just before the next hypernode
         else
@@ -420,16 +420,16 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
-  vtkm::Id numHypernodes; // contourTree.hypernodes.GetNumberOfValues()
-  vtkm::Id numSupernodes; // contourTree.supernodes.GetNumberOfValues()
+  vtkm::Id NumHypernodes; // contourTree.hypernodes.GetNumberOfValues()
+  vtkm::Id NumSupernodes; // contourTree.supernodes.GetNumberOfValues()
 
   vtkm::Id NumRows, NumColumns, NumSlices; // Mesh 2D or 3D - NumRows, NumColumns, NumSlices
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_LocateSuperarcsOnBoundary(vtkm::Id NumHypernodes, vtkm::Id NumSupernodes)
-    : numHypernodes(NumHypernodes)
-    , numSupernodes(NumSupernodes)
+  ComputeRegularStructure_LocateSuperarcsOnBoundary(vtkm::Id numHypernodes, vtkm::Id numSupernodes)
+    : NumHypernodes(numHypernodes)
+    , NumSupernodes(numSupernodes)
   {
   }
 
@@ -518,8 +518,8 @@ public:
         vtkm::Id lowSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id highSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (MaskedIndex(hyperparent) == numHypernodes - 1)
-          highSupernode = numSupernodes - 1;
+        if (MaskedIndex(hyperparent) == NumHypernodes - 1)
+          highSupernode = NumSupernodes - 1;
         // otherwise, take the supernode just before the next hypernode
         else
           highSupernode = contourTreeHypernodesPortal.Get(MaskedIndex(hyperparent) + 1) - 1;
@@ -553,9 +553,9 @@ public:
         vtkm::Id highSupernode = contourTreeHypernodesPortal.Get(hyperparent);
         vtkm::Id lowSupernode;
         // if it's at the right hand end, take the last supernode in the array
-        if (MaskedIndex(hyperparent) == numHypernodes - 1)
+        if (MaskedIndex(hyperparent) == NumHypernodes - 1)
         { // last hyperarc
-          lowSupernode = numSupernodes - 1;
+          lowSupernode = NumSupernodes - 1;
         } // last hyperarc
         // otherwise, take the supernode just before the next hypernode
         else

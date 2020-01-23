@@ -77,12 +77,12 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_SetArcs(vtkm::Id NumArcs)
-    : numArcs(NumArcs)
+  ComputeRegularStructure_SetArcs(vtkm::Id numArcs)
+    : NumArcs(numArcs)
   {
   }
 
@@ -101,7 +101,7 @@ public:
 
     // the end element is always the last
     bool isLastOnSuperarc = false;
-    if (sortedNode == numArcs - 1)
+    if (sortedNode == NumArcs - 1)
     {
       isLastOnSuperarc = true;
     }
@@ -189,12 +189,12 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_SetAugmentArcs(vtkm::Id NumArcs)
-    : numArcs(NumArcs)
+  ComputeRegularStructure_SetAugmentArcs(vtkm::Id numArcs)
+    : NumArcs(numArcs)
   {
   }
 
@@ -214,7 +214,7 @@ public:
 
     // the end element is always the last
     bool isLastOnSuperarc = false;
-    if (sortedNode == numArcs - 1)
+    if (sortedNode == NumArcs - 1)
     {
       isLastOnSuperarc = true;
     }
