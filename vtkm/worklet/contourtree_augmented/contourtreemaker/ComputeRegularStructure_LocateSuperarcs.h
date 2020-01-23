@@ -259,8 +259,8 @@ public:
             indexType topSuperparent = contourTree.Superparents[top];
             indexType bottomSuperparent = contourTree.Superparents[bottom];
             // and we can also find out when they transferred
-            indexType topWhen = contourTree.whenTransferred[topSuperparent];
-            indexType bottomWhen = contourTree.whenTransferred[bottomSuperparent];
+            indexType topWhen = contourTree.WhenTransferred[topSuperparent];
+            indexType bottomWhen = contourTree.WhenTransferred[bottomSuperparent];
             // and their hyperparent
             indexType topHyperparent = contourTree.hyperparents[topSuperparent];
             indexType bottomHyperparent = contourTree.hyperparents[bottomSuperparent];
@@ -280,7 +280,7 @@ public:
                     topSuperparent = contourTree.hyperarcs[MaskedIndex(topHyperparent)];
                     top = contourTree.Supernodes[MaskedIndex(topSuperparent)];
 
-                    topWhen = contourTree.whenTransferred[MaskedIndex(topSuperparent)];
+                    topWhen = contourTree.WhenTransferred[MaskedIndex(topSuperparent)];
                     // test to see if we've passed the node
                     if (top < node)
                     { // just pruned past
@@ -297,7 +297,7 @@ public:
                     // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
                     bottomSuperparent = contourTree.hyperarcs[MaskedIndex(bottomHyperparent)];
                     bottom = contourTree.Supernodes[MaskedIndex(bottomSuperparent)];
-                    bottomWhen = contourTree.whenTransferred[MaskedIndex(bottomSuperparent)];
+                    bottomWhen = contourTree.WhenTransferred[MaskedIndex(bottomSuperparent)];
                     // test to see if we've passed the node
                     if (bottom > node)
                     { // just pruned past
@@ -600,8 +600,8 @@ public:
             indexType topSuperparent = contourTree.Superparents[top];
             indexType bottomSuperparent = contourTree.Superparents[bottom];
             // and we can also find out when they transferred
-            indexType topWhen = contourTree.whenTransferred[topSuperparent];
-            indexType bottomWhen = contourTree.whenTransferred[bottomSuperparent];
+            indexType topWhen = contourTree.WhenTransferred[topSuperparent];
+            indexType bottomWhen = contourTree.WhenTransferred[bottomSuperparent];
             // and their hyperparent
             indexType topHyperparent = contourTree.hyperparents[topSuperparent];
             indexType bottomHyperparent = contourTree.hyperparents[bottomSuperparent];
@@ -621,7 +621,7 @@ public:
                     topSuperparent = contourTree.hyperarcs[MaskedIndex(topHyperparent)];
                     top = contourTree.Supernodes[MaskedIndex(topSuperparent)];
 
-                    topWhen = contourTree.whenTransferred[MaskedIndex(topSuperparent)];
+                    topWhen = contourTree.WhenTransferred[MaskedIndex(topSuperparent)];
                     // test to see if we've passed the node
                     if (top < node)
                     { // just pruned past
@@ -638,7 +638,7 @@ public:
                     // we prune up to the top of the hyperarc in either case, by updating the bottom superparent
                     bottomSuperparent = contourTree.hyperarcs[MaskedIndex(bottomHyperparent)];
                     bottom = contourTree.Supernodes[MaskedIndex(bottomSuperparent)];
-                    bottomWhen = contourTree.whenTransferred[MaskedIndex(bottomSuperparent)];
+                    bottomWhen = contourTree.WhenTransferred[MaskedIndex(bottomSuperparent)];
                     // test to see if we've passed the node
                     if (bottom > node)
                     { // just pruned past

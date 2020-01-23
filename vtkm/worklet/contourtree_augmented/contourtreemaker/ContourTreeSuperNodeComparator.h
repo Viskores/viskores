@@ -86,8 +86,8 @@ public:
                                      const IdArrayType& whenTransferred)
   {
     this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
-    SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
-    WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter());
+    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
+    this->WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter());
   }
 
   // () operator - gets called to do comparison

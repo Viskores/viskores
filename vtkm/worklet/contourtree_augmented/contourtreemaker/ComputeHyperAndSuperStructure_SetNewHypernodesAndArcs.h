@@ -109,7 +109,7 @@ public:
     /*
       for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
         { // per supernode
-          bool isAHypernode = IsHypernode(contourTree.whenTransferred[supernode]);
+          bool isAHypernode = IsHypernode(contourTree.WhenTransferred[supernode]);
 
           // ignore non-hypernodes
           // all others (including the root hypernode) are kept

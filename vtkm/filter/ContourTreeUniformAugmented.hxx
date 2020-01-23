@@ -343,7 +343,7 @@ public:
       vtkm::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
       vtkm::cont::ArrayHandlePermutation<vtkm::worklet::contourtree_augmented::IdArrayType,
                                          vtkm::worklet::contourtree_augmented::IdArrayType>
-        permutedSortOrder(contourTree.augmentnodes, sortOrder);
+        permutedSortOrder(contourTree.Augmentnodes, sortOrder);
       auto transformedIndex = vtkm::cont::make_ArrayHandleTransform(
         permutedSortOrder,
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabler(
@@ -351,7 +351,7 @@ public:
       vtkm::cont::Algorithm::Copy(transformedIndex, localGlobalMeshIndex);
       // Compute the local contour tree mesh
       auto localContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>(
-        contourTree.augmentnodes, contourTree.augmentarcs, sortOrder, field, localGlobalMeshIndex);
+        contourTree.Augmentnodes, contourTree.Augmentarcs, sortOrder, field, localGlobalMeshIndex);
       return localContourTreeMesh;
     }
     else
@@ -502,7 +502,7 @@ void MergeBlockFunctor(
         {
           // If we have the partially augmented (e.g., boundary augmented) contour tree
           newContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
-            currContourTree.augmentnodes, currContourTree.augmentarcs, contourTreeMeshOut);
+            currContourTree.Augmentnodes, currContourTree.Augmentarcs, contourTreeMeshOut);
         }
         else
         {

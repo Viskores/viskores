@@ -76,7 +76,7 @@ namespace contourtree_augmented
 {
 
 constexpr int N_NODE_COLORS = 12;
-constexpr const char* nodeColors[N_NODE_COLORS] = { // nodeColors
+constexpr const char* NODE_COLORS[N_NODE_COLORS] = { // nodeColors
   "red",  "red4",  "green",   "green4",   "royalblue", "royalblue4",
   "cyan", "cyan4", "magenta", "magenta4", "yellow",    "yellow4"
 }; // nodeColors
@@ -107,7 +107,7 @@ public:
   // VECTORS INDEXED ON N = SIZE OF DATA
 
   // the list of nodes is implicit - but for some purposes, it's useful to have them pre-sorted by superarc
-  IdArrayType nodes;
+  IdArrayType Nodes;
 
   // vector of (regular) arcs in the merge tree
   IdArrayType Arcs;
@@ -127,14 +127,14 @@ public:
   IdArrayType Superarcs;
 
   // for boundary augmented contour tree (note: these use the same convention as supernodes/superarcs)
-  IdArrayType augmentnodes;
-  IdArrayType augmentarcs;
+  IdArrayType Augmentnodes;
+  IdArrayType Augmentarcs;
 
   // vector of Hyperarcs to which each supernode/arc belongs
   IdArrayType Hyperparents;
 
   // vector tracking which superarc was transferred on which iteration
-  IdArrayType whenTransferred;
+  IdArrayType WhenTransferred;
 
   // VECTORS INDEXED ON H = SIZE OF HYPERTREE
 
@@ -206,14 +206,14 @@ inline void ContourTree::PrintContent() const
   PrintIndices("Supernodes", this->Supernodes);
   PrintIndices("Superarcs", this->Superarcs);
   PrintIndices("Hyperparents", this->Hyperparents);
-  PrintIndices("When Xferred", whenTransferred);
+  PrintIndices("When Xferred", this->WhenTransferred);
   std::cout << std::endl;
   PrintHeader(this->Hypernodes.GetNumberOfValues());
   PrintIndices("Hypernodes", this->Hypernodes);
   PrintIndices("Hyperarcs", this->Hyperarcs);
-  PrintHeader(augmentnodes.GetNumberOfValues());
-  PrintIndices("Augmentnodes", augmentnodes);
-  PrintIndices("Augmentarcs", augmentarcs);
+  PrintHeader(Augmentnodes.GetNumberOfValues());
+  PrintIndices("Augmentnodes", Augmentnodes);
+  PrintIndices("Augmentarcs", this->Augmentarcs);
 }
 
 void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)
@@ -248,7 +248,7 @@ void ContourTree::PrintDotSuperStructure()
   printf("digraph G\n\t{\n");
   printf("\tsize=\"6.5, 9\"\n\tratio=\"fill\"\n");
 
-  auto whenTransferredPortal = whenTransferred.GetPortalConstControl();
+  auto whenTransferredPortal = this->WhenTransferred.GetPortalConstControl();
   auto supernodesPortal = this->Supernodes.GetPortalConstControl();
   auto superarcsPortal = this->Superarcs.GetPortalConstControl();
   auto hypernodesPortal = this->Hypernodes.GetPortalConstControl();
@@ -261,7 +261,7 @@ void ContourTree::PrintDotSuperStructure()
     vtkm::Id iteration = MaskedIndex(whenTransferredPortal.Get(supernode));
     printf("\tnode s%lli [style=filled,fillcolor=%s]\n",
            (vtkm::Int64)supernodesPortal.Get(supernode),
-           nodeColors[iteration % N_NODE_COLORS]);
+           NODE_COLORS[iteration % N_NODE_COLORS]);
   } // per supernode
 
   // loop through supernodes

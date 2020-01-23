@@ -228,8 +228,8 @@ public:
     auto hypernodesPortal = contourTree.Hypernodes.GetPortalConstControl();
     auto hyperarcsPortal = contourTree.Hyperarcs.GetPortalConstControl();
     // auto superarcsPortal = contourTree.Superarcs.GetPortalConstControl();
-    auto nodesPortal = contourTree.nodes.GetPortalConstControl();
-    auto whenTransferredPortal = contourTree.whenTransferred.GetPortalConstControl();
+    auto nodesPortal = contourTree.Nodes.GetPortalConstControl();
+    auto whenTransferredPortal = contourTree.WhenTransferred.GetPortalConstControl();
     for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
     { // per node in sorted order
       vtkm::Id sortID = nodesPortal.Get(sortedNode);
@@ -432,7 +432,7 @@ public:
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
                           superarcList);
     auto superarcListPortal = superarcList.GetPortalControl();
-    vtkm::Id totalVolume = contourTree.nodes.GetNumberOfValues();
+    vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
     std::cout << "Total Volume: " << totalVolume << std::endl;
 #endif
@@ -953,7 +953,7 @@ public:
 
     // Reroot the Euler Tour at the global max
     tour.getTourAtRoot(MaskedIndex(contourTree.Superparents.GetPortalConstControl().Get(
-                         contourTree.nodes.GetNumberOfValues() - 1)),
+                         contourTree.Nodes.GetNumberOfValues() - 1)),
                        maxTourEdges.GetPortalControl());
 
     //
@@ -1000,7 +1000,7 @@ public:
     vtkm::cont::Invoker Invoke;
     Invoke(bestUpDownWorklet,
            tour.first,
-           contourTree.nodes,
+           contourTree.Nodes,
            contourTree.Supernodes,
            minValues,
            minParents,

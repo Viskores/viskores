@@ -880,7 +880,7 @@ int main(int argc, char* argv[])
                << std::left
                << "    #Nodes"
                << ": "
-               << ct.nodes.GetNumberOfValues()
+               << ct.Nodes.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
@@ -916,7 +916,7 @@ int main(int argc, char* argv[])
                << std::left
                << "    #WhenTransferred"
                << ": "
-               << ct.whenTransferred.GetNumberOfValues()
+               << ct.WhenTransferred.GetNumberOfValues()
                << std::endl
                << std::setw(42)
                << std::left
