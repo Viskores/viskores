@@ -87,19 +87,19 @@ struct ContourTreeBlockData
 
   // ContourTreeMesh data
   vtkm::Id NumVertices;
-  vtkm::worklet::contourtree_augmented::IdArrayType
-    sortOrder; // TODO we should be able to remove this one, but we need to figure out what we need to return in the worklet instead
-  vtkm::cont::ArrayHandle<FieldType> sortedValues;
-  vtkm::worklet::contourtree_augmented::IdArrayType globalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType firstNeighbour;
-  vtkm::Id maxNeighbours;
+  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
+  vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
+  vtkm::cont::ArrayHandle<FieldType> SortedValue;
+  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
+  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
+  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
+  vtkm::Id MaxNeighbours;
 
   // Block metadata
-  vtkm::Id3 blockOrigin;                // Origin of the data block
-  vtkm::Id3 blockSize;                  // Extends of the data block
-  vtkm::Id3 globalSize;                 // Extends of the global mesh
-  unsigned int computeRegularStructure; // pass through augmentation setting
+  vtkm::Id3 BlockOrigin;                // Origin of the data block
+  vtkm::Id3 BlockSize;                  // Extends of the data block
+  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
+  unsigned int ComputeRegularStructure; // pass through augmentation setting
 };
 
 namespace vtkmdiy
@@ -112,31 +112,31 @@ struct Serialization<ContourTreeBlockData<FieldType>>
   static void save(vtkmdiy::BinaryBuffer& bb, const ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.sortOrder);
-    vtkmdiy::save(bb, block.sortedValues);
-    vtkmdiy::save(bb, block.globalMeshIndex);
-    vtkmdiy::save(bb, block.neighbours);
-    vtkmdiy::save(bb, block.firstNeighbour);
-    vtkmdiy::save(bb, block.maxNeighbours);
-    vtkmdiy::save(bb, block.blockOrigin);
-    vtkmdiy::save(bb, block.blockSize);
-    vtkmdiy::save(bb, block.globalSize);
-    vtkmdiy::save(bb, block.computeRegularStructure);
+    vtkmdiy::save(bb, block.SortOrder);
+    vtkmdiy::save(bb, block.SortedValue);
+    vtkmdiy::save(bb, block.GlobalMeshIndex);
+    vtkmdiy::save(bb, block.Neighbours);
+    vtkmdiy::save(bb, block.FirstNeighbour);
+    vtkmdiy::save(bb, block.MaxNeighbours);
+    vtkmdiy::save(bb, block.BlockOrigin);
+    vtkmdiy::save(bb, block.BlockSize);
+    vtkmdiy::save(bb, block.GlobalSize);
+    vtkmdiy::save(bb, block.ComputeRegularStructure);
   }
 
   static void load(vtkmdiy::BinaryBuffer& bb, ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.sortOrder);
-    vtkmdiy::load(bb, block.sortedValues);
-    vtkmdiy::load(bb, block.globalMeshIndex);
-    vtkmdiy::load(bb, block.neighbours);
-    vtkmdiy::load(bb, block.firstNeighbour);
-    vtkmdiy::load(bb, block.maxNeighbours);
-    vtkmdiy::load(bb, block.blockOrigin);
-    vtkmdiy::load(bb, block.blockSize);
-    vtkmdiy::load(bb, block.globalSize);
-    vtkmdiy::load(bb, block.computeRegularStructure);
+    vtkmdiy::load(bb, block.SortOrder);
+    vtkmdiy::load(bb, block.SortedValue);
+    vtkmdiy::load(bb, block.GlobalMeshIndex);
+    vtkmdiy::load(bb, block.Neighbours);
+    vtkmdiy::load(bb, block.FirstNeighbour);
+    vtkmdiy::load(bb, block.MaxNeighbours);
+    vtkmdiy::load(bb, block.BlockOrigin);
+    vtkmdiy::load(bb, block.BlockSize);
+    vtkmdiy::load(bb, block.GlobalSize);
+    vtkmdiy::load(bb, block.ComputeRegularStructure);
   }
 };
 
@@ -339,7 +339,7 @@ public:
       // Compute the global mesh index for the partially augmented contour tree. I.e., here we
       // don't need the global mesh index for all nodes, but only for the augmented nodes from the
       // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
-      // globalMeshIndex by tranforming those indices with our IdRelabler
+      // GlobalMeshIndex by tranforming those indices with our IdRelabler
       vtkm::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
       vtkm::cont::ArrayHandlePermutation<vtkm::worklet::contourtree_augmented::IdArrayType,
                                          vtkm::worklet::contourtree_augmented::IdArrayType>
@@ -415,37 +415,37 @@ void merge_block_functor(
       // Construct the two contour tree mesh by assignign the block data
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshIn;
       contourTreeMeshIn.NumVertices = recvblock.NumVertices;
-      contourTreeMeshIn.sortOrder = recvblock.sortOrder;
-      contourTreeMeshIn.sortedValues = recvblock.sortedValues;
-      contourTreeMeshIn.globalMeshIndex = recvblock.globalMeshIndex;
-      contourTreeMeshIn.neighbours = recvblock.neighbours;
-      contourTreeMeshIn.firstNeighbour = recvblock.firstNeighbour;
-      contourTreeMeshIn.maxNeighbours = recvblock.maxNeighbours;
+      contourTreeMeshIn.sortOrder = recvblock.SortOrder;
+      contourTreeMeshIn.sortedValues = recvblock.SortedValue;
+      contourTreeMeshIn.globalMeshIndex = recvblock.GlobalMeshIndex;
+      contourTreeMeshIn.neighbours = recvblock.Neighbours;
+      contourTreeMeshIn.firstNeighbour = recvblock.FirstNeighbour;
+      contourTreeMeshIn.maxNeighbours = recvblock.MaxNeighbours;
 
       vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
       contourTreeMeshOut.NumVertices = block->NumVertices;
-      contourTreeMeshOut.sortOrder = block->sortOrder;
-      contourTreeMeshOut.sortedValues = block->sortedValues;
-      contourTreeMeshOut.globalMeshIndex = block->globalMeshIndex;
-      contourTreeMeshOut.neighbours = block->neighbours;
-      contourTreeMeshOut.firstNeighbour = block->firstNeighbour;
-      contourTreeMeshOut.maxNeighbours = block->maxNeighbours;
+      contourTreeMeshOut.sortOrder = block->SortOrder;
+      contourTreeMeshOut.sortedValues = block->SortedValue;
+      contourTreeMeshOut.globalMeshIndex = block->GlobalMeshIndex;
+      contourTreeMeshOut.neighbours = block->Neighbours;
+      contourTreeMeshOut.firstNeighbour = block->FirstNeighbour;
+      contourTreeMeshOut.maxNeighbours = block->MaxNeighbours;
       // Merge the two contour tree meshes
       vtkm::cont::TryExecute(MergeFunctor{}, contourTreeMeshIn, contourTreeMeshOut);
 
       // Compute the origin and size of the new block
-      vtkm::Id3 globalSize = block->globalSize;
+      vtkm::Id3 globalSize = block->GlobalSize;
       vtkm::Id3 currBlockOrigin;
-      currBlockOrigin[0] = std::min(recvblock.blockOrigin[0], block->blockOrigin[0]);
-      currBlockOrigin[1] = std::min(recvblock.blockOrigin[1], block->blockOrigin[1]);
-      currBlockOrigin[2] = std::min(recvblock.blockOrigin[2], block->blockOrigin[2]);
+      currBlockOrigin[0] = std::min(recvblock.BlockOrigin[0], block->BlockOrigin[0]);
+      currBlockOrigin[1] = std::min(recvblock.BlockOrigin[1], block->BlockOrigin[1]);
+      currBlockOrigin[2] = std::min(recvblock.BlockOrigin[2], block->BlockOrigin[2]);
       vtkm::Id3 currBlockMaxIndex; // Needed only to compute the block size
-      currBlockMaxIndex[0] = std::max(recvblock.blockOrigin[0] + recvblock.blockSize[0],
-                                      block->blockOrigin[0] + block->blockSize[0]);
-      currBlockMaxIndex[1] = std::max(recvblock.blockOrigin[1] + recvblock.blockSize[1],
-                                      block->blockOrigin[1] + block->blockSize[1]);
-      currBlockMaxIndex[2] = std::max(recvblock.blockOrigin[2] + recvblock.blockSize[2],
-                                      block->blockOrigin[2] + block->blockSize[2]);
+      currBlockMaxIndex[0] = std::max(recvblock.BlockOrigin[0] + recvblock.BlockSize[0],
+                                      block->BlockOrigin[0] + block->BlockSize[0]);
+      currBlockMaxIndex[1] = std::max(recvblock.BlockOrigin[1] + recvblock.BlockSize[1],
+                                      block->BlockOrigin[1] + block->BlockSize[1]);
+      currBlockMaxIndex[2] = std::max(recvblock.BlockOrigin[2] + recvblock.BlockSize[2],
+                                      block->BlockOrigin[2] + block->BlockSize[2]);
       vtkm::Id3 currBlockSize;
       currBlockSize[0] = currBlockMaxIndex[0] - currBlockOrigin[0];
       currBlockSize[1] = currBlockMaxIndex[1] - currBlockOrigin[1];
@@ -456,15 +456,15 @@ void merge_block_functor(
       {
         // Save the data from our block for the next iteration
         block->NumVertices = contourTreeMeshOut.NumVertices;
-        block->sortOrder = contourTreeMeshOut.sortOrder;
-        block->sortedValues = contourTreeMeshOut.sortedValues;
-        block->globalMeshIndex = contourTreeMeshOut.globalMeshIndex;
-        block->neighbours = contourTreeMeshOut.neighbours;
-        block->firstNeighbour = contourTreeMeshOut.firstNeighbour;
-        block->maxNeighbours = contourTreeMeshOut.maxNeighbours;
-        block->blockOrigin = currBlockOrigin;
-        block->blockSize = currBlockSize;
-        block->globalSize = globalSize;
+        block->SortOrder = contourTreeMeshOut.sortOrder;
+        block->SortedValue = contourTreeMeshOut.sortedValues;
+        block->GlobalMeshIndex = contourTreeMeshOut.globalMeshIndex;
+        block->Neighbours = contourTreeMeshOut.neighbours;
+        block->FirstNeighbour = contourTreeMeshOut.firstNeighbour;
+        block->MaxNeighbours = contourTreeMeshOut.maxNeighbours;
+        block->BlockOrigin = currBlockOrigin;
+        block->BlockSize = currBlockSize;
+        block->GlobalSize = globalSize;
       }
       else // If we are a block that will continue to be merged then we need compute the contour tree here
       {
@@ -489,16 +489,16 @@ void merge_block_functor(
           currContourTree,
           currSortOrder,
           currNumIterations,
-          block->computeRegularStructure,
+          block->ComputeRegularStructure,
           meshBoundaryExecObj);
         vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>* newContourTreeMesh = 0;
-        if (block->computeRegularStructure == 1)
+        if (block->ComputeRegularStructure == 1)
         {
           // If we have the fully augmented contour tree
           newContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
             currContourTree.arcs, contourTreeMeshOut);
         }
-        else if (block->computeRegularStructure == 2)
+        else if (block->ComputeRegularStructure == 2)
         {
           // If we have the partially augmented (e.g., boundary augmented) contour tree
           newContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
@@ -513,15 +513,15 @@ void merge_block_functor(
 
         // Copy the data from newContourTreeMesh into  block
         block->NumVertices = newContourTreeMesh->NumVertices;
-        block->sortOrder = newContourTreeMesh->sortOrder;
-        block->sortedValues = newContourTreeMesh->sortedValues;
-        block->globalMeshIndex = newContourTreeMesh->globalMeshIndex;
-        block->neighbours = newContourTreeMesh->neighbours;
-        block->firstNeighbour = newContourTreeMesh->firstNeighbour;
-        block->maxNeighbours = newContourTreeMesh->maxNeighbours;
-        block->blockOrigin = currBlockOrigin;
-        block->blockSize = currBlockSize;
-        block->globalSize = globalSize;
+        block->SortOrder = newContourTreeMesh->sortOrder;
+        block->SortedValue = newContourTreeMesh->sortedValues;
+        block->GlobalMeshIndex = newContourTreeMesh->globalMeshIndex;
+        block->Neighbours = newContourTreeMesh->neighbours;
+        block->FirstNeighbour = newContourTreeMesh->firstNeighbour;
+        block->MaxNeighbours = newContourTreeMesh->maxNeighbours;
+        block->BlockOrigin = currBlockOrigin;
+        block->BlockSize = currBlockSize;
+        block->GlobalSize = globalSize;
 
         // VTKm keeps track of the arrays for us, so we can savely delete the ContourTreeMesh
         // as all data has been transferred into our data block
@@ -763,21 +763,21 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // create the local data block structure
     localDataBlocks[bi] = new ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
-    localDataBlocks[bi]->sortOrder = currContourTreeMesh->sortOrder;
-    localDataBlocks[bi]->sortedValues = currContourTreeMesh->sortedValues;
-    localDataBlocks[bi]->globalMeshIndex = currContourTreeMesh->globalMeshIndex;
-    localDataBlocks[bi]->neighbours = currContourTreeMesh->neighbours;
-    localDataBlocks[bi]->firstNeighbour = currContourTreeMesh->firstNeighbour;
-    localDataBlocks[bi]->maxNeighbours = currContourTreeMesh->maxNeighbours;
-    localDataBlocks[bi]->blockOrigin =
+    localDataBlocks[bi]->SortOrder = currContourTreeMesh->sortOrder;
+    localDataBlocks[bi]->SortedValue = currContourTreeMesh->sortedValues;
+    localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->globalMeshIndex;
+    localDataBlocks[bi]->Neighbours = currContourTreeMesh->neighbours;
+    localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->firstNeighbour;
+    localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->maxNeighbours;
+    localDataBlocks[bi]->BlockOrigin =
       this->MultiBlockTreeHelper->mSpatialDecomposition.mLocalBlockOrigins.GetPortalConstControl()
         .Get(static_cast<vtkm::Id>(bi));
-    localDataBlocks[bi]->blockSize =
+    localDataBlocks[bi]->BlockSize =
       this->MultiBlockTreeHelper->mSpatialDecomposition.mLocalBlockSizes.GetPortalConstControl()
         .Get(static_cast<vtkm::Id>(bi));
-    localDataBlocks[bi]->globalSize = this->MultiBlockTreeHelper->mSpatialDecomposition.mGlobalSize;
+    localDataBlocks[bi]->GlobalSize = this->MultiBlockTreeHelper->mSpatialDecomposition.mGlobalSize;
     // We need to augment at least with the boundary vertices when running in parallel
-    localDataBlocks[bi]->computeRegularStructure = compRegularStruct;
+    localDataBlocks[bi]->ComputeRegularStructure = compRegularStruct;
   }
   // Setup vtkmdiy to do global binary reduction of neighbouring blocks. See also RecuctionOperation struct for example
 
@@ -857,12 +857,12 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // Construct the contour tree mesh from the last block
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
-    contourTreeMeshOut.sortOrder = localDataBlocks[0]->sortOrder;
-    contourTreeMeshOut.sortedValues = localDataBlocks[0]->sortedValues;
-    contourTreeMeshOut.globalMeshIndex = localDataBlocks[0]->globalMeshIndex;
-    contourTreeMeshOut.neighbours = localDataBlocks[0]->neighbours;
-    contourTreeMeshOut.firstNeighbour = localDataBlocks[0]->firstNeighbour;
-    contourTreeMeshOut.maxNeighbours = localDataBlocks[0]->maxNeighbours;
+    contourTreeMeshOut.sortOrder = localDataBlocks[0]->SortOrder;
+    contourTreeMeshOut.sortedValues = localDataBlocks[0]->SortedValue;
+    contourTreeMeshOut.globalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
+    contourTreeMeshOut.neighbours = localDataBlocks[0]->Neighbours;
+    contourTreeMeshOut.firstNeighbour = localDataBlocks[0]->FirstNeighbour;
+    contourTreeMeshOut.maxNeighbours = localDataBlocks[0]->MaxNeighbours;
     // Construct the mesh boundary exectuion object needed for boundary augmentation
     vtkm::Id3 minIdx(0, 0, 0);
     vtkm::Id3 maxIdx = this->MultiBlockTreeHelper->mSpatialDecomposition.mGlobalSize;
