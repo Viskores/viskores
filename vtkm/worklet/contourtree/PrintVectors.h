@@ -94,10 +94,10 @@ void printHeader(vtkm::Id howMany);
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-void printValues(std::string label,
+void PrintValues(std::string label,
                  vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                  vtkm::Id nValues = -1);
-void printIndices(std::string label,
+void PrintIndices(std::string label,
                   vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                   vtkm::Id nIndices = -1);
 
@@ -171,7 +171,7 @@ inline void printHeader(vtkm::Id howMany)
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-void printValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVec, vtkm::Id nValues)
+void PrintValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVec, vtkm::Id nValues)
 {
   // -1 means full size
   if (nValues == -1)
@@ -196,10 +196,10 @@ void printValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVe
 
   // and an endl
   std::cout << std::endl;
-} // printValues()
+} // PrintValues()
 
 // base routines for reading & writing host vectors
-inline void printIndices(std::string label,
+inline void PrintIndices(std::string label,
                          vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                          vtkm::Id nIndices)
 {
@@ -226,7 +226,7 @@ inline void printIndices(std::string label,
 
   // and an endl
   std::cout << std::endl;
-} // printIndices()
+} // PrintIndices()
 
 template <typename T, typename StorageType>
 void printLabelledBlock(std::string label,

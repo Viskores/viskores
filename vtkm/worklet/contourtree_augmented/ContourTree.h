@@ -199,21 +199,21 @@ void ContourTree::Init(vtkm::Id dataSize)
 inline void ContourTree::PrintContent() const
 {
   printHeader(arcs.GetNumberOfValues());
-  printIndices("Arcs", arcs);
-  printIndices("Superparents", superparents);
+  PrintIndices("Arcs", arcs);
+  PrintIndices("Superparents", superparents);
   std::cout << std::endl;
   printHeader(supernodes.GetNumberOfValues());
-  printIndices("Supernodes", supernodes);
-  printIndices("Superarcs", superarcs);
-  printIndices("Hyperparents", hyperparents);
-  printIndices("When Xferred", whenTransferred);
+  PrintIndices("Supernodes", supernodes);
+  PrintIndices("Superarcs", superarcs);
+  PrintIndices("Hyperparents", hyperparents);
+  PrintIndices("When Xferred", whenTransferred);
   std::cout << std::endl;
   printHeader(hypernodes.GetNumberOfValues());
-  printIndices("Hypernodes", hypernodes);
-  printIndices("Hyperarcs", hyperarcs);
+  PrintIndices("Hypernodes", hypernodes);
+  PrintIndices("Hyperarcs", hyperarcs);
   printHeader(augmentnodes.GetNumberOfValues());
-  printIndices("Augmentnodes", augmentnodes);
-  printIndices("Augmentarcs", augmentarcs);
+  PrintIndices("Augmentnodes", augmentnodes);
+  PrintIndices("Augmentarcs", augmentarcs);
 }
 
 void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)

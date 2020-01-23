@@ -467,10 +467,10 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "II A. Weights Computed" << std::endl;
     printHeader(upWeight.GetNumberOfValues());
-    //printIndices("Intrinsic Weight", superarcIntrinsicWeight);
-    //printIndices("Dependent Weight", superarcDependentWeight);
-    printIndices("Upwards Weight", upWeight);
-    printIndices("Downwards Weight", downWeight);
+    //PrintIndices("Intrinsic Weight", superarcIntrinsicWeight);
+    //PrintIndices("Dependent Weight", superarcDependentWeight);
+    PrintIndices("Upwards Weight", upWeight);
+    PrintIndices("Downwards Weight", downWeight);
     std::cout << std::endl;
 #endif
 
@@ -528,8 +528,8 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "II. Best Edges Selected" << std::endl;
     printHeader(bestUpward.GetNumberOfValues());
-    printIndices("Best Upwards", bestUpward);
-    printIndices("Best Downwards", bestDownward);
+    PrintIndices("Best Upwards", bestUpward);
+    PrintIndices("Best Downwards", bestDownward);
     std::cout << std::endl;
 #endif
 
@@ -585,7 +585,7 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "III. Branch Neighbours Identified" << std::endl;
     printHeader(whichBranch.GetNumberOfValues());
-    printIndices("Which Branch", whichBranch);
+    PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
 
@@ -607,7 +607,7 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
     printHeader(whichBranch.GetNumberOfValues());
-    printIndices("Which Branch", whichBranch);
+    PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
 
@@ -643,12 +643,12 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
     printHeader(chainToBranch.GetNumberOfValues());
-    printIndices("Chain To Branch", chainToBranch);
+    PrintIndices("Chain To Branch", chainToBranch);
     printHeader(nBranches);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
     // STAGE VI:  Sort all supernodes by [whichBranch, regular index] to get the sequence along the branch
     // Assign the upper end of the branch as an ID (for now).
@@ -675,9 +675,9 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;
     printHeader(nSupernodes);
-    printIndices("Supernode IDs", supernodeSorter);
-    printIndices("Branch", permutedBranches);
-    printIndices("Regular ID", permutedRegularID);
+    PrintIndices("Supernode IDs", supernodeSorter);
+    PrintIndices("Branch", permutedBranches);
+    PrintIndices("Regular ID", permutedRegularID);
 #endif
 
     // VI B. And reset the whichBranch to use the new branch IDs
@@ -717,10 +717,10 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "VI. Branches Set" << std::endl;
     printHeader(nBranches);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
 
     // STAGE VII: For each branch, set its parent (initially) to NO_SUCH_ELEMENT
@@ -754,10 +754,10 @@ public:
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
     printHeader(nBranches);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
 
   } // ComputeBranchData()

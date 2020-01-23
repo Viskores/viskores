@@ -637,13 +637,13 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
 
   std::cout << "Full Vertex Arrays - Size:  " << nValues << std::endl;
   printHeader(nValues);
-  printIndices("Index", valueIndex);
+  PrintIndices("Index", valueIndex);
   vtkm::cont::ArrayCopy(PermuteValueType(valueIndex, values), vertexValues);
-  printValues("Value", vertexValues);
-  printIndices("First Edge", firstEdge);
-  printIndices("Outdegree", outdegree);
-  printIndices("Chain Ext", chainExtremum);
-  printIndices("Prunes To", prunesTo);
+  PrintValues("Value", vertexValues);
+  PrintIndices("First Edge", firstEdge);
+  PrintIndices("Outdegree", outdegree);
+  PrintIndices("Chain Ext", chainExtremum);
+  PrintIndices("Prunes To", prunesTo);
   std::cout << std::endl;
 
   // Active Vertex Arrays
@@ -655,19 +655,19 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<T> tempValue;
 
     printHeader(nActiveVertices);
-    printIndices("Active Vertices", activeVertices);
+    PrintIndices("Active Vertices", activeVertices);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, valueIndex), tempIndex);
-    printIndices("Active Indices", tempIndex);
+    PrintIndices("Active Indices", tempIndex);
     vtkm::cont::ArrayCopy(PermuteValueType(activeVertices, vertexValues), tempValue);
-    printValues("Active Values", tempValue);
+    PrintValues("Active Values", tempValue);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, firstEdge), tempIndex);
-    printIndices("Active First Edge", tempIndex);
+    PrintIndices("Active First Edge", tempIndex);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, outdegree), tempIndex);
-    printIndices("Active Outdegree", tempIndex);
+    PrintIndices("Active Outdegree", tempIndex);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, chainExtremum), tempIndex);
-    printIndices("Active Chain Ext", tempIndex);
+    PrintIndices("Active Chain Ext", tempIndex);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, prunesTo), tempIndex);
-    printIndices("Active Prunes To", tempIndex);
+    PrintIndices("Active Prunes To", tempIndex);
     std::cout << std::endl;
   }
 
@@ -681,18 +681,18 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
   if (nEdges > 0)
   {
     printHeader(nEdges);
-    printIndices("Far", edgeFar);
+    PrintIndices("Far", edgeFar);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeFar, valueIndex), farIndices);
-    printIndices("Far Index", farIndices);
+    PrintIndices("Far Index", farIndices);
     vtkm::cont::ArrayCopy(PermuteValueType(farIndices, values), farValues);
-    printValues("Far Value", farValues);
+    PrintValues("Far Value", farValues);
 
     printHeader(nEdges);
-    printIndices("Near", edgeNear);
+    PrintIndices("Near", edgeNear);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeNear, valueIndex), nearIndices);
-    printIndices("Near Index", nearIndices);
+    PrintIndices("Near Index", nearIndices);
     vtkm::cont::ArrayCopy(PermuteValueType(nearIndices, values), nearValues);
-    printValues("Near Value", nearValues);
+    PrintValues("Near Value", nearValues);
   }
 
   // Active Edge Arrays
@@ -706,16 +706,16 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<T, StorageType> activeNearValues;
 
     printHeader(nActiveEdges);
-    printIndices("Active Edges", activeEdges);
+    PrintIndices("Active Edges", activeEdges);
 
     vtkm::cont::ArrayCopy(PermuteIndexType(activeEdges, edgeFar), activeFarIndices);
-    printIndices("Edge Far", activeFarIndices);
+    PrintIndices("Edge Far", activeFarIndices);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeEdges, edgeNear), activeNearIndices);
-    printIndices("Edge Near", activeNearIndices);
+    PrintIndices("Edge Near", activeNearIndices);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeNearIndices, valueIndex), activeNearLookup);
-    printIndices("Edge Near Index", activeNearLookup);
+    PrintIndices("Edge Near Index", activeNearLookup);
     vtkm::cont::ArrayCopy(PermuteValueType(activeNearLookup, values), activeNearValues);
-    printValues("Edge Near Value", activeNearValues);
+    PrintValues("Edge Near Value", activeNearValues);
     std::cout << std::endl;
   }
 
@@ -728,15 +728,15 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<T> tempSortValue;
 
     printHeader(nEdgeSorter);
-    printIndices("Edge Sorter", edgeSorter);
+    PrintIndices("Edge Sorter", edgeSorter);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, edgeNear), tempSortIndex);
-    printIndices("Sorted Near", tempSortIndex);
+    PrintIndices("Sorted Near", tempSortIndex);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, nearIndices), tempSortIndex);
-    printIndices("Sorted Near Index", tempSortIndex);
+    PrintIndices("Sorted Near Index", tempSortIndex);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, edgeFar), tempSortIndex);
-    printIndices("Sorted Far", tempSortIndex);
+    PrintIndices("Sorted Far", tempSortIndex);
     vtkm::cont::ArrayCopy(PermuteValueType(edgeSorter, nearValues), tempSortValue);
-    printValues("Sorted Near Value", tempSortValue);
+    PrintValues("Sorted Near Value", tempSortValue);
     std::cout << std::endl;
   }
 

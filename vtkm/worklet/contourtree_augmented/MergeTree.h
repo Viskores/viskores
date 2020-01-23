@@ -177,18 +177,18 @@ inline void MergeTree::DebugPrint(const char* message, const char* fileName, lon
   std::cout << std::endl;
 
   printHeader(arcs.GetNumberOfValues());
-  printIndices("Arcs", arcs);
-  printIndices("Superparents", superparents);
+  PrintIndices("Arcs", arcs);
+  PrintIndices("Superparents", superparents);
   std::cout << std::endl;
   printHeader(supernodes.GetNumberOfValues());
-  printIndices("Supernodes", supernodes);
-  printIndices("Superarcs", superarcs);
-  printIndices("Hyperparents", hyperparents);
+  PrintIndices("Supernodes", supernodes);
+  PrintIndices("Superarcs", superarcs);
+  PrintIndices("Hyperparents", hyperparents);
   std::cout << std::endl;
   printHeader(hypernodes.GetNumberOfValues());
-  printIndices("Hypernodes", hypernodes);
-  printIndices("Hyperarcs", hyperarcs);
-  printIndices("First Superchild", firstSuperchild);
+  PrintIndices("Hypernodes", hypernodes);
+  PrintIndices("Hyperarcs", hyperarcs);
+  PrintIndices("First Superchild", firstSuperchild);
   std::cout << std::endl;
 #else
   // Prevent unused parameter warning

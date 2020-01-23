@@ -282,12 +282,12 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
                superSortIndex,         // (input)
                contourTree.superarcs); // (output)
 
-  // printIndices("Sorted", contourTree.hypernodes);
-  // printIndices("Hyperparents", contourTree.hyperparents);
-  // printIndices("Supernodes", contourTree.supernodes);
-  // printIndices("Superarcs", contourTree.superarcs);
-  // printIndices("Perm Superarcs", permutedSuperarcs);
-  // printIndices("SuperSortIndex", superSortIndex);
+  // PrintIndices("Sorted", contourTree.hypernodes);
+  // PrintIndices("Hyperparents", contourTree.hyperparents);
+  // PrintIndices("Supernodes", contourTree.supernodes);
+  // PrintIndices("Superarcs", contourTree.superarcs);
+  // PrintIndices("Perm Superarcs", permutedSuperarcs);
+  // PrintIndices("SuperSortIndex", superSortIndex);
 
   // we will permute the hyperarcs & copy them back with the new supernode target IDs
   IdArrayType permutedHyperarcs;
@@ -983,13 +983,13 @@ void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, lon
   std::cout << "nIterations: " << nIterations << std::endl;
 
   printHeader(updegree.GetNumberOfValues());
-  printIndices("Updegree", updegree);
-  printIndices("Downdegree", downdegree);
-  printIndices("Aug Join SArcs", augmentedJoinSuperarcs);
-  printIndices("Aug Split SArcs", augmentedSplitSuperarcs);
+  PrintIndices("Updegree", updegree);
+  PrintIndices("Downdegree", downdegree);
+  PrintIndices("Aug Join SArcs", augmentedJoinSuperarcs);
+  PrintIndices("Aug Split SArcs", augmentedSplitSuperarcs);
 
   printHeader(activeSupernodes.GetNumberOfValues());
-  printIndices("Active SNodes", activeSupernodes);
+  PrintIndices("Active SNodes", activeSupernodes);
 #else
   // Avoid unused parameter warnings
   (void)message;

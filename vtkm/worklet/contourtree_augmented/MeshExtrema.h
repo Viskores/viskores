@@ -178,8 +178,8 @@ inline void MeshExtrema::DebugPrint(const char* message, const char* fileName, l
   std::cout << std::endl;
 
   printHeader(peaks.GetNumberOfValues());
-  printIndices("Peaks", peaks);
-  printIndices("Pits", pits);
+  PrintIndices("Peaks", peaks);
+  PrintIndices("Pits", pits);
 #else
   // Prevent unused parameter warning
   (void)message;

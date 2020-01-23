@@ -117,7 +117,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           12" << std::endl;
@@ -188,7 +188,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           67" << std::endl;
@@ -266,7 +266,7 @@ public:
       contourTree, meshSortOrder, saddlePeak);
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0          118" << std::endl;

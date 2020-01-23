@@ -276,8 +276,8 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
   printLabel("nLogSteps");
   printIndexType(nLogSteps);
   std::cout << std::endl;
-  printIndices("Sort Indices", sortIndices);
-  printIndices("Sort Order", sortOrder);
+  PrintIndices("Sort Indices", sortIndices);
+  PrintIndices("Sort Order", sortOrder);
   std::cout << std::endl;
 #else
   // Avoid unused parameter warning
@@ -321,7 +321,7 @@ void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintValues(
 #ifdef DEBUG_PRINT
   if (nCols > 0)
   {
-    printLabelledDataBlock<T, StorageType>("Value", values, nCols);
+    PrintLabelledDataBlock<T, StorageType>("Value", values, nCols);
     printSortedValues("Sorted Values", values, this->sortOrder);
   }
   printHeader(values.GetNumberOfValues());
@@ -338,7 +338,7 @@ void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
 #ifdef DEBUG_PRINT
   if (nCols > 0)
   {
-    printLabelledDataBlock<T, StorageType>("Value", values, nCols);
+    PrintLabelledDataBlock<T, StorageType>("Value", values, nCols);
   }
   printHeader(values.GetNumberOfValues());
 #else

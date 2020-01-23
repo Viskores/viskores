@@ -81,10 +81,10 @@ constexpr int PRINT_WIDTH = 12;
 constexpr int PREFIX_WIDTH = 24;
 
 template <typename T, typename StorageType>
-void printValues(std::string label,
+void PrintValues(std::string label,
                  const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                  vtkm::Id nValues = -1);
-void printIndices(std::string label,
+void PrintIndices(std::string label,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                   vtkm::Id nIndices = -1);
 template <typename T, typename StorageType>
@@ -169,10 +169,10 @@ inline void printHeader(vtkm::Id howMany)
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-inline void printValues(std::string label,
+inline void PrintValues(std::string label,
                         const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                         vtkm::Id nValues)
-{ // printValues()
+{ // PrintValues()
   // -1 means full size
   if (nValues == -1)
   {
@@ -190,7 +190,7 @@ inline void printValues(std::string label,
   }
   // and an std::endl
   std::cout << std::endl;
-} // printValues()
+} // PrintValues()
 
 
 // base routines for reading & writing host vectors
@@ -199,7 +199,7 @@ inline void printSortedValues(std::string label,
                               const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                               IdArrayType& sortVec,
                               vtkm::Id nValues)
-{ // printValues()
+{ // PrintValues()
   // -1 means full size
   if (nValues == -1)
   {
@@ -218,14 +218,14 @@ inline void printSortedValues(std::string label,
   }
   // and an std::endl
   std::cout << std::endl;
-} // printValues()
+} // PrintValues()
 
 
 // routine for printing index arrays
-inline void printIndices(std::string label,
+inline void PrintIndices(std::string label,
                          const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                          vtkm::Id nIndices)
-{ // printIndices()
+{ // PrintIndices()
   // -1 means full size
   if (nIndices == -1)
   {
@@ -241,57 +241,14 @@ inline void printIndices(std::string label,
 
   // and the std::endl
   std::cout << std::endl;
-} // printIndices()
-
-
-// routines for printing indices & data in blocks
-template <typename T, typename StorageType>
-inline void printNakedDataBlock(const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                                vtkm::Id nColumns)
-{ // printNakedDataBlock()
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  for (vtkm::Id row = 0; entry < dVec.GetNumberOfValues(); row++)
-  { // per row
-    // now print the data
-    auto portal = dVec.GetPortalConstControl();
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printNakedDataBlock()
-
-
-inline void printNakedIndexBlock(IdArrayType& iVec, vtkm::Id nColumns)
-{ // printNakedIndexBlock()
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  for (vtkm::Id row = 0; entry < iVec.GetNumberOfValues(); row++)
-  { // per row
-    // now print the data
-    auto portal = iVec.GetPortalConstControl();
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printNakedIndexBlock()
+} // PrintIndices()
 
 
 template <typename T, typename StorageType>
-inline void printLabelledDataBlock(std::string label,
+inline void PrintLabelledDataBlock(std::string label,
                                    const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                                    vtkm::Id nColumns)
-{ // printLabelledDataBlock()
+{ // PrintLabelledDataBlock()
   // start with a header
   printHeader(nColumns);
   // loop control variable
@@ -310,53 +267,12 @@ inline void printLabelledDataBlock(std::string label,
   } // per row
   // and a final std::endl
   std::cout << std::endl;
-} // printLabelledDataBlock()
-
-
-inline void printLabelledIndexBlock(std::string label, IdArrayType& iVec, vtkm::Id nColumns)
-{ // printLabelledIndexBlock()
-  // start with a header
-  printHeader(nColumns);
-  // loop control variable
-  vtkm::Id entry = 0;
-  // per row
-  auto portal = iVec.GetPortalConstControl();
-  for (vtkm::Id row = 0; entry < portal.GetNumberOfValues(); row++)
-  { // per row
-    printLabel(label + "[" + std::to_string(row) + "]");
-    // now print the data
-    for (vtkm::Id col = 0; col < nColumns; col++, entry++)
-    {
-      printIndexType(portal.Get(entry));
-    }
-    std::cout << std::endl;
-  } // per row
-  // and a final std::endl
-  std::cout << std::endl;
-} // printLabelledIndexBlock()
-
-
-// routine for printing one element per line for diffing
-inline void printByLine(IdArrayType& block)
-{ // printByLine()
-  auto portal = block.GetPortalConstControl();
-  for (vtkm::Id entry = 0; entry < block.GetNumberOfValues(); entry++)
-  { // per entry
-    if (NoSuchElement(portal.Get(entry)))
-    {
-      std::cout << std::to_string(-1L) << "\n";
-    }
-    else
-    {
-      std::cout << portal.Get(entry) << "\n";
-    }
-  } // per entry
-} // printByLine()
+} // PrintLabelledDataBlock()
 
 
 // routine for printing list of edge pairs. Used, e.g., to print the sorted list of saddle peaks from the ContourTree
-inline void printEdgePairArray(const EdgePairArray& edgePairArray)
-{ // printEdgePairArray()
+inline void PrintEdgePairArray(const EdgePairArray& edgePairArray)
+{ // PrintEdgePairArray()
   // now print them out
   auto edgePairArrayConstPortal = edgePairArray.GetPortalConstControl();
   for (vtkm::Id superarc = 0; superarc < edgePairArray.GetNumberOfValues(); superarc++)
@@ -366,7 +282,7 @@ inline void printEdgePairArray(const EdgePairArray& edgePairArray)
     std::cout << std::right << std::setw(PRINT_WIDTH)
               << edgePairArrayConstPortal.Get(superarc).second << std::endl;
   } // per superarc
-} // printEdgePairArray()
+} // PrintEdgePairArray()
 
 
 } // namespace contourtree_augmented

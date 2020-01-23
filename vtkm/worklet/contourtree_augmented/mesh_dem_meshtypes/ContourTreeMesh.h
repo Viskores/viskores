@@ -245,11 +245,11 @@ void ContourTreeMesh<FieldType>::DebugPrint(const char* message, const char* fil
   std::cout << std::endl;
 
   printHeader(this->nVertices);
-  printIndices("sortOrder", sortOrder);
-  printValues("sortedValues", sortedValues);
-  printIndices("globalMeshIndex", globalMeshIndex);
-  printIndices("neighbours", neighbours);
-  printIndices("firstNeighbour", firstNeighbour);
+  PrintIndices("sortOrder", sortOrder);
+  PrintValues("sortedValues", sortedValues);
+  PrintIndices("globalMeshIndex", globalMeshIndex);
+  PrintIndices("neighbours", neighbours);
+  PrintIndices("firstNeighbour", firstNeighbour);
   std::cout << "maxNeighbours=" << maxNeighbours << std::endl;
   std::cout << "mGetMax=" << mGetMax << std::endl;
 
@@ -509,7 +509,7 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
 
 #ifdef DEBUG_PRINT
   std::cout << "OverallSortOrder.size  " << overallSortOrder.GetNumberOfValues() << std::endl;
-  printIndices("overallSortOrder", overallSortOrder);
+  PrintIndices("overallSortOrder", overallSortOrder);
   std::cout << std::endl;
 #endif
 
@@ -534,7 +534,7 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
     overallSortIndex.GetPortalConstControl().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
 #ifdef DEBUG_PRINT
   std::cout << "OverallSortIndex.size  " << overallSortIndex.GetNumberOfValues() << std::endl;
-  printIndices("overallSortIndex", overallSortIndex);
+  PrintIndices("overallSortIndex", overallSortIndex);
   std::cout << "nVerticesCombined: " << nVerticesCombined << std::endl;
   std::cout << std::endl;
 #endif
@@ -553,8 +553,8 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
                otherToCombinedSortOrder);
 
 #ifdef DEBUG_PRINT
-  printIndices("thisToCombinedSortOrder", thisToCombinedSortOrder);
-  printIndices("otherToCombinedSortOrder", otherToCombinedSortOrder);
+  PrintIndices("thisToCombinedSortOrder", thisToCombinedSortOrder);
+  PrintIndices("otherToCombinedSortOrder", otherToCombinedSortOrder);
 #endif
 
   IdArrayType combinedNNeighbours;
@@ -585,8 +585,8 @@ void ContourTreeMesh<FieldType>::mergeWith(ContourTreeMesh<FieldType>& other)
   }
 
 #ifdef DEBUG_PRINT
-  printIndices("combinedNNeighbours", combinedNNeighbours);
-  printIndices("combinedOtherStartIndex", combinedOtherStartIndex);
+  PrintIndices("combinedNNeighbours", combinedNNeighbours);
+  PrintIndices("combinedOtherStartIndex", combinedOtherStartIndex);
 #endif
 
   IdArrayType combinedFirstNeighbour;
