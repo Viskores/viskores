@@ -454,7 +454,7 @@ void merge_block_functor(
       // On rank 0 we compute the contour tree at the end when the merge is done, so we don't need to do it here
       if (selfid == 0)
       {
-        // Copy the data from newContourTreeMesh into  block
+        // Save the data from our block for the next iteration
         block->nVertices = contourTreeMeshOut.nVertices;
         block->sortOrder = contourTreeMeshOut.sortOrder;
         block->sortedValues = contourTreeMeshOut.sortedValues;
@@ -522,8 +522,10 @@ void merge_block_functor(
         block->blockOrigin = currBlockOrigin;
         block->blockSize = currBlockSize;
         block->globalSize = globalSize;
-        // TODO delete newContourTreeMesh
-        // TODO Clean up the pointers from the local data blocks from the previous iteration
+
+        // VTKm keeps track of the arrays for us, so we can savely delete the ContourTreeMesh
+        // as all data has been transferred into our data block
+        delete newContourTreeMesh;
       }
     }
   }
