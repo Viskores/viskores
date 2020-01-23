@@ -323,7 +323,7 @@ void Branch<T>::PrintBranchDecomposition(std::ostream& os, std::string::size_typ
   {
     os << std::string(indent, ' ') << "  Children = [" << std::endl;
     for (Branch<T>* c : Children)
-      c->print(os, indent + 4);
+      c->PrintBranchDecomposition(os, indent + 4);
     os << std::string(indent, ' ') << std::string(indent, ' ') << "  ]" << std::endl;
   }
   os << std::string(indent, ' ') << "}" << std::endl;

@@ -931,7 +931,7 @@ void ContourTree<T, StorageType>::DebugPrint(const char* message)
 
   // print out the supernode arrays
   vtkm::Id nSupernodes = supernodes.GetNumberOfValues();
-  printHeader(nSupernodes);
+  PrintHeader(nSupernodes);
 
   PrintIndices("Supernodes", supernodes);
 
@@ -948,7 +948,7 @@ void ContourTree<T, StorageType>::DebugPrint(const char* message)
 
   // print out the active supernodes
   vtkm::Id nActiveSupernodes = activeSupernodes.GetNumberOfValues();
-  printHeader(nActiveSupernodes);
+  PrintHeader(nActiveSupernodes);
 
   PrintIndices("Active Supernodes", activeSupernodes);
 

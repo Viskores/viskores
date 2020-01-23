@@ -908,7 +908,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Full Vertex Arrays
   std::cout << "Full Vertex Arrays - Size:  " << globalIndex.GetNumberOfValues() << std::endl;
-  printHeader(globalIndex.GetNumberOfValues());
+  PrintHeader(globalIndex.GetNumberOfValues());
   PrintIndices("Global Index", globalIndex);
   PrintIndices("First Edge", firstEdge);
   PrintIndices("Outdegree", outdegree);
@@ -927,7 +927,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   IdArrayType activeHyperarcs;
   PermuteArray<vtkm::Id>(hyperarcs, activeVertices, activeHyperarcs);
   std::cout << "Active Vertex Arrays - Size: " << activeVertices.GetNumberOfValues() << std::endl;
-  printHeader(activeVertices.GetNumberOfValues());
+  PrintHeader(activeVertices.GetNumberOfValues());
   PrintIndices("Active Vertices", activeVertices);
   PrintIndices("Active Indices", activeIndices);
   PrintIndices("Active First Edge", activeFirst);
@@ -941,7 +941,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   IdArrayType nearIndices;
   PermuteArray<vtkm::Id>(globalIndex, edgeNear, nearIndices);
   std::cout << "Full Edge Arrays - Size:     " << edgeNear.GetNumberOfValues() << std::endl;
-  printHeader(edgeFar.GetNumberOfValues());
+  PrintHeader(edgeFar.GetNumberOfValues());
   PrintIndices("Near", edgeNear);
   PrintIndices("Far", edgeFar);
   PrintIndices("Near Index", nearIndices);
@@ -954,7 +954,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   IdArrayType activeNearIndices;
   PermuteArray<vtkm::Id>(edgeNear, activeEdges, activeNearIndices);
   std::cout << "Active Edge Arrays - Size:   " << activeEdges.GetNumberOfValues() << std::endl;
-  printHeader(activeEdges.GetNumberOfValues());
+  PrintHeader(activeEdges.GetNumberOfValues());
   PrintIndices("Active Edges", activeEdges);
   PrintIndices("Edge Near Index", activeNearIndices);
   PrintIndices("Edge Far Index", activeFarIndices);
@@ -966,7 +966,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   IdArrayType sortedNearIndices;
   PermuteArray<vtkm::Id>(edgeNear, edgeSorter, sortedNearIndices);
   std::cout << "Edge Sorter - Size:          " << edgeSorter.GetNumberOfValues() << std::endl;
-  printHeader(edgeSorter.GetNumberOfValues());
+  PrintHeader(edgeSorter.GetNumberOfValues());
   PrintIndices("Edge Sorter", edgeSorter);
   PrintIndices("Sorted Near Index", sortedNearIndices);
   PrintIndices("Sorted Far Index", sortedFarIndices);

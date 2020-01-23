@@ -244,7 +244,7 @@ void ContourTreeMesh<FieldType>::DebugPrint(const char* message, const char* fil
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printHeader(this->NumVertices);
+  PrintHeader(this->NumVertices);
   PrintIndices("sortOrder", sortOrder);
   PrintValues("sortedValues", sortedValues);
   PrintIndices("globalMeshIndex", globalMeshIndex);

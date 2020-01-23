@@ -466,7 +466,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "II A. Weights Computed" << std::endl;
-    printHeader(upWeight.GetNumberOfValues());
+    PrintHeader(upWeight.GetNumberOfValues());
     //PrintIndices("Intrinsic Weight", superarcIntrinsicWeight);
     //PrintIndices("Dependent Weight", superarcDependentWeight);
     PrintIndices("Upwards Weight", upWeight);
@@ -527,7 +527,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "II. Best Edges Selected" << std::endl;
-    printHeader(bestUpward.GetNumberOfValues());
+    PrintHeader(bestUpward.GetNumberOfValues());
     PrintIndices("Best Upwards", bestUpward);
     PrintIndices("Best Downwards", bestDownward);
     std::cout << std::endl;
@@ -584,7 +584,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "III. Branch Neighbours Identified" << std::endl;
-    printHeader(whichBranch.GetNumberOfValues());
+    PrintHeader(whichBranch.GetNumberOfValues());
     PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
@@ -606,7 +606,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
-    printHeader(whichBranch.GetNumberOfValues());
+    PrintHeader(whichBranch.GetNumberOfValues());
     PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
@@ -642,9 +642,9 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
-    printHeader(chainToBranch.GetNumberOfValues());
+    PrintHeader(chainToBranch.GetNumberOfValues());
     PrintIndices("Chain To Branch", chainToBranch);
-    printHeader(nBranches);
+    PrintHeader(nBranches);
     PrintIndices("Branch Minimum", branchMinimum);
     PrintIndices("Branch Maximum", branchMaximum);
     PrintIndices("Branch Saddle", branchSaddle);
@@ -674,7 +674,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;
-    printHeader(nSupernodes);
+    PrintHeader(nSupernodes);
     PrintIndices("Supernode IDs", supernodeSorter);
     PrintIndices("Branch", permutedBranches);
     PrintIndices("Regular ID", permutedRegularID);
@@ -716,7 +716,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "VI. Branches Set" << std::endl;
-    printHeader(nBranches);
+    PrintHeader(nBranches);
     PrintIndices("Branch Maximum", branchMaximum);
     PrintIndices("Branch Minimum", branchMinimum);
     PrintIndices("Branch Saddle", branchSaddle);
@@ -753,7 +753,7 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
-    printHeader(nBranches);
+    PrintHeader(nBranches);
     PrintIndices("Branch Maximum", branchMaximum);
     PrintIndices("Branch Minimum", branchMinimum);
     PrintIndices("Branch Saddle", branchSaddle);

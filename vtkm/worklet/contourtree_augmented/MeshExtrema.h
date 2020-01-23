@@ -177,7 +177,7 @@ inline void MeshExtrema::DebugPrint(const char* message, const char* fileName, l
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printHeader(Peaks.GetNumberOfValues());
+  PrintHeader(Peaks.GetNumberOfValues());
   PrintIndices("Peaks", Peaks);
   PrintIndices("Pits", Pits);
 #else

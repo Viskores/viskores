@@ -636,7 +636,7 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
   vtkm::cont::ArrayHandle<T, StorageType> vertexValues;
 
   std::cout << "Full Vertex Arrays - Size:  " << nValues << std::endl;
-  printHeader(nValues);
+  PrintHeader(nValues);
   PrintIndices("Index", valueIndex);
   vtkm::cont::ArrayCopy(PermuteValueType(valueIndex, values), vertexValues);
   PrintValues("Value", vertexValues);
@@ -654,7 +654,7 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<vtkm::Id> tempIndex;
     vtkm::cont::ArrayHandle<T> tempValue;
 
-    printHeader(nActiveVertices);
+    PrintHeader(nActiveVertices);
     PrintIndices("Active Vertices", activeVertices);
     vtkm::cont::ArrayCopy(PermuteIndexType(activeVertices, valueIndex), tempIndex);
     PrintIndices("Active Indices", tempIndex);
@@ -680,14 +680,14 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
   vtkm::cont::ArrayHandle<T, StorageType> nearValues;
   if (nEdges > 0)
   {
-    printHeader(nEdges);
+    PrintHeader(nEdges);
     PrintIndices("Far", edgeFar);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeFar, valueIndex), farIndices);
     PrintIndices("Far Index", farIndices);
     vtkm::cont::ArrayCopy(PermuteValueType(farIndices, values), farValues);
     PrintValues("Far Value", farValues);
 
-    printHeader(nEdges);
+    PrintHeader(nEdges);
     PrintIndices("Near", edgeNear);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeNear, valueIndex), nearIndices);
     PrintIndices("Near Index", nearIndices);
@@ -705,7 +705,7 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<vtkm::Id> activeNearLookup;
     vtkm::cont::ArrayHandle<T, StorageType> activeNearValues;
 
-    printHeader(nActiveEdges);
+    PrintHeader(nActiveEdges);
     PrintIndices("Active Edges", activeEdges);
 
     vtkm::cont::ArrayCopy(PermuteIndexType(activeEdges, edgeFar), activeFarIndices);
@@ -727,7 +727,7 @@ void ChainGraph<T, StorageType>::DebugPrint(const char* message)
     vtkm::cont::ArrayHandle<vtkm::Id> tempSortIndex;
     vtkm::cont::ArrayHandle<T> tempSortValue;
 
-    printHeader(nEdgeSorter);
+    PrintHeader(nEdgeSorter);
     PrintIndices("Edge Sorter", edgeSorter);
     vtkm::cont::ArrayCopy(PermuteIndexType(edgeSorter, edgeNear), tempSortIndex);
     PrintIndices("Sorted Near", tempSortIndex);

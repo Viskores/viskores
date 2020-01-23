@@ -313,13 +313,13 @@ void MergeTree<T, StorageType>::DebugPrint(const char* message)
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printLabelledBlock("Values", values, nRows * nSlices, nCols);
+  PrintLabelledBlock("Values", values, nRows * nSlices, nCols);
   std::cout << std::endl;
-  printLabelledBlock("MergeArcs", mergeArcs, nRows, nCols);
+  PrintLabelledBlock("MergeArcs", mergeArcs, nRows, nCols);
   std::cout << std::endl;
-  printLabelledBlock("Extrema", extrema, nRows, nCols);
+  PrintLabelledBlock("Extrema", extrema, nRows, nCols);
   std::cout << std::endl;
-  printLabelledBlock("Saddles", saddles, nRows, nCols);
+  PrintLabelledBlock("Saddles", saddles, nRows, nCols);
   std::cout << std::endl;
 } // DebugPrint()
 }

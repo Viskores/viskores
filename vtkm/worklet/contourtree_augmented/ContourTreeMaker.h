@@ -982,13 +982,13 @@ void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, lon
   std::cout << "------------------------------------------------------" << std::endl;
   std::cout << "nIterations: " << nIterations << std::endl;
 
-  printHeader(updegree.GetNumberOfValues());
+  PrintHeader(updegree.GetNumberOfValues());
   PrintIndices("Updegree", updegree);
   PrintIndices("Downdegree", downdegree);
   PrintIndices("Aug Join SArcs", augmentedJoinSuperarcs);
   PrintIndices("Aug Split SArcs", augmentedSplitSuperarcs);
 
-  printHeader(activeSupernodes.GetNumberOfValues());
+  PrintHeader(activeSupernodes.GetNumberOfValues());
   PrintIndices("Active SNodes", activeSupernodes);
 #else
   // Avoid unused parameter warnings

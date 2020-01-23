@@ -176,16 +176,16 @@ inline void MergeTree::DebugPrint(const char* message, const char* fileName, lon
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printHeader(arcs.GetNumberOfValues());
+  PrintHeader(arcs.GetNumberOfValues());
   PrintIndices("Arcs", arcs);
   PrintIndices("Superparents", superparents);
   std::cout << std::endl;
-  printHeader(supernodes.GetNumberOfValues());
+  PrintHeader(supernodes.GetNumberOfValues());
   PrintIndices("Supernodes", supernodes);
   PrintIndices("Superarcs", superarcs);
   PrintIndices("Hyperparents", hyperparents);
   std::cout << std::endl;
-  printHeader(hypernodes.GetNumberOfValues());
+  PrintHeader(hypernodes.GetNumberOfValues());
   PrintIndices("Hypernodes", hypernodes);
   PrintIndices("Hyperarcs", hyperarcs);
   PrintIndices("First Superchild", firstSuperchild);

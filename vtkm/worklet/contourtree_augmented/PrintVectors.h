@@ -88,23 +88,23 @@ void PrintIndices(std::string label,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                   vtkm::Id nIndices = -1);
 template <typename T, typename StorageType>
-void printSortedValues(std::string label,
+void PrintSortedValues(std::string label,
                        const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                        IdArrayType& sortVec,
                        vtkm::Id nValues = -1);
 
 // base routines for printing label & prefix bars
-inline void printLabel(std::string label)
-{ // printLabel()
+inline void PrintLabel(std::string label)
+{ // PrintLabel()
   // print out the front end
   std::cout << std::setw(PREFIX_WIDTH) << std::left << label;
   // print out the vertical line
   std::cout << std::right << "|";
-} // printLabel()
+} // PrintLabel()
 
 
-inline void printSeparatingBar(vtkm::Id howMany)
-{ // printSeparatingBar()
+inline void PrintSeparatingBar(vtkm::Id howMany)
+{ // PrintSeparatingBar()
   // print out the front end
   std::cout << std::setw(PREFIX_WIDTH) << std::setfill('-') << "";
   // now the + at the vertical line
@@ -116,55 +116,41 @@ inline void printSeparatingBar(vtkm::Id howMany)
   }
   // now the std::endl, resetting the fill character
   std::cout << std::setfill(' ') << std::endl;
-} // printSeparatingBar()
+} // PrintSeparatingBar()
 
 
 // routine to print out a single value
 template <typename T>
-inline void printDataType(T value)
-{ // printDataType
+inline void PrintDataType(T value)
+{ // PrintDataType
   std::cout << std::setw(PRINT_WIDTH) << value;
-} // printDataType
+} // PrintDataType
 
 
 // routine to print out a single index
-inline void printIndexType(vtkm::Id index)
-{ // printIndexType
+inline void PrintIndexType(vtkm::Id index)
+{ // PrintIndexType
   std::cout << std::setw(PRINT_WIDTH - 6) << MaskedIndex(index) << " " << FlagString(index);
-} // printIndexType
-
-
-// print blank of width PRINT_WIDTH
-inline void printBlank()
-{ // printBlank()
-  std::cout << std::setw(PRINT_WIDTH) << "";
-} // printBlank()
-
-
-// print text with PRINT_WIDTH indent
-inline void printText(std::string text)
-{ // printText()
-  std::cout << std::setw(PRINT_WIDTH) << text;
-} // printText()
+} // PrintIndexType
 
 
 // header line
-inline void printHeader(vtkm::Id howMany)
-{ // printHeader()
+inline void PrintHeader(vtkm::Id howMany)
+{ // PrintHeader()
   // print out a separating bar
-  printSeparatingBar(howMany);
+  PrintSeparatingBar(howMany);
   // print out a label
-  printLabel("ID");
+  PrintLabel("ID");
   // print out the ID numbers
   for (vtkm::Id entry = 0; entry < howMany; entry++)
   {
-    printIndexType(entry);
+    PrintIndexType(entry);
   }
   // and an std::endl
   std::cout << std::endl;
   // print out another separating bar
-  printSeparatingBar(howMany);
-} // printHeader()
+  PrintSeparatingBar(howMany);
+} // PrintHeader()
 
 
 // base routines for reading & writing host vectors
@@ -180,13 +166,13 @@ inline void PrintValues(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label);
 
   // now print the data
   auto portal = dVec.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
-    printDataType(portal.Get(entry));
+    PrintDataType(portal.Get(entry));
   }
   // and an std::endl
   std::cout << std::endl;
@@ -195,11 +181,11 @@ inline void PrintValues(std::string label,
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-inline void printSortedValues(std::string label,
+inline void PrintSortedValues(std::string label,
                               const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                               IdArrayType& sortVec,
                               vtkm::Id nValues)
-{ // PrintValues()
+{ // PrintSortedValues()
   // -1 means full size
   if (nValues == -1)
   {
@@ -207,18 +193,18 @@ inline void printSortedValues(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label);
 
   // now print the data
   auto dportal = dVec.GetPortalConstControl();
   auto sortPortal = sortVec.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
-    printDataType(dportal.Get(sortPortal.Get(entry)));
+    PrintDataType(dportal.Get(sortPortal.Get(entry)));
   }
   // and an std::endl
   std::cout << std::endl;
-} // PrintValues()
+} // PrintSortedValues()
 
 
 // routine for printing index arrays
@@ -233,11 +219,11 @@ inline void PrintIndices(std::string label,
   }
 
   // print the label
-  printLabel(label);
+  PrintLabel(label);
 
   auto portal = iVec.GetPortalConstControl();
   for (vtkm::Id entry = 0; entry < nIndices; entry++)
-    printIndexType(portal.Get(entry));
+    PrintIndexType(portal.Get(entry));
 
   // and the std::endl
   std::cout << std::endl;
@@ -250,18 +236,18 @@ inline void PrintLabelledDataBlock(std::string label,
                                    vtkm::Id nColumns)
 { // PrintLabelledDataBlock()
   // start with a header
-  printHeader(nColumns);
+  PrintHeader(nColumns);
   // loop control variable
   vtkm::Id entry = 0;
   // per row
   auto portal = dVec.GetPortalConstControl();
   for (vtkm::Id row = 0; entry < portal.GetNumberOfValues(); row++)
   { // per row
-    printLabel(label + "[" + std::to_string(row) + "]");
+    PrintLabel(label + "[" + std::to_string(row) + "]");
     // now print the data
     for (vtkm::Id col = 0; col < nColumns; col++, entry++)
     {
-      printDataType(portal.Get(entry));
+      PrintDataType(portal.Get(entry));
     }
     std::cout << std::endl;
   } // per row
