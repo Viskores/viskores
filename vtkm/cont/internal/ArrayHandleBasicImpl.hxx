@@ -119,7 +119,7 @@ ArrayHandle<T, StorageTagBasic>::GetStorage() const
 }
 
 template <typename T>
-typename ArrayHandle<T, StorageTagBasic>::PortalControl
+typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalType
 ArrayHandle<T, StorageTagBasic>::GetPortalControl()
 {
   LockType lock = this->GetLock();
@@ -127,7 +127,6 @@ ArrayHandle<T, StorageTagBasic>::GetPortalControl()
   this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
-
 
   // If the user writes into the iterator we return, then the execution
   // array will become invalid. Play it safe and release the execution
@@ -138,9 +137,8 @@ ArrayHandle<T, StorageTagBasic>::GetPortalControl()
   return privStorage->GetPortal();
 }
 
-
 template <typename T>
-typename ArrayHandle<T, StorageTagBasic>::PortalConstControl
+typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalConstType
 ArrayHandle<T, StorageTagBasic>::GetPortalConstControl() const
 {
   LockType lock = this->GetLock();
@@ -152,6 +150,54 @@ ArrayHandle<T, StorageTagBasic>::GetPortalConstControl() const
   StorageType* privStorage =
     static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
   return privStorage->GetPortalConst();
+}
+
+template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::ReadPortalType
+ArrayHandle<T, StorageTagBasic>::ReadPortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->Internals->WaitToRead(lock, token);
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
+  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+  //is not valid
+
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+  token.Attach(this->Internals,
+               this->Internals->Internals->GetReadCount(lock),
+               lock,
+               &this->Internals->Internals->ConditionVariable);
+  return ArrayHandle<T, StorageTagBasic>::ReadPortalType(std::move(token),
+                                                         privStorage->GetPortalConst());
+}
+
+template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::WritePortalType
+ArrayHandle<T, StorageTagBasic>::WritePortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->Internals->WaitToWrite(lock, token);
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
+  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+  //is not valid
+
+  // If the user writes into the iterator we return, then the execution
+  // array will become invalid. Play it safe and release the execution
+  // resources. (Use the const version to preserve the execution array.)
+  this->ReleaseResourcesExecutionInternal(lock);
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+  token.Attach(this->Internals,
+               this->Internals->Internals->GetWriteCount(lock),
+               lock,
+               &this->Internals->Internals->ConditionVariable);
+  return ArrayHandle<T, StorageTagBasic>::WritePortalType(std::move(token),
+                                                          privStorage->GetPortal());
 }
 
 template <typename T>
@@ -277,7 +323,7 @@ void ArrayHandle<T, StorageTagBasic>::SyncControlArray(LockType& lock) const
 }
 
 template <typename T>
-void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal(LockType& lock)
+void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal(LockType& lock) const
 {
   this->Internals->ReleaseResourcesExecutionInternal(lock);
 }

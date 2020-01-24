@@ -347,8 +347,14 @@ public:
   using StorageTag = ::vtkm::cont::StorageTagBasic;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
   using ValueType = T;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalType>;
+  using ReadPortalType =
+    vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalConstType>;
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
+    typename StorageType::PortalType;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
+    typename StorageType::PortalConstType;
 
   template <typename DeviceTag>
   struct ExecutionTypes
@@ -380,9 +386,21 @@ public:
 
   VTKM_CONT StorageType& GetStorage();
   VTKM_CONT const StorageType& GetStorage() const;
-  VTKM_CONT PortalControl GetPortalControl();
-  VTKM_CONT PortalConstControl GetPortalConstControl() const;
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalType GetPortalControl();
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalConstType GetPortalConstControl() const;
+
+  VTKM_CONT ReadPortalType ReadPortal() const;
+  VTKM_CONT WritePortalType WritePortal() const;
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
   VTKM_CONT void Shrink(vtkm::Id numberOfValues);
@@ -438,7 +456,7 @@ public:
 
 private:
   VTKM_CONT void SyncControlArray(LockType& lock) const;
-  VTKM_CONT void ReleaseResourcesExecutionInternal(LockType& lock);
+  VTKM_CONT void ReleaseResourcesExecutionInternal(LockType& lock) const;
 
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
   /// function should keep the returned lock and let it go out of scope

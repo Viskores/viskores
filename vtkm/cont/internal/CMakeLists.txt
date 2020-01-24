@@ -16,6 +16,7 @@ set(headers
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
+  ArrayPortalToken.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h

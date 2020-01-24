@@ -542,7 +542,7 @@ private:
                      "Shrink did not set size of array handle correctly.");
 
     // Get the array back and check its values.
-    StorageType::PortalConstType checkPortal = handle.GetPortalConstControl();
+    auto checkPortal = handle.GetPortalConstControl();
     VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE, "Storage portal wrong size.");
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)

@@ -56,6 +56,11 @@ vtkm::cont::Token::Token()
 {
 }
 
+vtkm::cont::Token::Token(Token&& rhs)
+  : Internals(std::move(rhs.Internals))
+{
+}
+
 vtkm::cont::Token::~Token()
 {
   this->DetachFromAll();

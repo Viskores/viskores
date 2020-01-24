@@ -11,16 +11,19 @@ The original `PrepareFor*` methods of `ArrayHandle` returned an object to
 be used in the execution environment on a particular device that pointed to
 data in the array. The pointer to the data was contingent on the state of
 the `ArrayHandle` not changing. The assumption was that the calling code
-would next use the returned execution environment object and would not
-further change the `ArrayHandle` until done with the execution environment
-object.
+would immediately use the returned execution environment object and would
+not further change the `ArrayHandle` until done with the execution
+environment object.
 
 This assumption is broken if multiple threads are running in the control
-environment. After one thread has called `PrepareFor*` and is in the
-process of using the resulting execution object and another thread attempts
-to write to or otherwise change the same array. Perhaps a well designed
-program should not share `ArrayHandle`s in this way, but if a mistake is
-made that would lead to a very difficult to diagnose intermittent error.
+environment. For example, if one thread has called `PrepareForInput` to get
+an execution array portal, the portal or its data could become invalid if
+another thread calls `PrepareForOutput` on the same array. Initially one
+would think that a well designed program should not share `ArrayHandle`s in
+this way, but there are good reasons to need to do so. For example, when
+using `vtkm::cont::PartitionedDataSet` where multiple partitions share a
+coordinate system (very common), it becomes unsafe to work on multiple
+blocks in parallel on different devices.
 
 What we really want is the code to be able to specify more explicitly when
 the execution object is in use. Ideally, the execution object itself would
@@ -96,6 +99,52 @@ It actually still works to use the old style of `PrepareForExecution`.
 However, you will get a deprecation warning (on supported compilers) when
 you try to use it.
 
+## Invoke and Dispatcher
+
+The `Dispatcher` classes now internally define a `Token` object during the
+call to `Invoke`. (Likewise, `Invoker` will have a `Token` defined during
+its invoke.) This internal `Token` is used when preparing `ArrayHandle`s
+and `ExecutionObject`s for the execution environment. (Details in the next
+section on how that works.)
+
+Because the invoke uses a `Token` to protect its arguments, it will block
+the execution of other worklets attempting to access arrays in a way that
+could cause read-write hazards. In the following example, the second
+worklet will not be able to execute until the first worklet finishes.
+
+``` cpp
+vtkm::cont::Invoker invoke;
+invoke(Worklet1{}, input, intermediate);
+invoke(Worklet2{}, intermediate, output); // Will not execute until Worklet1 finishes.
+```
+
+That said, invocations _can_ share arrays if their use will not cause
+read-write hazards. In particular, two invocations can both use the same
+array if they are both strictly reading from it. In the following example,
+both worklets can potentially execute at the same time.
+
+``` cpp
+vtkm::cont::Invoker invoke;
+invoke(Worklet1{}, input, output1);
+invoke(Worklet2{}, input, output2); // Will not block
+```
+
+The same `Token` is used for all arguments to the `Worklet`. This deatil is
+important to prevent deadlocks if the same object is used in more than one
+`Worklet` parameter. As a simple example, if a `Worklet` has a control
+signature like
+
+``` cpp
+  using ControlSignature = void(FieldIn, FieldOut);
+```
+
+it should continue to work to use the same array as both fields.
+
+``` cpp
+vtkm::cont::Invoker invoke;
+invoke(Worklet1{}, array, array);
+```
+
 ## Transport
 
 The dispatch mechanism of worklets internally uses
@@ -106,15 +155,18 @@ the covers for most users.
 
 ## Control Portals
 
-The calling signatures of `GetPortalControl` and `GetPortalConstControl`
-have not changed. That is, they do not require a `Token` object. This is
-because these are control-only objects and so the `Token` is embedded
-within the return portal object.
+The `GetPortalConstControl` and `GetPortalControl` methods have been
+deprecated. Instead, the methods `ReadPortal` and `WritePortal` should be
+used. The calling signature is the same as their predecessors, but the
+returned portal contains a `Token` as part of its state and prevents and
+changes to the `ArrayHandle` it comes from. The `WritePortal` also prevents
+other reads from the array.
 
 The advantage is that the returned portal will always be valid. However, it
 is now the case that a control portal can prevent something else from
 running. This means that control portals should drop scope as soon as
-possible.
+possible. It is because of this behavior change that new methods were
+created instead of altering the old ones.
 
 ## Deadlocks
 
@@ -127,7 +179,7 @@ Care should be taken to ensure that a single thread does not attempt to use
 an `ArrayHandle` two ways at the same time.
 
 ``` cpp
-auto portal = array.GetPortalControl();
+auto portal = array.WritePortal();
 for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
 {
   portal.Set(index, /* An interesting value */);
@@ -151,4 +203,18 @@ Instead, `portal` should be properly scoped.
 }
 vtkm::cont::Invoker invoke;
 invoke(MyWorklet, array); // Runs fine because portal left scope
+```
+
+Alternately, you can call `Detach` on the portal, which will invalidate the
+portal and unlock the `ArrayHandle`.
+
+``` cpp
+auto portal = array.WritePortal();
+for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
+{
+  portal.Set(index, /* An interesting value */);
+}
+portal.Detach();
+vtkm::cont::Invoker invoke;
+invoke(MyWorklet, array); // Runs fine because portal detached
 ```

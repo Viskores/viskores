@@ -36,6 +36,7 @@
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+#include <vtkm/cont/internal/ArrayPortalToken.h>
 
 namespace vtkm
 {
@@ -261,8 +262,9 @@ public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
   using ValueType = T;
   using StorageTag = StorageTag_;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalType>;
+  using ReadPortalType =
+    vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalConstType>;
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {
@@ -270,6 +272,11 @@ public:
     using PortalConst =
       typename ExecutionManagerType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
   };
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
+    typename StorageType::PortalType;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
+    typename StorageType::PortalConstType;
 
   /// Constructs an empty ArrayHandle. Typically used for output or
   /// intermediate arrays that will be filled by a VTKm algorithm.
@@ -367,13 +374,61 @@ public:
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
   /// exceptions maybe thrown for errors from previously executed worklets.
   ///
-  VTKM_CONT PortalControl GetPortalControl();
+  /// \deprecated Use `WritePortal` instead. Note that the portal returned from `WritePortal`
+  /// will disallow any other reads or writes to the array while it is in scope.
+  ///
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalType GetPortalControl();
 
   /// Get the array portal of the control array.
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
   /// exceptions maybe thrown for errors from previously executed worklets.
   ///
-  VTKM_CONT PortalConstControl GetPortalConstControl() const;
+  /// \deprecated Use `ReadPortal` instead. Note that the portal returned from `ReadPortal`
+  /// will disallow any writes to the array while it is in scope.
+  ///
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalConstType GetPortalConstControl() const;
+
+  /// \brief Get an array portal that can be used in the control environment.
+  ///
+  /// The returned array can be used in the control environment to read values from the array. (It
+  /// is not possible to write to the returned portal. That is `Get` will work on the portal, but
+  /// `Set` will not.)
+  ///
+  /// **Note:** The returned portal will prevent any writes or modifications to the array. To
+  /// ensure that the data pointed to by the portal is valid, this `ArrayHandle` will be locked to
+  /// any modifications while the portal remains in scope. (You can call `Detach` on the returned
+  /// portal to unlock the array. However, this will invalidate the portal.)
+  ///
+  /// **Note:** The returned portal cannot be used in the execution environment. This is because
+  /// the portal will not work on some devices like GPUs. To get a portal that will work in the
+  /// execution environment, use `PrepareForInput`.
+  ///
+  VTKM_CONT ReadPortalType ReadPortal() const;
+
+  /// \brief Get an array portal that can be used in the control environment.
+  ///
+  /// The returned array can be used in the control environment to reand and write values to the
+  /// array.
+  ///
+  /// **Note:** The returned portal will prevent any reads, writes, or modifications to the array.
+  /// To ensure that the data pointed to by the portal is valid, this `ArrayHandle` will be locked
+  /// to any modifications while the portal remains in scope. Also, to make sure that no reads get
+  /// out of sync, reads other than the returned portal are also blocked. (You can call `Detach` on
+  /// the returned portal to unlock the array. However, this will invalidate the portal.)
+  ///
+  /// **Note:** The returned portal cannot be used in the execution environment. This is because
+  /// the portal will not work on some devices like GPUs. To get a portal that will work in the
+  /// execution environment, use `PrepareForInput`.
+  ///
+  VTKM_CONT WritePortalType WritePortal() const;
 
   /// Returns the number of entries in the array.
   ///
@@ -617,7 +672,7 @@ protected:
   vtkm::Id GetNumberOfValues(LockType& lock) const;
 
   VTKM_CONT
-  void ReleaseResourcesExecutionInternal(LockType& lock)
+  void ReleaseResourcesExecutionInternal(LockType& lock) const
   {
     if (this->Internals->IsExecutionArrayValid(lock))
     {

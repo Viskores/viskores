@@ -67,6 +67,7 @@ class VTKM_CONT_EXPORT Token final
 
 public:
   VTKM_CONT Token();
+  VTKM_CONT Token(Token&& rhs);
   VTKM_CONT ~Token();
 
   /// Use this type to represent counts of how many tokens are holding a resource.
