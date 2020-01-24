@@ -92,31 +92,31 @@ public:
   // vtkm only allows 9 parameters for the operator so we need to do these inputs manually via the constructor
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  IdPortalType outdegreePortal;
-  IdPortalType indegreePortal;
-  IdPortalType outboundPortal;
-  IdPortalType inboundPortal;
-  IdPortalType inwardsPortal;
-  vtkm::Id nIterations;
+  IdPortalType OutdegreePortal;
+  IdPortalType IndegreePortal;
+  IdPortalType OutboundPortal;
+  IdPortalType InboundPortal;
+  IdPortalType InwardsPortal;
+  vtkm::Id NumIterations;
   bool isJoin;
 
 
   // Default Constructor
-  TransferLeafChains_TransferToContourTree(const vtkm::Id NIterations,
+  TransferLeafChains_TransferToContourTree(const vtkm::Id nIterations,
                                            const bool IsJoin,
                                            const IdArrayType& outdegree,
                                            const IdArrayType& indegree,
                                            const IdArrayType& outbound,
                                            const IdArrayType& inbound,
                                            const IdArrayType& inwards)
-    : nIterations(NIterations)
+    : NumIterations(nIterations)
     , isJoin(IsJoin)
   {
-    outdegreePortal = outdegree.PrepareForInput(DeviceAdapter());
-    indegreePortal = indegree.PrepareForInput(DeviceAdapter());
-    outboundPortal = outbound.PrepareForInput(DeviceAdapter());
-    inboundPortal = inbound.PrepareForInput(DeviceAdapter());
-    inwardsPortal = inwards.PrepareForInput(DeviceAdapter());
+    OutdegreePortal = outdegree.PrepareForInput(DeviceAdapter());
+    IndegreePortal = indegree.PrepareForInput(DeviceAdapter());
+    OutboundPortal = outbound.PrepareForInput(DeviceAdapter());
+    InboundPortal = inbound.PrepareForInput(DeviceAdapter());
+    InwardsPortal = inwards.PrepareForInput(DeviceAdapter());
   }
 
 
@@ -128,31 +128,31 @@ public:
                             const OutFieldPortalType& contourTreeSuperarcsPortal,
                             const OutFieldPortalType& contourTreeWhenTransferredPortal) const
   {
-    if ((outdegreePortal.Get(superID) == 0) && (indegreePortal.Get(superID) == 1))
+    if ((OutdegreePortal.Get(superID) == 0) && (IndegreePortal.Get(superID) == 1))
     { // a leaf
       contourTreeHyperparentsPortal.Set(superID, superID | (isJoin ? 0 : IS_ASCENDING));
       contourTreeHyperarcsPortal.Set(
-        superID, MaskedIndex(inboundPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+        superID, MaskedIndex(InboundPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
       contourTreeSuperarcsPortal.Set(
-        superID, MaskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
-      contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_HYPERNODE);
+        superID, MaskedIndex(InwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+      contourTreeWhenTransferredPortal.Set(superID, this->NumIterations | IS_HYPERNODE);
     } // a leaf
     else
     { // not a leaf
       // retrieve the out neighbour
-      vtkm::Id outNeighbour = MaskedIndex(outboundPortal.Get(superID));
+      vtkm::Id outNeighbour = MaskedIndex(OutboundPortal.Get(superID));
 
       // test whether outneighbour is a leaf
-      if ((outdegreePortal.Get(outNeighbour) != 0) || (indegreePortal.Get(outNeighbour) != 1))
+      if ((OutdegreePortal.Get(outNeighbour) != 0) || (IndegreePortal.Get(outNeighbour) != 1))
       {
       }
       else
       {
         // set superarc, &c.
         contourTreeSuperarcsPortal.Set(
-          superID, MaskedIndex(inwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
+          superID, MaskedIndex(InwardsPortal.Get(superID)) | (isJoin ? 0 : IS_ASCENDING));
         contourTreeHyperparentsPortal.Set(superID, outNeighbour | (isJoin ? 0 : IS_ASCENDING));
-        contourTreeWhenTransferredPortal.Set(superID, nIterations | IS_SUPERNODE);
+        contourTreeWhenTransferredPortal.Set(superID, this->NumIterations | IS_SUPERNODE);
       }
     } // not a leaf
 
@@ -170,7 +170,7 @@ public:
                 contourTree.hyperparents[superID] = superID | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.hyperarcs[superID] = MaskedIndex(inbound[superID]) | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.superarcs[superID] = MaskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
-                contourTree.whenTransferred[superID] = nIterations | IS_HYPERNODE;
+                contourTree.whenTransferred[superID] = this->NumIterations | IS_HYPERNODE;
                 } // a leaf
         else
                 { // not a leaf
@@ -184,7 +184,7 @@ public:
                 // set superarc, &c.
                 contourTree.superarcs[superID] = MaskedIndex(inwards[superID]) | (isJoin ? 0 : IS_ASCENDING);
                 contourTree.hyperparents[superID] = outNeighbour | (isJoin ? 0 : IS_ASCENDING);
-                contourTree.whenTransferred[superID] = nIterations | IS_SUPERNODE;
+                contourTree.whenTransferred[superID] = this->NumIterations | IS_SUPERNODE;
                 } // not a leaf
       } // per active supernode
 

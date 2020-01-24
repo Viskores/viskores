@@ -128,7 +128,7 @@ public:
   bool isJoinGraph;
 
   // we will store the number of iterations the computation took here
-  vtkm::Id nIterations;
+  vtkm::Id NumIterations;
 
   // ARRAYS FOR NODES IN THE TOPOLOGY GRAPH
 
@@ -228,7 +228,7 @@ ActiveGraph::ActiveGraph(bool IsJoinGraph)
   : Invoke()
   , isJoinGraph(IsJoinGraph)
 { // constructor
-  nIterations = 0;
+  this->NumIterations = 0;
   nSupernodes = 0;
   nHypernodes = 0;
 } // constructor
@@ -373,7 +373,7 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
   DebugPrint("Active Graph Computation Starting", __FILE__, __LINE__);
 
   // loop until we run out of active edges
-  nIterations = 0;
+  this->NumIterations = 0;
   while (true)
   { // main loop
     // choose the subset of edges for the governing saddles
@@ -397,7 +397,7 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
     BuildChains();
 
     // increment the iteration count
-    nIterations++;
+    this->NumIterations++;
   } // main loop
 
   // final pass to label the trunk vertices
@@ -907,7 +907,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   std::cout << "------------------------------------------------------" << std::endl;
 
   std::cout << "Is Join Graph? " << (isJoinGraph ? "T" : "F") << std::endl;
-  std::cout << "nIterations    " << nIterations << std::endl;
+  std::cout << "NumIterations    " << this->NumIterations << std::endl;
   std::cout << "nSupernodes    " << nSupernodes << std::endl;
   std::cout << "nHypernodes    " << nHypernodes << std::endl;
 

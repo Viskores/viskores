@@ -71,9 +71,9 @@ class FindDegrees_FindRHE : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
-    WholeArrayIn inNeighbour, // (input)
-    WholeArrayOut
-      upOrDowndegree); // (output) updegree in the case of the join tree and downdegree in the case of the split tree
+    WholeArrayIn inNeighbour,      // (input)
+    WholeArrayOut upOrDowndegree); // (output) updegree in the case of the
+                                   //join tree and downdegree for the split tree
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

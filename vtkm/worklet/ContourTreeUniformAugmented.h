@@ -321,7 +321,7 @@ private:
     timer.Start();
 
     // Collect the output data
-    nIterations = treeMaker.nIterations;
+    nIterations = treeMaker.NumIterations;
     sortOrder = mesh.SortOrder;
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.SortOrder);
