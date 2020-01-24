@@ -147,15 +147,15 @@ public:
   // ARRAYS FOR EDGES IN THE TOPOLOGY GRAPH
 
   // we will also need to keep track of both near and far ends of each edge
-  IdArrayType edgeFar;
-  IdArrayType edgeNear;
+  IdArrayType EdgeFar;
+  IdArrayType EdgeNear;
 
   // these now track the active nodes, edges, &c.:
   IdArrayType activeVertices;
   IdArrayType activeEdges;
 
   // and an array for sorting edges
-  IdArrayType edgeSorter;
+  IdArrayType EdgeSorter;
 
   // temporary arrays for super/hyper ID numbers
   IdArrayType superID;
@@ -347,14 +347,14 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
                this->GlobalIndex,
                extrema,
                neighbourhoodMasks,
-               edgeNear,
-               edgeFar,
+               this->EdgeNear,
+               this->EdgeFar,
                activeEdges);
 
   // now we have to go through and set the far ends of the new edges using the
   // inverse index array
   active_graph_inc_ns::InitializeEdgeFarFromActiveIndices initEdgeFarWorklet;
-  this->Invoke(initEdgeFarWorklet, edgeFar, extrema, activeIndices);
+  this->Invoke(initEdgeFarWorklet, this->EdgeFar, extrema, activeIndices);
 
   DebugPrint("Active Graph Started", __FILE__, __LINE__);
 
@@ -363,8 +363,8 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   this->Invoke(initHyperarcsWorklet, this->Hyperarcs, activeIndices);
 
   // finally, allocate and initialise the edgeSorter array
-  edgeSorter.Allocate(activeEdges.GetNumberOfValues());
-  vtkm::cont::Algorithm::Copy(activeEdges, edgeSorter);
+  this->EdgeSorter.Allocate(activeEdges.GetNumberOfValues());
+  vtkm::cont::Algorithm::Copy(activeEdges, this->EdgeSorter);
 
   //DebugPrint("Active Graph Initialised", __FILE__, __LINE__);
 } // InitialiseActiveGraph()
@@ -384,7 +384,7 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
     TransferSaddleStarts();
 
     // test whether there are any left (if not, we're on the trunk)
-    if (edgeSorter.GetNumberOfValues() <= 0)
+    if (this->EdgeSorter.GetNumberOfValues() <= 0)
       break;
 
     // find & label the extrema with their governing saddles
@@ -426,7 +426,7 @@ void ActiveGraph::TransferSaddleStarts()
   // update all of the edges so that the far end resets to the result of the ascent in the previous step
 
   active_graph_inc_ns::TransferSaddleStartsResetEdgeFar transferSaddleResetWorklet;
-  this->Invoke(transferSaddleResetWorklet, activeEdges, this->Hyperarcs, edgeFar);
+  this->Invoke(transferSaddleResetWorklet, activeEdges, this->Hyperarcs, this->EdgeFar);
 
   // in parallel, we need to create a vector to count the first edge for each vertex
   IdArrayType newOutdegree;
@@ -440,7 +440,7 @@ void ActiveGraph::TransferSaddleStarts()
                this->Outdegree,
                activeEdges,
                this->Hyperarcs,
-               edgeFar,
+               this->EdgeFar,
                newOutdegree);
 
   // now do a parallel prefix sum using the offset partial sum trick.
@@ -457,9 +457,9 @@ void ActiveGraph::TransferSaddleStarts()
   vtkm::Id nEdgesToSort = this->GetLastValue(newFirstEdge) + this->GetLastValue(newOutdegree);
 
   // now we write only the active saddle edges to the sorting array
-  edgeSorter
+  this->EdgeSorter
     .ReleaseResources(); // TODO is there a single way to resize an array handle without calling ReleaseResources followed by Allocate
-  edgeSorter.Allocate(nEdgesToSort);
+  this->EdgeSorter.Allocate(nEdgesToSort);
 
   // this will be a stream compaction later, but for now we'll do it the serial way
   active_graph_inc_ns::TransferSaddleStartsUpdateEdgeSorter updateEdgeSorterWorklet;
@@ -469,7 +469,7 @@ void ActiveGraph::TransferSaddleStarts()
                this->FirstEdge,
                newFirstEdge,
                newOutdegree,
-               edgeSorter);
+               this->EdgeSorter);
 
   DebugPrint("Saddle Starts Transferred", __FILE__, __LINE__);
 } // TransferSaddleStarts()
@@ -480,19 +480,20 @@ void ActiveGraph::FindGoverningSaddles()
 { // FindGoverningSaddles()
   // sort with the comparator
   vtkm::cont::Algorithm::Sort(
-    edgeSorter, active_graph_inc_ns::EdgePeakComparator(edgeFar, edgeNear, this->IsJoinGraph));
+    this->EdgeSorter,
+    active_graph_inc_ns::EdgePeakComparator(this->EdgeFar, this->EdgeNear, this->IsJoinGraph));
 
   // DebugPrint("After Sorting", __FILE__, __LINE__);
 
   // now loop through the edges to find the governing saddles
   active_graph_inc_ns::FindGoverningSaddlesWorklet findGovSaddlesWorklet;
-  vtkm::cont::ArrayHandleIndex edgeIndexArray(edgeSorter.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex edgeIndexArray(this->EdgeSorter.GetNumberOfValues());
 
   this->Invoke(findGovSaddlesWorklet,
                edgeIndexArray,
-               edgeSorter,
-               edgeFar,
-               edgeNear,
+               this->EdgeSorter,
+               this->EdgeFar,
+               this->EdgeNear,
                this->Hyperarcs,
                this->Outdegree);
 
@@ -549,7 +550,7 @@ void ActiveGraph::CompactActiveEdges()
   this->Invoke(computeNewOutdegreeWorklet,
                activeVertices,  // (input)
                activeEdges,     // (input)
-               edgeFar,         // (input)
+               this->EdgeFar,   // (input)
                this->FirstEdge, // (input)
                this->Outdegree, // (input)
                this->Hyperarcs, // (input/output)
@@ -584,7 +585,7 @@ void ActiveGraph::CompactActiveEdges()
                newOutdegree,    // (input)
                activeEdges,     // (input)
                newActiveEdges,  // (output)
-               edgeFar,         // (input/output)
+               this->EdgeFar,   // (input/output)
                this->FirstEdge, // (input/output)
                this->Outdegree, // (input/output)
                this->Hyperarcs  // (input/output)
@@ -877,8 +878,8 @@ void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
 void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
 {
   activeEdges.Allocate(nElems);
-  edgeNear.Allocate(nElems);
-  edgeFar.Allocate(nElems);
+  this->EdgeNear.Allocate(nElems);
+  this->EdgeFar.Allocate(nElems);
 }
 
 
@@ -888,11 +889,11 @@ void ActiveGraph::ReleaseTemporaryArrays()
   this->GlobalIndex.ReleaseResources();
   this->FirstEdge.ReleaseResources();
   this->Outdegree.ReleaseResources();
-  edgeNear.ReleaseResources();
-  edgeFar.ReleaseResources();
+  this->EdgeNear.ReleaseResources();
+  this->EdgeFar.ReleaseResources();
   activeEdges.ReleaseResources();
   activeVertices.ReleaseResources();
-  edgeSorter.ReleaseResources();
+  this->EdgeSorter.ReleaseResources();
   this->Hyperarcs.ReleaseResources();
   hyperID.ReleaseResources();
   superID.ReleaseResources();
@@ -946,22 +947,22 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Full Edge Arrays
   IdArrayType farIndices;
-  PermuteArray<vtkm::Id>(this->GlobalIndex, edgeFar, farIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeFar, farIndices);
   IdArrayType nearIndices;
-  PermuteArray<vtkm::Id>(this->GlobalIndex, edgeNear, nearIndices);
-  std::cout << "Full Edge Arrays - Size:     " << edgeNear.GetNumberOfValues() << std::endl;
-  PrintHeader(edgeFar.GetNumberOfValues());
-  PrintIndices("Near", edgeNear);
-  PrintIndices("Far", edgeFar);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeNear, nearIndices);
+  std::cout << "Full Edge Arrays - Size:     " << this->EdgeNear.GetNumberOfValues() << std::endl;
+  PrintHeader(this->EdgeFar.GetNumberOfValues());
+  PrintIndices("Near", this->EdgeNear);
+  PrintIndices("Far", this->EdgeFar);
   PrintIndices("Near Index", nearIndices);
   PrintIndices("Far Index", farIndices);
   std::cout << std::endl;
 
   // Active Edge Arrays
   IdArrayType activeFarIndices;
-  PermuteArray<vtkm::Id>(edgeFar, activeEdges, activeFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeFar, activeEdges, activeFarIndices);
   IdArrayType activeNearIndices;
-  PermuteArray<vtkm::Id>(edgeNear, activeEdges, activeNearIndices);
+  PermuteArray<vtkm::Id>(this->EdgeNear, activeEdges, activeNearIndices);
   std::cout << "Active Edge Arrays - Size:   " << activeEdges.GetNumberOfValues() << std::endl;
   PrintHeader(activeEdges.GetNumberOfValues());
   PrintIndices("Active Edges", activeEdges);
@@ -971,12 +972,12 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Edge Sorter Array
   IdArrayType sortedFarIndices;
-  PermuteArray<vtkm::Id>(edgeFar, edgeSorter, sortedFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeFar, this->EdgeSorter, sortedFarIndices);
   IdArrayType sortedNearIndices;
-  PermuteArray<vtkm::Id>(edgeNear, edgeSorter, sortedNearIndices);
-  std::cout << "Edge Sorter - Size:          " << edgeSorter.GetNumberOfValues() << std::endl;
-  PrintHeader(edgeSorter.GetNumberOfValues());
-  PrintIndices("Edge Sorter", edgeSorter);
+  PermuteArray<vtkm::Id>(this->EdgeNear, this->EdgeSorter, sortedNearIndices);
+  std::cout << "Edge Sorter - Size:          " << this->EdgeSorter.GetNumberOfValues() << std::endl;
+  PrintHeader(this->EdgeSorter.GetNumberOfValues());
+  PrintIndices("Edge Sorter", this->EdgeSorter);
   PrintIndices("Sorted Near Index", sortedNearIndices);
   PrintIndices("Sorted Far Index", sortedFarIndices);
   std::cout << std::endl;
