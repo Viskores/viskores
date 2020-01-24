@@ -133,7 +133,7 @@ public:
   // ARRAYS FOR NODES IN THE TOPOLOGY GRAPH
 
   // for each vertex, we need to know where it is in global sort order / mesh
-  IdArrayType globalIndex;
+  IdArrayType GlobalIndex;
 
   // the hyperarcs - i.e. the pseudoextremum defining the hyperarc the vertex is on
   IdArrayType Hyperarcs;
@@ -299,12 +299,12 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // we need to keep track of what the index of each vertex is in the active graph
   // for most vertices, this should have the NO_SUCH_VERTEX flag set
   AllocateVertexArrays(
-    nCriticalPoints); // allocates outdegree, globalIndex, Hyperarcs, activeVertices
+    nCriticalPoints); // allocates outdegree, GlobalIndex, Hyperarcs, activeVertices
 
   // our processing now depends on the degree of the vertex
   // but basically, we want to set up the arrays for this vertex:
   // activeIndex gets the next available ID in the active graph (was called nearIndex before)
-  // globalIndex stores the index in the join tree for later access
+  // GlobalIndex stores the index in the join tree for later access
   IdArrayType activeIndices;
   activeIndices.Allocate(mesh.NumVertices);
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
@@ -318,7 +318,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
                inverseIndex,
                extrema,
                activeIndices,
-               globalIndex,
+               this->GlobalIndex,
                outdegree,
                this->Hyperarcs,
                activeVertices);
@@ -343,7 +343,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
                outdegree,
                mesh,
                firstEdge,
-               globalIndex,
+               this->GlobalIndex,
                extrema,
                neighbourhoodMasks,
                edgeNear,
@@ -638,7 +638,7 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 { // FindSuperAndHyperNodes()
   // allocate memory for nodes
   hyperID.ReleaseResources();
-  hyperID.Allocate(globalIndex.GetNumberOfValues());
+  hyperID.Allocate(this->GlobalIndex.GetNumberOfValues());
 
   // compute new node positions
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
@@ -685,11 +685,11 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     oneIfHypernodeFunctor(this->GetLastValue(this->Hyperarcs));
 
   tree.Hypernodes.ReleaseResources();
-  tree.Hypernodes.Allocate(globalIndex.GetNumberOfValues());
+  tree.Hypernodes.Allocate(this->GlobalIndex.GetNumberOfValues());
 
   // perform stream compression
   active_graph_inc_ns::FindSuperAndHyperNodesWorklet findSuperAndHyperNodesWorklet;
-  vtkm::cont::ArrayHandleIndex graphVertexIndex(globalIndex.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex graphVertexIndex(this->GlobalIndex.GetNumberOfValues());
   this->Invoke(findSuperAndHyperNodesWorklet,
                graphVertexIndex,
                this->Hyperarcs,
@@ -722,7 +722,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
   //      a.      And the super ID array needs setting up
   superID.ReleaseResources();
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, globalIndex.GetNumberOfValues()),
+    vtkm::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, this->GlobalIndex.GetNumberOfValues()),
     superID);
   vtkm::cont::ArrayHandleIndex supernodeIndex(nSupernodes);
   PermutedIdArrayType permutedSuperID(tree.Supernodes, superID);
@@ -769,7 +769,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
                );
 
   // 6.   Now we can reset the supernodes to mesh IDs
-  PermutedIdArrayType permuteGlobalIndex(tree.Supernodes, globalIndex);
+  PermutedIdArrayType permuteGlobalIndex(tree.Supernodes, this->GlobalIndex);
   vtkm::cont::Algorithm::Copy(permuteGlobalIndex, tree.Supernodes);
 
   // 7.   and the hyperparent to point to a hyperarc rather than a graph index
@@ -811,7 +811,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
   // 1.   Set the arcs for the super/hypernodes based on where they prune to
   active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs setSuperAndHypernodeArcsWorklet;
   this->Invoke(setSuperAndHypernodeArcsWorklet,
-               this->globalIndex,
+               this->GlobalIndex,
                this->Hyperarcs,
                this->hyperID,
                tree.Arcs,
@@ -865,7 +865,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 // Allocate the vertex array
 void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
 {
-  globalIndex.Allocate(nElems);
+  this->GlobalIndex.Allocate(nElems);
   outdegree.Allocate(nElems);
   this->Hyperarcs.Allocate(nElems);
   activeVertices.Allocate(nElems);
@@ -884,7 +884,7 @@ void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
 // releases temporary arrays
 void ActiveGraph::ReleaseTemporaryArrays()
 {
-  globalIndex.ReleaseResources();
+  this->GlobalIndex.ReleaseResources();
   firstEdge.ReleaseResources();
   outdegree.ReleaseResources();
   edgeNear.ReleaseResources();
@@ -915,9 +915,9 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   std::cout << "nHypernodes    " << nHypernodes << std::endl;
 
   // Full Vertex Arrays
-  std::cout << "Full Vertex Arrays - Size:  " << globalIndex.GetNumberOfValues() << std::endl;
-  PrintHeader(globalIndex.GetNumberOfValues());
-  PrintIndices("Global Index", globalIndex);
+  std::cout << "Full Vertex Arrays - Size:  " << this->GlobalIndex.GetNumberOfValues() << std::endl;
+  PrintHeader(this->GlobalIndex.GetNumberOfValues());
+  PrintIndices("Global Index", this->GlobalIndex);
   PrintIndices("First Edge", firstEdge);
   PrintIndices("Outdegree", outdegree);
   PrintIndices("Hyperarc ID", this->Hyperarcs);
@@ -927,7 +927,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Active Vertex Arrays
   IdArrayType activeIndices;
-  PermuteArray<vtkm::Id>(globalIndex, activeVertices, activeIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, activeVertices, activeIndices);
   IdArrayType activeFirst;
   PermuteArray<vtkm::Id>(firstEdge, activeVertices, activeFirst);
   IdArrayType activeOutdegree;
@@ -945,9 +945,9 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   // Full Edge Arrays
   IdArrayType farIndices;
-  PermuteArray<vtkm::Id>(globalIndex, edgeFar, farIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, edgeFar, farIndices);
   IdArrayType nearIndices;
-  PermuteArray<vtkm::Id>(globalIndex, edgeNear, nearIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, edgeNear, nearIndices);
   std::cout << "Full Edge Arrays - Size:     " << edgeNear.GetNumberOfValues() << std::endl;
   PrintHeader(edgeFar.GetNumberOfValues());
   PrintIndices("Near", edgeNear);

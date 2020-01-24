@@ -80,7 +80,7 @@ public:
     FieldIn outdegree,               // (input) outdegree
     ExecObject meshStructure,        // (input) execution object with the mesh structure
     FieldIn firstEdge,               // (input)
-    FieldIn globalIndex,             // (input) ActiveGraph.globalIndex
+    FieldIn globalIndex,             // (input) ActiveGraph.GlobalIndex
     WholeArrayIn extrema,            // (input)
     WholeArrayIn neighbourhoodMasks, // (input)
     WholeArrayOut edgeNear,          // (output) edgeNear
@@ -99,7 +99,7 @@ public:
                             const vtkm::Id activeIndex,
                             const MeshStructureType& meshStructure,
                             const vtkm::Id& firstEdgeIndex,
-                            const vtkm::Id& sortIndex, // = globalIndex.Get(activeIndex)
+                            const vtkm::Id& sortIndex, // = GlobalIndex.Get(activeIndex)
                             const InFieldPortalType& extrema,
                             const InFieldPortalType& neighbourhoodMasks,
                             const OutFieldPortalType& edgeNear,
