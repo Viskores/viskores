@@ -185,10 +185,6 @@ public:
           }
         } // per activeIndex*/
   }
-
-private:
-  bool isJoinGraph;
-
 }; // Mesh2D_DEM_VertexStarter
 
 

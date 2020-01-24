@@ -125,7 +125,7 @@ public:
   vtkm::cont::Invoker Invoke;
 
   // we also need the orientation of the edges (i.e. is it join or split)
-  bool isJoinGraph;
+  bool IsJoinGraph;
 
   // we will store the number of iterations the computation took here
   vtkm::Id NumIterations;
@@ -147,7 +147,8 @@ public:
   // ARRAYS FOR EDGES IN THE TOPOLOGY GRAPH
 
   // we will also need to keep track of both near and far ends of each edge
-  IdArrayType edgeFar, edgeNear;
+  IdArrayType edgeFar;
+  IdArrayType edgeNear;
 
   // these now track the active nodes, edges, &c.:
   IdArrayType activeVertices;
@@ -157,10 +158,12 @@ public:
   IdArrayType edgeSorter;
 
   // temporary arrays for super/hyper ID numbers
-  IdArrayType superID, hyperID;
+  IdArrayType superID;
+  IdArrayType hyperID;
 
   // variables tracking size of super/hyper tree
-  vtkm::Id nSupernodes, nHypernodes;
+  vtkm::Id nSupernodes;
+  vtkm::Id nHypernodes;
 
   // BASIC ROUTINES: CONSTRUCTOR, PRINT, &c.
 
@@ -224,9 +227,9 @@ public:
 
 
 // constructor takes necessary references
-ActiveGraph::ActiveGraph(bool IsJoinGraph)
+ActiveGraph::ActiveGraph(bool isJoinGraph)
   : Invoke()
-  , isJoinGraph(IsJoinGraph)
+  , IsJoinGraph(isJoinGraph)
 { // constructor
   this->NumIterations = 0;
   nSupernodes = 0;
@@ -240,7 +243,7 @@ template <class Mesh>
 void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 { // InitialiseActiveGraph()
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
+  const IdArrayType& extrema = this->IsJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // For every vertex, work out whether it is critical
   // We do so by computing outdegree in the mesh & suppressing the vertex if outdegree is 1
@@ -256,10 +259,10 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   outDegrees.Allocate(mesh.NumVertices);
 
   // Initialize the nerighborhoodMasks and outDegrees arrays
-  mesh.SetPrepareForExecutionBehavior(isJoinGraph);
+  mesh.SetPrepareForExecutionBehavior(this->IsJoinGraph);
   vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
-    isJoinGraph);
+    this->IsJoinGraph);
 
   this->Invoke(initNeighMasksAndOutDegWorklet,
                sortIndexArray,
@@ -476,7 +479,7 @@ void ActiveGraph::FindGoverningSaddles()
 { // FindGoverningSaddles()
   // sort with the comparator
   vtkm::cont::Algorithm::Sort(
-    edgeSorter, active_graph_inc_ns::EdgePeakComparator(edgeFar, edgeNear, isJoinGraph));
+    edgeSorter, active_graph_inc_ns::EdgePeakComparator(edgeFar, edgeNear, this->IsJoinGraph));
 
   // DebugPrint("After Sorting", __FILE__, __LINE__);
 
@@ -500,7 +503,7 @@ void ActiveGraph::FindGoverningSaddles()
 void ActiveGraph::TransferRegularPoints()
 { // TransferRegularPointsWorklet
   // we need to label the regular points that have been identified
-  active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(isJoinGraph);
+  active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(this->IsJoinGraph);
   this->Invoke(transRegPtWorklet, activeVertices, this->Hyperarcs, outdegree);
 
   DebugPrint("Regular Points Should Now Be Labelled", __FILE__, __LINE__);
@@ -803,7 +806,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
+  const IdArrayType& extrema = this->IsJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // 1.   Set the arcs for the super/hypernodes based on where they prune to
   active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs setSuperAndHypernodeArcsWorklet;
@@ -819,7 +822,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 
   // 2.   Loop through all vertices to slide down Hyperarcs
   active_graph_inc_ns::SetArcsSlideVertices slideVerticesWorklet(
-    isJoinGraph, nSupernodes, nHypernodes);
+    this->IsJoinGraph, nSupernodes, nHypernodes);
   this->Invoke(slideVerticesWorklet,
                tree.Arcs,            // (input)
                extrema,              // (input)  i.e,. meshExtrema.Peaks or meshExtrema.Pits
@@ -906,7 +909,7 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   std::cout << "Active Graph Contains:                                " << std::endl;
   std::cout << "------------------------------------------------------" << std::endl;
 
-  std::cout << "Is Join Graph? " << (isJoinGraph ? "T" : "F") << std::endl;
+  std::cout << "Is Join Graph? " << (this->IsJoinGraph ? "T" : "F") << std::endl;
   std::cout << "NumIterations    " << this->NumIterations << std::endl;
   std::cout << "nSupernodes    " << nSupernodes << std::endl;
   std::cout << "nHypernodes    " << nHypernodes << std::endl;
