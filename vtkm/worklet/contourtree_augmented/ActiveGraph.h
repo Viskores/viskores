@@ -162,8 +162,8 @@ public:
   IdArrayType HyperID;
 
   // variables tracking size of super/hyper tree
-  vtkm::Id nSupernodes;
-  vtkm::Id nHypernodes;
+  vtkm::Id NumSupernodes;
+  vtkm::Id NumHypernodes;
 
   // BASIC ROUTINES: CONSTRUCTOR, PRINT, &c.
 
@@ -232,8 +232,8 @@ ActiveGraph::ActiveGraph(bool isJoinGraph)
   , IsJoinGraph(isJoinGraph)
 { // constructor
   this->NumIterations = 0;
-  nSupernodes = 0;
-  nHypernodes = 0;
+  this->NumSupernodes = 0;
+  this->NumHypernodes = 0;
 } // constructor
 
 
@@ -661,11 +661,11 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     this->Hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
-  nSupernodes = this->GetLastValue(newSupernodePosition) +
+  this->NumSupernodes = this->GetLastValue(newSupernodePosition) +
     oneIfSupernodeFunctor(this->GetLastValue(this->Hyperarcs));
 
   tree.Supernodes.ReleaseResources();
-  tree.Supernodes.Allocate(nSupernodes);
+  tree.Supernodes.Allocate(this->NumSupernodes);
 
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
   /*
@@ -684,7 +684,7 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     this->Hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  nHypernodes = this->GetLastValue(newHypernodePosition) +
+  this->NumHypernodes = this->GetLastValue(newHypernodePosition) +
     oneIfHypernodeFunctor(this->GetLastValue(this->Hyperarcs));
 
   tree.Hypernodes.ReleaseResources();
@@ -715,7 +715,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
   //      1.      set the hyperparents
   // allocate space for the hyperparents
   tree.Hyperparents.ReleaseResources();
-  tree.Hyperparents.Allocate(nSupernodes);
+  tree.Hyperparents.Allocate(this->NumSupernodes);
 
   // execute the worklet to set the hyperparents
   active_graph_inc_ns::SetSuperArcsSetTreeHyperparents setTreeHyperparentsWorklet;
@@ -727,7 +727,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, this->GlobalIndex.GetNumberOfValues()),
     this->SuperID);
-  vtkm::cont::ArrayHandleIndex supernodeIndex(nSupernodes);
+  vtkm::cont::ArrayHandleIndex supernodeIndex(this->NumSupernodes);
   PermutedIdArrayType permutedSuperID(tree.Supernodes, this->SuperID);
   vtkm::cont::Algorithm::Copy(supernodeIndex, permutedSuperID);
 
@@ -739,7 +739,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
 
   //      3.      Now update the other arrays to match
   IdArrayType hyperParentsTemp;
-  hyperParentsTemp.Allocate(nSupernodes);
+  hyperParentsTemp.Allocate(this->NumSupernodes);
   auto permutedTreeHyperparents = vtkm::cont::make_ArrayHandlePermutation(
     vtkm::cont::make_ArrayHandlePermutation(tree.Supernodes, this->SuperID), tree.Hyperparents);
 
@@ -754,9 +754,9 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
 
   //      4.      Allocate memory for superarcs
   tree.Superarcs.ReleaseResources();
-  tree.Superarcs.Allocate(nSupernodes);
+  tree.Superarcs.Allocate(this->NumSupernodes);
   tree.FirstSuperchild.ReleaseResources();
-  tree.FirstSuperchild.Allocate(nHypernodes);
+  tree.FirstSuperchild.Allocate(this->NumHypernodes);
 
   //      5.      Each supernode points to its neighbour in the list, except at the end of segments
   // execute the worklet to set the tree.Hyperparents and tree.FirstSuperchild
@@ -788,9 +788,10 @@ void ActiveGraph::SetHyperArcs(MergeTree& tree)
 { // SetHyperArcs()
   //      1.      Allocate memory for hypertree
   tree.Hypernodes.Shrink(
-    nHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
+    this
+      ->NumHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
   tree.Hyperarcs.ReleaseResources();
-  tree.Hyperarcs.Allocate(nHypernodes); // Has not been allocated yet
+  tree.Hyperarcs.Allocate(this->NumHypernodes); // Has not been allocated yet
 
   //      2.      Use the superIDs already set to fill in the Hyperarcs array
   active_graph_inc_ns::SetHyperArcsWorklet setHyperArcsWorklet;
@@ -825,7 +826,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 
   // 2.   Loop through all vertices to slide down Hyperarcs
   active_graph_inc_ns::SetArcsSlideVertices slideVerticesWorklet(
-    this->IsJoinGraph, nSupernodes, nHypernodes);
+    this->IsJoinGraph, this->NumSupernodes, this->NumHypernodes);
   this->Invoke(slideVerticesWorklet,
                tree.Arcs,            // (input)
                extrema,              // (input)  i.e,. meshExtrema.Peaks or meshExtrema.Pits
@@ -837,7 +838,7 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 
   // 3.   Now set the superparents correctly for the supernodes
   PermuteIndexType permuteTreeSuperparents(tree.Supernodes, tree.Superparents);
-  vtkm::cont::ArrayHandleIndex supernodesIndex(nSupernodes);
+  vtkm::cont::ArrayHandleIndex supernodesIndex(this->NumSupernodes);
   vtkm::cont::Algorithm::Copy(supernodesIndex, permuteTreeSuperparents);
 
   tree.DebugPrint("Superparents Set", __FILE__, __LINE__);
@@ -914,8 +915,8 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
 
   std::cout << "Is Join Graph? " << (this->IsJoinGraph ? "T" : "F") << std::endl;
   std::cout << "NumIterations    " << this->NumIterations << std::endl;
-  std::cout << "nSupernodes    " << nSupernodes << std::endl;
-  std::cout << "nHypernodes    " << nHypernodes << std::endl;
+  std::cout << "nSupernodes    " << this->NumSupernodes << std::endl;
+  std::cout << "nHypernodes    " << this->NumHypernodes << std::endl;
 
   // Full Vertex Arrays
   std::cout << "Full Vertex Arrays - Size:  " << this->GlobalIndex.GetNumberOfValues() << std::endl;

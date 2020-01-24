@@ -240,9 +240,10 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // but we will want to move supernodes around.
   // the first step is therefore to find the new order of supernodes by sorting
   // we will use the hypernodes array for this, as we will want a copy to end up there
+
+  // create linear sequence of numbers 0, 1, .. NumSupernodes
   vtkm::cont::ArrayHandleIndex initContourTreeHypernodes(
-    this->ContourTreeResult.Supernodes
-      .GetNumberOfValues()); // create linear sequence of numbers 0, 1, .. nSupernodes
+    this->ContourTreeResult.Supernodes.GetNumberOfValues());
   vtkm::cont::Algorithm::Copy(initContourTreeHypernodes, this->ContourTreeResult.Hypernodes);
 
   // now we sort hypernodes array with a comparator
@@ -640,8 +641,8 @@ void ContourTreeMaker::AugmentMergeTrees()
                newSplitID);                        //output
 
   // 7. use the active supernodes array for sorting
-  vtkm::cont::ArrayHandleIndex initActiveSupernodes(
-    nSupernodes); // create linear sequence of numbers 0, 1, .. nSupernodes
+  // create linear sequence of numbers 0, 1, .. nSupernodes
+  vtkm::cont::ArrayHandleIndex initActiveSupernodes(nSupernodes);
   vtkm::cont::Algorithm::Copy(initActiveSupernodes, this->ActiveSupernodes);
 
   // 8. Once we have got the superparent for each, we can sort by superparents and set
