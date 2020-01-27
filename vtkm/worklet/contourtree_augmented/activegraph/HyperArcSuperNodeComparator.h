@@ -79,10 +79,10 @@ public:
   VTKM_CONT
   HyperArcSuperNodeComparatorImpl(const IdArrayPortalType& hyperparents,
                                   const IdArrayPortalType& superID,
-                                  bool IsJoinTree)
+                                  bool isJoinTree)
     : TreeHyperparentsPortal(hyperparents)
     , GraphSuperIDPortal(superID)
-    , IsJoinTree(IsJoinTree)
+    , IsJoinTree(isJoinTree)
   { // constructor
   } // constructor
 
@@ -125,10 +125,10 @@ public:
   VTKM_CONT
   HyperArcSuperNodeComparator(const IdArrayType& hyperparents,
                               const IdArrayType& superID,
-                              bool IsJoinTree)
+                              bool isJoinTree)
     : Hyperparents(hyperparents)
     , SuperID(superID)
-    , IsJoinTree(IsJoinTree)
+    , IsJoinTree(isJoinTree)
   {
   }
 
