@@ -10,6 +10,9 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -146,10 +149,67 @@ struct TemplatedTests
                  WRITE_VALUE);
   }
 
+  void TestSimpleIterators()
+  {
+    std::array<T, ARRAY_SIZE> array;
+    T* begin = array.data();
+    T* end = begin + ARRAY_SIZE;
+    const T* cbegin = begin;
+    const T* cend = end;
+    vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::make_ArrayHandle(begin, ARRAY_SIZE);
+
+    std::cout
+      << "  Testing ArrayPortalToIterators(ArrayPortalFromIterators) gets back simple iterator."
+      << std::endl;
+    {
+      auto portal = vtkm::cont::internal::ArrayPortalFromIterators<T*>(begin, end);
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(begin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(begin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
+    }
+    {
+      auto portal = vtkm::cont::internal::ArrayPortalFromIterators<const T*>(cbegin, cend);
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(cbegin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(cbegin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
+    }
+
+    std::cout << "  Testing that basic ArrayHandle has simple iterators." << std::endl;
+    {
+      auto portal = arrayHandle.GetPortalControl();
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(begin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(begin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
+    }
+    {
+      auto portal = arrayHandle.GetPortalConstControl();
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(cbegin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(cbegin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
+    }
+  }
+
   void operator()()
   {
     TestIteratorRead();
     TestIteratorWrite();
+    TestSimpleIterators();
   }
 };
 
@@ -201,30 +261,10 @@ void TestCustomIterator()
   VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) == 13);
 }
 
-void TestBasicStorageSpecialization()
-{
-  // Control iterators from basic storage arrays should just be pointers:
-  vtkm::cont::ArrayHandle<int> handle;
-  handle.Allocate(1);
-
-  auto portal = handle.GetPortalControl();
-  auto portalConst = handle.GetPortalConstControl();
-
-  auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
-  auto iterConst = vtkm::cont::ArrayPortalToIteratorBegin(portalConst);
-
-  (void)iter;
-  (void)iterConst;
-
-  VTKM_TEST_ASSERT(std::is_same<decltype(iter), int*>::value);
-  VTKM_TEST_ASSERT(std::is_same<decltype(iterConst), int const*>::value);
-}
-
 void TestArrayPortalToIterators()
 {
   vtkm::testing::Testing::TryTypes(TestFunctor());
   TestCustomIterator();
-  TestBasicStorageSpecialization();
 }
 
 } // Anonymous namespace

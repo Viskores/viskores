@@ -13,6 +13,8 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
+#include <vtkm/internal/ArrayPortalHelpers.h>
+
 namespace vtkmstd
 {
 /// Implementation of std::void_t (C++17):
@@ -43,6 +45,10 @@ namespace vtkm
 namespace cont
 {
 
+template <typename PortalType,
+          typename CustomIterators = vtkm::internal::PortalSupportsIterators<PortalType>>
+class ArrayPortalToIterators;
+
 /// \brief Convert an \c ArrayPortal to STL iterators.
 ///
 /// \c ArrayPortalToIterators is a class that holds an \c ArrayPortal and
@@ -51,13 +57,12 @@ namespace cont
 /// STL iterators such as STL algorithms or Thrust operations.
 ///
 /// The default template implementation constructs iterators that provide
-/// values through the \c ArrayPortal itself. This class can be specialized to
-/// provide iterators that more directly access the data. For example, \c
-/// ArrayPortalFromIterator has a specialization to return the original
-/// iterators.
+/// values through the \c ArrayPortal itself. However, if the \c ArrayPortal
+/// contains its own iterators (by defining \c GetIteratorBegin and
+/// \c GetIteratorEnd), then those iterators are used.
 ///
-template <typename PortalType, typename CustomIterSFINAE = void>
-class ArrayPortalToIterators
+template <typename PortalType>
+class ArrayPortalToIterators<PortalType, std::false_type>
 {
 public:
   /// \c ArrayPortaltoIterators should be constructed with an instance of
@@ -92,10 +97,10 @@ private:
 
 // Specialize for custom iterator types:
 template <typename PortalType>
-class ArrayPortalToIterators<PortalType, vtkmstd::void_t<typename PortalType::IteratorType>>
+class ArrayPortalToIterators<PortalType, std::true_type>
 {
 public:
-  using IteratorType = typename PortalType::IteratorType;
+  using IteratorType = decltype(std::declval<PortalType>().GetIteratorBegin());
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
