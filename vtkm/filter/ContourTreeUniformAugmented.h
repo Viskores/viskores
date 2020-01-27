@@ -74,15 +74,50 @@ namespace detail
 class MultiBlockContourTreeHelper;
 } // namespace detail
 
-
+/// \brief Construct the Contour Tree for a 2D or 3D regular mesh
+///
+/// This filter implements the parallel peak pruning algorithm. In contrast to
+/// the ContourTreeUniform filter, this filter is optimized to allow for the
+/// computation of the augmented contour tree, i.e., the contour tree including
+/// all regular mesh vertices. Augmentation with regular vertices is used in
+/// practice to compute statistics (e.g., volume), to segment the input mesh,
+/// facilitate iso-value selection, enable localization of all verticies of a
+/// mesh in the tree among others.
+///
+/// In addition to single-block computation, the filter also supports multi-block
+/// regular grids. The blocks are processed in parallel using DIY and then the
+/// tree are merged progressively using a binary-reduction scheme to compute the
+/// final contour tree. I.e., in the multi-block context, the final tree is
+/// constructed on rank 0.
 class ContourTreeAugmented : public vtkm::filter::FilterCell<ContourTreeAugmented>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
+  ///
+  /// Create the contour tree filter
+  /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
+  ///                             connectivity should be used. Valid only for 3D input data. Default is false.
+  /// @param[in] computeRegularStructure  Unsigned int indicating whether the tree should be augmented.
+  ///                             0=no augmentation, 1=full augmentation, 2=boundary augmentation. The
+  ///                             latter option (=2) is mainly relevant for multi-block input data to
+  ///                             improve efficiency by considering only boundary vertices during the
+  ///                             merging of data blocks.
+  ///
   VTKM_CONT
   ContourTreeAugmented(bool useMarchingCubes = false, unsigned int computeRegularStructure = 1);
 
-  // Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
+  ///
+  /// Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
+  ///
+  /// Note: Only used when running on a multi-block dataset.
+  /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
+  /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
+  /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
+  ///                               with respect to blocksPerDim
+  /// @param[in] localBlockOrigins  Array with the (x,y,z) origin (with regard to mesh index) of each
+  ///                               local data block
+  /// @param[in] localBlockSizes    Array with the sizes (i.e., extends in number of mesh points) of each
+  ///                               local data block
   VTKM_CONT
   void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
                                vtkm::Id3 globalSize,
@@ -90,7 +125,7 @@ public:
                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
                                const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
 
-  // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
+  /// Output field "saddlePeak" wich is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
@@ -110,6 +145,12 @@ public:
                              vtkm::cont::PartitionedDataSet& output,
                              const vtkm::filter::PolicyBase<DerivedPolicy>&);
 
+
+  ///
+  /// Internal helper function that implements the actual functionality of PostExecute
+  ///
+  /// In the case we operate on vtkm::cont::MultiBlock we need to merge the trees
+  /// computed on the block to compute the final contour tree.
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT void DoPostExecute(
     const vtkm::cont::PartitionedDataSet& input,
@@ -117,32 +158,47 @@ public:
     const vtkm::filter::FieldMetadata& fieldMeta,
     const vtkm::cont::ArrayHandle<T, StorageType>&, // dummy parameter to get the type
     vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  //@}
 
+  //@{
+  /// Get the contour tree computed by the filter
   const vtkm::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
+  /// Get the sort order for the mesh vertices
   const vtkm::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;
+  /// Get the number of iterations used to compute the contour tree
   vtkm::Id GetNumIterations() const;
+  //@}
 
 private:
+  /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;
   // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
   unsigned int ComputeRegularStructure;
 
   // TODO Should the additional fields below be add to the vtkm::filter::ResultField and what is the best way to represent them
   // Additional result fields not included in the vtkm::filter::ResultField returned by DoExecute
-  // The contour tree
+
+  /// The contour tree computed by the filter
   vtkm::worklet::contourtree_augmented::ContourTree ContourTreeData;
-  // Number of iterations used to compute the contour tree
+  /// Number of iterations used to compute the contour tree
   vtkm::Id NumIterations;
-  // Array with the sorted order of the mesh vertices
+  /// Array with the sorted order of the mesh vertices
   vtkm::worklet::contourtree_augmented::IdArrayType MeshSortOrder;
-  // Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
+  /// Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
   detail::MultiBlockContourTreeHelper* MultiBlockTreeHelper;
 };
 
-
-// Helper struct to collect sizing information from the dataset
+///
+/// Helper struct to collect sizing information from the dataset
+///
 struct GetRowsColsSlices
 {
+  //@{
+  /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
+  /// @param[in] cells  The input vtkm::cont::CellSetStructured
+  /// @param[out] nRows  Number of rows (x) in the cell set
+  /// @param[out[ nCols  Number of columns (y) in the cell set
+  /// @param[out] nSlices Number of slices (z) in the cell set
   void operator()(const vtkm::cont::CellSetStructured<2>& cells,
                   vtkm::Id& nRows,
                   vtkm::Id& nCols,
@@ -163,6 +219,9 @@ struct GetRowsColsSlices
     nCols = pointDimensions[1];
     nSlices = pointDimensions[2];
   }
+  //@}
+
+  ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>
   template <typename T>
   void operator()(const T& cells, vtkm::Id& nRows, vtkm::Id& nCols, vtkm::Id& nSlices) const
   {
