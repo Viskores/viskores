@@ -53,7 +53,6 @@ struct vtkm::cont::Token::HeldReference
 };
 
 vtkm::cont::Token::Token()
-  : Internals(new InternalStruct)
 {
 }
 
@@ -64,6 +63,11 @@ vtkm::cont::Token::~Token()
 
 void vtkm::cont::Token::DetachFromAll()
 {
+  if (!this->Internals)
+  {
+    // If internals is NULL, then we are not attached to anything.
+    return;
+  }
   LockType localLock = this->Internals->GetLock();
   auto heldReferences = this->Internals->GetHeldReferences(localLock);
   for (auto&& held : *heldReferences)
@@ -81,6 +85,10 @@ void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReferenc
                                std::unique_lock<std::mutex>& lock,
                                std::condition_variable* conditionVariablePointer)
 {
+  if (!this->Internals)
+  {
+    this->Internals.reset(new InternalStruct);
+  }
   LockType localLock = this->Internals->GetLock();
   if (this->IsAttached(localLock, referenceCountPointer))
   {
@@ -100,6 +108,10 @@ inline bool vtkm::cont::Token::IsAttached(
   LockType& lock,
   vtkm::cont::Token::ReferenceCount* referenceCountPointer) const
 {
+  if (!this->Internals)
+  {
+    return false;
+  }
   for (auto&& heldReference : *this->Internals->GetHeldReferences(lock))
   {
     if (referenceCountPointer == heldReference.ReferenceCountPointer)
@@ -112,6 +124,10 @@ inline bool vtkm::cont::Token::IsAttached(
 
 bool vtkm::cont::Token::IsAttached(vtkm::cont::Token::ReferenceCount* referenceCountPointer) const
 {
+  if (!this->Internals)
+  {
+    return false;
+  }
   LockType lock = this->Internals->GetLock();
   return this->IsAttached(lock, referenceCountPointer);
 }
