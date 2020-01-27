@@ -81,8 +81,8 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  SetArcsSlideVertices(bool IsJoinGraph, vtkm::Id nSupernodes, vtkm::Id nHypernodes)
-    : IsJoinGraph(IsJoinGraph)
+  SetArcsSlideVertices(bool isJoinGraph, vtkm::Id nSupernodes, vtkm::Id nHypernodes)
+    : IsJoinGraph(isJoinGraph)
     , NumSupernodes(nSupernodes)
     , NumHypernodes(nHypernodes)
   {
