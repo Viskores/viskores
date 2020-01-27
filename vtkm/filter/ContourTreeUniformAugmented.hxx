@@ -78,7 +78,12 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 
-// TODO, this should be moved into a namespace but gcc seems to have trouble with the template specialization
+namespace vtkm
+{
+namespace filter
+{
+namespace detail
+{
 template <typename FieldType>
 struct ContourTreeBlockData
 {
@@ -101,15 +106,21 @@ struct ContourTreeBlockData
   vtkm::Id3 GlobalSize;                 // Extends of the global mesh
   unsigned int ComputeRegularStructure; // pass through augmentation setting
 };
+} // namespace detail
+} // namespace filter
+} // namespace vtkm
+
+
 
 namespace vtkmdiy
 {
 
 // Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
 template <typename FieldType>
-struct Serialization<ContourTreeBlockData<FieldType>>
+struct Serialization<vtkm::filter::detail::ContourTreeBlockData<FieldType>>
 {
-  static void save(vtkmdiy::BinaryBuffer& bb, const ContourTreeBlockData<FieldType>& block)
+  static void save(vtkmdiy::BinaryBuffer& bb,
+                   const vtkm::filter::detail::ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::save(bb, block.NumVertices);
     vtkmdiy::save(bb, block.SortOrder);
@@ -124,7 +135,8 @@ struct Serialization<ContourTreeBlockData<FieldType>>
     vtkmdiy::save(bb, block.ComputeRegularStructure);
   }
 
-  static void load(vtkmdiy::BinaryBuffer& bb, ContourTreeBlockData<FieldType>& block)
+  static void load(vtkmdiy::BinaryBuffer& bb,
+                   vtkm::filter::detail::ContourTreeBlockData<FieldType>& block)
   {
     vtkmdiy::load(bb, block.NumVertices);
     vtkmdiy::load(bb, block.SortOrder);
@@ -731,7 +743,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
   std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>*> localContourTreeMeshes;
   localContourTreeMeshes.resize(static_cast<std::size_t>(input.GetNumberOfPartitions()));
   // TODO need to allocate and free these ourselves. May need to update detail::MultiBlockContourTreeHelper::ComputeLocalContourTreeMesh
-  std::vector<ContourTreeBlockData<T>*> localDataBlocks;
+  std::vector<vtkm::filter::detail::ContourTreeBlockData<T>*> localDataBlocks;
   localDataBlocks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
   std::vector<vtkmdiy::Link*> localLinks; // dummy links needed to make DIY happy
   localLinks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
@@ -763,7 +775,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
         compRegularStruct);
     localContourTreeMeshes[bi] = currContourTreeMesh;
     // create the local data block structure
-    localDataBlocks[bi] = new ContourTreeBlockData<T>();
+    localDataBlocks[bi] = new vtkm::filter::detail::ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
     localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
     localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
