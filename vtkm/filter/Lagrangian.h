@@ -95,7 +95,6 @@ private:
   vtkm::Id cust_res;
   vtkm::Id3 SeedRes;
   vtkm::Id writeFrequency;
-  //  std::vector<vtkm::Float64> xCoordinates, yCoordinates, zCoordinates;
 };
 }
 } // namespace vtkm::filter
