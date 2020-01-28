@@ -211,17 +211,17 @@ struct GetInverseFunctorTypeImpl<std::false_type, DecoratorImplT, PortalList>
 // See note below about using non-writable portals in invertible functors.
 // We need to sub in const portals when writable ones don't exist.
 template <typename ArrayT>
-typename std::decay<ArrayT>::type::PortalControl GetPortalControlImpl(std::true_type,
-                                                                      ArrayT&& array)
+typename std::decay<ArrayT>::type::WritePortalType GetPortalControlImpl(std::true_type,
+                                                                        ArrayT&& array)
 {
-  return array.GetPortalControl();
+  return array.WritePortal();
 }
 
 template <typename ArrayT>
-typename std::decay<ArrayT>::type::PortalConstControl GetPortalControlImpl(std::false_type,
-                                                                           ArrayT&& array)
+typename std::decay<ArrayT>::type::ReadPortalType GetPortalControlImpl(std::false_type,
+                                                                       ArrayT&& array)
 {
-  return array.GetPortalConstControl();
+  return array.ReadPortal();
 }
 
 template <typename ArrayT, typename Device>
@@ -265,13 +265,13 @@ GetPortalOutputImpl(std::false_type, ArrayT&& array, Device, vtkm::cont::Token& 
 // const array handles so we can at least read from them in the inverse
 // functors.
 template <typename ArrayT,
-          typename Portal = typename std::decay<ArrayT>::type::PortalControl,
-          typename PortalConst = typename std::decay<ArrayT>::type::PortalConstControl>
+          typename Portal = typename std::decay<ArrayT>::type::WritePortalType,
+          typename PortalConst = typename std::decay<ArrayT>::type::ReadPortalType>
 using GetPortalControlType =
   typename brigand::if_<vtkm::internal::PortalSupportsSets<Portal>, Portal, PortalConst>::type;
 
 template <typename ArrayT>
-using GetPortalConstControlType = typename std::decay<ArrayT>::type::PortalConstControl;
+using GetPortalConstControlType = typename std::decay<ArrayT>::type::ReadPortalType;
 
 template <typename ArrayT,
           typename Device,
@@ -289,16 +289,15 @@ using GetPortalConstExecutionType =
 // Get portal objects:
 // See note above -- we swap in const portals sometimes.
 template <typename ArrayT>
-GetPortalControlType<typename std::decay<ArrayT>::type> GetPortalControl(ArrayT&& array)
+GetPortalControlType<typename std::decay<ArrayT>::type> WritePortal(ArrayT&& array)
 {
   return detail::GetPortalControlImpl(IsWritableArrayHandle<ArrayT>{}, std::forward<ArrayT>(array));
 }
 
 template <typename ArrayT>
-GetPortalConstControlType<typename std::decay<ArrayT>::type> GetPortalConstControl(
-  const ArrayT& array)
+GetPortalConstControlType<typename std::decay<ArrayT>::type> ReadPortal(const ArrayT& array)
 {
-  return array.GetPortalConstControl();
+  return array.ReadPortal();
 }
 
 template <typename ArrayT, typename Device>
@@ -377,15 +376,14 @@ using GetInverseFunctorType =
 // - So we jump through some decltype/declval hoops here to get this to work:
 template <typename... ArrayTs>
 using GetPortalConstControlList =
-  brigand::list<decltype((GetPortalConstControl(std::declval<ArrayTs&>())))...>;
+  brigand::list<decltype((ReadPortal(std::declval<ArrayTs&>())))...>;
 
 template <typename Device, typename... ArrayTs>
 using GetPortalConstExecutionList = brigand::list<decltype(
   (GetPortalInput(std::declval<ArrayTs&>(), Device{}, std::declval<vtkm::cont::Token&>())))...>;
 
 template <typename... ArrayTs>
-using GetPortalControlList =
-  brigand::list<decltype((GetPortalControl(std::declval<ArrayTs&>())))...>;
+using GetPortalControlList = brigand::list<decltype((WritePortal(std::declval<ArrayTs&>())))...>;
 
 template <typename Device, typename... ArrayTs>
 using GetPortalExecutionList = brigand::list<decltype(
@@ -553,7 +551,7 @@ struct DecoratorStorageTraits
       // Indices{}.value : Works on both MSVC2015 and MSVC2017.
       //
       // Don't touch the following line unless you really, really have to.
-      GetPortalControl(vtkmstd::get<Indices{}.value>(arrays))...);
+      WritePortal(vtkmstd::get<Indices{}.value>(arrays))...);
   }
 
   template <template <typename...> class List, typename... Indices>
@@ -567,7 +565,7 @@ struct DecoratorStorageTraits
       impl,
       // Don't touch the following line unless you really, really have to. See
       // note in MakePortalControl.
-      GetPortalConstControl(vtkmstd::get<Indices{}.value>(arrays))...);
+      ReadPortal(vtkmstd::get<Indices{}.value>(arrays))...);
   }
 
   template <template <typename...> class List, typename... Indices, typename Device>
@@ -646,7 +644,7 @@ struct DecoratorStorageTraits
                                                        List<std::size_t, Indices...>)
   {
     return CreatePortalDecorator<PortalControlType>(
-      numValues, impl, GetPortalControl(vtkmstd::get<Indices>(arrays))...);
+      numValues, impl, WritePortal(vtkmstd::get<Indices>(arrays))...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
@@ -656,7 +654,7 @@ struct DecoratorStorageTraits
                                                                  List<std::size_t, Indices...>)
   {
     return CreatePortalDecorator<PortalConstControlType>(
-      numValues, impl, GetPortalConstControl(vtkmstd::get<Indices>(arrays))...);
+      numValues, impl, ReadPortal(vtkmstd::get<Indices>(arrays))...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>

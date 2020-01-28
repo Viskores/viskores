@@ -71,7 +71,7 @@ void BenchRayTracing(::benchmark::State& state)
   rays.Buffers.at(0).InitConst(0.f);
 
   vtkm::cont::Field field = dataset.GetField("pointvar");
-  vtkm::Range range = field.GetRange().GetPortalConstControl().Get(0);
+  vtkm::Range range = field.GetRange().ReadPortal().Get(0);
 
   tracer.SetField(field, range);
 
@@ -81,8 +81,8 @@ void BenchRayTracing(::benchmark::State& state)
 
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colors;
   colors.Allocate(100);
-  auto portal = colors.GetPortalControl();
-  auto colorPortal = temp.GetPortalConstControl();
+  auto portal = colors.WritePortal();
+  auto colorPortal = temp.ReadPortal();
   constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
   for (vtkm::Id i = 0; i < 100; ++i)
   {

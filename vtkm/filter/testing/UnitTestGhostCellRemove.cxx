@@ -38,7 +38,7 @@ static vtkm::cont::ArrayHandle<vtkm::UInt8> StructuredGhostCellArray(vtkm::Id nx
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> ghosts;
   ghosts.Allocate(numCells);
-  auto portal = ghosts.GetPortalControl();
+  auto portal = ghosts.WritePortal();
   for (vtkm::Id i = 0; i < numCells; i++)
   {
     if (numLayers == 0)
@@ -165,11 +165,10 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   {
     auto ptIds = structured.GetPointsOfCell(i);
     for (vtkm::IdComponent j = 0; j < NDIM; j++, idx++)
-      conn.GetPortalControl().Set(idx, ptIds[j]);
+      conn.WritePortal().Set(idx, ptIds[j]);
 
-    shapes.GetPortalControl().Set(
-      i, (NDIM == 4 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
-    numIndices.GetPortalControl().Set(i, NDIM);
+    shapes.WritePortal().Set(i, (NDIM == 4 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
+    numIndices.WritePortal().Set(i, NDIM);
   }
 }
 
@@ -184,8 +183,8 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
   vtkm::cont::ArrayHandle<CoordType> explCoords;
 
   explCoords.Allocate(numPts);
-  auto explPortal = explCoords.GetPortalControl();
-  auto cp = coordData.GetPortalConstControl();
+  auto explPortal = explCoords.WritePortal();
+  auto cp = coordData.ReadPortal();
   for (vtkm::Id i = 0; i < numPts; i++)
     explPortal.Set(i, cp.Get(i));
 

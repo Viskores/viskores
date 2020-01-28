@@ -180,10 +180,10 @@ private:
   using StorageToArrayHandle = vtkm::cont::ArrayHandle<ValueType, S>;
 
   template <typename S>
-  using StorageToPortalControl = typename StorageToArrayHandle<S>::PortalControl;
+  using StorageToPortalControl = typename StorageToArrayHandle<S>::WritePortalType;
 
   template <typename S>
-  using StorageToPortalConstControl = typename StorageToArrayHandle<S>::PortalConstControl;
+  using StorageToPortalConstControl = typename StorageToArrayHandle<S>::ReadPortalType;
 
   using ArrayHandleVariantType = vtkm::internal::Variant<StorageToArrayHandle<StorageTags>...>;
   ArrayHandleVariantType ArrayHandleVariant;
@@ -231,7 +231,7 @@ private:
     template <typename ArrayHandleType>
     VTKM_CONT PortalType operator()(ArrayHandleType&& array) const
     {
-      return PortalType(array.GetPortalControl());
+      return PortalType(array.WritePortal());
     }
   };
 
@@ -240,7 +240,7 @@ private:
     template <typename ArrayHandleType>
     VTKM_CONT PortalConstType operator()(ArrayHandleType&& array) const
     {
-      return PortalConstType(array.GetPortalConstControl());
+      return PortalConstType(array.ReadPortal());
     }
   };
 

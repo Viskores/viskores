@@ -82,7 +82,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
 
   inArray.Allocate(ARRAY_SIZE);
-  SetPortal(inArray.GetPortalControl());
+  SetPortal(inArray.WritePortal());
 
   TryExecuteTestFunctor functor;
 
@@ -92,7 +92,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   {
     VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
     VTKM_TEST_ASSERT(functor.NumCalls == 1, "Bad number of calls");
-    CheckPortal(outArray.GetPortalConstControl());
+    CheckPortal(outArray.ReadPortal());
   }
   else
   {
@@ -105,7 +105,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   if (expectSuccess)
   {
     VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
-    CheckPortal(outArray2.GetPortalConstControl());
+    CheckPortal(outArray2.ReadPortal());
   }
   else
   {

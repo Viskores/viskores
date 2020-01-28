@@ -218,7 +218,7 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
   glDisable(GL_LIGHTING);
   glBegin(GL_QUADS);
 
-  auto colorPortal = colors.GetPortalConstControl();
+  auto colorPortal = colors.ReadPortal();
 
   for (int i = 0; i < n; i++)
   {

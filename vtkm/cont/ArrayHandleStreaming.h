@@ -120,9 +120,9 @@ public:
   using ValueType = typename ArrayHandleInputType::ValueType;
 
   using PortalType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>;
+    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::WritePortalType>;
   using PortalConstType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalConstControl>;
+    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -147,15 +147,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->InputArray.GetPortalControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalType(this->InputArray.WritePortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(
-      this->InputArray.GetPortalConstControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalConstType(this->InputArray.ReadPortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
@@ -238,9 +237,9 @@ public:
                        const vtkm::Id curBlockSize)
     : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize))
   {
-    this->GetPortalConstControl().SetBlockIndex(blockIndex);
-    this->GetPortalConstControl().SetBlockSize(blockSize);
-    this->GetPortalConstControl().SetCurBlockSize(curBlockSize);
+    this->ReadPortal().SetBlockIndex(blockIndex);
+    this->ReadPortal().SetBlockSize(blockSize);
+    this->ReadPortal().SetCurBlockSize(curBlockSize);
   }
 
   VTKM_CONT

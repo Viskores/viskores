@@ -134,8 +134,8 @@ class Storage<T, StorageTagView<ST>>
 public:
   using ValueType = T;
 
-  using PortalType = ArrayPortalView<typename ArrayHandleType::PortalControl>;
-  using PortalConstType = ArrayPortalView<typename ArrayHandleType::PortalConstControl>;
+  using PortalType = ArrayPortalView<typename ArrayHandleType::WritePortalType>;
+  using PortalConstType = ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -158,14 +158,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->StartIndex, this->NumValues);
+    return PortalType(this->Array.WritePortal(), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(), this->StartIndex, this->NumValues);
+    return PortalConstType(this->Array.ReadPortal(), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT

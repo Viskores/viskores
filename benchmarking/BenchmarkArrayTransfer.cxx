@@ -238,7 +238,7 @@ void BenchRoundTripRead(benchmark::State& state)
     invoker(ReadValues{}, array);
 
     // Copy back to host and read:
-    auto portal = array.GetPortalConstControl();
+    auto portal = array.ReadPortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
       benchmark::DoNotOptimize(portal.Get(i));
@@ -292,7 +292,7 @@ void BenchRoundTripReadWrite(benchmark::State& state)
     // Do work on device:
     invoker(ReadWriteValues{}, array);
 
-    auto portal = array.GetPortalControl();
+    auto portal = array.WritePortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
       portal.Set(i, portal.Get(i) - static_cast<ValueType>(i));
@@ -345,7 +345,7 @@ void BenchExecToContRead(benchmark::State& state)
     invoker(WriteValues{}, array);
 
     // Read back on host:
-    auto portal = array.GetPortalControl();
+    auto portal = array.WritePortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
       benchmark::DoNotOptimize(portal.Get(i));
@@ -397,7 +397,7 @@ void BenchExecToContWrite(benchmark::State& state)
     invoker(WriteValues{}, array);
 
     // Read back on host:
-    auto portal = array.GetPortalControl();
+    auto portal = array.WritePortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
       portal.Set(i, portal.Get(i) - static_cast<ValueType>(i));
@@ -449,7 +449,7 @@ void BenchExecToContReadWrite(benchmark::State& state)
     invoker(WriteValues{}, array);
 
     // Read back on host:
-    auto portal = array.GetPortalControl();
+    auto portal = array.WritePortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
       benchmark::DoNotOptimize(portal.Get(i));

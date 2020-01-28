@@ -572,7 +572,7 @@ void Canvas::SaveAs(const std::string& fileName) const
   vtkm::Id width = GetWidth();
   vtkm::Id height = GetHeight();
   of << "P6" << std::endl << width << " " << height << std::endl << 255 << std::endl;
-  ColorBufferType::PortalConstControl colorPortal = GetColorBuffer().GetPortalConstControl();
+  ColorBufferType::ReadPortalType colorPortal = GetColorBuffer().ReadPortal();
   for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
   {
     for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)

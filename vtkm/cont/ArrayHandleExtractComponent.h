@@ -95,8 +95,8 @@ class Storage<typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::Com
               StorageTagExtractComponent<ArrayHandleType>>
 {
 public:
-  using PortalType = ArrayPortalExtractComponent<typename ArrayHandleType::PortalControl>;
-  using PortalConstType = ArrayPortalExtractComponent<typename ArrayHandleType::PortalConstControl>;
+  using PortalType = ArrayPortalExtractComponent<typename ArrayHandleType::WritePortalType>;
+  using PortalConstType = ArrayPortalExtractComponent<typename ArrayHandleType::ReadPortalType>;
   using ValueType = typename PortalType::ValueType;
 
   VTKM_CONT
@@ -119,14 +119,14 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(), this->Component);
+    return PortalConstType(this->Array.ReadPortal(), this->Component);
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->Component);
+    return PortalType(this->Array.WritePortal(), this->Component);
   }
 
   VTKM_CONT

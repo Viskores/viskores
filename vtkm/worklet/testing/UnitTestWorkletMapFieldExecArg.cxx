@@ -85,8 +85,8 @@ struct DoTestWorklet
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldArray, SimpleExecObject());
 
     std::cout << "Check result." << std::endl;
-    CheckPortal(outputHandle.GetPortalConstControl());
-    CheckPortal(outputFieldArray.GetPortalConstControl());
+    CheckPortal(outputHandle.ReadPortal());
+    CheckPortal(outputFieldArray.ReadPortal());
 
     std::cout << "Repeat with dynamic arrays." << std::endl;
     // Clear out output arrays.
@@ -98,8 +98,8 @@ struct DoTestWorklet
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic, SimpleExecObject());
 
     std::cout << "Check dynamic array result." << std::endl;
-    CheckPortal(outputHandle.GetPortalConstControl());
-    CheckPortal(outputFieldArray.GetPortalConstControl());
+    CheckPortal(outputHandle.ReadPortal());
+    CheckPortal(outputFieldArray.ReadPortal());
   }
 };
 

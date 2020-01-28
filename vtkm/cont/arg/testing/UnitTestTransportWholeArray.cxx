@@ -132,7 +132,7 @@ struct TryWholeArrayType
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(outKernel, ARRAY_SIZE);
     token.DetachFromAll();
 
-    CheckPortal(array.GetPortalConstControl());
+    CheckPortal(array.ReadPortal());
 
     std::cout << "Check Transport WholeArrayIn" << std::endl;
     TestInKernel<typename InTransportType::ExecObjectType> inKernel;
@@ -152,7 +152,7 @@ struct TryWholeArrayType
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       T expectedValue = TestValue(index, T()) + T(OFFSET);
-      T retrievedValue = array.GetPortalConstControl().Get(index);
+      T retrievedValue = array.ReadPortal().Get(index);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "In/Out array not set correctly.");
     }
@@ -172,7 +172,7 @@ struct TryAtomicArrayType
 
     ArrayHandleType array;
     array.Allocate(1);
-    array.GetPortalControl().Set(0, 0);
+    array.WritePortal().Set(0, 0);
 
     vtkm::cont::Token token;
 
@@ -183,7 +183,7 @@ struct TryAtomicArrayType
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
     token.DetachFromAll();
 
-    T result = array.GetPortalConstControl().Get(0);
+    T result = array.ReadPortal().Get(0);
     VTKM_TEST_ASSERT(result == ((ARRAY_SIZE - 1) * ARRAY_SIZE) / 2,
                      "Got wrong summation in atomic array.");
   }

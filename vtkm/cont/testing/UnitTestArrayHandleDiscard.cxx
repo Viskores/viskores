@@ -35,7 +35,7 @@ struct Test
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
   using Handle = vtkm::cont::ArrayHandle<ValueType>;
   using DiscardHandle = vtkm::cont::ArrayHandleDiscard<ValueType>;
-  using OutputPortal = typename Handle::PortalControl;
+  using OutputPortal = typename Handle::WritePortalType;
   using ReduceOp = vtkm::Add;
 
   // Test discard arrays by using the ReduceByKey algorithm. Two regular arrays
@@ -68,7 +68,7 @@ struct Test
     Algorithm::SortByKey(keys, values);
     Algorithm::ReduceByKey(keys, values, output_keys, output_values, op);
 
-    OutputPortal outputs = output_values.GetPortalControl();
+    OutputPortal outputs = output_values.WritePortal();
 
     VTKM_TEST_ASSERT(outputs.GetNumberOfValues() == NUM_KEYS,
                      "Unexpected number of output values from ReduceByKey.");

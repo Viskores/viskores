@@ -370,9 +370,8 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
   auto oneIfArcValidArrayHandle =
     vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfArcValid>(arcs, oneIfArcValidFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfArcValidArrayHandle, arcTargetIndex);
-  vtkm::Id nValidArcs =
-    arcTargetIndex.GetPortalConstControl().Get(arcTargetIndex.GetNumberOfValues() - 1) +
-    oneIfArcValidFunctor(arcs.GetPortalConstControl().Get(arcs.GetNumberOfValues() - 1));
+  vtkm::Id nValidArcs = arcTargetIndex.ReadPortal().Get(arcTargetIndex.GetNumberOfValues() - 1) +
+    oneIfArcValidFunctor(arcs.ReadPortal().Get(arcs.GetNumberOfValues() - 1));
 
   // ... and compress array
   this->Neighbours.ReleaseResources();
@@ -409,8 +408,8 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
 #ifdef DEBUG_PRINT
   std::cout << std::setw(30) << std::left << __FILE__ << ":" << std::right << std::setw(4)
             << __LINE__ << std::endl;
-  auto firstNeighbourPortal = this->FirstNeighbour.GetPortalConstControl();
-  auto neighboursPortal = this->Neighbours.GetPortalConstControl();
+  auto firstNeighbourPortal = this->FirstNeighbour.ReadPortal();
+  auto neighboursPortal = this->Neighbours.ReadPortal();
   for (vtkm::Id vtx = 0; vtx < FirstNeighbour.GetNumberOfValues(); ++vtx)
   {
     std::cout << vtx << ": ";
@@ -444,7 +443,7 @@ void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
   IdArrayType nNeighbours;
   this->ComputeNNeighboursVector(nNeighbours);
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(nNeighbours);
-  this->MaxNeighbours = static_cast<vtkm::Id>(rangeArray.GetPortalConstControl().Get(0).Max);
+  this->MaxNeighbours = static_cast<vtkm::Id>(rangeArray.ReadPortal().Get(0).Max);
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
@@ -500,11 +499,11 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
       vtkm::cont::ArrayHandleIndex(other.NumVertices), markOtherFunctor);
     contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType, DeviceTag>
       cssicFunctor(allSortedValues, allGlobalIndices);
-    std::merge(vtkm::cont::ArrayPortalToIteratorBegin(thisIndices.GetPortalConstControl()),
-               vtkm::cont::ArrayPortalToIteratorEnd(thisIndices.GetPortalConstControl()),
-               vtkm::cont::ArrayPortalToIteratorBegin(otherIndices.GetPortalConstControl()),
-               vtkm::cont::ArrayPortalToIteratorEnd(otherIndices.GetPortalConstControl()),
-               vtkm::cont::ArrayPortalToIteratorBegin(overallSortOrder.GetPortalControl()),
+    std::merge(vtkm::cont::ArrayPortalToIteratorBegin(thisIndices.ReadPortal()),
+               vtkm::cont::ArrayPortalToIteratorEnd(thisIndices.ReadPortal()),
+               vtkm::cont::ArrayPortalToIteratorBegin(otherIndices.ReadPortal()),
+               vtkm::cont::ArrayPortalToIteratorEnd(otherIndices.ReadPortal()),
+               vtkm::cont::ArrayPortalToIteratorBegin(overallSortOrder.WritePortal()),
                cssicFunctor);
   }
 
@@ -526,14 +525,14 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
       differentFromNextFunctor);
 
     // Compute the exclusive scan of our transformed combined vector
-    overallSortIndex.GetPortalControl().Set(0, 0);
+    overallSortIndex.WritePortal().Set(0, 0);
     IdArrayType tempArr;
     vtkm::cont::Algorithm::ScanInclusive(differentFromNextArr, tempArr);
     vtkm::cont::Algorithm::CopySubRange(
       tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
   }
   vtkm::Id numVerticesCombined =
-    overallSortIndex.GetPortalConstControl().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
+    overallSortIndex.ReadPortal().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
 #ifdef DEBUG_PRINT
   std::cout << "OverallSortIndex.size  " << overallSortIndex.GetNumberOfValues() << std::endl;
   PrintIndices("overallSortIndex", overallSortIndex);
@@ -594,9 +593,9 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
   IdArrayType combinedFirstNeighbour;
   combinedFirstNeighbour.Allocate(numVerticesCombined);
   vtkm::cont::Algorithm::ScanExclusive(combinedNNeighbours, combinedFirstNeighbour);
-  vtkm::Id nCombinedNeighbours = combinedFirstNeighbour.GetPortalConstControl().Get(
-                                   combinedFirstNeighbour.GetNumberOfValues() - 1) +
-    combinedNNeighbours.GetPortalConstControl().Get(combinedNNeighbours.GetNumberOfValues() - 1);
+  vtkm::Id nCombinedNeighbours =
+    combinedFirstNeighbour.ReadPortal().Get(combinedFirstNeighbour.GetNumberOfValues() - 1) +
+    combinedNNeighbours.ReadPortal().Get(combinedNNeighbours.GetNumberOfValues() - 1);
 
   IdArrayType combinedNeighbours;
   combinedNeighbours.Allocate(nCombinedNeighbours);
@@ -637,9 +636,9 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
 
   // TODO Fix the MergedCombinedOtherStartIndex worklet and remove //1r block below
   // 1r--start
-  auto combinedOtherStartIndexPortal = combinedOtherStartIndex.GetPortalControl();
-  auto combinedFirstNeighbourPortal = combinedFirstNeighbour.GetPortalConstControl();
-  auto combinedNeighboursPortal = combinedNeighbours.GetPortalControl();
+  auto combinedOtherStartIndexPortal = combinedOtherStartIndex.WritePortal();
+  auto combinedFirstNeighbourPortal = combinedFirstNeighbour.ReadPortal();
+  auto combinedNeighboursPortal = combinedNeighbours.WritePortal();
   std::vector<vtkm::Id> tempCombinedNeighours((std::size_t)combinedNeighbours.GetNumberOfValues());
   for (vtkm::Id vtx = 0; vtx < combinedNeighbours.GetNumberOfValues(); ++vtx)
   {
@@ -761,7 +760,7 @@ void ContourTreeMesh<FieldType>::SaveVector(std::ostream& os,
 {
   vtkm::Id numVals = vec.GetNumberOfValues();
   os.write(reinterpret_cast<const char*>(&numVals), sizeof(ValueType));
-  auto vecPortal = vec.GetPortalConstControl();
+  auto vecPortal = vec.ReadPortal();
   for (vtkm::Id i = 0; i < numVals; ++i)
     os.write(reinterpret_cast<const char*>(vecPortal.Get(i)), sizeof(ValueType));
 }
@@ -774,7 +773,7 @@ void ContourTreeMesh<FieldType>::LoadVector(std::istream& is,
   vtkm::Id numVals;
   is.read(reinterpret_cast<char*>(&numVals), sizeof(ValueType));
   vec.Allocate(numVals);
-  auto vecPortal = vec.GetPortalControl();
+  auto vecPortal = vec.WritePortal();
   vtkm::Id val;
   for (vtkm::Id i = 0; i < numVals; ++i)
   {

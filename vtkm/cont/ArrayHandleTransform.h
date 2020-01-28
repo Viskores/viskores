@@ -273,7 +273,7 @@ public:
 
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                               typename ArrayHandleType::PortalConstControl,
+                                               typename ArrayHandleType::ReadPortalType,
                                                typename FunctorManager::FunctorType>;
 
   // Note that this array is read only, so you really should only be getting the const
@@ -307,7 +307,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
-    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor.PrepareForControl());
+    return PortalConstType(this->Array.ReadPortal(), this->Functor.PrepareForControl());
   }
 
   VTKM_CONT
@@ -367,12 +367,12 @@ public:
 
   using PortalType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                               typename ArrayHandleType::PortalControl,
+                                               typename ArrayHandleType::WritePortalType,
                                                typename FunctorManager::FunctorType,
                                                typename InverseFunctorManager::FunctorType>;
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                               typename ArrayHandleType::PortalConstControl,
+                                               typename ArrayHandleType::ReadPortalType,
                                                typename FunctorManager::FunctorType,
                                                typename InverseFunctorManager::FunctorType>;
 
@@ -398,7 +398,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
-    return PortalType(this->Array.GetPortalControl(),
+    return PortalType(this->Array.WritePortal(),
                       this->Functor.PrepareForControl(),
                       this->InverseFunctor.PrepareForControl());
   }
@@ -408,7 +408,7 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::cont::ScopedRuntimeDeviceTracker trackerScope(vtkm::cont::DeviceAdapterTagSerial{});
-    return PortalConstType(this->Array.GetPortalConstControl(),
+    return PortalConstType(this->Array.ReadPortal(),
                            this->Functor.PrepareForControl(),
                            this->InverseFunctor.PrepareForControl());
   }

@@ -262,8 +262,8 @@ struct DoTestForType
     array.Allocate(ARRAY_SIZE);
 
     std::cout << "Set array using reference" << std::endl;
-    using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
-    PortalType portal = array.GetPortalControl();
+    using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::WritePortalType;
+    PortalType portal = array.WritePortal();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       SetReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));

@@ -302,7 +302,7 @@ void TestNormalFunctorInvoke()
   output.SyncControlArray();
 
   VTKM_TEST_ASSERT(inputTestValues[1] == 5, "Input value changed.");
-  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(1) == inputTestValues[1] + 100 + 30,
+  VTKM_TEST_ASSERT(output.ReadPortal().Get(1) == inputTestValues[1] + 100 + 30,
                    "Output value not set right.");
 
   std::cout << "  Try return value." << std::endl;
@@ -323,7 +323,7 @@ void TestNormalFunctorInvoke()
   output.SyncControlArray();
 
   VTKM_TEST_ASSERT(inputTestValues[2] == 6, "Input value changed.");
-  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(2) == inputTestValues[2] + 200 + 30 * 2,
+  VTKM_TEST_ASSERT(output.ReadPortal().Get(2) == inputTestValues[2] + 200 + 30 * 2,
                    "Output value not set right.");
 }
 

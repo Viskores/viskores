@@ -47,7 +47,7 @@ struct ImplicitTests
     //verify that the control portal works
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {
-      const ValueType v = implict.GetPortalConstControl().Get(i);
+      const ValueType v = implict.ReadPortal().Get(i);
       const ValueType correct_value = functor(i);
       VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
     }

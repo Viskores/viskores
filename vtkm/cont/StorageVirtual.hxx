@@ -180,7 +180,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::ControlPortalForInput(
   vtkm::cont::internal::TransferInfoArray& payload) const
 {
-  auto portal = this->Handle.GetPortalConstControl();
+  auto portal = this->Handle.ReadPortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
@@ -190,7 +190,7 @@ inline void make_writableHostPortal(std::true_type,
                                     vtkm::cont::internal::TransferInfoArray& payload,
                                     HandleType& handle)
 {
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }

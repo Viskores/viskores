@@ -82,7 +82,7 @@ using IsInValidArrayHandle =
 ///
 template <typename ArrayHandle>
 using IsWritableArrayHandle =
-  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::PortalControl>;
+  vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::WritePortalType>;
 /// @}
 
 /// Checks to see if the given object is an array handle. This check is
@@ -804,8 +804,7 @@ make_ArrayHandle(const T* array, vtkm::Id length, vtkm::CopyFlag copy = vtkm::Co
   {
     ArrayHandleType handle;
     handle.Allocate(length);
-    std::copy(
-      array, array + length, vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()));
+    std::copy(array, array + length, vtkm::cont::ArrayPortalToIteratorBegin(handle.WritePortal()));
     return handle;
   }
   else
@@ -907,7 +906,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   bool full = false)
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
-  using PortalType = typename ArrayType::PortalConstControl;
+  using PortalType = typename ArrayType::ReadPortalType;
   using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
   vtkm::Id sz = array.GetNumberOfValues();
@@ -915,7 +914,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   out << "valueType=" << typeid(T).name() << " storageType=" << typeid(StorageT).name()
       << " numValues=" << sz << " bytes=" << (static_cast<size_t>(sz) * sizeof(T)) << " [";
 
-  PortalType portal = array.GetPortalConstControl();
+  PortalType portal = array.ReadPortal();
   if (full || sz <= 7)
   {
     for (vtkm::Id i = 0; i < sz; i++)

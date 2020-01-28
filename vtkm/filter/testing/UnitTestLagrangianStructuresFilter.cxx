@@ -32,9 +32,9 @@ void ValidateLCSFilterResult(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& 
 
   const vtkm::FloatDefault tolerance = static_cast<vtkm::FloatDefault>(1e-3);
 
-  auto vtkmPortal = vtkmOutput.GetPortalConstControl();
-  auto visitPortal = visitOutput.GetPortalConstControl();
-  auto diffPortal = expDiff.GetPortalConstControl();
+  auto vtkmPortal = vtkmOutput.ReadPortal();
+  auto visitPortal = visitOutput.ReadPortal();
+  auto diffPortal = expDiff.ReadPortal();
 
   for (vtkm::Id index = 0; index < vtkmOutput.GetNumberOfValues(); index++)
   {

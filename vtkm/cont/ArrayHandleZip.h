@@ -143,13 +143,14 @@ class Storage<vtkm::Pair<T1, T2>, vtkm::cont::StorageTagZip<ST1, ST2>>
 public:
   using ValueType = vtkm::Pair<T1, T2>;
 
-  using PortalType = vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                                          typename FirstHandleType::PortalControl,
-                                                          typename SecondHandleType::PortalControl>;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalZip<ValueType,
+                                         typename FirstHandleType::WritePortalType,
+                                         typename SecondHandleType::WritePortalType>;
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                         typename FirstHandleType::PortalConstControl,
-                                         typename SecondHandleType::PortalConstControl>;
+                                         typename FirstHandleType::ReadPortalType,
+                                         typename SecondHandleType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -168,14 +169,13 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->FirstArray.GetPortalControl(), this->SecondArray.GetPortalControl());
+    return PortalType(this->FirstArray.WritePortal(), this->SecondArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
-    return PortalConstType(this->FirstArray.GetPortalConstControl(),
-                           this->SecondArray.GetPortalConstControl());
+    return PortalConstType(this->FirstArray.ReadPortal(), this->SecondArray.ReadPortal());
   }
 
   VTKM_CONT

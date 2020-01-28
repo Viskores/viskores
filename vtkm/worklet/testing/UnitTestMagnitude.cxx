@@ -24,17 +24,18 @@ void TestMagnitude()
 
   using ArrayReturnType = vtkm::cont::ArrayHandle<vtkm::Float64>;
   using ArrayVectorType = vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
-  using PortalType = ArrayVectorType::PortalControl;
 
   ArrayVectorType pythagoreanTriples;
   pythagoreanTriples.Allocate(5);
-  PortalType pt = pythagoreanTriples.GetPortalControl();
+  {
+    auto inputPortal = pythagoreanTriples.WritePortal();
 
-  pt.Set(0, vtkm::make_Vec(3, 4, 5, 0));
-  pt.Set(1, vtkm::make_Vec(5, 12, 13, 0));
-  pt.Set(2, vtkm::make_Vec(8, 15, 17, 0));
-  pt.Set(3, vtkm::make_Vec(7, 24, 25, 0));
-  pt.Set(4, vtkm::make_Vec(9, 40, 41, 0));
+    inputPortal.Set(0, vtkm::make_Vec(3, 4, 5, 0));
+    inputPortal.Set(1, vtkm::make_Vec(5, 12, 13, 0));
+    inputPortal.Set(2, vtkm::make_Vec(8, 15, 17, 0));
+    inputPortal.Set(3, vtkm::make_Vec(7, 24, 25, 0));
+    inputPortal.Set(4, vtkm::make_Vec(9, 40, 41, 0));
+  }
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude> dispatcher(magnitudeWorklet);
 
@@ -42,13 +43,15 @@ void TestMagnitude()
 
   dispatcher.Invoke(pythagoreanTriples, result);
 
+  auto inputPortal = pythagoreanTriples.ReadPortal();
+  auto resultPortal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(std::sqrt(pt.Get(i)[0] * pt.Get(i)[0] + pt.Get(i)[1] * pt.Get(i)[1] +
-                           pt.Get(i)[2] * pt.Get(i)[2]),
-                 result.GetPortalConstControl().Get(i)),
-      "Wrong result for Magnitude worklet");
+    vtkm::Vec4i_32 inValue = inputPortal.Get(i);
+    vtkm::Float64 expectedValue =
+      std::sqrt((inValue[0] * inValue[0]) + (inValue[1] * inValue[1]) + (inValue[2] * inValue[2]));
+    vtkm::Float64 resultValue = resultPortal.Get(i);
+    VTKM_TEST_ASSERT(test_equal(expectedValue, resultValue), expectedValue, " != ", resultValue);
   }
 }
 }

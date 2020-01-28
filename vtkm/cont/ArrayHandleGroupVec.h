@@ -127,10 +127,10 @@ public:
   using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
   using PortalType =
-    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::WritePortalType,
                                               NUM_COMPONENTS>;
   using PortalConstType =
-    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalConstControl,
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::ReadPortalType,
                                               NUM_COMPONENTS>;
 
   VTKM_CONT
@@ -150,14 +150,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->SourceArray.GetPortalControl());
+    return PortalType(this->SourceArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->SourceArray.GetPortalConstControl());
+    return PortalConstType(this->SourceArray.ReadPortal());
   }
 
   VTKM_CONT

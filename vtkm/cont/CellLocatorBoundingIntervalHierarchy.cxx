@@ -266,13 +266,13 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   IdArrayHandle discardKeys;
   IdArrayHandle segmentSizes;
   segmentSizes.Allocate(1);
-  segmentSizes.GetPortalControl().Set(0, numCells);
+  segmentSizes.WritePortal().Set(0, numCells);
   this->ProcessedCellIds.Allocate(numCells);
   vtkm::Id cellIdsOffset = 0;
 
   IdArrayHandle parentIndices;
   parentIndices.Allocate(1);
-  parentIndices.GetPortalControl().Set(0, -1);
+  parentIndices.WritePortal().Set(0, -1);
 
   while (!done)
   {

@@ -105,7 +105,7 @@ void TestCellSetExplicit()
                    "result length not equal to number of cells");
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == cellset.GetNumberOfPointsInCell(i),
                      "incorrect result");
   }
 
@@ -118,7 +118,7 @@ void TestCellSetExplicit()
   vtkm::Id expected1[] = { 1, 2, 2, 1, 2, 4, 4, 2, 2, 1, 2 };
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected1[i], "incorrect result");
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == expected1[i], "incorrect result");
   }
 
   std::cout << "----------------------------------------------------\n";
@@ -132,7 +132,7 @@ void TestCellSetExplicit()
                    "result length not equal to number of cells");
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == cellset.GetNumberOfPointsInCell(i),
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == cellset.GetNumberOfPointsInCell(i),
                      "incorrect result");
   }
 
@@ -145,8 +145,7 @@ void TestCellSetExplicit()
   vtkm::Id expected2[] = { 0, 1, 1, 0, 0, 2, 2, 0, 2, 0, 1 };
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result at ", i);
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == expected2[i], "incorrect result at ", i);
   }
 
   std::cout << "----------------------------------------------------\n";

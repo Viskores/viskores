@@ -82,9 +82,9 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray;
   result.GetPointField("dotproduct").GetData().CopyTo(outputArray);
 
-  auto v1Portal = field1.GetPortalConstControl();
-  auto v2Portal = field2.GetPortalConstControl();
-  auto outPortal = outputArray.GetPortalConstControl();
+  auto v1Portal = field1.ReadPortal();
+  auto v2Portal = field2.ReadPortal();
+  auto outPortal = outputArray.ReadPortal();
 
   VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == field1.GetNumberOfValues(),
                    "Field sizes wrong");

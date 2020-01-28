@@ -279,12 +279,12 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
     // we need a temporary inverse index to change vertex IDs
     IdArrayType inverseIndex;
     inverseIndex.Allocate(mesh.NumVertices);
-    inverseIndex.GetPortalControl().Set(0,0);
+    inverseIndex.WritePortal().Set(0,0);
 
     std::partial_sum(
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(outDegrees.GetPortalControl()), oneIfCritical),
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(outDegrees.GetPortalControl())-1, oneIfCritical),
-            vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.GetPortalControl()) + 1);
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(outDegrees.WritePortal()), oneIfCritical),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(outDegrees.WritePortal())-1, oneIfCritical),
+            vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.WritePortal()) + 1);
     */
   IdArrayType inverseIndex;
   OnefIfCritical oneIfCriticalFunctor;
@@ -307,8 +307,8 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // GlobalIndex stores the index in the join tree for later access
   IdArrayType activeIndices;
   activeIndices.Allocate(mesh.NumVertices);
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
-                                                               mesh.NumVertices);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(
+    static_cast<vtkm::Id>(NO_SUCH_ELEMENT), mesh.NumVertices);
   vtkm::cont::Algorithm::Copy(noSuchElementArray, activeIndices);
 
   active_graph_inc_ns::InitializeActiveGraphVertices initActiveGraphVerticesWorklet;
@@ -326,7 +326,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // now we need to compute the FirstEdge array from the outDegrees
   this->FirstEdge.Allocate(nCriticalPoints);
   // STD Version of the prefix sum
-  //this->FirstEdge.GetPortalControl().Set(0, 0);
+  //this->FirstEdge.WritePortal().Set(0, 0);
   //std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(this->Outdegree.GetPortalControl()),
   //                 vtkm::cont::ArrayPortalToIteratorEnd(this->Outdegree.GetPortalControl()) - 1,
   //                 vtkm::cont::ArrayPortalToIteratorBegin(this->firstEdge.GetPortalControl()) + 1);
@@ -447,10 +447,10 @@ void ActiveGraph::TransferSaddleStarts()
   IdArrayType newFirstEdge;
   newFirstEdge.Allocate(this->ActiveVertices.GetNumberOfValues());
   // STD version of the prefix sum
-  // newFirstEdge.GetPortalControl().Set(0, 0);
-  // std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(newOutdegree.GetPortalControl()),
-  //                 vtkm::cont::ArrayPortalToIteratorEnd(newOutdegree.GetPortalControl()) - 1,
-  //                 vtkm::cont::ArrayPortalToIteratorBegin(newFirstEdge.GetPortalControl()) + 1);
+  // newFirstEdge.WritePortal().Set(0, 0);
+  // std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(newOutdegree.WritePortal()),
+  //                 vtkm::cont::ArrayPortalToIteratorEnd(newOutdegree.WritePortal()) - 1,
+  //                 vtkm::cont::ArrayPortalToIteratorBegin(newFirstEdge.WritePortal()) + 1);
   // VTK:M version of the prefix sum
   vtkm::cont::Algorithm::ScanExclusive(newOutdegree, newFirstEdge);
 
@@ -648,11 +648,11 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
   /*auto oneIfSupernode = [](vtkm::Id v) { return IsSupernode(v) ? 1 : 0; };
     IdArrayType newSupernodePosition;
     newSupernodePosition.Allocate(this->Hyperarcs.GetNumberOfValues());
-    newSupernodePosition.GetPortalControl().Set(0, 0);
+    newSupernodePosition.WritePortal().Set(0, 0);
 
     std::partial_sum(
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.GetPortalControl()), oneIfSupernode),
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.GetPortalControl()) - 1, oneIfSupernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.WritePortal()), oneIfSupernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.WritePortal()) - 1, oneIfSupernode),
             vtkm::cont::ArrayPortalToIteratorBegin(newSupernodePosition.GetPortalControl()) + 1);*/
 
   IdArrayType newSupernodePosition;
@@ -672,10 +672,10 @@ void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     auto oneIfHypernode = [](vtkm::Id v) { return IsHypernode(v) ? 1 : 0; };
     IdArrayType newHypernodePosition;
     newHypernodePosition.Allocate(this->Hyperarcs.GetNumberOfValues());
-    newHypernodePosition.GetPortalControl().Set(0, 0);
+    newHypernodePosition.WritePortal().Set(0, 0);
     std::partial_sum(
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.GetPortalControl()), oneIfHypernode),
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.GetPortalControl()) - 1, oneIfHypernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.WritePortal()), oneIfHypernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.WritePortal()) - 1, oneIfHypernode),
              vtkm::cont::ArrayPortalToIteratorBegin(newHypernodePosition.GetPortalControl()) + 1);
     */
   IdArrayType newHypernodePosition;

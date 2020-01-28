@@ -74,8 +74,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
-    const auto marginalPortal = marginalVariables.GetPortalConstControl();
-    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
+    const auto marginalPortal = marginalVariables.ReadPortal();
+    const auto numBinsPortal = numberOfBins.ReadPortal();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalPortal.Get(i) == true)
@@ -157,8 +157,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     vtkm::cont::ArrayCopy(freqsIn, freqs);
     vtkm::Id numMarginalVariables = 0; //count num of marginal variables
-    const auto marginalPortal = marginalVariables.GetPortalConstControl();
-    const auto numBinsPortal = numberOfBins.GetPortalConstControl();
+    const auto marginalPortal = marginalVariables.ReadPortal();
+    const auto numBinsPortal = numberOfBins.ReadPortal();
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalPortal.Get(i) == true)

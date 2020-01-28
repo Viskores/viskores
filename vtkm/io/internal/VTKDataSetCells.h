@@ -48,9 +48,9 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   vtkm::Id connIdx = 0;
   for (vtkm::Id i = 0; i < shapes.GetNumberOfValues(); ++i)
   {
-    vtkm::UInt8 shape = shapes.GetPortalConstControl().Get(i);
-    vtkm::IdComponent numInds = numIndices.GetPortalConstControl().Get(i);
-    auto connPortal = connectivity.GetPortalConstControl();
+    vtkm::UInt8 shape = shapes.ReadPortal().Get(i);
+    vtkm::IdComponent numInds = numIndices.ReadPortal().Get(i);
+    auto connPortal = connectivity.ReadPortal();
     switch (shape)
     {
       case vtkm::CELL_SHAPE_VERTEX:
@@ -189,26 +189,26 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
     permutation.Allocate(static_cast<vtkm::Id>(permutationVec.size()));
     std::copy(permutationVec.begin(),
               permutationVec.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(permutation.GetPortalControl()));
+              vtkm::cont::ArrayPortalToIteratorBegin(permutation.WritePortal()));
   }
 
   shapes.Allocate(static_cast<vtkm::Id>(newShapes.size()));
   std::copy(newShapes.begin(),
             newShapes.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(shapes.WritePortal()));
   numIndices.Allocate(static_cast<vtkm::Id>(newNumIndices.size()));
   std::copy(newNumIndices.begin(),
             newNumIndices.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(numIndices.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(numIndices.WritePortal()));
   connectivity.Allocate(static_cast<vtkm::Id>(newConnectivity.size()));
   std::copy(newConnectivity.begin(),
             newConnectivity.end(),
-            vtkm::cont::ArrayPortalToIteratorBegin(connectivity.GetPortalControl()));
+            vtkm::cont::ArrayPortalToIteratorBegin(connectivity.WritePortal()));
 }
 
 inline bool IsSingleShape(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes)
 {
-  auto shapesPortal = shapes.GetPortalConstControl();
+  auto shapesPortal = shapes.ReadPortal();
   vtkm::UInt8 shape0 = shapesPortal.Get(0);
   for (vtkm::Id i = 1; i < shapes.GetNumberOfValues(); ++i)
   {

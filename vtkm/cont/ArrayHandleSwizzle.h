@@ -195,9 +195,9 @@ class Storage<typename ResizeVectorType<typename ArrayHandleType::ValueType, Out
 
 public:
   using PortalType =
-    ArrayPortalSwizzle<typename ArrayHandleType::PortalControl, ArrayHandleType, OutSize>;
+    ArrayPortalSwizzle<typename ArrayHandleType::WritePortalType, ArrayHandleType, OutSize>;
   using PortalConstType =
-    ArrayPortalSwizzle<typename ArrayHandleType::PortalConstControl, ArrayHandleType, OutSize>;
+    ArrayPortalSwizzle<typename ArrayHandleType::ReadPortalType, ArrayHandleType, OutSize>;
   using MapType = typename Traits::MapType;
   using ValueType = typename Traits::OutValueType;
 
@@ -220,14 +220,14 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(), this->Map);
+    return PortalConstType(this->Array.ReadPortal(), this->Map);
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->Map);
+    return PortalType(this->Array.WritePortal(), this->Map);
   }
 
   VTKM_CONT

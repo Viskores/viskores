@@ -72,7 +72,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
+                       cellFieldArray.ReadPortal().Get(0) == 200.1f,
                      "Wrong cell field data");
   }
 
@@ -102,8 +102,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
+                       cellFieldArray.ReadPortal().Get(0) == 100.1f &&
+                       cellFieldArray.ReadPortal().Get(1) == 100.2f,
                      "Wrong cell field data");
   }
 
@@ -131,7 +131,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray = threshold.ProcessCellField(cellvar);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,
+                       cellFieldArray.ReadPortal().Get(0) == 100.1f,
                      "Wrong cell field data");
   }
 

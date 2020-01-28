@@ -45,15 +45,13 @@ class TestingArrayHandleMultiplexer
     using T = typename std::remove_reference<decltype(multiplexerArray)>::type::ValueType;
 
     vtkm::cont::printSummary_ArrayHandle(multiplexerArray, std::cout);
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexerArray.GetPortalConstControl(),
-                                        expectedArray.GetPortalConstControl()),
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexerArray.ReadPortal(), expectedArray.ReadPortal()),
                      "Multiplexer array gave wrong result in control environment");
 
     vtkm::cont::ArrayHandle<T> copy;
     vtkm::cont::ArrayCopy(multiplexerArray, copy);
-    VTKM_TEST_ASSERT(
-      test_equal_portals(copy.GetPortalConstControl(), expectedArray.GetPortalConstControl()),
-      "Multiplexer did not copy correctly in execution environment");
+    VTKM_TEST_ASSERT(test_equal_portals(copy.ReadPortal(), expectedArray.ReadPortal()),
+                     "Multiplexer did not copy correctly in execution environment");
   }
 
   static void BasicSwitch()

@@ -866,8 +866,8 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 {
   // Collect the valid saddle peak pairs
   std::vector<vtkm::Pair<vtkm::Id, vtkm::Id>> superarcVector;
-  const auto supernodePortal = supernodes.GetPortalConstControl();
-  const auto superarcPortal = superarcs.GetPortalConstControl();
+  const auto supernodePortal = supernodes.ReadPortal();
+  const auto superarcPortal = superarcs.ReadPortal();
   for (vtkm::Id supernode = 0; supernode < supernodes.GetNumberOfValues(); supernode++)
   {
     // ID of regular node
@@ -913,8 +913,8 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
   const vtkm::Id arcVecSize = static_cast<vtkm::Id>(superarcVector.size());
   for (vtkm::Id superarc = 0; superarc < arcVecSize; superarc++)
   {
-    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
-    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.WritePortal().Get(superarc).first << " ";
+    std::cout << std::setw(PRINT_WIDTH) << saddlePeak.WritePortal().Get(superarc).second
               << std::endl;
   }
 #endif

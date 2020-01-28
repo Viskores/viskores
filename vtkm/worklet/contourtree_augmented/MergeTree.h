@@ -240,15 +240,15 @@ inline void MergeTree::DebugPrintTree(const char* message,
 
   for (vtkm::Id entry = 0; entry < mesh.NumVertices; entry++)
   {
-    vtkm::Id sortIndex = mesh.SortIndices.GetPortalConstControl().Get(entry);
-    vtkm::Id arc = this->arcs.GetPortalConstControl().Get(sortIndex);
+    vtkm::Id sortIndex = mesh.SortIndices.ReadPortal().Get(entry);
+    vtkm::Id arc = this->arcs.ReadPortal().Get(sortIndex);
     if (NoSuchElement(arc))
     {
       std::cout << "-1" << std::endl;
     }
     else
     {
-      std::cout << mesh.SortOrder.GetPortalConstControl().Get(arc) << std::endl;
+      std::cout << mesh.SortOrder.ReadPortal().Get(arc) << std::endl;
     }
     if (mesh.NumDims == 2)
     {

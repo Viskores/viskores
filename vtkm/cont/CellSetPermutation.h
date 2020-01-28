@@ -352,18 +352,17 @@ public:
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override
   {
     return this->FullCellSet.GetNumberOfPointsInCell(
-      this->ValidCellIds.GetPortalConstControl().Get(cellIndex));
+      this->ValidCellIds.ReadPortal().Get(cellIndex));
   }
 
   vtkm::UInt8 GetCellShape(vtkm::Id id) const override
   {
-    return this->FullCellSet.GetCellShape(this->ValidCellIds.GetPortalConstControl().Get(id));
+    return this->FullCellSet.GetCellShape(this->ValidCellIds.ReadPortal().Get(id));
   }
 
   void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
   {
-    return this->FullCellSet.GetCellPointIds(this->ValidCellIds.GetPortalConstControl().Get(id),
-                                             ptids);
+    return this->FullCellSet.GetCellPointIds(this->ValidCellIds.ReadPortal().Get(id), ptids);
   }
 
   std::shared_ptr<CellSet> NewInstance() const override

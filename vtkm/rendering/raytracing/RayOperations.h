@@ -272,7 +272,7 @@ public:
     vtkm::cont::Algorithm::CopyIf(rays.Status, masks, compactedStatus);
     rays.Status = compactedStatus;
 
-    rays.NumRays = rays.Status.GetPortalConstControl().GetNumberOfValues();
+    rays.NumRays = rays.Status.ReadPortal().GetNumberOfValues();
 
     const size_t bufferCount = static_cast<size_t>(rays.Buffers.size());
     for (size_t i = 0; i < bufferCount; ++i)

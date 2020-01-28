@@ -184,7 +184,7 @@ public:
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
-    auto matchPortal = match.GetPortalConstControl();
+    auto matchPortal = match.ReadPortal();
     for (vtkm::Id index = 0; index < match.GetNumberOfValues(); index++)
     {
       VTKM_TEST_ASSERT(matchPortal.Get(index), "Points do not match");

@@ -379,7 +379,7 @@ ChannelBuffer<Precision> ChannelBuffer<Precision>::ExpandBuffer(
   const vtkm::Id outputSize,
   vtkm::cont::ArrayHandle<Precision> signature)
 {
-  VTKM_ASSERT(this->NumChannels == signature.GetPortalConstControl().GetNumberOfValues());
+  VTKM_ASSERT(this->NumChannels == signature.ReadPortal().GetNumberOfValues());
   ChannelBuffer<Precision> output(this->NumChannels, outputSize);
 
   output.SetName(this->Name);

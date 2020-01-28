@@ -308,16 +308,15 @@ public:
   {
     for (vtkm::Id i = 0; i < NumRays; ++i)
     {
-      if (PixelIdx.GetPortalControl().Get(i) == pixelId)
+      if (PixelIdx.WritePortal().Get(i) == pixelId)
       {
         std::cout << "Ray " << pixelId << "\n";
         std::cout << "Origin "
-                  << "[" << OriginX.GetPortalControl().Get(i) << ","
-                  << OriginY.GetPortalControl().Get(i) << "," << OriginZ.GetPortalControl().Get(i)
-                  << "]\n";
+                  << "[" << OriginX.WritePortal().Get(i) << "," << OriginY.WritePortal().Get(i)
+                  << "," << OriginZ.WritePortal().Get(i) << "]\n";
         std::cout << "Dir "
-                  << "[" << DirX.GetPortalControl().Get(i) << "," << DirY.GetPortalControl().Get(i)
-                  << "," << DirZ.GetPortalControl().Get(i) << "]\n";
+                  << "[" << DirX.WritePortal().Get(i) << "," << DirY.WritePortal().Get(i) << ","
+                  << DirZ.WritePortal().Get(i) << "]\n";
       }
     }
   }

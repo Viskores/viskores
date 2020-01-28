@@ -40,7 +40,7 @@ inline VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(
   //the entropy vector only contain one element, the entorpy of the input field
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
   entropy.Allocate(1);
-  entropy.GetPortalControl().Set(0, e);
+  entropy.WritePortal().Set(0, e);
 
   return CreateResult(inDataSet, entropy, this->GetOutputFieldName(), fieldMetadata);
 }

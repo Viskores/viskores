@@ -140,7 +140,7 @@ template <typename Storage>
 void ThreadsCheckArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   std::cout << "  Check array in control environment" << std::endl;
-  auto portal = array.GetPortalConstControl();
+  auto portal = array.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
 
   std::cout << "  Starting threads to check" << std::endl;
@@ -177,7 +177,7 @@ void ThreadsDecrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
     VTKM_TEST_ASSERT(futureResult, "Failure in DecrementArray");
   }
 
-  CheckPortal(array.GetPortalConstControl());
+  CheckPortal(array.ReadPortal());
 }
 
 template <typename Storage>

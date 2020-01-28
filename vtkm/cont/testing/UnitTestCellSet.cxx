@@ -123,7 +123,7 @@ void TestAgainstBaseLine(const vtkm::cont::CellSet& cellset,
     VTKM_TEST_ASSERT(cellset.GetNumberOfPointsInCell(i) == 8, "Wrong number of points-of-cell");
 
     vtkm::Id baseLineCellId =
-      (flag == IsPermutationCellSet::YES) ? PermutationArray.GetPortalConstControl().Get(i) : i;
+      (flag == IsPermutationCellSet::YES) ? PermutationArray.ReadPortal().Get(i) : i;
     auto baseLinePointIds = baseLineStructure.GetPointsOfCell(baseLineCellId);
 
     vtkm::Id pointIds[8];

@@ -208,15 +208,16 @@ class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, 
 public:
   using ValueType = vtkm::Vec<typename AH1::ValueType, 3>;
 
-  using PortalType = vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                                       typename AH1::PortalControl,
-                                                                       typename AH2::PortalControl,
-                                                                       typename AH3::PortalControl>;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
+                                                      typename AH1::WritePortalType,
+                                                      typename AH2::WritePortalType,
+                                                      typename AH3::WritePortalType>;
   using PortalConstType =
     vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                      typename AH1::PortalConstControl,
-                                                      typename AH2::PortalConstControl,
-                                                      typename AH3::PortalConstControl>;
+                                                      typename AH1::ReadPortalType,
+                                                      typename AH2::ReadPortalType,
+                                                      typename AH3::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -237,17 +238,16 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->FirstArray.GetPortalControl(),
-                      this->SecondArray.GetPortalControl(),
-                      this->ThirdArray.GetPortalControl());
+    return PortalType(this->FirstArray.WritePortal(),
+                      this->SecondArray.WritePortal(),
+                      this->ThirdArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
-    return PortalConstType(this->FirstArray.GetPortalConstControl(),
-                           this->SecondArray.GetPortalConstControl(),
-                           this->ThirdArray.GetPortalConstControl());
+    return PortalConstType(
+      this->FirstArray.ReadPortal(), this->SecondArray.ReadPortal(), this->ThirdArray.ReadPortal());
   }
 
   VTKM_CONT

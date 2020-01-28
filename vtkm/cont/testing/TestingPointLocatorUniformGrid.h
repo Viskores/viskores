@@ -170,10 +170,10 @@ public:
     bool passTest = true;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
-      vtkm::Id workletIdx = nnId_Handle.GetPortalControl().Get(i);
-      vtkm::FloatDefault workletDis = nnDis_Handle.GetPortalConstControl().Get(i);
-      vtkm::Id bfworkletIdx = bfnnId_Handle.GetPortalControl().Get(i);
-      vtkm::FloatDefault bfworkletDis = bfnnDis_Handle.GetPortalConstControl().Get(i);
+      vtkm::Id workletIdx = nnId_Handle.WritePortal().Get(i);
+      vtkm::FloatDefault workletDis = nnDis_Handle.ReadPortal().Get(i);
+      vtkm::Id bfworkletIdx = bfnnId_Handle.WritePortal().Get(i);
+      vtkm::FloatDefault bfworkletDis = bfnnDis_Handle.ReadPortal().Get(i);
 
       if (workletIdx != bfworkletIdx)
       {

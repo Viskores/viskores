@@ -88,10 +88,10 @@ public:
   VTKM_CONT Storage& operator=(Storage&&) noexcept = default;
 
   VTKM_CONT
-  PortalType GetPortal() { return PortalType{ this->Data.GetPortalControl() }; }
+  PortalType GetPortal() { return PortalType{ this->Data.WritePortal() }; }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() { return PortalConstType{ this->Data.GetPortalConstControl() }; }
+  PortalConstType GetPortalConst() { return PortalConstType{ this->Data.ReadPortal() }; }
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfBits(); }
   VTKM_CONT void Allocate(vtkm::Id numberOfValues) { this->Data.Allocate(numberOfValues); }

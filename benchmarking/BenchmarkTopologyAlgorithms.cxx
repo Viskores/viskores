@@ -160,7 +160,7 @@ VTKM_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
 
   NumberGenerator<ValueType> generator{ static_cast<ValueType>(min), static_cast<ValueType>(max) };
   array.Allocate(size);
-  auto portal = array.GetPortalControl();
+  auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < size; ++i)
   {
     portal.Set(i, generator.next());

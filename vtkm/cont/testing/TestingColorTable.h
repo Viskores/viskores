@@ -35,6 +35,23 @@ template <typename DeviceAdapterTag>
 class TestingColorTable
 {
 
+  template <vtkm::IdComponent N>
+  static void CheckColors(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, N>> result,
+                          const std::vector<vtkm::Vec<vtkm::UInt8, N>>& expected)
+  {
+    using Vec = vtkm::Vec<vtkm::UInt8, N>;
+
+    VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()));
+    auto portal = result.ReadPortal();
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
+    {
+      Vec resultValue = portal.Get(index);
+      Vec expectedValue = expected[static_cast<std::size_t>(index)];
+      VTKM_TEST_ASSERT(
+        resultValue == expectedValue, "Expected color ", expectedValue, " but got ", resultValue);
+    }
+  }
+
 public:
   static void TestConstructors()
   {
@@ -150,6 +167,8 @@ public:
 
   static void TestClamping()
   {
+    std::cout << "Test Clamping" << std::endl;
+
     vtkm::Range range{ 0.0, 1.0 };
     vtkm::Vec<float, 3> rgb1{ 0.0f, 1.0f, 0.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 0.0f, 1.0f };
@@ -167,19 +186,13 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //verify that we clamp the values to the expected range
-    const vtkm::Vec3ui_8 correct[nvals] = {
-      { 0, 255, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 255 }
-    };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct[i], "incorrect value in color from clamp test");
-    }
+    CheckColors(colors, { { 0, 255, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 255 } });
   }
 
   static void TestRangeColors()
   {
+    std::cout << "Test default ranges" << std::endl;
+
     vtkm::Range range{ -1.0, 2.0 };
     vtkm::Vec<float, 3> rgb1{ 0.0f, 1.0f, 0.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 0.0f, 1.0f };
@@ -199,37 +212,21 @@ public:
 
     //verify that both the above and below range colors are used,
     //and that the default value of both is 0,0,0
-    const vtkm::Vec3ui_8 correct_range_defaults[nvals] = {
-      { 0, 0, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 0, 0, 0 }
-    };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_range_defaults[i],
-                       "incorrect value in color from default range color test");
-    }
+    CheckColors(colors, { { 0, 0, 0 }, { 0, 255, 0 }, { 255, 0, 255 }, { 0, 0, 0 } });
 
 
+    std::cout << "Test specified ranges" << std::endl;
     //verify that we can specify custom above and below range colors
     table.SetAboveRangeColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red
     table.SetBelowRangeColor(vtkm::Vec<float, 3>{ 0.0f, 0.0f, 1.0f }); //green
     const bool ran2 = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran2, "color table failed to execute");
-    const vtkm::Vec3ui_8 correct_custom_range_colors[nvals] = {
-      { 0, 0, 255 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 0 }
-    };
-    portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_custom_range_colors[i],
-                       "incorrect value in custom above/below range color test");
-    }
+    CheckColors(colors, { { 0, 0, 255 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 0 } });
   }
 
   static void TestRescaleRange()
   {
+    std::cout << "Test Rescale Range" << std::endl;
     vtkm::Range range{ -100.0, 100.0 };
 
     //implement a blue2yellow color table
@@ -261,20 +258,19 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec3ui_8 correct_lab_values[nvals] = { { 0, 0, 255 },     { 105, 69, 204 },
-                                                       { 126, 109, 153 }, { 156, 151, 117 },
-                                                       { 207, 202, 87 },  { 255, 255, 0 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_lab_values[i],
-                       "incorrect value in color after rescaling the color table");
-    }
+    CheckColors(colors,
+                { { 0, 0, 255 },
+                  { 105, 69, 204 },
+                  { 126, 109, 153 },
+                  { 156, 151, 117 },
+                  { 207, 202, 87 },
+                  { 255, 255, 0 } });
   }
 
   static void TestAddPoints()
   {
+    std::cout << "Test Add Points" << std::endl;
+
     vtkm::Range range{ -20, 20.0 };
     auto rgbspace = vtkm::cont::ColorSpace::RGB;
 
@@ -296,20 +292,13 @@ public:
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
-    const vtkm::Vec3ui_8 correct_rgb_values[nvals] = { { 0, 0, 128 },
-                                                       { 0, 128, 255 },
-                                                       { 128, 255, 255 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_rgb_values[i],
-                       "incorrect value when interpolating between values");
-    }
+    CheckColors(colors, { { 0, 0, 128 }, { 0, 128, 255 }, { 128, 255, 255 } });
   }
 
   static void TestAddSegments()
   {
+    std::cout << "Test Add Segments" << std::endl;
+
     vtkm::Range range{ 0.0, 50.0 };
     auto diverging = vtkm::cont::ColorSpace::DIVERGING;
 
@@ -342,21 +331,19 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec4ui_8 correct_diverging_values[nvals] = {
-      { 59, 76, 192, 0 },     { 124, 159, 249, 51 },  { 192, 212, 245, 102 },
-      { 242, 203, 183, 153 }, { 238, 133, 104, 204 }, { 180, 4, 38, 255 }
-    };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_diverging_values[i],
-                       "incorrect value when interpolating between values");
-    }
+    CheckColors(colors,
+                { { 59, 76, 192, 0 },
+                  { 124, 159, 249, 51 },
+                  { 192, 212, 245, 102 },
+                  { 242, 203, 183, 153 },
+                  { 238, 133, 104, 204 },
+                  { 180, 4, 38, 255 } });
   }
 
   static void TestRemovePoints()
   {
+    std::cout << "Test Remove Points" << std::endl;
+
     auto hsv = vtkm::cont::ColorSpace::HSV;
 
     vtkm::cont::ColorTable table(hsv);
@@ -388,35 +375,32 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec3ui_8 correct_hsv_values[nvals] = { { 0, 0, 255 },   { 0, 204, 255 },
-                                                       { 0, 255, 102 }, { 102, 255, 0 },
-                                                       { 255, 204, 0 }, { 255, 0, 0 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_hsv_values[i],
-                       "incorrect value when interpolating between values");
-    }
+    CheckColors(colors,
+                { { 0, 0, 255 },
+                  { 0, 204, 255 },
+                  { 0, 255, 102 },
+                  { 102, 255, 0 },
+                  { 255, 204, 0 },
+                  { 255, 0, 0 } });
 
+    std::cout << "  Change Color Space" << std::endl;
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors_rgb;
     table.SetColorSpace(vtkm::cont::ColorSpace::RGB);
     table.Map(field, colors_rgb);
 
-    const vtkm::Vec3ui_8 correct_rgb_values[nvals] = { { 0, 0, 255 },   { 51, 0, 204 },
-                                                       { 102, 0, 153 }, { 153, 0, 102 },
-                                                       { 204, 0, 51 },  { 255, 0, 0 } };
-    auto rgb_portal = colors_rgb.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = rgb_portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_rgb_values[i],
-                       "incorrect value when interpolating between values");
-    }
+    CheckColors(colors_rgb,
+                { { 0, 0, 255 },
+                  { 51, 0, 204 },
+                  { 102, 0, 153 },
+                  { 153, 0, 102 },
+                  { 204, 0, 51 },
+                  { 255, 0, 0 } });
   }
 
   static void TestOpacityOnlyPoints()
   {
+    std::cout << "Test Opacity Only Points" << std::endl;
+
     auto hsv = vtkm::cont::ColorSpace::HSV;
 
     vtkm::cont::ColorTable table(hsv);
@@ -449,20 +433,19 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec4ui_8 correct_opacity_values[nvals] = { { 0, 0, 0, 0 },   { 0, 0, 0, 1 },
-                                                           { 0, 0, 0, 11 },  { 0, 0, 0, 52 },
-                                                           { 0, 0, 0, 203 }, { 0, 0, 0, 255 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_opacity_values[i],
-                       "incorrect value when interpolating between opacity values");
-    }
+    CheckColors(colors,
+                { { 0, 0, 0, 0 },
+                  { 0, 0, 0, 1 },
+                  { 0, 0, 0, 11 },
+                  { 0, 0, 0, 52 },
+                  { 0, 0, 0, 203 },
+                  { 0, 0, 0, 255 } });
   }
 
   static void TestWorkletTransport()
   {
+    std::cout << "Test Worklet Transport" << std::endl;
+
     using namespace vtkm::worklet::colorconversion;
 
     vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
@@ -484,21 +467,12 @@ public:
       dispatcher.Invoke(samples, colors);
     }
 
-    const vtkm::Vec4ui_8 correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
-                                                            { 21, 150, 21, 255 },
-                                                            { 255, 251, 230, 255 } };
-
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_sampling_points[i],
-                       "incorrect value when interpolating in linear green preset");
-    }
+    CheckColors(colors, { { 14, 28, 31, 255 }, { 21, 150, 21, 255 }, { 255, 251, 230, 255 } });
   }
 
   static void TestSampling()
   {
+    std::cout << "Test Sampling" << std::endl;
 
     vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
@@ -508,22 +482,15 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     constexpr vtkm::Id nvals = 3;
-    table.Sample(3, colors);
+    table.Sample(nvals, colors);
 
-    const vtkm::Vec4ui_8 correct_sampling_points[nvals] = { { 14, 28, 31, 255 },
-                                                            { 21, 150, 21, 255 },
-                                                            { 255, 251, 230, 255 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_sampling_points[i],
-                       "incorrect value when interpolating in linear green preset");
-    }
+    CheckColors(colors, { { 14, 28, 31, 255 }, { 21, 150, 21, 255 }, { 255, 251, 230, 255 } });
   }
 
   static void TestLookupTable()
   {
+    std::cout << "Test Lookup Table" << std::endl;
+
     //build a color table with clamping off and verify that sampling works
     vtkm::Range range{ 0.0, 50.0 };
     vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
@@ -545,17 +512,15 @@ public:
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
-    const vtkm::Vec3ui_8 correct_diverging_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },
-                                                             { 122, 157, 248 }, { 191, 211, 246 },
-                                                             { 241, 204, 184 }, { 238, 134, 105 },
-                                                             { 180, 4, 38 },    { 255, 0, 0 } };
-    auto portal = colors.GetPortalConstControl();
-    for (std::size_t i = 0; i < nvals; ++i)
-    {
-      auto result = portal.Get(static_cast<vtkm::Id>(i));
-      VTKM_TEST_ASSERT(result == correct_diverging_values[i],
-                       "incorrect value when interpolating between values");
-    }
+    CheckColors(colors,
+                { { 0, 0, 255 },
+                  { 59, 76, 192 },
+                  { 122, 157, 248 },
+                  { 191, 211, 246 },
+                  { 241, 204, 184 },
+                  { 238, 134, 105 },
+                  { 180, 4, 38 },
+                  { 255, 0, 0 } });
   }
 
   struct TestAll

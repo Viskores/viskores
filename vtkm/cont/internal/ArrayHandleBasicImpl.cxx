@@ -379,7 +379,7 @@ void ArrayHandleImpl::WaitToRead(LockType& lock, const vtkm::cont::Token& token)
 {
   // Note that if you deadlocked here, that means that you are trying to do a read operation on an
   // array where an object is writing to it. This could happen on the same thread. For example, if
-  // you call `GetPortalControl()` then no other operation that can result in reading or writing
+  // you call `WritePortal()` then no other operation that can result in reading or writing
   // data in the array can happen while the resulting portal is still in scope.
   this->Internals->ConditionVariable.wait(
     lock, [&lock, &token, this] { return this->CanRead(lock, token); });
@@ -389,7 +389,7 @@ void ArrayHandleImpl::WaitToWrite(LockType& lock, const vtkm::cont::Token& token
 {
   // Note that if you deadlocked here, that means that you are trying to do a write operation on an
   // array where an object is reading or writing to it. This could happen on the same thread. For
-  // example, if you call `GetPortalControl()` then no other operation that can result in reading
+  // example, if you call `WritePortal()` then no other operation that can result in reading
   // or writing data in the array can happen while the resulting portal is still in scope.
   this->Internals->ConditionVariable.wait(
     lock, [&lock, &token, this] { return this->CanWrite(lock, token); });

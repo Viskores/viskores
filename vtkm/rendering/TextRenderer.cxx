@@ -232,8 +232,8 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
   TextureCoordsArrayHandle textureCoords;
   screenCoords.Allocate(static_cast<vtkm::Id>(text.length()));
   textureCoords.Allocate(static_cast<vtkm::Id>(text.length()));
-  ScreenCoordsArrayHandle::PortalControl screenCoordsPortal = screenCoords.GetPortalControl();
-  TextureCoordsArrayHandle::PortalControl textureCoordsPortal = textureCoords.GetPortalControl();
+  ScreenCoordsArrayHandle::WritePortalType screenCoordsPortal = screenCoords.WritePortal();
+  TextureCoordsArrayHandle::WritePortalType textureCoordsPortal = textureCoords.WritePortal();
   vtkm::Vec4f_32 charVertices, charUVs, charCoords;
   for (std::size_t i = 0; i < text.length(); ++i)
   {

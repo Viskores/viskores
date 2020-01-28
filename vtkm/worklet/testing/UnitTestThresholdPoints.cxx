@@ -119,8 +119,7 @@ public:
     vtkm::cont::Field pointField = outDataSet.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(12) == 50.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(12) == 50.0f, "Wrong point field data");
   }
 
   void TestUniform3D() const

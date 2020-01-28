@@ -77,7 +77,7 @@ bool TestArrayEqual(const vtkm::cont::ArrayHandle<ItemType>& result,
                     const std::array<ItemType, N>& expected)
 {
   bool success = false;
-  auto portal = result.GetPortalConstControl();
+  auto portal = result.ReadPortal();
   vtkm::Id count = portal.GetNumberOfValues();
 
   if (static_cast<std::size_t>(count) == N)

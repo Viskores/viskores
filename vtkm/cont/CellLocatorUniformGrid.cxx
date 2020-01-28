@@ -54,9 +54,9 @@ void CellLocatorUniformGrid::Build()
   }
 
   UniformType uniformCoords = coords.GetData().Cast<UniformType>();
-  this->Origin = uniformCoords.GetPortalConstControl().GetOrigin();
+  this->Origin = uniformCoords.ReadPortal().GetOrigin();
 
-  vtkm::Vec3f spacing = uniformCoords.GetPortalConstControl().GetSpacing();
+  vtkm::Vec3f spacing = uniformCoords.ReadPortal().GetSpacing();
   vtkm::Vec3f unitLength;
   unitLength[0] = static_cast<vtkm::FloatDefault>(this->PointDims[0] - 1);
   unitLength[1] = static_cast<vtkm::FloatDefault>(this->PointDims[1] - 1);

@@ -66,7 +66,7 @@ void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataS
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
   result.GetPointField("warpvector").GetData().CopyTo(outputArray);
-  auto outPortal = outputArray.GetPortalConstControl();
+  auto outPortal = outputArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)
   {

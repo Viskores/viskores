@@ -69,19 +69,16 @@ public:
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
     PointDimensions = Conn.GetPointDimensions();
-    MinPoint[0] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetFirstPortal().Get(0));
-    MinPoint[1] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetSecondPortal().Get(0));
-    MinPoint[2] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetThirdPortal().Get(0));
+    MinPoint[0] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetFirstPortal().Get(0));
+    MinPoint[1] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetSecondPortal().Get(0));
+    MinPoint[2] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetThirdPortal().Get(0));
 
     MaxPoint[0] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
+      coordinates.ReadPortal().GetFirstPortal().Get(PointDimensions[0] - 1));
     MaxPoint[1] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
+      coordinates.ReadPortal().GetSecondPortal().Get(PointDimensions[1] - 1));
     MaxPoint[2] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+      coordinates.ReadPortal().GetThirdPortal().Get(PointDimensions[2] - 1));
   }
 
   VTKM_EXEC

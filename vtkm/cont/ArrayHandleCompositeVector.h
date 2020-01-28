@@ -120,14 +120,14 @@ struct ArrayTupleForEach
   template <typename PortalTuple>
   VTKM_CONT static void GetPortalTupleControl(ArrayTuple& arrays, PortalTuple& portals)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).GetPortalControl();
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).WritePortal();
     Next::GetPortalTupleControl(arrays, portals);
   }
 
   template <typename PortalTuple>
   VTKM_CONT static void GetPortalConstTupleControl(const ArrayTuple& arrays, PortalTuple& portals)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).GetPortalConstControl();
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).ReadPortal();
     Next::GetPortalConstTupleControl(arrays, portals);
   }
 
@@ -228,10 +228,10 @@ template <typename Head, typename... Tail>
 struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head, Tail...>>
 {
   using Next = PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Tail...>>;
-  using PortalControlTuple = typename TupleTypePrepend<typename Head::PortalControl,
+  using PortalControlTuple = typename TupleTypePrepend<typename Head::WritePortalType,
                                                        typename Next::PortalControlTuple>::Type;
   using PortalConstControlTuple =
-    typename TupleTypePrepend<typename Head::PortalConstControl,
+    typename TupleTypePrepend<typename Head::ReadPortalType,
                               typename Next::PortalConstControlTuple>::Type;
 
   template <typename DeviceTag>
@@ -249,8 +249,8 @@ struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head, Tail...>>
 template <typename Head>
 struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head>>
 {
-  using PortalControlTuple = vtkmstd::tuple<typename Head::PortalControl>;
-  using PortalConstControlTuple = vtkmstd::tuple<typename Head::PortalConstControl>;
+  using PortalControlTuple = vtkmstd::tuple<typename Head::WritePortalType>;
+  using PortalConstControlTuple = vtkmstd::tuple<typename Head::ReadPortalType>;
 
   template <typename DeviceTag>
   struct ExecutionTypes

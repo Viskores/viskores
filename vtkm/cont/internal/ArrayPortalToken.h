@@ -31,31 +31,47 @@ namespace internal
 ///
 /// Because `Token`s only work in the control environment, so it is for this class.
 ///
-template <typename PortalType>
-class VTKM_ALWAYS_EXPORT ArrayPortalToken : public PortalType
+template <typename PortalType_>
+class VTKM_ALWAYS_EXPORT ArrayPortalToken : public PortalType_
 {
   std::shared_ptr<vtkm::cont::Token> Token;
 
+  using Superclass = PortalType_;
+
 public:
   template <typename... PortalArgs>
-  VTKM_CONT ArrayPortalToken(vtkm::cont::Token&& token, PortalArgs&... args)
-    : PortalType(std::forward<PortalArgs>(args)...)
+  VTKM_CONT ArrayPortalToken(vtkm::cont::Token&& token, PortalArgs&&... args)
+    : Superclass(std::forward<PortalArgs>(args)...)
     , Token(new vtkm::cont::Token(std::move(token)))
   {
   }
 
   template <typename... PortalArgs>
-  VTKM_CONT ArrayPortalToken(PortalArgs&... args)
-    : PortalType(std::forward<PortalArgs>(args)...)
+  VTKM_CONT ArrayPortalToken(std::shared_ptr<vtkm::cont::Token> token, PortalArgs&&... args)
+    : Superclass(std::forward<PortalArgs>(args)...)
+    , Token(token)
+  {
+  }
+
+  template <typename... PortalArgs>
+  VTKM_CONT ArrayPortalToken(PortalArgs&&... args)
+    : Superclass(std::forward<PortalArgs>(args)...)
     , Token(new vtkm::cont::Token)
   {
   }
 
-  VTKM_CONT void Detach() const
-  {
-    this->Token.DetachFromAll();
-    this->Portal = PortalType();
-  }
+  /// \brief Detach this portal from the `ArrayHandle`.
+  ///
+  /// This will open up the `ArrayHandle` for reading and/or writing.
+  ///
+  VTKM_CONT void Detach() { this->Token->DetachFromAll(); }
+
+  /// \brief Get the `Token` of the `ArrayPortal`.
+  ///
+  /// You can keep a copy of this shared pointer to keep the scope around longer than this
+  /// object exists (unless, of course, the `Token` is explicitly detached).
+  ///
+  VTKM_CONT std::shared_ptr<vtkm::cont::Token> GetToken() const { return this->Token; }
 };
 }
 }

@@ -39,7 +39,7 @@ vtkm::cont::ArrayHandle<T> makeArray(vtkm::Id length, T)
   vtkm::cont::ArrayHandle<T> data;
   data.Allocate(length);
 
-  auto portal = data.GetPortalControl();
+  auto portal = data.WritePortal();
   for (vtkm::Id i = 0; i != data.GetNumberOfValues(); ++i)
   {
     portal.Set(i, TestValue(i, T()));
@@ -101,7 +101,7 @@ void validate(vtkm::cont::ArrayHandle<T, U> handle, vtkm::interop::BufferState& 
   VTKM_TEST_ASSERT(resource->Size == capacity,
                    "buffer state internal resource doesn't match BufferState capacity");
 
-  auto portal = handle.GetPortalConstControl();
+  auto portal = handle.ReadPortal();
   auto iter = returnedValues.cbegin();
   for (vtkm::Id i = 0; i != handle.GetNumberOfValues(); ++i, ++iter)
   {

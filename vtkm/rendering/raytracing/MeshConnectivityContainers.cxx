@@ -170,7 +170,7 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
   vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
     Cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-  ShapeId = shapes.GetPortalConstControl().Get(0);
+  ShapeId = shapes.ReadPortal().Get(0);
   CellTables tables;
   NumIndices = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 2);
 
@@ -183,7 +183,7 @@ UnstructuredSingleContainer::UnstructuredSingleContainer(
   }
   vtkm::Id start = 0;
   NumFaces = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 1);
-  vtkm::Id numCells = CellConnectivity.GetPortalConstControl().GetNumberOfValues();
+  vtkm::Id numCells = CellConnectivity.ReadPortal().GetNumberOfValues();
   CellOffsets = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start, NumIndices, numCells);
 
   Logger* logger = Logger::GetInstance();

@@ -357,9 +357,9 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
                    "Wrong number of values in normals field");
   for (vtkm::Id i = 0; i < numVerts; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(normals.GetPortalConstControl().Get(i), expected[i], 0.001),
+    VTKM_TEST_ASSERT(test_equal(normals.ReadPortal().Get(i), expected[i], 0.001),
                      "Result (",
-                     normals.GetPortalConstControl().Get(i),
+                     normals.ReadPortal().Get(i),
                      ") does not match expected value (",
                      expected[i],
                      ") vert ",
@@ -384,7 +384,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
                    "Wrong number of values in normals field");
   for (vtkm::Id i = 0; i < numVerts; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(normals.GetPortalConstControl().Get(i), expected[i], 0.001),
+    VTKM_TEST_ASSERT(test_equal(normals.ReadPortal().Get(i), expected[i], 0.001),
                      "Result does not match expected values");
   }
 }

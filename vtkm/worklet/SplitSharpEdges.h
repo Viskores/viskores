@@ -431,7 +431,7 @@ public:
       oldCoords.GetNumberOfValues(),
       this->NewPointsIdArray,
       0);
-    auto newPointsIdArrayPortal = this->NewPointsIdArray.GetPortalControl();
+    auto newPointsIdArrayPortal = this->NewPointsIdArray.WritePortal();
 
     // Fill the new point coordinate system with all the existing values
     newCoords.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
@@ -441,9 +441,9 @@ public:
     { //only if we have new points do we need add any of the new
       //coordinate locations
       vtkm::Id newCoordsIndex = oldCoords.GetNumberOfValues();
-      auto oldCoordsPortal = oldCoords.GetPortalConstControl();
-      auto newCoordsPortal = newCoords.GetPortalControl();
-      auto newPointNumsPortal = newPointNums.GetPortalControl();
+      auto oldCoordsPortal = oldCoords.ReadPortal();
+      auto newCoordsPortal = newCoords.WritePortal();
+      auto newPointNumsPortal = newPointNums.WritePortal();
       for (vtkm::Id i = 0; i < oldCoords.GetNumberOfValues(); i++)
       { // Find out for each new point, how many times it should be added
         for (vtkm::Id j = 0; j < newPointNumsPortal.Get(i); j++)
@@ -471,7 +471,7 @@ public:
            newpointStartingIndexs,
            pointCellsStartingIndexs,
            cellTopologyUpdateTuples);
-    auto ctutPortal = cellTopologyUpdateTuples.GetPortalConstControl();
+    auto ctutPortal = cellTopologyUpdateTuples.ReadPortal();
     vtkm::cont::printSummary_ArrayHandle(cellTopologyUpdateTuples, std::cout);
 
 
@@ -481,10 +481,10 @@ public:
     // here I just get a non-const copy of the array handle.
     auto connectivityArrayHandle = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                                    vtkm::TopologyElementTagPoint());
-    auto connectivityArrayHandleP = connectivityArrayHandle.GetPortalControl();
+    auto connectivityArrayHandleP = connectivityArrayHandle.WritePortal();
     auto offsetArrayHandle =
       newCellset.GetOffsetsArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-    auto offsetArrayHandleP = offsetArrayHandle.GetPortalControl();
+    auto offsetArrayHandleP = offsetArrayHandle.WritePortal();
     for (vtkm::Id i = 0; i < cellTopologyUpdateTuples.GetNumberOfValues(); i++)
     {
       vtkm::Id cellId(ctutPortal.Get(i)[0]), oldPointId(ctutPortal.Get(i)[1]),

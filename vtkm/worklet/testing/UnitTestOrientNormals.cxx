@@ -89,9 +89,8 @@ struct ValidateNormals
   using CellSetType = vtkm::cont::CellSetSingleType<>;
   using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
   using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
-  using NormalsPortalType = decltype(std::declval<NormalsArrayType>().GetPortalConstControl());
-  using PointsType =
-    decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().GetPortalConstControl());
+  using NormalsPortalType = decltype(std::declval<NormalsArrayType>().ReadPortal());
+  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().ReadPortal());
 
   vtkm::cont::CoordinateSystem Coords;
   CellSetType Cells;
@@ -105,8 +104,6 @@ struct ValidateNormals
 
   vtkm::cont::BitField VisitedCellsField;
   vtkm::cont::BitField VisitedPointsField;
-  vtkm::cont::BitField::PortalControl VisitedCells;
-  vtkm::cont::BitField::PortalControl VisitedPoints;
 
   bool CheckPoints;
   bool CheckCells;
@@ -147,7 +144,7 @@ struct ValidateNormals
                   const vtkm::cont::Field& cellNormalsField)
     : Coords{ dataset.GetCoordinateSystem() }
     , Cells{ dataset.GetCellSet().Cast<CellSetType>() }
-    , Points{ this->Coords.GetData().GetPortalConstControl() }
+    , Points{ this->Coords.GetData().ReadPortal() }
     , CheckPoints(checkPoints)
     , CheckCells(checkCells)
   {
@@ -163,12 +160,12 @@ struct ValidateNormals
     if (this->CheckPoints)
     {
       this->PointNormalsArray = pointNormalsField.GetData().AsVirtual<NormalType>();
-      this->PointNormals = this->PointNormalsArray.GetPortalConstControl();
+      this->PointNormals = this->PointNormalsArray.ReadPortal();
     }
     if (this->CheckCells)
     {
       this->CellNormalsArray = cellNormalsField.GetData().AsVirtual<NormalType>();
-      this->CellNormals = this->CellNormalsArray.GetPortalConstControl();
+      this->CellNormals = this->CellNormalsArray.ReadPortal();
     }
   }
 
@@ -178,7 +175,7 @@ struct ValidateNormals
     // Locate a point with the minimum x coordinate:
     const vtkm::Id startPoint = [&]() -> vtkm::Id {
       const vtkm::Float64 xMin = this->Coords.GetBounds().X.Min;
-      const auto points = this->Coords.GetData().GetPortalConstControl();
+      const auto points = this->Coords.GetData().ReadPortal();
       const vtkm::Id numPoints = points.GetNumberOfValues();
       vtkm::Id resultIdx = -1;
       for (vtkm::Id pointIdx = 0; pointIdx < numPoints; ++pointIdx)
@@ -226,17 +223,17 @@ private:
   {
     vtkm::cont::Algorithm::Fill(this->VisitedPointsField, false, this->Coords.GetNumberOfPoints());
     vtkm::cont::Algorithm::Fill(this->VisitedCellsField, false, this->Cells.GetNumberOfCells());
-
-    this->VisitedPoints = this->VisitedPointsField.GetPortalControl();
-    this->VisitedCells = this->VisitedCellsField.GetPortalControl();
   }
 
   void ValidateImpl(vtkm::Id startPtIdx, const NormalType& startRefNormal)
   {
+    vtkm::cont::BitField::WritePortalType visitedPoints = this->VisitedPointsField.WritePortal();
+    vtkm::cont::BitField::WritePortalType visitedCells = this->VisitedCellsField.WritePortal();
+
     using Entry = vtkm::Pair<vtkm::Id, NormalType>;
     std::vector<Entry> queue;
     queue.emplace_back(startPtIdx, startRefNormal);
-    this->VisitedPoints.SetBit(startPtIdx, true);
+    visitedPoints.SetBit(startPtIdx, true);
 
     vtkm::cont::Token token;
     auto connections = this->Cells.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{},
@@ -279,11 +276,11 @@ private:
         const vtkm::Id curCellIdx = neighborCells[nCellIdx];
 
         // Skip this cell if already visited:
-        if (this->VisitedCells.GetBit(curCellIdx))
+        if (visitedCells.GetBit(curCellIdx))
         {
           continue;
         }
-        this->VisitedCells.SetBit(curCellIdx, true);
+        visitedCells.SetBit(curCellIdx, true);
 
         if (this->CheckCells)
         {
@@ -308,14 +305,14 @@ private:
           const vtkm::Id nextPtIdx = neighborPoints[nPtIdx];
 
           // Skip if already visited:
-          if (this->VisitedPoints.GetBit(nextPtIdx))
+          if (visitedPoints.GetBit(nextPtIdx))
           {
             continue;
           }
 
           // Otherwise, queue next point using current normal as reference:
           queue.emplace_back(nextPtIdx, refNormal);
-          this->VisitedPoints.SetBit(nextPtIdx, true);
+          visitedPoints.SetBit(nextPtIdx, true);
         }
       }
     }

@@ -155,10 +155,10 @@ class Storage<T, StorageTagConcatenate<ST1, ST2>>
 
 public:
   using ValueType = T;
-  using PortalType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalControl,
-                                            typename ArrayHandleType2::PortalControl>;
-  using PortalConstType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalConstControl,
-                                                 typename ArrayHandleType2::PortalConstControl>;
+  using PortalType = ArrayPortalConcatenate<typename ArrayHandleType1::WritePortalType,
+                                            typename ArrayHandleType2::WritePortalType>;
+  using PortalConstType = ArrayPortalConcatenate<typename ArrayHandleType1::ReadPortalType,
+                                                 typename ArrayHandleType2::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -178,15 +178,14 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->valid);
-    return PortalConstType(this->array1.GetPortalConstControl(),
-                           this->array2.GetPortalConstControl());
+    return PortalConstType(this->array1.ReadPortal(), this->array2.ReadPortal());
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->valid);
-    return PortalType(this->array1.GetPortalControl(), this->array2.GetPortalControl());
+    return PortalType(this->array1.WritePortal(), this->array2.WritePortal());
   }
 
   VTKM_CONT

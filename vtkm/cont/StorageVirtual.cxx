@@ -145,7 +145,7 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::PrepareForInPlace(
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalControl()
+const vtkm::internal::PortalVirtualBase* StorageVirtual::WritePortal()
 {
   if (!this->HostUpToDate)
   {
@@ -160,7 +160,7 @@ const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalControl()
 }
 
 //--------------------------------------------------------------------
-const vtkm::internal::PortalVirtualBase* StorageVirtual::GetPortalConstControl() const
+const vtkm::internal::PortalVirtualBase* StorageVirtual::ReadPortal() const
 {
   if (!this->HostUpToDate)
   {

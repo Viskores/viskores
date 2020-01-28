@@ -34,7 +34,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.GetPortalConstControl().Get(i) != expected[i])
+    if (ah.ReadPortal().Get(i) != expected[i])
     {
       return false;
     }
@@ -112,7 +112,7 @@ void TestDataSet_Explicit()
   vtkm::Float32 expected[4] = { 30.1667f, 30.1667f, 30.1667f, 30.1667f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on explicit subset data");
   }
 }
@@ -147,7 +147,7 @@ void TestDataSet_Structured2D()
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }
@@ -182,7 +182,7 @@ void TestDataSet_Structured3D()
   vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }

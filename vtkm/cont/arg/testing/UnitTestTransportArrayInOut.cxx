@@ -64,7 +64,7 @@ struct TryArrayInOutType
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
     token.DetachFromAll();
 
-    typename ArrayHandleType::PortalConstControl portal = handle.GetPortalConstControl();
+    typename ArrayHandleType::ReadPortalType portal = handle.ReadPortal();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Portal has wrong number of values.");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)

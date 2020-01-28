@@ -219,7 +219,7 @@ static void TestMaxNeighborValue()
                                    170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f };
   for (int i = 0; i < 18; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected3D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected3D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 
@@ -236,7 +236,7 @@ static void TestMaxNeighborValue()
 
   for (int i = 0; i < 25; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected2D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected2D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 }

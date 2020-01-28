@@ -54,8 +54,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
   }
 
   std::vector<vtkm::Range> v_ranges(static_cast<size_t>(ranges.GetNumberOfValues()));
-  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.GetPortalConstControl()),
-            vtkm::cont::ArrayPortalToIteratorEnd(ranges.GetPortalConstControl()),
+  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.ReadPortal()),
+            vtkm::cont::ArrayPortalToIteratorEnd(ranges.ReadPortal()),
             v_ranges.begin());
 
   using VectorOfRangesT = std::vector<vtkm::Range>;

@@ -1010,18 +1010,18 @@ void Camera::CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays)
 {
   RayOperations::Resize(rays, 1, vtkm::cont::DeviceAdapterTagSerial());
   vtkm::Int32 pixelIndex = this->Width * (this->Height - pixel[1]) + pixel[0];
-  rays.PixelIdx.GetPortalControl().Set(0, pixelIndex);
-  rays.OriginX.GetPortalControl().Set(0, this->Position[0]);
-  rays.OriginY.GetPortalControl().Set(0, this->Position[1]);
-  rays.OriginZ.GetPortalControl().Set(0, this->Position[2]);
+  rays.PixelIdx.WritePortal().Set(0, pixelIndex);
+  rays.OriginX.WritePortal().Set(0, this->Position[0]);
+  rays.OriginY.WritePortal().Set(0, this->Position[1]);
+  rays.OriginZ.WritePortal().Set(0, this->Position[2]);
 
 
   vtkm::Float32 infinity;
   GetInfinity(infinity);
 
-  rays.MaxDistance.GetPortalControl().Set(0, infinity);
-  rays.MinDistance.GetPortalControl().Set(0, 0.f);
-  rays.HitIdx.GetPortalControl().Set(0, -2);
+  rays.MaxDistance.WritePortal().Set(0, infinity);
+  rays.MinDistance.WritePortal().Set(0, 0.f);
+  rays.HitIdx.WritePortal().Set(0, -2);
 
   vtkm::Float32 thx = tanf((this->FovX * vtkm::Pi_180f()) * .5f);
   vtkm::Float32 thy = tanf((this->FovY * vtkm::Pi_180f()) * .5f);
@@ -1059,9 +1059,9 @@ void Camera::CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays)
   ray_dir[0] = ray_dir[0] / sq_mag;
   ray_dir[1] = ray_dir[1] / sq_mag;
   ray_dir[2] = ray_dir[2] / sq_mag;
-  rays.DirX.GetPortalControl().Set(0, ray_dir[0]);
-  rays.DirY.GetPortalControl().Set(0, ray_dir[1]);
-  rays.DirZ.GetPortalControl().Set(0, ray_dir[2]);
+  rays.DirX.WritePortal().Set(0, ray_dir[0]);
+  rays.DirY.WritePortal().Set(0, ray_dir[1]);
+  rays.DirZ.WritePortal().Set(0, ray_dir[2]);
 }
 
 void Camera::WriteSettingsToLog()

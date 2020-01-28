@@ -56,7 +56,7 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
   if (input.GetNumberOfValues() < 1)
   {
-    auto portal = range.GetPortalControl();
+    auto portal = range.WritePortal();
     for (vtkm::IdComponent i = 0; i < VecTraits::NUM_COMPONENTS; ++i)
     {
       portal.Set(i, vtkm::Range());
@@ -79,7 +79,7 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
     }
     else
     {
-      auto portal = range.GetPortalControl();
+      auto portal = range.WritePortal();
       for (vtkm::IdComponent i = 0; i < VecTraits::NUM_COMPONENTS; ++i)
       {
         portal.Set(i,

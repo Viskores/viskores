@@ -558,9 +558,9 @@ int main(int argc, char* argv[])
   localBlockIndices.Allocate(blocksPerRank);
   localBlockOrigins.Allocate(blocksPerRank);
   localBlockSizes.Allocate(blocksPerRank);
-  auto localBlockIndicesPortal = localBlockIndices.GetPortalControl();
-  auto localBlockOriginsPortal = localBlockOrigins.GetPortalControl();
-  auto localBlockSizesPortal = localBlockSizes.GetPortalControl();
+  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
+  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
+  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   {
     vtkm::Id lastDimSize =

@@ -68,7 +68,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeComputeImpl(
       result.resize(
         std::max(result.size(), static_cast<size_t>(partition_range.GetNumberOfValues())));
 
-      auto portal = partition_range.GetPortalConstControl();
+      auto portal = partition_range.ReadPortal();
       std::transform(vtkm::cont::ArrayPortalToIteratorBegin(portal),
                      vtkm::cont::ArrayPortalToIteratorEnd(portal),
                      result.begin(),

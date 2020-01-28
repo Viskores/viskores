@@ -235,10 +235,10 @@ public:
     //Any non-polyline cell will set the value to 1. No need to worry about race conditions
     //as the outcasts will all set it to the same value.
     invalidCell.Allocate(1);
-    invalidCell.GetPortalControl().Set(0, 0);
+    invalidCell.WritePortal().Set(0, 0);
     countInvoker.Invoke(cellset, invalidCell, ptsPerPolyline);
 
-    if (invalidCell.GetPortalConstControl().Get(0) == 1)
+    if (invalidCell.ReadPortal().Get(0) == 1)
       throw vtkm::cont::ErrorBadValue("Stream surface requires only polyline data.");
 
     vtkm::Id numPolylines = cellset.GetNumberOfCells();

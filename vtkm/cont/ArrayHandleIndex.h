@@ -64,7 +64,9 @@ public:
 
   VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)
-    : Superclass(typename Superclass::PortalConstControl(internal::IndexFunctor{}, length))
+    : Superclass(
+        typename internal::Storage<vtkm::Id, StorageTagIndex>::PortalType(internal::IndexFunctor{},
+                                                                          length))
   {
   }
 };

@@ -79,8 +79,8 @@ public:
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
-    : Superclass(typename Superclass::PortalConstControl(internal::ConstantFunctor<T>(value),
-                                                         numberOfValues))
+    : Superclass(
+        typename Superclass::ReadPortalType(internal::ConstantFunctor<T>(value), numberOfValues))
   {
   }
 };
@@ -137,7 +137,7 @@ public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
     vtkmdiy::save(bb, obj.GetNumberOfValues());
-    vtkmdiy::save(bb, obj.GetPortalConstControl().Get(0));
+    vtkmdiy::save(bb, obj.ReadPortal().Get(0));
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)

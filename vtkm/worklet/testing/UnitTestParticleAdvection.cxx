@@ -188,16 +188,18 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   Connectivity structured;
   structured.SetPointDimensions(cellDims + vtkm::Vec<vtkm::Id, NDIM>(1));
 
-  vtkm::Id idx = 0;
-  for (vtkm::Id i = 0; i < nCells; i++)
+  auto connPortal = conn.WritePortal();
+  auto shapesPortal = shapes.WritePortal();
+  auto numIndicesPortal = numIndices.WritePortal();
+  vtkm::Id connectionIndex = 0;
+  for (vtkm::Id cellIndex = 0; cellIndex < nCells; cellIndex++)
   {
-    auto ptIds = structured.GetPointsOfCell(i);
-    for (vtkm::IdComponent j = 0; j < nVerts; j++, idx++)
-      conn.GetPortalControl().Set(idx, ptIds[j]);
+    auto ptIds = structured.GetPointsOfCell(cellIndex);
+    for (vtkm::IdComponent vertexIndex = 0; vertexIndex < nVerts; vertexIndex++, connectionIndex++)
+      connPortal.Set(connectionIndex, ptIds[vertexIndex]);
 
-    shapes.GetPortalControl().Set(
-      i, (NDIM == 2 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
-    numIndices.GetPortalControl().Set(i, nVerts);
+    shapesPortal.Set(cellIndex, (NDIM == 2 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
+    numIndicesPortal.Set(cellIndex, nVerts);
   }
 }
 
@@ -207,13 +209,8 @@ vtkm::cont::DataSet CreateWeirdnessFromStructuredDataSet(const vtkm::cont::DataS
   using CoordType = vtkm::Vec3f;
 
   auto inputCoords = input.GetCoordinateSystem(0).GetData();
-  vtkm::Id numPts = inputCoords.GetNumberOfValues();
   vtkm::cont::ArrayHandle<CoordType> explCoords;
-  explCoords.Allocate(numPts);
-  auto explPortal = explCoords.GetPortalControl();
-  auto cp = inputCoords.GetPortalConstControl();
-  for (vtkm::Id i = 0; i < numPts; i++)
-    explPortal.Set(i, cp.Get(i));
+  vtkm::cont::ArrayCopy(inputCoords, explCoords);
 
   vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
   vtkm::cont::ArrayHandle<vtkm::Id> conn;
@@ -316,8 +313,8 @@ void ValidateEvaluator(const EvalType& eval,
   vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
   evalTesterDispatcher.Invoke(pointsHandle, eval, evalStatus, evalResults);
-  auto statusPortal = evalStatus.GetPortalConstControl();
-  auto resultsPortal = evalResults.GetPortalConstControl();
+  auto statusPortal = evalStatus.ReadPortal();
+  auto resultsPortal = evalResults.ReadPortal();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
@@ -325,9 +322,6 @@ void ValidateEvaluator(const EvalType& eval,
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
-  pointsHandle.ReleaseResources();
-  evalStatus.ReleaseResources();
-  evalResults.ReleaseResources();
 }
 
 class TestIntegratorWorklet : public vtkm::worklet::WorkletMapField
@@ -369,9 +363,9 @@ void ValidateIntegrator(const IntegratorType& integrator,
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
   integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
-  auto statusPortal = stepStatus.GetPortalConstControl();
-  auto pointsPortal = pointsHandle.GetPortalConstControl();
-  auto resultsPortal = stepResults.GetPortalConstControl();
+  auto statusPortal = stepStatus.ReadPortal();
+  auto pointsPortal = pointsHandle.ReadPortal();
+  auto resultsPortal = stepResults.ReadPortal();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
@@ -384,9 +378,6 @@ void ValidateIntegrator(const IntegratorType& integrator,
       VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
                        "Error in evaluator result for " + msg);
   }
-  pointsHandle.ReleaseResources();
-  stepStatus.ReleaseResources();
-  stepResults.ReleaseResources();
 }
 
 template <typename IntegratorType>
@@ -405,8 +396,8 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
   integratorTesterDispatcher.Invoke(pointsHandle, integrator, stepStatus, stepResults);
-  auto statusPortal = stepStatus.GetPortalConstControl();
-  auto resultsPortal = stepResults.GetPortalConstControl();
+  auto statusPortal = stepStatus.ReadPortal();
+  auto resultsPortal = stepResults.ReadPortal();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
@@ -421,10 +412,6 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
     }
     //VTKM_TEST_ASSERT(!bounds.Contains(result), "Tolerance not satisfied.");
   }
-
-  pointsHandle.ReleaseResources();
-  stepStatus.ReleaseResources();
-  stepResults.ReleaseResources();
 }
 
 void TestEvaluators()
@@ -535,9 +522,9 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
                    "Number of output particles does not match input.");
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).NumSteps <= maxSteps,
+    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).NumSteps <= maxSteps,
                      "Too many steps taken in particle advection");
-    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).Status.CheckOk(),
+    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
                      "Bad status in particle advection");
   }
 }
@@ -551,9 +538,9 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
 
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).NumSteps <= maxSteps,
+    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).NumSteps <= maxSteps,
                      "Too many steps taken in streamline");
-    VTKM_TEST_ASSERT(res.Particles.GetPortalConstControl().Get(i).Status.CheckOk(),
+    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
                      "Bad status in streamline");
   }
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
@@ -688,7 +675,7 @@ void TestParticleStatus()
   pts.push_back(vtkm::Particle(vtkm::Vec3f(-1, -1, -1), 1));
   auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
   pa.Run(rk4, seedsArray, maxSteps);
-  auto portal = seedsArray.GetPortalConstControl();
+  auto portal = seedsArray.ReadPortal();
 
   bool tookStep0 = portal.Get(0).Status.CheckTookAnySteps();
   bool tookStep1 = portal.Get(1).Status.CheckTookAnySteps();
@@ -764,7 +751,7 @@ void TestWorkletsBasic()
       vtkm::Id numRequiredPoints = static_cast<vtkm::Id>(endPts.size());
       VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == numRequiredPoints,
                        "Wrong number of points in particle advection result.");
-      auto portal = res.Particles.GetPortalConstControl();
+      auto portal = res.Particles.ReadPortal();
       for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
       {
         VTKM_TEST_ASSERT(portal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
@@ -790,7 +777,7 @@ void TestWorkletsBasic()
                        "Wrong number of points in streamline result.");
 
       //Make sure all the points match.
-      auto parPortal = res.Particles.GetPortalConstControl();
+      auto parPortal = res.Particles.ReadPortal();
       for (vtkm::Id i = 0; i < res.Particles.GetNumberOfValues(); i++)
       {
         VTKM_TEST_ASSERT(parPortal.Get(i).Pos == endPts[static_cast<std::size_t>(i)],
@@ -803,7 +790,7 @@ void TestWorkletsBasic()
                          "Streamline particle did not terminate");
       }
 
-      auto posPortal = res.Positions.GetPortalConstControl();
+      auto posPortal = res.Positions.ReadPortal();
       for (vtkm::Id i = 0; i < res.Positions.GetNumberOfValues(); i++)
         VTKM_TEST_ASSERT(posPortal.Get(i) == samplePts[static_cast<std::size_t>(i)],
                          "Streamline points do not match");

@@ -184,7 +184,7 @@ struct TemplatedTests
 
     std::cout << "  Testing that basic ArrayHandle has simple iterators." << std::endl;
     {
-      auto portal = arrayHandle.GetPortalControl();
+      auto portal = arrayHandle.WritePortal();
       auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
       VTKM_TEST_ASSERT(vtkm::cont::TypeToString(begin) == vtkm::cont::TypeToString(iter),
                        "Expected iterator type ",
@@ -194,7 +194,7 @@ struct TemplatedTests
       VTKM_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
     }
     {
-      auto portal = arrayHandle.GetPortalConstControl();
+      auto portal = arrayHandle.ReadPortal();
       auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
       VTKM_TEST_ASSERT(vtkm::cont::TypeToString(cbegin) == vtkm::cont::TypeToString(iter),
                        "Expected iterator type ",

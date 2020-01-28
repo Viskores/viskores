@@ -62,7 +62,7 @@ struct TryArrayOutType
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
     token.DetachFromAll();
 
-    CheckPortal(handle.GetPortalConstControl());
+    CheckPortal(handle.ReadPortal());
   }
 };
 

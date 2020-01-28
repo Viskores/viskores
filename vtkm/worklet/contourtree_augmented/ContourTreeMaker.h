@@ -225,12 +225,14 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // test for final edges meeting
   if (this->ActiveSupernodes.GetNumberOfValues() == 1)
   { // meet at a vertex
-    vtkm::Id superID = this->ActiveSupernodes.GetPortalControl().Get(0);
-    this->ContourTreeResult.Superarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
-    this->ContourTreeResult.Hyperarcs.GetPortalControl().Set(superID, (vtkm::Id)NO_SUCH_ELEMENT);
-    this->ContourTreeResult.Hyperparents.GetPortalControl().Set(superID, superID);
-    this->ContourTreeResult.WhenTransferred.GetPortalControl().Set(
-      superID, this->NumIterations | IS_HYPERNODE);
+    vtkm::Id superID = this->ActiveSupernodes.ReadPortal().Get(0);
+    this->ContourTreeResult.Superarcs.WritePortal().Set(superID,
+                                                        static_cast<vtkm::Id>(NO_SUCH_ELEMENT));
+    this->ContourTreeResult.Hyperarcs.WritePortal().Set(superID,
+                                                        static_cast<vtkm::Id>(NO_SUCH_ELEMENT));
+    this->ContourTreeResult.Hyperparents.WritePortal().Set(superID, superID);
+    this->ContourTreeResult.WhenTransferred.WritePortal().Set(superID,
+                                                              this->NumIterations | IS_HYPERNODE);
   } // meet at a vertex
   DebugPrint("Contour Tree Constructed. Now Swizzling", __FILE__, __LINE__);
 
@@ -326,7 +328,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
       1,
       temp,
       1);
-    auto portal = temp.GetPortalControl();
+    auto portal = temp.ReadPortal();
     nHypernodes = portal.Get(0) + oneIfHypernodeFunctor(portal.Get(1));
   }
 
@@ -575,11 +577,11 @@ void ContourTreeMaker::AugmentMergeTrees()
     vtkm::cont::Algorithm::Sort(splitSort);
 
     // 3. Use set_union to combine the lists
-    auto contTreeSuperNodesBegin = vtkm::cont::ArrayPortalToIteratorBegin(this->ContourTreeResult.Supernodes.GetPortalControl());
-    auto tail = std::set_union(vtkm::cont::ArrayPortalToIteratorBegin(joinSort.GetPortalControl()),
-                               vtkm::cont::ArrayPortalToIteratorEnd(joinSort.GetPortalControl()),
-                               vtkm::cont::ArrayPortalToIteratorBegin(splitSort.GetPortalControl()),
-                               vtkm::cont::ArrayPortalToIteratorEnd(splitSort.GetPortalControl()),
+    auto contTreeSuperNodesBegin = vtkm::cont::ArrayPortalToIteratorBegin(this->ContourTreeResult.Supernodes.WritePortal());
+    auto tail = std::set_union(vtkm::cont::ArrayPortalToIteratorBegin(joinSort.WritePortal()),
+                               vtkm::cont::ArrayPortalToIteratorEnd(joinSort.WritePortal()),
+                               vtkm::cont::ArrayPortalToIteratorBegin(splitSort.WritePortal()),
+                               vtkm::cont::ArrayPortalToIteratorEnd(splitSort.WritePortal()),
                                contTreeSuperNodesBegin);
     // compute the true number of supernodes
     nSupernodes = tail - contTreeSuperNodesBegin;

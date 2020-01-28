@@ -78,14 +78,14 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
 {
   std::cout << "  Verify that the control portal works" << std::endl;
 
-  using OriginalPortalType = typename OriginalArrayHandleType::PortalConstControl;
-  using TransformedPortalType = typename TransformedArrayHandleType::PortalConstControl;
+  using OriginalPortalType = typename OriginalArrayHandleType::ReadPortalType;
+  using TransformedPortalType = typename TransformedArrayHandleType::ReadPortalType;
 
   VTKM_TEST_ASSERT(originalArray.GetNumberOfValues() == transformedArray.GetNumberOfValues(),
                    "Number of values in transformed array incorrect.");
 
-  OriginalPortalType originalPortal = originalArray.GetPortalConstControl();
-  TransformedPortalType transformedPortal = transformedArray.GetPortalConstControl();
+  OriginalPortalType originalPortal = originalArray.ReadPortal();
+  TransformedPortalType transformedPortal = transformedArray.ReadPortal();
 
   VTKM_TEST_ASSERT(originalPortal.GetNumberOfValues() == transformedPortal.GetNumberOfValues(),
                    "Number of values in transformed portal incorrect.");
@@ -139,10 +139,10 @@ struct TransformTests
     vtkm::cont::ArrayHandle<InputValueType> input;
     TransformHandle thandle(input, functor);
 
-    using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::PortalControl;
+    using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::WritePortalType;
     input.Allocate(ARRAY_SIZE);
     {
-      Portal portal = input.GetPortalControl();
+      Portal portal = input.WritePortal();
       for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
       {
         portal.Set(index, TestValue(index, InputValueType()));
@@ -159,7 +159,7 @@ struct TransformTests
 
     std::cout << "Modify array handle values to ensure transform gets updated" << std::endl;
     {
-      Portal portal = input.GetPortalControl();
+      Portal portal = input.WritePortal();
       for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
       {
         portal.Set(index, TestValue(index * index, InputValueType()));

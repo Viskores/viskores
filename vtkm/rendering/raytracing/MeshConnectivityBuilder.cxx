@@ -871,7 +871,7 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
     //
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
       singleType.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-    vtkm::UInt8 shapeType = shapes.GetPortalConstControl().Get(0);
+    vtkm::UInt8 shapeType = shapes.ReadPortal().Get(0);
     if (shapeType == CELL_SHAPE_HEXAHEDRON)
       type = UnstructuredSingle;
     if (shapeType == CELL_SHAPE_TETRA)

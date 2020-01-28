@@ -79,9 +79,9 @@ struct TestBinarySearch
     token.DetachFromAll();
 
     // Verify:
-    auto needlesPortal = needles.GetPortalConstControl();
-    auto hayStackPortal = hayStack.GetPortalConstControl();
-    auto resultsPortal = results.GetPortalConstControl();
+    auto needlesPortal = needles.ReadPortal();
+    auto hayStackPortal = hayStack.ReadPortal();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       if (expectedFound[static_cast<size_t>(i)])
@@ -150,7 +150,7 @@ struct TestLowerBound
     token.DetachFromAll();
 
     // Verify:
-    auto resultsPortal = results.GetPortalConstControl();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(resultsPortal.Get(i) == expected[static_cast<size_t>(i)]);
@@ -209,7 +209,7 @@ struct TestUpperBound
     token.DetachFromAll();
 
     // Verify:
-    auto resultsPortal = results.GetPortalConstControl();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(resultsPortal.Get(i) == expected[static_cast<size_t>(i)]);

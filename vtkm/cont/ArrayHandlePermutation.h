@@ -124,11 +124,11 @@ public:
   using ValueType = T;
 
   using PortalType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                 typename ValueArrayType::PortalControl>;
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
+                                                 typename ValueArrayType::WritePortalType>;
   using PortalConstType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                 typename ValueArrayType::PortalConstControl>;
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
+                                                 typename ValueArrayType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -148,16 +148,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->IndexArray.GetPortalConstControl(),
-                      this->ValueArray.GetPortalControl());
+    return PortalType(this->IndexArray.ReadPortal(), this->ValueArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->IndexArray.GetPortalConstControl(),
-                           this->ValueArray.GetPortalConstControl());
+    return PortalConstType(this->IndexArray.ReadPortal(), this->ValueArray.ReadPortal());
   }
 
   VTKM_CONT

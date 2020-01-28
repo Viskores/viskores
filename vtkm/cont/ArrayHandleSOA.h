@@ -182,11 +182,11 @@ struct ArrayHandleSOATraits
   using IsTrueVec = std::integral_constant<bool, (NUM_COMPONENTS > 1)>;
 
   using PortalControl = typename detail::SOAPortalChooser<ValueType,
-                                                          typename BaseArrayType::PortalControl,
+                                                          typename BaseArrayType::WritePortalType,
                                                           IsTrueVec>::Type;
   using PortalConstControl =
     typename detail::SOAPortalChooser<ValueType,
-                                      typename BaseArrayType::PortalConstControl,
+                                      typename BaseArrayType::ReadPortalType,
                                       IsTrueVec>::Type;
 
   template <typename Device>
@@ -282,7 +282,7 @@ public:
     VTKM_ASSERT(this->IsValid());
     return detail::MakeSOAPortal<PortalType>(
       this->Arrays, this->GetNumberOfValues(), [](BaseArrayType& array) {
-        return array.GetPortalControl();
+        return array.WritePortal();
       });
   }
 
@@ -291,7 +291,7 @@ public:
     VTKM_ASSERT(this->IsValid());
     return detail::MakeSOAPortal<PortalConstType>(
       this->Arrays, this->GetNumberOfValues(), [](const BaseArrayType& array) {
-        return array.GetPortalConstControl();
+        return array.ReadPortal();
       });
   }
 

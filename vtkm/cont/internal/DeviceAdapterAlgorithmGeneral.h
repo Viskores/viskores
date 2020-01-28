@@ -114,7 +114,7 @@ private:
       DerivedAlgorithm::Schedule(kernel, 1);
     }
 
-    return output.GetPortalConstControl().Get(0);
+    return output.ReadPortal().Get(0);
   }
 
 public:
@@ -748,7 +748,7 @@ public:
     if (numValues <= 0)
     {
       output.Allocate(1);
-      output.GetPortalControl().Set(0, initialValue);
+      output.WritePortal().Set(0, initialValue);
       return;
     }
 
@@ -808,7 +808,7 @@ public:
     else if (numberOfKeys == 1)
     {
       output.Allocate(1);
-      output.GetPortalControl().Set(0, initialValue);
+      output.WritePortal().Set(0, initialValue);
       return;
     }
 

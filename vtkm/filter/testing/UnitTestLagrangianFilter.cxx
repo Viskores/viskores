@@ -46,6 +46,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
   vtkm::cont::ArrayHandle<vtkm::Vec3f_64> velocityField;
   velocityField.Allocate(numPoints);
 
+  auto velocityPortal = velocityField.WritePortal();
   vtkm::Id count = 0;
   for (vtkm::Id i = 0; i < DIMS[0]; i++)
   {
@@ -53,11 +54,12 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
     {
       for (vtkm::Id k = 0; k < DIMS[2]; k++)
       {
-        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(0.1, 0.1, 0.1));
+        velocityPortal.Set(count, vtkm::Vec3f_64(0.1, 0.1, 0.1));
         count++;
       }
     }
   }
+  velocityPortal.Detach();
   dsf.AddPointField(dataset, "velocity", velocityField);
   return dataset;
 }

@@ -98,8 +98,7 @@ class VTKM_ALWAYS_EXPORT Storage<T, internal::StorageTagExtrudePlane>
 public:
   using ValueType = T;
 
-  using PortalConstType =
-    vtkm::exec::ArrayPortalExtrudePlane<typename HandleType::PortalConstControl>;
+  using PortalConstType = vtkm::exec::ArrayPortalExtrudePlane<typename HandleType::ReadPortalType>;
 
   // Note that this array is read only, so you really should only be getting the const
   // version of the portal. If you actually try to write to this portal, you will
@@ -126,7 +125,7 @@ public:
 
   PortalConstType GetPortalConst() const
   {
-    return PortalConstType(this->Array.GetPortalConstControl(), this->NumberOfPlanes);
+    return PortalConstType(this->Array.ReadPortal(), this->NumberOfPlanes);
   }
 
   vtkm::Id GetNumberOfValues() const
@@ -377,7 +376,7 @@ class Storage<T, internal::StorageTagExtrude>
 {
   using BaseT = typename VecTraits<T>::BaseComponentType;
   using HandleType = vtkm::cont::ArrayHandle<BaseT>;
-  using TPortalType = typename HandleType::PortalConstControl;
+  using TPortalType = typename HandleType::ReadPortalType;
 
 public:
   using ValueType = T;
@@ -421,7 +420,7 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
-    return PortalConstType(this->Array.GetPortalConstControl(),
+    return PortalConstType(this->Array.ReadPortal(),
                            static_cast<vtkm::Int32>(this->Array.GetNumberOfValues()),
                            this->NumberOfPlanes,
                            this->UseCylindrical);

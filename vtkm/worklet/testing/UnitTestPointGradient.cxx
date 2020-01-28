@@ -33,12 +33,12 @@ void TestPointGradientUniform2D()
   vtkm::Vec3f_32 expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointGradient worklet on 2D uniform data",
                      "\nExpected ",
                      expected[i],
                      "\nGot ",
-                     result.GetPortalConstControl().Get(i),
+                     result.ReadPortal().Get(i),
                      "\n");
   }
 }
@@ -64,12 +64,12 @@ void TestPointGradientUniform3D()
   };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointGradient worklet on 3D uniform data",
                      "\nExpected ",
                      expected[i],
                      "\nGot ",
-                     result.GetPortalConstControl().Get(i),
+                     result.ReadPortal().Get(i),
                      "\n");
   }
 }
@@ -105,7 +105,7 @@ void TestPointGradientUniform3DWithVectorField()
   for (int i = 0; i < 4; ++i)
   {
     vtkm::Vec<vtkm::Vec3f_64, 3> e = expected[i];
-    vtkm::Vec<vtkm::Vec3f_64, 3> r = result.GetPortalConstControl().Get(i);
+    vtkm::Vec<vtkm::Vec3f_64, 3> r = result.ReadPortal().Get(i);
 
     VTKM_TEST_ASSERT(test_equal(e[0], r[0]),
                      "Wrong result for vec field PointGradient worklet on 3D uniform data");
@@ -168,13 +168,13 @@ void TestPointGradientUniform3DWithVectorField2()
   {
     vtkm::Vec<vtkm::Vec3f_64, 3> eg = expected_gradients[i];
 
-    vtkm::Float64 d = extraOutput.Divergence.GetPortalConstControl().Get(i);
+    vtkm::Float64 d = extraOutput.Divergence.ReadPortal().Get(i);
 
     VTKM_TEST_ASSERT(test_equal((eg[0][0] + eg[1][1] + eg[2][2]), d),
                      "Wrong result for Divergence on 3D uniform data");
 
     vtkm::Vec3f_64 ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
-    vtkm::Vec3f_64 v = extraOutput.Vorticity.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_64 v = extraOutput.Vorticity.ReadPortal().Get(i);
     VTKM_TEST_ASSERT(test_equal(ev, v), "Wrong result for Vorticity on 3D uniform data");
 
     const vtkm::Vec3f_64 es(eg[1][2] + eg[2][1], eg[2][0] + eg[0][2], eg[0][1] + eg[1][0]);
@@ -184,7 +184,7 @@ void TestPointGradientUniform3DWithVectorField2()
     vtkm::Float64 qcriterion =
       ((vtkm::Dot(ev, ev) / 2.0f) - (vtkm::Dot(ed, ed) + (vtkm::Dot(es, es) / 2.0f))) / 2.0f;
 
-    vtkm::Float64 q = extraOutput.QCriterion.GetPortalConstControl().Get(i);
+    vtkm::Float64 q = extraOutput.QCriterion.ReadPortal().Get(i);
 
     VTKM_TEST_ASSERT(
       test_equal(qcriterion, q),
@@ -215,12 +215,12 @@ void TestPointGradientExplicit3D()
   };
   for (int i = 0; i < nVerts; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointGradient worklet on 3D explicit data",
                      "\nExpected ",
                      expected[i],
                      "\nGot ",
-                     result.GetPortalConstControl().Get(i),
+                     result.ReadPortal().Get(i),
                      "\n");
   }
 }
@@ -251,12 +251,12 @@ void TestPointGradientExplicit2D()
 
   for (int i = 0; i < nVerts; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointGradient worklet on 2D explicit data",
                      "\nExpected ",
                      expected[i],
                      "\nGot ",
-                     result.GetPortalConstControl().Get(i),
+                     result.ReadPortal().Get(i),
                      "\n");
   }
 }

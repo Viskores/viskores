@@ -501,10 +501,17 @@ public:
   using ArrayHandleType = ArrayHandle<WordTypeDefault, StorageTagBasic>;
 
   /// The BitPortal used in the control environment.
-  using PortalControl = detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<
+    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>>;
 
   /// A read-only BitPortal used in the control environment.
-  using PortalConstControl = detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
+  using ReadPortalType = vtkm::cont::internal::ArrayPortalToken<
+    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>>;
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use BitField::WritePortalType instead.") =
+    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayBitField::ReadPortalType instead.") =
+    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
 
   template <typename Device>
   struct ExecutionTypes
@@ -625,20 +632,46 @@ public:
   VTKM_CONT
   DeviceAdapterId GetDeviceAdapterId() const { return this->Internals->Data.GetDeviceAdapterId(); }
 
-  /// Get a portal to the data that is usable from the control environment.
-  VTKM_CONT
-  PortalControl GetPortalControl()
+  /// \brief Get a portal to the data that is usable from the control environment.
+  ///
+  /// As long as this portal is in scope, no one else will be able to read or write the BitField.
+  VTKM_CONT WritePortalType WritePortal() const
   {
-    return PortalControl{ this->Internals->Data.GetPortalControl(), this->Internals->NumberOfBits };
+    auto dataPortal = this->Internals->Data.WritePortal();
+    return WritePortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+  }
+
+  /// \brief Get a read-only portal to the data that is usable from the control environment.
+  ///
+  /// As long as this portal is in scope, no one else will be able to write in the BitField.
+  VTKM_CONT ReadPortalType ReadPortal() const
+  {
+    auto dataPortal = this->Internals->Data.ReadPortal();
+    return ReadPortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+  }
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use BitField::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl> GetPortalControl()
+  {
+    return detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>{
+      this->Internals->Data.WritePortal(), this->Internals->NumberOfBits
+    };
   }
 
   /// Get a read-only portal to the data that is usable from the control
   /// environment.
   VTKM_CONT
-  PortalConstControl GetPortalConstControl() const
+  VTKM_DEPRECATED(1.6,
+                  "Use BitField::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl> GetPortalConstControl() const
   {
-    return PortalConstControl{ this->Internals->Data.GetPortalConstControl(),
-                               this->Internals->NumberOfBits };
+    return detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>{
+      this->Internals->Data.ReadPortal(), this->Internals->NumberOfBits
+    };
   }
 
   /// Prepares this BitField to be used as an input to an operation in the

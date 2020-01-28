@@ -230,7 +230,7 @@ inline vtkm::cont::ArrayHandle<T> buildSampleHandle(vtkm::Int32 numSamples,
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(allocationSize);
 
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   vtkm::Id index = 0;
 
   //Insert the below range first

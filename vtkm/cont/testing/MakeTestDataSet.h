@@ -1509,7 +1509,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
 
   for (vtkm::Id i = 0; i < connectivitySize; ++i)
   {
-    connectivity.GetPortalControl().Set(i, pointId[i]);
+    connectivity.WritePortal().Set(i, pointId[i]);
   }
   vtkm::cont::CellSetSingleType<> cellSet;
   cellSet.Fill(nVerts, vtkm::CELL_SHAPE_TRIANGLE, 3, connectivity);
@@ -1522,11 +1522,11 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> pointvec;
   pointvec.Allocate(nVerts);
-  SetPortal(pointvec.GetPortalControl());
+  SetPortal(pointvec.WritePortal());
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> cellvec;
   cellvec.Allocate(connectivitySize / 3);
-  SetPortal(cellvec.GetPortalControl());
+  SetPortal(cellvec.WritePortal());
 
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(dataSet, "pointvar", pointvar);

@@ -55,7 +55,7 @@ void CheckValues(IteratorType begin, IteratorType end, T)
 template <typename T>
 void CheckArray(const vtkm::cont::ArrayHandle<T>& handle)
 {
-  CheckPortal(handle.GetPortalConstControl());
+  CheckPortal(handle.ReadPortal());
 }
 }
 
@@ -139,7 +139,7 @@ private:
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
                        "Uninitialized array does not report zero values.");
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
+      VTKM_TEST_ASSERT(arrayHandle.ReadPortal().GetNumberOfValues() == 0,
                        "Uninitialized array does not give portal with zero values.");
       vtkm::cont::Token token;
       arrayHandle = vtkm::cont::ArrayHandle<T>();
@@ -226,7 +226,7 @@ private:
           vtkm::cont::Token token;
           arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
           token.DetachFromAll();
-          arrayHandle.GetPortalControl();
+          arrayHandle.WritePortal();
         }
         catch (vtkm::cont::Error&)
         {
@@ -313,7 +313,7 @@ private:
           vtkm::cont::Token token;
           arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
           token.DetachFromAll();
-          arrayHandle.GetPortalControl();
+          arrayHandle.WritePortal();
         }
         catch (vtkm::cont::Error&)
         {
@@ -377,8 +377,7 @@ private:
         InplaceFunctor<T, ExecutionPortalType> functor(executionPortal);
         Algorithm::Schedule(functor, ARRAY_SIZE * 2);
       }
-      typename vtkm::cont::ArrayHandle<T>::PortalConstControl controlPortal =
-        arrayHandle.GetPortalConstControl();
+      typename vtkm::cont::ArrayHandle<T>::ReadPortalType controlPortal = arrayHandle.ReadPortal();
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
         VTKM_TEST_ASSERT(test_equal(controlPortal.Get(index), TestValue(index, T()) + T(1)),
@@ -411,7 +410,7 @@ private:
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 
-        a1.GetPortalConstControl();
+        a1.ReadPortal();
         VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
         VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
 

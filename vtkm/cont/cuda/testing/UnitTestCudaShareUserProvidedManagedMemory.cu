@@ -209,7 +209,7 @@ void TestRoundTrip(bool managed)
 
   try
   {
-    handle.GetPortalControl();
+    handle.WritePortal();
   }
   catch (vtkm::cont::ErrorBadValue&)
   {

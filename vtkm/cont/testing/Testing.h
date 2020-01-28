@@ -178,8 +178,8 @@ struct TestEqualArrayHandle
       result.PushMessage("sizes don't match");
       return;
     }
-    auto portal1 = array1.GetPortalConstControl();
-    auto portal2 = array2.GetPortalConstControl();
+    auto portal1 = array1.ReadPortal();
+    auto portal2 = array2.ReadPortal();
     for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
     {
       if (!test_equal(portal1.Get(i), portal2.Get(i)))

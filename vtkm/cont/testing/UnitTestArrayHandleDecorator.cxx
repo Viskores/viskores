@@ -318,7 +318,7 @@ struct DecoratorTests
         vtkm::cont::make_ArrayHandleDecorator(ARRAY_SIZE, InvertibleDecorImpl{}, ah1, ah2, ah3Copy);
 
       {
-        auto portalDecor = ahDecor.GetPortalConstControl();
+        auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 23 });
@@ -338,7 +338,7 @@ struct DecoratorTests
                             ahDecor);
 
       { // Accessing portal should give all 25s:
-        auto portalDecor = ahDecor.GetPortalConstControl();
+        auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 25 });
@@ -354,7 +354,7 @@ struct DecoratorTests
       }
 
       { // ah3Copy should have updated values:
-        auto portalAH3Copy = ah3Copy.GetPortalConstControl();
+        auto portalAH3Copy = ah3Copy.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalAH3Copy.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalAH3Copy.Get(0) == ValueType{ 15 });
@@ -383,9 +383,9 @@ struct DecoratorTests
     auto decorArray = vtkm::cont::make_ArrayHandleDecorator(ARRAY_SIZE, impl, ahCount, ahConst);
 
     {
-      auto decorPortal = decorArray.GetPortalConstControl();
-      auto countPortal = ahCount.GetPortalConstControl();
-      auto constPortal = ahConst.GetPortalConstControl();
+      auto decorPortal = decorArray.ReadPortal();
+      auto countPortal = ahCount.ReadPortal();
+      auto constPortal = ahConst.ReadPortal();
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
         VTKM_TEST_ASSERT(decorPortal.Get(i) == op(countPortal.Get(i), constPortal.Get(i)));
@@ -395,9 +395,9 @@ struct DecoratorTests
     vtkm::cont::ArrayHandle<ValueType> copiedInExec;
     vtkm::cont::ArrayCopy(decorArray, copiedInExec);
     {
-      auto copiedPortal = copiedInExec.GetPortalConstControl();
-      auto countPortal = ahCount.GetPortalConstControl();
-      auto constPortal = ahConst.GetPortalConstControl();
+      auto copiedPortal = copiedInExec.ReadPortal();
+      auto countPortal = ahCount.ReadPortal();
+      auto constPortal = ahConst.ReadPortal();
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
         VTKM_TEST_ASSERT(copiedPortal.Get(i) == op(countPortal.Get(i), constPortal.Get(i)));
@@ -425,8 +425,8 @@ struct DecoratorTests
       ARRAY_SIZE, ScanExtendedToNumIndicesDecorImpl<ValueType>{}, scan);
 
     {
-      auto origPortal = numIndicesOrig.GetPortalConstControl();
-      auto decorPortal = numIndicesDecor.GetPortalConstControl();
+      auto origPortal = numIndicesOrig.ReadPortal();
+      auto decorPortal = numIndicesDecor.ReadPortal();
       VTKM_STATIC_ASSERT(VTKM_PASS_COMMAS(
         std::is_same<decltype(origPortal.Get(0)), decltype(decorPortal.Get(0))>::value));
       VTKM_TEST_ASSERT(origPortal.GetNumberOfValues() == decorPortal.GetNumberOfValues());
@@ -450,7 +450,7 @@ struct DecoratorTests
     decor.Allocate(5);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
     {
-      auto decorPortal = decor.GetPortalControl();
+      auto decorPortal = decor.WritePortal();
       decorPortal.Set(0, 13);
       decorPortal.Set(1, 8);
       decorPortal.Set(2, 43);
@@ -460,7 +460,7 @@ struct DecoratorTests
 
     VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 5);
     {
-      auto a1Portal = a1.GetPortalConstControl();
+      auto a1Portal = a1.ReadPortal();
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(0), 1));
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(1), 0));
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(2), 4));
@@ -470,7 +470,7 @@ struct DecoratorTests
 
     VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 5);
     {
-      auto a2Portal = a2.GetPortalConstControl();
+      auto a2Portal = a2.ReadPortal();
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(0), 3));
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(1), 8));
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(2), 3));
@@ -481,7 +481,7 @@ struct DecoratorTests
     decor.Shrink(3);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
     {
-      auto decorPortal = decor.GetPortalConstControl();
+      auto decorPortal = decor.ReadPortal();
       VTKM_TEST_ASSERT(test_equal(decorPortal.Get(0), 13));
       VTKM_TEST_ASSERT(test_equal(decorPortal.Get(1), 8));
       VTKM_TEST_ASSERT(test_equal(decorPortal.Get(2), 43));
@@ -489,7 +489,7 @@ struct DecoratorTests
 
     VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 3);
     {
-      auto a1Portal = a1.GetPortalConstControl();
+      auto a1Portal = a1.ReadPortal();
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(0), 1));
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(1), 0));
       VTKM_TEST_ASSERT(test_equal(a1Portal.Get(2), 4));
@@ -497,7 +497,7 @@ struct DecoratorTests
 
     VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 3);
     {
-      auto a2Portal = a2.GetPortalConstControl();
+      auto a2Portal = a2.ReadPortal();
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(0), 3));
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(1), 8));
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(2), 3));

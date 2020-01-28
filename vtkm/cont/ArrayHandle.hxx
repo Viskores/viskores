@@ -451,7 +451,7 @@ inline void VTKM_CONT StorageSerialization(vtkmdiy::BinaryBuffer& bb,
   vtkmdiy::save(bb, count);
 
   vtkmdiy::save(bb, vtkm::Id(0)); //not a basic storage
-  auto portal = obj.GetPortalConstControl();
+  auto portal = obj.ReadPortal();
   for (vtkm::Id i = 0; i < count; ++i)
   {
     vtkmdiy::save(bb, portal.Get(i));
@@ -501,7 +501,7 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
   }
   else
   {
-    auto portal = obj.GetPortalControl();
+    auto portal = obj.WritePortal();
     for (vtkm::Id i = 0; i < count; ++i)
     {
       T val{};

@@ -218,9 +218,9 @@ struct PermutationTests
 
     VTKM_TEST_ASSERT(permutationArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation array wrong size.");
-    VTKM_TEST_ASSERT(permutationArray.GetPortalControl().GetNumberOfValues() == ARRAY_SIZE,
+    VTKM_TEST_ASSERT(permutationArray.WritePortal().GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation portal wrong size.");
-    VTKM_TEST_ASSERT(permutationArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE,
+    VTKM_TEST_ASSERT(permutationArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation portal wrong size.");
 
     vtkm::cont::Token token;
@@ -233,15 +233,15 @@ struct PermutationTests
     Algorithm::Schedule(make_InPlacePermutationFunctor(permutationArray, Device(), token),
                         ARRAY_SIZE);
     token.DetachFromAll();
-    CheckInPlaceResult(valueArray.GetPortalControl());
-    CheckInPlaceResult(valueArray.GetPortalConstControl());
+    CheckInPlaceResult(valueArray.WritePortal());
+    CheckInPlaceResult(valueArray.ReadPortal());
 
     std::cout << "Try output operation" << std::endl;
     Algorithm::Schedule(make_OutputPermutationFunctor(permutationArray, Device(), token),
                         ARRAY_SIZE);
     token.DetachFromAll();
-    CheckOutputResult(valueArray.GetPortalConstControl());
-    CheckOutputResult(valueArray.GetPortalControl());
+    CheckOutputResult(valueArray.ReadPortal());
+    CheckOutputResult(valueArray.WritePortal());
   }
 };
 
