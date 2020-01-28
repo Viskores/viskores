@@ -63,7 +63,7 @@ public:
   void UpdateSeedResolution(vtkm::cont::DataSet input);
 
   VTKM_CONT
-  void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
+  void InitializeSeedPositions(const vtkm::cont::DataSet& input);
 
   VTKM_CONT
   void InitializeCoordinates(const vtkm::cont::DataSet& input);

@@ -163,7 +163,7 @@ inline void Lagrangian::UpdateSeedResolution(const vtkm::cont::DataSet input)
 
 
 //-----------------------------------------------------------------------------
-inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
+inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input)
 {
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
@@ -210,31 +210,34 @@ inline void Lagrangian::InitializeUniformSeeds(const vtkm::cont::DataSet& input)
 //-----------------------------------------------------------------------------
 inline void Lagrangian::InitializeCoordinates(const vtkm::cont::DataSet& input)
 {
-  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
+  if (xCoordinates.empty() && yCoordinates.empty() && zCoordinates.empty())
+  {
+    vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
-  vtkm::Float64 x_spacing = 0.0, y_spacing = 0.0, z_spacing = 0.0;
-  if (this->SeedRes[0] > 1)
-    x_spacing = (double)(bounds.X.Max - bounds.X.Min) / (double)(this->SeedRes[0] - 1);
-  if (this->SeedRes[1] > 1)
-    y_spacing = (double)(bounds.Y.Max - bounds.Y.Min) / (double)(this->SeedRes[1] - 1);
-  if (this->SeedRes[2] > 1)
-    z_spacing = (double)(bounds.Z.Max - bounds.Z.Min) / (double)(this->SeedRes[2] - 1);
-  // Divide by zero handling for 2D data set. How is this handled
+    vtkm::Float64 x_spacing = 0.0, y_spacing = 0.0, z_spacing = 0.0;
+    if (this->SeedRes[0] > 1)
+      x_spacing = (double)(bounds.X.Max - bounds.X.Min) / (double)(this->SeedRes[0] - 1);
+    if (this->SeedRes[1] > 1)
+      y_spacing = (double)(bounds.Y.Max - bounds.Y.Min) / (double)(this->SeedRes[1] - 1);
+    if (this->SeedRes[2] > 1)
+      z_spacing = (double)(bounds.Z.Max - bounds.Z.Min) / (double)(this->SeedRes[2] - 1);
+    // Divide by zero handling for 2D data set. How is this handled
 
-  for (int x = 0; x < this->SeedRes[0]; x++)
-  {
-    vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
-    this->xCoordinates.push_back(bounds.X.Min + xi);
-  }
-  for (int y = 0; y < this->SeedRes[1]; y++)
-  {
-    vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
-    this->yCoordinates.push_back(bounds.Y.Min + yi);
-  }
-  for (int z = 0; z < this->SeedRes[2]; z++)
-  {
-    vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
-    this->zCoordinates.push_back(bounds.Z.Min + zi);
+    for (int x = 0; x < this->SeedRes[0]; x++)
+    {
+      vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
+      this->xCoordinates.push_back(bounds.X.Min + xi);
+    }
+    for (int y = 0; y < this->SeedRes[1]; y++)
+    {
+      vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
+      this->yCoordinates.push_back(bounds.Y.Min + yi);
+    }
+    for (int z = 0; z < this->SeedRes[2]; z++)
+    {
+      vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
+      this->zCoordinates.push_back(bounds.Z.Min + zi);
+    }
   }
 }
 
@@ -249,7 +252,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
   if (cycle == 0)
   {
-    InitializeUniformSeeds(input);
+    InitializeSeedPositions(input);
     BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
     vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
   }
@@ -303,7 +306,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 
     if (this->resetParticles)
     {
-      InitializeUniformSeeds(input);
+      InitializeSeedPositions(input);
       BasisParticlesOriginal.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
       vtkm::cont::ArrayCopy(BasisParticles, BasisParticlesOriginal);
     }
