@@ -66,7 +66,10 @@ public:
   void InitializeSeedPositions(const vtkm::cont::DataSet& input);
 
   VTKM_CONT
-  void InitializeCoordinates(const vtkm::cont::DataSet& input);
+  void InitializeCoordinates(const vtkm::cont::DataSet& input,
+                             std::vector<Float64>& xC,
+                             std::vector<Float64>& yC,
+                             std::vector<Float64>& zC);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -92,7 +95,7 @@ private:
   vtkm::Id cust_res;
   vtkm::Id3 SeedRes;
   vtkm::Id writeFrequency;
-  std::vector<vtkm::Float64> xCoordinates, yCoordinates, zCoordinates;
+  //  std::vector<vtkm::Float64> xCoordinates, yCoordinates, zCoordinates;
 };
 }
 } // namespace vtkm::filter
