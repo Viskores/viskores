@@ -700,7 +700,7 @@ void ContourTreeMaker::AugmentMergeTrees()
 
 
 
-namespace detail
+namespace details
 {
 
 struct LeafChainsToContourTree
@@ -825,13 +825,13 @@ void ContourTreeMaker::TransferLeafChains(bool isJoin)
 
 
   // loop through the active vertices
-  detail::LeafChainsToContourTree task(this->NumIterations, // (input)
-                                       isJoin,              // (input)
-                                       outdegree,           // (input)
-                                       indegree,            // (input)
-                                       outbound,            // (input)
-                                       inbound,             // (input)
-                                       inwards);            // (input)
+  details::LeafChainsToContourTree task(this->NumIterations, // (input)
+                                        isJoin,              // (input)
+                                        outdegree,           // (input)
+                                        indegree,            // (input)
+                                        outbound,            // (input)
+                                        inbound,             // (input)
+                                        inwards);            // (input)
   vtkm::cont::TryExecute(task,
                          this->ActiveSupernodes,                   // (input)
                          this->ContourTreeResult.Hyperparents,     // (output)
