@@ -75,6 +75,7 @@ using vtkm::cont::testing::MakeTestDataSet;
 class TestContourTreeUniform
 {
 private:
+  /// Helper function used to compae two IdArrayType ArrayHandles
   void AssertIdArrayHandles(vtkm::worklet::contourtree_augmented::IdArrayType& result,
                             vtkm::worklet::contourtree_augmented::IdArrayType& expected,
                             std::string arrayName) const
@@ -91,6 +92,10 @@ private:
     VTKM_TEST_ASSERT(testResult, "Wrong result for " + arrayName);
   }
 
+  ///
+  ///  Helper struct to store all arrays with the expected results for comparison during
+  ///  the computation of the contour tree
+  ///
   struct ExpectedStepResults
   {
   public:
@@ -101,6 +106,10 @@ private:
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsJoin,
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksBuildRegularChainsJoin,
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsJoin,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksSplit,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsSplit,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksBuildRegularChainsSplit,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsSplit,
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitGlobalIndex,
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitFirstEdge,
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitOutdegree,
@@ -123,6 +132,10 @@ private:
       , MeshExtremaPitsJoin(meshExtremaPitsJoin)
       , MeshExtremaPeaksBuildRegularChainsJoin(meshExtremaPeaksBuildRegularChainsJoin)
       , MeshExtremaPitsBuildRegularChainsJoin(meshExtremaPitsBuildRegularChainsJoin)
+      , MeshExtremaPeaksSplit(meshExtremaPeaksSplit)
+      , MeshExtremaPitsSplit(meshExtremaPitsSplit)
+      , MeshExtremaPeaksBuildRegularChainsSplit(meshExtremaPeaksBuildRegularChainsSplit)
+      , MeshExtremaPitsBuildRegularChainsSplit(meshExtremaPitsBuildRegularChainsSplit)
       , ActiveGraphJoinTreeInitGlobalIndex(activeGraphJoinTreeInitGlobalIndex)
       , ActiveGraphJoinTreeInitFirstEdge(activeGraphJoinTreeInitFirstEdge)
       , ActiveGraphJoinTreeInitOutdegree(activeGraphJoinTreeInitOutdegree)
@@ -148,6 +161,10 @@ private:
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsJoin;
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksBuildRegularChainsJoin;
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsBuildRegularChainsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksSplit;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsSplit;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksBuildRegularChainsSplit;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsBuildRegularChainsSplit;
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitGlobalIndex;
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitFirstEdge;
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitOutdegree;
@@ -221,6 +238,201 @@ private:
       return;
     }
   }
+
+  ///
+  /// Helper function to generate the test data for 3D contour tree tests.
+  /// The function in turns call the CallTestContourTreeAugmentedSteps
+  /// function which sets up the mesh, which finally calls the
+  /// RunTestContourTreeAugmentedSteps to actually execute all the
+  /// steps and validate the results.
+  ///
+  void TestContourTreeAugmentedSteps3D(bool useMarchingCubes,
+                                       unsigned int computeRegularStructure,
+                                       ExpectedStepResults& expectedResults) const
+  {
+    // Create the input uniform cell set with values to contour
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+
+    vtkm::cont::CellSetStructured<3> cellSet;
+    dataSet.GetCellSet().CopyTo(cellSet);
+
+    vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
+    vtkm::Id nRows = pointDimensions[0];
+    vtkm::Id nCols = pointDimensions[1];
+    vtkm::Id nSlices = pointDimensions[2];
+
+    vtkm::cont::ArrayHandle<vtkm::Float32> field;
+    dataSet.GetField("pointvar").GetData().CopyTo(field);
+
+    // Run the specific test
+    CallTestContourTreeAugmentedSteps(
+      field, nRows, nCols, nSlices, useMarchingCubes, computeRegularStructure, expectedResults);
+  }
+
+  ///
+  /// Helper function running all the steps from the contour tree worklet and testing
+  /// at each step that the results match the provided expected results
+  ///
+  template <typename FieldType,
+            typename StorageType,
+            typename MeshClass,
+            typename MeshBoundaryClass>
+  void RunTestContourTreeAugmentedSteps(
+    const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
+    MeshClass& mesh,
+    unsigned int computeRegularStructure,
+    const MeshBoundaryClass& meshBoundary,
+    ExpectedStepResults& expectedResults) const
+  {
+    std::cout << "Testing contour tree steps with computeRegularStructure="
+              << computeRegularStructure << " meshtype=" << typeid(MeshClass).name() << std::endl;
+
+    using namespace vtkm::worklet::contourtree_augmented;
+    vtkm::worklet::contourtree_augmented::IdArrayType sortOrder;
+    vtkm::worklet::contourtree_augmented::ContourTree contourTree;
+
+
+    // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
+    //          here via the mesh parameter. The actual data load is performed outside of the
+    //          worklet in the example contour tree app (or whoever uses the worklet)
+
+    // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh
+    // Sort the mesh data
+    mesh.SortData(fieldArray);
+    // Test that the sort is correct
+    AssertIdArrayHandles(mesh.SortOrder, expectedResults.SortOrder, "mesh.SortOrder");
+    AssertIdArrayHandles(mesh.SortOrder, expectedResults.SortOrder, "mesh.SortOrder");
+
+    // Stage 3: Assign every mesh vertex to a peak
+    MeshExtrema extrema(mesh.NumVertices);
+    extrema.SetStarts(mesh, true);
+    AssertIdArrayHandles(extrema.Peaks, expectedResults.MeshExtremaPeaksJoin, "extrema.Peaks");
+    AssertIdArrayHandles(extrema.Pits, expectedResults.MeshExtremaPitsJoin, "extrema.Pits");
+
+    extrema.BuildRegularChains(true);
+    AssertIdArrayHandles(
+      extrema.Peaks, expectedResults.MeshExtremaPeaksBuildRegularChainsJoin, "extrema.Peaks");
+    AssertIdArrayHandles(
+      extrema.Pits, expectedResults.MeshExtremaPitsBuildRegularChainsJoin, "extrema.Pits");
+
+    // Stage 4: Identify join saddles & construct Active Join Graph
+    MergeTree joinTree(mesh.NumVertices, true);
+    ActiveGraph joinGraph(true);
+    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
+
+    joinGraph.Initialise(mesh, extrema);
+    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
+    AssertIdArrayHandles(joinGraph.GlobalIndex,
+                         expectedResults.ActiveGraphJoinTreeInitGlobalIndex,
+                         "joinGraph.GlobalIndex (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.FirstEdge,
+                         expectedResults.ActiveGraphJoinTreeInitFirstEdge,
+                         "joinGraph.FirstEdge (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.Outdegree,
+                         expectedResults.ActiveGraphJoinTreeInitOutdegree,
+                         "joinGraph.Outdegree (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.Hyperarcs,
+                         expectedResults.ActiveGraphJoinTreeInitHyperarcs,
+                         "joinGraph.Hyperarcs (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.ActiveVertices,
+                         expectedResults.ActiveGraphJoinTreeInitActiveVertices,
+                         "joinGraph.ActiveVertices (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.EdgeNear,
+                         expectedResults.ActiveGraphJoinTreeInitEdgeNear,
+                         "joinGraph.EdgeNear (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.EdgeFar,
+                         expectedResults.ActiveGraphJoinTreeInitEdgeFar,
+                         "joinGraph.EdgeFar (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.ActiveEdges,
+                         expectedResults.ActiveGraphJoinTreeInitActiveEdges,
+                         "joinGraph.ActiveEdges (after joinGraph.Initialise");
+
+    // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
+    joinGraph.MakeMergeTree(joinTree, extrema);
+    // TODO Add asserts for joinGraph.MakeMergeTree
+
+
+    // Stage 6: Assign every mesh vertex to a pit
+    extrema.SetStarts(mesh, false);
+    AssertIdArrayHandles(extrema.Peaks, expectedResults.MeshExtremaPeaksSplit, "extrema.Peaks");
+    AssertIdArrayHandles(extrema.Pits, expectedResults.MeshExtremaPitsSplit, "extrema.Pits");
+
+    extrema.BuildRegularChains(false);
+    AssertIdArrayHandles(
+      extrema.Peaks, expectedResults.MeshExtremaPeaksBuildRegularChainsSplit, "extrema.Peaks");
+    AssertIdArrayHandles(
+      extrema.Pits, expectedResults.MeshExtremaPitsBuildRegularChainsSplit, "extrema.Pits");
+
+    // Stage 7:     Identify split saddles & construct Active Split Graph
+    MergeTree splitTree(mesh.NumVertices, false);
+    ActiveGraph splitGraph(false);
+    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
+
+    splitGraph.Initialise(mesh, extrema);
+    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
+    AssertIdArrayHandles(splitGraph.GlobalIndex,
+                         expectedResults.ActiveGraphSplitTreeInitGlobalIndex,
+                         "splitGraph.GlobalIndex (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.FirstEdge,
+                         expectedResults.ActiveGraphSplitTreeInitFirstEdge,
+                         "splitGraph.FirstEdge (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.Outdegree,
+                         expectedResults.ActiveGraphSplitTreeInitOutdegree,
+                         "splitGraph.Outdegree (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.Hyperarcs,
+                         expectedResults.ActiveGraphSplitTreeInitHyperarcs,
+                         "splitGraph.Hyperarcs (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.ActiveVertices,
+                         expectedResults.ActiveGraphSplitTreeInitActiveVertices,
+                         "splitGraph.ActiveVertices (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.EdgeNear,
+                         expectedResults.ActiveGraphSplitTreeInitEdgeNear,
+                         "splitGraph.EdgeNear (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.EdgeFar,
+                         expectedResults.ActiveGraphSplitTreeInitEdgeFar,
+                         "splitGraph.EdgeFar (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.ActiveEdges,
+                         expectedResults.ActiveGraphSplitTreeInitActiveEdges,
+                         "splitGraph.ActiveEdges (after splitGraph.Initialise");
+
+    // TODO Add asserts for splitGraph.Initialise
+
+    // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
+    splitGraph.MakeMergeTree(splitTree, extrema);
+    // TODO Add asserts for splitGraph.MakeMergeTree
+
+    // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
+    contourTree.Init(mesh.NumVertices);
+    // TODO Add asserts for contourTree.Init
+    ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
+    // 9.1 First we compute the hyper- and super- structure
+    treeMaker.ComputeHyperAndSuperStructure();
+    // TODO Add asserts for treeMaker.ComputeHyperAndSuperStructure
+
+    // 9.2 Then we compute the regular structure
+    if (computeRegularStructure == 1) // augment with all vertices
+    {
+      treeMaker.ComputeRegularStructure(extrema);
+    }
+    else if (computeRegularStructure == 2) // augment by the mesh boundary
+    {
+      treeMaker.ComputeBoundaryRegularStructure(extrema, mesh, meshBoundary);
+    }
+    // TODO Add asserts for treeMaker.ComputeRegularStructure / treeMaker.ComputeBoundaryRegularStructure
+  }
+
 
 public:
   //
@@ -487,7 +699,10 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType expectedSortIndices =
       vtkm::cont::make_ArrayHandle(expectedSortIndicesArr, 125);
 
-    vtkm::Id expectedMeshExtremaPeaksArr[125] = {
+    //
+    // Join Tree Set Starts
+    //
+    vtkm::Id meshExtremaPeaksJoinArr[125] = {
       1,   2,   3,   4,   9,   6,   7,   8,   9,   14,  11,  12,  13,  14,  19,  16,  17,  18,
       19,  24,  21,  22,  23,  24,  40,  26,  27,  28,  29,  31,  123, 111, 119, 120, 112, 124,
       37,  112, 116, 124, 124, 42,  43,  44,  45,  47,  106, 111, 102, 111, 103, 120, 53,  103,
@@ -498,16 +713,18 @@ public:
     };
     for (vtkm::Id i = 124; i > 120; i--)
     {
-      expectedMeshExtremaPeaksArr[i] =
-        expectedMeshExtremaPeaksArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+      meshExtremaPeaksJoinArr[i] =
+        meshExtremaPeaksJoinArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
-    vtkm::worklet::contourtree_augmented::IdArrayType expectedMeshExtremaPeaksJoin =
-      vtkm::cont::make_ArrayHandle(expectedMeshExtremaPeaksArr, 125);
-    vtkm::worklet::contourtree_augmented::IdArrayType expectedMeshExtremaPitsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksJoin =
+      vtkm::cont::make_ArrayHandle(meshExtremaPeaksJoinArr, 125);
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsJoin;
     vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, 125),
-                                expectedMeshExtremaPitsJoin);
+                                meshExtremaPitsJoin);
 
-    // Regular chains
+    //
+    // Join Tree Build Regular chains
+    //
     vtkm::Id meshExtremaPeaksBuildRegularChainsJoinArr[125] = {
       124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124,
       124, 124, 124, 124, 124, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 124,
@@ -526,7 +743,79 @@ public:
       vtkm::cont::make_ArrayHandle(meshExtremaPeaksBuildRegularChainsJoinArr, 125);
 
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsJoin =
-      expectedMeshExtremaPitsJoin; // should remain all at 0
+      meshExtremaPitsJoin; // should remain all at 0
+
+
+    //
+    // Split Tree Set Starts
+    //
+    vtkm::Id meshExtremaPeaksSplitArr[125] = {
+      124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124,
+      124, 124, 124, 124, 124, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 124,
+      123, 123, 123, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 123,
+      123, 123, 124, 123, 123, 123, 123, 123, 121, 123, 121, 123, 121, 123, 121, 121, 123, 123,
+      123, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121,
+      121, 121, 122, 121, 121, 121, 121, 122, 123, 123, 123, 123, 123, 123, 123, 123, 123, 121,
+      123, 121, 121, 123, 123, 121, 121, 123, 123, 121, 122, 123, 124, 121, 122, 123, 124
+    };
+    for (vtkm::Id i = 0; i < 125; i++)
+    {
+      meshExtremaPeaksSplitArr[i] =
+        meshExtremaPeaksSplitArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksSplit =
+      vtkm::cont::make_ArrayHandle(meshExtremaPeaksSplitArr, 125);
+
+    vtkm::Id meshExtremaPitsSplitArr[125] = {
+      0,   0,  1,   2,  3,  0,  1,  2,  3,  4,   5,  6,  7,  8,   9,  10, 11, 12, 13, 14, 15,
+      16,  17, 18,  19, 0,  1,  2,  3,  4,  25,  3,  30, 8,  32,  13, 34, 15, 16, 17, 18, 25,
+      26,  27, 28,  29, 41, 28, 46, 47, 48, 49,  50, 34, 38, 39,  51, 41, 42, 43, 44, 45, 57,
+      44,  62, 63,  64, 65, 66, 50, 54, 55, 67,  57, 58, 59, 60,  61, 73, 57, 58, 59, 60, 78,
+      62,  80, 81,  82, 83, 64, 85, 86, 87, 88,  66, 90, 91, 92,  98, 98, 98, 26, 30, 32, 27,
+      100, 25, 106, 6,  43, 48, 2,  10, 42, 102, 1,  11, 46, 101, 5,  7,  41, 98, 0,  12
+    };
+    meshExtremaPitsSplitArr[0] =
+      meshExtremaPitsSplitArr[0] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    meshExtremaPitsSplitArr[98] =
+      meshExtremaPitsSplitArr[97] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsSplit =
+      vtkm::cont::make_ArrayHandle(meshExtremaPitsSplitArr, 125);
+
+    //
+    // Split Tree Build Regular chains
+    //
+    vtkm::Id meshExtremaPeaksBuildRegularChainsSplitArr[125] = {
+      124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124,
+      124, 124, 124, 124, 124, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 124,
+      123, 123, 123, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 123,
+      123, 123, 124, 123, 123, 123, 123, 123, 121, 123, 121, 123, 121, 123, 121, 121, 123, 123,
+      123, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121, 121,
+      121, 121, 122, 121, 121, 121, 121, 122, 123, 123, 123, 123, 123, 123, 123, 123, 123, 121,
+      123, 121, 121, 123, 123, 121, 121, 123, 123, 121, 122, 123, 124, 121, 122, 123, 124
+    };
+    for (vtkm::Id i = 0; i < 125; i++)
+    {
+      meshExtremaPeaksBuildRegularChainsSplitArr[i] =
+        meshExtremaPeaksBuildRegularChainsSplitArr[i] |
+        vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksBuildRegularChainsSplit =
+      vtkm::cont::make_ArrayHandle(meshExtremaPeaksBuildRegularChainsSplitArr, 125);
+
+    vtkm::Id meshExtremaPitsBuildRegularChainsSplitArr[125] = {
+      0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,
+      0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,
+      0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,
+      0,  0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  98, 98,
+      98, 0, 0, 0, 0, 98, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 0,  0,
+    };
+    for (vtkm::Id i = 0; i < 125; i++)
+    {
+      meshExtremaPitsBuildRegularChainsSplitArr[i] = meshExtremaPitsBuildRegularChainsSplitArr[i] |
+        vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsSplit =
+      vtkm::cont::make_ArrayHandle(meshExtremaPitsBuildRegularChainsSplitArr, 125);
 
     //
     // Join Graph Initialize
@@ -637,10 +926,14 @@ public:
     // Setup the expected results object
     ExpectedStepResults expectedResults(expectedSortOrder,
                                         expectedSortIndices,
-                                        expectedMeshExtremaPeaksJoin,
-                                        expectedMeshExtremaPitsJoin,
+                                        meshExtremaPeaksJoin,
+                                        meshExtremaPitsJoin,
                                         meshExtremaPeaksBuildRegularChainsJoin,
                                         meshExtremaPitsBuildRegularChainsJoin,
+                                        meshExtremaPeaksSplit,
+                                        meshExtremaPitsSplit,
+                                        meshExtremaPeaksBuildRegularChainsSplit,
+                                        meshExtremaPitsBuildRegularChainsSplit,
                                         activeGraphJoinTreeInitGlobalIndex,
                                         activeGraphJoinTreeInitFirstEdge,
                                         activeGraphJoinTreeInitOutdegree,
@@ -659,188 +952,11 @@ public:
                                         activeGraphSplitTreeInitActiveEdges);
 
     // Execute the test for the current settings
-    TestContourTreeAugmentedSteps(false, // don't use marchin cubes
-                                  1,     // fully augment the tree
-                                  expectedResults);
+    TestContourTreeAugmentedSteps3D(false, // don't use marchin cubes
+                                    1,     // fully augment the tree
+                                    expectedResults);
   }
 
-  void TestContourTreeAugmentedSteps(bool useMarchingCubes,
-                                     unsigned int computeRegularStructure,
-                                     ExpectedStepResults& expectedResults) const
-  {
-    // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
-
-    vtkm::cont::CellSetStructured<3> cellSet;
-    dataSet.GetCellSet().CopyTo(cellSet);
-
-    vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
-    vtkm::Id nRows = pointDimensions[0];
-    vtkm::Id nCols = pointDimensions[1];
-    vtkm::Id nSlices = pointDimensions[2];
-
-    vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
-
-    // Run the specific test
-    CallTestContourTreeAugmentedSteps(
-      field, nRows, nCols, nSlices, useMarchingCubes, computeRegularStructure, expectedResults);
-  }
-
-
-  template <typename FieldType,
-            typename StorageType,
-            typename MeshClass,
-            typename MeshBoundaryClass>
-  void RunTestContourTreeAugmentedSteps(
-    const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-    MeshClass& mesh,
-    unsigned int computeRegularStructure,
-    const MeshBoundaryClass& meshBoundary,
-    ExpectedStepResults& expectedResults) const
-  {
-    std::cout << "Testing contour tree steps with computeRegularStructure="
-              << computeRegularStructure << " meshtype=" << typeid(MeshClass).name() << std::endl;
-
-    using namespace vtkm::worklet::contourtree_augmented;
-    vtkm::worklet::contourtree_augmented::IdArrayType sortOrder;
-    vtkm::worklet::contourtree_augmented::ContourTree contourTree;
-
-
-    // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
-    //          here via the mesh parameter. The actual data load is performed outside of the
-    //          worklet in the example contour tree app (or whoever uses the worklet)
-
-    // Stage 2 : Sort the data on the mesh to initialize sortIndex & indexReverse on the mesh
-    // Sort the mesh data
-    mesh.SortData(fieldArray);
-    // Test that the sort is correct
-    AssertIdArrayHandles(mesh.SortOrder, expectedResults.SortOrder, "mesh.SortOrder");
-    AssertIdArrayHandles(mesh.SortOrder, expectedResults.SortOrder, "mesh.SortOrder");
-
-    // Stage 3: Assign every mesh vertex to a peak
-    MeshExtrema extrema(mesh.NumVertices);
-    extrema.SetStarts(mesh, true);
-    AssertIdArrayHandles(extrema.Peaks, expectedResults.MeshExtremaPeaksJoin, "extrema.Peaks");
-    AssertIdArrayHandles(extrema.Pits, expectedResults.MeshExtremaPitsJoin, "extrema.Pits");
-    extrema.BuildRegularChains(true);
-    AssertIdArrayHandles(
-      extrema.Peaks, expectedResults.MeshExtremaPeaksBuildRegularChainsJoin, "extrema.Peaks");
-    AssertIdArrayHandles(
-      extrema.Pits, expectedResults.MeshExtremaPitsBuildRegularChainsJoin, "extrema.Pits");
-
-    // Stage 4: Identify join saddles & construct Active Join Graph
-    MergeTree joinTree(mesh.NumVertices, true);
-    ActiveGraph joinGraph(true);
-    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
-
-    joinGraph.Initialise(mesh, extrema);
-    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
-    AssertIdArrayHandles(joinGraph.GlobalIndex,
-                         expectedResults.ActiveGraphJoinTreeInitGlobalIndex,
-                         "joinGraph.GlobalIndex (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.FirstEdge,
-                         expectedResults.ActiveGraphJoinTreeInitFirstEdge,
-                         "joinGraph.FirstEdge (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.Outdegree,
-                         expectedResults.ActiveGraphJoinTreeInitOutdegree,
-                         "joinGraph.Outdegree (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.Hyperarcs,
-                         expectedResults.ActiveGraphJoinTreeInitHyperarcs,
-                         "joinGraph.Hyperarcs (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.ActiveVertices,
-                         expectedResults.ActiveGraphJoinTreeInitActiveVertices,
-                         "joinGraph.ActiveVertices (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.EdgeNear,
-                         expectedResults.ActiveGraphJoinTreeInitEdgeNear,
-                         "joinGraph.EdgeNear (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.EdgeFar,
-                         expectedResults.ActiveGraphJoinTreeInitEdgeFar,
-                         "joinGraph.EdgeFar (after joinGraph.Initialise");
-    AssertIdArrayHandles(joinGraph.ActiveEdges,
-                         expectedResults.ActiveGraphJoinTreeInitActiveEdges,
-                         "joinGraph.ActiveEdges (after joinGraph.Initialise");
-
-    // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
-    joinGraph.MakeMergeTree(joinTree, extrema);
-    // TODO Add asserts for joinGraph.MakeMergeTree
-
-
-    // Stage 6: Assign every mesh vertex to a pit
-    extrema.SetStarts(mesh, false);
-    // TODO Add asserts for extream.SetStarts
-    extrema.BuildRegularChains(false);
-    // TODO Add asserts for extrema.BuildRegularChains
-
-    // Stage 7:     Identify split saddles & construct Active Split Graph
-    MergeTree splitTree(mesh.NumVertices, false);
-    ActiveGraph splitGraph(false);
-    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
-
-    splitGraph.Initialise(mesh, extrema);
-    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
-    AssertIdArrayHandles(splitGraph.GlobalIndex,
-                         expectedResults.ActiveGraphSplitTreeInitGlobalIndex,
-                         "splitGraph.GlobalIndex (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.FirstEdge,
-                         expectedResults.ActiveGraphSplitTreeInitFirstEdge,
-                         "splitGraph.FirstEdge (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.Outdegree,
-                         expectedResults.ActiveGraphSplitTreeInitOutdegree,
-                         "splitGraph.Outdegree (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.Hyperarcs,
-                         expectedResults.ActiveGraphSplitTreeInitHyperarcs,
-                         "splitGraph.Hyperarcs (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.ActiveVertices,
-                         expectedResults.ActiveGraphSplitTreeInitActiveVertices,
-                         "splitGraph.ActiveVertices (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.EdgeNear,
-                         expectedResults.ActiveGraphSplitTreeInitEdgeNear,
-                         "splitGraph.EdgeNear (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.EdgeFar,
-                         expectedResults.ActiveGraphSplitTreeInitEdgeFar,
-                         "splitGraph.EdgeFar (after splitGraph.Initialise");
-    AssertIdArrayHandles(splitGraph.ActiveEdges,
-                         expectedResults.ActiveGraphSplitTreeInitActiveEdges,
-                         "splitGraph.ActiveEdges (after splitGraph.Initialise");
-
-    // TODO Add asserts for splitGraph.Initialise
-
-    // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
-    splitGraph.MakeMergeTree(splitTree, extrema);
-    // TODO Add asserts for splitGraph.MakeMergeTree
-
-    // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
-    contourTree.Init(mesh.NumVertices);
-    // TODO Add asserts for contourTree.Init
-    ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
-    // 9.1 First we compute the hyper- and super- structure
-    treeMaker.ComputeHyperAndSuperStructure();
-    // TODO Add asserts for treeMaker.ComputeHyperAndSuperStructure
-
-    // 9.2 Then we compute the regular structure
-    if (computeRegularStructure == 1) // augment with all vertices
-    {
-      treeMaker.ComputeRegularStructure(extrema);
-    }
-    else if (computeRegularStructure == 2) // augment by the mesh boundary
-    {
-      treeMaker.ComputeBoundaryRegularStructure(extrema, mesh, meshBoundary);
-    }
-    // TODO Add asserts for treeMaker.ComputeRegularStructure / treeMaker.ComputeBoundaryRegularStructure
-  }
 
   void operator()() const
   {
