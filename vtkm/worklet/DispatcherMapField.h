@@ -54,7 +54,7 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    auto numInstances = scheduling_range(inputDomain);
+    auto numInstances = SchedulingRange(inputDomain);
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.

@@ -52,27 +52,27 @@ namespace internal
 {
 
 template <typename Domain>
-inline auto scheduling_range(const Domain& inputDomain) -> decltype(inputDomain.GetNumberOfValues())
+inline auto SchedulingRange(const Domain& inputDomain) -> decltype(inputDomain.GetNumberOfValues())
 {
   return inputDomain.GetNumberOfValues();
 }
 
 template <typename Domain>
-inline auto scheduling_range(const Domain* const inputDomain)
+inline auto SchedulingRange(const Domain* const inputDomain)
   -> decltype(inputDomain->GetNumberOfValues())
 {
   return inputDomain->GetNumberOfValues();
 }
 
 template <typename Domain, typename SchedulingRangeType>
-inline auto scheduling_range(const Domain& inputDomain, SchedulingRangeType type)
+inline auto SchedulingRange(const Domain& inputDomain, SchedulingRangeType type)
   -> decltype(inputDomain.GetSchedulingRange(type))
 {
   return inputDomain.GetSchedulingRange(type);
 }
 
 template <typename Domain, typename SchedulingRangeType>
-inline auto scheduling_range(const Domain* const inputDomain, SchedulingRangeType type)
+inline auto SchedulingRange(const Domain* const inputDomain, SchedulingRangeType type)
   -> decltype(inputDomain->GetSchedulingRange(type))
 {
   return inputDomain->GetSchedulingRange(type);

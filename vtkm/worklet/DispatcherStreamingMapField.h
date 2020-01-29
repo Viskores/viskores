@@ -227,7 +227,7 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id fullSize = scheduling_range(inputDomain);
+    vtkm::Id fullSize = SchedulingRange(inputDomain);
     vtkm::Id blockSize = fullSize / NumberOfBlocks;
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;

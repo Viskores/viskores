@@ -61,7 +61,7 @@ public:
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
-    this->BasicInvoke(invocation, scheduling_range(inputDomain, SchedulingRangeType{}));
+    this->BasicInvoke(invocation, SchedulingRange(inputDomain, SchedulingRangeType{}));
   }
 };
 }

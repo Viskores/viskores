@@ -286,12 +286,12 @@ public:
 
 
 template <typename T>
-inline vtkm::Id scheduling_range(const std::vector<T>& inputDomain)
+inline vtkm::Id SchedulingRange(const std::vector<T>& inputDomain)
 {
   return static_cast<vtkm::Id>(inputDomain.size());
 }
 template <typename T>
-inline vtkm::Id scheduling_range(const std::vector<T>* const inputDomain)
+inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
 {
   return static_cast<vtkm::Id>(inputDomain->size());
 }
@@ -332,8 +332,8 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    //verify the overloads for scheduling_range work
-    auto numInstances = scheduling_range(inputDomain);
+    //verify the overloads for SchedulingRange work
+    auto numInstances = SchedulingRange(inputDomain);
 
     // A MapField is a pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.

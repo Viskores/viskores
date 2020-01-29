@@ -62,7 +62,7 @@ public:
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BasicInvoke.
-    this->BasicInvoke(invocation, scheduling_range(inputDomain));
+    this->BasicInvoke(invocation, SchedulingRange(inputDomain));
   }
 };
 }
