@@ -155,11 +155,17 @@ inline void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
   vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   if (isMaximal)
   {
-    this->Invoke(setStartsWorklet, sortIndexArray, mesh, Peaks);
+    this->Invoke(setStartsWorklet,
+                 sortIndexArray, // input
+                 mesh,           // input
+                 Peaks);         // output
   }
   else
   {
-    this->Invoke(setStartsWorklet, sortIndexArray, mesh, Pits);
+    this->Invoke(setStartsWorklet,
+                 sortIndexArray, // input
+                 mesh,           // input
+                 Pits);          // output
   }
   DebugPrint("Regular Starts Set", __FILE__, __LINE__);
 }
