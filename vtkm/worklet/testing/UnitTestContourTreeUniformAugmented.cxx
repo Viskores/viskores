@@ -70,12 +70,14 @@ namespace
 {
 
 using vtkm::cont::testing::MakeTestDataSet;
-using namespace vtkm::worklet::contourtree_augmented;
+
 
 class TestContourTreeUniform
 {
 private:
-  void AssertIdArrayHandles(IdArrayType& result, IdArrayType& expected, std::string arrayName) const
+  void AssertIdArrayHandles(vtkm::worklet::contourtree_augmented::IdArrayType& result,
+                            vtkm::worklet::contourtree_augmented::IdArrayType& expected,
+                            std::string arrayName) const
   {
     vtkm::cont::testing::TestEqualResult testResult =
       vtkm::cont::testing::test_equal_ArrayHandles(result, expected);
@@ -83,8 +85,8 @@ private:
     {
       std::cout << arrayName << " sizes; result=" << result.GetNumberOfValues()
                 << " expected=" << expected.GetNumberOfValues() << std::endl;
-      PrintIndices(arrayName + " result", result);
-      PrintIndices(arrayName + " expected", expected);
+      vtkm::worklet::contourtree_augmented::PrintIndices(arrayName + " result", result);
+      vtkm::worklet::contourtree_augmented::PrintIndices(arrayName + " expected", expected);
     }
     VTKM_TEST_ASSERT(testResult, "Wrong result for " + arrayName);
   }
@@ -92,12 +94,13 @@ private:
   struct ExpectedStepResults
   {
   public:
-    ExpectedStepResults(IdArrayType& expectedSortOrder,
-                        IdArrayType& expectedSortIndices,
-                        IdArrayType& meshExtremaPeaksJoin,
-                        IdArrayType& meshExtremaPitsJoin,
-                        IdArrayType& meshExtremaPeaksBuildRegularChainsJoin,
-                        IdArrayType& meshExtremaPitsBuildRegularChainsJoin)
+    ExpectedStepResults(
+      vtkm::worklet::contourtree_augmented::IdArrayType& expectedSortOrder,
+      vtkm::worklet::contourtree_augmented::IdArrayType& expectedSortIndices,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksJoin,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsJoin,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksBuildRegularChainsJoin,
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsJoin)
       : SortOrder(expectedSortOrder)
       , SortIndices(expectedSortIndices)
       , MeshExtremaPeaksJoin(meshExtremaPeaksJoin)
@@ -107,12 +110,12 @@ private:
     {
     }
 
-    IdArrayType SortOrder;
-    IdArrayType SortIndices;
-    IdArrayType MeshExtremaPeaksJoin;
-    IdArrayType MeshExtremaPitsJoin;
-    IdArrayType MeshExtremaPeaksBuildRegularChainsJoin;
-    IdArrayType MeshExtremaPitsBuildRegularChainsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
+    vtkm::worklet::contourtree_augmented::IdArrayType SortIndices;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksBuildRegularChainsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsBuildRegularChainsJoin;
   };
 
   //
@@ -421,7 +424,8 @@ public:
       117, 118, 119, 120, 121, 122, 123, 124, 62,  67,  63,  57,  61,  66,  58,  68,  56,  87,
       37,  83,  91,  33,  41,  82,  92,  32,  42,  86,  88,  36,  38,  81,  93,  31,  43
     };
-    IdArrayType expectedSortOrder = vtkm::cont::make_ArrayHandle(expectedSortOrderArr, 125);
+    vtkm::worklet::contourtree_augmented::IdArrayType expectedSortOrder =
+      vtkm::cont::make_ArrayHandle(expectedSortOrderArr, 125);
 
     vtkm::Id expectedSortIndicesArr[125] = {
       0,   1,   2,   3,   4,   5,   6,   7,   8,  9,   10,  11,  12,  13,  14,  15,  16,  17,
@@ -432,7 +436,8 @@ public:
       66,  110, 114, 122, 67,  68,  69,  70,  71, 72,  73,  74,  75,  76,  77,  78,  79,  80,
       81,  82,  83,  84,  85,  86,  87,  88,  89, 90,  91,  92,  93,  94,  95,  96,  97
     };
-    IdArrayType expectedSortIndices = vtkm::cont::make_ArrayHandle(expectedSortIndicesArr, 125);
+    vtkm::worklet::contourtree_augmented::IdArrayType expectedSortIndices =
+      vtkm::cont::make_ArrayHandle(expectedSortIndicesArr, 125);
 
     vtkm::Id expectedMeshExtremaPeaksArr[125] = {
       1,   2,   3,   4,   9,   6,   7,   8,   9,   14,  11,  12,  13,  14,  19,  16,  17,  18,
@@ -445,11 +450,12 @@ public:
     };
     for (vtkm::Id i = 124; i > 120; i--)
     {
-      expectedMeshExtremaPeaksArr[i] = expectedMeshExtremaPeaksArr[i] | TERMINAL_ELEMENT;
+      expectedMeshExtremaPeaksArr[i] =
+        expectedMeshExtremaPeaksArr[i] | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
-    IdArrayType expectedMeshExtremaPeaksJoin =
+    vtkm::worklet::contourtree_augmented::IdArrayType expectedMeshExtremaPeaksJoin =
       vtkm::cont::make_ArrayHandle(expectedMeshExtremaPeaksArr, 125);
-    IdArrayType expectedMeshExtremaPitsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType expectedMeshExtremaPitsJoin;
     vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, 125),
                                 expectedMeshExtremaPitsJoin);
 
@@ -464,13 +470,13 @@ public:
     };
     for (vtkm::Id i = 0; i < 125; i++)
     {
-      meshExtremaPeaksBuildRegularChainsJoinArr[i] =
-        meshExtremaPeaksBuildRegularChainsJoinArr[i] | TERMINAL_ELEMENT;
+      meshExtremaPeaksBuildRegularChainsJoinArr[i] = meshExtremaPeaksBuildRegularChainsJoinArr[i] |
+        vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
-    IdArrayType meshExtremaPeaksBuildRegularChainsJoin =
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPeaksBuildRegularChainsJoin =
       vtkm::cont::make_ArrayHandle(meshExtremaPeaksBuildRegularChainsJoinArr, 125);
 
-    IdArrayType meshExtremaPitsBuildRegularChainsJoin =
+    vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsJoin =
       expectedMeshExtremaPitsJoin; // should remain all at 0
 
     ExpectedStepResults expectedResults(expectedSortOrder,
