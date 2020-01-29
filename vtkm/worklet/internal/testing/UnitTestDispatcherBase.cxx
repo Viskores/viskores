@@ -284,6 +284,18 @@ public:
   }
 };
 
+
+template <typename T>
+inline vtkm::Id SchedulingRange(const std::vector<T>& inputDomain)
+{
+  return static_cast<vtkm::Id>(inputDomain.size());
+}
+template <typename T>
+inline vtkm::Id SchedulingRange(const std::vector<T>* const inputDomain)
+{
+  return static_cast<vtkm::Id>(inputDomain->size());
+}
+
 template <typename WorkletType>
 class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
                                                                       WorkletType,
@@ -295,19 +307,37 @@ class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispat
   using ScatterType = typename Superclass::ScatterType;
 
 public:
-  VTKM_CONT
-  TestDispatcher(const WorkletType& worklet = WorkletType(),
-                 const ScatterType& scatter = ScatterType())
-    : Superclass(worklet, scatter)
+  template <typename... T>
+  VTKM_CONT TestDispatcher(T&&... args)
+    : Superclass(std::forward<T>(args)...)
   {
   }
 
   VTKM_CONT
   template <typename Invocation>
-  void DoInvoke(Invocation&& invocation) const
+  void DoInvoke(Invocation& invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
-    this->BasicInvoke(invocation, ARRAY_SIZE);
+
+    using namespace vtkm::worklet::internal;
+
+    // This is the type for the input domain
+    using InputDomainType = typename Invocation::InputDomainType;
+
+    // We can pull the input domain parameter (the data specifying the input
+    // domain) from the invocation object.
+    const InputDomainType& inputDomain = invocation.GetInputDomain();
+
+    // For a DispatcherMapField, the inputDomain must be an ArrayHandle (or
+    // an VariantArrayHandle that gets cast to one). The size of the domain
+    // (number of threads/worklet instances) is equal to the size of the
+    // array.
+    //verify the overloads for SchedulingRange work
+    auto numInstances = SchedulingRange(inputDomain);
+
+    // A MapField is a pretty straightforward dispatch. Once we know the number
+    // of invocations, the superclass can take care of the rest.
+    this->BasicInvoke(invocation, numInstances);
   }
 
 private:

@@ -176,6 +176,20 @@ private:
 
 template <typename T>
 VTKM_CONT Keys<T>::Keys() = default;
+
+template <typename KeyType>
+inline auto SchedulingRange(const vtkm::worklet::Keys<KeyType>& inputDomain)
+  -> decltype(inputDomain.GetInputRange())
+{
+  return inputDomain.GetInputRange();
+}
+
+template <typename KeyType>
+inline auto SchedulingRange(const vtkm::worklet::Keys<KeyType>* const inputDomain)
+  -> decltype(inputDomain->GetInputRange())
+{
+  return inputDomain->GetInputRange();
+}
 }
 } // namespace vtkm::worklet
 
