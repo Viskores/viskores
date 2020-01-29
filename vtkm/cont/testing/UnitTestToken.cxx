@@ -133,10 +133,10 @@ void TestBasicAttachDetatch()
   CHECK_OBJECT(object3, 0, 1);
 }
 
-void WaitForDetachment(TestObject object)
+void WaitForDetachment(TestObject* object)
 {
-  std::unique_lock<std::mutex> lock(*object.Mutex);
-  object.ConditionVariable->wait(lock, [&object] { return *object.TokenCount < 1; });
+  std::unique_lock<std::mutex> lock(*object->Mutex);
+  object->ConditionVariable->wait(lock, [object] { return *object->TokenCount < 1; });
   std::cout << "  Thread woke up" << std::endl;
 }
 
@@ -152,7 +152,7 @@ void TestThreadWake()
   CHECK_OBJECT(object, 1, 2);
 
   std::cout << "  Launching coordinated thread" << std::endl;
-  auto future = std::async(std::launch::async, WaitForDetachment, object);
+  auto future = std::async(std::launch::async, WaitForDetachment, &object);
 
   std::cout << "  Sleep 2 seconds for thread to lock" << std::endl;
   // 2 seconds should be ample time for the spawned thread to launch. If the systems busy then
