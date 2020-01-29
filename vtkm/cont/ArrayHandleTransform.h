@@ -472,8 +472,12 @@ public:
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
-  //meant to be an invalid writeable execution portal
-  using PortalExecution = typename StorageType::PortalType;
+  // You can get the "writable" version of the portal, but you will not actually be
+  // able to write to it.
+  using PortalExecution = vtkm::exec::internal::ArrayPortalTransform<
+    ValueType,
+    typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
+    typename FunctorManager::FunctorType>;
   using PortalConstExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
