@@ -559,6 +559,11 @@ public:
     // Stage 4: Identify join saddles & construct Active Join Graph
     MergeTree joinTree(mesh.NumVertices, true);
     ActiveGraph joinGraph(true);
+    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumIterations");
+
     joinGraph.Initialise(mesh, extrema);
     // TODO Add asserts for joinGraph.Initalise
 
@@ -575,6 +580,11 @@ public:
     // Stage 7:     Identify split saddles & construct Active Split Graph
     MergeTree splitTree(mesh.NumVertices, false);
     ActiveGraph splitGraph(false);
+    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumIterations");
+
     splitGraph.Initialise(mesh, extrema);
     // TODO Add asserts for splitGraph.Initialise
 
