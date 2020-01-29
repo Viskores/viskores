@@ -355,7 +355,33 @@ private:
 
     // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
     joinGraph.MakeMergeTree(joinTree, extrema);
-    // TODO Add asserts for joinGraph.MakeMergeTree
+    // Make sure all temporary arrays have been released
+    vtkm::worklet::contourtree_augmented::IdArrayType tempEmpty;
+    AssertIdArrayHandles(
+      joinGraph.GlobalIndex, tempEmpty, "joinGraph.GlobalIndex (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.FirstEdge, tempEmpty, "joinGraph.FirstEdge (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.Outdegree, tempEmpty, "joinGraph.Outdegree (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.Hyperarcs, tempEmpty, "joinGraph.Hyperarcs (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(joinGraph.ActiveVertices,
+                         tempEmpty,
+                         "joinGraph.ActiveVertices (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.EdgeNear, tempEmpty, "joinGraph.EdgeNear (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.EdgeFar, tempEmpty, "joinGraph.EdgeFar (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.ActiveEdges, tempEmpty, "joinGraph.ActiveEdges (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.EdgeSorter, tempEmpty, "joinGraph.EdgeSorters (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.SuperID, tempEmpty, "joinGraph.SuperID (after joinGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      joinGraph.HyperID, tempEmpty, "joinGraph.HyperID (after joinGraph.MakeMergeTree");
+    // TODO Add asserts for joinGraph.MakeMergeTree joinGraph.NumIterations
+    // TODO Add asserts for  joinGraph.MakeMergeTree check all MergeTree arrays
 
 
     // Stage 6: Assign every mesh vertex to a pit
@@ -407,11 +433,33 @@ private:
                          expectedResults.ActiveGraphSplitTreeInitActiveEdges,
                          "splitGraph.ActiveEdges (after splitGraph.Initialise");
 
-    // TODO Add asserts for splitGraph.Initialise
-
     // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
     splitGraph.MakeMergeTree(splitTree, extrema);
-    // TODO Add asserts for splitGraph.MakeMergeTree
+    AssertIdArrayHandles(
+      splitGraph.GlobalIndex, tempEmpty, "splitGraph.GlobalIndex (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.FirstEdge, tempEmpty, "splitGraph.FirstEdge (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.Outdegree, tempEmpty, "splitGraph.Outdegree (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.Hyperarcs, tempEmpty, "splitGraph.Hyperarcs (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(splitGraph.ActiveVertices,
+                         tempEmpty,
+                         "splitGraph.ActiveVertices (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.EdgeNear, tempEmpty, "splitGraph.EdgeNear (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.EdgeFar, tempEmpty, "splitGraph.EdgeFar (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.ActiveEdges, tempEmpty, "splitGraph.ActiveEdges (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.EdgeSorter, tempEmpty, "splitGraph.EdgeSorters (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.SuperID, tempEmpty, "splitGraph.SuperID (after splitGraph.MakeMergeTree");
+    AssertIdArrayHandles(
+      splitGraph.HyperID, tempEmpty, "splitGraph.HyperID (after splitGraph.MakeMergeTree");
+    // TODO Add asserts for splitGraph.MakeMergeTree splitGraph.NumIterations
+    // TODO Add asserts for  splitGraph.MakeMergeTree check all MergeTree arrays
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
     contourTree.Init(mesh.NumVertices);
