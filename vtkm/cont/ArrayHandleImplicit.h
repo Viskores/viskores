@@ -33,7 +33,6 @@ struct ArrayHandleImplicitTraits
   using StorageTag = vtkm::cont::StorageTagImplicit<ArrayPortalImplicit<FunctorType>>;
   using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-  using PortalType = typename StorageType::PortalType;
 };
 
 /// \brief An array portal that returns the result of a functor
@@ -104,7 +103,7 @@ public:
 
   VTKM_CONT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
-    : Superclass(typename ArrayTraits::PortalType(functor, length))
+    : Superclass(typename ArrayTraits::StorageType::PortalType(functor, length))
   {
   }
 };
