@@ -100,13 +100,45 @@ private:
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksJoin,
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsJoin,
       vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksBuildRegularChainsJoin,
-      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsJoin)
+      vtkm::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsJoin,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitGlobalIndex,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitFirstEdge,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitOutdegree,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitHyperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitActiveVertices,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitEdgeNear,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitEdgeFar,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitActiveEdges,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitGlobalIndex,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitFirstEdge,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitOutdegree,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitHyperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitActiveVertices,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitEdgeNear,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitEdgeFar,
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitActiveEdges)
       : SortOrder(expectedSortOrder)
       , SortIndices(expectedSortIndices)
       , MeshExtremaPeaksJoin(meshExtremaPeaksJoin)
       , MeshExtremaPitsJoin(meshExtremaPitsJoin)
       , MeshExtremaPeaksBuildRegularChainsJoin(meshExtremaPeaksBuildRegularChainsJoin)
       , MeshExtremaPitsBuildRegularChainsJoin(meshExtremaPitsBuildRegularChainsJoin)
+      , ActiveGraphJoinTreeInitGlobalIndex(activeGraphJoinTreeInitGlobalIndex)
+      , ActiveGraphJoinTreeInitFirstEdge(activeGraphJoinTreeInitFirstEdge)
+      , ActiveGraphJoinTreeInitOutdegree(activeGraphJoinTreeInitOutdegree)
+      , ActiveGraphJoinTreeInitHyperarcs(activeGraphJoinTreeInitHyperarcs)
+      , ActiveGraphJoinTreeInitActiveVertices(activeGraphJoinTreeInitActiveVertices)
+      , ActiveGraphJoinTreeInitEdgeNear(activeGraphJoinTreeInitEdgeNear)
+      , ActiveGraphJoinTreeInitEdgeFar(activeGraphJoinTreeInitEdgeFar)
+      , ActiveGraphJoinTreeInitActiveEdges(activeGraphJoinTreeInitActiveEdges)
+      , ActiveGraphSplitTreeInitGlobalIndex(activeGraphSplitTreeInitGlobalIndex)
+      , ActiveGraphSplitTreeInitFirstEdge(activeGraphSplitTreeInitFirstEdge)
+      , ActiveGraphSplitTreeInitOutdegree(activeGraphSplitTreeInitOutdegree)
+      , ActiveGraphSplitTreeInitHyperarcs(activeGraphSplitTreeInitHyperarcs)
+      , ActiveGraphSplitTreeInitActiveVertices(activeGraphSplitTreeInitActiveVertices)
+      , ActiveGraphSplitTreeInitEdgeNear(activeGraphSplitTreeInitEdgeNear)
+      , ActiveGraphSplitTreeInitEdgeFar(activeGraphSplitTreeInitEdgeFar)
+      , ActiveGraphSplitTreeInitActiveEdges(activeGraphSplitTreeInitActiveEdges)
     {
     }
 
@@ -116,6 +148,22 @@ private:
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsJoin;
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPeaksBuildRegularChainsJoin;
     vtkm::worklet::contourtree_augmented::IdArrayType MeshExtremaPitsBuildRegularChainsJoin;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitGlobalIndex;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitFirstEdge;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitOutdegree;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitHyperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitActiveVertices;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitEdgeNear;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitEdgeFar;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphJoinTreeInitActiveEdges;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitGlobalIndex;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitFirstEdge;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitOutdegree;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitHyperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitActiveVertices;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitEdgeNear;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitEdgeFar;
+    vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitActiveEdges;
   };
 
   //
@@ -459,6 +507,7 @@ public:
     vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, 125),
                                 expectedMeshExtremaPitsJoin);
 
+    // Regular chains
     vtkm::Id meshExtremaPeaksBuildRegularChainsJoinArr[125] = {
       124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124, 124,
       124, 124, 124, 124, 124, 124, 124, 123, 123, 123, 123, 123, 123, 123, 123, 124, 123, 124,
@@ -479,13 +528,137 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType meshExtremaPitsBuildRegularChainsJoin =
       expectedMeshExtremaPitsJoin; // should remain all at 0
 
+    //
+    // Join Graph Initialize
+    //
+    // Active graph join graph initialize GlobalIndex
+    vtkm::Id activeGraphJoinTreeInitGlobalIndexArr[12] = { 103, 104, 105, 106, 113, 114,
+                                                           115, 116, 121, 122, 123, 124 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitGlobalIndex =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitGlobalIndexArr, 12);
+
+    // Active graph join graph initialize FirstEdge
+    vtkm::Id activeGraphJoinTreeInitFirstEdgeArr[12] = {
+      0, 2, 4, 6, 8, 10, 12, 14, 16, 16, 16, 16
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitFirstEdge =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitFirstEdgeArr, 12);
+
+    // Active graph join graph initialize Outdegree
+    vtkm::Id activeGraphJoinTreeInitOutdegreeArr[12] = { 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitOutdegree =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitOutdegreeArr, 12);
+
+    // Active graph join graph initialize Hyperarcs
+    vtkm::Id activeGraphJoinTreeInitHyperarcsArr[12] = {
+      10, 10, 10, 10, 8, 8, 10, 10, 8, 9, 10, 11
+    };
+    for (vtkm::Id i = 8; i < 12; i++)
+    {
+      activeGraphJoinTreeInitHyperarcsArr[i] = activeGraphJoinTreeInitHyperarcsArr[i] |
+        vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitHyperarcs =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitHyperarcsArr, 12);
+
+    // Active graph join graph initialize ActiveVertices
+    vtkm::Id activeGraphJoinTreeInitActiveVerticesArr[12] = {
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveVertices =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveVerticesArr, 12);
+
+    // Active graph join graph initialize EdgeNear
+    vtkm::Id activeGraphJoinTreeInitEdgeNearArr[16] = { 0, 0, 1, 1, 2, 2, 3, 3,
+                                                        4, 4, 5, 5, 6, 6, 7, 7 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeNear =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeNearArr, 16);
+
+    // Active graph join graph initialize , EdgeFar
+    vtkm::Id activeGraphJoinTreeInitEdgeFarArr[16] = { 10, 8, 10, 9, 10, 9,  10, 8,
+                                                       8,  9, 8,  9, 10, 11, 10, 11 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeFar =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeFarArr, 16);
+
+    // Active graph join graph initialize , ActiveEdges
+    vtkm::Id activeGraphJoinTreeInitActiveEdgesArr[16] = { 0, 1, 2,  3,  4,  5,  6,  7,
+                                                           8, 9, 10, 11, 12, 13, 14, 15 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveEdges =
+      vtkm::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveEdgesArr, 16);
+
+    //
+    // Split Graph Initialize
+    //
+    // Active graph join graph initialize GlobalIndex
+    vtkm::Id activeGraphSplitTreeInitGlobalIndexArr[8] = { 0, 98, 99, 100, 101, 102, 107, 108 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitGlobalIndex =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitGlobalIndexArr, 8);
+
+    // Active graph join graph initialize FirstEdge
+    vtkm::Id activeGraphSplitTreeInitFirstEdgeArr[8] = { 0, 0, 0, 2, 4, 6, 8, 10 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitFirstEdge =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitFirstEdgeArr, 8);
+
+    // Active graph join graph initialize Outdegree
+    vtkm::Id activeGraphSplitTreeInitOutdegreeArr[8] = { 0, 0, 2, 2, 2, 2, 2, 2 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitOutdegree =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitOutdegreeArr, 8);
+
+    // Active graph join graph initialize Hyperarcs
+    vtkm::Id activeGraphSplitTreeInitHyperarcsArr[8] = { 0, 1, 1, 1, 0, 0, 0, 0 };
+    for (vtkm::Id i = 0; i < 2; i++)
+    {
+      activeGraphSplitTreeInitHyperarcsArr[i] = activeGraphSplitTreeInitHyperarcsArr[i] |
+        vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitHyperarcs =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitHyperarcsArr, 8);
+
+    // Active graph join graph initialize ActiveVertices
+    vtkm::Id activeGraphSplitTreeInitActiveVerticesArr[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveVertices =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveVerticesArr, 8);
+
+    // Active graph join graph initialize EdgeNear
+    vtkm::Id activeGraphSplitTreeInitEdgeNearArr[12] = { 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeNear =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeNearArr, 12);
+
+    // Active graph join graph initialize , EdgeFar
+    vtkm::Id activeGraphSplitTreeInitEdgeFarArr[12] = { 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeFar =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeFarArr, 12);
+
+    // Active graph join graph initialize , ActiveEdges
+    vtkm::Id activeGraphSplitTreeInitActiveEdgesArr[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveEdges =
+      vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveEdgesArr, 12);
+
+    // Setup the expected results object
     ExpectedStepResults expectedResults(expectedSortOrder,
                                         expectedSortIndices,
                                         expectedMeshExtremaPeaksJoin,
                                         expectedMeshExtremaPitsJoin,
                                         meshExtremaPeaksBuildRegularChainsJoin,
-                                        meshExtremaPitsBuildRegularChainsJoin);
+                                        meshExtremaPitsBuildRegularChainsJoin,
+                                        activeGraphJoinTreeInitGlobalIndex,
+                                        activeGraphJoinTreeInitFirstEdge,
+                                        activeGraphJoinTreeInitOutdegree,
+                                        activeGraphJoinTreeInitHyperarcs,
+                                        activeGraphJoinTreeInitActiveVertices,
+                                        activeGraphJoinTreeInitEdgeNear,
+                                        activeGraphJoinTreeInitEdgeFar,
+                                        activeGraphJoinTreeInitActiveEdges,
+                                        activeGraphSplitTreeInitGlobalIndex,
+                                        activeGraphSplitTreeInitFirstEdge,
+                                        activeGraphSplitTreeInitOutdegree,
+                                        activeGraphSplitTreeInitHyperarcs,
+                                        activeGraphSplitTreeInitActiveVertices,
+                                        activeGraphSplitTreeInitEdgeNear,
+                                        activeGraphSplitTreeInitEdgeFar,
+                                        activeGraphSplitTreeInitActiveEdges);
 
+    // Execute the test for the current settings
     TestContourTreeAugmentedSteps(false, // don't use marchin cubes
                                   1,     // fully augment the tree
                                   expectedResults);
@@ -561,15 +734,43 @@ public:
     ActiveGraph joinGraph(true);
     VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
     VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
 
     joinGraph.Initialise(mesh, extrema);
-    // TODO Add asserts for joinGraph.Initalise
+    VTKM_TEST_ASSERT(test_equal(joinGraph.IsJoinGraph, true), "Bad joinGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, 0), "Bad joinGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumSupernodes, 0), "Bad joinGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumHypernodes, 0), "Bad joinGraph.NumHypernodes");
+    AssertIdArrayHandles(joinGraph.GlobalIndex,
+                         expectedResults.ActiveGraphJoinTreeInitGlobalIndex,
+                         "joinGraph.GlobalIndex (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.FirstEdge,
+                         expectedResults.ActiveGraphJoinTreeInitFirstEdge,
+                         "joinGraph.FirstEdge (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.Outdegree,
+                         expectedResults.ActiveGraphJoinTreeInitOutdegree,
+                         "joinGraph.Outdegree (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.Hyperarcs,
+                         expectedResults.ActiveGraphJoinTreeInitHyperarcs,
+                         "joinGraph.Hyperarcs (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.ActiveVertices,
+                         expectedResults.ActiveGraphJoinTreeInitActiveVertices,
+                         "joinGraph.ActiveVertices (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.EdgeNear,
+                         expectedResults.ActiveGraphJoinTreeInitEdgeNear,
+                         "joinGraph.EdgeNear (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.EdgeFar,
+                         expectedResults.ActiveGraphJoinTreeInitEdgeFar,
+                         "joinGraph.EdgeFar (after joinGraph.Initialise");
+    AssertIdArrayHandles(joinGraph.ActiveEdges,
+                         expectedResults.ActiveGraphJoinTreeInitActiveEdges,
+                         "joinGraph.ActiveEdges (after joinGraph.Initialise");
 
     // Stage 5: Compute Join Tree Hyperarcs from Active Join Graph
     joinGraph.MakeMergeTree(joinTree, extrema);
     // TODO Add asserts for joinGraph.MakeMergeTree
+
 
     // Stage 6: Assign every mesh vertex to a pit
     extrema.SetStarts(mesh, false);
@@ -582,10 +783,39 @@ public:
     ActiveGraph splitGraph(false);
     VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
     VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumIterations");
-    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
 
     splitGraph.Initialise(mesh, extrema);
+    VTKM_TEST_ASSERT(test_equal(splitGraph.IsJoinGraph, false), "Bad splitGraph.IsJoinGraph");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumIterations, 0), "Bad splitGraph.NumIterations");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumSupernodes, 0), "Bad splitGraph.NumSupernodes");
+    VTKM_TEST_ASSERT(test_equal(splitGraph.NumHypernodes, 0), "Bad splitGraph.NumHypernodes");
+    AssertIdArrayHandles(splitGraph.GlobalIndex,
+                         expectedResults.ActiveGraphSplitTreeInitGlobalIndex,
+                         "splitGraph.GlobalIndex (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.FirstEdge,
+                         expectedResults.ActiveGraphSplitTreeInitFirstEdge,
+                         "splitGraph.FirstEdge (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.Outdegree,
+                         expectedResults.ActiveGraphSplitTreeInitOutdegree,
+                         "splitGraph.Outdegree (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.Hyperarcs,
+                         expectedResults.ActiveGraphSplitTreeInitHyperarcs,
+                         "splitGraph.Hyperarcs (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.ActiveVertices,
+                         expectedResults.ActiveGraphSplitTreeInitActiveVertices,
+                         "splitGraph.ActiveVertices (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.EdgeNear,
+                         expectedResults.ActiveGraphSplitTreeInitEdgeNear,
+                         "splitGraph.EdgeNear (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.EdgeFar,
+                         expectedResults.ActiveGraphSplitTreeInitEdgeFar,
+                         "splitGraph.EdgeFar (after splitGraph.Initialise");
+    AssertIdArrayHandles(splitGraph.ActiveEdges,
+                         expectedResults.ActiveGraphSplitTreeInitActiveEdges,
+                         "splitGraph.ActiveEdges (after splitGraph.Initialise");
+
     // TODO Add asserts for splitGraph.Initialise
 
     // Stage 8: Compute Split Tree Hyperarcs from Active Split Graph
