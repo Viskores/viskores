@@ -143,7 +143,29 @@ private:
       vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHyperparents,
       vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHypernodes,
       vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHyperarcs,
-      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeFirstSuperchild)
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeFirstSuperchild,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeNodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeArcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeSuperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeSupernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeSuperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeAugmentnodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeAugmentarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeHyperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeWhenTransferred,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeHypernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeContourTreeHyperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureNodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureArcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureSuperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureSupernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureSuperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureAugmentnodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureAugmentarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureHyperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureWhenTransferred,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureHypernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeRegularStructureHyperarcs)
       : SortOrder(expectedSortOrder)
       , SortIndices(expectedSortIndices)
       , MeshExtremaPeaksJoin(meshExtremaPeaksJoin)
@@ -188,6 +210,28 @@ private:
       , MakeSplitTreeHypernodes(makeSplitTreeHypernodes)
       , MakeSplitTreeHyperarcs(makeSplitTreeHyperarcs)
       , MakeSplitTreeFirstSuperchild(makeSplitTreeFirstSuperchild)
+      , MakeContourTreeNodes(makeContourTreeNodes)
+      , MakeContourTreeArcs(makeContourTreeArcs)
+      , MakeContourTreeSuperparents(makeContourTreeSuperparents)
+      , MakeContourTreeSupernodes(makeContourTreeSupernodes)
+      , MakeContourTreeSuperarcs(makeContourTreeSuperarcs)
+      , MakeContourTreeAugmentnodes(makeContourTreeAugmentnodes)
+      , MakeContourTreeAugmentarcs(makeContourTreeAugmentarcs)
+      , MakeContourTreeHyperparents(makeContourTreeHyperparents)
+      , MakeContourTreeWhenTransferred(makeContourTreeWhenTransferred)
+      , MakeContourTreeHypernodes(makeContourTreeHypernodes)
+      , MakeContourTreeHyperarcs(makeContourTreeHyperarcs)
+      , MakeRegularStructureNodes(makeRegularStructureNodes)
+      , MakeRegularStructureArcs(makeRegularStructureArcs)
+      , MakeRegularStructureSuperparents(makeRegularStructureSuperparents)
+      , MakeRegularStructureSupernodes(makeRegularStructureSupernodes)
+      , MakeRegularStructureSuperarcs(makeRegularStructureSuperarcs)
+      , MakeRegularStructureAugmentnodes(makeRegularStructureAugmentnodes)
+      , MakeRegularStructureAugmentarcs(makeRegularStructureAugmentarcs)
+      , MakeRegularStructureHyperparents(makeRegularStructureHyperparents)
+      , MakeRegularStructureWhenTransferred(makeRegularStructureWhenTransferred)
+      , MakeRegularStructureHypernodes(makeRegularStructureHypernodes)
+      , MakeRegularStructureHyperarcs(makeRegularStructureHyperarcs)
     {
     }
 
@@ -235,6 +279,28 @@ private:
     vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeHypernodes;
     vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeHyperarcs;
     vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeFirstSuperchild;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeNodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeArcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeSuperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeSupernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeSuperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeAugmentnodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeAugmentarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeHyperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeWhenTransferred;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeHypernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeContourTreeHyperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureNodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureArcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureSuperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureSupernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureSuperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureAugmentnodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureAugmentarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureHyperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureWhenTransferred;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureHypernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeRegularStructureHyperarcs;
   };
 
   //
@@ -565,7 +631,40 @@ private:
     ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();
-    // TODO Add asserts for treeMaker.ComputeHyperAndSuperStructure
+    // Confirm that we compute the correct hyper and super structure for the contour tree
+    AssertIdArrayHandles(contourTree.Nodes,
+                         expectedResults.MakeContourTreeNodes,
+                         "Bad contourTree.Nodes after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Arcs,
+                         expectedResults.MakeContourTreeArcs,
+                         "Bad contourTree.Arcs after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Superparents,
+                         expectedResults.MakeContourTreeSuperparents,
+                         "Bad contourTree.Superparents after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Supernodes,
+                         expectedResults.MakeContourTreeSupernodes,
+                         "Bad contourTree.Supernodes after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Superarcs,
+                         expectedResults.MakeContourTreeSuperarcs,
+                         "Bad contourTree.Superarcs after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Augmentnodes,
+                         expectedResults.MakeContourTreeAugmentnodes,
+                         "Bad contourTree.Augmentnodes after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Augmentarcs,
+                         expectedResults.MakeContourTreeAugmentarcs,
+                         "Bad contourTree.Augmentarcs after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Hyperparents,
+                         expectedResults.MakeContourTreeHyperparents,
+                         "Bad contourTree.Hyperparents after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.WhenTransferred,
+                         expectedResults.MakeContourTreeWhenTransferred,
+                         "Bad contourTree.WhenTransferred after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Hypernodes,
+                         expectedResults.MakeContourTreeHypernodes,
+                         "Bad contourTree.Hypernodes after ComputeHyperAndSuperStructure");
+    AssertIdArrayHandles(contourTree.Hyperarcs,
+                         expectedResults.MakeContourTreeHyperarcs,
+                         "Bad contourTree.Hyperarcs after ComputeHyperAndSuperStructure");
 
     // 9.2 Then we compute the regular structure
     if (computeRegularStructure == 1) // augment with all vertices
@@ -576,7 +675,41 @@ private:
     {
       treeMaker.ComputeBoundaryRegularStructure(extrema, mesh, meshBoundary);
     }
-    // TODO Add asserts for treeMaker.ComputeRegularStructure / treeMaker.ComputeBoundaryRegularStructure
+    // Asserts for treeMaker.ComputeRegularStructure / treeMaker.ComputeBoundaryRegularStructure
+    // Confirm that we compute the correct hyper and super structure for the contour tree
+    AssertIdArrayHandles(contourTree.Nodes,
+                         expectedResults.MakeRegularStructureNodes,
+                         "Bad contourTree.Nodes after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Arcs,
+                         expectedResults.MakeRegularStructureArcs,
+                         "Bad contourTree.Arcs after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Superparents,
+                         expectedResults.MakeRegularStructureSuperparents,
+                         "Bad contourTree.Superparents after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Supernodes,
+                         expectedResults.MakeRegularStructureSupernodes,
+                         "Bad contourTree.Supernodes after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Superarcs,
+                         expectedResults.MakeRegularStructureSuperarcs,
+                         "Bad contourTree.Superarcs after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Augmentnodes,
+                         expectedResults.MakeRegularStructureAugmentnodes,
+                         "Bad contourTree.Augmentnodes after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Augmentarcs,
+                         expectedResults.MakeRegularStructureAugmentarcs,
+                         "Bad contourTree.Augmentarcs after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Hyperparents,
+                         expectedResults.MakeRegularStructureHyperparents,
+                         "Bad contourTree.Hyperparents after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.WhenTransferred,
+                         expectedResults.MakeRegularStructureWhenTransferred,
+                         "Bad contourTree.WhenTransferred after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Hypernodes,
+                         expectedResults.MakeRegularStructureHypernodes,
+                         "Bad contourTree.Hypernodes after ComputeRegularStructure");
+    AssertIdArrayHandles(contourTree.Hyperarcs,
+                         expectedResults.MakeRegularStructureHyperarcs,
+                         "Bad contourTree.Hyperarcs after ComputeRegularStructure");
   }
 
 
@@ -817,7 +950,7 @@ public:
   }
 
 
-  void TestContourTreeAugmentedStepsFreudenthal3DAugmented() const
+  void TestContourTreeAugmentedStepsFreudenthal3D(unsigned int computeRegularStructure) const
   {
 
     // Create the expected results
@@ -1160,9 +1293,9 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSupernodes =
       vtkm::cont::make_ArrayHandle(makeSplitTreeSupernodesArr, 3);
 
-    vtkm::Id makeSplitTreeSuperarcsArr[3] = { 0, 0, 0 };
-    makeSplitTreeSuperarcsArr[0] =
-      makeSplitTreeSuperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::Id makeSplitTreeSuperarcsArr[3] = {
+      0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, 0, 0
+    };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSuperarcs =
       vtkm::cont::make_ArrayHandle(makeSplitTreeSuperarcsArr, 3);
 
@@ -1176,9 +1309,9 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHypernodes =
       vtkm::cont::make_ArrayHandle(makeSplitTreeHypernodesArr, 3);
 
-    vtkm::Id makeSplitTreeHyperarcsArr[3] = { 0, 0, 0 };
-    makeSplitTreeHyperarcsArr[2] =
-      makeSplitTreeHyperarcsArr[2] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::Id makeSplitTreeHyperarcsArr[3] = {
+      0, 0, 0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT
+    };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHyperarcs =
       vtkm::cont::make_ArrayHandle(makeSplitTreeHyperarcsArr, 3);
 
@@ -1186,8 +1319,407 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeFirstSuperchild =
       vtkm::cont::make_ArrayHandle(makeSplitTreeFirstSuperchildArr, 3);
 
+    //
+    //  Contour Tree Compute
+    //
+    vtkm::worklet::contourtree_augmented::IdArrayType tempNoSuchElementArray;
+    vtkm::cont::Algorithm::Copy(
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(
+        (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, 125),
+      tempNoSuchElementArray);
 
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeNodes;
+
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeArcs = tempNoSuchElementArray;
+
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSuperparents =
+      tempNoSuchElementArray;
+
+    vtkm::Id makeContourTreeSupernodesArr[10] = { 121, 122, 123, 124, 0, 98, 114, 116, 99, 106 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSupernodes =
+      vtkm::cont::make_ArrayHandle(makeContourTreeSupernodesArr, 10);
+
+    vtkm::Id makeContourTreeSuperarcsArr[10] = {
+      6,
+      6,
+      7,
+      7,
+      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      9,
+      9,
+      9 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSuperarcs =
+      vtkm::cont::make_ArrayHandle(makeContourTreeSuperarcsArr, 10);
+
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeAugmentnodes;
+
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeAugmentarcs;
+
+    vtkm::Id makeContourTreeHyperparentsArr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHyperparents =
+      vtkm::cont::make_ArrayHandle(makeContourTreeHyperparentsArr, 10);
+
+    vtkm::Id makeContourTreeWhenTransferredArr[10] = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 4 };
+    for (vtkm::Id i = 0; i < 10; i++)
+    {
+      makeContourTreeWhenTransferredArr[i] =
+        makeContourTreeWhenTransferredArr[i] | vtkm::worklet::contourtree_augmented::IS_HYPERNODE;
+    }
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeWhenTransferred =
+      vtkm::cont::make_ArrayHandle(makeContourTreeWhenTransferredArr, 10);
+
+    vtkm::Id makeContourTreeHypernodesArr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHypernodes =
+      vtkm::cont::make_ArrayHandle(makeContourTreeHypernodesArr, 10);
+
+    vtkm::Id makeContourTreeHyperarcsArr[10] = {
+      6,
+      6,
+      7,
+      7,
+      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      9,
+      9,
+      9 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+      0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeHyperarcs =
+      vtkm::cont::make_ArrayHandle(makeContourTreeHyperarcsArr, 10);
+
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureNodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureArcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureSuperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureSupernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureSuperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureAugmentnodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureAugmentarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHyperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureWhenTransferred;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHypernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHyperarcs;
+    if (computeRegularStructure == 0)
+    {
+      // TODO fill in values without augmentation
+      // No augmentation so nothing changes
+      makeRegularStructureNodes = makeContourTreeNodes;
+      makeRegularStructureArcs = makeContourTreeArcs;
+      makeRegularStructureSuperparents = makeContourTreeSuperparents;
+      makeRegularStructureSupernodes = makeContourTreeSupernodes;
+      makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
+      makeRegularStructureAugmentnodes = makeContourTreeAugmentnodes;
+      makeRegularStructureAugmentarcs = makeContourTreeAugmentarcs;
+      makeRegularStructureHyperparents = makeContourTreeHyperparents;
+      makeRegularStructureWhenTransferred = makeContourTreeWhenTransferred;
+      makeRegularStructureHypernodes = makeContourTreeHypernodes;
+      makeRegularStructureHyperarcs = makeContourTreeHyperarcs;
+    }
+    else if (computeRegularStructure == 1)
+    {
+      // TODO fill in values with augmentation
+      vtkm::Id makeRegularStructureNodesArr[125] = {
+        121, 117, 122, 118, 123, 119, 124, 120, 0,   1,  2,   3,   4,   5,   6,   7,   8,  9,
+        10,  11,  12,  13,  14,  15,  16,  17,  18,  19, 20,  21,  22,  23,  24,  25,  26, 27,
+        28,  29,  30,  31,  32,  33,  34,  35,  36,  37, 38,  39,  40,  41,  42,  43,  44, 45,
+        46,  47,  48,  49,  50,  51,  52,  53,  54,  55, 56,  57,  58,  59,  60,  61,  62, 63,
+        64,  65,  66,  67,  68,  69,  70,  71,  72,  73, 74,  75,  76,  77,  78,  79,  80, 81,
+        82,  83,  84,  85,  86,  87,  88,  89,  90,  91, 92,  93,  94,  95,  96,  97,  98, 114,
+        113, 110, 109, 107, 116, 115, 112, 111, 108, 99, 100, 101, 102, 103, 104, 105, 106
+      };
+      makeRegularStructureNodes = vtkm::cont::make_ArrayHandle(makeRegularStructureNodesArr, 125);
+
+      vtkm::Id makeRegularStructureArcsArr[125] = {
+        1 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        2 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        3 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        4 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        5 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        6 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        7 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        9 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        10 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        11 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        12 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        13 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        14 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        15 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        16 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        17 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        18 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        19 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        20 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        21 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        22 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        23 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        24 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        25 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        26 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        27 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        28 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        29 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        30 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        31 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        32 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        33 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        34 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        35 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        36 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        37 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        38 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        39 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        40 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        41 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        42 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        43 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        44 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        45 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        46 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        47 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        48 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        49 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        50 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        51 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        52 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        53 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        54 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        55 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        56 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        57 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        58 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        59 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        60 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        61 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        62 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        63 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        64 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        65 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        66 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        67 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        68 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        69 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        70 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        71 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        72 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        73 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        74 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        75 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        76 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        77 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        78 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        79 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        80 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        81 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        82 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        83 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        84 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        85 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        86 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        87 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        88 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        89 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        90 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        91 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        92 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        93 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        94 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        95 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        96 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        97 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        99 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        99 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        100 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        101 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        102 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        103 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        104 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        105 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        106 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+        106,
+        106,
+        107,
+        109,
+        108,
+        111,
+        110,
+        113,
+        112,
+        115,
+        114,
+        114,
+        116,
+        116,
+        117,
+        118,
+        119,
+        120
+      };
+      makeRegularStructureArcs = vtkm::cont::make_ArrayHandle(makeRegularStructureArcsArr, 125);
+
+      vtkm::Id makeRegularStructureSuperparentsArr[125] = {
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8,
+        8, 8, 8, 8, 8, 8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3
+      };
+      makeRegularStructureSuperparents =
+        vtkm::cont::make_ArrayHandle(makeRegularStructureSuperparentsArr, 125);
+      makeRegularStructureSupernodes = makeContourTreeSupernodes;
+      makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
+      makeRegularStructureAugmentnodes = makeContourTreeAugmentnodes;
+      makeRegularStructureAugmentarcs = makeContourTreeAugmentarcs;
+      makeRegularStructureHyperparents = makeContourTreeHyperparents;
+      makeRegularStructureWhenTransferred = makeContourTreeWhenTransferred;
+      makeRegularStructureHypernodes = makeContourTreeHypernodes;
+      makeRegularStructureHyperarcs = makeContourTreeHyperarcs;
+    }
+    else if (computeRegularStructure == 2)
+    {
+      // TODO fill in values for boundary augmentation
+      makeRegularStructureNodes = makeContourTreeNodes;
+      makeRegularStructureArcs = makeContourTreeArcs;
+      makeRegularStructureSuperparents = makeContourTreeSuperparents;
+      makeRegularStructureSupernodes = makeContourTreeSupernodes;
+      makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
+
+      vtkm::Id makeRegularStructureAugmentnodesArr[107] = {
+        0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16, 17,
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,  29,  30,  31,  32,  33,  34, 35,
+        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,  47,  48,  49,  50,  51,  52, 53,
+        54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,  65,  66,  67,  68,  69,  70, 71,
+        72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,  83,  84,  85,  86,  87,  88, 89,
+        90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124
+      };
+      makeRegularStructureAugmentnodes =
+        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentnodesArr, 107);
+
+      vtkm::Id makeRegularStructureAugmentarcsArr[107] = {
+        1 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        2 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        3 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        4 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        5 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        6 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        7 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        9 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        10 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        11 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        12 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        13 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        14 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        15 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        16 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        17 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        18 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        19 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        20 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        21 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        22 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        23 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        24 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        25 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        26 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        27 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        28 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        29 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        30 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        31 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        32 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        33 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        34 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        35 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        36 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        37 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        38 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        39 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        40 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        41 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        42 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        43 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        44 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        45 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        46 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        47 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        48 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        49 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        50 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        51 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        52 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        53 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        54 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        55 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        56 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        57 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        58 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        59 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        60 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        61 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        62 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        63 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        64 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        65 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        66 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        67 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        68 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        69 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        70 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        71 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        72 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        73 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        74 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        75 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        76 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        77 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        78 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        79 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        80 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        81 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        82 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        83 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        84 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        85 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        86 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        87 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        88 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        89 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        90 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        91 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        92 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        93 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        94 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        95 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        96 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        97 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        99 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        99 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        100 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
+        0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+        100,
+        100,
+        101,
+        101,
+        102,
+        102
+      };
+      makeRegularStructureAugmentarcs =
+        vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentarcsArr, 107);
+
+
+      makeRegularStructureHyperparents = makeContourTreeHyperparents;
+      makeRegularStructureWhenTransferred = makeContourTreeWhenTransferred;
+      makeRegularStructureHypernodes = makeContourTreeHypernodes;
+      makeRegularStructureHyperarcs = makeContourTreeHyperarcs;
+    }
+
+    //
     // Setup the expected results object
+    //
     ExpectedStepResults expectedResults(expectedSortOrder,
                                         expectedSortIndices,
                                         meshExtremaPeaksJoin,
@@ -1231,11 +1763,35 @@ public:
                                         makeSplitTreeHyperparents,
                                         makeSplitTreeHypernodes,
                                         makeSplitTreeHyperarcs,
-                                        makeSplitTreeFirstSuperchild);
+                                        makeSplitTreeFirstSuperchild,
+                                        makeContourTreeNodes,
+                                        makeContourTreeArcs,
+                                        makeContourTreeSuperparents,
+                                        makeContourTreeSupernodes,
+                                        makeContourTreeSuperarcs,
+                                        makeContourTreeAugmentnodes,
+                                        makeContourTreeAugmentarcs,
+                                        makeContourTreeHyperparents,
+                                        makeContourTreeWhenTransferred,
+                                        makeContourTreeHypernodes,
+                                        makeContourTreeHyperarcs,
+                                        makeRegularStructureNodes,
+                                        makeRegularStructureArcs,
+                                        makeRegularStructureSuperparents,
+                                        makeRegularStructureSupernodes,
+                                        makeRegularStructureSuperarcs,
+                                        makeRegularStructureAugmentnodes,
+                                        makeRegularStructureAugmentarcs,
+                                        makeRegularStructureHyperparents,
+                                        makeRegularStructureWhenTransferred,
+                                        makeRegularStructureHypernodes,
+                                        makeRegularStructureHyperarcs);
 
+    //
     // Execute the test for the current settings
-    TestContourTreeAugmentedSteps3D(false, // don't use marchin cubes
-                                    1,     // fully augment the tree
+    //
+    TestContourTreeAugmentedSteps3D(false,                   // don't use marchin cubes
+                                    computeRegularStructure, // fully augment the tree
                                     expectedResults);
   }
 
@@ -1245,7 +1801,9 @@ public:
     this->TestContourTree_Mesh2D_Freudenthal();
     this->TestContourTree_Mesh3D_Freudenthal();
     this->TestContourTree_Mesh3D_MarchingCubes();
-    this->TestContourTreeAugmentedStepsFreudenthal3DAugmented();
+    this->TestContourTreeAugmentedStepsFreudenthal3D(0); // without augmentation
+    this->TestContourTreeAugmentedStepsFreudenthal3D(1); // with full augmentation
+    this->TestContourTreeAugmentedStepsFreudenthal3D(2); // with full augmentation
   }
 };
 }
