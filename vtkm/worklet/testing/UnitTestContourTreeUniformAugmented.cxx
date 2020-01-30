@@ -125,7 +125,25 @@ private:
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitActiveVertices,
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitEdgeNear,
       vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitEdgeFar,
-      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitActiveEdges)
+      vtkm::worklet::contourtree_augmented::IdArrayType& activeGraphSplitTreeInitActiveEdges,
+      vtkm::Id makeJoinTreeNumIterations,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeArcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeSuperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeSupernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeSuperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeHyperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeHypernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeHyperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeJoinTreeFirstSuperchild,
+      vtkm::Id makeSplitTreeNumIterations,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeArcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeSuperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeSupernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeSuperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHyperparents,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHypernodes,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeHyperarcs,
+      vtkm::worklet::contourtree_augmented::IdArrayType& makeSplitTreeFirstSuperchild)
       : SortOrder(expectedSortOrder)
       , SortIndices(expectedSortIndices)
       , MeshExtremaPeaksJoin(meshExtremaPeaksJoin)
@@ -152,6 +170,24 @@ private:
       , ActiveGraphSplitTreeInitEdgeNear(activeGraphSplitTreeInitEdgeNear)
       , ActiveGraphSplitTreeInitEdgeFar(activeGraphSplitTreeInitEdgeFar)
       , ActiveGraphSplitTreeInitActiveEdges(activeGraphSplitTreeInitActiveEdges)
+      , MakeJoinTreeNumIterations(makeJoinTreeNumIterations)
+      , MakeJoinTreeArcs(makeJoinTreeArcs)
+      , MakeJoinTreeSuperparents(makeJoinTreeSuperparents)
+      , MakeJoinTreeSupernodes(makeJoinTreeSupernodes)
+      , MakeJoinTreeSuperarcs(makeJoinTreeSuperarcs)
+      , MakeJoinTreeHyperparents(makeJoinTreeHyperparents)
+      , MakeJoinTreeHypernodes(makeJoinTreeHypernodes)
+      , MakeJoinTreeHyperarcs(makeJoinTreeHyperarcs)
+      , MakeJoinTreeFirstSuperchild(makeJoinTreeFirstSuperchild)
+      , MakeSplitTreeNumIterations(makeSplitTreeNumIterations)
+      , MakeSplitTreeArcs(makeSplitTreeArcs)
+      , MakeSplitTreeSuperparents(makeSplitTreeSuperparents)
+      , MakeSplitTreeSupernodes(makeSplitTreeSupernodes)
+      , MakeSplitTreeSuperarcs(makeSplitTreeSuperarcs)
+      , MakeSplitTreeHyperparents(makeSplitTreeHyperparents)
+      , MakeSplitTreeHypernodes(makeSplitTreeHypernodes)
+      , MakeSplitTreeHyperarcs(makeSplitTreeHyperarcs)
+      , MakeSplitTreeFirstSuperchild(makeSplitTreeFirstSuperchild)
     {
     }
 
@@ -181,6 +217,24 @@ private:
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitEdgeNear;
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitEdgeFar;
     vtkm::worklet::contourtree_augmented::IdArrayType ActiveGraphSplitTreeInitActiveEdges;
+    vtkm::Id MakeJoinTreeNumIterations;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeArcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeSuperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeSupernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeSuperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeHyperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeHypernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeHyperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeJoinTreeFirstSuperchild;
+    vtkm::Id MakeSplitTreeNumIterations;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeArcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeSuperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeSupernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeSuperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeHyperparents;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeHypernodes;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeHyperarcs;
+    vtkm::worklet::contourtree_augmented::IdArrayType MakeSplitTreeFirstSuperchild;
   };
 
   //
@@ -380,9 +434,25 @@ private:
       joinGraph.SuperID, tempEmpty, "joinGraph.SuperID (after joinGraph.MakeMergeTree");
     AssertIdArrayHandles(
       joinGraph.HyperID, tempEmpty, "joinGraph.HyperID (after joinGraph.MakeMergeTree");
-    // TODO Add asserts for joinGraph.MakeMergeTree joinGraph.NumIterations
-    // TODO Add asserts for  joinGraph.MakeMergeTree check all MergeTree arrays
-
+    // Make sure the actual join tree data is correct
+    VTKM_TEST_ASSERT(test_equal(joinGraph.NumIterations, expectedResults.MakeJoinTreeNumIterations),
+                     "Bad joinGraph.NumIterations");
+    AssertIdArrayHandles(joinTree.Arcs, expectedResults.MakeJoinTreeArcs, "Bad joinTree.Arcs");
+    AssertIdArrayHandles(
+      joinTree.Superparents, expectedResults.MakeJoinTreeSuperparents, "Bad joinTree.Superparents");
+    AssertIdArrayHandles(
+      joinTree.Supernodes, expectedResults.MakeJoinTreeSupernodes, "Bad joinTree.Supernodes");
+    AssertIdArrayHandles(
+      joinTree.Superarcs, expectedResults.MakeJoinTreeSuperarcs, "Bad joinTree.Superarcs");
+    AssertIdArrayHandles(
+      joinTree.Hyperparents, expectedResults.MakeJoinTreeHyperparents, "Bad joinTree.Hyperparents");
+    AssertIdArrayHandles(
+      joinTree.Hypernodes, expectedResults.MakeJoinTreeHypernodes, "Bad joinTree.Hypernodes");
+    AssertIdArrayHandles(
+      joinTree.Hyperarcs, expectedResults.MakeJoinTreeHyperarcs, "Bad joinTree.Hyperarcs");
+    AssertIdArrayHandles(joinTree.FirstSuperchild,
+                         expectedResults.MakeJoinTreeFirstSuperchild,
+                         "Bad joinTree.FirstSuperchild");
 
     // Stage 6: Assign every mesh vertex to a pit
     extrema.SetStarts(mesh, false);
@@ -458,8 +528,28 @@ private:
       splitGraph.SuperID, tempEmpty, "splitGraph.SuperID (after splitGraph.MakeMergeTree");
     AssertIdArrayHandles(
       splitGraph.HyperID, tempEmpty, "splitGraph.HyperID (after splitGraph.MakeMergeTree");
-    // TODO Add asserts for splitGraph.MakeMergeTree splitGraph.NumIterations
-    // TODO Add asserts for  splitGraph.MakeMergeTree check all MergeTree arrays
+    // Make sure the actual split tree data is correct
+    VTKM_TEST_ASSERT(
+      test_equal(splitGraph.NumIterations, expectedResults.MakeSplitTreeNumIterations),
+      "Bad splitGraph.NumIterations");
+    AssertIdArrayHandles(splitTree.Arcs, expectedResults.MakeSplitTreeArcs, "Bad splitTree.Arcs");
+    AssertIdArrayHandles(splitTree.Superparents,
+                         expectedResults.MakeSplitTreeSuperparents,
+                         "Bad splitTree.Superparents");
+    AssertIdArrayHandles(
+      splitTree.Supernodes, expectedResults.MakeSplitTreeSupernodes, "Bad splitTree.Supernodes");
+    AssertIdArrayHandles(
+      splitTree.Superarcs, expectedResults.MakeSplitTreeSuperarcs, "Bad splitTree.Superarcs");
+    AssertIdArrayHandles(splitTree.Hyperparents,
+                         expectedResults.MakeSplitTreeHyperparents,
+                         "Bad splitTree.Hyperparents");
+    AssertIdArrayHandles(
+      splitTree.Hypernodes, expectedResults.MakeSplitTreeHypernodes, "Bad splitTree.Hypernodes");
+    AssertIdArrayHandles(
+      splitTree.Hyperarcs, expectedResults.MakeSplitTreeHyperarcs, "Bad splitTree.Hyperarcs");
+    AssertIdArrayHandles(splitTree.FirstSuperchild,
+                         expectedResults.MakeSplitTreeFirstSuperchild,
+                         "Bad splitTree.FirstSuperchild");
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
     contourTree.Init(mesh.NumVertices);
@@ -971,6 +1061,124 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveEdges =
       vtkm::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveEdgesArr, 12);
 
+    //
+    // JoinTree MakeMergeTree
+    //
+    vtkm::Id makeJoinTreeNumIterations = 2;
+
+    vtkm::Id makeJoinTreeArcsArr[125] = {
+      0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,
+      17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,
+      35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,
+      53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,
+      71,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,
+      89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99,  100, 101, 102, 103, 104, 105, 106,
+      106, 107, 109, 108, 111, 110, 113, 112, 115, 114, 114, 116, 116, 117, 118, 119, 120
+    };
+    makeJoinTreeArcsArr[0] =
+      makeJoinTreeArcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeArcs =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeArcsArr, 125);
+
+    vtkm::Id makeJoinTreeSuperparentsArr[125] = {
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 1, 2, 2, 1, 1, 2, 2, 3, 4, 5, 6, 3, 4, 5, 6
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSuperparents =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperparentsArr, 125);
+
+    vtkm::Id makeJoinTreeSupernodesArr[7] = { 106, 114, 116, 121, 122, 123, 124 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSupernodes =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSupernodesArr, 7);
+
+    vtkm::Id makeJoinTreeSuperarcsArr[7] = { 0, 0, 0, 1, 1, 2, 2 };
+    makeJoinTreeSuperarcsArr[0] =
+      makeJoinTreeSuperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeSuperarcs =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeSuperarcsArr, 7);
+
+    vtkm::Id makeJoinTreeHyperparentsArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHyperparents =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperparentsArr, 7);
+
+    vtkm::Id makeJoinTreeHypernodesArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHypernodes =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHypernodesArr, 7);
+
+    vtkm::Id makeJoinTreeHyperarcsArr[7] = { 0, 0, 0, 1, 1, 2, 2 };
+    makeJoinTreeHyperarcsArr[0] =
+      makeJoinTreeHyperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeHyperarcs =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeHyperarcsArr, 7);
+
+    vtkm::Id makeJoinTreeFirstSuperchildArr[7] = { 0, 1, 2, 3, 4, 5, 6 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeJoinTreeFirstSuperchild =
+      vtkm::cont::make_ArrayHandle(makeJoinTreeFirstSuperchildArr, 7);
+
+
+    //
+    // SplitTree MakeMergeTree
+    //
+    vtkm::Id makeSplitTreeNumIterations = 1;
+
+    vtkm::Id makeSplitTreeArcsArr[125] = {
+      1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18,
+      19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,
+      37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,
+      55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,
+      73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,
+      91,  92,  93,  94,  95,  96,  97,  99,  99,  100, 101, 102, 103, 104, 105, 106, 107, 108,
+      109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 0
+    };
+    makeSplitTreeArcsArr[124] =
+      makeSplitTreeArcsArr[124] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeArcs =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeArcsArr, 125);
+
+    vtkm::Id makeSplitTreeSuperparentsArr[125] = {
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSuperparents =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperparentsArr, 125);
+
+    vtkm::Id makeSplitTreeSupernodesArr[3] = { 99, 98, 0 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSupernodes =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSupernodesArr, 3);
+
+    vtkm::Id makeSplitTreeSuperarcsArr[3] = { 0, 0, 0 };
+    makeSplitTreeSuperarcsArr[0] =
+      makeSplitTreeSuperarcsArr[0] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeSuperarcs =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeSuperarcsArr, 3);
+
+    vtkm::Id makeSplitTreeHyperparentsArr[3] = { 2, 1, 0 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHyperparents =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperparentsArr, 3);
+
+    vtkm::Id makeSplitTreeHypernodesArr[3] = {
+      2, 1, 0,
+    };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHypernodes =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHypernodesArr, 3);
+
+    vtkm::Id makeSplitTreeHyperarcsArr[3] = { 0, 0, 0 };
+    makeSplitTreeHyperarcsArr[2] =
+      makeSplitTreeHyperarcsArr[2] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHyperarcs =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeHyperarcsArr, 3);
+
+    vtkm::Id makeSplitTreeFirstSuperchildArr[3] = { 2, 1, 0 };
+    vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeFirstSuperchild =
+      vtkm::cont::make_ArrayHandle(makeSplitTreeFirstSuperchildArr, 3);
+
+
     // Setup the expected results object
     ExpectedStepResults expectedResults(expectedSortOrder,
                                         expectedSortIndices,
@@ -997,7 +1205,25 @@ public:
                                         activeGraphSplitTreeInitActiveVertices,
                                         activeGraphSplitTreeInitEdgeNear,
                                         activeGraphSplitTreeInitEdgeFar,
-                                        activeGraphSplitTreeInitActiveEdges);
+                                        activeGraphSplitTreeInitActiveEdges,
+                                        makeJoinTreeNumIterations,
+                                        makeJoinTreeArcs,
+                                        makeJoinTreeSuperparents,
+                                        makeJoinTreeSupernodes,
+                                        makeJoinTreeSuperarcs,
+                                        makeJoinTreeHyperparents,
+                                        makeJoinTreeHypernodes,
+                                        makeJoinTreeHyperarcs,
+                                        makeJoinTreeFirstSuperchild,
+                                        makeSplitTreeNumIterations,
+                                        makeSplitTreeArcs,
+                                        makeSplitTreeSuperparents,
+                                        makeSplitTreeSupernodes,
+                                        makeSplitTreeSuperarcs,
+                                        makeSplitTreeHyperparents,
+                                        makeSplitTreeHypernodes,
+                                        makeSplitTreeHyperarcs,
+                                        makeSplitTreeFirstSuperchild);
 
     // Execute the test for the current settings
     TestContourTreeAugmentedSteps3D(false, // don't use marchin cubes
