@@ -1339,18 +1339,16 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSupernodes =
       vtkm::cont::make_ArrayHandle(makeContourTreeSupernodesArr, 10);
 
-    vtkm::Id makeContourTreeSuperarcsArr[10] = {
-      6,
-      6,
-      7,
-      7,
-      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
-      8 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
-      9,
-      9,
-      9 | vtkm::worklet::contourtree_augmented::IS_ASCENDING,
-      0 | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT
-    };
+    vtkm::Id makeContourTreeSuperarcsArr[10] = { 6, 6, 7, 7, 8, 8, 9, 9, 9, 0 };
+    makeContourTreeSuperarcsArr[4] =
+      makeContourTreeSuperarcsArr[5] | vtkm::worklet::contourtree_augmented::IS_ASCENDING;
+    makeContourTreeSuperarcsArr[5] =
+      makeContourTreeSuperarcsArr[6] | vtkm::worklet::contourtree_augmented::IS_ASCENDING;
+    makeContourTreeSuperarcsArr[8] =
+      makeContourTreeSuperarcsArr[8] | vtkm::worklet::contourtree_augmented::IS_ASCENDING;
+    makeContourTreeSuperarcsArr[9] =
+      makeContourTreeSuperarcsArr[9] | vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
     vtkm::worklet::contourtree_augmented::IdArrayType makeContourTreeSuperarcs =
       vtkm::cont::make_ArrayHandle(makeContourTreeSuperarcsArr, 10);
 
