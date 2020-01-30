@@ -11,6 +11,7 @@
 set(headers
   AverageByKey.h
   BoundaryTypes.h
+  AveragePointNeighborhood.h
   CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
@@ -34,6 +35,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  ImageDifference.h
   KdTree3D.h
   KernelSplatter.h
   Keys.h
