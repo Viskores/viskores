@@ -342,9 +342,6 @@ private:
               << computeRegularStructure << " meshtype=" << typeid(MeshClass).name() << std::endl;
 
     using namespace vtkm::worklet::contourtree_augmented;
-    vtkm::worklet::contourtree_augmented::IdArrayType sortOrder;
-    vtkm::worklet::contourtree_augmented::ContourTree contourTree;
-
 
     // Stage 1: Load the data into the mesh. This is done in the Run() method above and accessible
     //          here via the mesh parameter. The actual data load is performed outside of the
@@ -552,8 +549,19 @@ private:
                          "Bad splitTree.FirstSuperchild");
 
     // Stage 9: Join & Split Tree are Augmented, then combined to construct Contour Tree
+    vtkm::worklet::contourtree_augmented::ContourTree contourTree;
     contourTree.Init(mesh.NumVertices);
-    // TODO Add asserts for contourTree.Init
+    // confirm that the arcs and superparents are initialized as NO_SUCH_ELEMENT
+    vtkm::worklet::contourtree_augmented::IdArrayType tempNoSuchElementArray;
+    vtkm::cont::Algorithm::Copy(
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(
+        (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, mesh.NumVertices),
+      tempNoSuchElementArray);
+    AssertIdArrayHandles(
+      contourTree.Arcs, tempNoSuchElementArray, "Bad contourTree.Arcs after init");
+    AssertIdArrayHandles(
+      contourTree.Superparents, tempNoSuchElementArray, "Bad contourTree.Superparents after init");
+
     ContourTreeMaker treeMaker(contourTree, joinTree, splitTree);
     // 9.1 First we compute the hyper- and super- structure
     treeMaker.ComputeHyperAndSuperStructure();
