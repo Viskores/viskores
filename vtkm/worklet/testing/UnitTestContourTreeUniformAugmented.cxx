@@ -1403,7 +1403,6 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHyperarcs;
     if (computeRegularStructure == 0)
     {
-      // TODO fill in values without augmentation
       // No augmentation so nothing changes
       makeRegularStructureNodes = makeContourTreeNodes;
       makeRegularStructureArcs = makeContourTreeArcs;
@@ -1419,7 +1418,6 @@ public:
     }
     else if (computeRegularStructure == 1)
     {
-      // TODO fill in values with augmentation
       vtkm::Id makeRegularStructureNodesArr[125] = {
         121, 117, 122, 118, 123, 119, 124, 120, 0,   1,  2,   3,   4,   5,   6,   7,   8,  9,
         10,  11,  12,  13,  14,  15,  16,  17,  18,  19, 20,  21,  22,  23,  24,  25,  26, 27,
@@ -1469,7 +1467,6 @@ public:
     }
     else if (computeRegularStructure == 2)
     {
-      // TODO fill in values for boundary augmentation
       makeRegularStructureNodes = makeContourTreeNodes;
       makeRegularStructureArcs = makeContourTreeArcs;
       makeRegularStructureSuperparents = makeContourTreeSuperparents;
