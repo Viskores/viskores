@@ -1399,6 +1399,16 @@ public:
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureWhenTransferred;
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHypernodes;
     vtkm::worklet::contourtree_augmented::IdArrayType makeRegularStructureHyperarcs;
+
+    // Depending on the computeRegularStructure setting the values of some arrays changes
+    // We define them here so we can populate the data in the if/else blocks below and
+    // still keep the data in scope during the actual tests
+    vtkm::Id* makeRegularStructureNodesArr = NULL;
+    vtkm::Id* makeRegularStructureArcsArr = NULL;
+    vtkm::Id* makeRegularStructureSuperparentsArr = NULL;
+    vtkm::Id* makeRegularStructureAugmentnodesArr = NULL;
+    vtkm::Id* makeRegularStructureAugmentarcsArr = NULL;
+
     if (computeRegularStructure == 0)
     {
       // No augmentation so nothing changes
@@ -1416,7 +1426,7 @@ public:
     }
     else if (computeRegularStructure == 1)
     {
-      vtkm::Id makeRegularStructureNodesArr[125] = {
+      makeRegularStructureNodesArr = new vtkm::Id[125]{
         121, 117, 122, 118, 123, 119, 124, 120, 0,   1,  2,   3,   4,   5,   6,   7,   8,  9,
         10,  11,  12,  13,  14,  15,  16,  17,  18,  19, 20,  21,  22,  23,  24,  25,  26, 27,
         28,  29,  30,  31,  32,  33,  34,  35,  36,  37, 38,  39,  40,  41,  42,  43,  44, 45,
@@ -1427,7 +1437,7 @@ public:
       };
       makeRegularStructureNodes = vtkm::cont::make_ArrayHandle(makeRegularStructureNodesArr, 125);
 
-      vtkm::Id makeRegularStructureArcsArr[125] = {
+      makeRegularStructureArcsArr = new vtkm::Id[125]{
         1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17, 18,
         19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35, 36,
         37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53, 54,
@@ -1445,13 +1455,13 @@ public:
       }
       makeRegularStructureArcs = vtkm::cont::make_ArrayHandle(makeRegularStructureArcsArr, 125);
 
-      vtkm::Id makeRegularStructureSuperparentsArr[125] = {
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8,
-        8, 8, 8, 8, 8, 8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3
-      };
+      makeRegularStructureSuperparentsArr =
+        new vtkm::Id[125]{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8, 8, 8, 8, 8, 8,
+                           8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3 };
       makeRegularStructureSuperparents =
         vtkm::cont::make_ArrayHandle(makeRegularStructureSuperparentsArr, 125);
       makeRegularStructureSupernodes = makeContourTreeSupernodes;
@@ -1471,25 +1481,25 @@ public:
       makeRegularStructureSupernodes = makeContourTreeSupernodes;
       makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
 
-      vtkm::Id makeRegularStructureAugmentnodesArr[107] = {
-        0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16, 17,
-        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,  29,  30,  31,  32,  33,  34, 35,
-        36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,  47,  48,  49,  50,  51,  52, 53,
-        54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,  65,  66,  67,  68,  69,  70, 71,
-        72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,  83,  84,  85,  86,  87,  88, 89,
-        90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124
-      };
+      makeRegularStructureAugmentnodesArr =
+        new vtkm::Id[107]{ 0,  1,  2,  3,  4,   5,   6,   7,   8,   9,   10, 11, 12, 13, 14, 15,
+                           16, 17, 18, 19, 20,  21,  22,  23,  24,  25,  26, 27, 28, 29, 30, 31,
+                           32, 33, 34, 35, 36,  37,  38,  39,  40,  41,  42, 43, 44, 45, 46, 47,
+                           48, 49, 50, 51, 52,  53,  54,  55,  56,  57,  58, 59, 60, 61, 62, 63,
+                           64, 65, 66, 67, 68,  69,  70,  71,  72,  73,  74, 75, 76, 77, 78, 79,
+                           80, 81, 82, 83, 84,  85,  86,  87,  88,  89,  90, 91, 92, 93, 94, 95,
+                           96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124 };
       makeRegularStructureAugmentnodes =
         vtkm::cont::make_ArrayHandle(makeRegularStructureAugmentnodesArr, 107);
 
-      vtkm::Id makeRegularStructureAugmentarcsArr[107] = {
-        1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11, 12,  13,  14,  15,  16,  17, 18,
-        19, 20, 21, 22, 23, 24, 25, 26, 27, 28,  29, 30,  31,  32,  33,  34,  35, 36,
-        37, 38, 39, 40, 41, 42, 43, 44, 45, 46,  47, 48,  49,  50,  51,  52,  53, 54,
-        55, 56, 57, 58, 59, 60, 61, 62, 63, 64,  65, 66,  67,  68,  69,  70,  71, 72,
-        73, 74, 75, 76, 77, 78, 79, 80, 81, 82,  83, 84,  85,  86,  87,  88,  89, 90,
-        91, 92, 93, 94, 95, 96, 97, 99, 99, 100, 0,  100, 100, 101, 101, 102, 102
-      };
+      makeRegularStructureAugmentarcsArr =
+        new vtkm::Id[107]{ 1,  2,  3,  4,   5,  6,   7,   8,   9,   10,  11, 12, 13, 14, 15, 16,
+                           17, 18, 19, 20,  21, 22,  23,  24,  25,  26,  27, 28, 29, 30, 31, 32,
+                           33, 34, 35, 36,  37, 38,  39,  40,  41,  42,  43, 44, 45, 46, 47, 48,
+                           49, 50, 51, 52,  53, 54,  55,  56,  57,  58,  59, 60, 61, 62, 63, 64,
+                           65, 66, 67, 68,  69, 70,  71,  72,  73,  74,  75, 76, 77, 78, 79, 80,
+                           81, 82, 83, 84,  85, 86,  87,  88,  89,  90,  91, 92, 93, 94, 95, 96,
+                           97, 99, 99, 100, 0,  100, 100, 101, 101, 102, 102 };
       makeRegularStructureAugmentarcsArr[100] = makeRegularStructureAugmentarcsArr[100] |
         vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
       for (vtkm::Id i = 0; i < 100; i++)
@@ -1584,6 +1594,29 @@ public:
     TestContourTreeAugmentedSteps3D(false,                   // don't use marchin cubes
                                     computeRegularStructure, // fully augment the tree
                                     expectedResults);
+
+    //
+    // Free temporary arrays allocated with new
+    if (makeRegularStructureNodesArr != NULL)
+    {
+      delete[] makeRegularStructureNodesArr;
+    }
+    if (makeRegularStructureArcsArr != NULL)
+    {
+      delete[] makeRegularStructureArcsArr;
+    }
+    if (makeRegularStructureSuperparentsArr != NULL)
+    {
+      delete[] makeRegularStructureSuperparentsArr;
+    }
+    if (makeRegularStructureAugmentnodesArr != NULL)
+    {
+      delete[] makeRegularStructureAugmentnodesArr;
+    }
+    if (makeRegularStructureAugmentarcsArr != NULL)
+    {
+      delete[] makeRegularStructureAugmentarcsArr;
+    }
   }
 
 
