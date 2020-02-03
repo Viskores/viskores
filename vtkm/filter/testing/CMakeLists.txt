@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
+  UnitTestMapFieldPermutation.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMeshQualityFilter.cxx

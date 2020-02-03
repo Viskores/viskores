@@ -45,6 +45,7 @@ set(headers
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
+  MapFieldPermutation.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -154,6 +155,7 @@ set(sources_device
   GradientScalar.cxx
   GradientUniformPoints.cxx
   GradientVector.cxx
+  MapFieldPermutation.cxx
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx
