@@ -72,11 +72,8 @@ struct AverageByKey
   /// This method uses an existing \c Keys object to collected values by those keys and find
   /// the average of those groups.
   ///
-  template <typename KeyType,
-            typename ValueType,
-            typename InValuesStorage,
-            typename OutAveragesStorage>
-  VTKM_CONT static void Run(const vtkm::worklet::Keys<KeyType>& keys,
+  template <typename ValueType, typename InValuesStorage, typename OutAveragesStorage>
+  VTKM_CONT static void Run(const vtkm::worklet::internal::KeysBase& keys,
                             const vtkm::cont::ArrayHandle<ValueType, InValuesStorage>& inValues,
                             vtkm::cont::ArrayHandle<ValueType, OutAveragesStorage>& outAverages)
   {
@@ -90,9 +87,9 @@ struct AverageByKey
   /// This method uses an existing \c Keys object to collected values by those keys and find
   /// the average of those groups.
   ///
-  template <typename KeyType, typename ValueType, typename InValuesStorage>
+  template <typename ValueType, typename InValuesStorage>
   VTKM_CONT static vtkm::cont::ArrayHandle<ValueType> Run(
-    const vtkm::worklet::Keys<KeyType>& keys,
+    const vtkm::worklet::internal::KeysBase& keys,
     const vtkm::cont::ArrayHandle<ValueType, InValuesStorage>& inValues)
   {
 
