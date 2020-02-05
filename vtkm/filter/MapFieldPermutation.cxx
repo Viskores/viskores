@@ -59,9 +59,9 @@ bool vtkm::filter::MapFieldPermutation(const vtkm::cont::Field& inputField,
   return functor.CalledMap;
 }
 
-bool MapFieldPermutation(const vtkm::cont::Field& inputField,
-                         const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                         vtkm::cont::DataSet& outputData)
+bool vtkm::filter::MapFieldPermutation(const vtkm::cont::Field& inputField,
+                                       const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+                                       vtkm::cont::DataSet& outputData)
 {
   vtkm::cont::Field outputField;
   bool success = vtkm::filter::MapFieldPermutation(inputField, permutation, outputField);
