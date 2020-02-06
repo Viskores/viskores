@@ -39,10 +39,15 @@ namespace filter
 /// `true`, then the results in `outputField` are valid. If it is `false`, then `outputField`
 /// should not be used.
 ///
+/// If an invalid index is given in the permutation array (i.e. less than 0 or greater than the
+/// size of the array), then the resulting outputField will be given `invalidValue` (converted as
+/// best as possible to the correct data type).
+///
 VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-  vtkm::cont::Field& outputField);
+  vtkm::cont::Field& outputField,
+  vtkm::Float64 invalidValue = vtkm::Nan<vtkm::Float64>());
 
 /// \brief Maps a field by permuting it by a given index array.
 ///
@@ -62,10 +67,15 @@ VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldPermutation(
 /// `true`, then `outputData` has the permuted field. If it is `false`, then the field is not
 /// placed in `outputData`.
 ///
+/// If an invalid index is given in the permutation array (i.e. less than 0 or greater than the
+/// size of the array), then the resulting outputField will be given `invalidValue` (converted as
+/// best as possible to the correct data type).
+///
 VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldPermutation(
   const vtkm::cont::Field& inputField,
   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-  vtkm::cont::DataSet& outputData);
+  vtkm::cont::DataSet& outputData,
+  vtkm::Float64 invalidValue = vtkm::Nan<vtkm::Float64>());
 }
 } // namespace vtkm::filter
 
