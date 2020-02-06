@@ -10,6 +10,10 @@
 #ifndef vtk_m_filter_VertexClustering_hxx
 #define vtk_m_filter_VertexClustering_hxx
 
+#include <vtkm/filter/VertexClustering.h>
+
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace vtkm
 {
 namespace filter
@@ -43,32 +47,22 @@ inline VTKM_CONT vtkm::cont::DataSet VertexClustering::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool VertexClustering::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool VertexClustering::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                           const vtkm::cont::Field& field,
+                                                           vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  vtkm::cont::ArrayHandle<T> fieldArray;
-
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
-    fieldArray = this->Worklet.ProcessPointField(input);
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    fieldArray = this->Worklet.ProcessCellField(input);
-  }
-  else
-  {
-    return false;
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetPointIdMap(), result);
   }
 
-  //use the same meta data as the input so we get the same field name, etc.
-  result.AddField(fieldMeta.AsField(fieldArray));
+  if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIdMap(), result);
+  }
 
-  return true;
+  return false;
 }
 }
 }

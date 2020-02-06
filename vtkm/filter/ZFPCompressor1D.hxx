@@ -56,16 +56,6 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPCompressor1D::DoExecute(
   dataset.AddField(vtkm::cont::make_FieldPoint("compressed", compressed));
   return dataset;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ZFPCompressor1D::DoMapField(vtkm::cont::DataSet&,
-                                                  const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                                  const vtkm::filter::FieldMetadata&,
-                                                  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return false;
-}
 }
 } // namespace vtkm::filter
 #endif

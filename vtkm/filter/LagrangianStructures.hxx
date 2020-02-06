@@ -155,11 +155,10 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool LagrangianStructures::DoMapField(
+template <typename DerivedPolicy>
+inline VTKM_CONT bool LagrangianStructures::MapFieldOntoOutput(
   vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<T, StorageType>&,
-  const vtkm::filter::FieldMetadata&,
+  const vtkm::cont::Field&,
   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;

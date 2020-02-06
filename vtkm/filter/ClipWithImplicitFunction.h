@@ -43,6 +43,26 @@ public:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                       const vtkm::cont::Field& field);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  {
+    if (field.IsFieldPoint())
+    {
+      // DIE, POLICIES, DIE!
+      return this->FilterDataSet<ClipWithImplicitFunction>::MapFieldOntoOutput(
+        result, field, policy);
+    }
+    else
+    {
+      return this->MapFieldOntoOutput(result, field);
+    }
+  }
+
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -51,24 +71,14 @@ public:
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    vtkm::cont::ArrayHandle<T> output;
+    // All other conditions should be handled by MapFieldOntoOutput directly.
+    VTKM_ASSERT(fieldMeta.IsPointField());
 
-    if (fieldMeta.IsPointField())
-    {
-      output = this->Worklet.ProcessPointField(input);
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      output = this->Worklet.ProcessCellField(input);
-    }
-    else
-    {
-      return false;
-    }
+    vtkm::cont::ArrayHandle<T> output;
+    output = this->Worklet.ProcessPointField(input);
 
     //use the same meta data as the input so we get the same field name, etc.
     result.AddField(fieldMeta.AsField(output));
-
     return true;
   }
 

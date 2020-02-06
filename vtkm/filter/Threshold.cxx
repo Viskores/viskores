@@ -10,10 +10,31 @@
 #define vtkm_filter_Threshold_cxx
 #include <vtkm/filter/Threshold.h>
 
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace vtkm
 {
 namespace filter
 {
+
+VTKM_FILTER_EXPORT bool Threshold::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                      const vtkm::cont::Field& field)
+{
+  if (field.IsFieldPoint())
+  {
+    //we copy the input handle to the result dataset, reusing the metadata
+    result.AddField(field);
+    return true;
+  }
+
+  if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
+  }
+
+  return false;
+}
+
 //-----------------------------------------------------------------------------
 VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(Threshold);
 }

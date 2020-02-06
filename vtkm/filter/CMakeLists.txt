@@ -152,6 +152,7 @@ set(sources_device
   ContourInteger.cxx
   ContourScalar.cxx
   ExternalFaces.cxx
+  ExtractGeometry.cxx
   ExtractStructured.cxx
   GradientScalar.cxx
   GradientUniformPoints.cxx

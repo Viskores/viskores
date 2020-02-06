@@ -45,7 +45,7 @@ public:
   };
 
   Tetrahedralize()
-    : OutCellsPerCell()
+    : OutCellScatter(vtkm::cont::ArrayHandle<vtkm::IdComponent>{})
   {
   }
 
@@ -54,14 +54,20 @@ public:
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet)
   {
     TetrahedralizeExplicit worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
+    vtkm::cont::CellSetSingleType<> result = worklet.Run(cellSet, outCellsPerCell);
+    this->OutCellScatter = DistributeCellData::MakeScatter(outCellsPerCell);
+    return result;
   }
 
   // Tetrahedralize structured data set, save number of tetra cells per input
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& cellSet)
   {
     TetrahedralizeStructured worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
+    vtkm::cont::CellSetSingleType<> result = worklet.Run(cellSet, outCellsPerCell);
+    this->OutCellScatter = DistributeCellData::MakeScatter(outCellsPerCell);
+    return result;
   }
 
   vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&)
@@ -76,15 +82,16 @@ public:
   {
     vtkm::cont::ArrayHandle<T> output;
 
-    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(
-      DistributeCellData::MakeScatter(this->OutCellsPerCell));
+    vtkm::worklet::DispatcherMapField<DistributeCellData> dispatcher(this->OutCellScatter);
     dispatcher.Invoke(input, output);
 
     return output;
   }
 
+  DistributeCellData::ScatterType GetOutCellScatter() const { return this->OutCellScatter; }
+
 private:
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellsPerCell;
+  DistributeCellData::ScatterType OutCellScatter;
 };
 }
 } // namespace vtkm::worklet

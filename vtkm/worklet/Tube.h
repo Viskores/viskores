@@ -628,6 +628,15 @@ public:
     return output;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetOutputCellSourceIndex() const
+  {
+    return this->OutputCellSourceIndex;
+  }
+  vtkm::cont::ArrayHandle<vtkm::Id> GetOutputPointSourceIndex() const
+  {
+    return this->OutputPointSourceIndex;
+  }
+
 private:
   bool Capping;
   vtkm::Id NumSides;

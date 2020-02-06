@@ -29,7 +29,12 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
+  //this call is only valid after calling DoExecute.
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>);
+
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
@@ -43,6 +48,8 @@ private:
 }
 } // vtkm::filter
 
+#ifndef vtk_m_filter_Probe_hxx
 #include <vtkm/filter/Probe.hxx>
+#endif
 
 #endif // vtk_m_filter_Probe_h

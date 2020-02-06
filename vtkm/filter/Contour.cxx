@@ -10,6 +10,8 @@
 #define vtkm_filter_Contour_cxx
 #include <vtkm/filter/Contour.h>
 
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace vtkm
 {
 namespace filter
@@ -66,6 +68,29 @@ VTKM_FILTER_EXPORT void Contour::SetIsoValues(const std::vector<vtkm::Float64>& 
 VTKM_FILTER_EXPORT vtkm::Float64 Contour::GetIsoValue(vtkm::Id index) const
 {
   return this->IsoValues[static_cast<std::size_t>(index)];
+}
+
+//-----------------------------------------------------------------------------
+VTKM_FILTER_EXPORT bool Contour::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                    const vtkm::cont::Field& field)
+{
+  if (field.IsFieldPoint())
+  {
+    // Handled by DoMapField, which the superclass will call.
+    // Actually already done by other version of MapFieldOntoOutput. (Stupid policies.)
+    //return this->FilterDataSetWithField<Contour>::MapFieldOntoOutput(result, field, policy);
+    VTKM_ASSERT(false && "Should not be here");
+    return false;
+  }
+  else if (field.IsFieldCell())
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellIdMap();
+    return vtkm::filter::MapFieldPermutation(field, permutation, result);
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 }
