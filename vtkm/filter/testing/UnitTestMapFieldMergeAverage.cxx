@@ -59,8 +59,8 @@ vtkm::cont::ArrayHandle<T> MakeExpectedOutput(const vtkm::cont::ArrayHandle<T, S
     ComponentType num = 0;
     for (vtkm::Id fullI = reducedI; fullI < inputArray.GetNumberOfValues(); fullI += REDUCED_SIZE)
     {
-      sum = sum + inputPortal.Get(fullI);
-      num = num + ComponentType(1);
+      sum = static_cast<T>(sum + inputPortal.Get(fullI));
+      num = static_cast<ComponentType>(num + ComponentType(1));
     }
     outputPortal.Set(reducedI, sum / T(num));
   }
