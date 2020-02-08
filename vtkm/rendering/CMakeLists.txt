@@ -133,6 +133,7 @@ set(device_sources
   raytracing/QuadIntersector.cxx
   raytracing/RayTracer.cxx
   raytracing/RayOperations.cxx
+  raytracing/ScalarRenderer.cxx
   raytracing/ShapeIntersector.cxx
   raytracing/SphereExtractor.cxx
   raytracing/SphereIntersector.cxx

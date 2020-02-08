@@ -33,6 +33,7 @@ set(headers
   RayTracer.h
   RayTracingTypeDefs.h
   Sampler.h
+  ScalarRenderer.h
   ShapeIntersector.h
   SphereExtractor.h
   SphereIntersector.h
