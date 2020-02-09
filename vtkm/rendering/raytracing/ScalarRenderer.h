@@ -27,13 +27,19 @@ namespace raytracing
 class VTKM_RENDERING_EXPORT ScalarRenderer
 {
 protected:
-  std::vector<std::shared_ptr<ShapeIntersector>> Intersectors;
+  std::shared_ptr<ShapeIntersector> Intersector;
   std::vector<vtkm::cont::Field> Fields;
-  Camera camera;
-  vtkm::Id NumberOfShapes;
+  std::vector<vtkm::Range> Ranges;
+  bool IntersectorValid;
 
   template <typename Precision>
-  void RenderOnDevice(Ray<Precision>& rays);
+  void RenderOnDevice(Ray<Precision>& rays, Precision missScalar);
+
+  template <typename Precision>
+  void AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string name);
+
+  template <typename Precision>
+  void AddDepthBuffer(Ray<Precision>& rays);
 
 public:
   VTKM_CONT
@@ -42,25 +48,16 @@ public:
   ~ScalarRenderer();
 
   VTKM_CONT
-  Camera& GetCamera();
-
-  VTKM_CONT
-  void AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersector);
+  void SetShapeIntersector(std::shared_ptr<ShapeIntersector> intersector);
 
   VTKM_CONT
   void AddField(const vtkm::cont::Field& scalarField);
 
   VTKM_CONT
-  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays);
+  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays, vtkm::Float32 missScalar);
 
   VTKM_CONT
-  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays);
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfShapes() const;
-
-  VTKM_CONT
-  void Clear();
+  void Render(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays, vtkm::Float64 missScalar);
 
 }; //class RayTracer
 }
