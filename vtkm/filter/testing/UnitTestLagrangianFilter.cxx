@@ -80,15 +80,17 @@ void TestLagrangianFilterMultiStepInterval()
     {
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 3375,
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 4096,
                        "Wrong number of basis flows extracted.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 2, "Wrong number of fields.");
     }
     else
     {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 0,
-                       "Output dataset should have no cells.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 0,
+                       "Output dataset should have no points.");
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 0,
                        "Wrong number of coordinate systems in the output dataset.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 0, "Wrong number of fields.");
     }
   }
 }
