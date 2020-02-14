@@ -149,6 +149,20 @@ Below is a simple example of using VTK-m to load a VTK image file, run the
 Marching Cubes algorithm on it, and render the results to an image:
 
 ```cpp
+#include <vtkm/Bounds.h>
+#include <vtkm/Range.h>
+#include <vtkm/cont/ColorTable.h>
+#include <vtkm/filter/Contour.h>
+#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View3D.h>
+#include <vtkm/worklet/Normalize.h>
+
 vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
 vtkm::cont::DataSet inputData = reader.ReadDataSet();
 std::string fieldName = "scalars";
@@ -199,6 +213,19 @@ view.Paint();
 view.SaveAs("demo_output.pnm");
 ```
 
+A minimal CMakeLists.txt such as the following one can be used to build this
+example.
+
+```CMake
+project(example)
+
+set(VTKm_DIR "/somepath/lib/cmake/vtkm-XYZ")
+
+find_package(VTKm REQUIRED)
+
+add_executable(example example.cxx)
+target_link_libraries(example vtkm_cont vtkm_rendering)
+```
 
 ## License ##
 
