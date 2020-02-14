@@ -223,4 +223,4 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
 [VTK-m Wiki]:               http://m.vtk.org/
 [VTK-m Tutorial]:           http://m.vtk.org/index.php/Tutorial
-gCONTRIBUTING.md]:          CONTRIBUTING.md
+[CONTRIBUTING.md]:          CONTRIBUTING.md
