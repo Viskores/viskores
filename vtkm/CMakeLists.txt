@@ -25,6 +25,7 @@ set(headers
   CellClassification.h
   CellShape.h
   CellTraits.h
+  Deprecated.h
   Flags.h
   Geometry.h
   Hash.h
@@ -34,6 +35,7 @@ set(headers
   Matrix.h
   NewtonsMethod.h
   Pair.h
+  Particle.h
   Range.h
   RangeId.h
   RangeId2.h
