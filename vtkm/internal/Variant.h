@@ -76,6 +76,37 @@ using std::is_trivially_copyable;
 } // namespace vtkmstd
 #endif
 
+// It would make sense to put this in its own header file.
+#if (defined(VTKM_GCC) && (__GNUC__ == 4))
+#define VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED 1
+
+namespace vtkmstd
+{
+
+// GCC 4.8 and 4.9 claim to support C++11, but do not support std::is_trivially_copyable.
+// There is no relyable way to get this information (since it has to come special from
+// the compiler). For our purposes, we will report as nothing being trivially copyable,
+// which causes us to call the constructors with everything. This should be fine unless
+// some other part of the compiler is trying to check for trivial copies (perhaps nvcc
+// on top of GCC 4.8).
+template <typename>
+struct is_trivially_copyable : std::false_type
+{
+};
+
+} // namespace vtkmstd
+
+#else // is_trivially_copyable supported
+
+namespace vtkmstd
+{
+
+using std::is_trivially_copyable;
+
+} // namespace vtkmstd
+
+#endif // is_trivially_copyable supported
+
 namespace vtkm
 {
 namespace internal
@@ -118,45 +149,45 @@ struct AllTriviallyCopyable<> : std::true_type
 
 template <typename T0>
 struct AllTriviallyCopyable<T0>
-  : std::integral_constant<bool, (std::is_trivially_copyable<T0>::value)>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_copyable<T0>::value)>
 {
 };
 
 template <typename T0, typename T1>
 struct AllTriviallyCopyable<T0, T1>
   : std::integral_constant<bool,
-                           (std::is_trivially_copyable<T0>::value &&
-                            std::is_trivially_copyable<T1>::value)>
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value)>
 {
 };
 
 template <typename T0, typename T1, typename T2>
 struct AllTriviallyCopyable<T0, T1, T2>
   : std::integral_constant<bool,
-                           (std::is_trivially_copyable<T0>::value &&
-                            std::is_trivially_copyable<T1>::value &&
-                            std::is_trivially_copyable<T2>::value)>
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value)>
 {
 };
 
 template <typename T0, typename T1, typename T2, typename T3>
 struct AllTriviallyCopyable<T0, T1, T2, T3>
   : std::integral_constant<bool,
-                           (std::is_trivially_copyable<T0>::value &&
-                            std::is_trivially_copyable<T1>::value &&
-                            std::is_trivially_copyable<T2>::value &&
-                            std::is_trivially_copyable<T3>::value)>
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value &&
+                            vtkmstd::is_trivially_copyable<T3>::value)>
 {
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
 struct AllTriviallyCopyable<T0, T1, T2, T3, T4, Ts...>
   : std::integral_constant<bool,
-                           (std::is_trivially_copyable<T0>::value &&
-                            std::is_trivially_copyable<T1>::value &&
-                            std::is_trivially_copyable<T2>::value &&
-                            std::is_trivially_copyable<T3>::value &&
-                            std::is_trivially_copyable<T4>::value &&
+                           (vtkmstd::is_trivially_copyable<T0>::value &&
+                            vtkmstd::is_trivially_copyable<T1>::value &&
+                            vtkmstd::is_trivially_copyable<T2>::value &&
+                            vtkmstd::is_trivially_copyable<T3>::value &&
+                            vtkmstd::is_trivially_copyable<T4>::value &&
                             AllTriviallyCopyable<Ts...>::value)>
 {
 };
