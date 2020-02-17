@@ -55,6 +55,32 @@ struct TestZeroPortal
   ValueType Get(vtkm::Id) const { return 0; }
 };
 
+template <vtkm::IdComponent IndexToReplace, typename U>
+struct replace
+{
+  U theReplacement;
+
+  template <typename T, vtkm::IdComponent Index>
+  struct ReturnType
+  {
+    using type = typename std::conditional<Index == IndexToReplace, U, T>::type;
+  };
+
+  template <typename T, vtkm::IdComponent Index>
+  VTKM_CONT typename ReturnType<T, Index>::type operator()(T&& x,
+                                                           vtkm::internal::IndexTag<Index>) const
+  {
+    return x;
+  }
+
+  template <typename T>
+  VTKM_CONT U operator()(T&&, vtkm::internal::IndexTag<IndexToReplace>) const
+  {
+    return theReplacement;
+  }
+};
+
+
 template <vtkm::IdComponent InputDomainIndex, vtkm::IdComponent ParamIndex, typename T>
 struct FetchArrayTopologyMapInTests
 {
