@@ -13,6 +13,31 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
+namespace vtkmstd
+{
+/// Implementation of std::void_t (C++17):
+/// Allows for specialization of class templates based on members of template
+/// parameters.
+#if defined(VTKM_GCC) && (__GNUC__ < 5)
+// Due to a defect in the wording (CWG 1558) unused parameters in alias templates
+// were not guaranteed to ensure SFINAE, and therefore would consider everything
+// to match the 'true' side. For VTK-m the only known compiler that implemented
+// this defect is GCC < 5.
+template <class... T>
+struct void_pack
+{
+  using type = void;
+};
+template <class... T>
+using void_t = typename void_pack<T...>::type;
+#else
+template <typename...>
+using void_t = void;
+#endif
+
+
+} // end namespace vtkmstd
+
 namespace vtkm
 {
 namespace cont
