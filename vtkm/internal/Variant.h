@@ -14,11 +14,9 @@
 
 #include <vtkm/ListTag.h>
 
-
+#if defined(VTKM_USING_GLIBCXX_4)
 // It would make sense to put this in its own header file, but it is hard to imagine needing
 // aligned_union anywhere else.
-#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || defined(VTKM_ICC)
-
 #include <algorithm>
 namespace vtkmstd
 {
@@ -54,17 +52,28 @@ struct aligned_union
   using type =
     vtkmstd::aligned_data_block<alignment_value, vtkmstd::max_size<Len, sizeof(Types)...>::value>;
 };
+
+// GCC 4.8 and 4.9 standard library does not support std::is_trivially_copyable.
+// There is no relyable way to get this information (since it has to come special from
+// the compiler). For our purposes, we will report as nothing being trivially copyable,
+// which causes us to call the constructors with everything. This should be fine unless
+// some other part of the compiler is trying to check for trivial copies (perhaps nvcc
+// on top of GCC 4.8).
+template <typename>
+struct is_trivially_copyable : std::false_type
+{
+};
+
 } // namespace vtkmstd
 
-#else // aligned_union supported
-
+#else // NOT VTKM_USING_GLIBCXX_4
 namespace vtkmstd
 {
 
 using std::aligned_union;
+using std::is_trivially_copyable;
 
 } // namespace vtkmstd
-
 #endif
 
 namespace vtkm

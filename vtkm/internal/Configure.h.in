@@ -156,6 +156,26 @@
 #define VTKM_THIRDPARTY_POST_INCLUDE
 #endif
 
+#if defined(__GLIBCXX__) &&                                                                        \
+  (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626)
+// GCC release date mapping
+// 20160726 == 4.9.4
+// 20150626 == 4.9.3
+// 20150422 == 5.1
+// 20141030 == 4.9.2
+// See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html#abi.versioning.__GLIBCXX__
+// Some context on why this check is useful
+// Components of the c++ standard such as `std::aligned_union` are not something
+// intrinsic to compiler but part of the standard library. Therefore support for these
+// features are determined by what standard library is used versus the compiler.
+// For example by default Intel, PGI, and IBM compilers use the standard library
+// that is provided by a systems default C++ compiler ( generally gcc ). For this
+// reason we have a define that states we are compiling with GLIBCXX_4 which
+// is missing some usefull C++ standard library components
+//
+#define VTKM_USING_GLIBCXX_4
+#endif
+
 //Determine if current compiler supports vectorization pragma's
 //if so set the define VTKM_COMPILER_SUPPORTS_VECTOR_PRAGMAS
 //
