@@ -22,7 +22,6 @@
 #include <vtkm/rendering/raytracing/SphereIntersector.h>
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 namespace vtkm
 {
@@ -183,7 +182,7 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   return result;
 }
 
-void ScalarRenderer::Result::SaveVTK(const std::string filename)
+vtkm::cont::DataSet ScalarRenderer::Result::ToDataSet()
 {
   if (Scalars.size() == 0)
   {
@@ -212,8 +211,7 @@ void ScalarRenderer::Result::SaveVTK(const std::string filename)
 
   result.AddField(vtkm::cont::Field("depth", vtkm::cont::Field::Association::CELL_SET, Depths));
 
-  vtkm::io::writer::VTKDataSetWriter writer(filename + ".vtk");
-  writer.WriteDataSet(result);
+  return result;
 }
 }
 } // vtkm::rendering

@@ -8,9 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/rendering/ScalarRenderer.h>
 #include <vtkm/rendering/testing/RenderTest.h>
-#include <vtkm/source/Tangle.h>
 
 namespace
 {
@@ -30,7 +30,9 @@ void RenderTests()
   renderer.SetInput(dataset);
   vtkm::rendering::ScalarRenderer::Result res = renderer.Render(camera);
 
-  res.SaveVTK("scalar");
+  vtkm::cont::DataSet result = res.ToDataSet();
+  vtkm::io::writer::VTKDataSetWriter writer("scalar.vtk");
+  writer.WriteDataSet(result);
 }
 
 } //namespace

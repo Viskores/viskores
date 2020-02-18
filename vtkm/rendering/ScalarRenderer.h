@@ -42,7 +42,7 @@ public:
     std::vector<std::string> ScalarNames;
     std::map<std::string, vtkm::Range> Ranges;
 
-    void SaveVTK(const std::string filename);
+    vtkm::cont::DataSet ToDataSet();
   };
 
   ScalarRenderer::Result Render(const vtkm::rendering::Camera& camera);
