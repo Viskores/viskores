@@ -63,6 +63,9 @@ public:
                      const vtkm::Int32 width,
                      const vtkm::Int32 height);
 
+  VTKM_CONT
+  void SetParameters(const vtkm::rendering::Camera& camera,
+                     vtkm::rendering::CanvasRayTracer& canvas);
 
   VTKM_CONT
   void SetHeight(const vtkm::Int32& height);
