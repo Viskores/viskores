@@ -63,6 +63,7 @@ set(headers
   MapperConnectivity.h
   MapperWireframer.h
   Quadralizer.h
+  ScalarRenderer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -109,6 +110,7 @@ set(device_sources
   MapperRayTracer.cxx
   MapperVolume.cxx
   MapperWireframer.cxx
+  ScalarRenderer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx

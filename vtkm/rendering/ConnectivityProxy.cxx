@@ -210,7 +210,7 @@ public:
       throw vtkm::cont::ErrorBadValue("Conn Proxy: null canvas");
     }
     vtkm::rendering::raytracing::Camera rayCamera;
-    rayCamera.SetParameters(camera, *canvas);
+    rayCamera.SetParameters(camera, canvas->GetWidth(), canvas->GetHeight());
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, this->Coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);

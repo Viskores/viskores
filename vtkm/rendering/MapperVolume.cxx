@@ -14,7 +14,6 @@
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
-
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -103,7 +102,10 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     vtkm::rendering::raytracing::Camera rayCamera;
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
 
-    rayCamera.SetParameters(camera, *this->Internals->Canvas);
+    vtkm::Int32 width = this->Internals->Canvas->GetWidth();
+    vtkm::Int32 height = this->Internals->Canvas->GetHeight();
+
+    rayCamera.SetParameters(camera, width, height);
 
     rayCamera.CreateRays(rays, coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);

@@ -31,6 +31,34 @@ namespace raytracing
 namespace detail
 {
 template <typename Precision>
+class FilterDepth : public vtkm::worklet::WorkletMapField
+{
+private:
+  Precision MissScalar;
+
+public:
+  VTKM_CONT
+  FilterDepth(const Precision missScalar)
+    : MissScalar(missScalar)
+  {
+  }
+
+  typedef void ControlSignature(FieldIn, FieldInOut);
+
+  typedef void ExecutionSignature(_1, _2);
+  VTKM_EXEC void operator()(const vtkm::Id& hitIndex, Precision& scalar) const
+  {
+    Precision value = scalar;
+    if (hitIndex < 0)
+    {
+      value = MissScalar;
+    }
+
+    scalar = value;
+  }
+}; //class WriteBuffer
+
+template <typename Precision>
 class WriteBuffer : public vtkm::worklet::WorkletMapField
 {
 private:
@@ -149,6 +177,10 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays, Precision missScalar)
     logger->AddLogData("intersection_data", time);
     AddBuffer(rays, missScalar, Fields[f].GetName());
   }
+
+  vtkm::worklet::DispatcherMapField<detail::FilterDepth<Precision>>(
+    detail::FilterDepth<Precision>(missScalar))
+    .Invoke(rays.HitIdx, rays.Distance);
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);
