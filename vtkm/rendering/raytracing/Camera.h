@@ -60,8 +60,8 @@ public:
 
   VTKM_CONT
   void SetParameters(const vtkm::rendering::Camera& camera,
-                     const vtkm::Int32 width,
-                     const vtkm::Int32 height);
+                     const vtkm::Id width,
+                     const vtkm::Id height);
 
 
   VTKM_CONT

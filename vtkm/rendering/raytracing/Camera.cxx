@@ -494,16 +494,16 @@ Camera::~Camera()
 
 VTKM_CONT
 void Camera::SetParameters(const vtkm::rendering::Camera& camera,
-                           const vtkm::Int32 width,
-                           const vtkm::Int32 height)
+                           const vtkm::Id width,
+                           const vtkm::Id height)
 {
   this->SetUp(camera.GetViewUp());
   this->SetLookAt(camera.GetLookAt());
   this->SetPosition(camera.GetPosition());
   this->SetZoom(camera.GetZoom());
   this->SetFieldOfView(camera.GetFieldOfView());
-  this->SetHeight(height);
-  this->SetWidth(width);
+  this->SetHeight(vtkm::Int32(height));
+  this->SetWidth(vtkm::Int32(width));
   this->CameraView = camera;
 }
 
