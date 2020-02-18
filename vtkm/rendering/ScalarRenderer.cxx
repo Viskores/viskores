@@ -166,8 +166,6 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   raytracing::ChannelBuffer<vtkm::Float32> depthExpanded =
     depthChannel.ExpandBuffer(rays.PixelIdx, expandSize, Internals->DefaultValue);
 
-  res.push_back(depthExpanded.Buffer);
-  names.push_back("depth");
 
   Result result;
   result.Width = Internals->Width;
@@ -175,6 +173,7 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
   result.Scalars = res;
   result.ScalarNames = names;
   result.Ranges = rangeMap;
+  result.Depths = depthExpanded.Buffer;
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("write_to_canvas", time);
@@ -210,6 +209,8 @@ void ScalarRenderer::Result::SaveVTK(const std::string filename)
     result.AddField(
       vtkm::cont::Field(ScalarNames[i], vtkm::cont::Field::Association::CELL_SET, Scalars[i]));
   }
+
+  result.AddField(vtkm::cont::Field("depth", vtkm::cont::Field::Association::CELL_SET, Depths));
 
   vtkm::io::writer::VTKDataSetWriter writer(filename + ".vtk");
   writer.WriteDataSet(result);

@@ -37,6 +37,7 @@ public:
   {
     vtkm::Int32 Width;
     vtkm::Int32 Height;
+    vtkm::cont::ArrayHandle<vtkm::Float32> Depths;
     std::vector<vtkm::cont::ArrayHandle<vtkm::Float32>> Scalars;
     std::vector<std::string> ScalarNames;
     std::map<std::string, vtkm::Range> Ranges;
