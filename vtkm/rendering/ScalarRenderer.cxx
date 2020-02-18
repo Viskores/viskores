@@ -103,7 +103,7 @@ void ScalarRenderer::SetInput(vtkm::cont::DataSet& dataSet)
 ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& camera)
 {
 
-  if (Internals->ValidDataSet)
+  if (!Internals->ValidDataSet)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: input never set");
   }
