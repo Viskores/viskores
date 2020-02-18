@@ -33,7 +33,7 @@ public:
   void SetHeight(const vtkm::Int32 height);
   void SetDefaultValue(vtkm::Float32 value);
 
-  struct Result
+  struct VTKM_RENDERING_EXPORT Result
   {
     vtkm::Int32 Width;
     vtkm::Int32 Height;
