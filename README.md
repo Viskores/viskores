@@ -28,6 +28,12 @@ You can find out more about the design of VTK-m on the [VTK-m Wiki].
       + "Part 4: Advanced Development" covers topics such as new worklet
         types and custom device adapters.
 
+  + A practical [VTK-m Tutorial] based in what users want to accomplish with
+    VTK-m:
+      + Building VTK-m and using existing VTK-m data structures and filters.
+      + Algorithm development with VTK-m.
+      + Writing new VTK-m filters.
+
   + Community discussion takes place on the [VTK-m users email list].
 
   + Doxygen-generated nightly reference documentation is available
@@ -216,4 +222,5 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
 [VTK-m Wiki]:               http://m.vtk.org/
-[CONTRIBUTING.md]:          CONTRIBUTING.md
+[VTK-m Tutorial]:           http://m.vtk.org/index.php/Tutorial
+gCONTRIBUTING.md]:          CONTRIBUTING.md
