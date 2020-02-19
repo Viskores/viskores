@@ -90,22 +90,28 @@ inline VTKM_CONT bool Triangulate::MapFieldOntoOutput(vtkm::cont::DataSet& resul
                                                       const vtkm::cont::Field& field,
                                                       vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  // point data is copied as is because it was not collapsed
   if (field.IsFieldPoint())
   {
+    // point data is copied as is because it was not collapsed
     result.AddField(field);
     return true;
   }
-
-  // cell data must be scattered to the cells created per input cell
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
+    // cell data must be scattered to the cells created per input cell
     vtkm::cont::ArrayHandle<vtkm::Id> permutation =
       this->Worklet.GetOutCellScatter().GetOutputToInputMap();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 }

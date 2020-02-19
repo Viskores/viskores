@@ -82,8 +82,15 @@ bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIdMap(), result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------

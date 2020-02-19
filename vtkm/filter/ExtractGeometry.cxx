@@ -39,6 +39,11 @@ VTKM_FILTER_EXPORT bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet&
     vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetValidCellIds();
     return vtkm::filter::MapFieldPermutation(field, permutation, result);
   }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
   else
   {
     return false;

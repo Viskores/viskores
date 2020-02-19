@@ -56,13 +56,19 @@ inline VTKM_CONT bool VertexClustering::MapFieldOntoOutput(vtkm::cont::DataSet& 
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetPointIdMap(), result);
   }
-
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIdMap(), result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 }

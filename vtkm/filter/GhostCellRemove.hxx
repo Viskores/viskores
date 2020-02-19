@@ -376,6 +376,11 @@ VTKM_CONT bool GhostCellRemove::MapFieldOntoOutput(vtkm::cont::DataSet& result,
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
   }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
   else
   {
     return false;

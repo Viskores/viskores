@@ -84,9 +84,16 @@ inline VTKM_CONT bool ExtractPoints::MapFieldOntoOutput(
       return true;
     }
   }
-
-  // cell data does not apply
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
 }
 }

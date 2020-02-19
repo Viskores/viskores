@@ -73,7 +73,7 @@ inline VTKM_CONT bool Mask::MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                                const vtkm::cont::Field& field,
                                                vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (field.IsFieldPoint())
+  if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
     result.AddField(field); // pass through
     return true;

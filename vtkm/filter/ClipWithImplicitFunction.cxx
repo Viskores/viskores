@@ -11,34 +11,10 @@
 #define vtkm_filter_ClipWithImplicitFunction_cxx
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
-#include <vtkm/filter/MapFieldPermutation.h>
-
 namespace vtkm
 {
 namespace filter
 {
-
-VTKM_FILTER_EXPORT bool ClipWithImplicitFunction::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                                     const vtkm::cont::Field& field)
-{
-  if (field.IsFieldPoint())
-  {
-    // Handled by DoMapField, which the superclass will call.
-    // Actually already done by other version of MapFieldOntoOutput. (Stupid policies.)
-    //return this->FilterDataSet<ClipWithImplicitFunction>::MapFieldOntoOutput(result, field, policy);
-    VTKM_ASSERT(false && "Should not be here");
-    return false;
-  }
-  else if (field.IsFieldCell())
-  {
-    vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellMapOutputToInput();
-    return vtkm::filter::MapFieldPermutation(field, permutation, result);
-  }
-  else
-  {
-    return false;
-  }
-}
 //-----------------------------------------------------------------------------
 VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ClipWithImplicitFunction);
 }

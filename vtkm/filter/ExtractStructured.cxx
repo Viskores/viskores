@@ -36,13 +36,19 @@ bool ExtractStructured::MapFieldOntoOutput(vtkm::cont::DataSet& result,
   {
     return vtkm::filter::MapFieldPermutation(field, this->PointFieldMap, result);
   }
-
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
     return vtkm::filter::MapFieldPermutation(field, this->CellFieldMap, result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------

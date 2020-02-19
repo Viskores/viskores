@@ -64,14 +64,20 @@ inline VTKM_CONT bool Tube::MapFieldOntoOutput(vtkm::cont::DataSet& result,
     return vtkm::filter::MapFieldPermutation(
       field, this->Worklet.GetOutputPointSourceIndex(), result);
   }
-
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
     return vtkm::filter::MapFieldPermutation(
       field, this->Worklet.GetOutputCellSourceIndex(), result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 } // namespace vtkm::filter

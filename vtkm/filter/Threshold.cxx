@@ -20,19 +20,20 @@ namespace filter
 VTKM_FILTER_EXPORT bool Threshold::MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                                       const vtkm::cont::Field& field)
 {
-  if (field.IsFieldPoint())
+  if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
     //we copy the input handle to the result dataset, reusing the metadata
     result.AddField(field);
     return true;
   }
-
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
   }
-
-  return false;
+  else
+  {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------

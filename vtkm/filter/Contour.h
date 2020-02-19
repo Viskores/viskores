@@ -14,6 +14,8 @@
 #include <vtkm/filter/vtkm_filter_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+
 #include <vtkm/worklet/Contour.h>
 
 namespace vtkm
@@ -111,9 +113,6 @@ public:
                                 const vtkm::filter::FieldMetadata& fieldMeta,
                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                       const vtkm::cont::Field& field);
-
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
@@ -121,12 +120,25 @@ public:
   {
     if (field.IsFieldPoint())
     {
-      // DIE, POLICIES, DIE!
+      // If the field is a point field, then we need to do a custom interpolation of the points.
+      // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+      // call our DoMapField.
       return this->FilterDataSetWithField<Contour>::MapFieldOntoOutput(result, field, policy);
+    }
+    else if (field.IsFieldCell())
+    {
+      // Use the precompiled field permutation function.
+      vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellIdMap();
+      return vtkm::filter::MapFieldPermutation(field, permutation, result);
+    }
+    else if (field.IsFieldGlobal())
+    {
+      result.AddField(field);
+      return true;
     }
     else
     {
-      return this->MapFieldOntoOutput(result, field);
+      return false;
     }
   }
 

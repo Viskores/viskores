@@ -54,17 +54,24 @@ VTKM_CONT inline bool Probe::MapFieldOntoOutput(vtkm::cont::DataSet& result,
 {
   if (field.IsFieldPoint())
   {
-    // This is a special interpolation that is handled by DoMapField. The superclass'
-    // MapFieldOntoOutput will handle this.
+    // If the field is a point field, then we need to do a custom interpolation of the points.
+    // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+    // call our DoMapField.
     return this->FilterDataSet<Probe>::MapFieldOntoOutput(result, field, policy);
   }
-
-  if (field.IsFieldCell())
+  else if (field.IsFieldCell())
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIds(), result);
   }
-
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy>

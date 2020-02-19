@@ -76,9 +76,16 @@ inline VTKM_CONT bool MaskPoints::MapFieldOntoOutput(vtkm::cont::DataSet& result
       return true;
     }
   }
-
-  // cell data does not apply
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
 }
 }

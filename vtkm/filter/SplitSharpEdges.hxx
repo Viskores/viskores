@@ -68,7 +68,7 @@ inline VTKM_CONT bool SplitSharpEdges::MapFieldOntoOutput(vtkm::cont::DataSet& r
   {
     return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetNewPointsIdArray(), result);
   }
-  else if (field.IsFieldCell())
+  else if (field.IsFieldCell() || field.IsFieldGlobal())
   {
     result.AddField(field); // pass through
     return true;
