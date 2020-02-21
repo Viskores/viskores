@@ -16,11 +16,6 @@ namespace vtkm
 namespace filter
 {
 
-VTKM_CONT ImageConnectivity::ImageConnectivity()
-{
-  this->SetOutputFieldName("component");
-}
-
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ImageConnectivity::DoExecute(
   const vtkm::cont::DataSet& input,
