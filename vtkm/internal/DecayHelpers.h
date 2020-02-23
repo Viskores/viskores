@@ -14,8 +14,6 @@
 
 namespace vtkm
 {
-namespace worklet
-{
 namespace internal
 {
 
@@ -25,6 +23,5 @@ using remove_pointer_and_decay = typename std::remove_pointer<typename std::deca
 template <typename T>
 using remove_cvref = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 }
-}
-}
+} // namespace vtkm::internal
 #endif
