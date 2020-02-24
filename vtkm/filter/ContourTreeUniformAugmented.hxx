@@ -205,8 +205,8 @@ public:
       // may need to change back when porting ot later verison of VTKM/vtkmdiy
       vtkmdiy::DiscreteBounds domain; //(2);
       domain.min[0] = domain.min[1] = 0;
-      domain.max[0] = (int)this->GlobalSize[0];
-      domain.max[1] = (int)this->GlobalSize[1];
+      domain.max[0] = static_cast<int>(this->GlobalSize[0]);
+      domain.max[1] = static_cast<int>(this->GlobalSize[1]);
       return domain;
     }
     else
@@ -214,9 +214,9 @@ public:
       // may need to change back when porting to later version of VTMK/vtkmdiy
       vtkmdiy::DiscreteBounds domain; //(3);
       domain.min[0] = domain.min[1] = domain.min[2] = 0;
-      domain.max[0] = (int)this->GlobalSize[0];
-      domain.max[1] = (int)this->GlobalSize[1];
-      domain.max[2] = (int)this->GlobalSize[2];
+      domain.max[0] = static_cast<int>(this->GlobalSize[0]);
+      domain.max[1] = static_cast<int>(this->GlobalSize[1]);
+      domain.max[2] = static_cast<int>(this->GlobalSize[2]);
       return domain;
     }
   }
