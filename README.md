@@ -155,6 +155,19 @@ Below is a simple example of using VTK-m to load a VTK image file, run the
 Marching Cubes algorithm on it, and render the results to an image:
 
 ```cpp
+#include <vtkm/Bounds.h>
+#include <vtkm/Range.h>
+#include <vtkm/cont/ColorTable.h>
+#include <vtkm/filter/Contour.h>
+#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View3D.h>
+
 vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
 vtkm::cont::DataSet inputData = reader.ReadDataSet();
 std::string fieldName = "scalars";
@@ -171,21 +184,10 @@ vtkm::cont::DataSet outputData = filter.Execute(inputData);
 
 // compute the bounds and extends of the input data
 vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
-vtkm::Vec<vtkm::Float64,3> totalExtent( coordsBounds.X.Length(),
-                                        coordsBounds.Y.Length(),
-                                        coordsBounds.Z.Length() );
-vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
-vtkm::Normalize(totalExtent);
 
 // setup a camera and point it to towards the center of the input data
 vtkm::rendering::Camera camera;
 camera.ResetToBounds(coordsBounds);
-
-camera.SetLookAt(totalExtent*(mag * .5f));
-camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
-camera.SetClippingRange(1.f, 100.f);
-camera.SetFieldOfView(60.f);
-camera.SetPosition(totalExtent*(mag * 2.f));
 vtkm::cont::ColorTable colorTable("inferno");
 
 // Create a mapper, canvas and view that will be used to render the scene
@@ -205,6 +207,19 @@ view.Paint();
 view.SaveAs("demo_output.pnm");
 ```
 
+A minimal CMakeLists.txt such as the following one can be used to build this
+example.
+
+```CMake
+project(example)
+
+set(VTKm_DIR "/somepath/lib/cmake/vtkm-XYZ")
+
+find_package(VTKm REQUIRED)
+
+add_executable(example example.cxx)
+target_link_libraries(example vtkm_cont vtkm_rendering)
+```
 
 ## License ##
 
