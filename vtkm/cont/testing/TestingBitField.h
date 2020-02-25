@@ -187,9 +187,6 @@ struct TestingBitField
       return true;
     };
 
-    portal.SetBit(i, bit);
-    DEVICE_ASSERT(testValues("SetBit"));
-
     bit = mod;
     portal.SetBitAtomic(i, mod);
     DEVICE_ASSERT(testValues("SetBitAtomic"));

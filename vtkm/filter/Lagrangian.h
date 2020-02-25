@@ -63,10 +63,13 @@ public:
   void UpdateSeedResolution(vtkm::cont::DataSet input);
 
   VTKM_CONT
-  void WriteDataSet(vtkm::Id cycle, const std::string& filename, vtkm::cont::DataSet dataset);
+  void InitializeSeedPositions(const vtkm::cont::DataSet& input);
 
   VTKM_CONT
-  void InitializeUniformSeeds(const vtkm::cont::DataSet& input);
+  void InitializeCoordinates(const vtkm::cont::DataSet& input,
+                             std::vector<Float64>& xC,
+                             std::vector<Float64>& yC,
+                             std::vector<Float64>& zC);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(

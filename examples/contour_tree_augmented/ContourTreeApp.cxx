@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
   // Compute the number of vertices, i.e., xdim * ydim * zdim
   unsigned short nDims = static_cast<unsigned short>(dims.size());
   std::size_t numVertices = static_cast<std::size_t>(
-    std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<std::size_t>()));
+    std::accumulate(dims.begin(), dims.end(), std::size_t(1), std::multiplies<std::size_t>()));
 
   // Print the mesh metadata
   if (rank == 0)
