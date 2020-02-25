@@ -15,28 +15,17 @@
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/StaticAssert.h>
+#include <vtkm/Tuple.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
 #include <vtkm/internal/brigand.hpp>
 
-#include <vtkmtaotuple/include/Tuple.h>
-#include <vtkmtaotuple/include/tao/seq/make_integer_sequence.hpp>
+#include <vtkmstd/integer_sequence.h>
 
 
 #include <type_traits>
 #include <utility>
-
-// Some compilers like brigand's integer sequences.
-// Some compilers prefer tao's.
-// Brigand seems to have more support, so we'll use that as default and fallback
-// to tao when brigand fails. With C++14, we'll be able to just use the STL.
-#if !defined(VTKM_CUDA_DEVICE_PASS) &&                                                             \
-  (defined(VTKM_GCC) ||                                                                            \
-   (defined(__apple_build_version__) && (__apple_build_version__ >= 10000000)) ||                  \
-   (defined(VTKM_CLANG) && (__clang_major__ >= 5)))
-#define VTKM_USE_TAO_SEQ
-#endif
 
 namespace vtkm
 {
@@ -407,14 +396,10 @@ struct DecoratorStorageTraits
                          "ArrayHandleDecorator must be a list of ArrayHandle "
                          "types.");
 
-  using ArrayTupleType = vtkmstd::tuple<ArrayTs...>;
+  using ArrayTupleType = vtkm::Tuple<ArrayTs...>;
 
-// size_t integral constants that index ArrayTs:
-#ifndef VTKM_USE_TAO_SEQ
-  using IndexList = brigand::make_sequence<brigand::size_t<0>, sizeof...(ArrayTs)>;
-#else  // VTKM_USE_TAO_SEQ
-  using IndexList = tao::seq::make_index_sequence<sizeof...(ArrayTs)>;
-#endif // VTKM_USE_TAO_SEQ
+  // size_t integral constants that index ArrayTs:
+  using IndexList = vtkmstd::make_index_sequence<sizeof...(ArrayTs)>;
 
   // true_type/false_type depending on whether the decorator supports Allocate/Shrink:
   using IsAllocatable = IsDecoratorAllocatable<DecoratorImplT, ArrayList>;
@@ -532,13 +517,12 @@ struct DecoratorStorageTraits
   }
 
 
-#ifndef VTKM_USE_TAO_SEQ
   // Portal construction methods. These actually create portals.
-  template <template <typename...> class List, typename... Indices>
+  template <template <typename, std::size_t...> class List, std::size_t... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
                                                        ArrayTupleType& arrays,
                                                        vtkm::Id numValues,
-                                                       List<Indices...>)
+                                                       List<std::size_t, Indices...>)
   {
     return CreatePortalDecorator<PortalControlType>(
       numValues,
@@ -551,100 +535,7 @@ struct DecoratorStorageTraits
       // Indices{}.value : Works on both MSVC2015 and MSVC2017.
       //
       // Don't touch the following line unless you really, really have to.
-      WritePortal(vtkmstd::get<Indices{}.value>(arrays))...);
-  }
-
-  template <template <typename...> class List, typename... Indices>
-  VTKM_CONT static PortalConstControlType MakePortalConstControl(const DecoratorImplT& impl,
-                                                                 const ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<Indices...>)
-  {
-    return CreatePortalDecorator<PortalConstControlType>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      ReadPortal(vtkmstd::get<Indices{}.value>(arrays))...);
-  }
-
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(const DecoratorImplT& impl,
-                                                                    const ArrayTupleType& arrays,
-                                                                    vtkm::Id numValues,
-                                                                    List<Indices...>,
-                                                                    Device dev,
-                                                                    vtkm::cont::Token& token)
-  {
-    return CreatePortalDecorator<PortalConstExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInput(vtkmstd::get<Indices{}.value>(arrays), dev, token)...);
-  }
-
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(const DecoratorImplT& impl,
-                                                                 ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<Indices...>,
-                                                                 Device dev,
-                                                                 vtkm::cont::Token& token)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInPlace(vtkmstd::get<Indices{}.value>(arrays), dev, token)...);
-  }
-
-  template <template <typename...> class List, typename... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalOutput(const DecoratorImplT& impl,
-                                                                ArrayTupleType& arrays,
-                                                                vtkm::Id numValues,
-                                                                List<Indices...>,
-                                                                Device dev,
-                                                                vtkm::cont::Token& token)
-  {
-    return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalOutput(vtkmstd::get<Indices{}.value>(arrays), dev, token)...);
-  }
-
-  template <template <typename...> class List, typename... Indices>
-  VTKM_CONT static void AllocateSourceArrays(const DecoratorImplT& impl,
-                                             ArrayTupleType& arrays,
-                                             vtkm::Id numValues,
-                                             List<Indices...>)
-  {
-    CallAllocate(IsAllocatable{}, impl, numValues, vtkmstd::get<Indices{}.value>(arrays)...);
-  }
-
-  template <template <typename...> class List, typename... Indices>
-  VTKM_CONT static void ShrinkSourceArrays(const DecoratorImplT& impl,
-                                           ArrayTupleType& arrays,
-                                           vtkm::Id numValues,
-                                           List<Indices...>)
-  {
-    CallShrink(IsShrinkable{}, impl, numValues, vtkmstd::get<Indices{}.value>(arrays)...);
-  }
-
-#else // VTKM_USE_TAO_SEQ
-
-  // Portal construction methods. These actually create portals.
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
-  VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
-                                                       ArrayTupleType& arrays,
-                                                       vtkm::Id numValues,
-                                                       List<std::size_t, Indices...>)
-  {
-    return CreatePortalDecorator<PortalControlType>(
-      numValues, impl, WritePortal(vtkmstd::get<Indices>(arrays))...);
+      WritePortal(vtkm::Get<Indices>(arrays))...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
@@ -654,7 +545,11 @@ struct DecoratorStorageTraits
                                                                  List<std::size_t, Indices...>)
   {
     return CreatePortalDecorator<PortalConstControlType>(
-      numValues, impl, ReadPortal(vtkmstd::get<Indices>(arrays))...);
+      numValues,
+      impl,
+      // Don't touch the following line unless you really, really have to. See
+      // note in MakePortalControl.
+      ReadPortal(vtkm::Get<Indices>(arrays))...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
@@ -666,7 +561,11 @@ struct DecoratorStorageTraits
                                                                     vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalConstExecutionType<Device>>(
-      numValues, impl, GetPortalInput(vtkmstd::get<Indices>(arrays), dev, token)...);
+      numValues,
+      impl,
+      // Don't touch the following line unless you really, really have to. See
+      // note in MakePortalControl.
+      GetPortalInput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
@@ -678,7 +577,11 @@ struct DecoratorStorageTraits
                                                                  vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues, impl, GetPortalInPlace(vtkmstd::get<Indices>(arrays), dev, token)...);
+      numValues,
+      impl,
+      // Don't touch the following line unless you really, really have to. See
+      // note in MakePortalControl.
+      GetPortalInPlace(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
@@ -690,7 +593,11 @@ struct DecoratorStorageTraits
                                                                 vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues, impl, GetPortalOutput(vtkmstd::get<Indices>(arrays), dev, token)...);
+      numValues,
+      impl,
+      // Don't touch the following line unless you really, really have to. See
+      // note in MakePortalControl.
+      GetPortalOutput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
@@ -699,7 +606,7 @@ struct DecoratorStorageTraits
                                              vtkm::Id numValues,
                                              List<std::size_t, Indices...>)
   {
-    CallAllocate(IsAllocatable{}, impl, numValues, vtkmstd::get<Indices>(arrays)...);
+    CallAllocate(IsAllocatable{}, impl, numValues, vtkm::Get<Indices>(arrays)...);
   }
 
   template <template <typename, std::size_t...> class List, std::size_t... Indices>
@@ -708,10 +615,8 @@ struct DecoratorStorageTraits
                                            vtkm::Id numValues,
                                            List<std::size_t, Indices...>)
   {
-    CallShrink(IsShrinkable{}, impl, numValues, vtkmstd::get<Indices>(arrays)...);
+    CallShrink(IsShrinkable{}, impl, numValues, vtkm::Get<Indices>(arrays)...);
   }
-
-#endif // VTKM_USE_TAO_SEQ
 };
 
 } // end namespace decor
@@ -1030,7 +935,7 @@ public:
   ArrayHandleDecorator(vtkm::Id numValues,
                        const typename std::decay<DecoratorImplT>::type& impl,
                        const typename std::decay<ArrayTs>::type&... arrays)
-    : Superclass{ StorageType{ impl, vtkmstd::make_tuple(arrays...), numValues } }
+    : Superclass{ StorageType{ impl, vtkm::MakeTuple(arrays...), numValues } }
   {
   }
 };
