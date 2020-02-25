@@ -60,6 +60,33 @@ public:
   {
   }
 
+  // Even though these do not do anything the default implementation does not, they are defined so
+  // that the CUDA compiler does not try to compile it for devices and then fail because the
+  // std::shared_ptr does not work on CUDA devices.
+  VTKM_CONT ArrayPortalToken(const ArrayPortalToken& src)
+    : Superclass(src)
+    , Token(src.Token)
+  {
+  }
+  VTKM_CONT ArrayPortalToken(ArrayPortalToken&& rhs)
+    : Superclass(std::move(static_cast<Superclass&&>(rhs)))
+    , Token(std::move(rhs.Token))
+  {
+  }
+  VTKM_CONT ArrayPortalToken& operator=(const ArrayPortalToken& src)
+  {
+    this->Superclass::operator=(src);
+    this->Token = src.Token;
+    return *this;
+  }
+  VTKM_CONT ArrayPortalToken& operator=(ArrayPortalToken&& rhs)
+  {
+    this->Superclass::operator=(std::move(static_cast<Superclass&&>(rhs)));
+    this->Token = std::move(rhs.Token);
+    return *this;
+  }
+  VTKM_CONT ~ArrayPortalToken() {}
+
   /// \brief Detach this portal from the `ArrayHandle`.
   ///
   /// This will open up the `ArrayHandle` for reading and/or writing.

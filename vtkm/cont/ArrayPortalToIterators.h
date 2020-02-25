@@ -75,6 +75,39 @@ public:
   {
   }
 
+  // These are the same as the default implementation, but explicitly created to prevent warnings
+  // from the CUDA compiler where it tries to compile for the device when the underlying portal
+  // only works for the host.
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators(const ArrayPortalToIterators& src)
+    : Portal(src.Portal)
+  {
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators(ArrayPortalToIterators&& rhs)
+    : Portal(std::move(rhs.Portal))
+  {
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ~ArrayPortalToIterators() {}
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators& operator=(const ArrayPortalToIterators& src)
+  {
+    this->Portal = src.Portal;
+    return *this;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators& operator=(ArrayPortalToIterators&& rhs)
+  {
+    this->Portal = std::move(rhs.Portal);
+    return *this;
+  }
+
   /// The type of the iterator.
   ///
   using IteratorType = vtkm::cont::internal::IteratorFromArrayPortal<PortalType>;
@@ -117,6 +150,43 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   IteratorType GetEnd() const { return this->End; }
+
+  // These are the same as the default implementation, but explicitly created to prevent warnings
+  // from the CUDA compiler where it tries to compile for the device when the underlying portal
+  // only works for the host.
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators(const ArrayPortalToIterators& src)
+    : Begin(src.Begin)
+    , End(src.End)
+  {
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators(ArrayPortalToIterators&& rhs)
+    : Begin(std::move(rhs.Begin))
+    , End(std::move(rhs.End))
+  {
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ~ArrayPortalToIterators() {}
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators& operator=(const ArrayPortalToIterators& src)
+  {
+    this->Begin = src.Begin;
+    this->End = src.End;
+    return *this;
+  }
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalToIterators& operator=(ArrayPortalToIterators&& rhs)
+  {
+    this->Begin = std::move(rhs.Begin);
+    this->End = std::move(rhs.End);
+    return *this;
+  }
 
 private:
   IteratorType Begin;

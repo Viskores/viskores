@@ -35,6 +35,7 @@ public:
 
   using iter = IteratorFromArrayPortal<ArrayPortalType>;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   IteratorFromArrayPortal()
     : Portal()
@@ -42,6 +43,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   explicit IteratorFromArrayPortal(const ArrayPortalType& portal, vtkm::Id index = 0)
     : Portal(portal)

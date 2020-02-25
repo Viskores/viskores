@@ -61,14 +61,18 @@ class VTKM_ALWAYS_EXPORT ArrayPortalWrapper final
 public:
   ArrayPortalWrapper(const PortalT& p) noexcept : ArrayPortalVirtual<T>(), Portal(p) {}
 
-  VTKM_EXEC
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ~ArrayPortalWrapper() {}
+
+  VTKM_EXEC_CONT
   T Get(vtkm::Id index) const noexcept
   {
     using call_supported_t = typename internal::PortalSupportsGets<PortalT>::type;
     return this->Get(call_supported_t(), index);
   }
 
-  VTKM_EXEC
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const T& value) const noexcept
   {
     using call_supported_t = typename internal::PortalSupportsSets<PortalT>::type;
@@ -77,10 +81,10 @@ public:
 
 private:
   // clang-format off
-  VTKM_EXEC inline T Get(std::true_type, vtkm::Id index) const noexcept { return this->Portal.Get(index); }
-  VTKM_EXEC inline T Get(std::false_type, vtkm::Id) const noexcept { return T{}; }
-  VTKM_EXEC inline void Set(std::true_type, vtkm::Id index, const T& value) const noexcept { this->Portal.Set(index, value); }
-  VTKM_EXEC inline void Set(std::false_type, vtkm::Id, const T&) const noexcept {}
+  VTKM_EXEC_CONT inline T Get(std::true_type, vtkm::Id index) const noexcept { return this->Portal.Get(index); }
+  VTKM_EXEC_CONT inline T Get(std::false_type, vtkm::Id) const noexcept { return T{}; }
+  VTKM_EXEC_CONT inline void Set(std::true_type, vtkm::Id index, const T& value) const noexcept { this->Portal.Set(index, value); }
+  VTKM_EXEC_CONT inline void Set(std::false_type, vtkm::Id, const T&) const noexcept {}
   // clang-format on
 
 

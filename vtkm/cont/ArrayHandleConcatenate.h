@@ -40,6 +40,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalConcatenate(const PortalType1& p1, const PortalType2& p2)
     : portal1(p1)
@@ -48,6 +49,7 @@ public:
   }
 
   // Copy constructor
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherP1, typename OtherP2>
   VTKM_EXEC_CONT ArrayPortalConcatenate(const ArrayPortalConcatenate<OtherP1, OtherP2>& src)
     : portal1(src.GetPortal1())
