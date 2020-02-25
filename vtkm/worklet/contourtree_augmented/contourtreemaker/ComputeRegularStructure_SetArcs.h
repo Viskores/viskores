@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_compute_regular_structure_set_arcs_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_compute_regular_structure_set_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_compute_regular_structure_set_arcs_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_compute_regular_structure_set_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -77,12 +77,12 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.Arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_SetArcs(vtkm::Id NumArcs)
-    : numArcs(NumArcs)
+  ComputeRegularStructure_SetArcs(vtkm::Id numArcs)
+    : NumArcs(numArcs)
   {
   }
 
@@ -101,7 +101,7 @@ public:
 
     // the end element is always the last
     bool isLastOnSuperarc = false;
-    if (sortedNode == numArcs - 1)
+    if (sortedNode == NumArcs - 1)
     {
       isLastOnSuperarc = true;
     }
@@ -118,14 +118,14 @@ public:
       // retrieve the superarc's far end
       vtkm::Id superarcEnd = contourTreeSuperarcsPortal.Get(superparent);
       // this only happens for the root of the tree, but is still needed
-      if (noSuchElement(superarcEnd))
+      if (NoSuchElement(superarcEnd))
       {
         contourTreeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       }
       else
       {
         contourTreeArcsPortal.Set(nodeID,
-                                  contourTreeSupernodesPortal.Get(maskedIndex(superarcEnd)) |
+                                  contourTreeSupernodesPortal.Get(MaskedIndex(superarcEnd)) |
                                     (superarcEnd & IS_ASCENDING));
       }
     } // last on superarc
@@ -138,19 +138,19 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id sortedNode = 0; sortedNode < contourTree.arcs.size(); sortedNode++)
+      for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.size(); sortedNode++)
         { // per node
           // convert arcSorter to node ID
           vtkm::Id nodeID = arcSorter[sortedNode];
-          vtkm::Id superparent = contourTree.superparents[nodeID];
+          vtkm::Id superparent = contourTree.Superparents[nodeID];
 
           // the end element is always the last
           bool isLastOnSuperarc = false;
-          if (sortedNode == contourTree.arcs.size()-1)
+          if (sortedNode == contourTree.Arcs.size()-1)
              isLastOnSuperarc = true;
           // otherwise look for a change in the superparent
           else
-             isLastOnSuperarc = (superparent != contourTree.superparents[arcSorter[sortedNode + 1]]);
+             isLastOnSuperarc = (superparent != contourTree.Superparents[arcSorter[sortedNode + 1]]);
 
           // if it's the last on the superarc
           if (isLastOnSuperarc)
@@ -158,15 +158,15 @@ public:
               // retrieve the superarc's far end
               vtkm::Id superarcEnd = contourTree.superarcs[superparent];
               // this only happens for the root of the tree, but is still needed
-              if (noSuchElement(superarcEnd))
-                contourTree.arcs[nodeID] = NO_SUCH_ELEMENT;
+              if (NoSuchElement(superarcEnd))
+                contourTree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                contourTree.arcs[nodeID] = contourTree.supernodes[maskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
+                contourTree.Arcs[nodeID] = contourTree.Supernodes[MaskedIndex(superarcEnd)] | (superarcEnd & IS_ASCENDING);
             } // last on superarc
           else
             { // not last on superarc
               vtkm::Id neighbour = arcSorter[sortedNode+1];
-              contourTree.arcs[nodeID] = neighbour | ((neighbour > nodeID) ? IS_ASCENDING : 0);
+              contourTree.Arcs[nodeID] = neighbour | ((neighbour > nodeID) ? IS_ASCENDING : 0);
             } // not last on superarc
 
         } // per node
@@ -189,12 +189,12 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  vtkm::Id numArcs; // contourTree.arcs.GetNumberOfValues()
+  vtkm::Id NumArcs; // contourTree.Arcs.GetNumberOfValues()
 
   // Default Constructor
   VTKM_EXEC_CONT
-  ComputeRegularStructure_SetAugmentArcs(vtkm::Id NumArcs)
-    : numArcs(NumArcs)
+  ComputeRegularStructure_SetAugmentArcs(vtkm::Id numArcs)
+    : NumArcs(numArcs)
   {
   }
 
@@ -214,7 +214,7 @@ public:
 
     // the end element is always the last
     bool isLastOnSuperarc = false;
-    if (sortedNode == numArcs - 1)
+    if (sortedNode == NumArcs - 1)
     {
       isLastOnSuperarc = true;
     }
@@ -231,7 +231,7 @@ public:
       // retrieve the superarc's far end
       vtkm::Id superarcEnd = contourTreeSuperarcsPortal.Get(superparent);
       // this only happens for the root of the tree, but is still needed
-      if (noSuchElement(superarcEnd))
+      if (NoSuchElement(superarcEnd))
       {
         contourTreeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       }
@@ -239,7 +239,7 @@ public:
       {
         contourTreeArcsPortal.Set(
           nodeID,
-          toCompressedPortal.Get(contourTreeSupernodesPortal.Get(maskedIndex(superarcEnd))) |
+          toCompressedPortal.Get(contourTreeSupernodesPortal.Get(MaskedIndex(superarcEnd))) |
             (superarcEnd & IS_ASCENDING));
       }
     } // last on superarc

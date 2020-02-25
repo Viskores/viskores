@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_activegraph_h
-#define vtkm_worklet_contourtree_augmented_activegraph_h
+#ifndef vtk_m_worklet_contourtree_augmented_activegraph_h
+#define vtk_m_worklet_contourtree_augmented_activegraph_h
 
 #include <iomanip>
 #include <numeric>
@@ -125,42 +125,45 @@ public:
   vtkm::cont::Invoker Invoke;
 
   // we also need the orientation of the edges (i.e. is it join or split)
-  bool isJoinGraph;
+  bool IsJoinGraph;
 
   // we will store the number of iterations the computation took here
-  vtkm::Id nIterations;
+  vtkm::Id NumIterations;
 
   // ARRAYS FOR NODES IN THE TOPOLOGY GRAPH
 
   // for each vertex, we need to know where it is in global sort order / mesh
-  IdArrayType globalIndex;
+  IdArrayType GlobalIndex;
 
   // the hyperarcs - i.e. the pseudoextremum defining the hyperarc the vertex is on
-  IdArrayType hyperarcs;
+  IdArrayType Hyperarcs;
 
   // the first edge for each vertex
-  IdArrayType firstEdge;
+  IdArrayType FirstEdge;
 
   // the outdegree for each vertex
-  IdArrayType outdegree;
+  IdArrayType Outdegree;
 
   // ARRAYS FOR EDGES IN THE TOPOLOGY GRAPH
 
   // we will also need to keep track of both near and far ends of each edge
-  IdArrayType edgeFar, edgeNear;
+  IdArrayType EdgeFar;
+  IdArrayType EdgeNear;
 
   // these now track the active nodes, edges, &c.:
-  IdArrayType activeVertices;
-  IdArrayType activeEdges;
+  IdArrayType ActiveVertices;
+  IdArrayType ActiveEdges;
 
   // and an array for sorting edges
-  IdArrayType edgeSorter;
+  IdArrayType EdgeSorter;
 
   // temporary arrays for super/hyper ID numbers
-  IdArrayType superID, hyperID;
+  IdArrayType SuperID;
+  IdArrayType HyperID;
 
   // variables tracking size of super/hyper tree
-  vtkm::Id nSupernodes, nHypernodes;
+  vtkm::Id NumSupernodes;
+  vtkm::Id NumHypernodes;
 
   // BASIC ROUTINES: CONSTRUCTOR, PRINT, &c.
 
@@ -224,13 +227,13 @@ public:
 
 
 // constructor takes necessary references
-ActiveGraph::ActiveGraph(bool IsJoinGraph)
+ActiveGraph::ActiveGraph(bool isJoinGraph)
   : Invoke()
-  , isJoinGraph(IsJoinGraph)
+  , IsJoinGraph(isJoinGraph)
 { // constructor
-  nIterations = 0;
-  nSupernodes = 0;
-  nHypernodes = 0;
+  this->NumIterations = 0;
+  this->NumSupernodes = 0;
+  this->NumHypernodes = 0;
 } // constructor
 
 
@@ -240,7 +243,7 @@ template <class Mesh>
 void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 { // InitialiseActiveGraph()
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.peaks : meshExtrema.pits;
+  const IdArrayType& extrema = this->IsJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // For every vertex, work out whether it is critical
   // We do so by computing outdegree in the mesh & suppressing the vertex if outdegree is 1
@@ -251,15 +254,15 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
   // Neighbourhood mask (one bit set per connected component in neighbourhood
   IdArrayType neighbourhoodMasks;
-  neighbourhoodMasks.Allocate(mesh.nVertices);
+  neighbourhoodMasks.Allocate(mesh.NumVertices);
   IdArrayType outDegrees; // TODO Should we change this to an unsigned type
-  outDegrees.Allocate(mesh.nVertices);
+  outDegrees.Allocate(mesh.NumVertices);
 
   // Initialize the nerighborhoodMasks and outDegrees arrays
-  mesh.setPrepareForExecutionBehavior(isJoinGraph);
-  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.nVertices);
+  mesh.SetPrepareForExecutionBehavior(this->IsJoinGraph);
+  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   active_graph_inc_ns::InitializeNeighbourhoodMasksAndOutDegrees initNeighMasksAndOutDegWorklet(
-    isJoinGraph);
+    this->IsJoinGraph);
 
   this->Invoke(initNeighMasksAndOutDegWorklet,
                sortIndexArray,
@@ -275,7 +278,7 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
 
     // we need a temporary inverse index to change vertex IDs
     IdArrayType inverseIndex;
-    inverseIndex.Allocate(mesh.nVertices);
+    inverseIndex.Allocate(mesh.NumVertices);
     inverseIndex.GetPortalControl().Set(0,0);
 
     std::partial_sum(
@@ -284,9 +287,9 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
             vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.GetPortalControl()) + 1);
     */
   IdArrayType inverseIndex;
-  onefIfCritical oneIfCriticalFunctor;
+  OnefIfCritical oneIfCriticalFunctor;
   auto oneIfCriticalArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfCritical>(outDegrees, oneIfCriticalFunctor);
+    vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfCritical>(outDegrees, oneIfCriticalFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
@@ -296,16 +299,16 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
   // we need to keep track of what the index of each vertex is in the active graph
   // for most vertices, this should have the NO_SUCH_VERTEX flag set
   AllocateVertexArrays(
-    nCriticalPoints); // allocates outdegree, globalIndex, hyperarcs, activeVertices
+    nCriticalPoints); // allocates outdegree, GlobalIndex, Hyperarcs, ActiveVertices
 
   // our processing now depends on the degree of the vertex
   // but basically, we want to set up the arrays for this vertex:
   // activeIndex gets the next available ID in the active graph (was called nearIndex before)
-  // globalIndex stores the index in the join tree for later access
+  // GlobalIndex stores the index in the join tree for later access
   IdArrayType activeIndices;
-  activeIndices.Allocate(mesh.nVertices);
+  activeIndices.Allocate(mesh.NumVertices);
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT,
-                                                               mesh.nVertices);
+                                                               mesh.NumVertices);
   vtkm::cont::Algorithm::Copy(noSuchElementArray, activeIndices);
 
   active_graph_inc_ns::InitializeActiveGraphVertices initActiveGraphVerticesWorklet;
@@ -315,52 +318,53 @@ void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
                inverseIndex,
                extrema,
                activeIndices,
-               globalIndex,
-               outdegree,
-               hyperarcs,
-               activeVertices);
+               this->GlobalIndex,
+               this->Outdegree,
+               this->Hyperarcs,
+               this->ActiveVertices);
 
-  // now we need to compute the firstEdge array from the outDegrees
-  firstEdge.Allocate(nCriticalPoints);
+  // now we need to compute the FirstEdge array from the outDegrees
+  this->FirstEdge.Allocate(nCriticalPoints);
   // STD Version of the prefix sum
-  //firstEdge.GetPortalControl().Set(0, 0);
-  //std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(outdegree.GetPortalControl()),
-  //                 vtkm::cont::ArrayPortalToIteratorEnd(outdegree.GetPortalControl()) - 1,
-  //                 vtkm::cont::ArrayPortalToIteratorBegin(firstEdge.GetPortalControl()) + 1);
+  //this->FirstEdge.GetPortalControl().Set(0, 0);
+  //std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(this->Outdegree.GetPortalControl()),
+  //                 vtkm::cont::ArrayPortalToIteratorEnd(this->Outdegree.GetPortalControl()) - 1,
+  //                 vtkm::cont::ArrayPortalToIteratorBegin(this->firstEdge.GetPortalControl()) + 1);
   // VTKM Version of the prefix sum
-  vtkm::cont::Algorithm::ScanExclusive(outdegree, firstEdge);
+  vtkm::cont::Algorithm::ScanExclusive(this->Outdegree, this->FirstEdge);
   // Compute the number of critical edges
 
-  vtkm::Id nCriticalEdges = this->GetLastValue(firstEdge) + this->GetLastValue(outdegree);
+  vtkm::Id nCriticalEdges =
+    this->GetLastValue(this->FirstEdge) + this->GetLastValue(this->Outdegree);
 
   AllocateEdgeArrays(nCriticalEdges);
 
   active_graph_inc_ns::InitializeActiveEdges<Mesh> initActiveEdgesWorklet;
   this->Invoke(initActiveEdgesWorklet,
-               outdegree,
+               this->Outdegree,
                mesh,
-               firstEdge,
-               globalIndex,
+               this->FirstEdge,
+               this->GlobalIndex,
                extrema,
                neighbourhoodMasks,
-               edgeNear,
-               edgeFar,
-               activeEdges);
+               this->EdgeNear,
+               this->EdgeFar,
+               this->ActiveEdges);
 
   // now we have to go through and set the far ends of the new edges using the
   // inverse index array
   active_graph_inc_ns::InitializeEdgeFarFromActiveIndices initEdgeFarWorklet;
-  this->Invoke(initEdgeFarWorklet, edgeFar, extrema, activeIndices);
+  this->Invoke(initEdgeFarWorklet, this->EdgeFar, extrema, activeIndices);
 
   DebugPrint("Active Graph Started", __FILE__, __LINE__);
 
   // then we loop through the active vertices to convert their indices to active graph indices
   active_graph_inc_ns::InitializeHyperarcsFromActiveIndices initHyperarcsWorklet;
-  this->Invoke(initHyperarcsWorklet, hyperarcs, activeIndices);
+  this->Invoke(initHyperarcsWorklet, this->Hyperarcs, activeIndices);
 
   // finally, allocate and initialise the edgeSorter array
-  edgeSorter.Allocate(activeEdges.GetNumberOfValues());
-  vtkm::cont::Algorithm::Copy(activeEdges, edgeSorter);
+  this->EdgeSorter.Allocate(this->ActiveEdges.GetNumberOfValues());
+  vtkm::cont::Algorithm::Copy(this->ActiveEdges, this->EdgeSorter);
 
   //DebugPrint("Active Graph Initialised", __FILE__, __LINE__);
 } // InitialiseActiveGraph()
@@ -373,14 +377,14 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
   DebugPrint("Active Graph Computation Starting", __FILE__, __LINE__);
 
   // loop until we run out of active edges
-  nIterations = 0;
+  this->NumIterations = 0;
   while (true)
   { // main loop
     // choose the subset of edges for the governing saddles
     TransferSaddleStarts();
 
     // test whether there are any left (if not, we're on the trunk)
-    if (edgeSorter.GetNumberOfValues() <= 0)
+    if (this->EdgeSorter.GetNumberOfValues() <= 0)
       break;
 
     // find & label the extrema with their governing saddles
@@ -397,7 +401,7 @@ void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema)
     BuildChains();
 
     // increment the iteration count
-    nIterations++;
+    this->NumIterations++;
   } // main loop
 
   // final pass to label the trunk vertices
@@ -422,26 +426,26 @@ void ActiveGraph::TransferSaddleStarts()
   // update all of the edges so that the far end resets to the result of the ascent in the previous step
 
   active_graph_inc_ns::TransferSaddleStartsResetEdgeFar transferSaddleResetWorklet;
-  this->Invoke(transferSaddleResetWorklet, activeEdges, hyperarcs, edgeFar);
+  this->Invoke(transferSaddleResetWorklet, this->ActiveEdges, this->Hyperarcs, this->EdgeFar);
 
   // in parallel, we need to create a vector to count the first edge for each vertex
   IdArrayType newOutdegree;
-  newOutdegree.Allocate(activeVertices.GetNumberOfValues());
+  newOutdegree.Allocate(this->ActiveVertices.GetNumberOfValues());
 
   // this will be a stream compaction later, but for now we'll do it the serial way
   active_graph_inc_ns::TransferSaddleStartsSetNewOutdegreeForSaddles transferOutDegree;
   this->Invoke(transferOutDegree,
-               activeVertices,
-               firstEdge,
-               outdegree,
-               activeEdges,
-               hyperarcs,
-               edgeFar,
+               this->ActiveVertices,
+               this->FirstEdge,
+               this->Outdegree,
+               this->ActiveEdges,
+               this->Hyperarcs,
+               this->EdgeFar,
                newOutdegree);
 
   // now do a parallel prefix sum using the offset partial sum trick.
   IdArrayType newFirstEdge;
-  newFirstEdge.Allocate(activeVertices.GetNumberOfValues());
+  newFirstEdge.Allocate(this->ActiveVertices.GetNumberOfValues());
   // STD version of the prefix sum
   // newFirstEdge.GetPortalControl().Set(0, 0);
   // std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(newOutdegree.GetPortalControl()),
@@ -453,19 +457,19 @@ void ActiveGraph::TransferSaddleStarts()
   vtkm::Id nEdgesToSort = this->GetLastValue(newFirstEdge) + this->GetLastValue(newOutdegree);
 
   // now we write only the active saddle edges to the sorting array
-  edgeSorter
+  this->EdgeSorter
     .ReleaseResources(); // TODO is there a single way to resize an array handle without calling ReleaseResources followed by Allocate
-  edgeSorter.Allocate(nEdgesToSort);
+  this->EdgeSorter.Allocate(nEdgesToSort);
 
   // this will be a stream compaction later, but for now we'll do it the serial way
   active_graph_inc_ns::TransferSaddleStartsUpdateEdgeSorter updateEdgeSorterWorklet;
   this->Invoke(updateEdgeSorterWorklet,
-               activeVertices,
-               activeEdges,
-               firstEdge,
+               this->ActiveVertices,
+               this->ActiveEdges,
+               this->FirstEdge,
                newFirstEdge,
                newOutdegree,
-               edgeSorter);
+               this->EdgeSorter);
 
   DebugPrint("Saddle Starts Transferred", __FILE__, __LINE__);
 } // TransferSaddleStarts()
@@ -476,16 +480,22 @@ void ActiveGraph::FindGoverningSaddles()
 { // FindGoverningSaddles()
   // sort with the comparator
   vtkm::cont::Algorithm::Sort(
-    edgeSorter, active_graph_inc_ns::EdgePeakComparator(edgeFar, edgeNear, isJoinGraph));
+    this->EdgeSorter,
+    active_graph_inc_ns::EdgePeakComparator(this->EdgeFar, this->EdgeNear, this->IsJoinGraph));
 
   // DebugPrint("After Sorting", __FILE__, __LINE__);
 
   // now loop through the edges to find the governing saddles
   active_graph_inc_ns::FindGoverningSaddlesWorklet findGovSaddlesWorklet;
-  vtkm::cont::ArrayHandleIndex edgeIndexArray(edgeSorter.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex edgeIndexArray(this->EdgeSorter.GetNumberOfValues());
 
-  this->Invoke(
-    findGovSaddlesWorklet, edgeIndexArray, edgeSorter, edgeFar, edgeNear, hyperarcs, outdegree);
+  this->Invoke(findGovSaddlesWorklet,
+               edgeIndexArray,
+               this->EdgeSorter,
+               this->EdgeFar,
+               this->EdgeNear,
+               this->Hyperarcs,
+               this->Outdegree);
 
   DebugPrint("Governing Saddles Set", __FILE__, __LINE__);
 } // FindGoverningSaddles()
@@ -495,8 +505,8 @@ void ActiveGraph::FindGoverningSaddles()
 void ActiveGraph::TransferRegularPoints()
 { // TransferRegularPointsWorklet
   // we need to label the regular points that have been identified
-  active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(isJoinGraph);
-  this->Invoke(transRegPtWorklet, activeVertices, hyperarcs, outdegree);
+  active_graph_inc_ns::TransferRegularPointsWorklet transRegPtWorklet(this->IsJoinGraph);
+  this->Invoke(transRegPtWorklet, this->ActiveVertices, this->Hyperarcs, this->Outdegree);
 
   DebugPrint("Regular Points Should Now Be Labelled", __FILE__, __LINE__);
 } // TransferRegularPointsWorklet()
@@ -510,15 +520,16 @@ void ActiveGraph::CompactActiveVertices()
   // create a temporary array the same size
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveVertices;
 
-  // Use only the current activeVertices outdegree to match size on CopyIf
+  // Use only the current this->ActiveVertices this->Outdegree to match size on CopyIf
   vtkm::cont::ArrayHandle<vtkm::Id> outdegreeLookup;
-  vtkm::cont::Algorithm::Copy(PermuteIndexType(activeVertices, outdegree), outdegreeLookup);
+  vtkm::cont::Algorithm::Copy(PermuteIndexType(this->ActiveVertices, this->Outdegree),
+                              outdegreeLookup);
 
-  // compact the activeVertices array to keep only the ones of interest
-  vtkm::cont::Algorithm::CopyIf(activeVertices, outdegreeLookup, newActiveVertices);
+  // compact the this->ActiveVertices array to keep only the ones of interest
+  vtkm::cont::Algorithm::CopyIf(this->ActiveVertices, outdegreeLookup, newActiveVertices);
 
-  activeVertices.ReleaseResources();
-  vtkm::cont::Algorithm::Copy(newActiveVertices, activeVertices);
+  this->ActiveVertices.ReleaseResources();
+  vtkm::cont::Algorithm::Copy(newActiveVertices, this->ActiveVertices);
 
   DebugPrint("Active Vertex List Compacted", __FILE__, __LINE__);
 } // CompactActiveVertices()
@@ -528,7 +539,7 @@ void ActiveGraph::CompactActiveVertices()
 void ActiveGraph::CompactActiveEdges()
 { // CompactActiveEdges()
   // grab the size of the array for easier reference
-  vtkm::Id nActiveVertices = activeVertices.GetNumberOfValues();
+  vtkm::Id nActiveVertices = this->ActiveVertices.GetNumberOfValues();
 
   // first, we have to work out the first edge for each active vertex
   // we start with a temporary new outdegree
@@ -538,13 +549,13 @@ void ActiveGraph::CompactActiveEdges()
   // Run workflet to compute newOutdegree for each vertex
   active_graph_inc_ns::CompactActiveEdgesComputeNewVertexOutdegree computeNewOutdegreeWorklet;
   this->Invoke(computeNewOutdegreeWorklet,
-               activeVertices, // (input)
-               activeEdges,    // (input)
-               edgeFar,        // (input)
-               firstEdge,      // (input)
-               outdegree,      // (input)
-               hyperarcs,      // (input/output)
-               newOutdegree    // (output)
+               this->ActiveVertices, // (input)
+               this->ActiveEdges,    // (input)
+               this->EdgeFar,        // (input)
+               this->FirstEdge,      // (input)
+               this->Outdegree,      // (input)
+               this->Hyperarcs,      // (input/output)
+               newOutdegree          // (output)
                );
 
   // now we do a reduction to compute the offsets of each vertex
@@ -558,7 +569,7 @@ void ActiveGraph::CompactActiveEdges()
   // create a temporary vector for copying
   IdArrayType newActiveEdges;
   newActiveEdges.Allocate(nNewEdges);
-  // overwriting hyperarcs in parallel is safe, as the worst than can happen is
+  // overwriting Hyperarcs in parallel is safe, as the worst than can happen is
   // that another valid ascent is found; for comparison and validation purposes
   // however it makes sense to have a `canoical' computation. To achieve this
   // canonical computation, we need to write into a new array during computation
@@ -570,25 +581,25 @@ void ActiveGraph::CompactActiveEdges()
   // now copy the relevant edges into the active edge array
   active_graph_inc_ns::CompactActiveEdgesTransferActiveEdges transferActiveEdgesWorklet;
   this->Invoke(transferActiveEdgesWorklet,
-               activeVertices,
-               newPosition,    // (input)
-               newOutdegree,   // (input)
-               activeEdges,    // (input)
-               newActiveEdges, // (output)
-               edgeFar,        // (input/output)
-               firstEdge,      // (input/output)
-               outdegree,      // (input/output)
-               hyperarcs       // (input/output)
+               this->ActiveVertices,
+               newPosition,       // (input)
+               newOutdegree,      // (input)
+               this->ActiveEdges, // (input)
+               newActiveEdges,    // (output)
+               this->EdgeFar,     // (input/output)
+               this->FirstEdge,   // (input/output)
+               this->Outdegree,   // (input/output)
+               this->Hyperarcs    // (input/output)
                );
 
   // resize the original array and recopy
-  //vtkm::cont::Algorithm::::Copy(newActiveEdges, activeEdges);
-  activeEdges.ReleaseResources();
-  activeEdges =
-    newActiveEdges; // vtkm ArrayHandles are smart, so we can just swap it in without having to copy
+  //vtkm::cont::Algorithm::::Copy(newActiveEdges, this-ActiveEdges);
+  this->ActiveEdges.ReleaseResources();
+  // vtkm ArrayHandles are smart, so we can just swap it in without having to copy
+  this->ActiveEdges = newActiveEdges;
 
   // for canonical computation: swap in newly computed hyperarc array
-  //      hyperarcs.swap(newHyperarcs);
+  //      this->Hyperarcs.swap(newHyperarcs);
 
   DebugPrint("Active Edges Now Compacted", __FILE__, __LINE__);
 } // CompactActiveEdges()
@@ -599,16 +610,16 @@ void ActiveGraph::CompactActiveEdges()
 void ActiveGraph::BuildChains()
 { // BuildChains()
   // 1. compute the number of log steps required in this pass
-  vtkm::Id nLogSteps = 1;
-  for (vtkm::Id shifter = activeVertices.GetNumberOfValues(); shifter != 0; shifter >>= 1)
-    nLogSteps++;
+  vtkm::Id numLogSteps = 1;
+  for (vtkm::Id shifter = this->ActiveVertices.GetNumberOfValues(); shifter != 0; shifter >>= 1)
+    numLogSteps++;
 
   // 2.   Use path compression / step doubling to collect vertices along chains
   //              until every vertex has been assigned to *an* extremum
-  for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
+  for (vtkm::Id logStep = 0; logStep < numLogSteps; logStep++)
   { // per log step
     active_graph_inc_ns::BuildChainsWorklet buildChainsWorklet;
-    this->Invoke(buildChainsWorklet, activeVertices, hyperarcs);
+    this->Invoke(buildChainsWorklet, this->ActiveVertices, this->Hyperarcs);
   } // per log step
   DebugPrint("Chains Built", __FILE__, __LINE__);
 } // BuildChains()
@@ -619,7 +630,7 @@ void ActiveGraph::BuildTrunk()
 { //BuildTrunk
   // all remaining vertices belong to the trunk
   active_graph_inc_ns::BuildTrunkWorklet buildTrunkWorklet;
-  this->Invoke(buildTrunkWorklet, activeVertices, hyperarcs);
+  this->Invoke(buildTrunkWorklet, this->ActiveVertices, this->Hyperarcs);
 
   DebugPrint("Trunk Built", __FILE__, __LINE__);
 } //BuildTrunk
@@ -629,67 +640,67 @@ void ActiveGraph::BuildTrunk()
 void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 { // FindSuperAndHyperNodes()
   // allocate memory for nodes
-  hyperID.ReleaseResources();
-  hyperID.Allocate(globalIndex.GetNumberOfValues());
+  this->HyperID.ReleaseResources();
+  this->HyperID.Allocate(this->GlobalIndex.GetNumberOfValues());
 
   // compute new node positions
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
-  /*auto oneIfSupernode = [](vtkm::Id v) { return isSupernode(v) ? 1 : 0; };
+  /*auto oneIfSupernode = [](vtkm::Id v) { return IsSupernode(v) ? 1 : 0; };
     IdArrayType newSupernodePosition;
-    newSupernodePosition.Allocate(hyperarcs.GetNumberOfValues());
+    newSupernodePosition.Allocate(this->Hyperarcs.GetNumberOfValues());
     newSupernodePosition.GetPortalControl().Set(0, 0);
 
     std::partial_sum(
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(hyperarcs.GetPortalControl()), oneIfSupernode),
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(hyperarcs.GetPortalControl()) - 1, oneIfSupernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.GetPortalControl()), oneIfSupernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.GetPortalControl()) - 1, oneIfSupernode),
             vtkm::cont::ArrayPortalToIteratorBegin(newSupernodePosition.GetPortalControl()) + 1);*/
 
   IdArrayType newSupernodePosition;
-  onefIfSupernode oneIfSupernodeFunctor;
-  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfSupernode>(
-    hyperarcs, oneIfSupernodeFunctor);
+  OnefIfSupernode oneIfSupernodeFunctor;
+  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfSupernode>(
+    this->Hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
-  nSupernodes =
-    this->GetLastValue(newSupernodePosition) + oneIfSupernodeFunctor(this->GetLastValue(hyperarcs));
+  this->NumSupernodes = this->GetLastValue(newSupernodePosition) +
+    oneIfSupernodeFunctor(this->GetLastValue(this->Hyperarcs));
 
-  tree.supernodes.ReleaseResources();
-  tree.supernodes.Allocate(nSupernodes);
+  tree.Supernodes.ReleaseResources();
+  tree.Supernodes.Allocate(this->NumSupernodes);
 
   // The following commented code block is variant ported directly from PPP2 using std::partial_sum. This has been replaced here with vtkm's ScanExclusive.
   /*
-    auto oneIfHypernode = [](vtkm::Id v) { return isHypernode(v) ? 1 : 0; };
+    auto oneIfHypernode = [](vtkm::Id v) { return IsHypernode(v) ? 1 : 0; };
     IdArrayType newHypernodePosition;
-    newHypernodePosition.Allocate(hyperarcs.GetNumberOfValues());
+    newHypernodePosition.Allocate(this->Hyperarcs.GetNumberOfValues());
     newHypernodePosition.GetPortalControl().Set(0, 0);
     std::partial_sum(
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(hyperarcs.GetPortalControl()), oneIfHypernode),
-            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(hyperarcs.GetPortalControl()) - 1, oneIfHypernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorBegin(this->Hyperarcs.GetPortalControl()), oneIfHypernode),
+            boost::make_transform_iterator(vtkm::cont::ArrayPortalToIteratorEnd(this->Hyperarcs.GetPortalControl()) - 1, oneIfHypernode),
              vtkm::cont::ArrayPortalToIteratorBegin(newHypernodePosition.GetPortalControl()) + 1);
     */
   IdArrayType newHypernodePosition;
-  onefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, onefIfHypernode>(
-    hyperarcs, oneIfHypernodeFunctor);
+  OnefIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
+    this->Hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
-  nHypernodes =
-    this->GetLastValue(newHypernodePosition) + oneIfHypernodeFunctor(this->GetLastValue(hyperarcs));
+  this->NumHypernodes = this->GetLastValue(newHypernodePosition) +
+    oneIfHypernodeFunctor(this->GetLastValue(this->Hyperarcs));
 
-  tree.hypernodes.ReleaseResources();
-  tree.hypernodes.Allocate(globalIndex.GetNumberOfValues());
+  tree.Hypernodes.ReleaseResources();
+  tree.Hypernodes.Allocate(this->GlobalIndex.GetNumberOfValues());
 
   // perform stream compression
   active_graph_inc_ns::FindSuperAndHyperNodesWorklet findSuperAndHyperNodesWorklet;
-  vtkm::cont::ArrayHandleIndex graphVertexIndex(globalIndex.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex graphVertexIndex(this->GlobalIndex.GetNumberOfValues());
   this->Invoke(findSuperAndHyperNodesWorklet,
                graphVertexIndex,
-               hyperarcs,
+               this->Hyperarcs,
                newHypernodePosition,
                newSupernodePosition,
-               hyperID,
-               tree.hypernodes,
-               tree.supernodes);
+               this->HyperID,
+               tree.Hypernodes,
+               tree.Supernodes);
 
   DebugPrint("Super/Hypernodes Found", __FILE__, __LINE__);
   tree.DebugPrint("Super/Hypernodes Found", __FILE__, __LINE__);
@@ -703,37 +714,37 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
 
   //      1.      set the hyperparents
   // allocate space for the hyperparents
-  tree.hyperparents.ReleaseResources();
-  tree.hyperparents.Allocate(nSupernodes);
+  tree.Hyperparents.ReleaseResources();
+  tree.Hyperparents.Allocate(this->NumSupernodes);
 
   // execute the worklet to set the hyperparents
   active_graph_inc_ns::SetSuperArcsSetTreeHyperparents setTreeHyperparentsWorklet;
-  this->Invoke(setTreeHyperparentsWorklet, tree.supernodes, hyperarcs, tree.hyperparents);
+  this->Invoke(setTreeHyperparentsWorklet, tree.Supernodes, this->Hyperarcs, tree.Hyperparents);
 
   tree.DebugPrint("Hyperparents Set", __FILE__, __LINE__);
   //      a.      And the super ID array needs setting up
-  superID.ReleaseResources();
+  this->SuperID.ReleaseResources();
   vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, globalIndex.GetNumberOfValues()),
-    superID);
-  vtkm::cont::ArrayHandleIndex supernodeIndex(nSupernodes);
-  PermutedIdArrayType permutedSuperID(tree.supernodes, superID);
+    vtkm::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, this->GlobalIndex.GetNumberOfValues()),
+    this->SuperID);
+  vtkm::cont::ArrayHandleIndex supernodeIndex(this->NumSupernodes);
+  PermutedIdArrayType permutedSuperID(tree.Supernodes, this->SuperID);
   vtkm::cont::Algorithm::Copy(supernodeIndex, permutedSuperID);
 
   //      2.      Sort the supernodes into segments according to hyperparent
   //              See comparator for details
-  vtkm::cont::Algorithm::Sort(tree.supernodes,
+  vtkm::cont::Algorithm::Sort(tree.Supernodes,
                               active_graph_inc_ns::HyperArcSuperNodeComparator(
-                                tree.hyperparents, this->superID, tree.isJoinTree));
+                                tree.Hyperparents, this->SuperID, tree.IsJoinTree));
 
   //      3.      Now update the other arrays to match
   IdArrayType hyperParentsTemp;
-  hyperParentsTemp.Allocate(nSupernodes);
+  hyperParentsTemp.Allocate(this->NumSupernodes);
   auto permutedTreeHyperparents = vtkm::cont::make_ArrayHandlePermutation(
-    vtkm::cont::make_ArrayHandlePermutation(tree.supernodes, superID), tree.hyperparents);
+    vtkm::cont::make_ArrayHandlePermutation(tree.Supernodes, this->SuperID), tree.Hyperparents);
 
   vtkm::cont::Algorithm::Copy(permutedTreeHyperparents, hyperParentsTemp);
-  vtkm::cont::Algorithm::Copy(hyperParentsTemp, tree.hyperparents);
+  vtkm::cont::Algorithm::Copy(hyperParentsTemp, tree.Hyperparents);
   hyperParentsTemp.ReleaseResources();
   //      a.      And the super ID array needs setting up // TODO Check if we really need this?
   vtkm::cont::Algorithm::Copy(supernodeIndex, permutedSuperID);
@@ -742,31 +753,31 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
   tree.DebugPrint("Supernodes Sorted", __FILE__, __LINE__);
 
   //      4.      Allocate memory for superarcs
-  tree.superarcs.ReleaseResources();
-  tree.superarcs.Allocate(nSupernodes);
-  tree.firstSuperchild.ReleaseResources();
-  tree.firstSuperchild.Allocate(nHypernodes);
+  tree.Superarcs.ReleaseResources();
+  tree.Superarcs.Allocate(this->NumSupernodes);
+  tree.FirstSuperchild.ReleaseResources();
+  tree.FirstSuperchild.Allocate(this->NumHypernodes);
 
   //      5.      Each supernode points to its neighbour in the list, except at the end of segments
-  // execute the worklet to set the tree.hyperparents and tree.firstSuperchild
+  // execute the worklet to set the tree.Hyperparents and tree.FirstSuperchild
   active_graph_inc_ns::SetSuperArcsSetTreeSuperarcs setTreeSuperarcsWorklet;
   this->Invoke(setTreeSuperarcsWorklet,
-               tree.supernodes,     // (input)
-               hyperarcs,           // (input)
-               tree.hyperparents,   // (input)
-               superID,             // (input)
-               hyperID,             // (input)
-               tree.superarcs,      // (output)
-               tree.firstSuperchild // (output)
+               tree.Supernodes,     // (input)
+               this->Hyperarcs,     // (input)
+               tree.Hyperparents,   // (input)
+               this->SuperID,       // (input)
+               this->HyperID,       // (input)
+               tree.Superarcs,      // (output)
+               tree.FirstSuperchild // (output)
                );
 
   // 6.   Now we can reset the supernodes to mesh IDs
-  PermutedIdArrayType permuteGlobalIndex(tree.supernodes, globalIndex);
-  vtkm::cont::Algorithm::Copy(permuteGlobalIndex, tree.supernodes);
+  PermutedIdArrayType permuteGlobalIndex(tree.Supernodes, this->GlobalIndex);
+  vtkm::cont::Algorithm::Copy(permuteGlobalIndex, tree.Supernodes);
 
   // 7.   and the hyperparent to point to a hyperarc rather than a graph index
-  PermutedIdArrayType permuteHyperID(tree.hyperparents, hyperID);
-  vtkm::cont::Algorithm::Copy(permuteHyperID, tree.hyperparents);
+  PermutedIdArrayType permuteHyperID(tree.Hyperparents, this->HyperID);
+  vtkm::cont::Algorithm::Copy(permuteHyperID, tree.Hyperparents);
 
   tree.DebugPrint("Superarcs Set", __FILE__, __LINE__);
 } // SetSuperArcs()
@@ -776,15 +787,16 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
 void ActiveGraph::SetHyperArcs(MergeTree& tree)
 { // SetHyperArcs()
   //      1.      Allocate memory for hypertree
-  tree.hypernodes.Shrink(
-    nHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
-  tree.hyperarcs.ReleaseResources();
-  tree.hyperarcs.Allocate(nHypernodes); // Has not been allocated yet
+  tree.Hypernodes.Shrink(
+    this
+      ->NumHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
+  tree.Hyperarcs.ReleaseResources();
+  tree.Hyperarcs.Allocate(this->NumHypernodes); // Has not been allocated yet
 
-  //      2.      Use the superIDs already set to fill in the hyperarcs array
+  //      2.      Use the superIDs already set to fill in the Hyperarcs array
   active_graph_inc_ns::SetHyperArcsWorklet setHyperArcsWorklet;
   this->Invoke(
-    setHyperArcsWorklet, tree.hypernodes, tree.hyperarcs, this->hyperarcs, this->superID);
+    setHyperArcsWorklet, tree.Hypernodes, tree.Hyperarcs, this->Hyperarcs, this->SuperID);
 
   // Debug output
   DebugPrint("Hyperarcs Set", __FILE__, __LINE__);
@@ -798,57 +810,57 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
   using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // reference to the correct array in the extrema
-  const IdArrayType& extrema = isJoinGraph ? meshExtrema.peaks : meshExtrema.pits;
+  const IdArrayType& extrema = this->IsJoinGraph ? meshExtrema.Peaks : meshExtrema.Pits;
 
   // 1.   Set the arcs for the super/hypernodes based on where they prune to
   active_graph_inc_ns::SetArcsSetSuperAndHypernodeArcs setSuperAndHypernodeArcsWorklet;
   this->Invoke(setSuperAndHypernodeArcsWorklet,
-               this->globalIndex,
-               this->hyperarcs,
-               this->hyperID,
-               tree.arcs,
-               tree.superparents);
+               this->GlobalIndex,
+               this->Hyperarcs,
+               this->HyperID,
+               tree.Arcs,
+               tree.Superparents);
 
   DebugPrint("Sliding Arcs Set", __FILE__, __LINE__);
   tree.DebugPrint("Sliding Arcs Set", __FILE__, __LINE__);
 
-  // 2.   Loop through all vertices to slide down hyperarcs
+  // 2.   Loop through all vertices to slide down Hyperarcs
   active_graph_inc_ns::SetArcsSlideVertices slideVerticesWorklet(
-    isJoinGraph, nSupernodes, nHypernodes);
+    this->IsJoinGraph, this->NumSupernodes, this->NumHypernodes);
   this->Invoke(slideVerticesWorklet,
-               tree.arcs,            // (input)
-               extrema,              // (input)  i.e,. meshExtrema.peaks or meshExtrema.pits
-               tree.firstSuperchild, // (input)
-               tree.supernodes,      // (input)
-               tree.superparents);   // (input/output)
+               tree.Arcs,            // (input)
+               extrema,              // (input)  i.e,. meshExtrema.Peaks or meshExtrema.Pits
+               tree.FirstSuperchild, // (input)
+               tree.Supernodes,      // (input)
+               tree.Superparents);   // (input/output)
 
   tree.DebugPrint("Sliding Finished", __FILE__, __LINE__);
 
   // 3.   Now set the superparents correctly for the supernodes
-  PermuteIndexType permuteTreeSuperparents(tree.supernodes, tree.superparents);
-  vtkm::cont::ArrayHandleIndex supernodesIndex(nSupernodes);
+  PermuteIndexType permuteTreeSuperparents(tree.Supernodes, tree.Superparents);
+  vtkm::cont::ArrayHandleIndex supernodesIndex(this->NumSupernodes);
   vtkm::cont::Algorithm::Copy(supernodesIndex, permuteTreeSuperparents);
 
   tree.DebugPrint("Superparents Set", __FILE__, __LINE__);
 
   // 4.   Finally, sort all of the vertices onto their superarcs
   IdArrayType nodes;
-  vtkm::cont::ArrayHandleIndex nodesIndex(tree.arcs.GetNumberOfValues());
+  vtkm::cont::ArrayHandleIndex nodesIndex(tree.Arcs.GetNumberOfValues());
   vtkm::cont::Algorithm::Copy(nodesIndex, nodes);
 
   //  5.  Sort the nodes into segments according to superparent
   //      See comparator for details
   vtkm::cont::Algorithm::Sort(
-    nodes, active_graph_inc_ns::SuperArcNodeComparator(tree.superparents, tree.isJoinTree));
+    nodes, active_graph_inc_ns::SuperArcNodeComparator(tree.Superparents, tree.IsJoinTree));
 
   //  6. Connect the nodes to each other
   active_graph_inc_ns::SetArcsConnectNodes connectNodesWorklet;
   this->Invoke(connectNodesWorklet,
-               tree.arcs,         // (input/output)
+               tree.Arcs,         // (input/output)
                nodes,             // (input)
-               tree.superparents, // (input)
-               tree.superarcs,    // (input)
-               tree.supernodes);  // (input)
+               tree.Superparents, // (input)
+               tree.Superarcs,    // (input)
+               tree.Supernodes);  // (input)
 
   tree.DebugPrint("Arcs Set", __FILE__, __LINE__);
 } // SetArcs()
@@ -857,36 +869,36 @@ void ActiveGraph::SetArcs(MergeTree& tree, MeshExtrema& meshExtrema)
 // Allocate the vertex array
 void ActiveGraph::AllocateVertexArrays(vtkm::Id nElems)
 {
-  globalIndex.Allocate(nElems);
-  outdegree.Allocate(nElems);
-  hyperarcs.Allocate(nElems);
-  activeVertices.Allocate(nElems);
+  this->GlobalIndex.Allocate(nElems);
+  this->Outdegree.Allocate(nElems);
+  this->Hyperarcs.Allocate(nElems);
+  this->ActiveVertices.Allocate(nElems);
 }
 
 
 // Allocate the edge array
 void ActiveGraph::AllocateEdgeArrays(vtkm::Id nElems)
 {
-  activeEdges.Allocate(nElems);
-  edgeNear.Allocate(nElems);
-  edgeFar.Allocate(nElems);
+  this->ActiveEdges.Allocate(nElems);
+  this->EdgeNear.Allocate(nElems);
+  this->EdgeFar.Allocate(nElems);
 }
 
 
 // releases temporary arrays
 void ActiveGraph::ReleaseTemporaryArrays()
 {
-  globalIndex.ReleaseResources();
-  firstEdge.ReleaseResources();
-  outdegree.ReleaseResources();
-  edgeNear.ReleaseResources();
-  edgeFar.ReleaseResources();
-  activeEdges.ReleaseResources();
-  activeVertices.ReleaseResources();
-  edgeSorter.ReleaseResources();
-  hyperarcs.ReleaseResources();
-  hyperID.ReleaseResources();
-  superID.ReleaseResources();
+  this->GlobalIndex.ReleaseResources();
+  this->FirstEdge.ReleaseResources();
+  this->Outdegree.ReleaseResources();
+  this->EdgeNear.ReleaseResources();
+  this->EdgeFar.ReleaseResources();
+  this->ActiveEdges.ReleaseResources();
+  this->ActiveVertices.ReleaseResources();
+  this->EdgeSorter.ReleaseResources();
+  this->Hyperarcs.ReleaseResources();
+  this->HyperID.ReleaseResources();
+  this->SuperID.ReleaseResources();
 }
 
 
@@ -901,75 +913,77 @@ void ActiveGraph::DebugPrint(const char* message, const char* fileName, long lin
   std::cout << "Active Graph Contains:                                " << std::endl;
   std::cout << "------------------------------------------------------" << std::endl;
 
-  std::cout << "Is Join Graph? " << (isJoinGraph ? "T" : "F") << std::endl;
-  std::cout << "nIterations    " << nIterations << std::endl;
-  std::cout << "nSupernodes    " << nSupernodes << std::endl;
-  std::cout << "nHypernodes    " << nHypernodes << std::endl;
+  std::cout << "Is Join Graph? " << (this->IsJoinGraph ? "T" : "F") << std::endl;
+  std::cout << "NumIterations    " << this->NumIterations << std::endl;
+  std::cout << "nSupernodes    " << this->NumSupernodes << std::endl;
+  std::cout << "nHypernodes    " << this->NumHypernodes << std::endl;
 
   // Full Vertex Arrays
-  std::cout << "Full Vertex Arrays - Size:  " << globalIndex.GetNumberOfValues() << std::endl;
-  printHeader(globalIndex.GetNumberOfValues());
-  printIndices("Global Index", globalIndex);
-  printIndices("First Edge", firstEdge);
-  printIndices("Outdegree", outdegree);
-  printIndices("Hyperarc ID", hyperarcs);
-  printIndices("Hypernode ID", hyperID);
-  printIndices("Supernode ID", superID);
+  std::cout << "Full Vertex Arrays - Size:  " << this->GlobalIndex.GetNumberOfValues() << std::endl;
+  PrintHeader(this->GlobalIndex.GetNumberOfValues());
+  PrintIndices("Global Index", this->GlobalIndex);
+  PrintIndices("First Edge", this->FirstEdge);
+  PrintIndices("Outdegree", this->Outdegree);
+  PrintIndices("Hyperarc ID", this->Hyperarcs);
+  PrintIndices("Hypernode ID", this->HyperID);
+  PrintIndices("Supernode ID", this->SuperID);
   std::cout << std::endl;
 
   // Active Vertex Arrays
   IdArrayType activeIndices;
-  permuteArray<vtkm::Id>(globalIndex, activeVertices, activeIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, this->ActiveVertices, activeIndices);
   IdArrayType activeFirst;
-  permuteArray<vtkm::Id>(firstEdge, activeVertices, activeFirst);
+  PermuteArray<vtkm::Id>(this->FirstEdge, this->ActiveVertices, activeFirst);
   IdArrayType activeOutdegree;
-  permuteArray<vtkm::Id>(outdegree, activeVertices, activeOutdegree);
+  PermuteArray<vtkm::Id>(this->Outdegree, this->ActiveVertices, activeOutdegree);
   IdArrayType activeHyperarcs;
-  permuteArray<vtkm::Id>(hyperarcs, activeVertices, activeHyperarcs);
-  std::cout << "Active Vertex Arrays - Size: " << activeVertices.GetNumberOfValues() << std::endl;
-  printHeader(activeVertices.GetNumberOfValues());
-  printIndices("Active Vertices", activeVertices);
-  printIndices("Active Indices", activeIndices);
-  printIndices("Active First Edge", activeFirst);
-  printIndices("Active Outdegree", activeOutdegree);
-  printIndices("Active Hyperarc ID", activeHyperarcs);
+  PermuteArray<vtkm::Id>(this->Hyperarcs, this->ActiveVertices, activeHyperarcs);
+  std::cout << "Active Vertex Arrays - Size: " << this->ActiveVertices.GetNumberOfValues()
+            << std::endl;
+  PrintHeader(this->ActiveVertices.GetNumberOfValues());
+  PrintIndices("Active Vertices", this->ActiveVertices);
+  PrintIndices("Active Indices", activeIndices);
+  PrintIndices("Active First Edge", activeFirst);
+  PrintIndices("Active Outdegree", activeOutdegree);
+  PrintIndices("Active Hyperarc ID", activeHyperarcs);
   std::cout << std::endl;
 
   // Full Edge Arrays
   IdArrayType farIndices;
-  permuteArray<vtkm::Id>(globalIndex, edgeFar, farIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeFar, farIndices);
   IdArrayType nearIndices;
-  permuteArray<vtkm::Id>(globalIndex, edgeNear, nearIndices);
-  std::cout << "Full Edge Arrays - Size:     " << edgeNear.GetNumberOfValues() << std::endl;
-  printHeader(edgeFar.GetNumberOfValues());
-  printIndices("Near", edgeNear);
-  printIndices("Far", edgeFar);
-  printIndices("Near Index", nearIndices);
-  printIndices("Far Index", farIndices);
+  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeNear, nearIndices);
+  std::cout << "Full Edge Arrays - Size:     " << this->EdgeNear.GetNumberOfValues() << std::endl;
+  PrintHeader(this->EdgeFar.GetNumberOfValues());
+  PrintIndices("Near", this->EdgeNear);
+  PrintIndices("Far", this->EdgeFar);
+  PrintIndices("Near Index", nearIndices);
+  PrintIndices("Far Index", farIndices);
   std::cout << std::endl;
 
   // Active Edge Arrays
   IdArrayType activeFarIndices;
-  permuteArray<vtkm::Id>(edgeFar, activeEdges, activeFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeFar, this->ActiveEdges, activeFarIndices);
   IdArrayType activeNearIndices;
-  permuteArray<vtkm::Id>(edgeNear, activeEdges, activeNearIndices);
-  std::cout << "Active Edge Arrays - Size:   " << activeEdges.GetNumberOfValues() << std::endl;
-  printHeader(activeEdges.GetNumberOfValues());
-  printIndices("Active Edges", activeEdges);
-  printIndices("Edge Near Index", activeNearIndices);
-  printIndices("Edge Far Index", activeFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeNear, this->ActiveEdges, activeNearIndices);
+  std::cout << "Active Edge Arrays - Size:   " << this->ActiveEdges.GetNumberOfValues()
+            << std::endl;
+  PrintHeader(this->ActiveEdges.GetNumberOfValues());
+  PrintIndices("Active Edges", this->ActiveEdges);
+  PrintIndices("Edge Near Index", activeNearIndices);
+  PrintIndices("Edge Far Index", activeFarIndices);
   std::cout << std::endl;
 
   // Edge Sorter Array
   IdArrayType sortedFarIndices;
-  permuteArray<vtkm::Id>(edgeFar, edgeSorter, sortedFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeFar, this->EdgeSorter, sortedFarIndices);
   IdArrayType sortedNearIndices;
-  permuteArray<vtkm::Id>(edgeNear, edgeSorter, sortedNearIndices);
-  std::cout << "Edge Sorter - Size:          " << edgeSorter.GetNumberOfValues() << std::endl;
-  printHeader(edgeSorter.GetNumberOfValues());
-  printIndices("Edge Sorter", edgeSorter);
-  printIndices("Sorted Near Index", sortedNearIndices);
-  printIndices("Sorted Far Index", sortedFarIndices);
+  PermuteArray<vtkm::Id>(this->EdgeNear, this->EdgeSorter, sortedNearIndices);
+  std::cout << "Edge Sorter - Size:          " << this->EdgeSorter.GetNumberOfValues() << std::endl;
+  PrintHeader(this->EdgeSorter.GetNumberOfValues());
+  PrintIndices("Edge Sorter", this->EdgeSorter);
+  PrintIndices("Sorted Near Index", sortedNearIndices);
+  PrintIndices("Sorted Far Index", sortedFarIndices);
   std::cout << std::endl;
 
   std::cout << "---------------------------" << std::endl;

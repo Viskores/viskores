@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_init_new_join_splot_id_and_superparents_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -123,7 +123,7 @@ public:
         { // per supernode
 
           // find the regular ID for the supernode
-          vtkm::Id nodeID = contourTree.supernodes[supernode];
+          vtkm::Id nodeID = contourTree.Supernodes[supernode];
 
           // Transfer the join information
           // look up the join superparent in the join tree
@@ -131,7 +131,7 @@ public:
           // save the join superparent
           joinSuperparents[supernode] = joinSuperparent;
           // now, if the join superparent's mesh ID is the node itself, we're at a join supernode
-          if (joinTree.supernodes[joinSuperparent] == nodeID)
+          if (joinTree.Supernodes[joinSuperparent] == nodeID)
                   newJoinID[joinSuperparent] = supernode;
 
           // Transfer the split information
@@ -140,7 +140,7 @@ public:
           // save the split superparent
           splitSuperparents[supernode] = splitSuperparent;
           // now, if the split superparent's mesh ID is the node, we're at a split supernode
-          if (splitTree.supernodes[splitSuperparent] == nodeID)
+          if (splitTree.Supernodes[splitSuperparent] == nodeID)
                   newSplitID[splitSuperparent] = supernode;
 
         } // per supernode

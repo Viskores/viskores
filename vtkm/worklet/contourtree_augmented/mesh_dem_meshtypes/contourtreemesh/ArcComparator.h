@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_arc_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -89,29 +89,29 @@ public:
   VTKM_CONT
   ArcComparatorImpl(const IdArrayType& ct_arcs)
   { // constructor
-    arcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
+    this->ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
   } // constructor
 
   // () operator - gets called to do comparison
   VTKM_EXEC
   bool operator()(const vtkm::Id& x, const vtkm::Id& y) const
   { // operator()
-    vtkm::Id from1 = (x % 2 == 0) ? x / 2 : maskedIndex(arcsPortal.Get(x / 2));
-    vtkm::Id from2 = (y % 2 == 0) ? y / 2 : maskedIndex(arcsPortal.Get(y / 2));
+    vtkm::Id from1 = (x % 2 == 0) ? x / 2 : MaskedIndex(ArcsPortal.Get(x / 2));
+    vtkm::Id from2 = (y % 2 == 0) ? y / 2 : MaskedIndex(ArcsPortal.Get(y / 2));
     if (from1 != from2)
     {
       return from1 < from2;
     }
     else
     {
-      vtkm::Id to1 = (x % 2 == 0) ? maskedIndex(arcsPortal.Get(x / 2)) : x / 2;
-      vtkm::Id to2 = (y % 2 == 0) ? maskedIndex(arcsPortal.Get(y / 2)) : y / 2;
+      vtkm::Id to1 = (x % 2 == 0) ? MaskedIndex(ArcsPortal.Get(x / 2)) : x / 2;
+      vtkm::Id to2 = (y % 2 == 0) ? MaskedIndex(ArcsPortal.Get(y / 2)) : y / 2;
       return to1 < to2;
     }
   } // operator()
 
 private:
-  IdPortalType arcsPortal;
+  IdPortalType ArcsPortal;
 
 }; // ArcComparator
 

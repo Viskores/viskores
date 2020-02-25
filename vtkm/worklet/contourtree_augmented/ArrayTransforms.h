@@ -51,8 +51,8 @@
 //==============================================================================
 
 // include guard
-#ifndef vtkm_worklet_contourtree_augmented_array_transforms_h
-#define vtkm_worklet_contourtree_augmented_array_transforms_h
+#ifndef vtk_m_worklet_contourtree_augmented_array_transforms_h
+#define vtk_m_worklet_contourtree_augmented_array_transforms_h
 
 // global libraries
 #include <vtkm/cont/Algorithm.h>
@@ -75,7 +75,7 @@ namespace contourtree_augmented
 
 // permute routines
 template <typename ValueType, typename ArrayType>
-void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
+void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
 { // permuteValues()
   using transform_type =
     vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>;
@@ -96,9 +96,9 @@ void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& outpu
   // The following is equivalent to doing the following in serial
   //
   // for (vtkm::Id entry = 0; entry < permute.size(); entry++)
-  //     output[entry] = input[maskedIndex(permute[entry])];
+  //     output[entry] = input[MaskedIndex(permute[entry])];
   //
-  // Apply the maskedIndex functor to the permute array. ArrayHandleTransform is a fancy vtkm array, i.e.,
+  // Apply the MaskedIndex functor to the permute array. ArrayHandleTransform is a fancy vtkm array, i.e.,
   // the function is applied on-the-fly without creating a copy of the array.
   transform_type maskedPermuteIndex =
     vtkm::cont::make_ArrayHandleTransform(permute, MaskedIndexFunctor<ValueType>());
@@ -109,66 +109,55 @@ void permuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& outpu
   vtkm::cont::ArrayCopy(permutedInput, output);
 } // permuteValues()
 
-// permuteValues from the original PPP2 code is equivalent to permuteArray<T, vtkm::cont:ArrayHandle<T, StorageType>, DeviceAdaptor>   and has therefore been removed
-/*template <typename T, typename StorageType, typename DeviceAdapter>
-void permuteValues(const vtkm::cont::ArrayHandle<T,StorageType> &input, IdArrayType &permute, vtkm::cont::ArrayHandle<T,StorageType> &output)
-{}
-*/
 
-// permuteIndicies from the original PPP2 code is equivalent to permuteArray<vtkm::Id, IdArrayType, DeviceAdaptor> and has therefore been removed
-/* template <typename DeviceAdapter>
-void permuteIndices(IdArrayType &input, IdArrayType &permute, IdArrayType &output)
-{}
-*/
-
-// tranform functor needed for ScanExclusive calculation. Return 0 if noSuchElement else 1
-struct oneIfArcValid
+// transform functor needed for ScanExclusive calculation. Return 0 if noSuchElement else 1
+struct OneIfArcValid
 {
   VTKM_EXEC_CONT
-  oneIfArcValid() {}
+  OneIfArcValid() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id a) const { return noSuchElement(a) ? 0 : 1; }
+  vtkm::Id operator()(vtkm::Id a) const { return NoSuchElement(a) ? 0 : 1; }
 };
 
 // transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass
-struct markOther
+struct MarkOther
 {
   VTKM_EXEC_CONT
-  markOther() {}
+  MarkOther() {}
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id idx) const { return idx | CV_OTHER_FLAG; }
 };
 
 // transform functor needed for ScanExclusive calculation. Return 1 if vertex is critical else 0.
-struct onefIfCritical
+struct OnefIfCritical
 {
   VTKM_EXEC_CONT
-  onefIfCritical() {}
+  OnefIfCritical() {}
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id x) const { return x != 1 ? 1 : 0; }
 };
 
 // transform functor needed for ScanExclusive calculation in FindSuperAndHyperNodes. Return 1 if vertex is a supernode, else 0.
-struct onefIfSupernode
+struct OnefIfSupernode
 {
   VTKM_EXEC_CONT
-  onefIfSupernode() {}
+  OnefIfSupernode() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id x) const { return isSupernode(x) ? 1 : 0; }
+  vtkm::Id operator()(vtkm::Id x) const { return IsSupernode(x) ? 1 : 0; }
 };
 
 // transform functor needed for ScanExclusive calculation in FindSuperAndHyperNodes. Return 1 if vertex is a hypernode, else 0.
-struct onefIfHypernode
+struct OnefIfHypernode
 {
   VTKM_EXEC_CONT
-  onefIfHypernode() {}
+  OnefIfHypernode() {}
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id x) const { return isHypernode(x) ? 1 : 0; }
+  vtkm::Id operator()(vtkm::Id x) const { return IsHypernode(x) ? 1 : 0; }
 };
 
 

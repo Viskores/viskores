@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_compute_best_up_down_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -133,8 +133,8 @@ public:
     {
       Id j = edgesLinear.Get(k++)[1];
 
-      Id regularVertexValueI = maskedIndex(supernodes.Get(i));
-      Id regularVertexValueJ = maskedIndex(supernodes.Get(j));
+      Id regularVertexValueI = MaskedIndex(supernodes.Get(i));
+      Id regularVertexValueJ = MaskedIndex(supernodes.Get(j));
 
       //
       // Get the minimum of subtree T(j) \cup {i}
@@ -142,13 +142,13 @@ public:
 
       // If the arc is pointed the right way (according to the rooting of the tree) use the subtree min value
       // This is the minimum of T(j)
-      Id minValueInSubtree = maskedIndex(supernodes.Get(minValues.Get(j)));
+      Id minValueInSubtree = MaskedIndex(supernodes.Get(minValues.Get(j)));
 
       // See if the vertex i has a smaller value,
       // This means find the minimum of T(j) \cup {i}
       if (minValueInSubtree > regularVertexValueI)
       {
-        minValueInSubtree = maskedIndex(supernodes.Get(i));
+        minValueInSubtree = MaskedIndex(supernodes.Get(i));
       }
 
       // If the dirrection of the arc is not according to the rooting of the tree,
@@ -164,12 +164,12 @@ public:
 
       // See if the vertex i has a bigger value,
       // This means find the maximum of T(j) \cup {i}
-      Id maxValueInSubtree = maskedIndex(supernodes.Get(maxValues.Get(j)));
+      Id maxValueInSubtree = MaskedIndex(supernodes.Get(maxValues.Get(j)));
 
       // Include the current vertex along with the subtree it points at
       if (maxValueInSubtree < regularVertexValueI)
       {
-        maxValueInSubtree = maskedIndex(supernodes.Get(i));
+        maxValueInSubtree = MaskedIndex(supernodes.Get(i));
       }
 
       // If the dirrection of the arc is not according to the rooting of the tree,
@@ -206,7 +206,7 @@ public:
     }
 
     // Make sure at least one of these was set
-    assert(false == noSuchElement(bestUp.Get(i)) || false == noSuchElement(bestDown.Get(i)));
+    assert(false == NoSuchElement(bestUp.Get(i)) || false == NoSuchElement(bestDown.Get(i)));
   }
 }; // ComputeBestUpDown
 } // process_contourtree_inc

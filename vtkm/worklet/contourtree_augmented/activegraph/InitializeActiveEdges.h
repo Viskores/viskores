@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_edges_h
 
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -80,7 +80,7 @@ public:
     FieldIn outdegree,               // (input) outdegree
     ExecObject meshStructure,        // (input) execution object with the mesh structure
     FieldIn firstEdge,               // (input)
-    FieldIn globalIndex,             // (input) ActiveGraph.globalIndex
+    FieldIn globalIndex,             // (input) ActiveGraph.GlobalIndex
     WholeArrayIn extrema,            // (input)
     WholeArrayIn neighbourhoodMasks, // (input)
     WholeArrayOut edgeNear,          // (output) edgeNear
@@ -95,18 +95,18 @@ public:
   InitializeActiveEdges() {}
 
   template <typename MeshStructureType, typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& outDegree,
+  VTKM_EXEC void operator()(const vtkm::Id& outdegree,
                             const vtkm::Id activeIndex,
                             const MeshStructureType& meshStructure,
                             const vtkm::Id& firstEdgeIndex,
-                            const vtkm::Id& sortIndex, // = globalIndex.Get(activeIndex)
+                            const vtkm::Id& sortIndex, // = GlobalIndex.Get(activeIndex)
                             const InFieldPortalType& extrema,
                             const InFieldPortalType& neighbourhoodMasks,
                             const OutFieldPortalType& edgeNear,
                             const OutFieldPortalType& edgeFar,
                             const OutFieldPortalType& activeEdges) const
   {
-    if (outDegree != 0)
+    if (outdegree != 0)
     {
       // temporary array for storing edges
       vtkm::Id neigbourComponents[MeshClassType::MAX_OUTDEGREE];
@@ -128,14 +128,14 @@ public:
       // as with earlier versions, the parallel equivalent will need to use stream compression
       // but the serial version can be expressed more simply.
 
-      for (vtkm::Id edge = 0; edge < outDegree; edge++)
+      for (vtkm::Id edge = 0; edge < outdegree; edge++)
       { // per edge
         // compute the edge index in the edge arrays
         vtkm::Id edgeID = firstEdgeIndex + edge;
 
         // now set the low and high ends
         edgeNear.Set(edgeID, activeIndex);
-        edgeFar.Set(edgeID, maskedIndex(extrema.Get(neigbourComponents[edge])));
+        edgeFar.Set(edgeID, MaskedIndex(extrema.Get(neigbourComponents[edge])));
 
         // and save the edge itself
         activeEdges.Set(edgeID, edgeID);
@@ -145,8 +145,8 @@ public:
     // This operator implements the following loop from the serial code
     /*for (indexType activeIndex = 0; activeIndex < nCriticalPoints; ++activeIndex)
       {
-        indexType outDegree = outdegree[activeIndex];
-        if (outDegree != 0)
+        indexType outdegree = outdegree[activeIndex];
+        if (outdegree != 0)
           {
             indexType sortIndex = globalIndex[activeIndex];
 
@@ -170,14 +170,14 @@ public:
             // as with earlier versions, the parallel equivalent will need to use stream compression
             // but the serial version can be expressed more simply.
 
-            for (indexType edge = 0; edge < outDegree; edge++)
+            for (indexType edge = 0; edge < outdegree; edge++)
               { // per edge
                 // compute the edge index in the edge arrays
                 indexType edgeID = firstEdge[activeIndex] + edge;
 
                 // now set the low and high ends
                 edgeNear[edgeID] = activeIndex;
-                edgeFar[edgeID] = maskedIndex(extrema[neigbourComponents[edge]]);
+                edgeFar[edgeID] = MaskedIndex(extrema[neigbourComponents[edge]]);
 
                 // and save the edge itself
                 activeEdges[edgeID] = edgeID;
@@ -185,10 +185,6 @@ public:
           }
         } // per activeIndex*/
   }
-
-private:
-  bool isJoinGraph;
-
 }; // Mesh2D_DEM_VertexStarter
 
 

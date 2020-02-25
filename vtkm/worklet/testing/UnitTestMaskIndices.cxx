@@ -52,16 +52,16 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
   for (vtkm::Id i = 0; i < indices.GetNumberOfValues(); ++i)
   {
     // All unmasked indices should have been copied to the output.
-    vtkm::Id unmaskedIndex = indices.GetPortalConstControl().Get(i);
-    vtkm::Id writtenValue = outPointId.GetPortalConstControl().Get(unmaskedIndex);
-    VTKM_TEST_ASSERT(unmaskedIndex == writtenValue,
+    vtkm::Id unMaskedIndex = indices.GetPortalConstControl().Get(i);
+    vtkm::Id writtenValue = outPointId.GetPortalConstControl().Get(unMaskedIndex);
+    VTKM_TEST_ASSERT(unMaskedIndex == writtenValue,
                      "Did not pass unmasked index. Expected ",
-                     unmaskedIndex,
+                     unMaskedIndex,
                      ". Got ",
                      writtenValue);
 
     // Mark index as passed.
-    stencil.GetPortalControl().Set(unmaskedIndex, 1);
+    stencil.GetPortalControl().Set(unMaskedIndex, 1);
   }
 
   // Check that output that should not be written was not.

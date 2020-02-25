@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_execution_object_mesh_2d_h
 
 #include <vtkm/Types.h>
 
@@ -72,35 +72,35 @@ class MeshStructure2D
 public:
   VTKM_EXEC_CONT
   MeshStructure2D()
-    : nCols(0)
-    , nRows(0)
+    : NumColumns(0)
+    , NumRows(0)
   {
   }
 
   VTKM_EXEC_CONT
   MeshStructure2D(vtkm::Id ncols, vtkm::Id nrows)
-    : nCols(ncols)
-    , nRows(nrows)
+    : NumColumns(ncols)
+    , NumRows(nrows)
   {
   }
 
   // number of mesh vertices
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->nRows * this->nCols); }
+  vtkm::Id GetNumberOfVertices() const { return (this->NumRows * this->NumColumns); }
 
   // vertex row - integer divide by columns
   VTKM_EXEC
-  inline vtkm::Id vertexRow(vtkm::Id v) const { return v / nCols; }
+  inline vtkm::Id VertexRow(vtkm::Id v) const { return v / NumColumns; }
 
   // verteck column -- integer modulus by columns
   VTKM_EXEC
-  inline vtkm::Id vertexColumn(vtkm::Id v) const { return v % nCols; }
+  inline vtkm::Id VertexColumn(vtkm::Id v) const { return v % NumColumns; }
 
   //vertex ID - row * ncols + col
   VTKM_EXEC
-  inline vtkm::Id vertexId(vtkm::Id r, vtkm::Id c) const { return r * nCols + c; }
+  inline vtkm::Id VertexId(vtkm::Id r, vtkm::Id c) const { return r * NumColumns + c; }
 
-  vtkm::Id nCols, nRows;
+  vtkm::Id NumColumns, NumRows;
 
 }; // MeshStructure2D
 

@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_process_contourtree_h
-#define vtkm_worklet_contourtree_augmented_process_contourtree_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_h
 
 // global includes
 #include <algorithm>
@@ -82,7 +82,7 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
 
-#include <vtkm/worklet/contourtree_augmented/EulerTour.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 
 
 
@@ -115,20 +115,20 @@ public:
     std::vector<EdgePair> arcSorter;
 
     // fill it up
-    auto arcsPortal = contourTree.arcs.GetPortalConstControl();
+    auto arcsPortal = contourTree.Arcs.GetPortalConstControl();
     auto sortOrderPortal = sortOrder.GetPortalConstControl();
 
-    for (vtkm::Id node = 0; node < contourTree.arcs.GetNumberOfValues(); node++)
+    for (vtkm::Id node = 0; node < contourTree.Arcs.GetNumberOfValues(); node++)
     { // per node
       // retrieve ID of target supernode
       vtkm::Id arcTo = arcsPortal.Get(node);
 
       // if this is true, it is the last pruned vertex & is omitted
-      if (noSuchElement(arcTo))
+      if (NoSuchElement(arcTo))
         continue;
 
       // otherwise, strip out the flags
-      arcTo = maskedIndex(arcTo);
+      arcTo = MaskedIndex(arcTo);
 
       // now convert to mesh IDs from sort IDs
       // otherwise, we need to convert the IDs to regular mesh IDs
@@ -160,11 +160,11 @@ public:
     std::vector<EdgePair> superarcSorter;
 
     // fill it up
-    auto supernodesPortal = contourTree.supernodes.GetPortalConstControl();
-    auto superarcsPortal = contourTree.superarcs.GetPortalConstControl();
+    auto supernodesPortal = contourTree.Supernodes.GetPortalConstControl();
+    auto superarcsPortal = contourTree.Superarcs.GetPortalConstControl();
     auto sortOrderPortal = sortOrder.GetPortalConstControl();
 
-    for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.GetNumberOfValues();
+    for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues();
          supernode++)
     { // per supernode
       // sort ID of the supernode
@@ -174,17 +174,17 @@ public:
       vtkm::Id superTo = superarcsPortal.Get(supernode);
 
       // if this is true, it is the last pruned vertex & is omitted
-      if (noSuchElement(superTo))
+      if (NoSuchElement(superTo))
         continue;
 
       // otherwise, strip out the flags
-      superTo = maskedIndex(superTo);
+      superTo = MaskedIndex(superTo);
 
       // otherwise, we need to convert the IDs to regular mesh IDs
-      vtkm::Id regularID = sortOrderPortal.Get(maskedIndex(sortID));
+      vtkm::Id regularID = sortOrderPortal.Get(MaskedIndex(sortID));
 
       // retrieve the regular ID for it
-      vtkm::Id regularTo = sortOrderPortal.Get(maskedIndex(supernodesPortal.Get(superTo)));
+      vtkm::Id regularTo = sortOrderPortal.Get(MaskedIndex(supernodesPortal.Get(superTo)));
 
       // how we print depends on which end has lower ID
       if (regularID < regularTo)
@@ -219,18 +219,18 @@ public:
   { // ContourTreeMaker::ComputeWeights()
     // start by storing the first sorted vertex ID for each superarc
     IdArrayType firstVertexForSuperparent;
-    firstVertexForSuperparent.Allocate(contourTree.superarcs.GetNumberOfValues());
-    superarcIntrinsicWeight.Allocate(contourTree.superarcs.GetNumberOfValues());
+    firstVertexForSuperparent.Allocate(contourTree.Superarcs.GetNumberOfValues());
+    superarcIntrinsicWeight.Allocate(contourTree.Superarcs.GetNumberOfValues());
     auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.GetPortalControl();
     auto firstVertexForSuperparentPortal = firstVertexForSuperparent.GetPortalControl();
-    auto superparentsPortal = contourTree.superparents.GetPortalConstControl();
-    auto hyperparentsPortal = contourTree.hyperparents.GetPortalConstControl();
-    auto hypernodesPortal = contourTree.hypernodes.GetPortalConstControl();
-    auto hyperarcsPortal = contourTree.hyperarcs.GetPortalConstControl();
-    // auto superarcsPortal = contourTree.superarcs.GetPortalConstControl();
-    auto nodesPortal = contourTree.nodes.GetPortalConstControl();
-    auto whenTransferredPortal = contourTree.whenTransferred.GetPortalConstControl();
-    for (vtkm::Id sortedNode = 0; sortedNode < contourTree.arcs.GetNumberOfValues(); sortedNode++)
+    auto superparentsPortal = contourTree.Superparents.GetPortalConstControl();
+    auto hyperparentsPortal = contourTree.Hyperparents.GetPortalConstControl();
+    auto hypernodesPortal = contourTree.Hypernodes.GetPortalConstControl();
+    auto hyperarcsPortal = contourTree.Hyperarcs.GetPortalConstControl();
+    // auto superarcsPortal = contourTree.Superarcs.GetPortalConstControl();
+    auto nodesPortal = contourTree.Nodes.GetPortalConstControl();
+    auto whenTransferredPortal = contourTree.WhenTransferred.GetPortalConstControl();
+    for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
     { // per node in sorted order
       vtkm::Id sortID = nodesPortal.Get(sortedNode);
       vtkm::Id superparent = superparentsPortal.Get(sortID);
@@ -240,10 +240,10 @@ public:
         firstVertexForSuperparentPortal.Set(superparent, sortedNode);
     } // per node in sorted order
     // now we use that to compute the intrinsic weights
-    for (vtkm::Id superarc = 0; superarc < contourTree.superarcs.GetNumberOfValues(); superarc++)
-      if (superarc == contourTree.superarcs.GetNumberOfValues() - 1)
+    for (vtkm::Id superarc = 0; superarc < contourTree.Superarcs.GetNumberOfValues(); superarc++)
+      if (superarc == contourTree.Superarcs.GetNumberOfValues() - 1)
         superarcIntrinsicWeightPortal.Set(superarc,
-                                          contourTree.arcs.GetNumberOfValues() -
+                                          contourTree.Arcs.GetNumberOfValues() -
                                             firstVertexForSuperparentPortal.Get(superarc));
       else
         superarcIntrinsicWeightPortal.Set(superarc,
@@ -252,13 +252,13 @@ public:
 
     // now initialise the arrays for transfer & dependent weights
     vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.superarcs.GetNumberOfValues()),
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Superarcs.GetNumberOfValues()),
       superarcDependentWeight);
     vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.supernodes.GetNumberOfValues()),
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Supernodes.GetNumberOfValues()),
       supernodeTransferWeight);
     vtkm::cont::ArrayCopy(
-      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.hyperarcs.GetNumberOfValues()),
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Hyperarcs.GetNumberOfValues()),
       hyperarcDependentWeight);
 
     // set up the array which tracks which supernodes to deal with on which iteration
@@ -266,15 +266,15 @@ public:
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1),
                           firstSupernodePerIteration);
     auto firstSupernodePerIterationPortal = firstSupernodePerIteration.GetPortalControl();
-    for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.GetNumberOfValues();
+    for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues();
          supernode++)
     { // per supernode
-      vtkm::Id when = maskedIndex(whenTransferredPortal.Get(supernode));
+      vtkm::Id when = MaskedIndex(whenTransferredPortal.Get(supernode));
       if (supernode == 0)
       { // zeroth supernode
         firstSupernodePerIterationPortal.Set(when, supernode);
       } // zeroth supernode
-      else if (when != maskedIndex(whenTransferredPortal.Get(supernode - 1)))
+      else if (when != MaskedIndex(whenTransferredPortal.Get(supernode - 1)))
       { // non-matching supernode
         firstSupernodePerIterationPortal.Set(when, supernode);
       } // non-matching supernode
@@ -285,7 +285,7 @@ public:
                                              firstSupernodePerIterationPortal.Get(iteration + 1));
 
     // set the sentinel at the end of the array
-    firstSupernodePerIterationPortal.Set(nIterations, contourTree.supernodes.GetNumberOfValues());
+    firstSupernodePerIterationPortal.Set(nIterations, contourTree.Supernodes.GetNumberOfValues());
 
     // now use that array to construct a similar array for hypernodes
     IdArrayType firstHypernodePerIteration;
@@ -297,7 +297,7 @@ public:
     for (vtkm::Id iteration = 0; iteration < nIterations; iteration++)
       firstHypernodePerIterationPortal.Set(
         iteration, hyperparentsPortal.Get(firstSupernodePerIterationPortal.Get(iteration)));
-    firstHypernodePerIterationPortal.Set(nIterations, contourTree.hypernodes.GetNumberOfValues());
+    firstHypernodePerIterationPortal.Set(nIterations, contourTree.Hypernodes.GetNumberOfValues());
 
     // now iterate, propagating weights inwards
     for (vtkm::Id iteration = 0; iteration < nIterations; iteration++)
@@ -369,9 +369,9 @@ public:
         // last superarc for the hyperarc
         vtkm::Id lastSuperarc;
         // special case for the last hyperarc
-        if (hypernode == contourTree.hypernodes.GetNumberOfValues() - 1)
+        if (hypernode == contourTree.Hypernodes.GetNumberOfValues() - 1)
           // take the last superarc in the array
-          lastSuperarc = contourTree.supernodes.GetNumberOfValues() - 1;
+          lastSuperarc = contourTree.Supernodes.GetNumberOfValues() - 1;
         else
           // otherwise, take the next hypernode's ID and subtract 1
           lastSuperarc = hypernodesPortal.Get(hypernode + 1) - 1;
@@ -381,7 +381,7 @@ public:
                                           superarcDependentWeightPortal.Get(lastSuperarc));
 
         // note that in parallel, this will have to be split out as a sort & partial sum in another array
-        vtkm::Id hyperarcTarget = maskedIndex(hyperarcsPortal.Get(hypernode));
+        vtkm::Id hyperarcTarget = MaskedIndex(hyperarcsPortal.Get(hypernode));
         supernodeTransferWeightPortal.Set(hyperarcTarget,
                                           supernodeTransferWeightPortal.Get(hyperarcTarget) +
                                             hyperarcDependentWeightPortal.Get(hypernode));
@@ -399,12 +399,12 @@ public:
                                                IdArrayType& branchSaddle,
                                                IdArrayType& branchParent)
   { // ComputeVolumeBranchDecomposition()
-    auto superarcsPortal = contourTree.superarcs.GetPortalConstControl();
+    auto superarcsPortal = contourTree.Superarcs.GetPortalConstControl();
     auto superarcDependentWeightPortal = superarcDependentWeight.GetPortalConstControl();
     auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.GetPortalConstControl();
 
     // cache the number of non-root supernodes & superarcs
-    vtkm::Id nSupernodes = contourTree.supernodes.GetNumberOfValues();
+    vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
     vtkm::Id nSuperarcs = nSupernodes - 1;
 
     // STAGE I:  Find the upward and downwards weight for each superarc, and set up arrays
@@ -432,7 +432,7 @@ public:
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
                           superarcList);
     auto superarcListPortal = superarcList.GetPortalControl();
-    vtkm::Id totalVolume = contourTree.nodes.GetNumberOfValues();
+    vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
     std::cout << "Total Volume: " << totalVolume << std::endl;
 #endif
@@ -440,10 +440,10 @@ public:
     // so we can easily skip it by not indexing to the full size
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      if (isAscending(superarcsPortal.Get(superarc)))
+      if (IsAscending(superarcsPortal.Get(superarc)))
       { // ascending superarc
         superarcListPortal.Set(superarc,
-                               EdgePair(superarc, maskedIndex(superarcsPortal.Get(superarc))));
+                               EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
         upWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -454,7 +454,7 @@ public:
       else
       { // descending superarc
         superarcListPortal.Set(superarc,
-                               EdgePair(maskedIndex(superarcsPortal.Get(superarc)), superarc));
+                               EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
         downWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -466,11 +466,11 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "II A. Weights Computed" << std::endl;
-    printHeader(upWeight.GetNumberOfValues());
-    //printIndices("Intrinsic Weight", superarcIntrinsicWeight);
-    //printIndices("Dependent Weight", superarcDependentWeight);
-    printIndices("Upwards Weight", upWeight);
-    printIndices("Downwards Weight", downWeight);
+    PrintHeader(upWeight.GetNumberOfValues());
+    //PrintIndices("Intrinsic Weight", superarcIntrinsicWeight);
+    //PrintIndices("Dependent Weight", superarcDependentWeight);
+    PrintIndices("Upwards Weight", upWeight);
+    PrintIndices("Downwards Weight", downWeight);
     std::cout << std::endl;
 #endif
 
@@ -527,9 +527,9 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "II. Best Edges Selected" << std::endl;
-    printHeader(bestUpward.GetNumberOfValues());
-    printIndices("Best Upwards", bestUpward);
-    printIndices("Best Downwards", bestDownward);
+    PrintHeader(bestUpward.GetNumberOfValues());
+    PrintIndices("Best Upwards", bestUpward);
+    PrintIndices("Best Downwards", bestDownward);
     std::cout << std::endl;
 #endif
 
@@ -555,7 +555,7 @@ public:
   { // ComputeBranchData()
 
     // Set up constants
-    vtkm::Id nSupernodes = contourTree.supernodes.GetNumberOfValues();
+    vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
@@ -573,7 +573,7 @@ public:
     for (vtkm::Id supernode = 0; supernode != nSupernodes; supernode++)
     { // per supernode
       vtkm::Id bestUp = bestUpwardPortal.Get(supernode);
-      if (noSuchElement(bestUp))
+      if (NoSuchElement(bestUp))
         // flag it as an upper leaf
         whichBranchPortal.Set(supernode, TERMINAL_ELEMENT | supernode);
       else if (bestDownwardPortal.Get(bestUp) == supernode)
@@ -584,30 +584,30 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "III. Branch Neighbours Identified" << std::endl;
-    printHeader(whichBranch.GetNumberOfValues());
-    printIndices("Which Branch", whichBranch);
+    PrintHeader(whichBranch.GetNumberOfValues());
+    PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
 
     // STAGE IV: Use pointer-doubling on whichBranch to propagate branches
     // Compute the number of log steps required in this pass
-    vtkm::Id nLogSteps = 1;
+    vtkm::Id numLogSteps = 1;
     for (vtkm::Id shifter = nSupernodes; shifter != 0; shifter >>= 1)
-      nLogSteps++;
+      numLogSteps++;
 
     // use pointer-doubling to build the branches
-    for (vtkm::Id iteration = 0; iteration < nLogSteps; iteration++)
+    for (vtkm::Id iteration = 0; iteration < numLogSteps; iteration++)
     { // per iteration
       // loop through the vertices, updating the chaining array
       for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-        if (!isTerminalElement(whichBranchPortal.Get(supernode)))
+        if (!IsTerminalElement(whichBranchPortal.Get(supernode)))
           whichBranchPortal.Set(supernode, whichBranchPortal.Get(whichBranchPortal.Get(supernode)));
     } // per iteration
 
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
-    printHeader(whichBranch.GetNumberOfValues());
-    printIndices("Which Branch", whichBranch);
+    PrintHeader(whichBranch.GetNumberOfValues());
+    PrintIndices("Which Branch", whichBranch);
     std::cout << std::endl;
 #endif
 
@@ -622,7 +622,7 @@ public:
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
       // test whether the supernode points to itself to find the top ends
-      if (maskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+      if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
       {
         chainToBranchPortal.Set(supernode, nBranches++);
       }
@@ -642,13 +642,13 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
-    printHeader(chainToBranch.GetNumberOfValues());
-    printIndices("Chain To Branch", chainToBranch);
-    printHeader(nBranches);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintHeader(chainToBranch.GetNumberOfValues());
+    PrintIndices("Chain To Branch", chainToBranch);
+    PrintHeader(nBranches);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
     // STAGE VI:  Sort all supernodes by [whichBranch, regular index] to get the sequence along the branch
     // Assign the upper end of the branch as an ID (for now).
@@ -663,28 +663,28 @@ public:
 
     vtkm::cont::Algorithm::Sort(
       supernodeSorter,
-      process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.supernodes));
+      process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
     IdArrayType permutedBranches;
     permutedBranches.Allocate(nSupernodes);
-    permuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
+    PermuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
 
     IdArrayType permutedRegularID;
     permutedRegularID.Allocate(nSupernodes);
-    permuteArray<vtkm::Id>(contourTree.supernodes, supernodeSorter, permutedRegularID);
+    PermuteArray<vtkm::Id>(contourTree.Supernodes, supernodeSorter, permutedRegularID);
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;
-    printHeader(nSupernodes);
-    printIndices("Supernode IDs", supernodeSorter);
-    printIndices("Branch", permutedBranches);
-    printIndices("Regular ID", permutedRegularID);
+    PrintHeader(nSupernodes);
+    PrintIndices("Supernode IDs", supernodeSorter);
+    PrintIndices("Branch", permutedBranches);
+    PrintIndices("Regular ID", permutedRegularID);
 #endif
 
     // VI B. And reset the whichBranch to use the new branch IDs
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
       whichBranchPortal.Set(supernode,
-                            chainToBranchPortal.Get(maskedIndex(whichBranchPortal.Get(supernode))));
+                            chainToBranchPortal.Get(MaskedIndex(whichBranchPortal.Get(supernode))));
     }
 
     // VI C.  For each segment, the highest element sets up the upper end, the lowest element sets the low end
@@ -716,11 +716,11 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "VI. Branches Set" << std::endl;
-    printHeader(nBranches);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintHeader(nBranches);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
 
     // STAGE VII: For each branch, set its parent (initially) to NO_SUCH_ELEMENT
@@ -734,18 +734,18 @@ public:
     { // per branch
       vtkm::Id branchMax = branchMaximumPortal.Get(branchID);
       // check whether the maximum is NOT a leaf
-      if (!noSuchElement(bestUpwardPortal.Get(branchMax)))
+      if (!NoSuchElement(bestUpwardPortal.Get(branchMax)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, maskedIndex(bestUpwardPortal.Get(branchMax)));
+        branchSaddlePortal.Set(branchID, MaskedIndex(bestUpwardPortal.Get(branchMax)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
         branchParentPortal.Set(branchID, whichBranchPortal.Get(bestUpwardPortal.Get(branchMax)));
       } // points to a saddle
       // now do the same with the branch minimum
       vtkm::Id branchMin = branchMinimumPortal.Get(branchID);
       // test whether NOT a lower leaf
-      if (!noSuchElement(bestDownwardPortal.Get(branchMin)))
+      if (!NoSuchElement(bestDownwardPortal.Get(branchMin)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, maskedIndex(bestDownwardPortal.Get(branchMin)));
+        branchSaddlePortal.Set(branchID, MaskedIndex(bestDownwardPortal.Get(branchMin)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
         branchParentPortal.Set(branchID, whichBranchPortal.Get(bestDownwardPortal.Get(branchMin)));
       } // points to a saddle
@@ -753,11 +753,11 @@ public:
 
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
-    printHeader(nBranches);
-    printIndices("Branch Maximum", branchMaximum);
-    printIndices("Branch Minimum", branchMinimum);
-    printIndices("Branch Saddle", branchSaddle);
-    printIndices("Branch Parent", branchParent);
+    PrintHeader(nBranches);
+    PrintIndices("Branch Maximum", branchMaximum);
+    PrintIndices("Branch Minimum", branchMinimum);
+    PrintIndices("Branch Saddle", branchSaddle);
+    PrintIndices("Branch Parent", branchParent);
 #endif
 
   } // ComputeBranchData()
@@ -901,8 +901,8 @@ public:
       Id vertex = static_cast<Id>(vertexData[i].index);
       Id parent = parents.Get(vertex);
 
-      Id vertexValue = maskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));
-      Id parentValue = maskedIndex(supernodes.Get(minMaxIndex.Get(parent)));
+      Id vertexValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));
+      Id parentValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(parent)));
 
       if ((true == isMin && vertexValue < parentValue) ||
           (false == isMin && vertexValue > parentValue))
@@ -925,7 +925,7 @@ public:
   { // ComputeHeightBranchDecomposition()
 
     // Cache the number of non-root supernodes & superarcs
-    vtkm::Id nSupernodes = contourTree.supernodes.GetNumberOfValues();
+    vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
 
@@ -944,16 +944,16 @@ public:
     maxTourEdges.Allocate(2 * (nSupernodes - 1));
 
     // Compute the Euler Tour
-    vtkm::worklet::contourtree_augmented::EulerTour tour;
-    tour.computeEulerTour(contourTree.superarcs.GetPortalConstControl());
+    process_contourtree_inc_ns::EulerTour tour;
+    tour.computeEulerTour(contourTree.Superarcs.GetPortalConstControl());
 
     // Reroot the Euler Tour at the global min
-    tour.getTourAtRoot(maskedIndex(contourTree.superparents.GetPortalConstControl().Get(0)),
+    tour.getTourAtRoot(MaskedIndex(contourTree.Superparents.GetPortalConstControl().Get(0)),
                        minTourEdges.GetPortalControl());
 
     // Reroot the Euler Tour at the global max
-    tour.getTourAtRoot(maskedIndex(contourTree.superparents.GetPortalConstControl().Get(
-                         contourTree.nodes.GetNumberOfValues() - 1)),
+    tour.getTourAtRoot(MaskedIndex(contourTree.Superparents.GetPortalConstControl().Get(
+                         contourTree.Nodes.GetNumberOfValues() - 1)),
                        maxTourEdges.GetPortalControl());
 
     //
@@ -970,13 +970,13 @@ public:
     // This is why I have left the option to do a BFS style search in serial instead of doing an a prefix min/max for every subtree in the euler tour
     if (false == useParallelMinMaxSearch)
     {
-      ProcessContourTree::findMinMax(contourTree.supernodes.GetPortalConstControl(),
+      ProcessContourTree::findMinMax(contourTree.Supernodes.GetPortalConstControl(),
                                      minTourEdges.GetPortalConstControl(),
                                      true,
                                      minValues.GetPortalControl(),
                                      minParents.GetPortalControl());
 
-      ProcessContourTree::findMinMax(contourTree.supernodes.GetPortalConstControl(),
+      ProcessContourTree::findMinMax(contourTree.Supernodes.GetPortalConstControl(),
                                      maxTourEdges.GetPortalConstControl(),
                                      false,
                                      maxValues.GetPortalControl(),
@@ -985,10 +985,10 @@ public:
     else
     {
       ProcessContourTree::findMinMaxParallel(
-        contourTree.supernodes, minTourEdges, true, minValues, minParents);
+        contourTree.Supernodes, minTourEdges, true, minValues, minParents);
 
       ProcessContourTree::findMinMaxParallel(
-        contourTree.supernodes, maxTourEdges, false, maxValues, maxParents);
+        contourTree.Supernodes, maxTourEdges, false, maxValues, maxParents);
     }
 
     //
@@ -1000,8 +1000,8 @@ public:
     vtkm::cont::Invoker Invoke;
     Invoke(bestUpDownWorklet,
            tour.first,
-           contourTree.nodes,
-           contourTree.supernodes,
+           contourTree.Nodes,
+           contourTree.Supernodes,
            minValues,
            minParents,
            maxValues,

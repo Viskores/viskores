@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
-#define vtkm_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -81,13 +81,13 @@ class IdRelabler
 public:
   VTKM_EXEC_CONT
   IdRelabler()
-    : inputStartRow(0)
-    , inputStartCol(0)
-    , inputStartSlice(0)
-    , inputNRows(1)
-    , inputNCols(1)
-    , outputNRows(1)
-    , outputNCols(1)
+    : InputStartRow(0)
+    , InputStartCol(0)
+    , InputStartSlice(0)
+    , InputNumRows(1)
+    , InputNumCols(1)
+    , OutputNumRows(1)
+    , OutputNumCol(1)
   {
   }
 
@@ -99,30 +99,30 @@ public:
              vtkm::Id iNC,
              vtkm::Id oNR,
              vtkm::Id oNC)
-    : inputStartRow(iSR)
-    , inputStartCol(iSC)
-    , inputStartSlice(iSS)
-    , inputNRows(iNR)
-    , inputNCols(iNC)
-    , outputNRows(oNR)
-    , outputNCols(oNC)
+    : InputStartRow(iSR)
+    , InputStartCol(iSC)
+    , InputStartSlice(iSS)
+    , InputNumRows(iNR)
+    , InputNumCols(iNC)
+    , OutputNumRows(oNR)
+    , OutputNumCol(oNC)
   {
   }
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id v) const
   {
-    vtkm::Id r = inputStartRow + ((v % (inputNRows * inputNCols)) / inputNCols);
-    vtkm::Id c = inputStartCol + (v % inputNCols);
-    vtkm::Id s = inputStartSlice + v / (inputNRows * inputNCols);
+    vtkm::Id r = InputStartRow + ((v % (InputNumRows * InputNumCols)) / InputNumCols);
+    vtkm::Id c = InputStartCol + (v % InputNumCols);
+    vtkm::Id s = InputStartSlice + v / (InputNumRows * InputNumCols);
 
-    return (s * outputNRows + r) * outputNCols + c;
+    return (s * OutputNumRows + r) * OutputNumCol + c;
   }
 
 private:
-  vtkm::Id inputStartRow, inputStartCol, inputStartSlice;
-  vtkm::Id inputNRows, inputNCols;
-  vtkm::Id outputNRows, outputNCols;
+  vtkm::Id InputStartRow, InputStartCol, InputStartSlice;
+  vtkm::Id InputNumRows, InputNumCols;
+  vtkm::Id OutputNumRows, OutputNumCol;
 };
 
 

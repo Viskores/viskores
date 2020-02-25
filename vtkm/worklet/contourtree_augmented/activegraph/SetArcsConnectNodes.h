@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_set_arcs_connect_nodes_h
-#define vtkm_worklet_contourtree_augmented_active_graph_set_arcs_connect_nodes_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_connect_nodes_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_set_arcs_connect_nodes_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -100,7 +100,7 @@ public:
     { // left edge
       vtkm::Id superarc = treeSuperarcsPortal.Get(superparent);
       // explicit check for global minimum
-      if (noSuchElement(superarc))
+      if (NoSuchElement(superarc))
         treeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       else
         treeArcsPortal.Set(nodeID, treeSupernodesPortal.Get(treeSuperarcsPortal.Get(superparent)));
@@ -109,7 +109,7 @@ public:
     { // any other transition
       vtkm::Id superarc = treeSuperarcsPortal.Get(superparent);
       // explicit check for global minimum
-      if (noSuchElement(superarc))
+      if (NoSuchElement(superarc))
         treeArcsPortal.Set(nodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       else
         treeArcsPortal.Set(nodeID, treeSupernodesPortal.Get(treeSuperarcsPortal.Get(superparent)));
@@ -121,7 +121,7 @@ public:
 
     // In serial this worklet implements the following operation
     /*
-      for (indexType node = 0; node < tree.arcs.size(); node++)
+      for (indexType node = 0; node < tree.Arcs.size(); node++)
         { // per node
           indexType nodeID = nodes[node];
           // work out whether we have the first node on the superarc
@@ -130,22 +130,22 @@ public:
             { // left edge
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
-              if (noSuchElement(superarc))
-                      tree.arcs[nodeID] = NO_SUCH_ELEMENT;
+              if (NoSuchElement(superarc))
+                      tree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                      tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];
+                      tree.Arcs[nodeID] = tree.Supernodes[tree.superarcs[superparent]];
             } // left edge
-          else if (superparent != tree.superparents[nodes[node-1]])
+          else if (superparent != tree.Superparents[nodes[node-1]])
             { // any other transition
               indexType superarc = tree.superarcs[superparent];
               // explicit check for global minimum
-              if (noSuchElement(superarc))
-                      tree.arcs[nodeID] = NO_SUCH_ELEMENT;
+              if (NoSuchElement(superarc))
+                      tree.Arcs[nodeID] = NO_SUCH_ELEMENT;
               else
-                      tree.arcs[nodeID] = tree.supernodes[tree.superarcs[superparent]];
+                      tree.Arcs[nodeID] = tree.Supernodes[tree.superarcs[superparent]];
             } // any other transition
           else
-            tree.arcs[nodeID] = nodes[node-1];
+            tree.Arcs[nodeID] = nodes[node-1];
         } // per node
         */
   }

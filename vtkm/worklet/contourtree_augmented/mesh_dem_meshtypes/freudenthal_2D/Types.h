@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_types_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_types_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_types_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_2D_freudenthal_types_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -65,17 +65,17 @@ namespace contourtree_augmented
 {
 namespace m2d_freudenthal
 {
-using edgeBoundaryDetectionMasksType = typename vtkm::cont::ArrayHandle<vtkm::Int8>;
+using EdgeBoundaryDetectionMasksType = typename vtkm::cont::ArrayHandle<vtkm::Int8>;
 
 static constexpr vtkm::Int32 N_INCIDENT_EDGES = 6;
 
-static constexpr vtkm::Int8 leftBit = 1 << 0;
-static constexpr vtkm::Int8 rightBit = 1 << 1;
-static constexpr vtkm::Int8 topBit = 1 << 2;
-static constexpr vtkm::Int8 bottomBit = 1 << 3;
+static constexpr vtkm::Int8 LeftBit = 1 << 0;
+static constexpr vtkm::Int8 RightBit = 1 << 1;
+static constexpr vtkm::Int8 TopBit = 1 << 2;
+static constexpr vtkm::Int8 BottomBit = 1 << 3;
 
-static const vtkm::Int8 edgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
-  rightBit, bottomBit | rightBit, bottomBit, leftBit, leftBit | topBit, topBit
+static const vtkm::Int8 EdgeBoundaryDetectionMasks[N_INCIDENT_EDGES] = {
+  RightBit, BottomBit | RightBit, BottomBit, LeftBit, LeftBit | TopBit, TopBit
 };
 
 } // mesh_dem_types_2d_freudenthal

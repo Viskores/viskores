@@ -18,7 +18,8 @@ set(headers
   ComputeEulerTourList.h
   ComputeMinMaxValues.h
   SetTriangleSuperarcId.h
-  )
+  EulerTour.h
+ )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})

@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_mergetree_h
-#define vtkm_worklet_contourtree_augmented_mergetree_h
+#ifndef vtk_m_worklet_contourtree_augmented_mergetree_h
+#define vtk_m_worklet_contourtree_augmented_mergetree_h
 
 #include <iomanip>
 
@@ -78,49 +78,49 @@ class MergeTree
 { // class MergeTree
 public:
   // whether it is join or split tree
-  bool isJoinTree;
+  bool IsJoinTree;
 
   // VECTORS INDEXED ON N = SIZE OF DATA
 
   // the list of nodes is implicit
 
   // vector of (regular) arcs in the merge tree
-  IdArrayType arcs;
+  IdArrayType Arcs;
 
   // vector storing which superarc owns each node
-  IdArrayType superparents;
+  IdArrayType Superparents;
 
   // VECTORS INDEXED ON T = SIZE OF TREE
 
   // vector storing the list of supernodes by ID
   // WARNING: THESE ARE NOT SORTED BY INDEX
   // Instead, they are sorted by hyperarc, secondarily on index
-  IdArrayType supernodes;
+  IdArrayType Supernodes;
 
   // vector of superarcs in the merge tree
   // stored as supernode indices
-  IdArrayType superarcs;
+  IdArrayType Superarcs;
 
-  // vector of hyperarcs to which each supernode/arc belongs
-  IdArrayType hyperparents;
+  // vector of Hyperarcs to which each supernode/arc belongs
+  IdArrayType Hyperparents;
 
   // VECTORS INDEXED ON H = SIZE OF HYPERTREE
 
   // vector of sort indices for the hypernodes
-  IdArrayType hypernodes;
+  IdArrayType Hypernodes;
 
-  // vector of hyperarcs in the merge tree
+  // vector of Hyperarcs in the merge tree
   // NOTE: These are supernode IDs, not hypernode IDs
-  // because not all hyperarcs lead to hypernodes
-  IdArrayType hyperarcs;
+  // because not all Hyperarcs lead to hypernodes
+  IdArrayType Hyperarcs;
 
   // vector to find the first child superarc
-  IdArrayType firstSuperchild;
+  IdArrayType FirstSuperchild;
 
   // ROUTINES
 
   // creates merge tree (empty)
-  MergeTree(vtkm::Id meshSize, bool IsJoinTree);
+  MergeTree(vtkm::Id meshSize, bool isJoinTree);
 
   // debug routine
   void DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -143,23 +143,23 @@ public:
 
 
 // creates merge tree (empty)
-inline MergeTree::MergeTree(vtkm::Id meshSize, bool IsJoinTree)
-  : isJoinTree(IsJoinTree)
-  , supernodes()
-  , superarcs()
-  , hyperparents()
-  , hypernodes()
-  , hyperarcs()
-  , firstSuperchild()
+inline MergeTree::MergeTree(vtkm::Id meshSize, bool isJoinTree)
+  : IsJoinTree(isJoinTree)
+  , Supernodes()
+  , Superarcs()
+  , Hyperparents()
+  , Hypernodes()
+  , Hyperarcs()
+  , FirstSuperchild()
 { // MergeTree()
   // Allocate the arcs array
   // TODO it should be sufficient to just allocate arcs without initializing it with 0s
   vtkm::cont::ArrayHandleConstant<vtkm::Id> meshSizeNullArray(0, meshSize);
-  vtkm::cont::Algorithm::Copy(meshSizeNullArray, arcs);
+  vtkm::cont::Algorithm::Copy(meshSizeNullArray, this->Arcs);
 
   // Initialize the superparents with NO_SUCH_ELEMENT
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray((vtkm::Id)NO_SUCH_ELEMENT, meshSize);
-  vtkm::cont::Algorithm::Copy(noSuchElementArray, superparents);
+  vtkm::cont::Algorithm::Copy(noSuchElementArray, this->Superparents);
 
 } // MergeTree()
 
@@ -176,19 +176,19 @@ inline void MergeTree::DebugPrint(const char* message, const char* fileName, lon
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printHeader(arcs.GetNumberOfValues());
-  printIndices("Arcs", arcs);
-  printIndices("Superparents", superparents);
+  PrintHeader(this->Arcs.GetNumberOfValues());
+  PrintIndices("Arcs", this->Arcs);
+  PrintIndices("Superparents", this->Superparents);
   std::cout << std::endl;
-  printHeader(supernodes.GetNumberOfValues());
-  printIndices("Supernodes", supernodes);
-  printIndices("Superarcs", superarcs);
-  printIndices("Hyperparents", hyperparents);
+  PrintHeader(this->Supernodes.GetNumberOfValues());
+  PrintIndices("Supernodes", this->Supernodes);
+  PrintIndices("Superarcs", this->Superarcs);
+  PrintIndices("Hyperparents", this->Hyperparents);
   std::cout << std::endl;
-  printHeader(hypernodes.GetNumberOfValues());
-  printIndices("Hypernodes", hypernodes);
-  printIndices("Hyperarcs", hyperarcs);
-  printIndices("First Superchild", firstSuperchild);
+  PrintHeader(this->Hypernodes.GetNumberOfValues());
+  PrintIndices("Hypernodes", this->Hypernodes);
+  PrintIndices("Hyperarcs", this->Hyperarcs);
+  PrintIndices("First Superchild", FirstSuperchild);
   std::cout << std::endl;
 #else
   // Prevent unused parameter warning
@@ -225,7 +225,7 @@ inline void MergeTree::DebugPrintTree(const char* message,
   std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
             << lineNum << std::endl;
   std::cout << std::left << std::string(message) << std::endl;
-  if (isJoinTree)
+  if (this->IsJoinTree)
   {
     std::cout << "Join Tree:" << std::endl;
   }
@@ -238,28 +238,28 @@ inline void MergeTree::DebugPrintTree(const char* message,
 
   std::cout << "==========" << std::endl;
 
-  for (vtkm::Id entry = 0; entry < mesh.nVertices; entry++)
+  for (vtkm::Id entry = 0; entry < mesh.NumVertices; entry++)
   {
-    vtkm::Id sortIndex = mesh.sortIndices.GetPortalConstControl().Get(entry);
+    vtkm::Id sortIndex = mesh.SortIndices.GetPortalConstControl().Get(entry);
     vtkm::Id arc = this->arcs.GetPortalConstControl().Get(sortIndex);
-    if (noSuchElement(arc))
+    if (NoSuchElement(arc))
     {
       std::cout << "-1" << std::endl;
     }
     else
     {
-      std::cout << mesh.sortOrder.GetPortalConstControl().Get(arc) << std::endl;
+      std::cout << mesh.SortOrder.GetPortalConstControl().Get(arc) << std::endl;
     }
-    if (mesh.nDims == 2)
+    if (mesh.NumDims == 2)
     {
-      if ((entry % mesh.nCols) == (mesh.nCols - 1))
+      if ((entry % mesh.NumColumns) == (mesh.NumColumns - 1))
       {
         std::cout << std::endl;
       }
     }
-    else if (mesh.nDims == 3)
+    else if (mesh.NumDims == 3)
     {
-      if ((entry % (mesh.nCols * mesh.nRows)) == (mesh.nCols * mesh.nRows - 1))
+      if ((entry % (mesh.NumColumns * mesh.NumRows)) == (mesh.nCols * mesh.NumRows - 1))
       {
         std::cout << std::endl;
       }

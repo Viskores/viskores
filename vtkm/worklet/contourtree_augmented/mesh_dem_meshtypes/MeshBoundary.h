@@ -56,8 +56,8 @@
 // class and an ExectionObject class with the PrepareForInput function that
 // VTKm expects to generate the object for the execution environment.
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_boundary_h
-#define vtkm_worklet_contourtree_augmented_mesh_boundary_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_h
+#define vtk_m_worklet_contourtree_augmented_mesh_boundary_h
 
 #include <cstdlib>
 
@@ -80,7 +80,7 @@ class MeshBoundary2D
 {
 public:
   // Sort indicies types
-  using sortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
 
   VTKM_EXEC_CONT
   MeshBoundary2D()
@@ -92,24 +92,24 @@ public:
   MeshBoundary2D(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
   {
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
-    vtkm::Id meshSortOrderValue = this->sortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.vertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.vertexColumn(meshSortOrderValue);
+    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
+    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
 
-    return (row == 0) || (col == 0) || (row == MeshStructure.nRows - 1) ||
-      (col == MeshStructure.nCols - 1);
+    return (row == 0) || (col == 0) || (row == MeshStructure.NumRows - 1) ||
+      (col == MeshStructure.NumColumns - 1);
   }
 
 private:
   // 2D Mesh size parameters
   mesh_dem::MeshStructure2D<DeviceTag> MeshStructure;
-  sortOrderPortalType sortOrderPortal;
+  SortOrderPortalType SortOrderPortal;
 };
 
 class MeshBoundary2DExec : public vtkm::cont::ExecutionObjectBase
@@ -117,9 +117,9 @@ class MeshBoundary2DExec : public vtkm::cont::ExecutionObjectBase
 public:
   VTKM_EXEC_CONT
   MeshBoundary2DExec(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& inSortOrder)
-    : nRows(nrows)
-    , nCols(ncols)
-    , sortOrder(inSortOrder)
+    : NumRows(nrows)
+    , NumColumns(ncols)
+    , SortOrder(inSortOrder)
   {
   }
 
@@ -127,14 +127,14 @@ public:
   template <typename DeviceTag>
   MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag) const
   {
-    return MeshBoundary2D<DeviceTag>(this->nRows, this->nCols, this->sortOrder);
+    return MeshBoundary2D<DeviceTag>(this->NumRows, this->NumColumns, this->SortOrder);
   }
 
 private:
   // 2D Mesh size parameters
-  vtkm::Id nRows;
-  vtkm::Id nCols;
-  const IdArrayType& sortOrder;
+  vtkm::Id NumRows;
+  vtkm::Id NumColumns;
+  const IdArrayType& SortOrder;
 };
 
 
@@ -143,7 +143,7 @@ class MeshBoundary3D : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // Sort indicies types
-  using sortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
 
   VTKM_EXEC_CONT
   MeshBoundary3D()
@@ -155,24 +155,24 @@ public:
   MeshBoundary3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices, const IdArrayType& sortOrder)
     : MeshStructure(mesh_dem::MeshStructure3D<DeviceTag>(nrows, ncols, nslices))
   {
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
-    vtkm::Id meshSortOrderValue = this->sortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.vertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.vertexColumn(meshSortOrderValue);
-    const vtkm::Id sli = MeshStructure.vertexSlice(meshSortOrderValue);
-    return (row == 0) || (col == 0) || (sli == 0) || (row == MeshStructure.nRows - 1) ||
-      (col == MeshStructure.nCols - 1) || (sli == MeshStructure.nSlices - 1);
+    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
+    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
+    const vtkm::Id sli = MeshStructure.VertexSlice(meshSortOrderValue);
+    return (row == 0) || (col == 0) || (sli == 0) || (row == MeshStructure.NumRows - 1) ||
+      (col == MeshStructure.NumColumns - 1) || (sli == MeshStructure.NumSlices - 1);
   }
 
 protected:
   // 3D Mesh size parameters
   mesh_dem::MeshStructure3D<DeviceTag> MeshStructure;
-  sortOrderPortalType sortOrderPortal;
+  SortOrderPortalType SortOrderPortal;
 };
 
 
@@ -184,10 +184,10 @@ public:
                      vtkm::Id ncols,
                      vtkm::Id nslices,
                      const IdArrayType& inSortOrder)
-    : nRows(nrows)
-    , nCols(ncols)
-    , nSlices(nslices)
-    , sortOrder(inSortOrder)
+    : NumRows(nrows)
+    , NumColumns(ncols)
+    , NumSlices(nslices)
+    , SortOrder(inSortOrder)
   {
   }
 
@@ -195,15 +195,16 @@ public:
   template <typename DeviceTag>
   MeshBoundary3D<DeviceTag> PrepareForExecution(DeviceTag) const
   {
-    return MeshBoundary3D<DeviceTag>(this->nRows, this->nCols, this->nSlices, this->sortOrder);
+    return MeshBoundary3D<DeviceTag>(
+      this->NumRows, this->NumColumns, this->NumSlices, this->SortOrder);
   }
 
 protected:
   // 3D Mesh size parameters
-  vtkm::Id nRows;
-  vtkm::Id nCols;
-  vtkm::Id nSlices;
-  const IdArrayType& sortOrder;
+  vtkm::Id NumRows;
+  vtkm::Id NumColumns;
+  vtkm::Id NumSlices;
+  const IdArrayType& SortOrder;
 };
 
 
