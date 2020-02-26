@@ -115,8 +115,8 @@ VTKM_CONT void WriteToCanvas(const vtkm::rendering::raytracing::Ray<Precision>& 
             canvas->GetColorBuffer());
 
   //Force the transfer so the vectors contain data from device
-  canvas->GetColorBuffer().GetPortalControl().Get(0);
-  canvas->GetDepthBuffer().GetPortalControl().Get(0);
+  canvas->GetColorBuffer().WritePortal().Get(0);
+  canvas->GetDepthBuffer().WritePortal().Get(0);
 }
 
 } // namespace internal

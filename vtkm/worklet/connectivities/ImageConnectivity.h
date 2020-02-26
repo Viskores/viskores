@@ -119,10 +119,10 @@ public:
       vtkm::cont::Invoker invoke;
       do
       {
-        updateRequired.GetPortalControl().Set(0, 0); //reset the atomic state
+        updateRequired.WritePortal().Set(0, 0); //reset the atomic state
         invoke(detail::ImageGraft{}, input, components, pixels, components, updateRequired);
         invoke(PointerJumping{}, components);
-      } while (updateRequired.GetPortalControl().Get(0) > 0);
+      } while (updateRequired.WritePortal().Get(0) > 0);
 
       // renumber connected component to the range of [0, number of components).
       vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;

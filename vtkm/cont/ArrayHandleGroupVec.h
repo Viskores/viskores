@@ -127,10 +127,10 @@ public:
   using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
   using PortalType =
-    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::WritePortalType,
                                               NUM_COMPONENTS>;
   using PortalConstType =
-    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalConstControl,
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::ReadPortalType,
                                               NUM_COMPONENTS>;
 
   VTKM_CONT
@@ -150,14 +150,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->SourceArray.GetPortalControl());
+    return PortalType(this->SourceArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->SourceArray.GetPortalConstControl());
+    return PortalConstType(this->SourceArray.ReadPortal());
   }
 
   VTKM_CONT
@@ -256,32 +256,32 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     if (this->SourceArray.GetNumberOfValues() % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
         "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
-    return PortalConstExecution(this->SourceArray.PrepareForInput(Device()));
+    return PortalConstExecution(this->SourceArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     if (this->SourceArray.GetNumberOfValues() % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
         "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
-    return PortalExecution(this->SourceArray.PrepareForInPlace(Device()));
+    return PortalExecution(this->SourceArray.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     return PortalExecution(
-      this->SourceArray.PrepareForOutput(numberOfValues * NUM_COMPONENTS, Device()));
+      this->SourceArray.PrepareForOutput(numberOfValues * NUM_COMPONENTS, Device(), token));
   }
 
   VTKM_CONT

@@ -134,7 +134,7 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWith
   vtkm::cont::DataSet result = splitSharpEdgesFilter.Execute(simpleCubeWithSN);
 
   auto newCoords = result.GetCoordinateSystem().GetData();
-  auto newCoordsP = newCoords.GetPortalConstControl();
+  auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
   result.GetField("pointvar").GetData().CopyTo(newPointvarField);
 
@@ -148,7 +148,7 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWith
                      "result value does not match expected value");
   }
 
-  auto newPointvarFieldPortal = newPointvarField.GetPortalConstControl();
+  auto newPointvarFieldPortal = newPointvarField.ReadPortal();
   for (vtkm::IdComponent i = 0; i < newPointvarField.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(test_equal(newPointvarFieldPortal.Get(static_cast<vtkm::Id>(i)),
@@ -169,7 +169,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
   auto newCoords = result.GetCoordinateSystem().GetData();
   vtkm::cont::CellSetExplicit<>& newCellset =
     result.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
-  auto newCoordsP = newCoords.GetPortalConstControl();
+  auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
   result.GetField("pointvar").GetData().CopyTo(newPointvarField);
 
@@ -185,7 +185,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
 
   const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                                   vtkm::TopologyElementTagPoint());
-  auto connectivityArrayPortal = connectivityArray.GetPortalConstControl();
+  auto connectivityArrayPortal = connectivityArray.ReadPortal();
   for (vtkm::IdComponent i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(connectivityArrayPortal.Get(static_cast<vtkm::Id>(i)) ==
@@ -193,7 +193,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
                      "connectivity array result does not match expected value");
   }
 
-  auto newPointvarFieldPortal = newPointvarField.GetPortalConstControl();
+  auto newPointvarFieldPortal = newPointvarField.ReadPortal();
   for (vtkm::IdComponent i = 0; i < newPointvarField.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(test_equal(newPointvarFieldPortal.Get(static_cast<vtkm::Id>(i)),

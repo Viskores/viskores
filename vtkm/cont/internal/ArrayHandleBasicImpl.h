@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/cont/Token.h>
 
 #include <type_traits>
 
@@ -158,26 +159,41 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   VTKM_CONT void CheckControlArrayValid(const LockType& lock) noexcept(false);
 
   VTKM_CONT vtkm::Id GetNumberOfValues(const LockType& lock, vtkm::UInt64 sizeOfT) const;
-  VTKM_CONT void Allocate(const LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
-  VTKM_CONT void Shrink(const LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
+  VTKM_CONT void Allocate(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
+  VTKM_CONT void Shrink(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
 
-  VTKM_CONT void SyncControlArray(const LockType& lock, vtkm::UInt64 sizeofT) const;
-  VTKM_CONT void ReleaseResources(const LockType& lock);
-  VTKM_CONT void ReleaseResourcesExecutionInternal(const LockType& lock);
+  VTKM_CONT void SyncControlArray(LockType& lock, vtkm::UInt64 sizeofT) const;
+  VTKM_CONT void ReleaseResources(LockType& lock);
+  VTKM_CONT void ReleaseResourcesExecutionInternal(LockType& lock);
 
-  VTKM_CONT void PrepareForInput(const LockType& lock, vtkm::UInt64 sizeofT) const;
-  VTKM_CONT void PrepareForOutput(const LockType& lock, vtkm::Id numVals, vtkm::UInt64 sizeofT);
-  VTKM_CONT void PrepareForInPlace(const LockType& lock, vtkm::UInt64 sizeofT);
+  VTKM_CONT void PrepareForInput(LockType& lock,
+                                 vtkm::UInt64 sizeofT,
+                                 vtkm::cont::Token& token) const;
+  VTKM_CONT void PrepareForOutput(LockType& lock,
+                                  vtkm::Id numVals,
+                                  vtkm::UInt64 sizeofT,
+                                  vtkm::cont::Token& token);
+  VTKM_CONT void PrepareForInPlace(LockType& lock, vtkm::UInt64 sizeofT, vtkm::cont::Token& token);
 
   // Check if the current device matches the last one. If they don't match
   // this moves all data back from execution environment and deletes the
   // ExecutionInterface instance.
   // Returns true when the caller needs to reallocate ExecutionInterface
-  VTKM_CONT bool PrepareForDevice(const LockType& lock,
+  VTKM_CONT bool PrepareForDevice(LockType& lock,
                                   DeviceAdapterId devId,
                                   vtkm::UInt64 sizeofT) const;
 
   VTKM_CONT DeviceAdapterId GetDeviceAdapterId(const LockType& lock) const;
+
+  /// Returns true if read operations can currently be performed.
+  VTKM_CONT bool CanRead(const LockType& lock, const vtkm::cont::Token& token) const;
+  //// Returns true if write operations can currently be performed.
+  VTKM_CONT bool CanWrite(const LockType& lock, const vtkm::cont::Token& token) const;
+
+  //// Will block the current thread until a read can be performed.
+  VTKM_CONT void WaitToRead(LockType& lock, const vtkm::cont::Token& token) const;
+  //// Will block the current thread until a write can be performed.
+  VTKM_CONT void WaitToWrite(LockType& lock, const vtkm::cont::Token& token) const;
 
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
   /// function should keep the returned lock and let it go out of scope
@@ -190,11 +206,14 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
     mutable bool ControlArrayValid;
     StorageBasicBase* ControlArray;
 
-    mutable ExecutionArrayInterfaceBasicBase* ExecutionInterface;
-    mutable bool ExecutionArrayValid;
-    mutable void* ExecutionArray;
-    mutable void* ExecutionArrayEnd;
-    mutable void* ExecutionArrayCapacity;
+    mutable ExecutionArrayInterfaceBasicBase* ExecutionInterface = nullptr;
+    mutable bool ExecutionArrayValid = false;
+    mutable void* ExecutionArray = nullptr;
+    mutable void* ExecutionArrayEnd = nullptr;
+    mutable void* ExecutionArrayCapacity = nullptr;
+
+    mutable vtkm::cont::Token::ReferenceCount ReadCount = 0;
+    mutable vtkm::cont::Token::ReferenceCount WriteCount = 0;
 
     VTKM_CONT void CheckLock(const LockType& lock) const
     {
@@ -203,16 +222,12 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
 
   public:
     MutexType Mutex;
+    std::condition_variable ConditionVariable;
 
     template <typename T>
     VTKM_CONT explicit InternalStruct(T)
       : ControlArrayValid(false)
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>())
-      , ExecutionInterface(nullptr)
-      , ExecutionArrayValid(false)
-      , ExecutionArray(nullptr)
-      , ExecutionArrayEnd(nullptr)
-      , ExecutionArrayCapacity(nullptr)
     {
     }
 
@@ -221,11 +236,6 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
       const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
       : ControlArrayValid(true)
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(storage))
-      , ExecutionInterface(nullptr)
-      , ExecutionArrayValid(false)
-      , ExecutionArray(nullptr)
-      , ExecutionArrayEnd(nullptr)
-      , ExecutionArrayCapacity(nullptr)
     {
     }
 
@@ -235,11 +245,6 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
       : ControlArrayValid(true)
       , ControlArray(
           new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(std::move(storage)))
-      , ExecutionInterface(nullptr)
-      , ExecutionArrayValid(false)
-      , ExecutionArray(nullptr)
-      , ExecutionArrayEnd(nullptr)
-      , ExecutionArrayCapacity(nullptr)
     {
     }
 
@@ -303,6 +308,16 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
       this->CheckLock(lock);
       return this->ExecutionArrayCapacity;
     }
+    VTKM_CONT vtkm::cont::Token::ReferenceCount* GetReadCount(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return &this->ReadCount;
+    }
+    VTKM_CONT vtkm::cont::Token::ReferenceCount* GetWriteCount(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return &this->WriteCount;
+    }
 
     VTKM_CONT TypelessExecutionArray MakeTypelessExecutionArray(const LockType& lock);
   };
@@ -332,8 +347,14 @@ public:
   using StorageTag = ::vtkm::cont::StorageTagBasic;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
   using ValueType = T;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalType>;
+  using ReadPortalType =
+    vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalConstType>;
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
+    typename StorageType::PortalType;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
+    typename StorageType::PortalConstType;
 
   template <typename DeviceTag>
   struct ExecutionTypes
@@ -365,9 +386,21 @@ public:
 
   VTKM_CONT StorageType& GetStorage();
   VTKM_CONT const StorageType& GetStorage() const;
-  VTKM_CONT PortalControl GetPortalControl();
-  VTKM_CONT PortalConstControl GetPortalConstControl() const;
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalType GetPortalControl();
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  typename StorageType::PortalConstType GetPortalConstControl() const;
+
+  VTKM_CONT ReadPortalType ReadPortal() const;
+  VTKM_CONT WritePortalType WritePortal() const;
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
   VTKM_CONT void Shrink(vtkm::Id numberOfValues);
@@ -376,19 +409,44 @@ public:
 
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag device) const;
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token) const;
 
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numVals,
-    DeviceAdapterTag device);
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
+  PrepareForOutput(vtkm::Id numVals, DeviceAdapterTag device, vtkm::cont::Token& token);
 
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag device);
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token);
 
   template <typename DeviceAdapterTag>
-  VTKM_CONT void PrepareForDevice(const LockType& lock, DeviceAdapterTag) const;
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst
+    PrepareForInput(DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForOutput(vtkm::Id numVals, DeviceAdapterTag device)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForOutput(numVals, device, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag device)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInPlace(device, token);
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT void PrepareForDevice(LockType& lock, DeviceAdapterTag) const;
 
   VTKM_CONT DeviceAdapterId GetDeviceAdapterId() const;
 
@@ -397,8 +455,8 @@ public:
   std::shared_ptr<internal::ArrayHandleImpl> Internals;
 
 private:
-  VTKM_CONT void SyncControlArray(const LockType& lock) const;
-  VTKM_CONT void ReleaseResourcesExecutionInternal(const LockType& lock);
+  VTKM_CONT void SyncControlArray(LockType& lock) const;
+  VTKM_CONT void ReleaseResourcesExecutionInternal(LockType& lock) const;
 
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
   /// function should keep the returned lock and let it go out of scope

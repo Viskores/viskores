@@ -41,15 +41,29 @@ public:
   {
   }
 
+  // This constructor is deprecated in VTK-m 1.6
   VTKM_CONT
   ExecutionWholeArray(HandleType& handle)
     : Portal(handle.PrepareForInPlace(DeviceAdapterTag()))
   {
   }
 
+  // This constructor is deprecated in VTK-m 1.6
   VTKM_CONT
   ExecutionWholeArray(HandleType& handle, vtkm::Id length)
     : Portal(handle.PrepareForOutput(length, DeviceAdapterTag()))
+  {
+  }
+
+  VTKM_CONT
+  ExecutionWholeArray(HandleType& handle, vtkm::cont::Token& token)
+    : Portal(handle.PrepareForInPlace(DeviceAdapterTag(), token))
+  {
+  }
+
+  VTKM_CONT
+  ExecutionWholeArray(HandleType& handle, vtkm::Id length, vtkm::cont::Token& token)
+    : Portal(handle.PrepareForOutput(length, DeviceAdapterTag(), token))
   {
   }
 
@@ -91,9 +105,16 @@ public:
   {
   }
 
+  // This constructor is deprecated in VTK-m 1.6
   VTKM_CONT
   ExecutionWholeArrayConst(const HandleType& handle)
     : Portal(handle.PrepareForInput(DeviceAdapterTag()))
+  {
+  }
+
+  VTKM_CONT
+  ExecutionWholeArrayConst(const HandleType& handle, vtkm::cont::Token& token)
+    : Portal(handle.PrepareForInput(DeviceAdapterTag(), token))
   {
   }
 

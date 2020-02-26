@@ -135,7 +135,7 @@ struct TestingBitField
   {
     BitField field;
     field.Allocate(numBits);
-    auto portal = field.GetPortalControl();
+    auto portal = field.WritePortal();
     for (vtkm::Id i = 0; i < numBits; ++i)
     {
       portal.SetBit(i, RandomBitFromIndex(i));
@@ -166,8 +166,8 @@ struct TestingBitField
                      "memory.");
   }
 
-  template <typename PortalType, typename PortalConstType>
-  VTKM_EXEC_CONT static bool HelpTestBit(vtkm::Id i, PortalType portal, PortalConstType portalConst)
+  template <typename PortalType>
+  VTKM_EXEC_CONT static bool HelpTestBit(vtkm::Id i, PortalType portal)
   {
     const auto origBit = RandomBitFromIndex(i);
     auto bit = origBit;
@@ -177,9 +177,7 @@ struct TestingBitField
     auto testValues = [&](const char* op) -> bool {
       auto expected = bit;
       auto result = portal.GetBitAtomic(i);
-      auto resultConst = portalConst.GetBitAtomic(i);
       DEVICE_ASSERT_MSG(result == expected, op);
-      DEVICE_ASSERT_MSG(resultConst == expected, op);
 
       // Reset:
       bit = origBit;
@@ -211,19 +209,15 @@ struct TestingBitField
     bool casResult = portal.CompareAndSwapBitAtomic(i, bit, notBit);
     DEVICE_ASSERT(casResult == bit);
     DEVICE_ASSERT(portal.GetBit(i) == bit);
-    DEVICE_ASSERT(portalConst.GetBit(i) == bit);
     casResult = portal.CompareAndSwapBitAtomic(i, notBit, bit);
     DEVICE_ASSERT(casResult == bit);
     DEVICE_ASSERT(portal.GetBit(i) == notBit);
-    DEVICE_ASSERT(portalConst.GetBit(i) == notBit);
 
     return true;
   }
 
-  template <typename WordType, typename PortalType, typename PortalConstType>
-  VTKM_EXEC_CONT static bool HelpTestWord(vtkm::Id i,
-                                          PortalType portal,
-                                          PortalConstType portalConst)
+  template <typename WordType, typename PortalType>
+  VTKM_EXEC_CONT static bool HelpTestWord(vtkm::Id i, PortalType portal)
   {
     const auto origWord = RandomWordFromIndex<WordType>(i);
     auto word = origWord;
@@ -233,9 +227,7 @@ struct TestingBitField
     auto testValues = [&](const char* op) -> bool {
       auto expected = word;
       auto result = portal.template GetWordAtomic<WordType>(i);
-      auto resultConst = portalConst.template GetWordAtomic<WordType>(i);
       DEVICE_ASSERT_MSG(result == expected, op);
-      DEVICE_ASSERT_MSG(resultConst == expected, op);
 
       // Reset:
       word = origWord;
@@ -273,25 +265,21 @@ struct TestingBitField
     auto casResult = portal.CompareAndSwapWordAtomic(i, word, notWord);
     DEVICE_ASSERT(casResult == word);
     DEVICE_ASSERT(portal.template GetWord<WordType>(i) == word);
-    DEVICE_ASSERT(portalConst.template GetWord<WordType>(i) == word);
     casResult = portal.CompareAndSwapWordAtomic(i, notWord, word);
     DEVICE_ASSERT(casResult == word);
     DEVICE_ASSERT(portal.template GetWord<WordType>(i) == notWord);
-    DEVICE_ASSERT(portalConst.template GetWord<WordType>(i) == notWord);
 
     return true;
   }
 
-  template <typename PortalType, typename PortalConstType>
+  template <typename PortalType>
   struct HelpTestWordOpsControl
   {
     PortalType Portal;
-    PortalConstType PortalConst;
 
     VTKM_CONT
-    HelpTestWordOpsControl(PortalType portal, PortalConstType portalConst)
+    HelpTestWordOpsControl(PortalType portal)
       : Portal(portal)
-      , PortalConst(portalConst)
     {
     }
 
@@ -299,16 +287,15 @@ struct TestingBitField
     VTKM_CONT void operator()(WordType)
     {
       const auto numWords = this->Portal.template GetNumberOfWords<WordType>();
-      VTKM_TEST_ASSERT(numWords == this->PortalConst.template GetNumberOfWords<WordType>());
       for (vtkm::Id i = 0; i < numWords; ++i)
       {
-        VTKM_TEST_ASSERT(HelpTestWord<WordType>(i, this->Portal, this->PortalConst));
+        VTKM_TEST_ASSERT(HelpTestWord<WordType>(i, this->Portal));
       }
     }
   };
 
-  template <typename Portal, typename PortalConst>
-  VTKM_CONT static void HelpTestPortalsControl(Portal portal, PortalConst portalConst)
+  template <typename Portal>
+  VTKM_CONT static void HelpTestPortalsControl(Portal portal)
   {
     const auto numWords8 = (NUM_BITS + 7) / 8;
     const auto numWords16 = (NUM_BITS + 15) / 16;
@@ -320,18 +307,13 @@ struct TestingBitField
     VTKM_TEST_ASSERT(portal.template GetNumberOfWords<vtkm::UInt16>() == numWords16);
     VTKM_TEST_ASSERT(portal.template GetNumberOfWords<vtkm::UInt32>() == numWords32);
     VTKM_TEST_ASSERT(portal.template GetNumberOfWords<vtkm::UInt64>() == numWords64);
-    VTKM_TEST_ASSERT(portalConst.GetNumberOfBits() == NUM_BITS);
-    VTKM_TEST_ASSERT(portalConst.template GetNumberOfWords<vtkm::UInt8>() == numWords8);
-    VTKM_TEST_ASSERT(portalConst.template GetNumberOfWords<vtkm::UInt16>() == numWords16);
-    VTKM_TEST_ASSERT(portalConst.template GetNumberOfWords<vtkm::UInt32>() == numWords32);
-    VTKM_TEST_ASSERT(portalConst.template GetNumberOfWords<vtkm::UInt64>() == numWords64);
 
     for (vtkm::Id i = 0; i < NUM_BITS; ++i)
     {
-      HelpTestBit(i, portal, portalConst);
+      HelpTestBit(i, portal);
     }
 
-    HelpTestWordOpsControl<Portal, PortalConst> test(portal, portalConst);
+    HelpTestWordOpsControl<Portal> test(portal);
     vtkm::ListForEach(test, typename Portal::AtomicInterface::WordTypes{});
   }
 
@@ -339,10 +321,8 @@ struct TestingBitField
   static void TestControlPortals()
   {
     auto field = RandomBitField();
-    auto portal = field.GetPortalControl();
-    auto portalConst = field.GetPortalConstControl();
 
-    HelpTestPortalsControl(portal, portalConst);
+    HelpTestPortalsControl(field.WritePortal());
   }
 
   template <typename Portal>
@@ -362,15 +342,13 @@ struct TestingBitField
     return true;
   }
 
-  template <typename WordType, typename PortalType, typename PortalConstType>
+  template <typename WordType, typename PortalType>
   struct HelpTestPortalsExecutionWordsFunctor : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    PortalConstType PortalConst;
 
-    HelpTestPortalsExecutionWordsFunctor(PortalType portal, PortalConstType portalConst)
+    HelpTestPortalsExecutionWordsFunctor(PortalType portal)
       : Portal(portal)
-      , PortalConst(portalConst)
     {
     }
 
@@ -384,14 +362,9 @@ struct TestingBitField
           this->RaiseError("Testing Portal sanity failed.");
           return;
         }
-        if (!HelpTestPortalSanityExecution(this->PortalConst))
-        {
-          this->RaiseError("Testing PortalConst sanity failed.");
-          return;
-        }
       }
 
-      if (!HelpTestWord<WordType>(i, this->Portal, this->PortalConst))
+      if (!HelpTestWord<WordType>(i, this->Portal))
       {
         this->RaiseError("Testing word operations failed.");
         return;
@@ -399,22 +372,20 @@ struct TestingBitField
     }
   };
 
-  template <typename PortalType, typename PortalConstType>
+  template <typename PortalType>
   struct HelpTestPortalsExecutionBitsFunctor : vtkm::exec::FunctorBase
   {
     PortalType Portal;
-    PortalConstType PortalConst;
 
-    HelpTestPortalsExecutionBitsFunctor(PortalType portal, PortalConstType portalConst)
+    HelpTestPortalsExecutionBitsFunctor(PortalType portal)
       : Portal(portal)
-      , PortalConst(portalConst)
     {
     }
 
     VTKM_EXEC_CONT
     void operator()(vtkm::Id i) const
     {
-      if (!HelpTestBit(i, this->Portal, this->PortalConst))
+      if (!HelpTestBit(i, this->Portal))
       {
         this->RaiseError("Testing bit operations failed.");
         return;
@@ -422,16 +393,14 @@ struct TestingBitField
     }
   };
 
-  template <typename PortalType, typename PortalConstType>
+  template <typename PortalType>
   struct HelpTestWordOpsExecution
   {
     PortalType Portal;
-    PortalConstType PortalConst;
 
     VTKM_CONT
-    HelpTestWordOpsExecution(PortalType portal, PortalConstType portalConst)
+    HelpTestWordOpsExecution(PortalType portal)
       : Portal(portal)
-      , PortalConst(portalConst)
     {
     }
 
@@ -439,34 +408,32 @@ struct TestingBitField
     VTKM_CONT void operator()(WordType)
     {
       const auto numWords = this->Portal.template GetNumberOfWords<WordType>();
-      VTKM_TEST_ASSERT(numWords == this->PortalConst.template GetNumberOfWords<WordType>());
 
-      using WordFunctor =
-        HelpTestPortalsExecutionWordsFunctor<WordType, PortalType, PortalConstType>;
-      WordFunctor test{ this->Portal, this->PortalConst };
+      using WordFunctor = HelpTestPortalsExecutionWordsFunctor<WordType, PortalType>;
+      WordFunctor test{ this->Portal };
       Algo::Schedule(test, numWords);
     }
   };
 
-  template <typename Portal, typename PortalConst>
-  VTKM_CONT static void HelpTestPortalsExecution(Portal portal, PortalConst portalConst)
+  template <typename Portal>
+  VTKM_CONT static void HelpTestPortalsExecution(Portal portal)
   {
-    HelpTestPortalsExecutionBitsFunctor<Portal, PortalConst> bitTest{ portal, portalConst };
+    HelpTestPortalsExecutionBitsFunctor<Portal> bitTest{ portal };
     Algo::Schedule(bitTest, portal.GetNumberOfBits());
 
 
-    HelpTestWordOpsExecution<Portal, PortalConst> test(portal, portalConst);
+    HelpTestWordOpsExecution<Portal> test(portal);
     vtkm::ListForEach(test, typename Portal::AtomicInterface::WordTypes{});
   }
 
   VTKM_CONT
   static void TestExecutionPortals()
   {
+    vtkm::cont::Token token;
     auto field = RandomBitField();
-    auto portal = field.PrepareForInPlace(DeviceAdapterTag{});
-    auto portalConst = field.PrepareForInput(DeviceAdapterTag{});
+    auto portal = field.PrepareForInPlace(DeviceAdapterTag{}, token);
 
-    HelpTestPortalsExecution(portal, portalConst);
+    HelpTestPortalsExecution(portal);
   }
 
   VTKM_CONT
@@ -475,7 +442,7 @@ struct TestingBitField
     auto testMask32 = [](vtkm::Id numBits, vtkm::UInt32 expectedMask) {
       vtkm::cont::BitField field;
       field.Allocate(numBits);
-      auto mask = field.GetPortalConstControl().GetFinalWordMask<vtkm::UInt32>();
+      auto mask = field.ReadPortal().GetFinalWordMask<vtkm::UInt32>();
 
       VTKM_TEST_ASSERT(expectedMask == mask,
                        "Unexpected mask for BitField size ",
@@ -490,7 +457,7 @@ struct TestingBitField
     auto testMask64 = [](vtkm::Id numBits, vtkm::UInt64 expectedMask) {
       vtkm::cont::BitField field;
       field.Allocate(numBits);
-      auto mask = field.GetPortalConstControl().GetFinalWordMask<vtkm::UInt64>();
+      auto mask = field.ReadPortal().GetFinalWordMask<vtkm::UInt64>();
 
       VTKM_TEST_ASSERT(expectedMask == mask,
                        "Unexpected mask for BitField size ",
@@ -581,10 +548,13 @@ struct TestingBitField
                      " got: ",
                      numBits);
 
+    vtkm::cont::Token token;
     Algo::Schedule(
-      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), false }, numBits);
-    Algo::Schedule(ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}), true },
-                   numBits);
+      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), false },
+      numBits);
+    Algo::Schedule(
+      ArrayHandleBitFieldChecker{ handle.PrepareForInPlace(DeviceAdapterTag{}, token), true },
+      numBits);
   }
 
   VTKM_CONT
@@ -598,10 +568,10 @@ struct TestingBitField
     vtkm::cont::Invoker invoke;
     invoke(ConditionalMergeWorklet{}, condArray, trueArray, falseArray, output);
 
-    auto condVals = condArray.GetPortalConstControl();
-    auto trueVals = trueArray.GetPortalConstControl();
-    auto falseVals = falseArray.GetPortalConstControl();
-    auto outVals = output.GetPortalConstControl();
+    auto condVals = condArray.ReadPortal();
+    auto trueVals = trueArray.ReadPortal();
+    auto falseVals = falseArray.ReadPortal();
+    auto outVals = output.ReadPortal();
 
     VTKM_TEST_ASSERT(condVals.GetNumberOfValues() == trueVals.GetNumberOfValues());
     VTKM_TEST_ASSERT(condVals.GetNumberOfValues() == falseVals.GetNumberOfValues());
@@ -624,10 +594,10 @@ struct TestingBitField
     vtkm::cont::Invoker invoke;
     invoke(ConditionalMergeWorklet2{}, condBits, trueArray, falseArray, output);
 
-    auto condVals = condBits.GetPortalConstControl();
-    auto trueVals = trueArray.GetPortalConstControl();
-    auto falseVals = falseArray.GetPortalConstControl();
-    auto outVals = output.GetPortalConstControl();
+    auto condVals = condBits.ReadPortal();
+    auto trueVals = trueArray.ReadPortal();
+    auto falseVals = falseArray.ReadPortal();
+    auto outVals = output.ReadPortal();
 
     VTKM_TEST_ASSERT(condVals.GetNumberOfBits() == trueVals.GetNumberOfValues());
     VTKM_TEST_ASSERT(condVals.GetNumberOfBits() == falseVals.GetNumberOfValues());

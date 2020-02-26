@@ -173,7 +173,7 @@ VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
   std::mt19937_64 rng;
 
   array.Allocate(numValues);
-  auto portal = array.GetPortalControl();
+  auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
     portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()), ValueType{}));
@@ -188,7 +188,7 @@ VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numV
   std::mt19937_64 rng;
 
   array.Allocate(numValues);
-  auto portal = array.GetPortalControl();
+  auto portal = array.WritePortal();
   for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
     portal.Set(i, TestValue(static_cast<vtkm::Id>(rng()) % mod, ValueType{}));

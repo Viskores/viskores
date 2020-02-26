@@ -41,12 +41,15 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device
   // inherit from vtkm::cont::ExecutionObjectBase and have a PrepareForExecution method.
   VTKM_IS_EXECUTION_OBJECT(ContObjectType);
 
-  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForExecution(Device()));
+  using ExecObjectType = vtkm::cont::internal::ExecutionObjectType<ContObjectType, Device>;
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(ContObjectType& object,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
-    return object.PrepareForExecution(Device());
+    return vtkm::cont::internal::CallPrepareForExecution(object, Device{}, token);
   }
 };
 }

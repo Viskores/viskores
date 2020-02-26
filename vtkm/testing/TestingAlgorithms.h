@@ -65,19 +65,23 @@ struct TestBinarySearch
     IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
     IdArray results;
 
+    vtkm::cont::Token token;
+
     using Functor = Impl<typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::Portal>;
-    Functor functor{ needles.PrepareForInput(Device{}),
-                     hayStack.PrepareForInput(Device{}),
-                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}) };
+    Functor functor{ needles.PrepareForInput(Device{}, token),
+                     hayStack.PrepareForInput(Device{}, token),
+                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}, token) };
 
     Algo::Schedule(functor, needles.GetNumberOfValues());
 
+    token.DetachFromAll();
+
     // Verify:
-    auto needlesPortal = needles.GetPortalConstControl();
-    auto hayStackPortal = hayStack.GetPortalConstControl();
-    auto resultsPortal = results.GetPortalConstControl();
+    auto needlesPortal = needles.ReadPortal();
+    auto hayStackPortal = hayStack.ReadPortal();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       if (expectedFound[static_cast<size_t>(i)])
@@ -132,17 +136,21 @@ struct TestLowerBound
     IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
     IdArray results;
 
+    vtkm::cont::Token token;
+
     using Functor = Impl<typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::Portal>;
-    Functor functor{ needles.PrepareForInput(Device{}),
-                     hayStack.PrepareForInput(Device{}),
-                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}) };
+    Functor functor{ needles.PrepareForInput(Device{}, token),
+                     hayStack.PrepareForInput(Device{}, token),
+                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}, token) };
 
     Algo::Schedule(functor, needles.GetNumberOfValues());
 
+    token.DetachFromAll();
+
     // Verify:
-    auto resultsPortal = results.GetPortalConstControl();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(resultsPortal.Get(i) == expected[static_cast<size_t>(i)]);
@@ -187,17 +195,21 @@ struct TestUpperBound
     IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
     IdArray results;
 
+    vtkm::cont::Token token;
+
     using Functor = Impl<typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::PortalConst,
                          typename IdArray::ExecutionTypes<Device>::Portal>;
-    Functor functor{ needles.PrepareForInput(Device{}),
-                     hayStack.PrepareForInput(Device{}),
-                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}) };
+    Functor functor{ needles.PrepareForInput(Device{}, token),
+                     hayStack.PrepareForInput(Device{}, token),
+                     results.PrepareForOutput(needles.GetNumberOfValues(), Device{}, token) };
 
     Algo::Schedule(functor, needles.GetNumberOfValues());
 
+    token.DetachFromAll();
+
     // Verify:
-    auto resultsPortal = results.GetPortalConstControl();
+    auto resultsPortal = results.ReadPortal();
     for (vtkm::Id i = 0; i < needles.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(resultsPortal.Get(i) == expected[static_cast<size_t>(i)]);

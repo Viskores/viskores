@@ -131,18 +131,18 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
   vtkm::cont::ArrayHandle<T, ST1> firstArray = input.GetStorage().GetFirstArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(firstArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(0, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(0, componentRange);
 
   vtkm::cont::ArrayHandle<T, ST2> secondArray = input.GetStorage().GetSecondArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(secondArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(1, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(1, componentRange);
 
   vtkm::cont::ArrayHandle<T, ST3> thirdArray = input.GetStorage().GetThirdArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(thirdArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(2, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(2, componentRange);
 
   return result;
 }

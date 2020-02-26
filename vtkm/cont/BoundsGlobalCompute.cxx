@@ -29,12 +29,12 @@ vtkm::Bounds MergeBoundsGlobal(const vtkm::Bounds& local)
 {
   vtkm::cont::ArrayHandle<vtkm::Range> ranges;
   ranges.Allocate(3);
-  ranges.GetPortalControl().Set(0, local.X);
-  ranges.GetPortalControl().Set(1, local.Y);
-  ranges.GetPortalControl().Set(2, local.Z);
+  ranges.WritePortal().Set(0, local.X);
+  ranges.WritePortal().Set(1, local.Y);
+  ranges.WritePortal().Set(2, local.Z);
 
   ranges = vtkm::cont::detail::MergeRangesGlobal(ranges);
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   return vtkm::Bounds(portal.Get(0), portal.Get(1), portal.Get(2));
 }
 }

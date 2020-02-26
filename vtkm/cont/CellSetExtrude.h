@@ -103,12 +103,34 @@ public:
   template <typename Device>
   ConnectivityP2C<Device> PrepareForInput(Device,
                                           vtkm::TopologyElementTagCell,
-                                          vtkm::TopologyElementTagPoint) const;
+                                          vtkm::TopologyElementTagPoint,
+                                          vtkm::cont::Token&) const;
 
   template <typename Device>
   ConnectivityC2P<Device> PrepareForInput(Device,
                                           vtkm::TopologyElementTagPoint,
-                                          vtkm::TopologyElementTagCell) const;
+                                          vtkm::TopologyElementTagCell,
+                                          vtkm::cont::Token&) const;
+
+  template <typename Device>
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  ConnectivityP2C<Device> PrepareForInput(Device device,
+                                          vtkm::TopologyElementTagCell visitTopology,
+                                          vtkm::TopologyElementTagPoint incidentTopology) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
+
+  template <typename Device>
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  ConnectivityC2P<Device> PrepareForInput(Device device,
+                                          vtkm::TopologyElementTagPoint visitTopology,
+                                          vtkm::TopologyElementTagCell incidentTopology) const
+  {
+    vtkm::cont::Token token;
+    this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
 
 private:
   template <typename Device>

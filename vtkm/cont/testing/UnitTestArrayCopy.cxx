@@ -43,7 +43,7 @@ void TryCopy()
     vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+    TestValues(input.ReadPortal(), output.ReadPortal());
   }
 
   { // basic -> basic
@@ -52,21 +52,21 @@ void TryCopy()
     vtkm::cont::ArrayCopy(source, input);
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+    TestValues(input.ReadPortal(), output.ReadPortal());
   }
 
   { // implicit -> implicit (index)
     vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
     vtkm::cont::ArrayHandleIndex output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+    TestValues(input.ReadPortal(), output.ReadPortal());
   }
 
   { // implicit -> implicit (constant)
     vtkm::cont::ArrayHandleConstant<int> input(41, ARRAY_SIZE);
     vtkm::cont::ArrayHandleConstant<int> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+    TestValues(input.ReadPortal(), output.ReadPortal());
   }
 
   { // implicit -> implicit (base->derived, constant)
@@ -74,7 +74,7 @@ void TryCopy()
       vtkm::cont::make_ArrayHandleConstant<int>(41, ARRAY_SIZE);
     vtkm::cont::ArrayHandleConstant<int> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.GetPortalConstControl(), output.GetPortalConstControl());
+    TestValues(input.ReadPortal(), output.ReadPortal());
   }
 }
 

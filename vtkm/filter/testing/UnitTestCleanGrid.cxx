@@ -49,22 +49,22 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   VTKM_TEST_ASSERT(outPointField.GetNumberOfValues() == 6,
                    "Wrong point field size: ",
                    outPointField.GetNumberOfValues());
-  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(1), 20.1),
+  VTKM_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(1), 20.1),
                    "Bad point field value: ",
-                   outPointField.GetPortalConstControl().Get(1));
-  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(4), 50.1),
+                   outPointField.ReadPortal().Get(1));
+  VTKM_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(4), 50.1),
                    "Bad point field value: ",
-                   outPointField.GetPortalConstControl().Get(1));
+                   outPointField.ReadPortal().Get(1));
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outCellField;
   outData.GetField("cellvar").GetData().CopyTo(outCellField);
   VTKM_TEST_ASSERT(outCellField.GetNumberOfValues() == 2, "Wrong cell field size.");
-  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(0), 100.1),
+  VTKM_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(0), 100.1),
                    "Bad cell field value",
-                   outCellField.GetPortalConstControl().Get(0));
-  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(1), 200.1),
+                   outCellField.ReadPortal().Get(0));
+  VTKM_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(1), 200.1),
                    "Bad cell field value",
-                   outCellField.GetPortalConstControl().Get(0));
+                   outCellField.ReadPortal().Get(0));
 }
 
 void TestPointMerging()

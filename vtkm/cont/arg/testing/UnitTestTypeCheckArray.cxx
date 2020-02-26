@@ -41,7 +41,7 @@ struct TryArraysOfType
                      "Composite array type check failed.");
 
     // Just some type that is not a valid array.
-    using NotAnArray = typename StandardArray::PortalControl;
+    using NotAnArray = typename StandardArray::WritePortalType;
     VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray, NotAnArray>::value),
                      "Not an array type check failed.");
 

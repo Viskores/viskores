@@ -65,7 +65,7 @@ vtkm::cont::DataSet make3DRectilinearDataSet(double time)
         double vec[3];
         double loc[3] = { i * xdiff + xmin, j * ydiff + ymax, k * zdiff + zmin };
         field.calculateVelocity(loc, time, vec);
-        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
+        velocityField.WritePortal().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
         count++;
       }
     }

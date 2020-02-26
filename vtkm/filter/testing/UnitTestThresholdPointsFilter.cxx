@@ -39,8 +39,7 @@ public:
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(12) == 50.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(12) == 50.0f, "Wrong point field data");
   }
 
   void TestRegular3D() const
@@ -62,8 +61,7 @@ public:
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(0) == 99.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
   }
 
   void TestExplicit3D() const
@@ -85,8 +83,7 @@ public:
     vtkm::cont::Field pointField = output.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
     pointField.GetData().CopyTo(pointFieldArray);
-    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(4) == 10.f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(4) == 10.f, "Wrong point field data");
   }
 
   void TestExplicit3DZeroResults() const

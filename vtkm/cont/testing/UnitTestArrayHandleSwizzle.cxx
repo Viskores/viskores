@@ -121,8 +121,8 @@ struct SwizzleTests
     VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == this->RefArray.GetNumberOfValues(),
                      "Number of values incorrect in Read test.");
 
-    auto refPortal = this->RefArray.GetPortalConstControl();
-    auto testPortal = testArray.GetPortalConstControl();
+    auto refPortal = this->RefArray.ReadPortal();
+    auto testPortal = testArray.ReadPortal();
 
     SwizzleVectorType refVecSwizzle(vtkm::TypeTraits<SwizzleVectorType>::ZeroInitialization());
     for (vtkm::Id i = 0; i < testArray.GetNumberOfValues(); ++i)
@@ -161,8 +161,9 @@ struct SwizzleTests
     template <typename DeviceTag, typename SwizzleHandleType>
     bool operator()(DeviceTag, SwizzleHandleType& swizzle) const
     {
+      vtkm::cont::Token token;
       using Portal = typename SwizzleHandleType::template ExecutionTypes<DeviceTag>::Portal;
-      WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag()));
+      WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag(), token));
       Algo::Schedule(functor, swizzle.GetNumberOfValues());
       return true;
     }
@@ -177,12 +178,14 @@ struct SwizzleTests
       SwizzleInputArrayType input = this->BuildSwizzleInputArray();
       auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
-      WriteTestFunctor<typename SwizzleArrayType<OutSize>::PortalControl> functor(
-        swizzle.GetPortalControl());
-
-      for (vtkm::Id i = 0; i < swizzle.GetNumberOfValues(); ++i)
       {
-        functor(i);
+        WriteTestFunctor<typename SwizzleArrayType<OutSize>::WritePortalType> functor(
+          swizzle.WritePortal());
+
+        for (vtkm::Id i = 0; i < swizzle.GetNumberOfValues(); ++i)
+        {
+          functor(i);
+        }
       }
 
       this->ValidateWriteTestArray(input, map);
@@ -202,8 +205,8 @@ struct SwizzleTests
   template <vtkm::IdComponent OutSize>
   void ValidateWriteTestArray(SwizzleInputArrayType testArray, const MapType<OutSize>& map) const
   {
-    auto refPortal = this->RefArray.GetPortalConstControl();
-    auto portal = testArray.GetPortalConstControl();
+    auto refPortal = this->RefArray.ReadPortal();
+    auto portal = testArray.ReadPortal();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
                      "Number of values in write test output do not match input.");

@@ -66,7 +66,8 @@ protected:
   struct PrepareExecutionObjectFunctor;
 
   VTKM_CONT void PrepareExecutionObject(ExecutionObjectHandleType& execObjHandle,
-                                        vtkm::cont::DeviceAdapterId deviceId) const override;
+                                        vtkm::cont::DeviceAdapterId deviceId,
+                                        vtkm::cont::Token& token) const override;
 
   bool IsRangeInvalid() const
   {

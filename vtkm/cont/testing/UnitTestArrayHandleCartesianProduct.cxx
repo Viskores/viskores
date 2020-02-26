@@ -50,11 +50,9 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
     vtkm::Id idx1 = (i % (nx * ny)) / nx;
     vtkm::Id idx2 = i / (nx * ny);
 
-    val = vtkm::Vec<T, 3>(x.GetPortalConstControl().Get(idx0),
-                          y.GetPortalConstControl().Get(idx1),
-                          z.GetPortalConstControl().Get(idx2));
-    VTKM_TEST_ASSERT(test_equal(cpArray.GetPortalConstControl().Get(i), val),
-                     "Wrong value in array");
+    val =
+      vtkm::Vec<T, 3>(x.ReadPortal().Get(idx0), y.ReadPortal().Get(idx1), z.ReadPortal().Get(idx2));
+    VTKM_TEST_ASSERT(test_equal(cpArray.ReadPortal().Get(i), val), "Wrong value in array");
   }
 }
 

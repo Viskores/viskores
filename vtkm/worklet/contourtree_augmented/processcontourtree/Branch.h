@@ -158,13 +158,13 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
   bool dataFieldIsSorted)
 { // ComputeBranchDecomposition()
-  auto branchMinimumPortal = branchMinimum.GetPortalConstControl();
-  auto branchMaximumPortal = branchMaximum.GetPortalConstControl();
-  auto branchSaddlePortal = branchSaddle.GetPortalConstControl();
-  auto branchParentPortal = branchParent.GetPortalConstControl();
-  auto sortOrderPortal = sortOrder.GetPortalConstControl();
-  auto supernodesPortal = contourTreeSupernodes.GetPortalConstControl();
-  auto dataFieldPortal = dataField.GetPortalConstControl();
+  auto branchMinimumPortal = branchMinimum.ReadPortal();
+  auto branchMaximumPortal = branchMaximum.ReadPortal();
+  auto branchSaddlePortal = branchSaddle.ReadPortal();
+  auto branchParentPortal = branchParent.ReadPortal();
+  auto sortOrderPortal = sortOrder.ReadPortal();
+  auto supernodesPortal = contourTreeSupernodes.ReadPortal();
+  auto dataFieldPortal = dataField.ReadPortal();
   vtkm::Id nBranches = branchSaddle.GetNumberOfValues();
   std::vector<Branch<T>*> branches;
   Branch<T>* root = nullptr;
@@ -232,8 +232,8 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
 
   // FIXME: This is a somewhat hackish way to compute the Volume, but it works
   // It would probably be better to compute this from the already computed Volume information
-  auto whichBranchPortal = whichBranch.GetPortalConstControl();
-  auto superparentsPortal = contourTreeSuperparents.GetPortalConstControl();
+  auto whichBranchPortal = whichBranch.ReadPortal();
+  auto superparentsPortal = contourTreeSuperparents.ReadPortal();
   for (vtkm::Id i = 0; i < contourTreeSuperparents.GetNumberOfValues(); i++)
   {
     branches[static_cast<size_t>(

@@ -111,10 +111,11 @@ public:
   VTKM_CONT
   SingleCellTypeInterpolationHelper(vtkm::UInt8 cellShape,
                                     vtkm::IdComponent pointsPerCell,
-                                    const ConnType& connectivity)
+                                    const ConnType& connectivity,
+                                    vtkm::cont::Token& token)
     : CellShape(cellShape)
     , PointsPerCell(pointsPerCell)
-    , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
+    , Connectivity(connectivity.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
@@ -156,10 +157,11 @@ public:
   VTKM_CONT
   ExplicitCellInterpolationHelper(const ShapeType& shape,
                                   const OffsetType& offset,
-                                  const ConnType& connectivity)
-    : Shape(shape.PrepareForInput(DeviceAdapter()))
-    , Offset(offset.PrepareForInput(DeviceAdapter()))
-    , Connectivity(connectivity.PrepareForInput(DeviceAdapter()))
+                                  const ConnType& connectivity,
+                                  vtkm::cont::Token& token)
+    : Shape(shape.PrepareForInput(DeviceAdapter(), token))
+    , Offset(offset.PrepareForInput(DeviceAdapter(), token))
+    , Connectivity(connectivity.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
@@ -199,7 +201,8 @@ public:
   virtual ~CellInterpolationHelper() = default;
 
   VTKM_CONT virtual const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const = 0;
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const = 0;
 };
 
 class StructuredCellInterpolationHelper : public vtkm::cont::CellInterpolationHelper
@@ -237,7 +240,8 @@ public:
 
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId deviceId,
+    vtkm::cont::Token& token) const override
   {
     auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
     const bool valid = tracker.CanRunOn(deviceId);
@@ -250,7 +254,7 @@ public:
     ExecutionType* execObject = new ExecutionType(this->CellDims, this->PointDims, this->Is3D);
     this->ExecHandle.Reset(execObject);
 
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    return this->ExecHandle.PrepareForExecution(deviceId, token);
   }
 
 private:
@@ -293,11 +297,14 @@ public:
     template <typename DeviceAdapter>
     VTKM_CONT bool operator()(DeviceAdapter,
                               const vtkm::cont::SingleCellTypeInterpolationHelper& contInterpolator,
-                              HandleType& execInterpolator) const
+                              HandleType& execInterpolator,
+                              vtkm::cont::Token& token) const
     {
       using ExecutionType = vtkm::exec::SingleCellTypeInterpolationHelper<DeviceAdapter>;
-      ExecutionType* execObject = new ExecutionType(
-        contInterpolator.CellShape, contInterpolator.PointsPerCell, contInterpolator.Connectivity);
+      ExecutionType* execObject = new ExecutionType(contInterpolator.CellShape,
+                                                    contInterpolator.PointsPerCell,
+                                                    contInterpolator.Connectivity,
+                                                    token);
       execInterpolator.Reset(execObject);
       return true;
     }
@@ -305,15 +312,16 @@ public:
 
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId deviceId,
+    vtkm::cont::Token& token) const override
   {
-    const bool success =
-      vtkm::cont::TryExecuteOnDevice(deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle);
+    const bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, SingleCellTypeFunctor(), *this, this->ExecHandle, token);
     if (!success)
     {
       throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
     }
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    return this->ExecHandle.PrepareForExecution(deviceId, token);
   }
 
 private:
@@ -350,11 +358,12 @@ public:
     template <typename DeviceAdapter>
     VTKM_CONT bool operator()(DeviceAdapter,
                               const vtkm::cont::ExplicitCellInterpolationHelper& contInterpolator,
-                              HandleType& execInterpolator) const
+                              HandleType& execInterpolator,
+                              vtkm::cont::Token& token) const
     {
       using ExecutionType = vtkm::exec::ExplicitCellInterpolationHelper<DeviceAdapter>;
       ExecutionType* execObject = new ExecutionType(
-        contInterpolator.Shape, contInterpolator.Offset, contInterpolator.Connectivity);
+        contInterpolator.Shape, contInterpolator.Offset, contInterpolator.Connectivity, token);
       execInterpolator.Reset(execObject);
       return true;
     }
@@ -362,15 +371,16 @@ public:
 
   VTKM_CONT
   const vtkm::exec::CellInterpolationHelper* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const override
+    vtkm::cont::DeviceAdapterId deviceId,
+    vtkm::cont::Token& token) const override
   {
-    const bool success =
-      vtkm::cont::TryExecuteOnDevice(deviceId, ExplicitCellFunctor(), *this, this->ExecHandle);
+    const bool success = vtkm::cont::TryExecuteOnDevice(
+      deviceId, ExplicitCellFunctor(), *this, this->ExecHandle, token);
     if (!success)
     {
       throwFailedRuntimeDeviceTransfer("ExplicitCellInterpolationHelper", deviceId);
     }
-    return this->ExecHandle.PrepareForExecution(deviceId);
+    return this->ExecHandle.PrepareForExecution(deviceId, token);
   }
 
 private:

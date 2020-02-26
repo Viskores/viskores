@@ -67,7 +67,7 @@ struct TestExecObjectType : vtkm::cont::ExecutionObjectBase
     f(*this, std::forward<Args>(args)...);
   }
   template <typename Device>
-  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     ExecutionObject<Device> object;
     object.Value = this->Value;
@@ -125,7 +125,8 @@ struct Transport<TestTransportTagIn, std::vector<vtkm::Id>, Device>
   ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
                             const std::vector<vtkm::Id>&,
                             vtkm::Id inputRange,
-                            vtkm::Id outputRange) const
+                            vtkm::Id outputRange,
+                            vtkm::cont::Token&) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
@@ -142,7 +143,8 @@ struct Transport<TestTransportTagOut, std::vector<vtkm::Id>, Device>
   ExecObjectType operator()(const std::vector<vtkm::Id>& contData,
                             const std::vector<vtkm::Id>&,
                             vtkm::Id inputRange,
-                            vtkm::Id outputRange) const
+                            vtkm::Id outputRange,
+                            vtkm::cont::Token&) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
     VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE, "Got unexpected size in test transport.");

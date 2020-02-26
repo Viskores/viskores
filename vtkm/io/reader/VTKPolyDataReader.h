@@ -39,11 +39,11 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
   vtkm::cont::ArrayHandle<T> out;
   out.Allocate(size);
 
-  auto outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
+  auto outp = vtkm::cont::ArrayPortalToIteratorBegin(out.WritePortal());
   for (std::size_t i = 0; i < arrays.size(); ++i)
   {
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].ReadPortal()),
+              vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].ReadPortal()),
               outp);
     using DifferenceType = typename std::iterator_traits<decltype(outp)>::difference_type;
     std::advance(outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
@@ -137,7 +137,7 @@ private:
     shapes.Allocate(static_cast<vtkm::Id>(shapesBuffer.size()));
     std::copy(shapesBuffer.begin(),
               shapesBuffer.end(),
-              vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
+              vtkm::cont::ArrayPortalToIteratorBegin(shapes.WritePortal()));
 
     vtkm::cont::ArrayHandle<vtkm::Id> permutation;
     vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
@@ -146,10 +146,8 @@ private:
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cellSet;
-      cellSet.Fill(numPoints,
-                   shapes.GetPortalConstControl().Get(0),
-                   numIndices.GetPortalConstControl().Get(0),
-                   connectivity);
+      cellSet.Fill(
+        numPoints, shapes.ReadPortal().Get(0), numIndices.ReadPortal().Get(0), connectivity);
       this->DataSet.SetCellSet(cellSet);
     }
     else

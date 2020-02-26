@@ -102,12 +102,13 @@ public:
   MeshStructureContourTreeMesh(const cpp2_ns::IdArrayType neighbours,
                                const cpp2_ns::IdArrayType firstNeighbour,
                                const vtkm::Id maxneighbours,
-                               bool getmax)
+                               bool getmax,
+                               vtkm::cont::Token& token)
     : MaxNeighbours(maxneighbours)
     , GetMax(getmax)
   {
-    NeighboursPortal = neighbours.PrepareForInput(DeviceAdapter());
-    FirstNeighbourPortal = firstNeighbour.PrepareForInput(DeviceAdapter());
+    this->NeighboursPortal = neighbours.PrepareForInput(DeviceAdapter(), token);
+    this->FirstNeighbourPortal = firstNeighbour.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC

@@ -57,29 +57,28 @@ protected:
 
 public:
   RectilinearLocator(const CartesianArrayHandle& coordinates,
-                     vtkm::cont::CellSetStructured<3>& cellset)
-    : Coordinates(coordinates.PrepareForInput(Device()))
+                     vtkm::cont::CellSetStructured<3>& cellset,
+                     vtkm::cont::Token& token)
+    : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
-                                   vtkm::TopologyElementTagPoint()))
+                                   vtkm::TopologyElementTagPoint(),
+                                   token))
   {
     CoordPortals[0] = Coordinates.GetFirstPortal();
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
     PointDimensions = Conn.GetPointDimensions();
-    MinPoint[0] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetFirstPortal().Get(0));
-    MinPoint[1] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetSecondPortal().Get(0));
-    MinPoint[2] =
-      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetThirdPortal().Get(0));
+    MinPoint[0] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetFirstPortal().Get(0));
+    MinPoint[1] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetSecondPortal().Get(0));
+    MinPoint[2] = static_cast<vtkm::Float32>(coordinates.ReadPortal().GetThirdPortal().Get(0));
 
     MaxPoint[0] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
+      coordinates.ReadPortal().GetFirstPortal().Get(PointDimensions[0] - 1));
     MaxPoint[1] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
+      coordinates.ReadPortal().GetSecondPortal().Get(PointDimensions[1] - 1));
     MaxPoint[2] = static_cast<vtkm::Float32>(
-      coordinates.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+      coordinates.ReadPortal().GetThirdPortal().Get(PointDimensions[2] - 1));
   }
 
   VTKM_EXEC
@@ -199,11 +198,14 @@ protected:
     Conn;
 
 public:
-  UniformLocator(const UniformArrayHandle& coordinates, vtkm::cont::CellSetStructured<3>& cellset)
-    : Coordinates(coordinates.PrepareForInput(Device()))
+  UniformLocator(const UniformArrayHandle& coordinates,
+                 vtkm::cont::CellSetStructured<3>& cellset,
+                 vtkm::cont::Token& token)
+    : Coordinates(coordinates.PrepareForInput(Device(), token))
     , Conn(cellset.PrepareForInput(Device(),
                                    vtkm::TopologyElementTagCell(),
-                                   vtkm::TopologyElementTagPoint()))
+                                   vtkm::TopologyElementTagPoint(),
+                                   token))
   {
     Origin = Coordinates.GetOrigin();
     PointDimensions = Conn.GetPointDimensions();
@@ -310,8 +312,9 @@ public:
           const vtkm::Float32& minScalar,
           const vtkm::Float32& maxScalar,
           const vtkm::Float32& sampleDistance,
-          const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
+          const LocatorType& locator,
+          vtkm::cont::Token& token)
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -503,8 +506,9 @@ public:
                    const vtkm::Float32& minScalar,
                    const vtkm::Float32& maxScalar,
                    const vtkm::Float32& sampleDistance,
-                   const LocatorType& locator)
-    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag()))
+                   const LocatorType& locator,
+                   vtkm::cont::Token& token)
+    : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
@@ -813,9 +817,10 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   if (IsUniformDataSet)
   {
+    vtkm::cont::Token token;
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
     vertices = Coordinates.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    UniformLocator<Device> locator(vertices, Cellset);
+    UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
     {
@@ -824,7 +829,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 vtkm::Float32(ScalarRange.Min),
                                                 vtkm::Float32(ScalarRange.Max),
                                                 SampleDistance,
-                                                locator));
+                                                locator,
+                                                token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
                                rays.Origin,
@@ -840,7 +846,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                          vtkm::Float32(ScalarRange.Min),
                                                          vtkm::Float32(ScalarRange.Max),
                                                          SampleDistance,
-                                                         locator))
+                                                         locator,
+                                                         token))
         .Invoke(rays.Dir,
                 rays.Origin,
                 rays.MinDistance,
@@ -851,9 +858,10 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   }
   else
   {
+    vtkm::cont::Token token;
     CartesianArrayHandle vertices;
     vertices = Coordinates.Cast<CartesianArrayHandle>();
-    RectilinearLocator<Device> locator(vertices, Cellset);
+    RectilinearLocator<Device> locator(vertices, Cellset, token);
     if (isAssocPoints)
     {
       vtkm::worklet::DispatcherMapField<Sampler<Device, RectilinearLocator<Device>>>
@@ -862,7 +870,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                       vtkm::Float32(ScalarRange.Min),
                                                       vtkm::Float32(ScalarRange.Max),
                                                       SampleDistance,
-                                                      locator));
+                                                      locator,
+                                                      token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
                                rays.Origin,
@@ -879,7 +888,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                                vtkm::Float32(ScalarRange.Min),
                                                                vtkm::Float32(ScalarRange.Max),
                                                                SampleDistance,
-                                                               locator));
+                                                               locator,
+                                                               token));
       rectilinearLocatorDispatcher.SetDevice(Device());
       rectilinearLocatorDispatcher.Invoke(
         rays.Dir,

@@ -83,11 +83,12 @@ public:
   VTKM_CONT
   ContourTreeSuperNodeComparatorImpl(const IdArrayType& hyperparents,
                                      const IdArrayType& supernodes,
-                                     const IdArrayType& whenTransferred)
+                                     const IdArrayType& whenTransferred,
+                                     vtkm::cont::Token& token)
   {
-    this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
-    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
-    this->WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter());
+    this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter(), token);
+    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter(), token);
+    this->WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter(), token);
   }
 
   // () operator - gets called to do comparison
@@ -138,10 +139,12 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token)
   {
     return ContourTreeSuperNodeComparatorImpl<DeviceAdapter>(
-      this->Hyperparents, this->Supernodes, this->WhenTransferred);
+      this->Hyperparents, this->Supernodes, this->WhenTransferred, token);
   }
 
 private:

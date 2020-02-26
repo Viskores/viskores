@@ -81,16 +81,16 @@ struct IsNoExceptHandle
     is_noexcept_movable<VirtualType>();
 
     //verify the input portals of the handle
-    is_noexcept_movable<decltype(
-      std::declval<HandleType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
-    is_noexcept_movable<decltype(
-      std::declval<VirtualType>().PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}))>();
+    is_noexcept_movable<decltype(std::declval<HandleType>().PrepareForInput(
+      vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
+    is_noexcept_movable<decltype(std::declval<VirtualType>().PrepareForInput(
+      vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
 
     //verify the output portals of the handle
-    is_noexcept_movable<decltype(
-      std::declval<HandleType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
-    is_noexcept_movable<decltype(
-      std::declval<VirtualType>().PrepareForOutput(2, vtkm::cont::DeviceAdapterTagSerial{}))>();
+    is_noexcept_movable<decltype(std::declval<HandleType>().PrepareForOutput(
+      2, vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
+    is_noexcept_movable<decltype(std::declval<VirtualType>().PrepareForOutput(
+      2, vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
   }
 };
 

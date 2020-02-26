@@ -86,7 +86,8 @@ public:
   void SetPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag) const;
+  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag,
+                                                            vtkm::cont::Token& token) const;
 
   Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices);
 
@@ -106,12 +107,12 @@ Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_3D
 
 {
   // Initialize the case tables in vtkm
-  EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
     m3d_freudenthal::EdgeBoundaryDetectionMasks, m3d_freudenthal::N_INCIDENT_EDGES);
-  NeighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
+  this->NeighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
     m3d_freudenthal::NeighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3));
-  LinkComponentCaseTable = vtkm::cont::make_ArrayHandle(m3d_freudenthal::LinkComponentCaseTable,
-                                                        m3d_freudenthal::LINK_COMPONENT_CASES);
+  this->LinkComponentCaseTable = vtkm::cont::make_ArrayHandle(
+    m3d_freudenthal::LinkComponentCaseTable, m3d_freudenthal::LINK_COMPONENT_CASES);
 }
 
 
@@ -126,7 +127,9 @@ void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::SetPrepareForExecuti
 template <typename T, typename StorageType>
 template <typename DeviceTag>
 MeshStructureFreudenthal3D<DeviceTag>
-  Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
+Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(
+  DeviceTag,
+  vtkm::cont::Token& token) const
 {
   return MeshStructureFreudenthal3D<DeviceTag>(this->NumColumns,
                                                this->NumRows,
@@ -135,9 +138,10 @@ MeshStructureFreudenthal3D<DeviceTag>
                                                this->UseGetMax,
                                                this->SortIndices,
                                                this->SortOrder,
-                                               EdgeBoundaryDetectionMasks,
-                                               NeighbourOffsets,
-                                               LinkComponentCaseTable);
+                                               this->EdgeBoundaryDetectionMasks,
+                                               this->NeighbourOffsets,
+                                               this->LinkComponentCaseTable,
+                                               token);
 }
 
 

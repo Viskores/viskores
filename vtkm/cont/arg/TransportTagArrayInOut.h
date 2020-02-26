@@ -40,20 +40,22 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInPlace(Device()));
+  using ExecObjectType = decltype(
+    std::declval<ContObjectType>().PrepareForInPlace(Device(), std::declval<vtkm::cont::Token&>()));
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
                                       vtkm::Id vtkmNotUsed(inputRange),
-                                      vtkm::Id outputRange) const
+                                      vtkm::Id outputRange,
+                                      vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != outputRange)
     {
       throw vtkm::cont::ErrorBadValue("Input/output array to worklet invocation the wrong size.");
     }
 
-    return object.PrepareForInPlace(Device());
+    return object.PrepareForInPlace(Device(), token);
   }
 };
 }

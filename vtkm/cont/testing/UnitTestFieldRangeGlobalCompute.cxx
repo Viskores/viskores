@@ -41,8 +41,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals, vtkm::Typ
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -63,8 +64,9 @@ vtkm::cont::ArrayHandle<T> CreateArray(const T& min,
   }
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  auto portal = handle.WritePortal();
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(portal),
+                vtkm::cont::ArrayPortalToIteratorEnd(portal),
                 [&]() {
                   T val;
                   for (int cc = 0; cc < size; ++cc)
@@ -86,7 +88,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == 1, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   auto range = portal.Get(0);
   PRINT_INFO(<< "  expecting [" << min << ", " << max << "], got [" << range.Min << ", "
              << range.Max
@@ -104,7 +106,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   vtkmdiy::mpi::communicator comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   VTKM_TEST_ASSERT(ranges.GetNumberOfValues() == size, "Wrong number of ranges");
 
-  auto portal = ranges.GetPortalConstControl();
+  auto portal = ranges.ReadPortal();
   for (int cc = 0; cc < size; ++cc)
   {
     auto range = portal.Get(cc);

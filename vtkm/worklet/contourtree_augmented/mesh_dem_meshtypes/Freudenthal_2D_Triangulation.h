@@ -81,7 +81,8 @@ public:
   void SetPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag) const;
+  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag,
+                                                            vtkm::cont::Token& token) const;
 
   Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows);
 
@@ -99,7 +100,7 @@ Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D
   : Mesh_DEM_Triangulation_2D<T, StorageType>(ncols, nrows)
 
 {
-  EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
     m2d_freudenthal::EdgeBoundaryDetectionMasks, m2d_freudenthal::N_INCIDENT_EDGES);
 }
 
@@ -114,7 +115,9 @@ void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::SetPrepareForExecuti
 template <typename T, typename StorageType>
 template <typename DeviceTag>
 MeshStructureFreudenthal2D<DeviceTag>
-  Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
+Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(
+  DeviceTag,
+  vtkm::cont::Token& token) const
 {
   return MeshStructureFreudenthal2D<DeviceTag>(this->NumColumns,
                                                this->NumRows,
@@ -122,7 +125,8 @@ MeshStructureFreudenthal2D<DeviceTag>
                                                this->UseGetMax,
                                                this->SortIndices,
                                                this->SortOrder,
-                                               EdgeBoundaryDetectionMasks);
+                                               this->EdgeBoundaryDetectionMasks,
+                                               token);
 }
 
 template <typename T, typename StorageType>

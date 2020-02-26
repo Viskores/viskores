@@ -90,7 +90,8 @@ public:
   void SetPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  MeshStructureMarchingCubes<DeviceTag> PrepareForExecution(DeviceTag) const;
+  MeshStructureMarchingCubes<DeviceTag> PrepareForExecution(DeviceTag,
+                                                            vtkm::cont::Token& token) const;
 
   Mesh_DEM_Triangulation_3D_MarchingCubes(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices);
 
@@ -110,9 +111,9 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
 
 {
   // Initialize the case tables in vtkm
-  EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
     m3d_marchingcubes::EdgeBoundaryDetectionMasks, m3d_marchingcubes::N_ALL_NEIGHBOURS);
-  CubeVertexPermutations = vtkm::cont::make_ArrayHandleGroupVec<
+  this->CubeVertexPermutations = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       CubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lenghts ...PermVecLength
     vtkm::cont::make_ArrayHandle(
@@ -120,7 +121,7 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
       m3d_marchingcubes::CubeVertexPermutations_NumPermutations *
         m3d_marchingcubes::CubeVertexPermutations_PermVecLength // total number of elements
       ));
-  LinkVertexConnectionsSix = vtkm::cont::make_ArrayHandleGroupVec<
+  this->LinkVertexConnectionsSix = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
     vtkm::cont::make_ArrayHandle(
@@ -128,7 +129,7 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
       m3d_marchingcubes::LinkVertexConnectionsSix_NumPairs *
         m3d_marchingcubes::VertexConnections_VecLength // total number of elements
       ));
-  LinkVertexConnectionsEighteen = vtkm::cont::make_ArrayHandleGroupVec<
+  this->LinkVertexConnectionsEighteen = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
     vtkm::cont::make_ArrayHandle(
@@ -136,9 +137,9 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
       m3d_marchingcubes::LinkVertexConnectionsEighteen_NumPairs *
         m3d_marchingcubes::VertexConnections_VecLength // total number of elements
       ));
-  InCubeConnectionsSix = vtkm::cont::make_ArrayHandle(
+  this->InCubeConnectionsSix = vtkm::cont::make_ArrayHandle(
     m3d_marchingcubes::InCubeConnectionsSix, m3d_marchingcubes::InCubeConnectionsSix_NumElements);
-  InCubeConnectionsEighteen =
+  this->InCubeConnectionsEighteen =
     vtkm::cont::make_ArrayHandle(m3d_marchingcubes::InCubeConnectionsEighteen,
                                  m3d_marchingcubes::InCubeConnectionsEighteen_NumElements);
 }
@@ -154,7 +155,9 @@ void Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::SetPrepareForExecu
 template <typename T, typename StorageType>
 template <typename DeviceTag>
 MeshStructureMarchingCubes<DeviceTag>
-  Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::PrepareForExecution(DeviceTag) const
+Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::PrepareForExecution(
+  DeviceTag,
+  vtkm::cont::Token& token) const
 {
   return MeshStructureMarchingCubes<DeviceTag>(this->NumColumns,
                                                this->NumRows,
@@ -162,12 +165,13 @@ MeshStructureMarchingCubes<DeviceTag>
                                                this->UseGetMax,
                                                this->SortIndices,
                                                this->SortOrder,
-                                               EdgeBoundaryDetectionMasks,
-                                               CubeVertexPermutations,
-                                               LinkVertexConnectionsSix,
-                                               LinkVertexConnectionsEighteen,
-                                               InCubeConnectionsSix,
-                                               InCubeConnectionsEighteen);
+                                               this->EdgeBoundaryDetectionMasks,
+                                               this->CubeVertexPermutations,
+                                               this->LinkVertexConnectionsSix,
+                                               this->LinkVertexConnectionsEighteen,
+                                               this->InCubeConnectionsSix,
+                                               this->InCubeConnectionsEighteen,
+                                               token);
 }
 
 template <typename T, typename StorageType>

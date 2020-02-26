@@ -431,7 +431,7 @@ private:
     using CoordType = CoordsArray::ValueType;
     using ValueType = CoordType::ComponentType;
 
-    const auto& portal = coords.GetPortalConstControl();
+    const auto& portal = coords.ReadPortal();
     CoordType inOrigin = portal.GetOrigin();
     CoordType inSpacing = portal.GetSpacing();
 
@@ -467,7 +467,7 @@ private:
       if (arrays[i].GetNumberOfValues() == 1)
       {
         xyzs[i].Allocate(1);
-        xyzs[i].GetPortalControl().Set(0, vtkm::cont::ArrayGetValue(0, arrays[i]));
+        xyzs[i].WritePortal().Set(0, vtkm::cont::ArrayGetValue(0, arrays[i]));
       }
       else
       {

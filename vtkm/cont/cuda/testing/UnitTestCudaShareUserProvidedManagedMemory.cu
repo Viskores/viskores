@@ -62,7 +62,9 @@ template <typename ValueType>
 void TestPrepareForInput(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
   auto lock = handle.Internals->GetLock();
   void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
@@ -87,7 +89,9 @@ template <typename ValueType>
 void TestPrepareForInPlace(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
   auto lock = handle.Internals->GetLock();
   void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
@@ -113,7 +117,9 @@ void TestPrepareForOutput(bool managed)
 {
   // Should reuse a managed control pointer if buffer is large enough.
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
   auto lock = handle.Internals->GetLock();
   void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
@@ -138,7 +144,9 @@ template <typename ValueType>
 void TestReleaseResourcesExecution(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
   void* origArray;
   {
@@ -170,7 +178,9 @@ template <typename ValueType>
 void TestRoundTrip(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
   void* origContArray;
   {
@@ -199,7 +209,7 @@ void TestRoundTrip(bool managed)
 
   try
   {
-    handle.GetPortalControl();
+    handle.WritePortal();
   }
   catch (vtkm::cont::ErrorBadValue&)
   {

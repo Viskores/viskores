@@ -126,7 +126,7 @@ public:
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
-    : Superclass(typename Superclass::PortalConstControl(start, step, length))
+    : Superclass(typename Superclass::ReadPortalType(start, step, length))
   {
   }
 };
@@ -181,7 +181,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto portal = obj.GetPortalConstControl();
+    auto portal = obj.ReadPortal();
     vtkmdiy::save(bb, portal.GetStart());
     vtkmdiy::save(bb, portal.GetStep());
     vtkmdiy::save(bb, portal.GetNumberOfValues());

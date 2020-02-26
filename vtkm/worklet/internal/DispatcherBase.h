@@ -288,6 +288,7 @@ struct DispatcherBaseTransportFunctor
   const InputDomainType& InputDomain; // Warning: this is a reference
   vtkm::Id InputRange;
   vtkm::Id OutputRange;
+  vtkm::cont::Token& Token; // Warning: this is a reference
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
@@ -296,10 +297,12 @@ struct DispatcherBaseTransportFunctor
   template <typename InputRangeType, typename OutputRangeType>
   VTKM_CONT DispatcherBaseTransportFunctor(const InputDomainType& inputDomain,
                                            const InputRangeType& inputRange,
-                                           const OutputRangeType& outputRange)
+                                           const OutputRangeType& outputRange,
+                                           vtkm::cont::Token& token)
     : InputDomain(inputDomain)
     , InputRange(FlatRange(inputRange))
     , OutputRange(FlatRange(outputRange))
+    , Token(token)
   {
   }
 
@@ -325,8 +328,11 @@ struct DispatcherBaseTransportFunctor
     vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
 
     not_nullptr(invokeData, Index);
-    return transport(
-      as_ref(invokeData), as_ref(this->InputDomain), this->InputRange, this->OutputRange);
+    return transport(as_ref(invokeData),
+                     as_ref(this->InputDomain),
+                     this->InputRange,
+                     this->OutputRange,
+                     this->Token);
   }
 
 
@@ -710,6 +716,10 @@ private:
                                            ThreadRangeType&& threadRange,
                                            DeviceAdapter device) const
   {
+    // This token represents the scope of the execution objects. It should
+    // exist as long as things run on the device.
+    vtkm::cont::Token token;
+
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
     // contains the parameters passed to Invoke in the control environment. We
@@ -730,7 +740,7 @@ private:
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
-      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
+      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange, token));
 
     // Get the arrays used for scattering input to output.
     typename ScatterType::OutputToInputMapType outputToInputMap =
@@ -747,14 +757,14 @@ private:
                                typename Invocation::ControlInterface,
                                typename Invocation::ExecutionInterface,
                                Invocation::InputDomainIndex,
-                               decltype(outputToInputMap.PrepareForInput(device)),
-                               decltype(visitArray.PrepareForInput(device)),
-                               decltype(threadToOutputMap.PrepareForInput(device)),
+                               decltype(outputToInputMap.PrepareForInput(device, token)),
+                               decltype(visitArray.PrepareForInput(device, token)),
+                               decltype(threadToOutputMap.PrepareForInput(device, token)),
                                DeviceAdapter>
       changedInvocation(execObjectParameters,
-                        outputToInputMap.PrepareForInput(device),
-                        visitArray.PrepareForInput(device),
-                        threadToOutputMap.PrepareForInput(device));
+                        outputToInputMap.PrepareForInput(device, token),
+                        visitArray.PrepareForInput(device, token),
+                        threadToOutputMap.PrepareForInput(device, token));
 
     this->InvokeSchedule(changedInvocation, threadRange, device);
   }

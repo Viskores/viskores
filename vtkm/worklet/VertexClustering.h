@@ -110,7 +110,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<ValueType> ConcretePermutationArray(
 template <typename T, vtkm::IdComponent N>
 vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other)
 {
-  const T* vmem = reinterpret_cast<const T*>(&*other.GetPortalConstControl().GetIteratorBegin());
+  const T* vmem = reinterpret_cast<const T*>(&*other.ReadPortal().GetIteratorBegin());
   vtkm::cont::ArrayHandle<T> mem =
     vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
   vtkm::cont::ArrayHandle<T> result;
@@ -499,7 +499,7 @@ public:
 
     // remove the last element if invalid
     vtkm::Id cells = pointId3Array.GetNumberOfValues();
-    if (cells > 0 && pointId3Array.GetPortalConstControl().Get(cells - 1)[2] >= nPoints)
+    if (cells > 0 && pointId3Array.ReadPortal().Get(cells - 1)[2] >= nPoints)
     {
       cells--;
       pointId3Array.Shrink(cells);

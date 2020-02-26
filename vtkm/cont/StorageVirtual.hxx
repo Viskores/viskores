@@ -143,7 +143,8 @@ struct PortalWrapperToDevice
                          Handle&& handle,
                          vtkm::cont::internal::TransferInfoArray& payload) const
   {
-    auto portal = handle.PrepareForInput(device);
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInput(device, token);
     using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
     vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
     return transfer(device, payload, portal);
@@ -158,14 +159,16 @@ struct PortalWrapperToDevice
     using ACCESS_MODE = vtkm::cont::internal::detail::StorageVirtual::OutputMode;
     if (mode == ACCESS_MODE::WRITE)
     {
-      auto portal = handle.PrepareForOutput(numberOfValues, device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForOutput(numberOfValues, device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);
     }
     else
     {
-      auto portal = handle.PrepareForInPlace(device);
+      vtkm::cont::Token token;
+      auto portal = handle.PrepareForInPlace(device, token);
       using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
       vtkm::cont::detail::TransferToDevice<DerivedPortal> transfer;
       return transfer(device, payload, portal);
@@ -177,7 +180,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::ControlPortalForInput(
   vtkm::cont::internal::TransferInfoArray& payload) const
 {
-  auto portal = this->Handle.GetPortalConstControl();
+  auto portal = this->Handle.ReadPortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
@@ -187,7 +190,7 @@ inline void make_writableHostPortal(std::true_type,
                                     vtkm::cont::internal::TransferInfoArray& payload,
                                     HandleType& handle)
 {
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   using DerivedPortal = vtkm::ArrayPortalWrapper<decltype(portal)>;
   vtkm::cont::make_hostPortal<DerivedPortal>(payload, portal);
 }
@@ -412,17 +415,20 @@ struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTr
   {
   }
 
-  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                                      vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInput(Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  VTKM_CONT typename Superclass::PortalExecution PrepareForOutput(vtkm::Id numberOfValues,
+                                                                  vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForOutput(numberOfValues, Device());
   }
 
-  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  VTKM_CONT typename Superclass::PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                                                   vtkm::cont::Token&)
   {
     return this->Superclass::PrepareForInPlace(Device());
   }

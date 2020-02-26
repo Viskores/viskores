@@ -189,7 +189,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
 
       vtkm::cont::ArrayHandle<CommonType> output;
       output.Allocate(static_cast<vtkm::Id>(vec.size()));
-      auto portal = output.GetPortalControl();
+      auto portal = output.WritePortal();
       for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
       {
         portal.Set(i, static_cast<CommonType>(vec[static_cast<std::size_t>(i)]));
@@ -222,7 +222,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
 
       vtkm::cont::ArrayHandle<CommonType> output;
       output.Allocate(static_cast<vtkm::Id>(vec.size()));
-      auto portal = output.GetPortalControl();
+      auto portal = output.WritePortal();
       for (vtkm::Id i = 0; i < output.GetNumberOfValues(); ++i)
       {
         CommonType outval = CommonType();
@@ -354,8 +354,8 @@ protected:
     this->ReadArray(buffer);
 
     vtkm::Int32* buffp = &buffer[0];
-    auto connectivityPortal = connectivity.GetPortalControl();
-    auto numIndicesPortal = numIndices.GetPortalControl();
+    auto connectivityPortal = connectivity.WritePortal();
+    auto numIndicesPortal = numIndices.WritePortal();
     for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
     {
       vtkm::IdComponent numInds = static_cast<vtkm::IdComponent>(*buffp++);
@@ -379,7 +379,7 @@ protected:
     this->ReadArray(buffer);
 
     vtkm::Int32* buffp = &buffer[0];
-    auto shapesPortal = shapes.GetPortalControl();
+    auto shapesPortal = shapes.WritePortal();
     for (vtkm::Id i = 0; i < numCells; ++i)
     {
       shapesPortal.Set(i, static_cast<vtkm::UInt8>(*buffp++));
@@ -763,7 +763,7 @@ private:
       {
         // If we are reading data associated with a cell set, we need to (sometimes) permute the
         // data due to differences between VTK and VTK-m cell shapes.
-        auto permutation = this->Reader->GetCellsPermutation().GetPortalConstControl();
+        auto permutation = this->Reader->GetCellsPermutation().ReadPortal();
         vtkm::Id outSize = permutation.GetNumberOfValues();
         std::vector<T> permutedBuffer(static_cast<std::size_t>(outSize));
         for (vtkm::Id outIndex = 0; outIndex < outSize; outIndex++)

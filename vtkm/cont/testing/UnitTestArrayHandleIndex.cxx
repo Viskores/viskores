@@ -24,8 +24,7 @@ void TestArrayHandleIndex()
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == index,
-                     "Index array has unexpected value.");
+    VTKM_TEST_ASSERT(array.ReadPortal().Get(index) == index, "Index array has unexpected value.");
   }
 }
 

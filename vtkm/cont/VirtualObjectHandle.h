@@ -133,7 +133,8 @@ public:
   /// 2. VirtualObjectHandle is destroyed
   /// 3. Reset or ReleaseResources is called
   ///
-  VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
+  VTKM_CONT const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                                       vtkm::cont::Token&) const
   {
     const bool validId = this->Internals->DeviceIdIsValid(deviceId);
     if (!validId)
@@ -143,6 +144,14 @@ public:
     }
 
     return static_cast<const VirtualBaseType*>(this->Internals->PrepareForExecution(deviceId));
+  }
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object.")
+  const VirtualBaseType* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(deviceId, token);
   }
 
   /// Used as part of the \c ExecutionAndControlObjectBase interface. Returns the same pointer

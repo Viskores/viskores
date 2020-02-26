@@ -82,12 +82,12 @@ public:
 
     do
     {
-      allStars.GetPortalControl().Set(0, 1); //reset the atomic state
+      allStars.WritePortal().Set(0, 1); //reset the atomic state
       invoke(detail::Graft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
 
       // Detection of allStars has to come before pointer jumping. Don't try to rearrange it.
       invoke(IsStar{}, components, allStars);
-      everythingIsAStar = (allStars.GetPortalControl().Get(0) == 1);
+      everythingIsAStar = (allStars.WritePortal().Get(0) == 1);
       invoke(PointerJumping{}, components);
     } while (!everythingIsAStar);
 

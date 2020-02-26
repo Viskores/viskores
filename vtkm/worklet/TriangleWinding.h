@@ -202,8 +202,8 @@ public:
 
         cellShapes.ReleaseResourcesExecution();
 
-        auto rangeSizes = rangeHandleSizes.GetPortalConstControl().Get(0);
-        auto rangeShapes = rangeHandleShapes.GetPortalConstControl().Get(0);
+        auto rangeSizes = rangeHandleSizes.ReadPortal().Get(0);
+        auto rangeShapes = rangeHandleShapes.ReadPortal().Get(0);
 
         const bool sameSize = vtkm::Abs(rangeSizes.Max - rangeSizes.Min) < 0.5;
         const bool sameShape = vtkm::Abs(rangeShapes.Max - rangeShapes.Min) < 0.5;

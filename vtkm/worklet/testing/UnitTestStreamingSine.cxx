@@ -42,11 +42,9 @@ void compareArrays(T1& a1, T2& a2, T3& a3, char const* text)
 {
   for (vtkm::Id i = 0; i < a1.GetNumberOfValues(); ++i)
   {
-    std::cout << a1.GetPortalConstControl().Get(i) << " " << a2.GetPortalConstControl().Get(i)
-              << " " << a3.GetPortalConstControl().Get(i) << std::endl;
-    VTKM_TEST_ASSERT(
-      test_equal(a2.GetPortalConstControl().Get(i), a3.GetPortalConstControl().Get(i), 0.01f),
-      text);
+    std::cout << a1.ReadPortal().Get(i) << " " << a2.ReadPortal().Get(i) << " "
+              << a3.ReadPortal().Get(i) << std::endl;
+    VTKM_TEST_ASSERT(test_equal(a2.ReadPortal().Get(i), a3.ReadPortal().Get(i), 0.01f), text);
   }
 }
 

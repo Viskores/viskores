@@ -163,10 +163,11 @@ public:
   };
 
   template <typename DeviceAdapter>
-  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter,
+                                                          vtkm::cont::Token& token) const
   {
-    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter()),
-                                     this->Extrema.PrepareForInput(DeviceAdapter()),
+    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter(), token),
+                                     this->Extrema.PrepareForInput(DeviceAdapter(), token),
                                      this->IsJoinTree);
   }
 }; // VertexMergeComparator

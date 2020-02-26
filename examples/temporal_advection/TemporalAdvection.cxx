@@ -76,8 +76,8 @@ int main(int argc, char** argv)
 
   vtkm::Id numPts = pts.GetNumberOfValues();
   seeds.Allocate(numPts);
-  auto ptsPortal = pts.GetPortalConstControl();
-  auto seedPortal = seeds.GetPortalConstControl();
+  auto ptsPortal = pts.ReadPortal();
+  auto seedPortal = seeds.ReadPortal();
   for (vtkm::Id i = 0; i < numPts; i++)
   {
     vtkm::Particle p;

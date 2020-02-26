@@ -123,8 +123,8 @@ class Storage<T, StorageTagReverse<ST>>
 public:
   using ValueType = T;
   using ArrayHandleType = typename detail::ReverseTypeArg<T, ST>::ArrayHandle;
-  using PortalType = ArrayPortalReverse<typename ArrayHandleType::PortalControl>;
-  using PortalConstType = ArrayPortalReverse<typename ArrayHandleType::PortalConstControl>;
+  using PortalType = ArrayPortalReverse<typename ArrayHandleType::WritePortalType>;
+  using PortalConstType = ArrayPortalReverse<typename ArrayHandleType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -140,13 +140,10 @@ public:
 
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const
-  {
-    return PortalConstType(this->Array.GetPortalConstControl());
-  }
+  PortalConstType GetPortalConst() const { return PortalConstType(this->Array.ReadPortal()); }
 
   VTKM_CONT
-  PortalType GetPortal() { return PortalType(this->Array.GetPortalControl()); }
+  PortalType GetPortal() { return PortalType(this->Array.WritePortal()); }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
@@ -200,21 +197,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()));
+    return PortalExecution(this->Array.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device(), token));
   }
 
   VTKM_CONT

@@ -40,6 +40,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalConcatenate(const PortalType1& p1, const PortalType2& p2)
     : portal1(p1)
@@ -48,6 +49,7 @@ public:
   }
 
   // Copy constructor
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherP1, typename OtherP2>
   VTKM_EXEC_CONT ArrayPortalConcatenate(const ArrayPortalConcatenate<OtherP1, OtherP2>& src)
     : portal1(src.GetPortal1())
@@ -155,10 +157,10 @@ class Storage<T, StorageTagConcatenate<ST1, ST2>>
 
 public:
   using ValueType = T;
-  using PortalType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalControl,
-                                            typename ArrayHandleType2::PortalControl>;
-  using PortalConstType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalConstControl,
-                                                 typename ArrayHandleType2::PortalConstControl>;
+  using PortalType = ArrayPortalConcatenate<typename ArrayHandleType1::WritePortalType,
+                                            typename ArrayHandleType2::WritePortalType>;
+  using PortalConstType = ArrayPortalConcatenate<typename ArrayHandleType1::ReadPortalType,
+                                                 typename ArrayHandleType2::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -178,15 +180,14 @@ public:
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->valid);
-    return PortalConstType(this->array1.GetPortalConstControl(),
-                           this->array2.GetPortalConstControl());
+    return PortalConstType(this->array1.ReadPortal(), this->array2.ReadPortal());
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->valid);
-    return PortalType(this->array1.GetPortalControl(), this->array2.GetPortalControl());
+    return PortalType(this->array1.WritePortal(), this->array2.WritePortal());
   }
 
   VTKM_CONT
@@ -283,21 +284,21 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->array1.PrepareForInput(Device()),
-                                this->array2.PrepareForInput(Device()));
+    return PortalConstExecution(this->array1.PrepareForInput(Device(), token),
+                                this->array2.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->array1.PrepareForInPlace(Device()),
-                           this->array2.PrepareForInPlace(Device()));
+    return PortalExecution(this->array1.PrepareForInPlace(Device(), token),
+                           this->array2.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorInternal("ArrayHandleConcatenate is derived and read-only. ");
   }

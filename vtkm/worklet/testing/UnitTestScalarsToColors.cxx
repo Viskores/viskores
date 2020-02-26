@@ -90,7 +90,7 @@ vtkm::cont::ArrayHandle<T> make_data(const vtkm::Range& r)
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(static_cast<vtkm::Id>(test_values.size()));
 
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   vtkm::Id index = 0;
   if (shiftscale)
   {
@@ -119,7 +119,7 @@ vtkm::cont::ArrayHandle<T> make_data(const vtkm::Range& r)
 
 bool verify(vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output)
 {
-  auto portal = output.GetPortalConstControl();
+  auto portal = output.ReadPortal();
   vtkm::Id index = 0;
   for (auto i : rgb_result)
   {
@@ -140,7 +140,7 @@ bool verify(vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> output)
 bool verify(vtkm::Float32 alpha, vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> output)
 {
   const vtkm::UInt8 a = vtkm::worklet::colorconversion::ColorToUChar(alpha);
-  auto portal = output.GetPortalConstControl();
+  auto portal = output.ReadPortal();
   vtkm::Id index = 0;
   for (auto i : rgb_result)
   {
@@ -210,7 +210,7 @@ struct TestToRGB
       //and them to the range to get the correct range
       vtkm::worklet::colorconversion::MagnitudePortal wrapper;
       vtkm::Range magr;
-      auto portal = input.GetPortalControl();
+      auto portal = input.ReadPortal();
       for (vtkm::Id i = 0; i < input.GetNumberOfValues(); ++i)
       {
         const auto magv = wrapper(portal.Get(i));
@@ -221,7 +221,7 @@ struct TestToRGB
       magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
-      auto portal2 = output.GetPortalControl();
+      auto portal2 = output.ReadPortal();
       for (vtkm::Id i = 0; i < input.GetNumberOfValues(); ++i)
       {
         const auto expected = wrapper(portal.Get(i));
@@ -296,7 +296,7 @@ struct TestToRGBA
       //and them to the range to get the correct range
       vtkm::worklet::colorconversion::MagnitudePortal wrapper;
       vtkm::Range magr;
-      auto portal = input.GetPortalControl();
+      auto portal = input.ReadPortal();
       for (vtkm::Id i = 0; i < input.GetNumberOfValues(); ++i)
       {
         const auto magv = wrapper(portal.Get(i));
@@ -307,7 +307,7 @@ struct TestToRGBA
       magWorklet.RunMagnitude(input, output);
       // vtkm::cont::printSummary_ArrayHandle(output, std::cout, true);
 
-      auto portal2 = output.GetPortalControl();
+      auto portal2 = output.ReadPortal();
       for (vtkm::Id i = 0; i < input.GetNumberOfValues(); ++i)
       {
         const auto expected = wrapper(portal.Get(i));

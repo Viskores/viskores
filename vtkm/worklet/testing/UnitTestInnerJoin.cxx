@@ -27,7 +27,7 @@ public:
 
     for (vtkm::Id i = 0; i < size; ++i)
     {
-      if (ah.GetPortalConstControl().Get(i) != expected[i])
+      if (ah.ReadPortal().Get(i) != expected[i])
       {
         return false;
       }

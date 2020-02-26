@@ -517,15 +517,15 @@ public:
   }
 
   template <typename DeviceAdapter>
-  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     ExecObject<DeviceAdapter> execObject;
     execObject.NumVerticesPerCellPortal =
-      this->NumVerticesPerCellArray.PrepareForInput(DeviceAdapter());
+      this->NumVerticesPerCellArray.PrepareForInput(DeviceAdapter(), token);
     execObject.NumTrianglesTableOffsetPortal =
-      this->NumTrianglesTableOffsetArray.PrepareForInput(DeviceAdapter());
+      this->NumTrianglesTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
     execObject.NumTrianglesTablePortal =
-      this->NumTrianglesTableArray.PrepareForInput(DeviceAdapter());
+      this->NumTrianglesTableArray.PrepareForInput(DeviceAdapter(), token);
     return execObject;
   }
 
@@ -589,14 +589,16 @@ public:
   };
 
   template <typename DeviceAdapter>
-  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     ExecObject<DeviceAdapter> execObject;
-    execObject.EdgeTablePortal = this->EdgeTableArray.PrepareForInput(DeviceAdapter());
-    execObject.EdgeTableOffsetPortal = this->EdgeTableOffsetArray.PrepareForInput(DeviceAdapter());
-    execObject.TriangleTablePortal = this->TriangleTableArray.PrepareForInput(DeviceAdapter());
+    execObject.EdgeTablePortal = this->EdgeTableArray.PrepareForInput(DeviceAdapter(), token);
+    execObject.EdgeTableOffsetPortal =
+      this->EdgeTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
+    execObject.TriangleTablePortal =
+      this->TriangleTableArray.PrepareForInput(DeviceAdapter(), token);
     execObject.TriangleTableOffsetPortal =
-      this->TriangleTableOffsetArray.PrepareForInput(DeviceAdapter());
+      this->TriangleTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
     return execObject;
   }
 

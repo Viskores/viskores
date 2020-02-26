@@ -101,8 +101,8 @@ void CanvasOSMesa::Finish()
   {
     throw vtkm::cont::ErrorBadValue("Wrong width/height in ZBuffer");
   }
-  vtkm::cont::ArrayHandle<vtkm::Float32>::PortalControl depthPortal =
-      this->GetDepthBuffer().GetPortalControl();
+  vtkm::cont::ArrayHandle<vtkm::Float32>::WritePortalType depthPortal =
+      this->GetDepthBuffer().WritePortal();
   vtkm::Id npixels = this->GetWidth()*this->GetHeight();
   for (vtkm::Id i=0; i<npixels; i++)
   for (std::size_t i=0; i<npixels; i++)

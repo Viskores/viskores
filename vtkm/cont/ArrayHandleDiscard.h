@@ -148,21 +148,21 @@ public:
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadValue("Input access not supported: "
                                     "Cannot read from an ArrayHandleDiscard.");
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
   {
     throw vtkm::cont::ErrorBadValue("InPlace access not supported: "
                                     "Cannot read from an ArrayHandleDiscard.");
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numValues)
+  PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token&)
   {
     VTKM_ASSERT(this->Internal != nullptr);
     this->Internal->Allocate(numValues);

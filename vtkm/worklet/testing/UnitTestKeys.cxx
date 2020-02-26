@@ -65,11 +65,11 @@ void TryKeyType(KeyType)
   vtkm::worklet::Keys<KeyType> keys(sortedKeys);
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
-  CheckKeyReduce(keyArray.GetPortalConstControl(),
-                 keys.GetUniqueKeys().GetPortalConstControl(),
-                 keys.GetSortedValuesMap().GetPortalConstControl(),
-                 keys.GetOffsets().GetPortalConstControl(),
-                 keys.GetCounts().GetPortalConstControl());
+  CheckKeyReduce(keyArray.ReadPortal(),
+                 keys.GetUniqueKeys().ReadPortal(),
+                 keys.GetSortedValuesMap().ReadPortal(),
+                 keys.GetOffsets().ReadPortal(),
+                 keys.GetCounts().ReadPortal());
 }
 
 void TestKeys()

@@ -155,9 +155,11 @@ public:
 
   CylinderLeafIntersector() {}
 
-  CylinderLeafIntersector(const IdHandle& cylIds, const FloatHandle& radii)
-    : CylIds(cylIds.PrepareForInput(Device()))
-    , Radii(radii.PrepareForInput(Device()))
+  CylinderLeafIntersector(const IdHandle& cylIds,
+                          const FloatHandle& radii,
+                          vtkm::cont::Token& token)
+    : CylIds(cylIds.PrepareForInput(Device(), token))
+    , Radii(radii.PrepareForInput(Device(), token))
   {
   }
 
@@ -309,9 +311,10 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT CylinderLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT CylinderLeafIntersector<Device> PrepareForExecution(Device,
+                                                                vtkm::cont::Token& token) const
   {
-    return CylinderLeafIntersector<Device>(CylIds, Radii);
+    return CylinderLeafIntersector<Device>(this->CylIds, this->Radii, token);
   }
 };
 

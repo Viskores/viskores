@@ -71,8 +71,10 @@ void TransportWholeCellSetIn(Device)
     Device>
     transport;
 
+  vtkm::cont::Token token;
+
   TestKernel<ExecObjectType> kernel;
-  kernel.CellSet = transport(contObject, nullptr, 1, 1);
+  kernel.CellSet = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
 }

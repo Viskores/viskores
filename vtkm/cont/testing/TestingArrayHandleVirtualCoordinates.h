@@ -60,7 +60,7 @@ inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
   vtkm::worklet::DispatcherMapField<CopyWorklet>().Invoke(
     vtkm::cont::ArrayHandleVirtualCoordinates(in), vtkm::cont::ArrayHandleVirtualCoordinates(out));
 
-  VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
+  VTKM_TEST_ASSERT(test_equal_portals(in.ReadPortal(), out.ReadPortal()),
                    "Input and output portals don't match");
 }
 
@@ -90,7 +90,7 @@ private:
     a1.Allocate(length);
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      a1.GetPortalControl().Set(i, TestValue(i, PointType()));
+      a1.WritePortal().Set(i, TestValue(i, PointType()));
     }
     TestVirtualAccess(a1, out);
 
@@ -105,10 +105,10 @@ private:
     c3.Allocate(length);
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      auto p = a1.GetPortalConstControl().Get(i);
-      c1.GetPortalControl().Set(i, p[0]);
-      c2.GetPortalControl().Set(i, p[1]);
-      c3.GetPortalControl().Set(i, p[2]);
+      auto p = a1.ReadPortal().Get(i);
+      c1.WritePortal().Set(i, p[0]);
+      c2.WritePortal().Set(i, p[1]);
+      c3.WritePortal().Set(i, p[2]);
     }
     TestVirtualAccess(vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out);
 

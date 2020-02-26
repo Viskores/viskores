@@ -70,11 +70,12 @@ VTKM_CONT CellLocatorGeneral::CellLocatorGeneral()
 VTKM_CONT CellLocatorGeneral::~CellLocatorGeneral() = default;
 
 VTKM_CONT const vtkm::exec::CellLocator* CellLocatorGeneral::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
   if (this->Locator)
   {
-    return this->Locator->PrepareForExecution(device);
+    return this->Locator->PrepareForExecution(device, token);
   }
   return nullptr;
 }

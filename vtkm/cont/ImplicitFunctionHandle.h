@@ -93,9 +93,10 @@ public:
   VTKM_CONT const vtkm::cont::ImplicitFunctionHandle& GetHandle() const { return this->Handle; }
 
   VTKM_CONT
-  vtkm::ImplicitFunctionValue PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+  vtkm::ImplicitFunctionValue PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                  vtkm::cont::Token& token) const
   {
-    return vtkm::ImplicitFunctionValue(this->Handle.PrepareForExecution(device));
+    return vtkm::ImplicitFunctionValue(this->Handle.PrepareForExecution(device, token));
   }
 
   VTKM_CONT vtkm::ImplicitFunctionValue PrepareForControl() const

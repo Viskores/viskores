@@ -180,10 +180,10 @@ private:
   using StorageToArrayHandle = vtkm::cont::ArrayHandle<ValueType, S>;
 
   template <typename S>
-  using StorageToPortalControl = typename StorageToArrayHandle<S>::PortalControl;
+  using StorageToPortalControl = typename StorageToArrayHandle<S>::WritePortalType;
 
   template <typename S>
-  using StorageToPortalConstControl = typename StorageToArrayHandle<S>::PortalConstControl;
+  using StorageToPortalConstControl = typename StorageToArrayHandle<S>::ReadPortalType;
 
   using ArrayHandleVariantType = vtkm::internal::Variant<StorageToArrayHandle<StorageTags>...>;
   ArrayHandleVariantType ArrayHandleVariant;
@@ -231,7 +231,7 @@ private:
     template <typename ArrayHandleType>
     VTKM_CONT PortalType operator()(ArrayHandleType&& array) const
     {
-      return PortalType(array.GetPortalControl());
+      return PortalType(array.WritePortal());
     }
   };
 
@@ -240,7 +240,7 @@ private:
     template <typename ArrayHandleType>
     VTKM_CONT PortalConstType operator()(ArrayHandleType&& array) const
     {
-      return PortalConstType(array.GetPortalConstControl());
+      return PortalConstType(array.ReadPortal());
     }
   };
 
@@ -354,20 +354,24 @@ public:
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->StoragePointer->GetNumberOfValues(); }
 
-  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                 vtkm::cont::Token& token)
   {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInputFunctor{});
+    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInputFunctor{},
+                                                                     token);
   }
 
-  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                              vtkm::cont::Token& token)
   {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInPlaceFunctor{});
+    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForInPlaceFunctor{},
+                                                                     token);
   }
 
-  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(PrepareForOutputFunctor{},
-                                                                     numberOfValues);
+    return this->StoragePointer->GetArrayHandleVariant().CastAndCall(
+      PrepareForOutputFunctor{}, numberOfValues, token);
   }
 
   VTKM_CONT void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
@@ -393,27 +397,30 @@ private:
   struct PrepareForInputFunctor
   {
     template <typename ArrayHandleType>
-    VTKM_CONT PortalConstExecution operator()(const ArrayHandleType& array)
+    VTKM_CONT PortalConstExecution operator()(const ArrayHandleType& array,
+                                              vtkm::cont::Token& token)
     {
-      return PortalConstExecution(array.PrepareForInput(Device{}));
+      return PortalConstExecution(array.PrepareForInput(Device{}, token));
     }
   };
 
   struct PrepareForInPlaceFunctor
   {
     template <typename ArrayHandleType>
-    VTKM_CONT PortalExecution operator()(ArrayHandleType& array)
+    VTKM_CONT PortalExecution operator()(ArrayHandleType& array, vtkm::cont::Token& token)
     {
-      return PortalExecution(array.PrepareForInPlace(Device{}));
+      return PortalExecution(array.PrepareForInPlace(Device{}, token));
     }
   };
 
   struct PrepareForOutputFunctor
   {
     template <typename ArrayHandleType>
-    VTKM_CONT PortalExecution operator()(ArrayHandleType& array, vtkm::Id numberOfValues)
+    VTKM_CONT PortalExecution operator()(ArrayHandleType& array,
+                                         vtkm::Id numberOfValues,
+                                         vtkm::cont::Token& token)
     {
-      return PortalExecution(array.PrepareForOutput(numberOfValues, Device{}));
+      return PortalExecution(array.PrepareForOutput(numberOfValues, Device{}, token));
     }
   };
 };

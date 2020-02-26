@@ -181,8 +181,8 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
   BasisParticles.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
   BasisParticlesValidity.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
 
-  auto portal1 = BasisParticles.GetPortalControl();
-  auto portal2 = BasisParticlesValidity.GetPortalControl();
+  auto portal1 = BasisParticles.WritePortal();
+  auto portal2 = BasisParticlesValidity.WritePortal();
 
   vtkm::Id count = 0, id = 0;
   for (int x = 0; x < this->SeedRes[0]; x++)

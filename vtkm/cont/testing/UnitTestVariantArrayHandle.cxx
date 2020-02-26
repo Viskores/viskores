@@ -80,7 +80,7 @@ class ArrayHandleWithUnusualStorage
 public:
   VTKM_CONT
   ArrayHandleWithUnusualStorage()
-    : Superclass(typename Superclass::PortalConstControl())
+    : Superclass(typename Superclass::ReadPortalType())
   {
   }
 };
@@ -104,7 +104,7 @@ struct CheckFunctor
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
 
-    auto portal = array.GetPortalConstControl();
+    auto portal = array.ReadPortal();
     CheckPortal(portal);
   }
 
@@ -120,7 +120,7 @@ struct CheckFunctor
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
 
-    auto portal = array.GetPortalConstControl();
+    auto portal = array.ReadPortal();
     CheckPortal(portal);
   }
 
@@ -135,7 +135,7 @@ struct CheckFunctor
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
 
-    auto portal = array.GetPortalConstControl();
+    auto portal = array.ReadPortal();
     CheckPortal(portal);
   }
 };
@@ -353,7 +353,7 @@ void TryNewInstance(T, ArrayVariantType originalArray)
   staticArray.Allocate(ARRAY_SIZE);
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    staticArray.GetPortalControl().Set(index, TestValue(index + 100, T()));
+    staticArray.WritePortal().Set(index, TestValue(index + 100, T()));
   }
   CheckArrayVariant(originalArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 
@@ -361,7 +361,7 @@ void TryNewInstance(T, ArrayVariantType originalArray)
             << "dynamic array points to the same new values." << std::endl;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    staticArray.GetPortalControl().Set(index, TestValue(index, T()));
+    staticArray.WritePortal().Set(index, TestValue(index, T()));
   }
   CheckArrayVariant(newArray, vtkm::VecTraits<T>::NUM_COMPONENTS, true, false);
 }
@@ -378,8 +378,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
     MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
-                                        originalArray.GetPortalConstControl()));
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
   {
@@ -391,8 +390,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
     MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
-                                        originalArray.GetPortalConstControl()));
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
   {
@@ -404,8 +402,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
     VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
-                                        originalArray.GetPortalConstControl()));
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
   {
@@ -417,8 +414,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
     VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
-    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.GetPortalConstControl(),
-                                        originalArray.GetPortalConstControl()));
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 }
 

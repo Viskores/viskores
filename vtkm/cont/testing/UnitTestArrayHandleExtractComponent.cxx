@@ -87,8 +87,8 @@ struct ExtractComponentTests
     using RefVectorType = typename ReferenceCompositeArray::ValueType;
     using Traits = vtkm::VecTraits<RefVectorType>;
 
-    auto testPortal = testArray.GetPortalConstControl();
-    auto refPortal = this->RefComposite.GetPortalConstControl();
+    auto testPortal = testArray.ReadPortal();
+    auto refPortal = this->RefComposite.ReadPortal();
 
     VTKM_TEST_ASSERT(testPortal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
                      "Number of values in read test output do not match input.");
@@ -137,13 +137,15 @@ struct ExtractComponentTests
       InputArray composite = this->BuildInputArray();
       ExtractArray extract(composite, component);
 
-      WriteTestFunctor<typename ExtractArray::PortalControl,
-                       typename ReferenceCompositeArray::PortalConstControl>
-        functor(extract.GetPortalControl(), this->RefComposite.GetPortalConstControl(), component);
-
-      for (vtkm::Id i = 0; i < extract.GetNumberOfValues(); ++i)
       {
-        functor(i);
+        WriteTestFunctor<typename ExtractArray::WritePortalType,
+                         typename ReferenceCompositeArray::ReadPortalType>
+          functor(extract.WritePortal(), this->RefComposite.ReadPortal(), component);
+
+        for (vtkm::Id i = 0; i < extract.GetNumberOfValues(); ++i)
+        {
+          functor(i);
+        }
       }
 
       this->ValidateWriteTestArray(composite, component);
@@ -158,11 +160,15 @@ struct ExtractComponentTests
       using RefPortal =
         typename ReferenceCompositeArray::template ExecutionTypes<DeviceTag>::PortalConst;
 
-      WriteTestFunctor<Portal, RefPortal> functor(extract.PrepareForInPlace(DeviceTag()),
-                                                  this->RefComposite.PrepareForInput(DeviceTag()),
-                                                  component);
+      {
+        vtkm::cont::Token token;
+        WriteTestFunctor<Portal, RefPortal> functor(
+          extract.PrepareForInPlace(DeviceTag(), token),
+          this->RefComposite.PrepareForInput(DeviceTag(), token),
+          component);
+        Algo::Schedule(functor, extract.GetNumberOfValues());
+      }
 
-      Algo::Schedule(functor, extract.GetNumberOfValues());
       this->ValidateWriteTestArray(composite, component);
     }
   }
@@ -173,8 +179,8 @@ struct ExtractComponentTests
     using Traits = vtkm::VecTraits<VectorType>;
 
     // Check that the indicated component is twice the reference value.
-    auto refPortal = this->RefComposite.GetPortalConstControl();
-    auto portal = testArray.GetPortalConstControl();
+    auto refPortal = this->RefComposite.ReadPortal();
+    auto portal = testArray.ReadPortal();
 
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
                      "Number of values in write test output do not match input.");

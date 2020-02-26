@@ -25,7 +25,7 @@ void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
                               { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
                               { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
 
-  auto portal = normals.GetPortalConstControl();
+  auto portal = normals.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {
@@ -44,7 +44,7 @@ void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
                               { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
                               { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
 
-  auto portal = normals.GetPortalConstControl();
+  auto portal = normals.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {

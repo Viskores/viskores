@@ -225,7 +225,7 @@ inline VTKM_CONT void Histogram::PreExecute(const vtkm::cont::PartitionedDataSet
     {
       throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
     }
-    this->ComputedRange = handle.GetPortalConstControl().Get(0);
+    this->ComputedRange = handle.ReadPortal().Get(0);
   }
 }
 

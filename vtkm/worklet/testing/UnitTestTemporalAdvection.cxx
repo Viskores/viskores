@@ -75,9 +75,9 @@ void ValidateEvaluator(const EvalType& eval,
   vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
   evalTesterDispatcher.Invoke(pointIns, eval, evalStatus, evalResults);
-  auto statusPortal = evalStatus.GetPortalConstControl();
-  auto resultsPortal = evalResults.GetPortalConstControl();
-  auto validityPortal = validity.GetPortalConstControl();
+  auto statusPortal = evalStatus.ReadPortal();
+  auto resultsPortal = evalResults.ReadPortal();
+  auto validityPortal = validity.ReadPortal();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
@@ -86,8 +86,6 @@ void ValidateEvaluator(const EvalType& eval,
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == expected, "Error in evaluator result for " + msg);
   }
-  evalStatus.ReleaseResources();
-  evalResults.ReleaseResources();
 }
 
 template <typename ScalarType>
@@ -121,7 +119,7 @@ void GeneratePoints(const vtkm::Id numOfEntries,
                     vtkm::cont::ArrayHandle<vtkm::Particle>& pointIns)
 {
   pointIns.Allocate(numOfEntries);
-  auto writePortal = pointIns.GetPortalControl();
+  auto writePortal = pointIns.WritePortal();
   for (vtkm::Id index = 0; index < numOfEntries; index++)
   {
     vtkm::Particle particle(RandomPt(bounds), index);
@@ -135,7 +133,7 @@ void GenerateValidity(const vtkm::Id numOfEntries,
                       const vtkm::Vec3f& vecTwo)
 {
   validity.Allocate(numOfEntries);
-  auto writePortal = validity.GetPortalControl();
+  auto writePortal = validity.WritePortal();
   for (vtkm::Id index = 0; index < numOfEntries; index++)
   {
     vtkm::Vec3f value = 0.5f * vecOne + (1.0f - 0.5f) * vecTwo;

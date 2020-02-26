@@ -106,9 +106,9 @@ void CompareArrays(vtkm::cont::ArrayHandle<T> array1,
 {
   VTKM_IS_ARRAY_HANDLE(SelectArrayType);
 
-  auto portal1 = array1.GetPortalConstControl();
-  auto portal2 = array2.GetPortalConstControl();
-  auto selectPortal = selectArray.GetPortalConstControl();
+  auto portal1 = array1.ReadPortal();
+  auto portal2 = array2.ReadPortal();
+  auto selectPortal = selectArray.ReadPortal();
 
   VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == portal2.GetNumberOfValues());
   VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == selectArray.GetNumberOfValues());

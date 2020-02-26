@@ -333,6 +333,7 @@ public:
   Variant& operator=(const Variant&) = default;
   Variant& operator=(Variant&&) = default;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT Variant(const T& src) noexcept
   {
@@ -344,6 +345,7 @@ public:
     this->Index = index;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT Variant(const T&& src) noexcept
   {
@@ -388,6 +390,7 @@ public:
   }
 
 private:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename... Args>
   VTKM_EXEC_CONT T& EmplaceImpl(Args&&... args)
   {
@@ -397,6 +400,7 @@ private:
     return *value;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename U, typename... Args>
   VTKM_EXEC_CONT T& EmplaceImpl(std::initializer_list<U> il, Args&&... args)
   {

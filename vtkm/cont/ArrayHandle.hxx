@@ -118,7 +118,7 @@ const typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage() c
 }
 
 template <typename T, typename S>
-typename ArrayHandle<T, S>::PortalControl ArrayHandle<T, S>::GetPortalControl()
+typename ArrayHandle<T, S>::StorageType::PortalType ArrayHandle<T, S>::GetPortalControl()
 {
   LockType lock = this->GetLock();
 
@@ -139,7 +139,8 @@ typename ArrayHandle<T, S>::PortalControl ArrayHandle<T, S>::GetPortalControl()
 }
 
 template <typename T, typename S>
-typename ArrayHandle<T, S>::PortalConstControl ArrayHandle<T, S>::GetPortalConstControl() const
+typename ArrayHandle<T, S>::StorageType::PortalConstType ArrayHandle<T, S>::GetPortalConstControl()
+  const
 {
   LockType lock = this->GetLock();
 
@@ -147,6 +148,53 @@ typename ArrayHandle<T, S>::PortalConstControl ArrayHandle<T, S>::GetPortalConst
   if (this->Internals->IsControlArrayValid(lock))
   {
     return this->Internals->GetControlArray(lock)->GetPortalConst();
+  }
+  else
+  {
+    throw vtkm::cont::ErrorInternal(
+      "ArrayHandle::SyncControlArray did not make control array valid.");
+  }
+}
+
+template <typename T, typename S>
+typename ArrayHandle<T, S>::ReadPortalType ArrayHandle<T, S>::ReadPortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->WaitToRead(lock, token);
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
+  {
+    token.Attach(
+      *this, this->Internals->GetReadCount(lock), lock, &this->Internals->ConditionVariable);
+    return ReadPortalType(std::move(token),
+                          this->Internals->GetControlArray(lock)->GetPortalConst());
+  }
+  else
+  {
+    throw vtkm::cont::ErrorInternal(
+      "ArrayHandle::SyncControlArray did not make control array valid.");
+  }
+}
+
+template <typename T, typename S>
+typename ArrayHandle<T, S>::WritePortalType ArrayHandle<T, S>::WritePortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->WaitToWrite(lock, token);
+
+  this->SyncControlArray(lock);
+  if (this->Internals->IsControlArrayValid(lock))
+  {
+    // If the user writes into the iterator we return, then the execution
+    // array will become invalid. Play it safe and release the execution
+    // resources. (Use the const version to preserve the execution array.)
+    this->ReleaseResourcesExecutionInternal(lock);
+    token.Attach(
+      *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
+    return WritePortalType(std::move(token), this->Internals->GetControlArray(lock)->GetPortal());
   }
   else
   {
@@ -185,6 +233,7 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 
     if (numberOfValues < originalNumberOfValues)
     {
+      this->WaitToWrite(lock, vtkm::cont::Token{});
       if (this->Internals->IsControlArrayValid(lock))
       {
         this->Internals->GetControlArray(lock)->Shrink(numberOfValues);
@@ -217,11 +266,12 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device) const
+ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device, vtkm::cont::Token& token) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
+  this->WaitToRead(lock, token);
 
   if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
@@ -233,9 +283,12 @@ ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device) const
 
   this->PrepareForDevice(lock, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInput(
-    !this->Internals->IsExecutionArrayValid(lock), device);
+    !this->Internals->IsExecutionArrayValid(lock), device, token);
 
   this->Internals->SetExecutionArrayValid(lock, true);
+
+  token.Attach(
+    *this, this->Internals->GetReadCount(lock), lock, &this->Internals->ConditionVariable);
 
   return portal;
 }
@@ -243,11 +296,14 @@ ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device) const
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag device)
+ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
+                                    DeviceAdapterTag device,
+                                    vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
+  this->WaitToWrite(lock, token);
 
   // Invalidate any control arrays.
   // Should the control array resource be released? Probably not a good
@@ -255,7 +311,8 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag de
   this->Internals->SetControlArrayValid(lock, false);
 
   this->PrepareForDevice(lock, device);
-  auto portal = this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device);
+  auto portal =
+    this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device, token);
 
   // We are assuming that the calling code will fill the array using the
   // iterators we are returning, so go ahead and mark the execution array as
@@ -268,17 +325,21 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag de
   // assumption anyway.)
   this->Internals->SetExecutionArrayValid(lock, true);
 
+  token.Attach(
+    *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
+
   return portal;
 }
 
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device)
+ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
   LockType lock = this->GetLock();
+  this->WaitToWrite(lock, token);
 
   if (!this->Internals->IsControlArrayValid(lock) && !this->Internals->IsExecutionArrayValid(lock))
   {
@@ -290,7 +351,7 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device)
 
   this->PrepareForDevice(lock, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInPlace(
-    !this->Internals->IsExecutionArrayValid(lock), device);
+    !this->Internals->IsExecutionArrayValid(lock), device, token);
 
   this->Internals->SetExecutionArrayValid(lock, true);
 
@@ -298,6 +359,9 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device)
   // the execution data is overwritten. Don't actually release the control
   // array. It may be shared as the execution array.
   this->Internals->SetControlArrayValid(lock, false);
+
+  token.Attach(
+    *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
 
   return portal;
 }
@@ -316,11 +380,15 @@ void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device
     else
     {
       // Have the wrong manager. Delete the old one and create a new one
-      // of the right type. (BTW, it would be possible for the array handle
-      // to hold references to execution arrays on multiple devices. However,
-      // there is not a clear use case for that yet and it is unclear what
-      // the behavior of "dirty" arrays should be, so it is not currently
-      // implemented.)
+      // of the right type. (TODO: it would be possible for the array handle
+      // to hold references to execution arrays on multiple devices. When data
+      // are written on one devices, all the other devices should get cleared.)
+
+      // BUG: There is a non-zero chance that while waiting for the write lock, another thread
+      // could change the ExecutionInterface, which would cause problems. In the future we should
+      // support multiple devices, in which case we would not have to delete one execution array
+      // to load another.
+      this->WaitToWrite(lock, vtkm::cont::Token{}); // Make sure no one is reading device array
       this->SyncControlArray(lock);
       // Need to change some state that does not change the logical state from
       // an external point of view.
@@ -338,6 +406,12 @@ void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
 {
   if (!this->Internals->IsControlArrayValid(lock))
   {
+    // It may be the case that `SyncControlArray` is called from a method that has a `Token`.
+    // However, if we are here, that `Token` should not already be attached to this array.
+    // If it were, then there should be no reason to move data arround (unless the `Token`
+    // was used when preparing for multiple devices, which it should not be used like that).
+    this->WaitToRead(lock, vtkm::cont::Token{});
+
     // Need to change some state that does not change the logical state from
     // an external point of view.
     if (this->Internals->IsExecutionArrayValid(lock))
@@ -377,7 +451,7 @@ inline void VTKM_CONT StorageSerialization(vtkmdiy::BinaryBuffer& bb,
   vtkmdiy::save(bb, count);
 
   vtkmdiy::save(bb, vtkm::Id(0)); //not a basic storage
-  auto portal = obj.GetPortalConstControl();
+  auto portal = obj.ReadPortal();
   for (vtkm::Id i = 0; i < count; ++i)
   {
     vtkmdiy::save(bb, portal.Get(i));
@@ -427,7 +501,7 @@ VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
   }
   else
   {
-    auto portal = obj.GetPortalControl();
+    auto portal = obj.WritePortal();
     for (vtkm::Id i = 0; i < count; ++i)
     {
       T val{};

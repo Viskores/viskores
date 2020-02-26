@@ -39,7 +39,7 @@ namespace cont
 namespace internal
 {
 
-/// \brief
+/// \brief General implementations of device adapter algorithms.
 ///
 /// This struct provides algorithms that implement "general" device adapter
 /// algorithms. If a device adapter provides implementations for Schedule,
@@ -93,24 +93,28 @@ struct DeviceAdapterAlgorithmGeneral
   //--------------------------------------------------------------------------
   // Get Execution Value
   // This method is used internally to get a single element from the execution
-  // array. Might want to expose this and/or allow actual device adapter
-  // implementations to provide one.
+  // array. Normally you would just use ArrayGetValue, but that functionality
+  // relies on the device adapter algorithm and would create a circular
+  // dependency.
 private:
   template <typename T, class CIn>
   VTKM_CONT static T GetExecutionValue(const vtkm::cont::ArrayHandle<T, CIn>& input, vtkm::Id index)
   {
-    using OutputArrayType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> output;
 
-    OutputArrayType output;
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(1, DeviceAdapterTag());
+    {
+      vtkm::cont::Token token;
 
-    CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(
-      inputPortal, outputPortal, index);
+      auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+      auto outputPortal = output.PrepareForOutput(1, DeviceAdapterTag(), token);
 
-    DerivedAlgorithm::Schedule(kernel, 1);
+      CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(
+        inputPortal, outputPortal, index);
 
-    return output.GetPortalConstControl().Get(0);
+      DerivedAlgorithm::Schedule(kernel, 1);
+    }
+
+    return output.ReadPortal().Get(0);
   }
 
 public:
@@ -125,8 +129,10 @@ public:
 
     vtkm::Id numBits = bits.GetNumberOfBits();
 
-    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
-    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{}, token);
+    auto indicesPortal = indices.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
     std::atomic<vtkm::UInt64> popCount;
     popCount.store(0, std::memory_order_seq_cst);
@@ -136,6 +142,8 @@ public:
 
     DerivedAlgorithm::Schedule(functor, functor.GetNumberOfInstances());
     DerivedAlgorithm::Synchronize();
+
+    token.DetachFromAll();
 
     numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
 
@@ -151,9 +159,11 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     const vtkm::Id inSize = input.GetNumberOfValues();
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTag());
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTag(), token);
 
     CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(inputPortal, outputPortal);
     DerivedAlgorithm::Schedule(kernel, inSize);
@@ -175,26 +185,36 @@ public:
     using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>;
     IndexArrayType indices;
 
-    auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTag());
-    auto indexPortal = indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
+    {
+      vtkm::cont::Token token;
 
-    StencilToIndexFlagKernel<decltype(stencilPortal), decltype(indexPortal), UnaryPredicate>
-      indexKernel(stencilPortal, indexPortal, unary_predicate);
+      auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTag(), token);
+      auto indexPortal = indices.PrepareForOutput(arrayLength, DeviceAdapterTag(), token);
 
-    DerivedAlgorithm::Schedule(indexKernel, arrayLength);
+      StencilToIndexFlagKernel<decltype(stencilPortal), decltype(indexPortal), UnaryPredicate>
+        indexKernel(stencilPortal, indexPortal, unary_predicate);
+
+      DerivedAlgorithm::Schedule(indexKernel, arrayLength);
+    }
 
     vtkm::Id outArrayLength = DerivedAlgorithm::ScanExclusive(indices, indices);
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(outArrayLength, DeviceAdapterTag());
+    {
+      vtkm::cont::Token token;
 
-    CopyIfKernel<decltype(inputPortal),
-                 decltype(stencilPortal),
-                 decltype(indexPortal),
-                 decltype(outputPortal),
-                 UnaryPredicate>
-      copyKernel(inputPortal, stencilPortal, indexPortal, outputPortal, unary_predicate);
-    DerivedAlgorithm::Schedule(copyKernel, arrayLength);
+      auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+      auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTag(), token);
+      auto indexPortal = indices.PrepareForOutput(arrayLength, DeviceAdapterTag(), token);
+      auto outputPortal = output.PrepareForOutput(outArrayLength, DeviceAdapterTag(), token);
+
+      CopyIfKernel<decltype(inputPortal),
+                   decltype(stencilPortal),
+                   decltype(indexPortal),
+                   decltype(outputPortal),
+                   UnaryPredicate>
+        copyKernel(inputPortal, stencilPortal, indexPortal, outputPortal, unary_predicate);
+      DerivedAlgorithm::Schedule(copyKernel, arrayLength);
+    }
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
@@ -260,8 +280,10 @@ public:
       }
     }
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTag(), token);
 
     CopyKernel<decltype(inputPortal), decltype(outputPortal)> kernel(
       inputPortal, outputPortal, inputStartIndex, outputIndex);
@@ -275,7 +297,9 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto bitsPortal = bits.PrepareForInput(DeviceAdapterTag{}, token);
 
     std::atomic<vtkm::UInt64> popCount;
     popCount.store(0, std::memory_order_relaxed);
@@ -301,7 +325,9 @@ public:
       return;
     }
 
-    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
     using WordType =
       typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
@@ -325,7 +351,9 @@ public:
       return;
     }
 
-    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
     using WordType =
       typename vtkm::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
@@ -352,7 +380,9 @@ public:
       return;
     }
 
-    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
     // If less than 32 bits, repeat the word until we get a 32 bit pattern.
     // Using this for the pattern prevents races while writing small numbers
@@ -381,7 +411,9 @@ public:
       return;
     }
 
-    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
     // If less than 32 bits, repeat the word until we get a 32 bit pattern.
     // Using this for the pattern prevents races while writing small numbers
@@ -409,7 +441,9 @@ public:
       return;
     }
 
-    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{}, token);
     FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
     DerivedAlgorithm::Schedule(functor, numValues);
   }
@@ -428,7 +462,9 @@ public:
       return;
     }
 
-    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{});
+    vtkm::cont::Token token;
+
+    auto portal = handle.PrepareForOutput(numValues, DeviceAdapterTag{}, token);
     FillArrayHandleFunctor<decltype(portal)> functor{ portal, value };
     DerivedAlgorithm::Schedule(functor, numValues);
   }
@@ -444,9 +480,11 @@ public:
 
     vtkm::Id arraySize = values.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag(), token);
 
     LowerBoundsKernel<decltype(inputPortal), decltype(valuesPortal), decltype(outputPortal)> kernel(
       inputPortal, valuesPortal, outputPortal);
@@ -464,9 +502,11 @@ public:
 
     vtkm::Id arraySize = values.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag(), token);
 
     LowerBoundsComparisonKernel<decltype(inputPortal),
                                 decltype(valuesPortal),
@@ -504,6 +544,8 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     //Crazy Idea:
     //We create a implicit array handle that wraps the input
     //array handle. The implicit functor is passed the input array handle, and
@@ -513,7 +555,7 @@ public:
     //
     //Now that we have an implicit array that is 1/16 the length of full array
     //we can use scan inclusive to compute the final sum
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
     ReduceKernel<decltype(inputPortal), U, BinaryFunctor> kernel(
       inputPortal, initialValue, binary_functor);
 
@@ -605,8 +647,9 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag());
-      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
+      vtkm::cont::Token token;
+      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag(), token);
+      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag(), token);
       ReduceStencilGeneration<decltype(inputPortal), decltype(keyStatePortal)> kernel(
         inputPortal, keyStatePortal);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
@@ -668,8 +711,10 @@ public:
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> inclusiveScan;
     T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan, binaryFunctor);
 
-    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag(), token);
 
     InclusiveToExclusiveKernel<decltype(inputPortal), decltype(outputPortal), BinaryFunctor>
       inclusiveToExclusive(inputPortal, outputPortal, binaryFunctor, initialValue);
@@ -703,15 +748,17 @@ public:
     if (numValues <= 0)
     {
       output.Allocate(1);
-      output.GetPortalControl().Set(0, initialValue);
+      output.WritePortal().Set(0, initialValue);
       return;
     }
 
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> inclusiveScan;
     T result = DerivedAlgorithm::ScanInclusive(input, inclusiveScan, binaryFunctor);
 
-    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(numValues + 1, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = inclusiveScan.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(numValues + 1, DeviceAdapterTag(), token);
 
     InclusiveToExtendedKernel<decltype(inputPortal), decltype(outputPortal), BinaryFunctor>
       inclusiveToExtended(inputPortal,
@@ -760,8 +807,8 @@ public:
     }
     else if (numberOfKeys == 1)
     {
-      output.PrepareForOutput(1, DeviceAdapterTag());
-      output.GetPortalControl().Set(0, initialValue);
+      output.Allocate(1);
+      output.WritePortal().Set(0, initialValue);
       return;
     }
 
@@ -772,8 +819,9 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag());
-      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
+      vtkm::cont::Token token;
+      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag(), token);
+      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag(), token);
       ReduceStencilGeneration<decltype(inputPortal), decltype(keyStatePortal)> kernel(
         inputPortal, keyStatePortal);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
@@ -782,9 +830,10 @@ public:
     // 2. Shift input and initialize elements at head flags position to initValue
     vtkm::cont::ArrayHandle<ValueT, vtkm::cont::StorageTagBasic> temp;
     {
-      auto inputPortal = values.PrepareForInput(DeviceAdapterTag());
-      auto keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag());
-      auto tempPortal = temp.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
+      vtkm::cont::Token token;
+      auto inputPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+      auto keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag(), token);
+      auto tempPortal = temp.PrepareForOutput(numberOfKeys, DeviceAdapterTag(), token);
 
       ShiftCopyAndInit<ValueT,
                        decltype(inputPortal),
@@ -891,22 +940,26 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
-    auto portal = output.PrepareForInPlace(DeviceAdapterTag());
-    using ScanKernelType = ScanKernel<decltype(portal), BinaryFunctor>;
-
-
-    vtkm::Id stride;
-    for (stride = 2; stride - 1 < numValues; stride *= 2)
     {
-      ScanKernelType kernel(portal, binary_functor, stride, stride / 2 - 1);
-      DerivedAlgorithm::Schedule(kernel, numValues / stride);
-    }
+      vtkm::cont::Token token;
 
-    // Do reverse operation on odd indices. Start at stride we were just at.
-    for (stride /= 2; stride > 1; stride /= 2)
-    {
-      ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
-      DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      auto portal = output.PrepareForInPlace(DeviceAdapterTag(), token);
+      using ScanKernelType = ScanKernel<decltype(portal), BinaryFunctor>;
+
+
+      vtkm::Id stride;
+      for (stride = 2; stride - 1 < numValues; stride *= 2)
+      {
+        ScanKernelType kernel(portal, binary_functor, stride, stride / 2 - 1);
+        DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      }
+
+      // Do reverse operation on odd indices. Start at stride we were just at.
+      for (stride /= 2; stride > 1; stride /= 2)
+      {
+        ScanKernelType kernel(portal, binary_functor, stride, stride - 1);
+        DerivedAlgorithm::Schedule(kernel, numValues / stride);
+      }
     }
 
     return GetExecutionValue(output, numValues - 1);
@@ -945,8 +998,9 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag());
-      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
+      vtkm::cont::Token token;
+      auto inputPortal = keys.PrepareForInput(DeviceAdapterTag(), token);
+      auto keyStatePortal = keystate.PrepareForOutput(numberOfKeys, DeviceAdapterTag(), token);
       ReduceStencilGeneration<decltype(inputPortal), decltype(keyStatePortal)> kernel(
         inputPortal, keyStatePortal);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
@@ -992,7 +1046,9 @@ public:
     }
     numThreads /= 2;
 
-    auto portal = values.PrepareForInPlace(DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto portal = values.PrepareForInPlace(DeviceAdapterTag(), token);
     using MergeKernel = BitonicSortMergeKernel<decltype(portal), BinaryCompare>;
     using CrossoverKernel = BitonicSortCrossoverKernel<decltype(portal), BinaryCompare>;
 
@@ -1066,9 +1122,11 @@ public:
       return;
     }
 
-    auto input1Portal = input1.PrepareForInput(DeviceAdapterTag());
-    auto input2Portal = input2.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto input1Portal = input1.PrepareForInput(DeviceAdapterTag(), token);
+    auto input2Portal = input2.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag(), token);
 
     BinaryTransformKernel<decltype(input1Portal),
                           decltype(input2Portal),
@@ -1101,12 +1159,17 @@ public:
     using WrappedBOpType = internal::WrappedBinaryOperator<bool, BinaryCompare>;
     WrappedBOpType wrappedCompare(binary_compare);
 
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    auto stencilPortal = stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag());
-    ClassifyUniqueComparisonKernel<decltype(valuesPortal), decltype(stencilPortal), WrappedBOpType>
-      classifyKernel(valuesPortal, stencilPortal, wrappedCompare);
+    {
+      vtkm::cont::Token token;
+      auto valuesPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+      auto stencilPortal = stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag(), token);
+      ClassifyUniqueComparisonKernel<decltype(valuesPortal),
+                                     decltype(stencilPortal),
+                                     WrappedBOpType>
+        classifyKernel(valuesPortal, stencilPortal, wrappedCompare);
 
-    DerivedAlgorithm::Schedule(classifyKernel, inputSize);
+      DerivedAlgorithm::Schedule(classifyKernel, inputSize);
+    }
 
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> outputArray;
 
@@ -1127,9 +1190,11 @@ public:
 
     vtkm::Id arraySize = values.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag(), token);
 
     UpperBoundsKernel<decltype(inputPortal), decltype(valuesPortal), decltype(outputPortal)> kernel(
       inputPortal, valuesPortal, outputPortal);
@@ -1146,9 +1211,11 @@ public:
 
     vtkm::Id arraySize = values.GetNumberOfValues();
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
-    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag());
+    vtkm::cont::Token token;
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag(), token);
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag(), token);
+    auto outputPortal = output.PrepareForOutput(arraySize, DeviceAdapterTag(), token);
 
     UpperBoundsKernelComparisonKernel<decltype(inputPortal),
                                       decltype(valuesPortal),

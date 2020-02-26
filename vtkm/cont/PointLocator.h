@@ -47,11 +47,19 @@ public:
     }
   }
 
-  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const
+  VTKM_CONT const vtkm::exec::PointLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                                vtkm::cont::Token& token) const
   {
-    this->PrepareExecutionObject(this->ExecutionObjectHandle, device);
-    return this->ExecutionObjectHandle.PrepareForExecution(device);
+    this->PrepareExecutionObject(this->ExecutionObjectHandle, device, token);
+    return this->ExecutionObjectHandle.PrepareForExecution(device, token);
+  }
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object")
+  const vtkm::exec::PointLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForExecution(device, token);
   }
 
 protected:
@@ -64,7 +72,8 @@ protected:
   using ExecutionObjectHandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::PointLocator>;
 
   VTKM_CONT virtual void PrepareExecutionObject(ExecutionObjectHandleType& execObjHandle,
-                                                vtkm::cont::DeviceAdapterId deviceId) const = 0;
+                                                vtkm::cont::DeviceAdapterId deviceId,
+                                                vtkm::cont::Token& token) const = 0;
 
 private:
   vtkm::cont::CoordinateSystem Coords;

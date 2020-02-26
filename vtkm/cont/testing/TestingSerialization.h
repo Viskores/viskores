@@ -125,7 +125,7 @@ struct RandomArrayHandle
 
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      a.GetPortalControl().Set(i, RandomValue<T>::Make(rangen));
+      a.WritePortal().Set(i, RandomValue<T>::Make(rangen));
     }
 
     return a;

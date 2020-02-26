@@ -51,7 +51,7 @@ void TestCellGradientUniform3D()
   };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellGradient filter on 3D uniform data");
   }
 }
@@ -101,7 +101,7 @@ void TestCellGradientUniform3DWithVectorField()
   for (int i = 0; i < 4; ++i)
   {
     vtkm::Vec<vtkm::Vec3f_64, 3> e = expected[i];
-    vtkm::Vec<vtkm::Vec3f_64, 3> r = resultArrayHandle.GetPortalConstControl().Get(i);
+    vtkm::Vec<vtkm::Vec3f_64, 3> r = resultArrayHandle.ReadPortal().Get(i);
 
     VTKM_TEST_ASSERT(test_equal(e[0], r[0]),
                      "Wrong result for vec field CellGradient filter on 3D uniform data");
@@ -132,7 +132,7 @@ void TestCellGradientExplicit()
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellGradient filter on 3D explicit data");
   }
 }
@@ -176,7 +176,7 @@ void TestPointGradientUniform3DWithVectorField()
   for (int i = 0; i < 4; ++i)
   {
     vtkm::Vec<vtkm::Vec3f_64, 3> e = expected[i];
-    vtkm::Vec<vtkm::Vec3f_64, 3> r = resultArrayHandle.GetPortalConstControl().Get(i);
+    vtkm::Vec<vtkm::Vec3f_64, 3> r = resultArrayHandle.ReadPortal().Get(i);
 
     VTKM_TEST_ASSERT(test_equal(e[0], r[0]),
                      "Wrong result for vec field CellGradient filter on 3D uniform data");
@@ -209,7 +209,7 @@ void TestPointGradientExplicit()
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellGradient filter on 3D explicit data");
   }
 }

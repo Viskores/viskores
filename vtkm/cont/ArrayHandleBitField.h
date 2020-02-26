@@ -88,10 +88,10 @@ public:
   VTKM_CONT Storage& operator=(Storage&&) noexcept = default;
 
   VTKM_CONT
-  PortalType GetPortal() { return PortalType{ this->Data.GetPortalControl() }; }
+  PortalType GetPortal() { return PortalType{ this->Data.WritePortal() }; }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() { return PortalConstType{ this->Data.GetPortalConstControl() }; }
+  PortalConstType GetPortalConst() { return PortalConstType{ this->Data.ReadPortal() }; }
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfBits(); }
   VTKM_CONT void Allocate(vtkm::Id numberOfValues) { this->Data.Allocate(numberOfValues); }
@@ -129,21 +129,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfBits(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution{ this->Data.PrepareForInput(Device{}) };
+    return PortalConstExecution{ this->Data.PrepareForInput(Device{}, token) };
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution{ this->Data.PrepareForInPlace(Device{}) };
+    return PortalExecution{ this->Data.PrepareForInPlace(Device{}, token) };
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return PortalExecution{ this->Data.PrepareForOutput(numberOfValues, Device{}) };
+    return PortalExecution{ this->Data.PrepareForOutput(numberOfValues, Device{}, token) };
   }
 
   VTKM_CONT

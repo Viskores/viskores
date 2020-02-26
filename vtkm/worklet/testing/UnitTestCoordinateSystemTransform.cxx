@@ -113,8 +113,8 @@ void ValidateCoordTransform(const vtkm::cont::CoordinateSystem& coords,
                    "Incorrect number of points in point transform");
 
   //The double transform should produce the same result.
-  auto pointsPortal = points.GetPortalConstControl();
-  auto resultsPortal = doubleTransform.GetPortalConstControl();
+  auto pointsPortal = points.ReadPortal();
+  auto resultsPortal = doubleTransform.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
   {

@@ -479,14 +479,17 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
   using KeyType = typename KeysInArray::ValueType;
   using ValueType = typename ValuesInArray::ValueType;
 
+  vtkm::cont::Token token;
+
   const vtkm::Id numValues = keysInArray.GetNumberOfValues();
-  auto keysInPortal = keysInArray.PrepareForInput(DeviceAdapterTagOpenMP());
-  auto valuesInPortal = valuesInArray.PrepareForInput(DeviceAdapterTagOpenMP());
+  auto keysInPortal = keysInArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
+  auto valuesInPortal = valuesInArray.PrepareForInput(DeviceAdapterTagOpenMP(), token);
   auto keysIn = vtkm::cont::ArrayPortalToIteratorBegin(keysInPortal);
   auto valuesIn = vtkm::cont::ArrayPortalToIteratorBegin(valuesInPortal);
 
-  auto keysOutPortal = keysOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP());
-  auto valuesOutPortal = valuesOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP());
+  auto keysOutPortal = keysOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP(), token);
+  auto valuesOutPortal =
+    valuesOutArray.PrepareForOutput(numValues, DeviceAdapterTagOpenMP(), token);
   auto keysOut = vtkm::cont::ArrayPortalToIteratorBegin(keysOutPortal);
   auto valuesOut = vtkm::cont::ArrayPortalToIteratorBegin(valuesOutPortal);
 
@@ -576,6 +579,8 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
       } // end tid == i
     }   // end combine reduction
   }     // end parallel
+
+  token.DetachFromAll();
 
   keysOutArray.Shrink(outIdx);
   valuesOutArray.Shrink(outIdx);

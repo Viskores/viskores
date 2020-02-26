@@ -696,7 +696,7 @@ public:
     else
     {
       auto vertices = coordData.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      auto Coordinates = vertices.GetPortalConstControl();
+      auto Coordinates = vertices.ReadPortal();
 
       MinPoint = Coordinates.GetOrigin();
       vtkm::Vec3f_64 spacing = Coordinates.GetSpacing();

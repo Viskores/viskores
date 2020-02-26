@@ -23,9 +23,11 @@ void TestIteratorSpecialization()
 {
   vtkm::cont::ArrayHandle<int> handle;
 
-  auto outputPortal = handle.PrepareForOutput(1, vtkm::cont::DeviceAdapterTagCuda{});
-  auto inputPortal = handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda{});
-  auto inPlacePortal = handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda{});
+  vtkm::cont::Token token;
+
+  auto outputPortal = handle.PrepareForOutput(1, vtkm::cont::DeviceAdapterTagCuda{}, token);
+  auto inputPortal = handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda{}, token);
+  auto inPlacePortal = handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda{}, token);
 
   auto outputIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
   auto inputIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);

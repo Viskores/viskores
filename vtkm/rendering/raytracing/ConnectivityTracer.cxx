@@ -1261,7 +1261,7 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
 //   vtkm::Id index = -1;
 //   for (vtkm::Id i = 0; i < rays.NumRays; ++i)
 //   {
-//     if (rays.PixelIdx.GetPortalControl().Get(i) == rayId)
+//     if (rays.PixelIdx.WritePortal().Get(i) == rayId)
 //     {
 //       index = i;
 //       break;
@@ -1273,12 +1273,12 @@ void ConnectivityTracer::IntegrateCells(Ray<FloatType>& rays,
 //   }
 
 //   std::cout << "++++++++RAY " << rayId << "++++++++\n";
-//   std::cout << "Status: " << (int)rays.Status.GetPortalControl().Get(index) << "\n";
-//   std::cout << "HitIndex: " << rays.HitIdx.GetPortalControl().Get(index) << "\n";
-//   std::cout << "Dist " << rays.Distance.GetPortalControl().Get(index) << "\n";
-//   std::cout << "MinDist " << rays.MinDistance.GetPortalControl().Get(index) << "\n";
-//   std::cout << "Origin " << rays.Origin.GetPortalConstControl().Get(index) << "\n";
-//   std::cout << "Dir " << rays.Dir.GetPortalConstControl().Get(index) << "\n";
+//   std::cout << "Status: " << (int)rays.Status.WritePortal().Get(index) << "\n";
+//   std::cout << "HitIndex: " << rays.HitIdx.WritePortal().Get(index) << "\n";
+//   std::cout << "Dist " << rays.Distance.WritePortal().Get(index) << "\n";
+//   std::cout << "MinDist " << rays.MinDistance.WritePortal().Get(index) << "\n";
+//   std::cout << "Origin " << rays.Origin.ReadPortal().Get(index) << "\n";
+//   std::cout << "Dir " << rays.Dir.ReadPortal().Get(index) << "\n";
 //   std::cout << "+++++++++++++++++++++++++\n";
 // }
 
@@ -1436,10 +1436,10 @@ std::vector<PartialComposite<FloatType>> ConnectivityTracer::PartialTrace(Ray<Fl
     {
       vtkm::cont::ArrayHandle<FloatType> signature;
       signature.Allocate(4);
-      signature.GetPortalControl().Set(0, 0.f);
-      signature.GetPortalControl().Set(1, 0.f);
-      signature.GetPortalControl().Set(2, 0.f);
-      signature.GetPortalControl().Set(3, 0.f);
+      signature.WritePortal().Set(0, 0.f);
+      signature.WritePortal().Set(1, 0.f);
+      signature.WritePortal().Set(2, 0.f);
+      signature.WritePortal().Set(3, 0.f);
       rays.Buffers.at(0).InitChannels(signature);
     }
     else

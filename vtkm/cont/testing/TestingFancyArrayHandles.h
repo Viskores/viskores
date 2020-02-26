@@ -188,9 +188,10 @@ struct TransformExecObject : public vtkm::cont::ExecutionAndControlObjectBase
   };
 
   template <typename DeviceAdapterTag>
-  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device) const
+  VTKM_CONT FunctorWrapper PrepareForExecution(DeviceAdapterTag device,
+                                               vtkm::cont::Token& token) const
   {
-    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device));
+    return FunctorWrapper(this->VirtualFunctor.PrepareForExecution(device, token));
   }
 
   VTKM_CONT FunctorWrapper PrepareForControl() const
@@ -255,7 +256,7 @@ private:
       using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
       using ComponentArrayType = vtkm::cont::ArrayHandle<ComponentType>;
       using SOAPortalType =
-        vtkm::internal::ArrayPortalSOA<ValueType, typename ComponentArrayType::PortalControl>;
+        vtkm::internal::ArrayPortalSOA<ValueType, typename ComponentArrayType::WritePortalType>;
 
       std::cout << "Test SOA portal reflects data in component portals." << std::endl;
       SOAPortalType soaPortalIn(ARRAY_SIZE);
@@ -265,7 +266,7 @@ private:
       {
         vtkm::cont::ArrayHandle<ComponentType> array;
         array.Allocate(ARRAY_SIZE);
-        auto portal = array.GetPortalControl();
+        auto portal = array.WritePortal();
         for (vtkm::IdComponent valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
         {
           portal.Set(valueIndex, TestValue(valueIndex, ValueType{})[componentIndex]);
@@ -280,22 +281,25 @@ private:
       CheckPortal(soaPortalIn);
 
       std::cout << "Test data set in SOA portal gets set in component portals." << std::endl;
-      SOAPortalType soaPortalOut(ARRAY_SIZE);
-      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
-        vtkm::cont::ArrayHandle<ComponentType> array;
-        array.Allocate(ARRAY_SIZE);
-        auto portal = array.GetPortalControl();
-        soaPortalOut.SetPortal(componentIndex, portal);
+        SOAPortalType soaPortalOut(ARRAY_SIZE);
+        for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+             ++componentIndex)
+        {
+          vtkm::cont::ArrayHandle<ComponentType> array;
+          array.Allocate(ARRAY_SIZE);
+          auto portal = array.WritePortal();
+          soaPortalOut.SetPortal(componentIndex, portal);
 
-        implArrays[static_cast<std::size_t>(componentIndex)] = array;
+          implArrays[static_cast<std::size_t>(componentIndex)] = array;
+        }
+
+        SetPortal(soaPortalOut);
       }
 
-      SetPortal(soaPortalOut);
-
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
-        auto portal = implArrays[static_cast<size_t>(componentIndex)].GetPortalConstControl();
+        auto portal = implArrays[static_cast<size_t>(componentIndex)].ReadPortal();
         for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
         {
           ComponentType x = TestValue(valueIndex, ValueType{})[componentIndex];
@@ -321,7 +325,7 @@ private:
         {
           vtkm::cont::ArrayHandle<ComponentType> componentArray;
           componentArray.Allocate(ARRAY_SIZE);
-          auto componentPortal = componentArray.GetPortalControl();
+          auto componentPortal = componentArray.WritePortal();
           for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
           {
             componentPortal.Set(
@@ -332,13 +336,13 @@ private:
         }
 
         VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-        VTKM_TEST_ASSERT(soaArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE);
-        CheckPortal(soaArray.GetPortalConstControl());
+        VTKM_TEST_ASSERT(soaArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE);
+        CheckPortal(soaArray.ReadPortal());
 
         vtkm::cont::ArrayHandle<ValueType> basicArray;
         vtkm::cont::ArrayCopy(soaArray, basicArray);
         VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
-        CheckPortal(basicArray.GetPortalConstControl());
+        CheckPortal(basicArray.ReadPortal());
       }
 
       {
@@ -358,35 +362,35 @@ private:
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = { vector0, vector1, vector2 };
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.GetPortalConstControl());
+          CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
             vtkm::cont::make_ArrayHandleSOA<Vec3>({ vector0, vector1, vector2 });
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.GetPortalConstControl());
+          CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
             vtkm::cont::make_ArrayHandleSOA(vector0, vector1, vector2);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.GetPortalConstControl());
+          CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
             { &vector0.front(), &vector1.front(), &vector2.front() }, ARRAY_SIZE);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.GetPortalConstControl());
+          CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA(
             ARRAY_SIZE, &vector0.front(), &vector1.front(), &vector2.front());
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.GetPortalConstControl());
+          CheckPortal(soaArray.ReadPortal());
         }
       }
     }
@@ -403,7 +407,7 @@ private:
 
       vtkm::cont::ArrayHandle<ValueType> basicArray;
       basicArray.Allocate(ARRAY_SIZE);
-      SetPortal(basicArray.GetPortalControl());
+      SetPortal(basicArray.WritePortal());
 
       vtkm::cont::ArrayHandleSOA<ValueType> soaArray;
       vtkm::cont::ArrayCopy(basicArray, soaArray);
@@ -412,7 +416,7 @@ private:
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
       {
         vtkm::cont::ArrayHandle<ComponentType> componentArray = soaArray.GetArray(componentIndex);
-        auto componentPortal = componentArray.GetPortalConstControl();
+        auto componentPortal = componentArray.ReadPortal();
         for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
         {
           ComponentType expected =
@@ -448,11 +452,11 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
-        const vtkm::Vec<ValueType, 3> result_v = result.GetPortalConstControl().Get(i);
+        const vtkm::Vec<ValueType, 3> result_v = result.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, vtkm::Vec<ValueType, 3>(value)),
                          "CompositeVector Handle Failed");
 
-        const vtkm::Vec<ValueType, 3> result_c = composite.GetPortalConstControl().Get(i);
+        const vtkm::Vec<ValueType, 3> result_c = composite.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_c, vtkm::Vec<ValueType, 3>(value)),
                          "CompositeVector Handle Failed");
       }
@@ -479,8 +483,8 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
-        const ValueType result_v = result.GetPortalConstControl().Get(i);
-        const ValueType control_value = constant.GetPortalConstControl().Get(i);
+        const ValueType result_v = result.ReadPortal().Get(i);
+        const ValueType control_value = constant.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, value), "Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Counting Handle Control Failed");
       }
@@ -514,9 +518,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType result_v = result.ReadPortal().Get(i);
         const ValueType correct_value = ValueType(component_value);
-        const ValueType control_value = counting.GetPortalConstControl().Get(i);
+        const ValueType control_value = counting.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Counting Handle Control Failed");
         component_value = ComponentType(component_value + ComponentType(1));
@@ -547,9 +551,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType result_v = result.ReadPortal().Get(i);
         const ValueType correct_value = functor(i);
-        const ValueType control_value = implicit.GetPortalConstControl().Get(i);
+        const ValueType control_value = implicit.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
       }
@@ -600,13 +604,13 @@ private:
         //verify that the control portal works
         for (vtkm::Id i = 0; i < length; ++i)
         {
-          const ValueType result_v = result.GetPortalConstControl().Get(i);
+          const ValueType result_v = result.ReadPortal().Get(i);
           ValueType correct_value;
           if (i < implicitLen)
-            correct_value = implicit.GetPortalConstControl().Get(i);
+            correct_value = implicit.ReadPortal().Get(i);
           else
-            correct_value = basic.GetPortalConstControl().Get(i - implicitLen);
-          const ValueType control_value = concatenate.GetPortalConstControl().Get(i);
+            correct_value = basic.ReadPortal().Get(i - implicitLen);
+          const ValueType control_value = concatenate.ReadPortal().Get(i);
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
                            "ArrayHandleConcatenate as Input Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value),
@@ -657,9 +661,9 @@ private:
           const vtkm::Id value_index = i;
           const vtkm::Id key_index = start_pos + i;
 
-          const ValueType result_v = result.GetPortalConstControl().Get(value_index);
-          const ValueType correct_value = implicit.GetPortalConstControl().Get(key_index);
-          const ValueType control_value = permutation.GetPortalConstControl().Get(value_index);
+          const ValueType result_v = result.ReadPortal().Get(value_index);
+          const ValueType correct_value = implicit.ReadPortal().Get(key_index);
+          const ValueType control_value = permutation.ReadPortal().Get(value_index);
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
         }
@@ -703,9 +707,9 @@ private:
           const vtkm::Id value_index = i;
           const vtkm::Id key_index = start_pos + i;
 
-          const ValueType result_v = result.GetPortalConstControl().Get(value_index);
-          const ValueType correct_value = implicit.GetPortalConstControl().Get(key_index);
-          const ValueType control_value = view.GetPortalConstControl().Get(value_index);
+          const ValueType result_v = result.ReadPortal().Get(value_index);
+          const ValueType correct_value = implicit.ReadPortal().Get(key_index);
+          const ValueType control_value = view.ReadPortal().Get(value_index);
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
         }
@@ -728,7 +732,7 @@ private:
         transformed = vtkm::cont::make_ArrayHandleTransform(input, functor);
 
       input.Allocate(length);
-      SetPortal(input.GetPortalControl());
+      SetPortal(input.WritePortal());
 
       vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
       std::cout << std::endl;
@@ -741,9 +745,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType result_v = result.ReadPortal().Get(i);
         const ValueType correct_value = functor(TestValue(i, ValueType()));
-        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        const ValueType control_value = transformed.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Transform Handle Control Failed");
       }
@@ -766,7 +770,7 @@ private:
       auto transformed = vtkm::cont::make_ArrayHandleTransform(input, virtualFunctor);
 
       input.Allocate(length);
-      SetPortal(input.GetPortalControl());
+      SetPortal(input.WritePortal());
 
       vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
       std::cout << std::endl;
@@ -779,9 +783,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = result.GetPortalConstControl().Get(i);
+        const ValueType result_v = result.ReadPortal().Get(i);
         const ValueType correct_value = functor(TestValue(i, ValueType()));
-        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        const ValueType control_value = transformed.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Transform Handle Control Failed");
       }
@@ -821,9 +825,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const OutputValueType result_v = result.GetPortalConstControl().Get(i);
+        const OutputValueType result_v = result.ReadPortal().Get(i);
         const OutputValueType correct_value = functor(ValueType(component_value));
-        const OutputValueType control_value = countingTransformed.GetPortalConstControl().Get(i);
+        const OutputValueType control_value = countingTransformed.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value),
                          "Transform Counting Handle Control Failed");
@@ -854,8 +858,8 @@ private:
       vtkm::Id length = ARRAY_SIZE;
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) ==
-                           static_cast<CastToType>(input.GetPortalConstControl().Get(i)),
+        VTKM_TEST_ASSERT(result.ReadPortal().Get(i) ==
+                           static_cast<CastToType>(input.ReadPortal().Get(i)),
                          "Casting ArrayHandle Failed");
       }
     }
@@ -885,8 +889,8 @@ private:
       vtkm::Id length = ARRAY_SIZE;
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        VTKM_TEST_ASSERT(input.GetPortalConstControl().Get(i) ==
-                           static_cast<vtkm::Id>(result.GetPortalConstControl().Get(i)),
+        VTKM_TEST_ASSERT(input.ReadPortal().Get(i) ==
+                           static_cast<vtkm::Id>(result.ReadPortal().Get(i)),
                          "Casting ArrayHandle Failed");
       }
     }
@@ -915,9 +919,8 @@ private:
       std::cout << std::endl;
 
       // verify results
-      VTKM_TEST_ASSERT(
-        test_equal_portals(result.GetPortalConstControl(), input.GetPortalConstControl()),
-        "CastingArrayHandle failed");
+      VTKM_TEST_ASSERT(test_equal_portals(result.ReadPortal(), input.ReadPortal()),
+                       "CastingArrayHandle failed");
     }
   };
 
@@ -944,9 +947,8 @@ private:
       std::cout << std::endl;
 
       // verify results
-      VTKM_TEST_ASSERT(
-        test_equal_portals(input.GetPortalConstControl(), result.GetPortalConstControl()),
-        "Multiplexing ArrayHandle failed");
+      VTKM_TEST_ASSERT(test_equal_portals(input.ReadPortal(), result.ReadPortal()),
+                       "Multiplexing ArrayHandle failed");
     }
   };
 
@@ -986,7 +988,7 @@ private:
       vtkm::Id totalIndex = 0;
       for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
       {
-        const ValueType result = resultArray.GetPortalConstControl().Get(index);
+        const ValueType result = resultArray.ReadPortal().Get(index);
         for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
              componentIndex++)
         {
@@ -1009,7 +1011,7 @@ private:
 
       vtkm::cont::ArrayHandle<ValueType> baseArray;
       baseArray.Allocate(ARRAY_SIZE);
-      SetPortal(baseArray.GetPortalControl());
+      SetPortal(baseArray.WritePortal());
 
       vtkm::cont::ArrayHandle<ComponentType> resultArray;
 
@@ -1038,7 +1040,7 @@ private:
         for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
              componentIndex++)
         {
-          const ComponentType result = resultArray.GetPortalConstControl().Get(totalIndex);
+          const ComponentType result = resultArray.ReadPortal().Get(totalIndex);
           VTKM_TEST_ASSERT(test_equal(result, expectedValue[componentIndex]),
                            "Result array got wrong value.");
           totalIndex++;
@@ -1092,7 +1094,7 @@ private:
 
       vtkm::cont::ArrayHandle<ComponentType> sourceArray;
       sourceArray.Allocate(sourceArraySize);
-      SetPortal(sourceArray.GetPortalControl());
+      SetPortal(sourceArray.WritePortal());
 
       vtkm::cont::printSummary_ArrayHandle(
         vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray), std::cout);
@@ -1104,7 +1106,7 @@ private:
       dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray),
                         dummyArray);
 
-      dummyArray.GetPortalConstControl();
+      dummyArray.ReadPortal();
     }
   };
 
@@ -1159,7 +1161,7 @@ private:
       vtkm::cont::printSummary_ArrayHandle(sourceArray, std::cout);
       std::cout << std::endl;
 
-      CheckPortal(sourceArray.GetPortalConstControl());
+      CheckPortal(sourceArray.ReadPortal());
     }
   };
 
@@ -1199,7 +1201,7 @@ private:
       //verify that the control portal works
       for (int i = 0; i < ARRAY_SIZE; ++i)
       {
-        const PairType result_v = result.GetPortalConstControl().Get(i);
+        const PairType result_v = result.ReadPortal().Get(i);
         const PairType correct_value(KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i)),
                                      ValueType(static_cast<ValueComponentType>(i)));
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "ArrayHandleZip Failed as input");
@@ -1213,19 +1215,11 @@ private:
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       using DiscardHandleType = vtkm::cont::ArrayHandleDiscard<ValueType>;
-      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
-
-      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
-
       const vtkm::Id length = ARRAY_SIZE;
 
       vtkm::cont::ArrayHandle<ValueType> input;
       input.Allocate(length);
-      Portal inputPortal = input.GetPortalControl();
-      for (vtkm::Id i = 0; i < length; ++i)
-      {
-        inputPortal.Set(i, ValueType(ComponentType(i)));
-      }
+      SetPortal(input.WritePortal());
 
       DiscardHandleType discard;
       discard.Allocate(length);
@@ -1250,15 +1244,9 @@ private:
       using PermutationHandleType =
         vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>;
 
-      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
       vtkm::cont::ArrayHandle<ValueType> input;
-      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
       input.Allocate(length);
-      Portal inputPortal = input.GetPortalControl();
-      for (vtkm::Id i = 0; i < length; ++i)
-      {
-        inputPortal.Set(i, ValueType(ComponentType(i)));
-      }
+      SetPortal(input.WritePortal());
 
       ValueHandleType values;
       values.Allocate(length * 2);
@@ -1273,13 +1261,7 @@ private:
       std::cout << std::endl;
 
       //verify that the control portal works
-      for (vtkm::Id i = 0; i < length; ++i)
-      {
-        const ValueType result_v = permutation.GetPortalConstControl().Get(i);
-        const ValueType correct_value = ValueType(ComponentType(i));
-        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
-                         "Permutation Handle Failed As Output");
-      }
+      CheckPortal(permutation.ReadPortal());
     }
   };
 
@@ -1293,15 +1275,9 @@ private:
       using ValueHandleType = vtkm::cont::ArrayHandle<ValueType>;
       using ViewHandleType = vtkm::cont::ArrayHandleView<ValueHandleType>;
 
-      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
       vtkm::cont::ArrayHandle<ValueType> input;
-      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
       input.Allocate(length);
-      Portal inputPortal = input.GetPortalControl();
-      for (vtkm::Id i = 0; i < length; ++i)
-      {
-        inputPortal.Set(i, ValueType(ComponentType(i)));
-      }
+      SetPortal(input.WritePortal());
 
       ValueHandleType values;
       values.Allocate(length * 2);
@@ -1314,13 +1290,7 @@ private:
       std::cout << std::endl;
 
       //verify that the control portal works
-      for (vtkm::Id i = 0; i < length; ++i)
-      {
-        const ValueType result_v = view.GetPortalConstControl().Get(i);
-        const ValueType correct_value = ValueType(ComponentType(i));
-        VTKM_TEST_ASSERT(test_equal(result_v, correct_value),
-                         "Permutation Handle Failed As Output");
-      }
+      CheckPortal(view.ReadPortal());
     }
   };
 
@@ -1338,7 +1308,7 @@ private:
 
       vtkm::cont::ArrayHandle<ValueType> input;
       input.Allocate(length);
-      SetPortal(input.GetPortalControl());
+      SetPortal(input.WritePortal());
 
       vtkm::cont::ArrayHandle<ValueType> output;
       auto transformed = vtkm::cont::make_ArrayHandleTransform(output, functor, inverseFunctor);
@@ -1352,9 +1322,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = output.GetPortalConstControl().Get(i);
+        const ValueType result_v = output.ReadPortal().Get(i);
         const ValueType correct_value = inverseFunctor(TestValue(i, ValueType()));
-        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        const ValueType control_value = transformed.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VTKM_TEST_ASSERT(test_equal(functor(result_v), control_value),
                          "Transform Handle Control Failed");
@@ -1381,7 +1351,7 @@ private:
 
       vtkm::cont::ArrayHandle<ValueType> input;
       input.Allocate(length);
-      SetPortal(input.GetPortalControl());
+      SetPortal(input.WritePortal());
 
       vtkm::cont::ArrayHandle<ValueType> output;
       auto transformed =
@@ -1396,9 +1366,9 @@ private:
       //verify that the control portal works
       for (vtkm::Id i = 0; i < length; ++i)
       {
-        const ValueType result_v = output.GetPortalConstControl().Get(i);
+        const ValueType result_v = output.ReadPortal().Get(i);
         const ValueType correct_value = inverseFunctor(TestValue(i, ValueType()));
-        const ValueType control_value = transformed.GetPortalConstControl().Get(i);
+        const ValueType control_value = transformed.ReadPortal().Get(i);
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VTKM_TEST_ASSERT(test_equal(functor(result_v), control_value),
                          "Transform Handle Control Failed");
@@ -1439,8 +1409,8 @@ private:
       //now the two arrays we have zipped should have data inside them
       for (int i = 0; i < ARRAY_SIZE; ++i)
       {
-        const KeyType result_key = result_keys.GetPortalConstControl().Get(i);
-        const ValueType result_value = result_values.GetPortalConstControl().Get(i);
+        const KeyType result_key = result_keys.ReadPortal().Get(i);
+        const ValueType result_value = result_values.ReadPortal().Get(i);
 
         VTKM_TEST_ASSERT(
           test_equal(result_key, KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i))),
@@ -1458,7 +1428,7 @@ private:
     {
       vtkm::cont::ArrayHandle<ValueType> inputValues;
       inputValues.Allocate(ARRAY_SIZE);
-      SetPortal(inputValues.GetPortalControl());
+      SetPortal(inputValues.WritePortal());
 
       vtkm::cont::ArrayHandle<ValueType> outputValues;
       outputValues.Allocate(ARRAY_SIZE);
@@ -1469,7 +1439,7 @@ private:
       vtkm::cont::printSummary_ArrayHandle(outputValues, std::cout);
       std::cout << std::endl;
 
-      CheckPortal(outputValues.GetPortalConstControl());
+      CheckPortal(outputValues.ReadPortal());
     }
   };
 

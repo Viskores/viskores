@@ -688,6 +688,10 @@ public:
   /// \brief returns a virtual object pointer of the exec color table
   ///
   /// This pointer is only valid as long as the ColorTable is unmodified
+  inline const vtkm::exec::ColorTableBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                                               vtkm::cont::Token& token) const;
+
+  VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object")
   inline const vtkm::exec::ColorTableBase* PrepareForExecution(
     vtkm::cont::DeviceAdapterId deviceId) const;
 

@@ -34,8 +34,8 @@ void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
   }
 
   this->ColorMap.Allocate(1024);
-  auto portal = this->ColorMap.GetPortalControl();
-  auto colorPortal = temp.GetPortalConstControl();
+  auto portal = this->ColorMap.WritePortal();
+  auto colorPortal = temp.ReadPortal();
   for (vtkm::Id i = 0; i < 1024; ++i)
   {
     auto color = colorPortal.Get(i);

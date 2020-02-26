@@ -84,11 +84,12 @@ public:
   // constructor
   SuperArcVolumetricComparatorImpl(const IdArrayType& Weight,
                                    const EdgePairArray& SuperarcList,
-                                   bool PairsAtLowEnd)
+                                   bool PairsAtLowEnd,
+                                   vtkm::cont::Token& token)
     : pairsAtLowEnd(PairsAtLowEnd)
   { // constructor
-    weightPortal = Weight.PrepareForInput(DeviceAdapter());
-    superarcListPortal = SuperarcList.PrepareForInput(DeviceAdapter());
+    weightPortal = Weight.PrepareForInput(DeviceAdapter(), token);
+    superarcListPortal = SuperarcList.PrepareForInput(DeviceAdapter(), token);
 
   } // constructor
 
@@ -165,10 +166,12 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT SuperArcVolumetricComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT SuperArcVolumetricComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token)
   {
     return SuperArcVolumetricComparatorImpl<DeviceAdapter>(
-      this->Weight, this->SuperArcList, this->PairsAtLowEnd);
+      this->Weight, this->SuperArcList, this->PairsAtLowEnd, token);
   }
 
 private:

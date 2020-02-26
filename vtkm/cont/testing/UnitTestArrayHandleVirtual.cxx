@@ -133,9 +133,10 @@ struct Test
 
     try
     {
-      virt.PrepareForInput(DeviceTag());
-      virt.PrepareForInPlace(DeviceTag());
-      virt.PrepareForOutput(ARRAY_SIZE, DeviceTag());
+      vtkm::cont::Token token;
+      virt.PrepareForInput(DeviceTag(), token);
+      virt.PrepareForInPlace(DeviceTag(), token);
+      virt.PrepareForOutput(ARRAY_SIZE, DeviceTag(), token);
     }
     catch (vtkm::cont::ErrorBadValue&)
     {

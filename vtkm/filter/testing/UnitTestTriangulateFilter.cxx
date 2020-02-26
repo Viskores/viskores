@@ -35,10 +35,10 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
       output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(2) == 1.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(3) == 1.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(30) == 15.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(31) == 15.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(3) == 1.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(30) == 15.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(31) == 15.f, "Wrong cell field data");
   }
 
   void TestExplicit() const
@@ -55,10 +55,10 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float32> outData =
       output.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(1) == 1.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(2) == 1.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(5) == 3.f, "Wrong cell field data");
-    VTKM_TEST_ASSERT(outData.GetPortalConstControl().Get(6) == 3.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(1) == 1.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(5) == 3.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outData.ReadPortal().Get(6) == 3.f, "Wrong cell field data");
   }
 
   void operator()() const

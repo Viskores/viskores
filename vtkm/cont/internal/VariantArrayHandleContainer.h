@@ -122,7 +122,7 @@ private:
   {
     return (this->Array.GetNumberOfValues() == 0)
       ? 0
-      : vtkm::VecTraits<T>::GetNumberOfComponents(this->Array.GetPortalConstControl().Get(0));
+      : vtkm::VecTraits<T>::GetNumberOfComponents(this->Array.ReadPortal().Get(0));
   }
 };
 

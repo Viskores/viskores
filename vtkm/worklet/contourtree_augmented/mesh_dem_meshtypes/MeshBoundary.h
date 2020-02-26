@@ -89,21 +89,24 @@ public:
   }
 
   VTKM_CONT
-  MeshBoundary2D(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& sortOrder)
+  MeshBoundary2D(vtkm::Id nrows,
+                 vtkm::Id ncols,
+                 const IdArrayType& sortOrder,
+                 vtkm::cont::Token& token)
     : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
   {
-    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceTag(), token);
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
     vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
+    const vtkm::Id row = this->MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = this->MeshStructure.VertexColumn(meshSortOrderValue);
 
-    return (row == 0) || (col == 0) || (row == MeshStructure.NumRows - 1) ||
-      (col == MeshStructure.NumColumns - 1);
+    return (row == 0) || (col == 0) || (row == this->MeshStructure.NumRows - 1) ||
+      (col == this->MeshStructure.NumColumns - 1);
   }
 
 private:
@@ -125,9 +128,9 @@ public:
 
   VTKM_CONT
   template <typename DeviceTag>
-  MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag) const
+  MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
   {
-    return MeshBoundary2D<DeviceTag>(this->NumRows, this->NumColumns, this->SortOrder);
+    return MeshBoundary2D<DeviceTag>(this->NumRows, this->NumColumns, this->SortOrder, token);
   }
 
 private:
@@ -152,21 +155,25 @@ public:
   }
 
   VTKM_CONT
-  MeshBoundary3D(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices, const IdArrayType& sortOrder)
+  MeshBoundary3D(vtkm::Id nrows,
+                 vtkm::Id ncols,
+                 vtkm::Id nslices,
+                 const IdArrayType& sortOrder,
+                 vtkm::cont::Token& token)
     : MeshStructure(mesh_dem::MeshStructure3D<DeviceTag>(nrows, ncols, nslices))
   {
-    SortOrderPortal = sortOrder.PrepareForInput(DeviceTag());
+    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceTag(), token);
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
     vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
-    const vtkm::Id row = MeshStructure.VertexRow(meshSortOrderValue);
-    const vtkm::Id col = MeshStructure.VertexColumn(meshSortOrderValue);
-    const vtkm::Id sli = MeshStructure.VertexSlice(meshSortOrderValue);
-    return (row == 0) || (col == 0) || (sli == 0) || (row == MeshStructure.NumRows - 1) ||
-      (col == MeshStructure.NumColumns - 1) || (sli == MeshStructure.NumSlices - 1);
+    const vtkm::Id row = this->MeshStructure.VertexRow(meshSortOrderValue);
+    const vtkm::Id col = this->MeshStructure.VertexColumn(meshSortOrderValue);
+    const vtkm::Id sli = this->MeshStructure.VertexSlice(meshSortOrderValue);
+    return (row == 0) || (col == 0) || (sli == 0) || (row == this->MeshStructure.NumRows - 1) ||
+      (col == this->MeshStructure.NumColumns - 1) || (sli == this->MeshStructure.NumSlices - 1);
   }
 
 protected:
@@ -193,10 +200,10 @@ public:
 
   VTKM_CONT
   template <typename DeviceTag>
-  MeshBoundary3D<DeviceTag> PrepareForExecution(DeviceTag) const
+  MeshBoundary3D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
   {
     return MeshBoundary3D<DeviceTag>(
-      this->NumRows, this->NumColumns, this->NumSlices, this->SortOrder);
+      this->NumRows, this->NumColumns, this->NumSlices, this->SortOrder, token);
   }
 
 protected:
@@ -222,20 +229,21 @@ public:
                               vtkm::Id totalNRows,
                               vtkm::Id totalNCols,
                               vtkm::Id3 minIdx,
-                              vtkm::Id3 maxIdx)
+                              vtkm::Id3 maxIdx,
+                              vtkm::cont::Token& token)
     : TotalNRows(totalNRows)
     , TotalNCols(totalNCols)
     , MinIdx(minIdx)
     , MaxIdx(maxIdx)
   {
-    assert(TotalNRows > 0 && TotalNCols > 0);
-    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag());
+    assert(this->TotalNRows > 0 && this->TotalNCols > 0);
+    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag(), token);
   }
 
   VTKM_EXEC_CONT
   bool liesOnBoundary(const vtkm::Id index) const
   {
-    vtkm::Id idx = GlobalMeshIndexPortal.Get(index);
+    vtkm::Id idx = this->GlobalMeshIndexPortal.Get(index);
     vtkm::Id3 rcs;
     rcs[0] = vtkm::Id((idx % (this->TotalNRows * this->TotalNCols)) / this->TotalNCols);
     rcs[1] = vtkm::Id(idx % this->TotalNCols);
@@ -280,10 +288,11 @@ public:
 
   VTKM_CONT
   template <typename DeviceTag>
-  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag) const
+  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag,
+                                                             vtkm::cont::Token& token) const
   {
     return MeshBoundaryContourTreeMesh<DeviceTag>(
-      GlobalMeshIndex, this->TotalNRows, this->TotalNCols, this->MinIdx, this->MaxIdx);
+      this->GlobalMeshIndex, this->TotalNRows, this->TotalNCols, this->MinIdx, this->MaxIdx, token);
   }
 
 private:

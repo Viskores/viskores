@@ -71,9 +71,9 @@ public:
   {
     vtkm::cont::ArrayHandle<T> yvals, zvals;
     yvals.Allocate(1);
-    yvals.GetPortalControl().Set(0, 0.0);
+    yvals.WritePortal().Set(0, 0.0);
     zvals.Allocate(1);
-    zvals.GetPortalControl().Set(0, 0.0);
+    zvals.WritePortal().Set(0, 0.0);
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
@@ -105,7 +105,7 @@ public:
   {
     vtkm::cont::ArrayHandle<T> zvals;
     zvals.Allocate(1);
-    zvals.GetPortalControl().Set(0, 0.0);
+    zvals.WritePortal().Set(0, 0.0);
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 

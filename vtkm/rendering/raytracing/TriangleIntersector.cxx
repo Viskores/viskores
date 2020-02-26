@@ -40,8 +40,8 @@ public:
 public:
   WaterTightLeafIntersector() = default;
 
-  WaterTightLeafIntersector(const Id4Handle& triangles)
-    : Triangles(triangles.PrepareForInput(Device()))
+  WaterTightLeafIntersector(const Id4Handle& triangles, vtkm::cont::Token& token)
+    : Triangles(triangles.PrepareForInput(Device(), token))
   {
   }
 
@@ -93,8 +93,8 @@ public:
 public:
   MollerTriLeafIntersector() {}
 
-  MollerTriLeafIntersector(const Id4Handle& triangles)
-    : Triangles(triangles.PrepareForInput(Device()))
+  MollerTriLeafIntersector(const Id4Handle& triangles, vtkm::cont::Token& token)
+    : Triangles(triangles.PrepareForInput(Device(), token))
   {
   }
 
@@ -148,9 +148,10 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT MollerTriLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT MollerTriLeafIntersector<Device> PrepareForExecution(Device,
+                                                                 vtkm::cont::Token& token) const
   {
-    return MollerTriLeafIntersector<Device>(Triangles);
+    return MollerTriLeafIntersector<Device>(this->Triangles, token);
   }
 };
 
@@ -167,9 +168,10 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT WaterTightLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT WaterTightLeafIntersector<Device> PrepareForExecution(Device,
+                                                                  vtkm::cont::Token& token) const
   {
-    return WaterTightLeafIntersector<Device>(Triangles);
+    return WaterTightLeafIntersector<Device>(this->Triangles, token);
   }
 };
 

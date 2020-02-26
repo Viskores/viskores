@@ -23,7 +23,7 @@ template <typename T>
 VTKM_CONT void TestValues(const vtkm::cont::ArrayHandle<T>& ah,
                           const std::initializer_list<T>& expected)
 {
-  auto portal = ah.GetPortalConstControl();
+  auto portal = ah.ReadPortal();
   VTKM_TEST_ASSERT(expected.size() == static_cast<size_t>(ah.GetNumberOfValues()));
   for (vtkm::Id i = 0; i < ah.GetNumberOfValues(); ++i)
   {

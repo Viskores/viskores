@@ -80,8 +80,8 @@ struct DoTestWholeArrayWorklet
                       vtkm::cont::VariantArrayHandle(outHandle).ResetTypes(vtkm::List<T>{}));
 
     std::cout << "Check result." << std::endl;
-    CheckPortal(inOutHandle.GetPortalConstControl());
-    CheckPortal(outHandle.GetPortalConstControl());
+    CheckPortal(inOutHandle.ReadPortal());
+    CheckPortal(outHandle.ReadPortal());
   }
 };
 

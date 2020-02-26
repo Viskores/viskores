@@ -109,8 +109,8 @@ public:
 
   QuadLeafIntersector() {}
 
-  QuadLeafIntersector(const IdHandle& quadIds)
-    : QuadIds(quadIds.PrepareForInput(Device()))
+  QuadLeafIntersector(const IdHandle& quadIds, vtkm::cont::Token& token)
+    : QuadIds(quadIds.PrepareForInput(Device(), token))
   {
   }
 
@@ -306,9 +306,9 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT QuadLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT QuadLeafIntersector<Device> PrepareForExecution(Device, vtkm::cont::Token& token) const
   {
-    return QuadLeafIntersector<Device>(QuadIds);
+    return QuadLeafIntersector<Device>(QuadIds, token);
   }
 };
 

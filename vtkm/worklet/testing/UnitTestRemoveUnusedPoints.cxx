@@ -50,7 +50,7 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
   VTKM_TEST_ASSERT(pointIds4[2] == 3, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds4[3] == 4, "Wrong point id for cell");
 
-  auto fieldPortal = field.GetPortalConstControl();
+  auto fieldPortal = field.ReadPortal();
   VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(0), TestValue(0, vtkm::Float32())), "Bad field");
   VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(1), TestValue(2, vtkm::Float32())), "Bad field");
   VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(2), TestValue(4, vtkm::Float32())), "Bad field");
@@ -65,7 +65,7 @@ void RunTest()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> inField;
   inField.Allocate(inCellSet.GetNumberOfPoints());
-  SetPortal(inField.GetPortalControl());
+  SetPortal(inField.WritePortal());
 
   std::cout << "Removing unused points" << std::endl;
   vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet);

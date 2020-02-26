@@ -85,10 +85,11 @@ public:
     TArrayPortalType;
   VTKM_CONT
   CombinedVector(const vtkm::cont::ArrayHandle<T>& ThisVector,
-                 const vtkm::cont::ArrayHandle<T>& OtherVector)
+                 const vtkm::cont::ArrayHandle<T>& OtherVector,
+                 vtkm::cont::Token& token)
   {
-    this->ThisVectorPortal = ThisVector.PrepareForInput(DeviceAdapter());
-    this->OtherVectorPortal = OtherVector.PrepareForInput(DeviceAdapter());
+    this->ThisVectorPortal = ThisVector.PrepareForInput(DeviceAdapter(), token);
+    this->OtherVectorPortal = OtherVector.PrepareForInput(DeviceAdapter(), token);
   }
 
   // See contourtree_augmented/Types.h for definitions of IsThis() and CV_OTHER_FLAG
@@ -123,9 +124,9 @@ public:
   }
 
   template <typename DeviceTag>
-  CombinedVector<T, DeviceTag> PrepareForExecution(DeviceTag) const
+  CombinedVector<T, DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
   {
-    return CombinedVector<T, DeviceTag>(this->ThisVector, this->OtherVector);
+    return CombinedVector<T, DeviceTag>(this->ThisVector, this->OtherVector, token);
   }
 
   vtkm::Id GetNumberOfValues() const

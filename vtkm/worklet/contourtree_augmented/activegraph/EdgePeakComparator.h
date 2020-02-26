@@ -77,11 +77,14 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  EdgePeakComparatorImpl(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
+  EdgePeakComparatorImpl(const IdArrayType& edgeFar,
+                         const IdArrayType& edgeNear,
+                         bool joinGraph,
+                         vtkm::cont::Token& token)
     : IsJoinGraph(joinGraph)
   { // constructor
-    EdgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter());
-    EdgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter());
+    this->EdgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -89,40 +92,40 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // start by comparing the indices of the far end
-    vtkm::Id farIndex1 = EdgeFarPortal.Get(i);
-    vtkm::Id farIndex2 = EdgeFarPortal.Get(j);
+    vtkm::Id farIndex1 = this->EdgeFarPortal.Get(i);
+    vtkm::Id farIndex2 = this->EdgeFarPortal.Get(j);
 
     // first compare the far end
     if (farIndex1 < farIndex2)
     {
-      return true ^ IsJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
     if (farIndex2 < farIndex1)
     {
-      return false ^ IsJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
 
     // then compare the indices of the near end (which are guaranteed to be sorted!)
-    vtkm::Id nearIndex1 = EdgeNearPortal.Get(i);
-    vtkm::Id nearIndex2 = EdgeNearPortal.Get(j);
+    vtkm::Id nearIndex1 = this->EdgeNearPortal.Get(i);
+    vtkm::Id nearIndex2 = this->EdgeNearPortal.Get(j);
 
     if (nearIndex1 < nearIndex2)
     {
-      return true ^ IsJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
     if (nearIndex2 < nearIndex1)
     {
-      return false ^ IsJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
 
     // if the near indices match, compare the edge IDs
     if (i < j)
     {
-      return false ^ IsJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
     if (j < i)
     {
-      return true ^ IsJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
 
     // fallback can happen when multiple paths end at same extremum
@@ -149,9 +152,12 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
-    return EdgePeakComparatorImpl<DeviceAdapter>(this->EdgeFar, this->EdgeNear, this->JoinGraph);
+    return EdgePeakComparatorImpl<DeviceAdapter>(
+      this->EdgeFar, this->EdgeNear, this->JoinGraph, token);
   }
 
 private:

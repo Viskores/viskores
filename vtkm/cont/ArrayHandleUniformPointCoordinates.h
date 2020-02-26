@@ -121,7 +121,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto portal = obj.GetPortalConstControl();
+    auto portal = obj.ReadPortal();
     vtkmdiy::save(bb, portal.GetDimensions());
     vtkmdiy::save(bb, portal.GetOrigin());
     vtkmdiy::save(bb, portal.GetSpacing());

@@ -65,7 +65,8 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
 {
   using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction>;
 
-  EvaluateImplicitFunction eval(function.PrepareForExecution(device));
+  vtkm::cont::Token token;
+  EvaluateImplicitFunction eval(function.PrepareForExecution(device, token));
   EvalDispatcher dispatcher(eval);
   dispatcher.SetDevice(DeviceAdapter());
   dispatcher.Invoke(points, values, gradients);
@@ -76,7 +77,7 @@ bool TestArrayEqual(const vtkm::cont::ArrayHandle<ItemType>& result,
                     const std::array<ItemType, N>& expected)
 {
   bool success = false;
-  auto portal = result.GetPortalConstControl();
+  auto portal = result.ReadPortal();
   vtkm::Id count = portal.GetNumberOfValues();
 
   if (static_cast<std::size_t>(count) == N)

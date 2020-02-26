@@ -82,7 +82,7 @@ public:
   {
     ScalarField = Dataset.GetField(fieldName);
     const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
-    ScalarRange = range.GetPortalConstControl().Get(0);
+    ScalarRange = range.ReadPortal().Get(0);
   }
 
   VTKM_CONT
@@ -115,7 +115,7 @@ public:
   vtkm::Range GetScalarFieldRange()
   {
     const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
-    ScalarRange = range.GetPortalConstControl().Get(0);
+    ScalarRange = range.ReadPortal().Get(0);
     return ScalarRange;
   }
 

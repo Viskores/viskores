@@ -115,10 +115,10 @@ public:
 
   template <typename DeviceAdapter>
   VTKM_CONT SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>
-  PrepareForExecution(DeviceAdapter device) const
+  PrepareForExecution(DeviceAdapter device, vtkm::cont::Token& token) const
   {
     return SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>(
-      this->Values.PrepareForInput(device));
+      this->Values.PrepareForInput(device, token));
   }
 
 private:

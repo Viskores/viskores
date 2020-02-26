@@ -38,7 +38,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.GetPortalConstControl().Get(i) != expected.GetPortalConstControl().Get(i))
+    if (ah.ReadPortal().Get(i) != expected.ReadPortal().Get(i))
     {
       return false;
     }

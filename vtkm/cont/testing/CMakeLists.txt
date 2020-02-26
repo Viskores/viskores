@@ -48,6 +48,7 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleSwizzle.cxx
+  UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
@@ -82,6 +83,7 @@ set(unit_tests
   UnitTestStorageList.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
+  UnitTestToken.cxx
   UnitTestTryExecute.cxx
   UnitTestVariantArrayHandle.cxx
   )

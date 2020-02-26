@@ -94,7 +94,7 @@ public:
     const vtkm::Id length = this->Range.GetNumberOfValues();
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      range[i] = this->Range.GetPortalConstControl().Get(i);
+      range[i] = this->Range.ReadPortal().Get(i);
     }
   }
 

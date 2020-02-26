@@ -87,9 +87,9 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  ArcComparatorImpl(const IdArrayType& ct_arcs)
+  ArcComparatorImpl(const IdArrayType& ct_arcs, vtkm::cont::Token& token)
   { // constructor
-    this->ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter());
+    this->ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -126,9 +126,10 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ArcComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT ArcComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter,
+                                                                 vtkm::cont::Token& token) const
   {
-    return ArcComparatorImpl<DeviceAdapter>(this->Arcs);
+    return ArcComparatorImpl<DeviceAdapter>(this->Arcs, token);
   }
 
 private:

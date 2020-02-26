@@ -81,7 +81,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
   {
-    this->Output(array.GetPortalConstControl());
+    this->Output(array.ReadPortal());
   }
 };
 
@@ -119,7 +119,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
   {
-    this->Output(array.GetPortalConstControl());
+    this->Output(array.ReadPortal());
   }
 };
 
@@ -179,7 +179,7 @@ private:
       vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
       cellSet.GetIndices(i, ids);
       out << nids;
-      auto IdPortal = ids.GetPortalConstControl();
+      auto IdPortal = ids.ReadPortal();
       for (int j = 0; j < nids; ++j)
         out << " " << IdPortal.Get(j);
       out << std::endl;

@@ -375,9 +375,9 @@ struct BenchBlackScholesImpl
       this->OptionStrike.Allocate(this->ArraySize);
       this->OptionYears.Allocate(this->ArraySize);
 
-      auto stockPricePortal = this->StockPrice.GetPortalControl();
-      auto optionStrikePortal = this->OptionStrike.GetPortalControl();
-      auto optionYearsPortal = this->OptionYears.GetPortalControl();
+      auto stockPricePortal = this->StockPrice.WritePortal();
+      auto optionStrikePortal = this->OptionStrike.WritePortal();
+      auto optionYearsPortal = this->OptionYears.WritePortal();
 
       for (vtkm::Id i = 0; i < this->ArraySize; ++i)
       {
@@ -488,7 +488,7 @@ struct BenchMathImpl
       std::uniform_real_distribution<Value> range;
 
       this->InputHandle.Allocate(this->ArraySize);
-      auto portal = this->InputHandle.GetPortalControl();
+      auto portal = this->InputHandle.WritePortal();
       for (vtkm::Id i = 0; i < this->ArraySize; ++i)
       {
         portal.Set(i, vtkm::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
@@ -590,7 +590,7 @@ struct BenchFusedMathImpl
       std::uniform_real_distribution<Value> range;
 
       this->InputHandle.Allocate(this->ArraySize);
-      auto portal = this->InputHandle.GetPortalControl();
+      auto portal = this->InputHandle.WritePortal();
       for (vtkm::Id i = 0; i < this->ArraySize; ++i)
       {
         portal.Set(i, vtkm::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
@@ -702,7 +702,7 @@ struct BenchEdgeInterpImpl
 
       { // Per-edge weights
         this->WeightHandle.Allocate(numberOfEdges);
-        auto portal = this->WeightHandle.GetPortalControl();
+        auto portal = this->WeightHandle.WritePortal();
         for (vtkm::Id i = 0; i < numberOfEdges; ++i)
         {
           portal.Set(i, weight_range(rng));
@@ -711,7 +711,7 @@ struct BenchEdgeInterpImpl
 
       { // Point field
         this->FieldHandle.Allocate(cellSet.GetNumberOfPoints());
-        auto portal = this->FieldHandle.GetPortalControl();
+        auto portal = this->FieldHandle.WritePortal();
         for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
         {
           portal.Set(i, field_range(rng));
@@ -788,7 +788,7 @@ static ImplicitFunctionBenchData MakeImplicitFunctionBenchData()
   std::uniform_real_distribution<vtkm::FloatDefault> disty(bounds[2], bounds[3]);
   std::uniform_real_distribution<vtkm::FloatDefault> distz(bounds[4], bounds[5]);
 
-  auto portal = data.Points.GetPortalControl();
+  auto portal = data.Points.WritePortal();
   for (vtkm::Id i = 0; i < count; ++i)
   {
     portal.Set(i, vtkm::make_Vec(distx(rangen), disty(rangen), distz(rangen)));
@@ -814,8 +814,9 @@ void BenchImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto handle = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device));
+  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device, token));
   EvalWorklet eval(function);
 
   vtkm::cont::Timer timer{ device };
@@ -847,8 +848,9 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto sphere = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  EvalWorklet eval(sphere.PrepareForExecution(device));
+  EvalWorklet eval(sphere.PrepareForExecution(device, token));
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -879,10 +881,11 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto h1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto h2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device));
-  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device));
+  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device, token));
+  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device, token));
   EvalWorklet eval(f1, f2);
 
   vtkm::cont::Timer timer{ device };
@@ -914,9 +917,10 @@ void Bench2VirtualImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
+  vtkm::cont::Token token;
   auto s1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto s2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  EvalWorklet eval(s1.PrepareForExecution(device), s2.PrepareForExecution(device));
+  EvalWorklet eval(s1.PrepareForExecution(device, token), s2.PrepareForExecution(device, token));
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };

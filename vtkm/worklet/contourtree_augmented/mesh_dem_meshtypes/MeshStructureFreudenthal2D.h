@@ -96,15 +96,16 @@ public:
     bool getmax,
     const IdArrayType& sortIndices,
     const IdArrayType& SortOrder,
-    const m2d_freudenthal::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn)
+    const m2d_freudenthal::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn,
+    vtkm::cont::Token& token)
     : mesh_dem::MeshStructure2D<DeviceAdapter>(ncols, nrows)
     , GetMax(getmax)
     , NumIncidentEdges(nincident_edges)
   {
-    SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    SortOrderPortal = SortOrder.PrepareForInput(DeviceAdapter());
-    EdgeBoundaryDetectionMasksPortal =
-      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
+    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
+    this->SortOrderPortal = SortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeBoundaryDetectionMasksPortal =
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC

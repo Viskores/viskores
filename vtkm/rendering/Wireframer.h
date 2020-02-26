@@ -167,7 +167,8 @@ public:
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
               const AtomicPackedFrameBuffer& frameBuffer,
-              const vtkm::Range& clippingRange)
+              const vtkm::Range& clippingRange,
+              vtkm::cont::Token& token)
     : WorldToProjection(worldToProjection)
     , Width(width)
     , Height(height)
@@ -176,9 +177,9 @@ public:
     , XOffset(xOffset)
     , YOffset(yOffset)
     , AssocPoints(assocPoints)
-    , ColorMap(colorMap.PrepareForInput(DeviceTag()))
+    , ColorMap(colorMap.PrepareForInput(DeviceTag(), token))
     , ColorMapSize(vtkm::Float32(colorMap.GetNumberOfValues() - 1))
-    , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag()))
+    , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag(), token))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
@@ -479,19 +480,18 @@ private:
     vtkm::Id width = static_cast<vtkm::Id>(Canvas->GetWidth());
     vtkm::Id height = static_cast<vtkm::Id>(Canvas->GetHeight());
     vtkm::Id pixelCount = width * height;
-    FrameBuffer.PrepareForOutput(pixelCount, DeviceTag());
 
-    if (ShowInternalZones && !IsOverlay)
+    if (this->ShowInternalZones && !this->IsOverlay)
     {
       vtkm::cont::ArrayHandleConstant<vtkm::Int64> clear(ClearValue, pixelCount);
-      vtkm::cont::Algorithm::Copy(clear, FrameBuffer);
+      vtkm::cont::Algorithm::Copy(clear, this->FrameBuffer);
     }
     else
     {
-      VTKM_ASSERT(SolidDepthBuffer.GetNumberOfValues() == pixelCount);
+      VTKM_ASSERT(this->SolidDepthBuffer.GetNumberOfValues() == pixelCount);
       CopyIntoFrameBuffer bufferCopy;
       vtkm::worklet::DispatcherMapField<CopyIntoFrameBuffer>(bufferCopy)
-        .Invoke(Canvas->GetColorBuffer(), SolidDepthBuffer, FrameBuffer);
+        .Invoke(this->Canvas->GetColorBuffer(), this->SolidDepthBuffer, this->FrameBuffer);
     }
     //
     // detect a 2D camera and set the correct viewport.
@@ -527,22 +527,26 @@ private:
     }
     const bool isAssocPoints = ScalarField.IsFieldPoint();
 
-    EdgePlotter<DeviceTag> plotter(WorldToProjection,
-                                   width,
-                                   height,
-                                   subsetWidth,
-                                   subsetHeight,
-                                   xOffset,
-                                   yOffset,
-                                   isAssocPoints,
-                                   ScalarFieldRange,
-                                   ColorMap,
-                                   FrameBuffer,
-                                   Camera.GetClippingRange());
-    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
-    plotterDispatcher.SetDevice(DeviceTag());
-    plotterDispatcher.Invoke(
-      PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+    {
+      vtkm::cont::Token token;
+      EdgePlotter<DeviceTag> plotter(WorldToProjection,
+                                     width,
+                                     height,
+                                     subsetWidth,
+                                     subsetHeight,
+                                     xOffset,
+                                     yOffset,
+                                     isAssocPoints,
+                                     ScalarFieldRange,
+                                     ColorMap,
+                                     FrameBuffer,
+                                     Camera.GetClippingRange(),
+                                     token);
+      vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
+      plotterDispatcher.SetDevice(DeviceTag());
+      plotterDispatcher.Invoke(
+        PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+    }
 
     BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter> converterDispatcher(converter);

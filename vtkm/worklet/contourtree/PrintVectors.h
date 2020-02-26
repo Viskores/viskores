@@ -188,7 +188,7 @@ void PrintValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVe
   PrintLabel(label);
 
   // now print the data
-  const auto dVecPortal = dVec.GetPortalConstControl();
+  const auto dVecPortal = dVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
     PrintDataType(dVecPortal.Get(entry));
@@ -218,7 +218,7 @@ inline void PrintIndices(std::string label,
   PrintLabel(label);
 
   // now print the data
-  const auto iVecPortal = iVec.GetPortalConstControl();
+  const auto iVecPortal = iVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nIndices; entry++)
   {
     PrintIndexType(iVecPortal.Get(entry));
@@ -249,7 +249,7 @@ void PrintLabelledBlock(std::string label,
   // loop control variable
   vtkm::Id entry = 0;
   // per row
-  const auto dVecPortal = dVec.GetPortalConstControl();
+  const auto dVecPortal = dVec.ReadPortal();
   for (vtkm::Id row = 0; row < nRows; row++)
   { // per row
     PrintLabel(label + "[" + NumString(row) + "]");

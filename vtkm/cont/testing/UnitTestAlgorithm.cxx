@@ -147,7 +147,7 @@ struct CompFunctor
 struct CompExecObject : vtkm::cont::ExecutionObjectBase
 {
   template <typename Device>
-  VTKM_CONT CompFunctor PrepareForExecution(Device)
+  VTKM_CONT CompFunctor PrepareForExecution(Device, vtkm::cont::Token&)
   {
     return CompFunctor();
   }

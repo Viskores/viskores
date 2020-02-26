@@ -91,19 +91,19 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(0), vtkm::make_Pair(0, 12)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 12)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(1), vtkm::make_Pair(4, 13)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(4, 13)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(2), vtkm::make_Pair(12, 13)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(12, 13)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(3), vtkm::make_Pair(12, 18)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(12, 18)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(4), vtkm::make_Pair(12, 20)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(12, 20)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(5), vtkm::make_Pair(13, 14)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(13, 14)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(6), vtkm::make_Pair(13, 19)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(13, 19)),
                      "Wrong result for ContourTree filter");
   }
 
@@ -130,23 +130,23 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(0), vtkm::make_Pair(0, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(1), vtkm::make_Pair(31, 42)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(31, 42)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(2), vtkm::make_Pair(42, 43)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(42, 43)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(3), vtkm::make_Pair(42, 56)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(42, 56)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(4), vtkm::make_Pair(56, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(56, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(5), vtkm::make_Pair(56, 92)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(56, 92)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(6), vtkm::make_Pair(62, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(62, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(7), vtkm::make_Pair(81, 92)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(81, 92)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(8), vtkm::make_Pair(92, 93)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), vtkm::make_Pair(92, 93)),
                      "Wrong result for ContourTree filter");
   }
 

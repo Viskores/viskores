@@ -75,11 +75,13 @@ public:
   };
 
   template <typename Device>
-  VTKM_CONT const ExecObject* PrepareForExecution(Device) const
+  VTKM_CONT const ExecObject* PrepareForExecution(Device, vtkm::cont::Token& token) const
   {
     this->PrepareForExecutionImpl(
-      Device(), const_cast<vtkm::cont::VirtualObjectHandle<ExecObject>&>(this->ExecObjectHandle));
-    return this->ExecObjectHandle.PrepareForExecution(Device());
+      Device(),
+      const_cast<vtkm::cont::VirtualObjectHandle<ExecObject>&>(this->ExecObjectHandle),
+      token);
+    return this->ExecObjectHandle.PrepareForExecution(Device(), token);
   }
 
 private:
@@ -92,7 +94,8 @@ protected:
 
   VTKM_CONT virtual void PrepareForExecutionImpl(
     vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::VirtualObjectHandle<ExecObject>& execObjectHandle) const = 0;
+    vtkm::cont::VirtualObjectHandle<ExecObject>& execObjectHandle,
+    vtkm::cont::Token& token) const = 0;
 
   template <typename FieldEvaluateType, typename DerivedType>
   class ExecObjectBaseImpl : public ExecObject
@@ -231,10 +234,11 @@ struct IntegratorPrepareForExecutionFunctor
     vtkm::cont::VirtualObjectHandle<Integrator::ExecObject>& execObjectHandle,
     const EvaluatorType& evaluator,
     vtkm::FloatDefault stepLength,
-    vtkm::FloatDefault tolerance) const
+    vtkm::FloatDefault tolerance,
+    vtkm::cont::Token& token) const
   {
-    IntegratorType<Device>* integrator =
-      new IntegratorType<Device>(evaluator.PrepareForExecution(Device()), stepLength, tolerance);
+    IntegratorType<Device>* integrator = new IntegratorType<Device>(
+      evaluator.PrepareForExecution(Device(), token), stepLength, tolerance);
     execObjectHandle.Reset(integrator);
     return true;
   }
@@ -258,13 +262,13 @@ public:
 
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
-                       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
+                       vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
                        typename RK4Integrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     using FieldEvaluateExecType =
-      decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
+      vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>;
     using Superclass =
       Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
                                      typename RK4Integrator::template ExecObject<Device>>;
@@ -320,14 +324,16 @@ private:
 protected:
   VTKM_CONT virtual void PrepareForExecutionImpl(
     vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::VirtualObjectHandle<Integrator::ExecObject>& execObjectHandle) const override
+    vtkm::cont::VirtualObjectHandle<Integrator::ExecObject>& execObjectHandle,
+    vtkm::cont::Token& token) const override
   {
     vtkm::cont::TryExecuteOnDevice(device,
                                    detail::IntegratorPrepareForExecutionFunctor<ExecObject>(),
                                    execObjectHandle,
                                    this->Evaluator,
                                    this->StepLength,
-                                   this->Tolerance);
+                                   this->Tolerance,
+                                   token);
   }
 };
 
@@ -383,14 +389,16 @@ private:
 protected:
   VTKM_CONT virtual void PrepareForExecutionImpl(
     vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::VirtualObjectHandle<Integrator::ExecObject>& execObjectHandle) const override
+    vtkm::cont::VirtualObjectHandle<Integrator::ExecObject>& execObjectHandle,
+    vtkm::cont::Token& token) const override
   {
     vtkm::cont::TryExecuteOnDevice(device,
                                    detail::IntegratorPrepareForExecutionFunctor<ExecObject>(),
                                    execObjectHandle,
                                    this->Evaluator,
                                    this->StepLength,
-                                   this->Tolerance);
+                                   this->Tolerance,
+                                   token);
   }
 }; //EulerIntegrator
 

@@ -48,12 +48,13 @@ public:
   ExecutionGridEvaluator(std::shared_ptr<vtkm::cont::CellLocator> locator,
                          std::shared_ptr<vtkm::cont::CellInterpolationHelper> interpolationHelper,
                          const vtkm::Bounds& bounds,
-                         const FieldArrayType& field)
+                         const FieldArrayType& field,
+                         vtkm::cont::Token& token)
     : Bounds(bounds)
-    , Field(field.PrepareForInput(DeviceAdapter()))
+    , Field(field.PrepareForInput(DeviceAdapter(), token))
   {
-    Locator = locator->PrepareForExecution(DeviceAdapter());
-    InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter());
+    Locator = locator->PrepareForExecution(DeviceAdapter(), token);
+    InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter(), token);
   }
 
   template <typename Point>
@@ -206,10 +207,11 @@ public:
 
   template <typename DeviceAdapter>
   VTKM_CONT ExecutionGridEvaluator<DeviceAdapter, FieldArrayType> PrepareForExecution(
-    DeviceAdapter) const
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
     return ExecutionGridEvaluator<DeviceAdapter, FieldArrayType>(
-      this->Locator, this->InterpolationHelper, this->Bounds, this->Vectors);
+      this->Locator, this->InterpolationHelper, this->Bounds, this->Vectors, token);
   }
 
 private:

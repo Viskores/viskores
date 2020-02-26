@@ -169,7 +169,7 @@ inline void PrintValues(std::string label,
   PrintLabel(label);
 
   // now print the data
-  auto portal = dVec.GetPortalConstControl();
+  auto portal = dVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
     PrintDataType(portal.Get(entry));
@@ -196,8 +196,8 @@ inline void PrintSortedValues(std::string label,
   PrintLabel(label);
 
   // now print the data
-  auto dportal = dVec.GetPortalConstControl();
-  auto sortPortal = sortVec.GetPortalConstControl();
+  auto dportal = dVec.ReadPortal();
+  auto sortPortal = sortVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nValues; entry++)
   {
     PrintDataType(dportal.Get(sortPortal.Get(entry)));
@@ -221,7 +221,7 @@ inline void PrintIndices(std::string label,
   // print the label
   PrintLabel(label);
 
-  auto portal = iVec.GetPortalConstControl();
+  auto portal = iVec.ReadPortal();
   for (vtkm::Id entry = 0; entry < nIndices; entry++)
     PrintIndexType(portal.Get(entry));
 
@@ -240,7 +240,7 @@ inline void PrintLabelledDataBlock(std::string label,
   // loop control variable
   vtkm::Id entry = 0;
   // per row
-  auto portal = dVec.GetPortalConstControl();
+  auto portal = dVec.ReadPortal();
   for (vtkm::Id row = 0; entry < portal.GetNumberOfValues(); row++)
   { // per row
     PrintLabel(label + "[" + std::to_string(row) + "]");
@@ -260,7 +260,7 @@ inline void PrintLabelledDataBlock(std::string label,
 inline void PrintEdgePairArray(const EdgePairArray& edgePairArray)
 { // PrintEdgePairArray()
   // now print them out
-  auto edgePairArrayConstPortal = edgePairArray.GetPortalConstControl();
+  auto edgePairArrayConstPortal = edgePairArray.ReadPortal();
   for (vtkm::Id superarc = 0; superarc < edgePairArray.GetNumberOfValues(); superarc++)
   { // per superarc
     std::cout << std::right << std::setw(PRINT_WIDTH)

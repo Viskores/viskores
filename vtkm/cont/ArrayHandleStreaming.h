@@ -29,6 +29,7 @@ public:
   using PortalType = P;
   using ValueType = typename PortalType::ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalStreaming()
     : InputPortal()
@@ -38,6 +39,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalStreaming(const PortalType& inputPortal,
                        vtkm::Id blockIndex,
@@ -50,6 +52,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherP>
   VTKM_EXEC_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
     : InputPortal(src.GetPortal())
@@ -57,6 +60,52 @@ public:
     , BlockSize(src.GetBlockSize())
     , CurBlockSize(src.GetCurBlockSize())
   {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming(const ArrayPortalStreaming& src)
+    : InputPortal(src.InputPortal)
+    , BlockIndex(src.BlockIndex)
+    , BlockSize(src.BlockSize)
+    , CurBlockSize(src.CurBlockSize)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming(const ArrayPortalStreaming&& rhs)
+    : InputPortal(std::move(rhs.InputPortal))
+    , BlockIndex(std::move(rhs.BlockIndex))
+    , BlockSize(std::move(rhs.BlockSize))
+    , CurBlockSize(std::move(rhs.CurBlockSize))
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ~ArrayPortalStreaming() {}
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming& operator=(const ArrayPortalStreaming& src)
+  {
+    this->InputPortal = src.InputPortal;
+    this->BlockIndex = src.BlockIndex;
+    this->BlockSize = src.BlockSize;
+    this->CurBlockSize = src.CurBlockSize;
+    return *this;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming& operator=(const ArrayPortalStreaming&& rhs)
+  {
+    this->InputPortal = std::move(rhs.InputPortal);
+    this->BlockIndex = std::move(rhs.BlockIndex);
+    this->BlockSize = std::move(rhs.BlockSize);
+    this->CurBlockSize = std::move(rhs.CurBlockSize);
+    return *this;
   }
 
   VTKM_EXEC_CONT
@@ -119,10 +168,13 @@ class Storage<typename ArrayHandleInputType::ValueType, StorageTagStreaming<Arra
 public:
   using ValueType = typename ArrayHandleInputType::ValueType;
 
-  using PortalType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>;
+  using PortalType = vtkm::cont::internal::ArrayPortalStreaming<
+    typename vtkm::cont::internal::Storage<typename ArrayHandleInputType::ValueType,
+                                           typename ArrayHandleInputType::StorageTag>::PortalType>;
   using PortalConstType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalConstControl>;
+    vtkm::cont::internal::ArrayPortalStreaming<typename vtkm::cont::internal::Storage<
+      typename ArrayHandleInputType::ValueType,
+      typename ArrayHandleInputType::StorageTag>::PortalConstType>;
 
   VTKM_CONT
   Storage()
@@ -147,15 +199,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->InputArray.GetPortalControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalType(this->InputArray.WritePortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(
-      this->InputArray.GetPortalConstControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalConstType(this->InputArray.ReadPortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
@@ -238,9 +289,9 @@ public:
                        const vtkm::Id curBlockSize)
     : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize))
   {
-    this->GetPortalConstControl().SetBlockIndex(blockIndex);
-    this->GetPortalConstControl().SetBlockSize(blockSize);
-    this->GetPortalConstControl().SetCurBlockSize(curBlockSize);
+    this->ReadPortal().SetBlockIndex(blockIndex);
+    this->ReadPortal().SetBlockSize(blockSize);
+    this->ReadPortal().SetCurBlockSize(curBlockSize);
   }
 
   VTKM_CONT

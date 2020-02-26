@@ -260,8 +260,8 @@ public:
                                      localBlockSizes)
   {
     vtkm::Id localNumBlocks = this->GetLocalNumberOfBlocks();
-    LocalContourTrees.resize((std::size_t)localNumBlocks);
-    LocalSortOrders.resize((std::size_t)localNumBlocks);
+    LocalContourTrees.resize(static_cast<std::size_t>(localNumBlocks));
+    LocalSortOrders.resize(static_cast<std::size_t>(localNumBlocks));
   }
 
   VTKM_CONT
@@ -762,12 +762,10 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     vtkm::cont::ArrayCopy(currField.GetData().AsVirtual<T>(), fieldData);
     auto currContourTreeMesh =
       vtkm::filter::detail::MultiBlockContourTreeHelper::ComputeLocalContourTreeMesh<T>(
-        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins
-          .GetPortalConstControl()
+        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal()
           .Get(static_cast<vtkm::Id>(bi)),
-        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes
-          .GetPortalConstControl()
-          .Get(static_cast<vtkm::Id>(bi)),
+        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+          static_cast<vtkm::Id>(bi)),
         this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize,
         fieldData,
         MultiBlockTreeHelper->LocalContourTrees[bi],
@@ -784,13 +782,11 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->FirstNeighbour;
     localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->MaxNeighbours;
     localDataBlocks[bi]->BlockOrigin =
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins
-        .GetPortalConstControl()
-        .Get(static_cast<vtkm::Id>(bi));
+      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
+        static_cast<vtkm::Id>(bi));
     localDataBlocks[bi]->BlockSize =
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes
-        .GetPortalConstControl()
-        .Get(static_cast<vtkm::Id>(bi));
+      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+        static_cast<vtkm::Id>(bi));
     localDataBlocks[bi]->GlobalSize =
       this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;
     // We need to augment at least with the boundary vertices when running in parallel
@@ -807,7 +803,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
   // Compute the gids for our local blocks
   const detail::SpatialDecomposition& spatialDecomp =
     this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition;
-  auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.GetPortalConstControl();
+  auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
   std::vector<vtkm::Id> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {

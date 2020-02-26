@@ -78,11 +78,12 @@ public:
                                            const CellIdArrayHandle& cellIds,
                                            const CellSetType& cellSet,
                                            const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                                           DeviceAdapter)
-    : Nodes(nodes.PrepareForInput(DeviceAdapter()))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter()))
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
-    , Coords(coords.PrepareForInput(DeviceAdapter()))
+                                           DeviceAdapter,
+                                           vtkm::cont::Token& token)
+    : Nodes(nodes.PrepareForInput(DeviceAdapter(), token))
+    , CellIds(cellIds.PrepareForInput(DeviceAdapter(), token))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
