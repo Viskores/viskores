@@ -10,10 +10,158 @@
 
 #include <vtkm/Tuple.h>
 
+#include <vtkmstd/integer_sequence.h>
+
 #include <vtkm/testing/Testing.h>
 
 namespace
 {
+
+// Do some compile-time testing of vtkmstd::integer_sequence. This is only tangentially
+// related to Tuple, but the two are often used together.
+template <vtkm::IdComponent... Ns>
+using SequenceId = vtkmstd::integer_sequence<vtkm::IdComponent, Ns...>;
+
+template <vtkm::IdComponent N>
+using MakeSequenceId = vtkmstd::make_integer_sequence<vtkm::IdComponent, N>;
+
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<0>, SequenceId<>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<1>, SequenceId<0>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<2>, SequenceId<0, 1>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<3>, SequenceId<0, 1, 2>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<5>, SequenceId<0, 1, 2, 3, 4>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<8>, SequenceId<0, 1, 2, 3, 4, 5, 6, 7>>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<MakeSequenceId<13>, SequenceId<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12>>::value));
+VTKM_STATIC_ASSERT(
+  (std::is_same<
+    MakeSequenceId<21>,
+    SequenceId<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<34>,
+                                 SequenceId<0,
+                                            1,
+                                            2,
+                                            3,
+                                            4,
+                                            5,
+                                            6,
+                                            7,
+                                            8,
+                                            9,
+                                            10,
+                                            11,
+                                            12,
+                                            13,
+                                            14,
+                                            15,
+                                            16,
+                                            17,
+                                            18,
+                                            19,
+                                            20,
+                                            21,
+                                            22,
+                                            23,
+                                            24,
+                                            25,
+                                            26,
+                                            27,
+                                            28,
+                                            29,
+                                            30,
+                                            31,
+                                            32,
+                                            33>>::value));
+VTKM_STATIC_ASSERT((std::is_same<MakeSequenceId<89>,
+                                 SequenceId<0,
+                                            1,
+                                            2,
+                                            3,
+                                            4,
+                                            5,
+                                            6,
+                                            7,
+                                            8,
+                                            9,
+                                            10,
+                                            11,
+                                            12,
+                                            13,
+                                            14,
+                                            15,
+                                            16,
+                                            17,
+                                            18,
+                                            19,
+                                            20,
+                                            21,
+                                            22,
+                                            23,
+                                            24,
+                                            25,
+                                            26,
+                                            27,
+                                            28,
+                                            29,
+                                            30,
+                                            31,
+                                            32,
+                                            33,
+                                            34,
+                                            35,
+                                            36,
+                                            37,
+                                            38,
+                                            39,
+                                            40,
+                                            41,
+                                            42,
+                                            43,
+                                            44,
+                                            45,
+                                            46,
+                                            47,
+                                            48,
+                                            49,
+                                            50,
+                                            51,
+                                            52,
+                                            53,
+                                            54,
+                                            55,
+                                            56,
+                                            57,
+                                            58,
+                                            59,
+                                            60,
+                                            61,
+                                            62,
+                                            63,
+                                            64,
+                                            65,
+                                            66,
+                                            67,
+                                            68,
+                                            69,
+                                            70,
+                                            71,
+                                            72,
+                                            73,
+                                            74,
+                                            75,
+                                            76,
+                                            77,
+                                            78,
+                                            79,
+                                            80,
+                                            81,
+                                            82,
+                                            83,
+                                            84,
+                                            85,
+                                            86,
+                                            87,
+                                            88>>::value));
 
 template <vtkm::IdComponent Index>
 struct TypePlaceholder
