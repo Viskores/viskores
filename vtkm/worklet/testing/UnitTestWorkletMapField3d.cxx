@@ -36,11 +36,11 @@ struct ExecutionObjectInterface : public vtkm::cont::ExecutionObjectBase
   vtkm::Id3 ScheduleRange;
 
   template <typename Device>
-  VTKM_CONT auto PrepareForExecution(Device device) const
-    -> ExecutionObject<decltype(this->Data.PrepareForInput(device))>
+  VTKM_CONT auto PrepareForExecution(Device device, vtkm::cont::Token& token) const
+    -> ExecutionObject<decltype(this->Data.PrepareForInput(device, token))>
   {
-    return ExecutionObject<decltype(this->Data.PrepareForInput(device))>{
-      this->Data.PrepareForInput(device)
+    return ExecutionObject<decltype(this->Data.PrepareForInput(device, token))>{
+      this->Data.PrepareForInput(device, token)
     };
   }
 
@@ -157,8 +157,8 @@ struct DoTestWorklet
     dispatcher.Invoke(inputExecObject, &outputHandleAsPtr, &inoutHandleAsPtr);
 
     std::cout << "Check results." << std::endl;
-    CheckPortal(outputHandleAsPtr.GetPortalConstControl());
-    CheckPortal(inoutHandleAsPtr.GetPortalConstControl());
+    CheckPortal(outputHandleAsPtr.ReadPortal());
+    CheckPortal(inoutHandleAsPtr.ReadPortal());
   }
 };
 
