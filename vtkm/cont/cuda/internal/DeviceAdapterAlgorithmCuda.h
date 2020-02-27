@@ -183,7 +183,7 @@ __global__ void TaskStrided1DLaunch(TaskType task, vtkm::Id size)
 }
 
 template <typename TaskType>
-__global__ void TaskStrided3DLaunch(TaskType task, dim3 size)
+__global__ void TaskStrided3DLaunch(TaskType task, vtkm::Id3 size)
 {
   //This is the 3D version of executing in a grid-stride manner
   const dim3 start(blockIdx.x * blockDim.x + threadIdx.x,
@@ -191,11 +191,11 @@ __global__ void TaskStrided3DLaunch(TaskType task, dim3 size)
                    blockIdx.z * blockDim.z + threadIdx.z);
   const dim3 inc(blockDim.x * gridDim.x, blockDim.y * gridDim.y, blockDim.z * gridDim.z);
 
-  for (vtkm::Id k = start.z; k < size.z; k += inc.z)
+  for (vtkm::Id k = start.z; k < size[2]; k += inc.z)
   {
-    for (vtkm::Id j = start.y; j < size.y; j += inc.y)
+    for (vtkm::Id j = start.y; j < size[1]; j += inc.y)
     {
-      task(start.x, size.x, inc.x, j, k);
+      task(size, start.x, size[0], inc.x, j, k);
     }
   }
 }
@@ -1711,7 +1711,7 @@ public:
 #endif
 
     cuda::internal::TaskStrided3DLaunch<<<blocks, threadsPerBlock, 0, cudaStreamPerThread>>>(
-      functor, ranges);
+      functor, rangeMax);
   }
 
   template <class Functor>

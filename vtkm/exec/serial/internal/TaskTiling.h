@@ -83,6 +83,7 @@ template <typename WType, typename IType>
 VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
                                            void* const v,
                                            vtkm::Id globalIndexOffset,
+                                           const vtkm::Id3& maxSize,
                                            vtkm::Id istart,
                                            vtkm::Id iend,
                                            vtkm::Id j,
@@ -95,14 +96,16 @@ VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
   InvocationType const* const invocation = static_cast<InvocationType*>(v);
 
   vtkm::Id3 index(istart, j, k);
-  for (vtkm::Id i = istart; i < iend; ++i)
+  auto threadIndex1D = index[0] + maxSize[0] * (index[1] + maxSize[1] * index[2]);
+  for (vtkm::Id i = istart; i < iend; ++i, ++threadIndex1D)
   {
     index[0] = i;
     //Todo: rename this function to DoTaskInvokeWorklet
     vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
       *worklet,
       *invocation,
-      worklet->GetThreadIndices(index,
+      worklet->GetThreadIndices(threadIndex1D,
+                                index,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
                                 invocation->ThreadToOutputMap,
@@ -114,7 +117,8 @@ VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
 template <typename FType>
 VTKM_NEVER_EXPORT void FunctorTiling3DExecute(void* f,
                                               void* const,
-                                              vtkm::Id,
+                                              vtkm::Id vtkmNotUsed(globalIndexOffset),
+                                              const vtkm::Id3& vtkmNotUsed(maxSize),
                                               vtkm::Id istart,
                                               vtkm::Id iend,
                                               vtkm::Id j,
@@ -295,18 +299,28 @@ public:
     this->SetErrorBufferFunction(this->Worklet, buffer);
   }
 
-  void operator()(vtkm::Id istart, vtkm::Id iend, vtkm::Id j, vtkm::Id k) const
+  void operator()(const vtkm::Id3& maxSize,
+                  vtkm::Id istart,
+                  vtkm::Id iend,
+                  vtkm::Id j,
+                  vtkm::Id k) const
   {
     this->ExecuteFunction(
-      this->Worklet, this->Invocation, this->GlobalIndexOffset, istart, iend, j, k);
+      this->Worklet, this->Invocation, this->GlobalIndexOffset, maxSize, istart, iend, j, k);
   }
 
 protected:
   void* Worklet;
   void* Invocation;
 
-  using ExecuteSignature =
-    void (*)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id);
+  using ExecuteSignature = void (*)(void*,
+                                    void* const,
+                                    vtkm::Id,
+                                    const vtkm::Id3&,
+                                    vtkm::Id,
+                                    vtkm::Id,
+                                    vtkm::Id,
+                                    vtkm::Id);
   ExecuteSignature ExecuteFunction;
 
   using SetErrorBufferSignature = void (*)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);

@@ -65,7 +65,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
       {
         const vtkm::Id start = r.cols().begin();
         const vtkm::Id end = r.cols().end();
-        functor(start, end, j, k);
+        functor(size, start, end, j, k);
       }
     }
   });
