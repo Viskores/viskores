@@ -518,11 +518,11 @@ struct DecoratorStorageTraits
 
 
   // Portal construction methods. These actually create portals.
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
+  template <std::size_t... Indices>
   VTKM_CONT static PortalControlType MakePortalControl(const DecoratorImplT& impl,
                                                        ArrayTupleType& arrays,
                                                        vtkm::Id numValues,
-                                                       List<std::size_t, Indices...>)
+                                                       vtkmstd::index_sequence<Indices...>)
   {
     return CreatePortalDecorator<PortalControlType>(
       numValues,
@@ -538,11 +538,12 @@ struct DecoratorStorageTraits
       WritePortal(vtkm::Get<Indices>(arrays))...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
-  VTKM_CONT static PortalConstControlType MakePortalConstControl(const DecoratorImplT& impl,
-                                                                 const ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<std::size_t, Indices...>)
+  template <std::size_t... Indices>
+  VTKM_CONT static PortalConstControlType MakePortalConstControl(
+    const DecoratorImplT& impl,
+    const ArrayTupleType& arrays,
+    vtkm::Id numValues,
+    vtkmstd::index_sequence<Indices...>)
   {
     return CreatePortalDecorator<PortalConstControlType>(
       numValues,
@@ -552,13 +553,14 @@ struct DecoratorStorageTraits
       ReadPortal(vtkm::Get<Indices>(arrays))...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
-  VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(const DecoratorImplT& impl,
-                                                                    const ArrayTupleType& arrays,
-                                                                    vtkm::Id numValues,
-                                                                    List<std::size_t, Indices...>,
-                                                                    Device dev,
-                                                                    vtkm::cont::Token& token)
+  template <std::size_t... Indices, typename Device>
+  VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(
+    const DecoratorImplT& impl,
+    const ArrayTupleType& arrays,
+    vtkm::Id numValues,
+    vtkmstd::index_sequence<Indices...>,
+    Device dev,
+    vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalConstExecutionType<Device>>(
       numValues,
@@ -568,13 +570,14 @@ struct DecoratorStorageTraits
       GetPortalInput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
-  VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(const DecoratorImplT& impl,
-                                                                 ArrayTupleType& arrays,
-                                                                 vtkm::Id numValues,
-                                                                 List<std::size_t, Indices...>,
-                                                                 Device dev,
-                                                                 vtkm::cont::Token& token)
+  template <std::size_t... Indices, typename Device>
+  VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(
+    const DecoratorImplT& impl,
+    ArrayTupleType& arrays,
+    vtkm::Id numValues,
+    vtkmstd::index_sequence<Indices...>,
+    Device dev,
+    vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalExecutionType<Device>>(
       numValues,
@@ -584,11 +587,11 @@ struct DecoratorStorageTraits
       GetPortalInPlace(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices, typename Device>
+  template <std::size_t... Indices, typename Device>
   VTKM_CONT static PortalExecutionType<Device> MakePortalOutput(const DecoratorImplT& impl,
                                                                 ArrayTupleType& arrays,
                                                                 vtkm::Id numValues,
-                                                                List<std::size_t, Indices...>,
+                                                                vtkmstd::index_sequence<Indices...>,
                                                                 Device dev,
                                                                 vtkm::cont::Token& token)
   {
@@ -600,20 +603,20 @@ struct DecoratorStorageTraits
       GetPortalOutput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
+  template <std::size_t... Indices>
   VTKM_CONT static void AllocateSourceArrays(const DecoratorImplT& impl,
                                              ArrayTupleType& arrays,
                                              vtkm::Id numValues,
-                                             List<std::size_t, Indices...>)
+                                             vtkmstd::index_sequence<Indices...>)
   {
     CallAllocate(IsAllocatable{}, impl, numValues, vtkm::Get<Indices>(arrays)...);
   }
 
-  template <template <typename, std::size_t...> class List, std::size_t... Indices>
+  template <std::size_t... Indices>
   VTKM_CONT static void ShrinkSourceArrays(const DecoratorImplT& impl,
                                            ArrayTupleType& arrays,
                                            vtkm::Id numValues,
-                                           List<std::size_t, Indices...>)
+                                           vtkmstd::index_sequence<Indices...>)
   {
     CallShrink(IsShrinkable{}, impl, numValues, vtkm::Get<Indices>(arrays)...);
   }
