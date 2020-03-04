@@ -525,17 +525,7 @@ struct DecoratorStorageTraits
                                                        vtkmstd::index_sequence<Indices...>)
   {
     return CreatePortalDecorator<PortalControlType>(
-      numValues,
-      impl,
-      // More MSVC ICE avoidance while expanding the Indices parameter pack,
-      // which is a list of std::integral_constant<size_t, ...>:
-      //
-      // Indices::value : Works everywhere but MSVC2017, which crashes on it.
-      // Indices{} : Works on MSVC2017, but won't compile on MSVC2015.
-      // Indices{}.value : Works on both MSVC2015 and MSVC2017.
-      //
-      // Don't touch the following line unless you really, really have to.
-      WritePortal(vtkm::Get<Indices>(arrays))...);
+      numValues, impl, WritePortal(vtkm::Get<Indices>(arrays))...);
   }
 
   template <std::size_t... Indices>
@@ -546,14 +536,10 @@ struct DecoratorStorageTraits
     vtkmstd::index_sequence<Indices...>)
   {
     return CreatePortalDecorator<PortalConstControlType>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      ReadPortal(vtkm::Get<Indices>(arrays))...);
+      numValues, impl, ReadPortal(vtkm::Get<Indices>(arrays))...);
   }
 
-  template <std::size_t... Indices, typename Device>
+  template <typename Device, std::size_t... Indices>
   VTKM_CONT static PortalConstExecutionType<Device> MakePortalInput(
     const DecoratorImplT& impl,
     const ArrayTupleType& arrays,
@@ -563,14 +549,10 @@ struct DecoratorStorageTraits
     vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalConstExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInput(vtkm::Get<Indices>(arrays), dev, token)...);
+      numValues, impl, GetPortalInput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
-  template <std::size_t... Indices, typename Device>
+  template <typename Device, std::size_t... Indices>
   VTKM_CONT static PortalExecutionType<Device> MakePortalInPlace(
     const DecoratorImplT& impl,
     ArrayTupleType& arrays,
@@ -580,14 +562,10 @@ struct DecoratorStorageTraits
     vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalInPlace(vtkm::Get<Indices>(arrays), dev, token)...);
+      numValues, impl, GetPortalInPlace(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
-  template <std::size_t... Indices, typename Device>
+  template <typename Device, std::size_t... Indices>
   VTKM_CONT static PortalExecutionType<Device> MakePortalOutput(const DecoratorImplT& impl,
                                                                 ArrayTupleType& arrays,
                                                                 vtkm::Id numValues,
@@ -596,11 +574,7 @@ struct DecoratorStorageTraits
                                                                 vtkm::cont::Token& token)
   {
     return CreatePortalDecorator<PortalExecutionType<Device>>(
-      numValues,
-      impl,
-      // Don't touch the following line unless you really, really have to. See
-      // note in MakePortalControl.
-      GetPortalOutput(vtkm::Get<Indices>(arrays), dev, token)...);
+      numValues, impl, GetPortalOutput(vtkm::Get<Indices>(arrays), dev, token)...);
   }
 
   template <std::size_t... Indices>
