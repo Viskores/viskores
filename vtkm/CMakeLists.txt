@@ -83,7 +83,6 @@ if(VTKm_ENABLE_LOGGING)
   add_subdirectory(thirdparty/loguru)
 endif()
 add_subdirectory(thirdparty/optionparser)
-add_subdirectory(thirdparty/taotuple)
 add_subdirectory(thirdparty/lcl)
 
 add_subdirectory(testing)
