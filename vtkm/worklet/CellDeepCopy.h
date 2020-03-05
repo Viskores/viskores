@@ -83,12 +83,9 @@ struct CellDeepCopy
     vtkm::cont::ConvertNumIndicesToOffsets(numIndices, offsets, connectivitySize);
     connectivity.Allocate(connectivitySize);
 
-    auto offsetsTrim =
-      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-
     vtkm::worklet::DispatcherMapTopology<PassCellStructure> passDispatcher;
     passDispatcher.Invoke(
-      inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim));
+      inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 
     vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage> newCellSet;
     newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, connectivity, offsets);

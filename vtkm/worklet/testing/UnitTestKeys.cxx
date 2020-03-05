@@ -31,7 +31,7 @@ void CheckKeyReduce(const KeyPortal& originalKeys,
   vtkm::Id originalSize = originalKeys.GetNumberOfValues();
   vtkm::Id uniqueSize = uniqueKeys.GetNumberOfValues();
   VTKM_TEST_ASSERT(originalSize == sortedValuesMap.GetNumberOfValues(), "Inconsistent array size.");
-  VTKM_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues(), "Inconsistent array size.");
+  VTKM_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues() - 1, "Inconsistent array size.");
   VTKM_TEST_ASSERT(uniqueSize == counts.GetNumberOfValues(), "Inconsistent array size.");
 
   for (vtkm::Id uniqueIndex = 0; uniqueIndex < uniqueSize; uniqueIndex++)
