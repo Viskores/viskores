@@ -399,9 +399,9 @@ public:
                                                IdArrayType& branchSaddle,
                                                IdArrayType& branchParent)
   { // ComputeVolumeBranchDecomposition()
-    auto superarcsPortal = contourTree.Superarcs.ReadPortal();
-    auto superarcDependentWeightPortal = superarcDependentWeight.ReadPortal();
-    auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.ReadPortal();
+    //auto superarcsPortal = contourTree.Superarcs.ReadPortal();
+    //auto superarcDependentWeightPortal = superarcDependentWeight.ReadPortal();
+    //auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.ReadPortal();
 
     // cache the number of non-root supernodes & superarcs
     vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
@@ -410,10 +410,10 @@ public:
     // STAGE I:  Find the upward and downwards weight for each superarc, and set up arrays
     IdArrayType upWeight;
     upWeight.Allocate(nSuperarcs);
-    auto upWeightPortal = upWeight.WritePortal();
+    //auto upWeightPortal = upWeight.WritePortal();
     IdArrayType downWeight;
     downWeight.Allocate(nSuperarcs);
-    auto downWeightPortal = downWeight.WritePortal();
+    //auto downWeightPortal = downWeight.WritePortal();
     IdArrayType bestUpward;
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
@@ -421,8 +421,8 @@ public:
     IdArrayType bestDownward;
     vtkm::cont::ArrayCopy(noSuchElementArray, bestDownward);
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
-    auto bestUpwardPortal = bestUpward.WritePortal();
-    auto bestDownwardPortal = bestDownward.WritePortal();
+    //auto bestUpwardPortal = bestUpward.WritePortal();
+    //auto bestDownwardPortal = bestDownward.WritePortal();
 
     // STAGE II: Pick the best (largest volume) edge upwards and downwards
     // II A. Pick the best upwards weight by sorting on lower vertex then processing by segments
@@ -431,7 +431,7 @@ public:
     vtkm::cont::ArrayHandle<EdgePair> superarcList;
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
                           superarcList);
-    auto superarcListPortal = superarcList.WritePortal();
+    //auto superarcListPortal = superarcList.WritePortal();
     vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
     std::cout << "Total Volume: " << totalVolume << std::endl;
@@ -440,27 +440,31 @@ public:
     // so we can easily skip it by not indexing to the full size
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      if (IsAscending(superarcsPortal.Get(superarc)))
+      if (IsAscending(contourTree.Superarcs.ReadPortal().Get(superarc)))
       { // ascending superarc
-        superarcListPortal.Set(superarc,
-                               EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
-        upWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
+        superarcList.WritePortal().Set(
+          superarc,
+          EdgePair(superarc, MaskedIndex(contourTree.Superarcs.ReadPortal().Get(superarc))));
+        upWeight.WritePortal().Set(superarc, superarcDependentWeight.ReadPortal().Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        downWeightPortal.Set(superarc,
-                             (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
-                               (superarcIntrinsicWeightPortal.Get(superarc) - 1));
+        downWeight.WritePortal().Set(
+          superarc,
+          (totalVolume - superarcDependentWeight.ReadPortal().Get(superarc)) +
+            (superarcIntrinsicWeight.ReadPortal().Get(superarc) - 1));
       } // ascending superarc
       else
       { // descending superarc
-        superarcListPortal.Set(superarc,
-                               EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
-        downWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
+        superarcList.WritePortal().Set(
+          superarc,
+          EdgePair(MaskedIndex(contourTree.Superarcs.ReadPortal().Get(superarc)), superarc));
+        downWeight.WritePortal().Set(superarc, superarcDependentWeight.ReadPortal().Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        upWeightPortal.Set(superarc,
-                           (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
-                             (superarcIntrinsicWeightPortal.Get(superarc) - 1));
+        upWeight.WritePortal().Set(
+          superarc,
+          (totalVolume - superarcDependentWeight.ReadPortal().Get(superarc)) +
+            (superarcIntrinsicWeight.ReadPortal().Get(superarc) - 1));
       } // descending superarc
     }   // per superarc
 
@@ -478,9 +482,9 @@ public:
     // II B 1.      Sort the superarcs by upper vertex
     IdArrayType superarcSorter;
     superarcSorter.Allocate(nSuperarcs);
-    auto superarcSorterPortal = superarcSorter.WritePortal();
+    //auto superarcSorterPortal = superarcSorter.WritePortal();
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
-      superarcSorterPortal.Set(superarc, superarc);
+      superarcSorter.WritePortal().Set(superarc, superarc);
 
     vtkm::cont::Algorithm::Sort(
       superarcSorter,
@@ -489,17 +493,18 @@ public:
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
-      const EdgePair& edge = superarcListPortal.Get(superarcID);
+      vtkm::Id superarcID = superarcSorter.ReadPortal().Get(superarc);
+      const EdgePair& edge = superarcList.ReadPortal().Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
-        bestDownwardPortal.Set(edge.second, edge.first);
+        bestDownward.WritePortal().Set(edge.second, edge.first);
       else
       { // not the last one
-        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
+        const EdgePair& nextEdge =
+          superarcList.ReadPortal().Get(superarcSorter.ReadPortal().Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.second != edge.second)
-          bestDownwardPortal.Set(edge.second, edge.first);
+          bestDownward.WritePortal().Set(edge.second, edge.first);
       } // not the last one
     }   // per superarc
 
@@ -511,17 +516,18 @@ public:
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
-      const EdgePair& edge = superarcListPortal.Get(superarcID);
+      vtkm::Id superarcID = superarcSorter.ReadPortal().Get(superarc);
+      const EdgePair& edge = superarcList.ReadPortal().Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
-        bestUpwardPortal.Set(edge.first, edge.second);
+        bestUpward.WritePortal().Set(edge.first, edge.second);
       else
       { // not the last one
-        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
+        const EdgePair& nextEdge =
+          superarcList.ReadPortal().Get(superarcSorter.ReadPortal().Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.first != edge.first)
-          bestUpwardPortal.Set(edge.first, edge.second);
+          bestUpward.WritePortal().Set(edge.first, edge.second);
       } // not the last one
     }   // per superarc
 
@@ -561,9 +567,9 @@ public:
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
 
     // Set up portals
-    auto bestUpwardPortal = bestUpward.WritePortal();
-    auto bestDownwardPortal = bestDownward.WritePortal();
-    auto whichBranchPortal = whichBranch.WritePortal();
+    //auto bestUpwardPortal = bestUpward.WritePortal();
+    //auto bestDownwardPortal = bestDownward.WritePortal();
+    //auto whichBranchPortal = whichBranch.WritePortal();
 
     // STAGE III: For each vertex, identify which neighbours are on same branch
     // Let v = BestUp(u). Then if u = BestDown(v), copy BestUp(u) to whichBranch(u)
@@ -572,14 +578,14 @@ public:
     // NB 2: We don't need to do it downwards because it's symmetric
     for (vtkm::Id supernode = 0; supernode != nSupernodes; supernode++)
     { // per supernode
-      vtkm::Id bestUp = bestUpwardPortal.Get(supernode);
+      vtkm::Id bestUp = bestUpward.ReadPortal().Get(supernode);
       if (NoSuchElement(bestUp))
         // flag it as an upper leaf
-        whichBranchPortal.Set(supernode, TERMINAL_ELEMENT | supernode);
-      else if (bestDownwardPortal.Get(bestUp) == supernode)
-        whichBranchPortal.Set(supernode, bestUp);
+        whichBranch.WritePortal().Set(supernode, TERMINAL_ELEMENT | supernode);
+      else if (bestDownward.ReadPortal().Get(bestUp) == supernode)
+        whichBranch.WritePortal().Set(supernode, bestUp);
       else
-        whichBranchPortal.Set(supernode, TERMINAL_ELEMENT | supernode);
+        whichBranch.WritePortal().Set(supernode, TERMINAL_ELEMENT | supernode);
     } // per supernode
 
 #ifdef DEBUG_PRINT
@@ -600,9 +606,15 @@ public:
     { // per iteration
       // loop through the vertices, updating the chaining array
       for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-        if (!IsTerminalElement(whichBranchPortal.Get(supernode)))
-          whichBranchPortal.Set(supernode, whichBranchPortal.Get(whichBranchPortal.Get(supernode)));
+        if (!IsTerminalElement(whichBranch.ReadPortal().Get(supernode)))
+        {
+          const auto currentValue =
+            MaskedIndex(whichBranch.ReadPortal().Get(whichBranch.ReadPortal().Get(supernode)));
+          whichBranch.WritePortal().Set(supernode, currentValue);
+        }
     } // per iteration
+
+
 
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
@@ -618,15 +630,16 @@ public:
     vtkm::Id nBranches = 0;
     IdArrayType chainToBranch;
     vtkm::cont::ArrayCopy(noSuchElementArray, chainToBranch);
-    auto chainToBranchPortal = chainToBranch.WritePortal();
+    //auto chainToBranchPortal = chainToBranch.WritePortal();
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
       // test whether the supernode points to itself to find the top ends
-      if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+      if (MaskedIndex(whichBranch.ReadPortal().Get(supernode)) == supernode)
       {
-        chainToBranchPortal.Set(supernode, nBranches++);
+        chainToBranch.WritePortal().Set(supernode, nBranches++);
       }
     }
+
 
     // V B.  Create the arrays for the branches
     auto noSuchElementArrayNBranches =
@@ -635,10 +648,10 @@ public:
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchMaximum);
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchSaddle);
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchParent);
-    auto branchMinimumPortal = branchMinimum.WritePortal();
-    auto branchMaximumPortal = branchMaximum.WritePortal();
-    auto branchSaddlePortal = branchSaddle.WritePortal();
-    auto branchParentPortal = branchParent.WritePortal();
+//auto branchMinimumPortal = branchMinimum.WritePortal();
+//auto branchMaximumPortal = branchMaximum.WritePortal();
+//auto branchSaddlePortal = branchSaddle.WritePortal();
+//auto branchParentPortal = branchParent.WritePortal();
 
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
@@ -655,15 +668,16 @@ public:
     // VI A.  Create the sorting array, then sort
     IdArrayType supernodeSorter;
     supernodeSorter.Allocate(nSupernodes);
-    auto supernodeSorterPortal = supernodeSorter.WritePortal();
+    //auto supernodeSorterPortal = supernodeSorter.WritePortal();
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
-      supernodeSorterPortal.Set(supernode, supernode);
+      supernodeSorter.WritePortal().Set(supernode, supernode);
     }
 
     vtkm::cont::Algorithm::Sort(
       supernodeSorter,
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
+
     IdArrayType permutedBranches;
     permutedBranches.Allocate(nSupernodes);
     PermuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
@@ -683,34 +697,36 @@ public:
     // VI B. And reset the whichBranch to use the new branch IDs
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     {
-      whichBranchPortal.Set(supernode,
-                            chainToBranchPortal.Get(MaskedIndex(whichBranchPortal.Get(supernode))));
+      const auto currentValue = MaskedIndex(whichBranch.ReadPortal().Get(supernode));
+      whichBranch.WritePortal().Set(supernode, chainToBranch.ReadPortal().Get(currentValue));
     }
 
     // VI C.  For each segment, the highest element sets up the upper end, the lowest element sets the low end
     for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
     { // per supernode
       // retrieve supernode & branch IDs
-      vtkm::Id supernodeID = supernodeSorterPortal.Get(supernode);
-      vtkm::Id branchID = whichBranchPortal.Get(supernodeID);
+      vtkm::Id supernodeID = supernodeSorter.ReadPortal().Get(supernode);
+      vtkm::Id branchID = whichBranch.ReadPortal().Get(supernodeID);
       // save the branch ID as the owner
       // use LHE of segment to set branch minimum
       if (supernode == 0)
       { // sn = 0
-        branchMinimumPortal.Set(branchID, supernodeID);
+        branchMinimum.WritePortal().Set(branchID, supernodeID);
       } // sn = 0
-      else if (branchID != whichBranchPortal.Get(supernodeSorterPortal.Get(supernode - 1)))
+      else if (branchID !=
+               whichBranch.ReadPortal().Get(supernodeSorter.ReadPortal().Get(supernode - 1)))
       { // LHE
-        branchMinimumPortal.Set(branchID, supernodeID);
+        branchMinimum.WritePortal().Set(branchID, supernodeID);
       } // LHE
       // use RHE of segment to set branch maximum
       if (supernode == nSupernodes - 1)
       { // sn = max
-        branchMaximumPortal.Set(branchID, supernodeID);
+        branchMaximum.WritePortal().Set(branchID, supernodeID);
       } // sn = max
-      else if (branchID != whichBranchPortal.Get(supernodeSorterPortal.Get(supernode + 1)))
+      else if (branchID !=
+               whichBranch.ReadPortal().Get(supernodeSorter.ReadPortal().Get(supernode + 1)))
       { // RHE
-        branchMaximumPortal.Set(branchID, supernodeID);
+        branchMaximum.WritePortal().Set(branchID, supernodeID);
       } // RHE
     }   // per supernode
 
@@ -732,22 +748,26 @@ public:
     // BTW: This is inefficient, and we need to compress down the list of branches
     for (vtkm::Id branchID = 0; branchID < nBranches; branchID++)
     { // per branch
-      vtkm::Id branchMax = branchMaximumPortal.Get(branchID);
+      vtkm::Id branchMax = branchMaximum.ReadPortal().Get(branchID);
       // check whether the maximum is NOT a leaf
-      if (!NoSuchElement(bestUpwardPortal.Get(branchMax)))
+      if (!NoSuchElement(bestUpward.ReadPortal().Get(branchMax)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, MaskedIndex(bestUpwardPortal.Get(branchMax)));
+        branchSaddle.WritePortal().Set(branchID,
+                                       MaskedIndex(bestUpward.ReadPortal().Get(branchMax)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
-        branchParentPortal.Set(branchID, whichBranchPortal.Get(bestUpwardPortal.Get(branchMax)));
+        branchParent.WritePortal().Set(
+          branchID, whichBranch.ReadPortal().Get(bestUpward.ReadPortal().Get(branchMax)));
       } // points to a saddle
       // now do the same with the branch minimum
-      vtkm::Id branchMin = branchMinimumPortal.Get(branchID);
+      vtkm::Id branchMin = branchMinimum.ReadPortal().Get(branchID);
       // test whether NOT a lower leaf
-      if (!NoSuchElement(bestDownwardPortal.Get(branchMin)))
+      if (!NoSuchElement(bestDownward.ReadPortal().Get(branchMin)))
       { // points to a saddle
-        branchSaddlePortal.Set(branchID, MaskedIndex(bestDownwardPortal.Get(branchMin)));
+        branchSaddle.WritePortal().Set(branchID,
+                                       MaskedIndex(bestDownward.ReadPortal().Get(branchMin)));
         // if not, then the bestUp points to a saddle vertex at which we join the parent
-        branchParentPortal.Set(branchID, whichBranchPortal.Get(bestDownwardPortal.Get(branchMin)));
+        branchParent.WritePortal().Set(
+          branchID, whichBranch.ReadPortal().Get(bestDownward.ReadPortal().Get(branchMin)));
       } // points to a saddle
     }   // per branch
 

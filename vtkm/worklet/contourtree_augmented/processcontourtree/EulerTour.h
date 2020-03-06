@@ -92,8 +92,6 @@ public:
     //
     edges.Allocate(2 * (superarcs.GetNumberOfValues() - 1));
 
-    auto edgesPortal = edges.WritePortal();
-
     int counter = 0;
     for (int i = 0; i < superarcs.GetNumberOfValues(); i++)
     {
@@ -101,8 +99,8 @@ public:
 
       if (j != 0)
       {
-        edgesPortal.Set(counter++, { i, j });
-        edgesPortal.Set(counter++, { j, i });
+        edges.WritePortal().Set(counter++, { i, j });
+        edges.WritePortal().Set(counter++, { j, i });
       }
     }
 
@@ -144,8 +142,6 @@ public:
   // Reroot the euler tour at a different root (O(n) for finding the first occurence of the new root and O(1) for rerouting and O(n) for returning it as an array)
   void getTourAtRoot(const Id root, const cont::ArrayHandle<Vec<Id, 2>>::WritePortalType tourEdges)
   {
-    auto edgesPortal = edges.WritePortal();
-
     //
     // Reroot at the global min/max
     //
@@ -153,7 +149,7 @@ public:
     Id start = NO_SUCH_ELEMENT;
     do
     {
-      if (edgesPortal.Get(i)[0] == root)
+      if (edges.ReadPortal().Get(i)[0] == root)
       {
         start = i;
         break;
@@ -170,7 +166,7 @@ public:
       i = start;
       do
       {
-        tourEdges.Set(counter++, edgesPortal.Get(i));
+        tourEdges.Set(counter++, edges.ReadPortal().Get(i));
         i = succ.WritePortal().Get(i);
 
       } while (i != start);
