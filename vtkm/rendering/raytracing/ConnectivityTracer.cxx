@@ -154,9 +154,15 @@ void ConnectivityTracer::Init()
   //
   // Check to see if a sample distance was set
   //
+  vtkm::Bounds coordsBounds = Coords.GetBounds();
+  vtkm::Float64 maxLength = 0.;
+  maxLength = vtkm::Max(maxLength, coordsBounds.X.Length());
+  maxLength = vtkm::Max(maxLength, coordsBounds.Y.Length());
+  maxLength = vtkm::Max(maxLength, coordsBounds.Z.Length());
+  BumpDistance = maxLength * BumpEpsilon;
+
   if (SampleDistance <= 0)
   {
-    vtkm::Bounds coordsBounds = Coords.GetBounds();
     BoundingBox[0] = vtkm::Float32(coordsBounds.X.Min);
     BoundingBox[1] = vtkm::Float32(coordsBounds.X.Max);
     BoundingBox[2] = vtkm::Float32(coordsBounds.Y.Min);
@@ -215,6 +221,10 @@ void ConnectivityTracer::SetVolumeData(const vtkm::cont::Field& scalarField,
   }
   MeshConnectivityBuilder builder;
   MeshContainer = builder.BuildConnectivity(cellSet, coords);
+
+  Locator.SetCellSet(this->CellSet);
+  Locator.SetCoordinates(this->Coords);
+  Locator.Update();
 }
 
 void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
@@ -276,8 +286,12 @@ void ConnectivityTracer::SetEnergyData(const vtkm::cont::Field& absorption,
   {
     delete MeshContainer;
   }
+
   MeshConnectivityBuilder builder;
   MeshContainer = builder.BuildConnectivity(cellSet, coords);
+  Locator.SetCellSet(this->CellSet);
+  Locator.SetCoordinates(this->Coords);
+  Locator.Update();
 }
 
 void ConnectivityTracer::SetBackgroundColor(const vtkm::Vec4f_32& backgroundColor)
@@ -461,10 +475,12 @@ class RayBumper : public vtkm::worklet::WorkletMapField
 {
 private:
   CellIntersector<255> Intersector;
+  vtkm::Float64 BumpDistance;
   const vtkm::UInt8 FailureStatus; // the status to assign ray if we fail to find the intersection
 public:
-  RayBumper(vtkm::UInt8 failureStatus = RAY_ABANDONED)
-    : FailureStatus(failureStatus)
+  RayBumper(vtkm::Float64 bumpDistance, vtkm::UInt8 failureStatus = RAY_ABANDONED)
+    : BumpDistance(bumpDistance)
+    , FailureStatus(failureStatus)
   {
   }
 
@@ -477,10 +493,11 @@ public:
                                 FieldInOut,
                                 FieldIn,
                                 FieldInOut,
-                                ExecObject meshConnectivity);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+                                ExecObject meshConnectivity,
+                                ExecObject locator);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10);
 
-  template <typename FloatType, typename PointPortalType>
+  template <typename FloatType, typename PointPortalType, typename LocatorType>
   VTKM_EXEC inline void operator()(vtkm::Id& currentCell,
                                    PointPortalType& vertices,
                                    FloatType& enterDistance,
@@ -489,11 +506,25 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const vtkm::Vec<FloatType, 3>& origin,
                                    vtkm::Vec<FloatType, 3>& rdir,
-                                   const MeshWrapper& meshConn) const
+                                   const MeshWrapper& meshConn,
+                                   const LocatorType& locator) const
   {
     // We only process lost rays
     if (rayStatus != RAY_LOST)
     {
+      return;
+    }
+    const FloatType bumpDistance = static_cast<FloatType>(BumpDistance);
+    enterDistance += bumpDistance;
+    vtkm::Vec<FloatType, 3> location = origin + rdir * (enterDistance);
+
+    vtkm::Id cellId;
+    vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+    locator->FindCell(location, cellId, pcoords, *this);
+    currentCell = cellId;
+    if (currentCell == -1)
+    {
+      rayStatus = RAY_EXITED_MESH;
       return;
     }
 
@@ -503,34 +534,16 @@ public:
     vtkm::Id cellConn[8];
     FloatType distances[6];
 
-    vtkm::Vec<FloatType, 3> centroid(0., 0., 0.);
-
     const vtkm::Int32 numIndices = meshConn.GetCellIndices(cellConn, currentCell);
     //load local cell data
     for (int i = 0; i < numIndices; ++i)
     {
       BOUNDS_CHECK(vertices, cellConn[i]);
       vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
-      centroid = centroid + point;
       xpoints[i] = point[0];
       ypoints[i] = point[1];
       zpoints[i] = point[2];
     }
-
-    FloatType invNumIndices = static_cast<FloatType>(1.) / static_cast<FloatType>(numIndices);
-    centroid[0] = centroid[0] * invNumIndices;
-    centroid[1] = centroid[1] * invNumIndices;
-    centroid[2] = centroid[2] * invNumIndices;
-
-    vtkm::Vec<FloatType, 3> toCentroid = centroid - origin;
-    vtkm::Normalize(toCentroid);
-
-    vtkm::Vec<FloatType, 3> dir = rdir;
-    vtkm::Vec<FloatType, 3> bump = toCentroid - dir;
-    dir = dir + RAY_TUG_EPSILON * bump;
-
-    vtkm::Normalize(dir);
-    rdir = dir;
 
     const vtkm::UInt8 cellShape = meshConn.GetCellShape(currentCell);
     Intersector.IntersectCell(xpoints, ypoints, zpoints, rdir, origin, distances, cellShape);
@@ -1153,7 +1166,7 @@ void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays, detail::RayTracking<
   vtkm::cont::Timer timer;
   timer.Start();
 
-  vtkm::worklet::DispatcherMapField<RayBumper> bumpDispatch;
+  vtkm::worklet::DispatcherMapField<RayBumper> bumpDispatch(RayBumper(this->BumpDistance));
   bumpDispatch.Invoke(rays.HitIdx,
                       this->Coords,
                       *(tracker.EnterDist),
@@ -1162,7 +1175,8 @@ void ConnectivityTracer::FindLostRays(Ray<FloatType>& rays, detail::RayTracking<
                       rays.Status,
                       rays.Origin,
                       rays.Dir,
-                      MeshContainer);
+                      MeshContainer,
+                      &this->Locator);
 
   this->LostRayTime += timer.GetElapsedTime();
 }
@@ -1286,7 +1300,7 @@ template <typename FloatType>
 void ConnectivityTracer::OffsetMinDistances(Ray<FloatType>& rays)
 {
   vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>> dispatcher(
-    AdvanceRay<FloatType>(FloatType(0.001)));
+    AdvanceRay<FloatType>(FloatType(this->BumpDistance)));
   dispatcher.Invoke(rays.Status, rays.MinDistance);
 }
 
@@ -1391,6 +1405,7 @@ template <typename FloatType>
 std::vector<PartialComposite<FloatType>> ConnectivityTracer::PartialTrace(Ray<FloatType>& rays)
 {
 
+  //this->CountRayStatus = true;
   bool hasPathLengths = rays.HasBuffer("path_lengths");
   this->RaysLost = 0;
   RayOperations::ResetStatus(rays, RAY_EXITED_MESH);
