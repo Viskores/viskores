@@ -294,6 +294,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   if (cycle % this->writeFrequency == 0)
   {
     /* Steps to create a structured dataset */
+    UpdateSeedResolution(input);
     vtkm::cont::ArrayHandle<vtkm::Vec3f> BasisParticlesDisplacement;
     BasisParticlesDisplacement.Allocate(this->SeedRes[0] * this->SeedRes[1] * this->SeedRes[2]);
     DisplacementCalculation displacement;
