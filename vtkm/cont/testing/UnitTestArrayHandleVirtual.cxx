@@ -217,6 +217,15 @@ struct Test
     // the concreteArray getting locked up.
     CheckPortal(virtualArray.ReadPortal());
     SetPortal(concreteArray.WritePortal());
+
+    // Make sure Detach also correctly unlocks the concrete array.
+    auto readPortal = virtualArray.ReadPortal();
+    readPortal.Detach();
+    concreteArray.WritePortal();
+
+    auto writePortal = virtualArray.WritePortal();
+    writePortal.Detach();
+    concreteArray.WritePortal();
   }
 
   void operator()()
