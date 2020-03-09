@@ -16,6 +16,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/StaticAssert.h>
 
+#include <cstdint>
 #include <iostream>
 #include <type_traits>
 
@@ -152,12 +153,12 @@ namespace vtkm
 //*****************************************************************************
 using Float32 = float;
 using Float64 = double;
-using Int8 = signed char;
-using UInt8 = unsigned char;
-using Int16 = short;
-using UInt16 = unsigned short;
-using Int32 = int;
-using UInt32 = unsigned int;
+using Int8 = int8_t;
+using UInt8 = uint8_t;
+using Int16 = int16_t;
+using UInt16 = uint16_t;
+using Int32 = int32_t;
+using UInt32 = uint32_t;
 
 /// Represents a component ID (index of component in a vector). The number
 /// of components, being a value fixed at compile time, is generally assumed
