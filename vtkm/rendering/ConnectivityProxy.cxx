@@ -67,7 +67,6 @@ public:
     {
       throw vtkm::cont::ErrorBadValue(
         "Conn Proxy: volume mode must be set before sample distance set");
-      return;
     }
     Tracer.SetSampleDistance(distance);
   }
