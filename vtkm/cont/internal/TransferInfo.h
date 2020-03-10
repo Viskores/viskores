@@ -44,7 +44,10 @@ struct VTKM_CONT_EXPORT TransferInfoArray
   void releaseDevice();
   void releaseAll();
 
-  const vtkm::internal::PortalVirtualBase* hostPtr() const noexcept { return this->Host.get(); }
+  std::unique_ptr<vtkm::internal::PortalVirtualBase>&& hostPtr() noexcept
+  {
+    return std::move(this->Host);
+  }
   const vtkm::internal::PortalVirtualBase* devicePtr() const noexcept { return this->Device; }
   vtkm::cont::DeviceAdapterId deviceId() const noexcept { return this->DeviceId; }
 
