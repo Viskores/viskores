@@ -515,12 +515,16 @@ public:
       return;
     }
     const FloatType bumpDistance = static_cast<FloatType>(BumpDistance);
-    enterDistance += bumpDistance;
-    vtkm::Vec<FloatType, 3> location = origin + rdir * (enterDistance);
 
-    vtkm::Id cellId;
-    vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-    locator->FindCell(location, cellId, pcoords, *this);
+    vtkm::Id cellId = currentCell;
+    while (cellId == currentCell)
+    {
+      enterDistance += bumpDistance;
+      vtkm::Vec<FloatType, 3> location = origin + rdir * (enterDistance);
+      vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+      locator->FindCell(location, cellId, pcoords, *this);
+    }
+
     currentCell = cellId;
     if (currentCell == -1)
     {
