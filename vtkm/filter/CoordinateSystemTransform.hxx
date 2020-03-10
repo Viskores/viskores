@@ -17,30 +17,30 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT CylindricalCoordinateTransform::CylindricalCoordinateTransform()
-  : Worklet()
-{
-  this->SetOutputFieldName("cylindricalCoordinateSystemTransform");
-}
-
-//-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet CylindricalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
+  const vtkm::filter::FieldMetadata& vtkmNotUsed(fieldMetadata),
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  this->Worklet.Run(field, outArray);
-  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
-}
+  vtkm::cont::DataSet outDataSet;
 
-//-----------------------------------------------------------------------------
-inline VTKM_CONT SphericalCoordinateTransform::SphericalCoordinateTransform()
-  : Worklet()
-{
-  this->SetOutputFieldName("sphericalCoordinateSystemTransform");
+  this->Worklet.Run(field, outArray);
+
+  // We first add the result coords to keep them at the first position
+  // of the resulting dataset.
+  outDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outArray));
+
+  for (int i = 0; i < inDataSet.GetNumberOfCoordinateSystems(); i++)
+  {
+    outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(i));
+  }
+
+  outDataSet.SetCellSet(inDataSet.GetCellSet());
+
+  return outDataSet;
 }
 
 //-----------------------------------------------------------------------------
@@ -48,12 +48,26 @@ template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet SphericalCoordinateTransform::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&) const
+  const vtkm::filter::FieldMetadata& vtkmNotUsed(fieldMetadata),
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   vtkm::cont::ArrayHandle<T> outArray;
-  Worklet.Run(field, outArray);
-  return CreateResult(inDataSet, outArray, this->GetOutputFieldName(), fieldMetadata);
+  vtkm::cont::DataSet outDataSet;
+
+  this->Worklet.Run(field, outArray);
+
+  // We first add the result coords to keep them at the first position
+  // of the resulting dataset.
+  outDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outArray));
+
+  for (int i = 0; i < inDataSet.GetNumberOfCoordinateSystems(); i++)
+  {
+    outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(i));
+  }
+
+  outDataSet.SetCellSet(inDataSet.GetCellSet());
+
+  return outDataSet;
 }
 }
 } // namespace vtkm::filter
