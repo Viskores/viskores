@@ -203,19 +203,19 @@ private:
 
       usage.push_back({ DATADIR,
                         0,
-                        "data",
+                        "D",
                         "data-dir",
                         TestVtkmArg::Required,
-                        "  --data-dir, -data "
+                        "  --data-dir, -D "
                         "<data-dir-path> \tPath to the "
                         "base data directory in the VTK-m "
                         "src dir." });
       usage.push_back({ BASELINEDIR,
                         0,
-                        "baseline",
+                        "B",
                         "baseline-dir",
                         TestVtkmArg::Required,
-                        "  --baseline-dir, -b "
+                        "  --baseline-dir, -B "
                         "<baseline-dir-path> "
                         "\tPath to the base dir "
                         "for regression test "
