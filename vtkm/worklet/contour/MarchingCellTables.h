@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_ContourTable_h
-#define vtk_m_ContourTable_h
+#ifndef vtk_m_MarchingCellTables_h
+#define vtk_m_MarchingCellTables_h
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
@@ -20,7 +20,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace internal
+namespace marching_cells
 {
 
 // clang-format off
@@ -626,4 +626,4 @@ private:
 }
 }
 }
-#endif // vtk_m_ContourTable_h
+#endif // vtk_m_MarchingCellTables_h
