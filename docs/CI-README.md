@@ -5,7 +5,6 @@ Gitlab CI
 # High level view
 1. Kitware Gitlab CI
     - Why pipelines
-    - Existing build and test pipelines
     - Gitlab runner tags
 
 2. How to use docker builders locally
@@ -16,7 +15,6 @@ Gitlab CI
 3. How to Add/Update Kitware Gitlab CI
     - How to add a new builder
     - How to add a new tester
-    - Docker image structure
     - How to update an existing docker image
 
 4. ECP OSTI CI
@@ -37,22 +35,15 @@ GitLab CI/CD is configured by a file called `.gitlab-ci.yml` located at the root
 The scripts set in this file are executed by the [GitLab Runners](https://docs.gitlab.com/runner/) associated with VTK-m.
 
 ## Why pipelines
-How this separates our the build and test components of the pipeline
 
-Pipelines are the top-level component of continuous integration, delivery, and deployment.
+Pipelines are the top-level component of continuous integration. For VTK-m the pipeline contains build and test stages, with the possibilty of adding subsequent stages such as coverage, or memory checking.
 
-Pipelines comprise:
+Decomposing the build and test into separate components comes with some significant benifits for VTK-m developers.
+The most impactful change is that we now have the ability to compile VTK-m on dedicated 'compilation' machines and
+test on machines with less memory or an older CPU improving turnaround time. Additionally since we are heavily
+leveraging docker, VTK-m build stages can be better load balanced across the set of builders as we don't have
+a tight coupling between a machine and build configuration.
 
-Jobs that define what to run. For example, code compilation or test runs.
-Stages that define when and how to run. For example, that tests run only after code compilation.
-Multiple jobs in the same stage are executed by Runners in parallel, if there are enough concurrent Runners.
-
-If all the jobs in a stage:
-
-Succeed, the pipeline moves on to the next stage.
-Fail, the next stage is not (usually) executed and the pipeline ends early.
-
-## Existing build and test pipelines
 ## Gitlab runner tags
 
 Current gitlab runner tags for VTK-m are:
@@ -87,28 +78,35 @@ Current gitlab runner tags for VTK-m are:
 
 # How to Add/Update Kitware Gitlab CI
 
-## How to add a new builder
+Adding new build or test stages is necessary when a given combination of compiler, platform,
+and VTK-m options isn't already captured by existing builders. Each definition is composed via 3 components; tags, variables, and extends.
 
-Adding builders is necessary when a given combination of compiler, platform,
-and VTK-m options isn't already captured by existing builders.
+Tags are used to by gitlab-ci to match a given build to a set of possible execution locations.
+Therefore we encode information such as we require docker or the linux kernel into tags.
+The full set of VTK-m tags each meaning are found under the `runner tags` section of the document.
+
+Extends is used to compose the execution enviornment of the builder. Basically this means
+setting up the correct build/test enviornment and specifying the CMake scripts that need
+to be executed. So a linux docker based builder would extend the docker image they want,
+plus `.cmake_build_linux`. A MacOS builder would extend `.cmake_build_macos`.
+
+Variables control stage specific information such as runtime enviornment variables,
+or VTK-m CMake options.
+
+## How to add a new builder
 
 Each builder definition is placed inside the respective OS `yml` file located in
 `.gitlab/ci/`. Therefore if you are adding a builder that will run on Ubuntu 20.04 it
 would go into `.gitlab/ci/ubuntu2004.yml`.
 
-As each builder tests a given set of flags, we need to encode them in the yml definition.
-This information is encoded via 3 ways; tags, variables, and extends.
+Variables are used to control the following components:
 
-Tags are used to by gitlab-ci to match a given build to a set of possible execution locations.
-Therefore we encode information such as we require docker or the linux kernel into tags.
-The full set of VTK-m tags each meaning are found under the `Builder tags` section of the document.
+    - Compiler
+    - VTK-m CMake Options
+    - Static / Shared
+    - Release / Debug / MinSizeRel
 
-Extends is used to compose the actual execution component of the builder with any information.
-So a linux docker based builder would extend the docker image they want, plus `.cmake_build_linux`. A MacOS builder would extend `.cmake_build_macos`.
-
-
-Variables are used to
-The defitinon of the builder would look roughly like
+An example defitinon of a builder would look like:
 ```yml
 build:ubuntu2004_$<compiler>:
   tags:
@@ -152,7 +150,37 @@ files.
 ```
 
 ## How to add a new tester
-## Docker image structure
+
+Each test definition is placed inside the respective OS `yml` file located in
+`.gitlab/ci/`. Therefore if you are adding a builder that will run on Ubuntu 20.04 it
+would go into `.gitlab/ci/ubuntu2004.yml`.
+
+The primary difference between tests and build definitions are that tests have
+the dependencies and needs sections. These are required as by default
+gitlab-ci will not run any test stage before ALL the build stages have
+completed.
+
+Variables for testers are currently only used for the following things:
+    - Allowing OpenMPI to run as root
+
+An example defitinon of a tester would look like:
+```yml
+test:ubuntu2004_$<compiler>:
+  tags:
+    - test
+    - cuda-rt
+    - turing
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu2004_cuda
+    - .cmake_test_linux
+  dependencies:
+    - build:ubuntu2004_$<compiler>
+  needs:
+    - build:ubuntu2004_$<compiler>
+```
 
 ## How to update an existing docker image
 
@@ -200,4 +228,3 @@ on the machine so that we maximimze compiler coverage.
 
 ## Issues
 Currently these builders don't report back to the VTK-m CDash instance.
-
