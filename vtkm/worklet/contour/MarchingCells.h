@@ -597,19 +597,19 @@ struct GenerateNormals
 };
 
 //----------------------------------------------------------------------------
-template <typename ValueType,
-          typename CellSetType,
+template <typename CellSetType,
           typename CoordinateSystem,
+          typename ValueType,
           typename StorageTagField,
           typename StorageTagVertices,
           typename StorageTagNormals,
           typename CoordinateType,
           typename NormalType>
 vtkm::cont::CellSetSingleType<> execute(
-  const ValueType* isovalues,
-  const vtkm::Id numIsoValues,
   const CellSetType& cells,
   const CoordinateSystem& coordinateSystem,
+  const ValueType* isovalues,
+  const vtkm::Id numIsoValues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
   vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
@@ -719,14 +719,14 @@ vtkm::cont::CellSetSingleType<> execute(
   //now that the vertices have been generated we can generate the normals
   if (sharedState.GenerateNormals)
   {
-    vtkm::cont::CastAndCall(coordinateSystem,
-                            GenerateNormals{},
-                            invoker,
-                            normals,
-                            inputField,
-                            cells,
-                            sharedState.InterpolationEdgeIds,
-                            sharedState.InterpolationWeights);
+    GenerateNormals genNorms;
+    genNorms(coordinateSystem,
+             invoker,
+             normals,
+             inputField,
+             cells,
+             sharedState.InterpolationEdgeIds,
+             sharedState.InterpolationWeights);
   }
 
   return outputCells;

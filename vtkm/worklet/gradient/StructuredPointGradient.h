@@ -86,9 +86,16 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     auto dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
     auto dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
+#if (defined(VTKM_CUDA) && defined(VTKM_GCC))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
     outputGradient[0] = static_cast<OT>(dx * r[0]);
     outputGradient[1] = static_cast<OT>(dy * r[1]);
     outputGradient[2] = static_cast<OT>(dz * r[2]);
+#if (defined(VTKM_CUDA) && defined(VTKM_GCC))
+#pragma GCC diagnostic pop
+#endif
   }
 
   //we need to pass the coordinates into this function, and instead
