@@ -98,7 +98,7 @@ public:
   void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
                 vtkm::Vec3f& parametric,
-                const vtkm::exec::FunctorBase& worklet) const override
+                const vtkm::exec::FunctorBase* worklet) const override
   {
     cellId = -1;
     vtkm::Id nodeIndex = 0;
@@ -139,7 +139,7 @@ private:
                  vtkm::Id& cellId,
                  vtkm::Id nodeIndex,
                  vtkm::Vec3f& parametric,
-                 const vtkm::exec::FunctorBase& worklet) const
+                 const vtkm::exec::FunctorBase* worklet) const
   {
     VTKM_ASSERT(state == FindCellState::EnterNode);
 
@@ -224,7 +224,7 @@ private:
   VTKM_EXEC vtkm::Id FindInLeaf(const vtkm::Vec3f& point,
                                 vtkm::Vec3f& parametric,
                                 const vtkm::exec::CellLocatorBoundingIntervalHierarchyNode& node,
-                                const vtkm::exec::FunctorBase& worklet) const
+                                const vtkm::exec::FunctorBase* worklet) const
   {
     using IndicesType = typename CellSetPortal::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
@@ -246,7 +246,7 @@ private:
                                       vtkm::Vec3f& parametric,
                                       CellShapeTag cellShape,
                                       const CoordsType& cellPoints,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      const vtkm::exec::FunctorBase* worklet)
   {
     bool success = false;
     parametric = vtkm::exec::WorldCoordinatesToParametricCoordinates(

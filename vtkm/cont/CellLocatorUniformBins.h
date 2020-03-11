@@ -111,7 +111,7 @@ private:
   VTKM_EXEC static bool PointInsideCell(FloatVec3 point,
                                         CellShapeTag cellShape,
                                         CoordsType cellPoints,
-                                        const vtkm::exec::FunctorBase& worklet,
+                                        const vtkm::exec::FunctorBase* worklet,
                                         FloatVec3& parametricCoordinates)
   {
     auto bounds = vtkm::internal::cl_uniform_bins::ComputeCellBounds(cellPoints);
@@ -160,7 +160,7 @@ public:
   void FindCell(const FloatVec3& point,
                 vtkm::Id& cellId,
                 FloatVec3& parametric,
-                const vtkm::exec::FunctorBase& worklet) const override
+                const vtkm::exec::FunctorBase* worklet) const override
   {
     using namespace vtkm::internal::cl_uniform_bins;
 

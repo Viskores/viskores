@@ -98,9 +98,8 @@ public:
   void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
                 vtkm::Vec3f& parametric,
-                const vtkm::exec::FunctorBase& worklet) const override
+                const vtkm::exec::FunctorBase* vtkmNotUsed(worklet)) const override
   {
-    (void)worklet; //suppress unused warning
     if (!this->IsInside(point))
     {
       cellId = -1;

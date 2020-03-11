@@ -32,7 +32,22 @@ public:
   virtual void FindCell(const vtkm::Vec3f& point,
                         vtkm::Id& cellId,
                         vtkm::Vec3f& parametric,
-                        const vtkm::exec::FunctorBase& worklet) const = 0;
+                        const vtkm::exec::FunctorBase* worklet) const = 0;
+
+  VTKM_EXEC
+  void FindCell(const vtkm::Vec3f& point,
+                vtkm::Id& cellId,
+                vtkm::Vec3f& parametric,
+                const vtkm::exec::FunctorBase& worklet) const
+  {
+    this->FindCell(point, cellId, parametric, &worklet);
+  }
+
+  VTKM_EXEC
+  void FindCell(const vtkm::Vec3f& point, vtkm::Id& cellId, vtkm::Vec3f& parametric) const
+  {
+    this->FindCell(point, cellId, parametric, nullptr);
+  }
 };
 
 } // namespace exec

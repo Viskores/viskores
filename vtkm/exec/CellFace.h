@@ -140,12 +140,41 @@ public:
 } // namespace detail
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(CellShapeTag shape,
-                                                                const vtkm::exec::FunctorBase&)
+static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase* = nullptr)
 {
   (void)shape; //C4100 false positive workaround
   detail::CellFaceTables table;
   return table.NumFaces(shape.Id);
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  return CellFaceNumberOfFaces(shape, &worklet);
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase* worklet = nullptr)
+{
+  VTKM_ASSUME(faceIndex >= 0);
+  VTKM_ASSUME(faceIndex < detail::CellFaceTables::MAX_NUM_FACES);
+  if (faceIndex >= vtkm::exec::CellFaceNumberOfFaces(shape, worklet))
+  {
+    if (worklet)
+    {
+      worklet->RaiseError("Invalid face number.");
+    }
+    return 0;
+  }
+  detail::CellFaceTables table;
+  return table.NumPointsInFace(shape.Id, faceIndex);
 }
 
 template <typename CellShapeTag>
@@ -154,21 +183,13 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
   CellShapeTag shape,
   const vtkm::exec::FunctorBase& worklet)
 {
-  VTKM_ASSUME(faceIndex >= 0);
-  VTKM_ASSUME(faceIndex < detail::CellFaceTables::MAX_NUM_FACES);
-  if (faceIndex >= vtkm::exec::CellFaceNumberOfFaces(shape, worklet))
-  {
-    worklet.RaiseError("Invalid face number.");
-    return 0;
-  }
-  detail::CellFaceTables table;
-  return table.NumPointsInFace(shape.Id, faceIndex);
+  return CellFaceNumberOfPoints(faceIndex, shape, &worklet);
 }
 
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
                                                   CellShapeTag shape,
-                                                  const vtkm::exec::FunctorBase& worklet)
+                                                  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   VTKM_ASSUME(faceIndex >= 0);
   VTKM_ASSUME(faceIndex < detail::CellFaceTables::MAX_NUM_FACES);
@@ -184,10 +205,19 @@ static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
 }
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(vtkm::IdComponent pointIndex,
-                                                             vtkm::IdComponent faceIndex,
-                                                             CellShapeTag shape,
-                                                             const vtkm::exec::FunctorBase& worklet)
+static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
+                                                  CellShapeTag shape,
+                                                  const vtkm::exec::FunctorBase& worklet)
+{
+  return CellFaceShape(faceIndex, shape, &worklet);
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(
+  vtkm::IdComponent pointIndex,
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   vtkm::IdComponent numPointsInFace = vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
   if (numPointsInFace < 1)
@@ -199,6 +229,15 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(vtkm::IdComponent p
 
   detail::CellFaceTables table;
   return table.PointsInFace(shape.Id, faceIndex, pointIndex);
+}
+
+template <typename CellShapeTag>
+static inline VTKM_EXEC vtkm::IdComponent CellFaceLocalIndex(vtkm::IdComponent pointIndex,
+                                                             vtkm::IdComponent faceIndex,
+                                                             CellShapeTag shape,
+                                                             const vtkm::exec::FunctorBase& worklet)
+{
+  return CellFaceLocalIndex(pointIndex, faceIndex, shape, &worklet);
 }
 
 /// \brief Returns a canonical identifier for a cell face
@@ -216,7 +255,7 @@ static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
   vtkm::IdComponent faceIndex,
   CellShapeTag shape,
   const GlobalPointIndicesVecType& globalPointIndicesVec,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   const vtkm::IdComponent numPointsInFace =
     vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
@@ -283,6 +322,16 @@ static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
   }
 
   return sorted;
+}
+
+template <typename CellShapeTag, typename GlobalPointIndicesVecType>
+static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const GlobalPointIndicesVecType& globalPointIndicesVec,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  return CellFaceCanonicalId(faceIndex, shape, globalPointIndicesVec, &worklet);
 }
 }
 } // namespace vtkm::exec

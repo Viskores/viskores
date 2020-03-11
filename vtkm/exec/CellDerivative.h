@@ -39,7 +39,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const WorldCoordType& worldCoordinateValues,
   const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
   vtkm::CellShapeTagGeneric shape,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   vtkm::Vec<typename FieldVecType::ComponentType, 3> result;
   switch (shape.Id)
@@ -48,7 +48,10 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
       result = CellDerivative(
         pointFieldValues, worldCoordinateValues, parametricCoords, CellShapeTag(), worklet));
     default:
-      worklet.RaiseError("Unknown cell shape sent to derivative.");
+      if (worklet)
+      {
+        worklet->RaiseError("Unknown cell shape sent to derivative.");
+      }
       return vtkm::Vec<typename FieldVecType::ComponentType, 3>();
   }
   return result;
@@ -67,7 +70,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeImpl(
   const FieldVecType& field,
   const WorldCoordType& wCoords,
   const ParametricCoordType& pcoords,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet)
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == tag.numberOfPoints());
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == tag.numberOfPoints());
@@ -85,7 +88,10 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeImpl(
                                 derivs[2]);
   if (status != lcl::ErrorCode::SUCCESS)
   {
-    worklet.RaiseError(lcl::errorString(status));
+    if (worklet)
+    {
+      worklet->RaiseError(lcl::errorString(status));
+    }
     derivs = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
   }
 
@@ -103,10 +109,10 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   CellShapeTag shape,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   return internal::CellDerivativeImpl(
-    vtkm::internal::make_VtkcCellShapeTag(shape), field, wCoords, pcoords, worklet);
+    vtkm::internal::make_LclCellShapeTag(shape), field, wCoords, pcoords, worklet);
 }
 
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
@@ -115,9 +121,12 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const WorldCoordType&,
   const vtkm::Vec<ParametricCoordType, 3>&,
   vtkm::CellShapeTagEmpty,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
-  worklet.RaiseError("Attempted to take derivative in empty cell.");
+  if (worklet)
+  {
+    worklet->RaiseError("Attempted to take derivative in empty cell.");
+  }
   return vtkm::Vec<typename FieldVecType::ComponentType, 3>();
 }
 
@@ -127,7 +136,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagPolyLine,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT(numPoints >= 1);
@@ -165,7 +174,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagPolygon,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == wCoords.GetNumberOfComponents());
 
@@ -191,7 +200,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const vtkm::VecAxisAlignedPointCoordinates<2>& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagQuad,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   return internal::CellDerivativeImpl(lcl::Pixel{}, field, wCoords, pcoords, worklet);
 }
@@ -202,9 +211,23 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const vtkm::VecAxisAlignedPointCoordinates<3>& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagHexahedron,
-  const vtkm::exec::FunctorBase& worklet)
+  const vtkm::exec::FunctorBase* worklet = nullptr)
 {
   return internal::CellDerivativeImpl(lcl::Voxel{}, field, wCoords, pcoords, worklet);
+}
+
+template <typename FieldVecType,
+          typename WorldCoordType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  return CellDerivative(field, wCoords, pcoords, shape, &worklet);
 }
 }
 } // namespace vtkm::exec
