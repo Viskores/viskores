@@ -476,11 +476,10 @@ class RayBumper : public vtkm::worklet::WorkletMapField
 private:
   CellIntersector<255> Intersector;
   vtkm::Float64 BumpDistance;
-  const vtkm::UInt8 FailureStatus; // the status to assign ray if we fail to find the intersection
+
 public:
-  RayBumper(vtkm::Float64 bumpDistance, vtkm::UInt8 failureStatus = RAY_ABANDONED)
+  RayBumper(vtkm::Float64 bumpDistance)
     : BumpDistance(bumpDistance)
-    , FailureStatus(failureStatus)
   {
   }
 
@@ -515,76 +514,86 @@ public:
       return;
     }
     const FloatType bumpDistance = static_cast<FloatType>(BumpDistance);
-    enterDistance += bumpDistance;
-    vtkm::Vec<FloatType, 3> location = origin + rdir * (enterDistance);
+    FloatType query_distance = enterDistance + bumpDistance;
 
-    vtkm::Id cellId;
-    vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-    locator->FindCell(location, cellId, pcoords, *this);
-    currentCell = cellId;
-    if (currentCell == -1)
+    bool valid_cell = false;
+
+    vtkm::Id cellId = currentCell;
+
+    while (!valid_cell)
     {
-      rayStatus = RAY_EXITED_MESH;
-      return;
-    }
-
-    FloatType xpoints[8];
-    FloatType ypoints[8];
-    FloatType zpoints[8];
-    vtkm::Id cellConn[8];
-    FloatType distances[6];
-
-    const vtkm::Int32 numIndices = meshConn.GetCellIndices(cellConn, currentCell);
-    //load local cell data
-    for (int i = 0; i < numIndices; ++i)
-    {
-      BOUNDS_CHECK(vertices, cellConn[i]);
-      vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
-      xpoints[i] = point[0];
-      ypoints[i] = point[1];
-      zpoints[i] = point[2];
-    }
-
-    const vtkm::UInt8 cellShape = meshConn.GetCellShape(currentCell);
-    Intersector.IntersectCell(xpoints, ypoints, zpoints, rdir, origin, distances, cellShape);
-
-    CellTables tables;
-    const vtkm::Int32 numFaces = tables.FaceLookUp(tables.CellTypeLookUp(cellShape), 1);
-
-    //vtkm::Int32 minFace = 6;
-    vtkm::Int32 maxFace = -1;
-    FloatType minDistance = static_cast<FloatType>(1e32);
-    FloatType maxDistance = static_cast<FloatType>(-1);
-    int hitCount = 0;
-    for (int i = 0; i < numFaces; ++i)
-    {
-      FloatType dist = distances[i];
-
-      if (dist != -1)
+      // push forward and look for a new cell
+      while (cellId == currentCell)
       {
-        hitCount++;
-        if (dist < minDistance)
+        query_distance += bumpDistance;
+        vtkm::Vec<FloatType, 3> location = origin + rdir * (query_distance);
+        vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
+        locator->FindCell(location, cellId, pcoords, *this);
+      }
+
+      currentCell = cellId;
+      if (currentCell == -1)
+      {
+        rayStatus = RAY_EXITED_MESH;
+        return;
+      }
+
+      FloatType xpoints[8];
+      FloatType ypoints[8];
+      FloatType zpoints[8];
+      vtkm::Id cellConn[8];
+      FloatType distances[6];
+
+      const vtkm::Int32 numIndices = meshConn.GetCellIndices(cellConn, currentCell);
+      //load local cell data
+      for (int i = 0; i < numIndices; ++i)
+      {
+        BOUNDS_CHECK(vertices, cellConn[i]);
+        vtkm::Vec<FloatType, 3> point = vtkm::Vec<FloatType, 3>(vertices.Get(cellConn[i]));
+        xpoints[i] = point[0];
+        ypoints[i] = point[1];
+        zpoints[i] = point[2];
+      }
+
+      const vtkm::UInt8 cellShape = meshConn.GetCellShape(currentCell);
+      Intersector.IntersectCell(xpoints, ypoints, zpoints, rdir, origin, distances, cellShape);
+
+      CellTables tables;
+      const vtkm::Int32 numFaces = tables.FaceLookUp(tables.CellTypeLookUp(cellShape), 1);
+
+      //vtkm::Int32 minFace = 6;
+      vtkm::Int32 maxFace = -1;
+      FloatType minDistance = static_cast<FloatType>(1e32);
+      FloatType maxDistance = static_cast<FloatType>(-1);
+      int hitCount = 0;
+      for (int i = 0; i < numFaces; ++i)
+      {
+        FloatType dist = distances[i];
+
+        if (dist != -1)
         {
-          minDistance = dist;
-          //minFace = i;
-        }
-        if (dist >= maxDistance)
-        {
-          maxDistance = dist;
-          maxFace = i;
+          hitCount++;
+          if (dist < minDistance)
+          {
+            minDistance = dist;
+            //minFace = i;
+          }
+          if (dist >= maxDistance)
+          {
+            maxDistance = dist;
+            maxFace = i;
+          }
         }
       }
-    }
-    if (minDistance >= maxDistance)
-    {
-      rayStatus = FailureStatus;
-    }
-    else
-    {
-      enterDistance = minDistance;
-      exitDistance = maxDistance;
-      enterFace = maxFace;
-      rayStatus = RAY_ACTIVE; //re-activate ray
+
+      if (minDistance < maxDistance)
+      {
+        enterDistance = minDistance;
+        exitDistance = maxDistance;
+        enterFace = maxFace;
+        rayStatus = RAY_ACTIVE; //re-activate ray
+        valid_cell = true;
+      }
     }
 
   } //operator
