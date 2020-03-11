@@ -104,9 +104,7 @@ public:
   {
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     connectivity.Allocate(connectivityLength);
-    const auto offsetsTrim =
-      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-    auto connWrap = vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim);
+    auto connWrap = vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets);
     vtkm::cont::Invoker{ Device{} }(WriteConnectivity{}, cs, connWrap);
     return connectivity;
   }

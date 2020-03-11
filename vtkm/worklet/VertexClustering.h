@@ -122,8 +122,9 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
 
 struct VertexClustering
 {
-  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                                            vtkm::cont::ArrayHandle<vtkm::Id>>;
+  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<
+    vtkm::cont::ArrayHandleView<vtkm::cont::ArrayHandle<vtkm::Id>>,
+    vtkm::cont::ArrayHandle<vtkm::Id>>;
 
   struct GridInfo
   {
@@ -375,10 +376,15 @@ public:
       vtkm::worklet::Keys<vtkm::Id> keys;
       keys.BuildArrays(pointCidArray, vtkm::worklet::KeysSortType::Stable);
 
+      // Create a View with all the keys offsets but the last element since
+      // BuildArrays uses ScanExtended
+      auto keysView = vtkm::cont::make_ArrayHandleView(
+        keys.GetOffsets(), 0, keys.GetOffsets().GetNumberOfValues() - 1);
+
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
       this->PointIdMap =
-        vtkm::cont::make_ArrayHandlePermutation(keys.GetOffsets(), keys.GetSortedValuesMap());
+        vtkm::cont::make_ArrayHandlePermutation(keysView, keys.GetSortedValuesMap());
 
       // Compute representative points from each cluster (may not match the
       // PointIdMap indexing)
