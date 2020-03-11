@@ -35,32 +35,26 @@ void RenderTests()
   colorTable.AddPointAlpha(0.0, .01f);
   colorTable.AddPointAlpha(1.0, .01f);
 
-  vtkm::cont::DataSet rectDS, regDS;
+  vtkm::cont::DataSet rectDS, unsDS;
   std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
-  std::string rectfname = basePath + "/magField.vtk";
-  std::string regfname = basePath + "/magField.vtk";
+  std::string rectfname = basePath + "/rectilinear/noise.vtk";
   vtkm::io::reader::VTKDataSetReader rectReader(rectfname);
-  vtkm::io::reader::VTKDataSetReader regReader(regfname);
 
   try
   {
     rectDS = rectReader.ReadDataSet();
-    regDS = regReader.ReadDataSet();
   }
   catch (vtkm::io::ErrorIO& e)
   {
     std::string message("Error reading: ");
     message += rectfname;
-    message += ", and ";
-    message += regfname;
     message += ", ";
     message += e.GetMessage();
 
     VTKM_TEST_FAIL(message.c_str());
   }
 
-  vtkm::rendering::testing::Render<M, C, V3>(regDS, "vec_magnitude", colorTable, "reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(rectDS, "vec_magnitude", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(rectDS, "hardyglobal", colorTable, "rect3D.pnm");
 }
 
 } //namespace

@@ -14,8 +14,6 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/internal/OptionParser.h>
-#include <vtkm/cont/internal/OptionParser.h>
-#include <vtkm/cont/internal/OptionParser.h>
 #include <vtkm/testing/Testing.h>
 #include <vtkm/thirdparty/diy/Configure.h>
 
@@ -40,8 +38,8 @@ namespace testing
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR, // base dir containing test data files
-  IMGDIR   // base dir for saving regression test images
+  DATADIR,    // base dir containing test data files
+  BASELINEDIR // base dir for regression test images
 };
 
 struct TestVtkmArg : public opt::Arg
@@ -100,11 +98,11 @@ struct TestVtkmArg : public opt::Arg
 struct Testing
 {
 public:
-  static VTKM_CONT const std::string GetTestDataBasePath() { return setAndGetTestDataBasePath(); }
+  static VTKM_CONT const std::string GetTestDataBasePath() { return SetAndGetTestDataBasePath(); }
 
   static VTKM_CONT const std::string GetRegressionTestImageBasePath()
   {
-    return setAndGetRegressionImageBasePath();
+    return SetAndGetRegressionImageBasePath();
   }
 
   template <class Func>
@@ -177,7 +175,7 @@ public:
   }
 
 private:
-  static std::string& setAndGetTestDataBasePath(std::string path = "")
+  static std::string& SetAndGetTestDataBasePath(std::string path = "")
   {
     static std::string TestDataBasePath;
 
@@ -187,7 +185,7 @@ private:
     return TestDataBasePath;
   }
 
-  static std::string& setAndGetRegressionImageBasePath(std::string path = "")
+  static std::string& SetAndGetRegressionImageBasePath(std::string path = "")
   {
     static std::string RegressionTestImageBasePath;
 
@@ -212,7 +210,7 @@ private:
                         "<data-dir-path> \tPath to the "
                         "base data directory in the VTK-m "
                         "src dir." });
-      usage.push_back({ IMGDIR,
+      usage.push_back({ BASELINEDIR,
                         0,
                         "baseline",
                         "baseline-dir",
@@ -229,7 +227,7 @@ private:
 
       // Remove argv[0] (executable name) if present:
       int vtkmArgc = argc > 0 ? argc - 1 : 0;
-      char** vtkmArgv = vtkmArgc > 0 ? argv + 1 : argv;
+      char** vtkmArgv = argc > 0 ? argv + 1 : argv;
 
       opt::Stats stats(usage.data(), vtkmArgc, vtkmArgv);
       std::unique_ptr<opt::Option[]> options{ new opt::Option[stats.options_max] };
@@ -244,34 +242,24 @@ private:
 
       if (options[DATADIR])
       {
-        setAndGetTestDataBasePath(options[DATADIR].arg);
+        SetAndGetTestDataBasePath(options[DATADIR].arg);
       }
 
-      if (options[IMGDIR])
+      if (options[BASELINEDIR])
       {
-        setAndGetRegressionImageBasePath(options[IMGDIR].arg);
+        SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
       }
 
       for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
       {
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    "Unknown option to internal Initialize: " << opt->name << "\n");
-        if ((InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
-        {
-          std::cerr << "Unknown internal option: " << opt->name << std::endl;
-          exit(1);
-        }
       }
 
       for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
       {
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
-        if ((InitializeOptions::ErrorOnBadArgument) != InitializeOptions::None)
-        {
-          std::cerr << "Unknown internal argument: " << parse.nonOption(nonOpt) << std::endl;
-          exit(1);
-        }
       }
     }
   }
