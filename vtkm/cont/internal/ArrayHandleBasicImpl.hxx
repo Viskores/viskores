@@ -157,8 +157,10 @@ typename ArrayHandle<T, StorageTagBasic>::ReadPortalType
 ArrayHandle<T, StorageTagBasic>::ReadPortal() const
 {
   LockType lock = this->GetLock();
-  vtkm::cont::Token token;
-  this->Internals->WaitToRead(lock, token);
+  {
+    vtkm::cont::Token token;
+    this->Internals->WaitToRead(lock, token);
+  }
   this->SyncControlArray(lock);
   this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
@@ -166,12 +168,8 @@ ArrayHandle<T, StorageTagBasic>::ReadPortal() const
 
   StorageType* privStorage =
     static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
-  token.Attach(this->Internals,
-               this->Internals->Internals->GetReadCount(lock),
-               lock,
-               &this->Internals->Internals->ConditionVariable);
-  return ArrayHandle<T, StorageTagBasic>::ReadPortalType(std::move(token),
-                                                         privStorage->GetPortalConst());
+  return ArrayHandle<T, StorageTagBasic>::ReadPortalType(
+    this->Internals->Internals->GetControlArrayValidPointer(lock), privStorage->GetPortalConst());
 }
 
 template <typename T>
@@ -179,8 +177,10 @@ typename ArrayHandle<T, StorageTagBasic>::WritePortalType
 ArrayHandle<T, StorageTagBasic>::WritePortal() const
 {
   LockType lock = this->GetLock();
-  vtkm::cont::Token token;
-  this->Internals->WaitToWrite(lock, token);
+  {
+    vtkm::cont::Token token;
+    this->Internals->WaitToWrite(lock, token);
+  }
   this->SyncControlArray(lock);
   this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
@@ -192,12 +192,8 @@ ArrayHandle<T, StorageTagBasic>::WritePortal() const
   this->ReleaseResourcesExecutionInternal(lock);
   StorageType* privStorage =
     static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
-  token.Attach(this->Internals,
-               this->Internals->Internals->GetWriteCount(lock),
-               lock,
-               &this->Internals->Internals->ConditionVariable);
-  return ArrayHandle<T, StorageTagBasic>::WritePortalType(std::move(token),
-                                                          privStorage->GetPortal());
+  return ArrayHandle<T, StorageTagBasic>::WritePortalType(
+    this->Internals->Internals->GetControlArrayValidPointer(lock), privStorage->GetPortal());
 }
 
 template <typename T>

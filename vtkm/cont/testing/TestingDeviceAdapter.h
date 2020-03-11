@@ -2704,7 +2704,6 @@ private:
       portal.SetWord(2, 0x00100000ul);
       portal.SetWord(8, 0x00100010ul);
       portal.SetWord(11, 0x10000000ul);
-      portal.Detach();
       testIndexArray(bits);
     }
   }
@@ -2795,7 +2794,6 @@ private:
       portal.SetWord(2, 0x00100000ul);
       portal.SetWord(8, 0x00100010ul);
       portal.SetWord(11, 0x10000000ul);
-      portal.Detach();
       verifyPopCount(bits);
     }
   }
