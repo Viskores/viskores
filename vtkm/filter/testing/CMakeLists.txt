@@ -16,6 +16,8 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
+  UnitTestContourFilterCustomPolicy.cxx
+  UnitTestContourFilterNormals.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -29,7 +31,8 @@ set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
-  UnitTestGradient.cxx
+  UnitTestGradientExplicit.cxx
+  UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
