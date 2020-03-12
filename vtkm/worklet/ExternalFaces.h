@@ -288,8 +288,8 @@ struct ExternalFaces
 
       vtkm::IdComponent faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
 
-      const vtkm::IdComponent numFacePoints =
-        vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, *this);
+      vtkm::IdComponent numFacePoints;
+      vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numFacePoints);
       VTKM_ASSERT(numFacePoints == faceConnectivity.GetNumberOfComponents());
 
       typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(inputIndex);
@@ -299,8 +299,9 @@ struct ExternalFaces
 
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
-        faceConnectivity[facePointIndex] =
-          inCellIndices[vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, *this)];
+        vtkm::IdComponent localFaceIndex;
+        vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, localFaceIndex);
+        faceConnectivity[facePointIndex] = inCellIndices[localFaceIndex];
       }
     }
 
@@ -314,13 +315,13 @@ struct ExternalFaces
   {
   public:
     using ControlSignature = void(CellSetIn inCellSet, FieldOut numFacesInCell);
-    using ExecutionSignature = _2(CellShape);
+    using ExecutionSignature = void(CellShape, _2);
     using InputDomain = _1;
 
     template <typename CellShapeTag>
-    VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape) const
+    VTKM_EXEC void operator()(CellShapeTag shape, vtkm::IdComponent& numFaces) const
     {
-      return vtkm::exec::CellFaceNumberOfFaces(shape, *this);
+      vtkm::exec::CellFaceNumberOfFaces(shape, numFaces);
     }
   };
 
@@ -346,7 +347,9 @@ struct ExternalFaces
                               vtkm::Id inputIndex,
                               vtkm::IdComponent visitIndex) const
     {
-      faceHash = vtkm::Hash(vtkm::exec::CellFaceCanonicalId(visitIndex, shape, cellNodeIds, *this));
+      vtkm::Id3 faceId;
+      vtkm::exec::CellFaceCanonicalId(visitIndex, shape, cellNodeIds, faceId);
+      faceHash = vtkm::Hash(faceId);
 
       cellIndex = inputIndex;
       faceIndex = visitIndex;
@@ -384,18 +387,18 @@ struct ExternalFaces
            myIndex < numCellsOnHash - 1; // Don't need to check last face
            myIndex++)
       {
-        vtkm::Id3 myFace =
-          vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
-                                          cellSet.GetCellShape(originCells[myIndex]),
-                                          cellSet.GetIndices(originCells[myIndex]),
-                                          *this);
+        vtkm::Id3 myFace;
+        vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
+                                        cellSet.GetCellShape(originCells[myIndex]),
+                                        cellSet.GetIndices(originCells[myIndex]),
+                                        myFace);
         for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
         {
-          vtkm::Id3 otherFace =
-            vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
-                                            cellSet.GetCellShape(originCells[otherIndex]),
-                                            cellSet.GetIndices(originCells[otherIndex]),
-                                            *this);
+          vtkm::Id3 otherFace;
+          vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
+                                          cellSet.GetCellShape(originCells[otherIndex]),
+                                          cellSet.GetIndices(originCells[otherIndex]),
+                                          otherFace);
           if (myFace == otherFace)
           {
             // Faces are the same. Must be internal. Remove 2, one for each face. We don't have to
@@ -421,8 +424,7 @@ private:
   VTKM_EXEC static vtkm::IdComponent FindUniqueFace(const CellSetType& cellSet,
                                                     const OriginCellsType& originCells,
                                                     const OriginFacesType& originFaces,
-                                                    vtkm::IdComponent visitIndex,
-                                                    const vtkm::exec::FunctorBase* self)
+                                                    vtkm::IdComponent visitIndex)
   {
     vtkm::IdComponent numCellsOnHash = originCells.GetNumberOfComponents();
     VTKM_ASSERT(originFaces.GetNumberOfComponents() == numCellsOnHash);
@@ -433,18 +435,19 @@ private:
     while (true)
     {
       VTKM_ASSERT(myIndex < numCellsOnHash);
-      vtkm::Id3 myFace = vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
-                                                         cellSet.GetCellShape(originCells[myIndex]),
-                                                         cellSet.GetIndices(originCells[myIndex]),
-                                                         *self);
+      vtkm::Id3 myFace;
+      vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
+                                      cellSet.GetCellShape(originCells[myIndex]),
+                                      cellSet.GetIndices(originCells[myIndex]),
+                                      myFace);
       bool foundPair = false;
       for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
       {
-        vtkm::Id3 otherFace =
-          vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
-                                          cellSet.GetCellShape(originCells[otherIndex]),
-                                          cellSet.GetIndices(originCells[otherIndex]),
-                                          *self);
+        vtkm::Id3 otherFace;
+        vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
+                                        cellSet.GetCellShape(originCells[otherIndex]),
+                                        cellSet.GetIndices(originCells[otherIndex]),
+                                        otherFace);
         if (myFace == otherFace)
         {
           // Faces are the same. Must be internal.
@@ -482,7 +485,7 @@ public:
                                   ValuesIn originCells,
                                   ValuesIn originFaces,
                                   ReducedValuesOut numPointsInFace);
-    using ExecutionSignature = _5(_2, _3, _4, VisitIndex);
+    using ExecutionSignature = void(_2, _3, _4, VisitIndex, _5);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -495,16 +498,17 @@ public:
     }
 
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
-    VTKM_EXEC vtkm::IdComponent operator()(const CellSetType& cellSet,
-                                           const OriginCellsType& originCells,
-                                           const OriginFacesType& originFaces,
-                                           vtkm::IdComponent visitIndex) const
+    VTKM_EXEC void operator()(const CellSetType& cellSet,
+                              const OriginCellsType& originCells,
+                              const OriginFacesType& originFaces,
+                              vtkm::IdComponent visitIndex,
+                              vtkm::IdComponent& numFacePoints) const
     {
       vtkm::IdComponent myIndex =
-        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex, this);
+        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex);
 
-      return vtkm::exec::CellFaceNumberOfPoints(
-        originFaces[myIndex], cellSet.GetCellShape(originCells[myIndex]), *this);
+      vtkm::exec::CellFaceNumberOfPoints(
+        originFaces[myIndex], cellSet.GetCellShape(originCells[myIndex]), numFacePoints);
     }
   };
 
@@ -537,16 +541,16 @@ public:
                               vtkm::Id& cellIdMapOut) const
     {
       const vtkm::IdComponent myIndex =
-        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex, this);
+        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex);
       const vtkm::IdComponent myFace = originFaces[myIndex];
 
 
       typename CellSetType::CellShapeTag shapeIn = cellSet.GetCellShape(originCells[myIndex]);
-      shapeOut = vtkm::exec::CellFaceShape(myFace, shapeIn, *this);
+      vtkm::exec::CellFaceShape(myFace, shapeIn, shapeOut);
       cellIdMapOut = originCells[myIndex];
 
-      const vtkm::IdComponent numFacePoints =
-        vtkm::exec::CellFaceNumberOfPoints(myFace, shapeIn, *this);
+      vtkm::IdComponent numFacePoints;
+      vtkm::exec::CellFaceNumberOfPoints(myFace, shapeIn, numFacePoints);
 
       VTKM_ASSERT(numFacePoints == connectivityOut.GetNumberOfComponents());
 
@@ -554,8 +558,9 @@ public:
 
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
-        connectivityOut[facePointIndex] =
-          inCellIndices[vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, *this)];
+        vtkm::IdComponent localFaceIndex;
+        vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, localFaceIndex);
+        connectivityOut[facePointIndex] = inCellIndices[localFaceIndex];
       }
     }
   };
@@ -570,7 +575,9 @@ public:
     template <typename CellShapeTag>
     VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape) const
     {
-      return !vtkm::exec::CellFaceNumberOfFaces(shape, *this);
+      vtkm::IdComponent numFaces;
+      vtkm::exec::CellFaceNumberOfFaces(shape, numFaces);
+      return !numFaces;
     }
   };
 

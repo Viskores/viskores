@@ -75,15 +75,14 @@ public:
   }
 
   VTKM_EXEC
-  void FindCell(const vtkm::Vec3f& point,
-                vtkm::Id& cellId,
-                vtkm::Vec3f& parametric,
-                const vtkm::exec::FunctorBase* vtkmNotUsed(worklet)) const override
+  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                           vtkm::Id& cellId,
+                           vtkm::Vec3f& parametric) const override
   {
     if (!this->IsInside(point))
     {
       cellId = -1;
-      return;
+      return vtkm::ErrorCode::CellNotFound;
     }
     // Get the Cell Id from the point.
     vtkm::Id3 logicalCell(0, 0, 0);
@@ -111,6 +110,8 @@ public:
     cellId =
       (logicalCell[2] * this->CellDims[1] + logicalCell[1]) * this->CellDims[0] + logicalCell[0];
     parametric = temp - logicalCell;
+
+    return vtkm::ErrorCode::Success;
   }
 
 private:

@@ -60,7 +60,11 @@ public:
                             const PointType& pc,
                             PointType& wc) const
   {
-    wc = vtkm::exec::ParametricCoordinatesToWorldCoordinates(points, pc, cellShape, *this);
+    auto status = vtkm::exec::ParametricCoordinatesToWorldCoordinates(points, pc, cellShape, wc);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+    }
   }
 };
 
@@ -166,7 +170,11 @@ public:
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords) const
   {
-    locator->FindCell(point, cellId, pcoords, *this);
+    vtkm::ErrorCode status = locator->FindCell(point, cellId, pcoords);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+    }
   }
 };
 

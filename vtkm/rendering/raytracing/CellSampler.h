@@ -78,9 +78,8 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     pointsVec.Append(points[i]);
     scalarVec.Append(scalars[i]);
   }
-  bool success = false; // ignored
-  vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    pointsVec, sampleLocation, shapeTag, success);
+  vtkm::Vec<P, 3> pcoords;
+  vtkm::exec::WorldCoordinatesToParametricCoordinates(pointsVec, sampleLocation, shapeTag, pcoords);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -88,7 +87,7 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
   {
     validSample = false;
   }
-  lerpedScalar = vtkm::exec::CellInterpolate(scalarVec, pcoords, shapeTag);
+  vtkm::exec::CellInterpolate(scalarVec, pcoords, shapeTag, lerpedScalar);
   return validSample;
 }
 
@@ -101,9 +100,9 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>&
 {
 
   bool validSample = true;
-  bool success;
-  vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    points, sampleLocation, vtkm::CellShapeTagHexahedron(), success);
+  vtkm::Vec<P, 3> pcoords;
+  vtkm::exec::WorldCoordinatesToParametricCoordinates(
+    points, sampleLocation, vtkm::CellShapeTagHexahedron(), pcoords);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -111,7 +110,7 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>&
   {
     validSample = false;
   }
-  lerpedScalar = vtkm::exec::CellInterpolate(scalars, pcoords, vtkm::CellShapeTagHexahedron());
+  vtkm::exec::CellInterpolate(scalars, pcoords, vtkm::CellShapeTagHexahedron(), lerpedScalar);
   return validSample;
 }
 } // namespace detail

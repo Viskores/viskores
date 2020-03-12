@@ -108,6 +108,7 @@ const std::vector<vtkm::UInt8>& GetExpectedHiddenCells()
 template <typename T>
 void TestResultArray(const vtkm::cont::ArrayHandle<T>& result, const std::vector<T>& expected)
 {
+  vtkm::cont::printSummary_ArrayHandle(result, std::cout);
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Incorrect field size");
 

@@ -108,22 +108,26 @@ private:
   // tests are done on the projection of the point on the cell. Extra checks
   // should be added to test if the point actually falls on the cell.
   template <typename CellShapeTag, typename CoordsType>
-  VTKM_EXEC static bool PointInsideCell(FloatVec3 point,
-                                        CellShapeTag cellShape,
-                                        CoordsType cellPoints,
-                                        const vtkm::exec::FunctorBase* worklet,
-                                        FloatVec3& parametricCoordinates)
+  VTKM_EXEC static vtkm::ErrorCode PointInsideCell(FloatVec3 point,
+                                                   CellShapeTag cellShape,
+                                                   CoordsType cellPoints,
+                                                   FloatVec3& parametricCoordinates,
+                                                   bool& inside)
   {
     auto bounds = vtkm::internal::cl_uniform_bins::ComputeCellBounds(cellPoints);
     if (point[0] >= bounds.Min[0] && point[0] <= bounds.Max[0] && point[1] >= bounds.Min[1] &&
         point[1] <= bounds.Max[1] && point[2] >= bounds.Min[2] && point[2] <= bounds.Max[2])
     {
-      bool success = false;
-      parametricCoordinates = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-        cellPoints, point, cellShape, success, worklet);
-      return success && vtkm::exec::CellInside(parametricCoordinates, cellShape);
+      VTKM_RETURN_ON_ERROR(vtkm::exec::WorldCoordinatesToParametricCoordinates(
+        cellPoints, point, cellShape, parametricCoordinates));
+      inside = vtkm::exec::CellInside(parametricCoordinates, cellShape);
     }
-    return false;
+    else
+    {
+      inside = false;
+    }
+    // Return success error code even point is not inside this cell
+    return vtkm::ErrorCode::Success;
   }
 
 public:
@@ -157,10 +161,9 @@ public:
   }
 
   VTKM_EXEC
-  void FindCell(const FloatVec3& point,
-                vtkm::Id& cellId,
-                FloatVec3& parametric,
-                const vtkm::exec::FunctorBase* worklet) const override
+  vtkm::ErrorCode FindCell(const FloatVec3& point,
+                           vtkm::Id& cellId,
+                           FloatVec3& parametric) const override
   {
     using namespace vtkm::internal::cl_uniform_bins;
 
@@ -176,7 +179,7 @@ public:
       auto ldim = this->LeafDimensions.Get(binId);
       if (!ldim[0] || !ldim[1] || !ldim[2])
       {
-        return;
+        return vtkm::ErrorCode::CellNotFound;
       }
 
       auto leafGrid = ComputeLeafGrid(binId3, ldim, this->TopLevel);
@@ -196,14 +199,19 @@ public:
         auto indices = this->CellSet.GetIndices(cid);
         auto pts = vtkm::make_VecFromPortalPermute(&indices, this->Coords);
         FloatVec3 pc;
-        if (PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, worklet, pc))
+        bool inside;
+        VTKM_RETURN_ON_ERROR(
+          PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, pc, inside));
+        if (inside)
         {
           cellId = cid;
           parametric = pc;
-          break;
+          return vtkm::ErrorCode::Success;
         }
       }
     }
+
+    return vtkm::ErrorCode::CellNotFound;
   }
 
 private:
