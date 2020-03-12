@@ -142,9 +142,9 @@ public:
   template <class Func>
   static VTKM_CONT int RunOnDevice(Func function, int argc, char* argv[])
   {
-    auto opts =
-      vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::Strict;
+    auto opts = vtkm::cont::InitializeOptions::RequireDevice;
     auto config = vtkm::cont::Initialize(argc, argv, opts);
+    ParseAdditionalTestArgs(argc, argv);
 
     try
     {
