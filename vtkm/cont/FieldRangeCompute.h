@@ -45,7 +45,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
-  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST(TypeList);
   return vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, TypeList());
 }
 
@@ -74,7 +74,7 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   vtkm::cont::Field::Association assoc,
   TypeList)
 {
-  VTKM_IS_LIST_TAG(TypeList);
+  VTKM_IS_LIST(TypeList);
   return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, TypeList());
 }
 

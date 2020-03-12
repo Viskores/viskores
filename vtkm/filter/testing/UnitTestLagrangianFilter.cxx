@@ -46,6 +46,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
   vtkm::cont::ArrayHandle<vtkm::Vec3f_64> velocityField;
   velocityField.Allocate(numPoints);
 
+  auto velocityPortal = velocityField.WritePortal();
   vtkm::Id count = 0;
   for (vtkm::Id i = 0; i < DIMS[0]; i++)
   {
@@ -53,11 +54,12 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
     {
       for (vtkm::Id k = 0; k < DIMS[2]; k++)
       {
-        velocityField.GetPortalControl().Set(count, vtkm::Vec3f_64(0.1, 0.1, 0.1));
+        velocityPortal.Set(count, vtkm::Vec3f_64(0.1, 0.1, 0.1));
         count++;
       }
     }
   }
+  velocityPortal.Detach();
   dsf.AddPointField(dataset, "velocity", velocityField);
   return dataset;
 }
@@ -80,15 +82,17 @@ void TestLagrangianFilterMultiStepInterval()
     {
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset.");
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 3375,
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 4096,
                        "Wrong number of basis flows extracted.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 2, "Wrong number of fields.");
     }
     else
     {
-      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCells() == 0,
-                       "Output dataset should have no cells.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 0,
+                       "Output dataset should have no points.");
       VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 0,
                        "Wrong number of coordinate systems in the output dataset.");
+      VTKM_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 0, "Wrong number of fields.");
     }
   }
 }

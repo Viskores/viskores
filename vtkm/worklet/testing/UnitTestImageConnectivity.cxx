@@ -51,7 +51,7 @@ public:
     std::size_t i = 0;
     for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++, i++)
     {
-      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(index) == componentExpected[i],
+      VTKM_TEST_ASSERT(component.ReadPortal().Get(index) == componentExpected[i],
                        "Components has unexpected value.");
     }
   }
@@ -84,7 +84,7 @@ public:
 
     for (vtkm::Id i = 0; i < component.GetNumberOfValues(); ++i)
     {
-      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(i) == componentExpected[size_t(i)],
+      VTKM_TEST_ASSERT(component.ReadPortal().Get(i) == componentExpected[size_t(i)],
                        "Components has unexpected value.");
     }
   }

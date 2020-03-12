@@ -47,7 +47,7 @@ target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
 # to have the smallest binary impact as they can drop any VTK-m symbol
 # they don't use.
 if(VTKM_COMPILER_IS_MSVC)
-  target_compile_options(vtkm_compiler_flags INTERFACE /Gy)
+  target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/Gy>)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
   endif()

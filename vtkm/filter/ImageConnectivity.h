@@ -31,9 +31,9 @@ namespace filter
 class ImageConnectivity : public vtkm::filter::FilterCell<ImageConnectivity>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
-  VTKM_CONT ImageConnectivity();
+  VTKM_CONT inline ImageConnectivity() { this->SetOutputFieldName("component"); }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,

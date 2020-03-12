@@ -35,7 +35,7 @@ void TestPointAverageUniform3D()
                                  100.3f, 100.35f, 100.4f, 100.3f, 100.35f, 100.4f };
   for (vtkm::Id i = 0; i < 18; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointAverage worklet on 3D regular data");
   }
 }
@@ -61,7 +61,7 @@ void TestPointAverageRegular3D()
                                  1.f, 1.5f, 2.f, 2.f, 2.5f, 3.f, 2.f, 2.5f, 3.f };
   for (vtkm::Id i = 0; i < 18; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointAverage worklet on 3D regular data");
   }
 }
@@ -84,7 +84,7 @@ void TestPointAverageExplicit1()
   vtkm::Float32 expected[5] = { 100.1f, 100.15f, 100.15f, 100.2f, 100.2f };
   for (int i = 0; i < 5; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointAverage worklet on 3D regular data");
   }
 }
@@ -108,7 +108,7 @@ void TestPointAverageExplicit2()
                                  115.2f, 115.3f,  115.1f,  130.5f, 125.35f };
   for (int i = 0; i < 11; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for PointAverage worklet on 3D regular data");
   }
 }

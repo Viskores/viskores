@@ -133,9 +133,11 @@ public:
 
   SphereLeafIntersector() {}
 
-  SphereLeafIntersector(const IdHandle& pointIds, const FloatHandle& radii)
-    : PointIds(pointIds.PrepareForInput(Device()))
-    , Radii(radii.PrepareForInput(Device()))
+  SphereLeafIntersector(const IdHandle& pointIds,
+                        const FloatHandle& radii,
+                        vtkm::cont::Token& token)
+    : PointIds(pointIds.PrepareForInput(Device(), token))
+    , Radii(radii.PrepareForInput(Device(), token))
   {
   }
 
@@ -201,9 +203,10 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT SphereLeafIntersector<Device> PrepareForExecution(Device) const
+  VTKM_CONT SphereLeafIntersector<Device> PrepareForExecution(Device,
+                                                              vtkm::cont::Token& token) const
   {
-    return SphereLeafIntersector<Device>(PointIds, Radii);
+    return SphereLeafIntersector<Device>(this->PointIds, this->Radii, token);
   }
 };
 
@@ -360,7 +363,7 @@ void SphereIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+            scalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
             PointIds);
 }
 

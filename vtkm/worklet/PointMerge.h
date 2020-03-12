@@ -136,8 +136,7 @@ public:
 
     // Because this class is a POD, we can reuse it in both control and execution environments.
 
-    template <typename Device>
-    BinLocator PrepareForExecution(Device) const
+    BinLocator PrepareForExecution(vtkm::cont::DeviceAdapterId, vtkm::cont::Token&) const
     {
       return *this;
     }

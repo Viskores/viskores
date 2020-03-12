@@ -19,7 +19,6 @@
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/TypeListTag.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayIn.h>
@@ -204,7 +203,8 @@ public:
             typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
-    const vtkm::Id3& threadIndex,
+    vtkm::Id threadIndex1D,
+    const vtkm::Id3& threadIndex3D,
     const OutToInArrayType& vtkmNotUsed(outToIn),
     const VisitArrayType& vtkmNotUsed(visit),
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
@@ -219,7 +219,7 @@ public:
                            "Scheduling on 3D topologies only works with default MaskNone.");
 
     return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
-      threadIndex, connectivity, globalThreadIndexOffset);
+      threadIndex3D, threadIndex1D, connectivity, globalThreadIndexOffset);
   }
 };
 }

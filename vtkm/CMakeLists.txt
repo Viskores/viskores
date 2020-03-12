@@ -17,6 +17,7 @@ vtkm_install_headers(
   vtkm ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Version.h)
 
 set(headers
+  Algorithms.h
   Assert.h
   BinaryPredicates.h
   BinaryOperators.h
@@ -25,15 +26,18 @@ set(headers
   CellClassification.h
   CellShape.h
   CellTraits.h
+  Deprecated.h
   Flags.h
   Geometry.h
   Hash.h
   ImplicitFunction.h
+  List.h
   ListTag.h
   Math.h
   Matrix.h
   NewtonsMethod.h
   Pair.h
+  Particle.h
   Range.h
   RangeId.h
   RangeId2.h
@@ -42,6 +46,7 @@ set(headers
   Swap.h
   TopologyElementTag.h
   Transform3D.h
+  TypeList.h
   TypeListTag.h
   Types.h
   TypeTraits.h

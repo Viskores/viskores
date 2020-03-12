@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_set_hyper_arcs_worklet_h
-#define vtkm_worklet_contourtree_augmented_active_graph_set_hyper_arcs_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_set_hyper_arcs_worklet_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_set_hyper_arcs_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -95,11 +95,11 @@ public:
     // now retrieve the hyperarc destination
     vtkm::Id graphTarget = graphHyperarcsPortal.Get(graphID);
     // if it's the global minimum, copy
-    if (noSuchElement(graphTarget))
+    if (NoSuchElement(graphTarget))
       treeHyperarcsPortal.Set(hypernode, (vtkm::Id)NO_SUCH_ELEMENT);
     // otherwise, look up the correct supernode ID
     else
-      treeHyperarcsPortal.Set(hypernode, graphSuperIDPortal.Get(maskedIndex(graphTarget)));
+      treeHyperarcsPortal.Set(hypernode, graphSuperIDPortal.Get(MaskedIndex(graphTarget)));
     // and reset the hypernode ID to a supernode ID
 
     // In serial this worklet implements the following operation
@@ -113,11 +113,11 @@ public:
           // now retrieve the hyperarc destination
           indexType graphTarget = hyperarcs[graphID];
           // if it's the global minimum, copy
-          if (noSuchElement(graphTarget))
+          if (NoSuchElement(graphTarget))
                   tree.hyperarcs[hypernode] = NO_SUCH_ELEMENT;
           // otherwise, look up the correct supernode ID
           else
-                  tree.hyperarcs[hypernode] = superID[maskedIndex(graphTarget)];
+                  tree.hyperarcs[hypernode] = superID[MaskedIndex(graphTarget)];
           // and reset the hypernode ID to a supernode ID
         } // per hypernode
       */

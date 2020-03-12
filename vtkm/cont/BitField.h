@@ -17,7 +17,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 #include <cassert>
@@ -61,16 +62,16 @@ struct BitFieldTraits
   /// Require an unsigned integral type that is <= BlockSize bytes, and is
   /// is supported by the specified AtomicInterface.
   template <typename WordType, typename AtomicInterface>
-  using IsValidWordTypeAtomic = std::integral_constant<
-    bool,
-    /* is unsigned */
-    std::is_unsigned<WordType>::value &&
-      /* doesn't exceed blocksize */
-      sizeof(WordType) <= static_cast<size_t>(BlockSize) &&
-      /* BlockSize is a multiple of WordType */
-      static_cast<size_t>(BlockSize) % sizeof(WordType) == 0 &&
-      /* Supported by atomic interface */
-      vtkm::ListContains<typename AtomicInterface::WordTypes, WordType>::value>;
+  using IsValidWordTypeAtomic =
+    std::integral_constant<bool,
+                           /* is unsigned */
+                           std::is_unsigned<WordType>::value &&
+                             /* doesn't exceed blocksize */
+                             sizeof(WordType) <= static_cast<size_t>(BlockSize) &&
+                             /* BlockSize is a multiple of WordType */
+                             static_cast<size_t>(BlockSize) % sizeof(WordType) == 0 &&
+                             /* Supported by atomic interface */
+                             vtkm::ListHas<typename AtomicInterface::WordTypes, WordType>::value>;
 };
 
 /// Identifies a bit in a BitField by Word and BitOffset. Note that these
@@ -500,10 +501,17 @@ public:
   using ArrayHandleType = ArrayHandle<WordTypeDefault, StorageTagBasic>;
 
   /// The BitPortal used in the control environment.
-  using PortalControl = detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<
+    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>>;
 
   /// A read-only BitPortal used in the control environment.
-  using PortalConstControl = detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
+  using ReadPortalType = vtkm::cont::internal::ArrayPortalToken<
+    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>>;
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use BitField::WritePortalType instead.") =
+    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayBitField::ReadPortalType instead.") =
+    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
 
   template <typename Device>
   struct ExecutionTypes
@@ -624,20 +632,46 @@ public:
   VTKM_CONT
   DeviceAdapterId GetDeviceAdapterId() const { return this->Internals->Data.GetDeviceAdapterId(); }
 
-  /// Get a portal to the data that is usable from the control environment.
-  VTKM_CONT
-  PortalControl GetPortalControl()
+  /// \brief Get a portal to the data that is usable from the control environment.
+  ///
+  /// As long as this portal is in scope, no one else will be able to read or write the BitField.
+  VTKM_CONT WritePortalType WritePortal() const
   {
-    return PortalControl{ this->Internals->Data.GetPortalControl(), this->Internals->NumberOfBits };
+    auto dataPortal = this->Internals->Data.WritePortal();
+    return WritePortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+  }
+
+  /// \brief Get a read-only portal to the data that is usable from the control environment.
+  ///
+  /// As long as this portal is in scope, no one else will be able to write in the BitField.
+  VTKM_CONT ReadPortalType ReadPortal() const
+  {
+    auto dataPortal = this->Internals->Data.ReadPortal();
+    return ReadPortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+  }
+
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use BitField::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl> GetPortalControl()
+  {
+    return detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>{
+      this->Internals->Data.WritePortal(), this->Internals->NumberOfBits
+    };
   }
 
   /// Get a read-only portal to the data that is usable from the control
   /// environment.
   VTKM_CONT
-  PortalConstControl GetPortalConstControl() const
+  VTKM_DEPRECATED(1.6,
+                  "Use BitField::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl> GetPortalConstControl() const
   {
-    return PortalConstControl{ this->Internals->Data.GetPortalConstControl(),
-                               this->Internals->NumberOfBits };
+    return detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>{
+      this->Internals->Data.ReadPortal(), this->Internals->NumberOfBits
+    };
   }
 
   /// Prepares this BitField to be used as an input to an operation in the
@@ -647,11 +681,21 @@ public:
   /// execution environment.
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag device) const
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::PortalConst;
-    return PortalType{ this->Internals->Data.PrepareForInput(device),
+    return PortalType{ this->Internals->Data.PrepareForInput(device, token),
                        this->Internals->NumberOfBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst
+    PrepareForInput(DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, token);
   }
 
   /// Prepares (allocates) this BitField to be used as an output from an
@@ -661,9 +705,8 @@ public:
   /// object are called). Returns a portal that can be used in code running in
   /// the execution environment.
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numBits,
-    DeviceAdapterTag device) const
+  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
+  PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device, vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
     const vtkm::Id numWords = this->BitsToAllocatedStorageWords(numBits);
@@ -675,9 +718,18 @@ public:
                  static_cast<vtkm::UInt64>(static_cast<size_t>(numWords) * sizeof(WordTypeDefault)))
                  .c_str());
 
-    auto portal = this->Internals->Data.PrepareForOutput(numWords, device);
+    auto portal = this->Internals->Data.PrepareForOutput(numWords, device, token);
     this->Internals->NumberOfBits = numBits;
     return PortalType{ portal, numBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForOutput(numBits, device, token);
   }
 
   /// Prepares this BitField to be used in an in-place operation (both as input
@@ -687,11 +739,21 @@ public:
   /// running in the execution environment.
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag device) const
+    DeviceAdapterTag device,
+    vtkm::cont::Token& token) const
   {
     using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
-    return PortalType{ this->Internals->Data.PrepareForInPlace(device),
+    return PortalType{ this->Internals->Data.PrepareForInPlace(device, token),
                        this->Internals->NumberOfBits };
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForInPlace(DeviceAdapterTag device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInPlace(device, token);
   }
 
 private:

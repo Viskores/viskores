@@ -29,7 +29,8 @@ public:
   using PortalType = P;
   using ValueType = typename PortalType::ValueType;
 
-  VTKM_CONT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   ArrayPortalStreaming()
     : InputPortal()
     , BlockIndex(0)
@@ -38,7 +39,8 @@ public:
   {
   }
 
-  VTKM_CONT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   ArrayPortalStreaming(const PortalType& inputPortal,
                        vtkm::Id blockIndex,
                        vtkm::Id blockSize,
@@ -50,8 +52,9 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherP>
-  VTKM_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
+  VTKM_EXEC_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
     : InputPortal(src.GetPortal())
     , BlockIndex(src.GetBlockIndex())
     , BlockSize(src.GetBlockSize())
@@ -59,10 +62,56 @@ public:
   {
   }
 
-  VTKM_CONT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming(const ArrayPortalStreaming& src)
+    : InputPortal(src.InputPortal)
+    , BlockIndex(src.BlockIndex)
+    , BlockSize(src.BlockSize)
+    , CurBlockSize(src.CurBlockSize)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming(const ArrayPortalStreaming&& rhs)
+    : InputPortal(std::move(rhs.InputPortal))
+    , BlockIndex(std::move(rhs.BlockIndex))
+    , BlockSize(std::move(rhs.BlockSize))
+    , CurBlockSize(std::move(rhs.CurBlockSize))
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ~ArrayPortalStreaming() {}
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming& operator=(const ArrayPortalStreaming& src)
+  {
+    this->InputPortal = src.InputPortal;
+    this->BlockIndex = src.BlockIndex;
+    this->BlockSize = src.BlockSize;
+    this->CurBlockSize = src.CurBlockSize;
+    return *this;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  ArrayPortalStreaming& operator=(const ArrayPortalStreaming&& rhs)
+  {
+    this->InputPortal = std::move(rhs.InputPortal);
+    this->BlockIndex = std::move(rhs.BlockIndex);
+    this->BlockSize = std::move(rhs.BlockSize);
+    this->CurBlockSize = std::move(rhs.CurBlockSize);
+    return *this;
+  }
+
+  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->CurBlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     return this->InputPortal.Get(this->BlockIndex * this->BlockSize + index);
@@ -70,30 +119,30 @@ public:
 
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
-  VTKM_CONT void Set(vtkm::Id index, const ValueType& value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     this->InputPortal.Set(this->BlockIndex * this->BlockSize + index, value);
   }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   const PortalType& GetPortal() const { return this->InputPortal; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetBlockSize(vtkm::Id blockSize) { this->BlockSize = blockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetBlockIndex(vtkm::Id blockIndex) { this->BlockIndex = blockIndex; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   void SetCurBlockSize(vtkm::Id curBlockSize) { this->CurBlockSize = curBlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetBlockSize() { return this->BlockSize; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetBlockIndex() { return this->BlockIndex; }
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   vtkm::Id GetCurBlockSize() { return this->CurBlockSize; }
 
 private:
@@ -119,10 +168,13 @@ class Storage<typename ArrayHandleInputType::ValueType, StorageTagStreaming<Arra
 public:
   using ValueType = typename ArrayHandleInputType::ValueType;
 
-  using PortalType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>;
+  using PortalType = vtkm::cont::internal::ArrayPortalStreaming<
+    typename vtkm::cont::internal::Storage<typename ArrayHandleInputType::ValueType,
+                                           typename ArrayHandleInputType::StorageTag>::PortalType>;
   using PortalConstType =
-    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalConstControl>;
+    vtkm::cont::internal::ArrayPortalStreaming<typename vtkm::cont::internal::Storage<
+      typename ArrayHandleInputType::ValueType,
+      typename ArrayHandleInputType::StorageTag>::PortalConstType>;
 
   VTKM_CONT
   Storage()
@@ -147,15 +199,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->InputArray.GetPortalControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalType(this->InputArray.WritePortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(
-      this->InputArray.GetPortalConstControl(), BlockSize, BlockIndex, CurBlockSize);
+    return PortalConstType(this->InputArray.ReadPortal(), BlockSize, BlockIndex, CurBlockSize);
   }
 
   VTKM_CONT
@@ -238,17 +289,19 @@ public:
                        const vtkm::Id curBlockSize)
     : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize))
   {
-    this->GetPortalConstControl().SetBlockIndex(blockIndex);
-    this->GetPortalConstControl().SetBlockSize(blockSize);
-    this->GetPortalConstControl().SetCurBlockSize(curBlockSize);
+    this->ReadPortal().SetBlockIndex(blockIndex);
+    this->ReadPortal().SetBlockSize(blockSize);
+    this->ReadPortal().SetCurBlockSize(curBlockSize);
   }
 
   VTKM_CONT
   void AllocateFullArray(vtkm::Id numberOfValues)
   {
-    this->ReleaseResourcesExecutionInternal();
-    this->Internals->ControlArray.AllocateFullArray(numberOfValues);
-    this->Internals->ControlArrayValid = true;
+    auto lock = this->GetLock();
+
+    this->ReleaseResourcesExecutionInternal(lock);
+    this->Internals->GetControlArray(lock)->AllocateFullArray(numberOfValues);
+    this->Internals->SetControlArrayValid(lock, true);
   }
 };
 }

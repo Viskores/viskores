@@ -34,8 +34,7 @@ void TestEntropy()
   ///// get entropy from resultEntropy /////
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
   resultEntropy.GetField("entropy").GetData().CopyTo(entropy);
-  vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl portal =
-    entropy.GetPortalConstControl();
+  vtkm::cont::ArrayHandle<vtkm::Float64>::ReadPortalType portal = entropy.ReadPortal();
   vtkm::Float64 entropyFromFilter = portal.Get(0);
 
   /////// check if calculating entopry is close enough to ground truth value /////

@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
 
@@ -55,20 +56,6 @@ struct AllAreArrayHandlesImpl<Head>
 
 template <typename... ArrayHandleTs>
 struct AllAreArrayHandles
-{
-  constexpr static bool Value = AllAreArrayHandlesImpl<ArrayHandleTs...>::Value;
-};
-
-// ParamsAreArrayHandles: ------------------------------------------------------
-// Same as AllAreArrayHandles, but accepts a tuple.
-template <typename T>
-struct ParamsAreArrayHandles
-{
-  constexpr static bool Value = false;
-};
-
-template <typename... ArrayHandleTs>
-struct ParamsAreArrayHandles<vtkmstd::tuple<ArrayHandleTs...>>
 {
   constexpr static bool Value = AllAreArrayHandlesImpl<ArrayHandleTs...>::Value;
 };
@@ -133,39 +120,45 @@ struct ArrayTupleForEach
   template <typename PortalTuple>
   VTKM_CONT static void GetPortalTupleControl(ArrayTuple& arrays, PortalTuple& portals)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).GetPortalControl();
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).WritePortal();
     Next::GetPortalTupleControl(arrays, portals);
   }
 
   template <typename PortalTuple>
   VTKM_CONT static void GetPortalConstTupleControl(const ArrayTuple& arrays, PortalTuple& portals)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).GetPortalConstControl();
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).ReadPortal();
     Next::GetPortalConstTupleControl(arrays, portals);
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInput(const ArrayTuple& arrays, PortalTuple& portals)
+  VTKM_CONT static void PrepareForInput(const ArrayTuple& arrays,
+                                        PortalTuple& portals,
+                                        vtkm::cont::Token& token)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInput(DeviceTag());
-    Next::template PrepareForInput<DeviceTag>(arrays, portals);
+    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInput(DeviceTag(), token);
+    Next::template PrepareForInput<DeviceTag>(arrays, portals, token);
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInPlace(ArrayTuple& arrays, PortalTuple& portals)
+  VTKM_CONT static void PrepareForInPlace(ArrayTuple& arrays,
+                                          PortalTuple& portals,
+                                          vtkm::cont::Token& token)
   {
-    vtkmstd::get<Index>(portals) = vtkmstd::get<Index>(arrays).PrepareForInPlace(DeviceTag());
-    Next::template PrepareForInPlace<DeviceTag>(arrays, portals);
+    vtkmstd::get<Index>(portals) =
+      vtkmstd::get<Index>(arrays).PrepareForInPlace(DeviceTag(), token);
+    Next::template PrepareForInPlace<DeviceTag>(arrays, portals, token);
   }
 
   template <typename DeviceTag, typename PortalTuple>
   VTKM_CONT static void PrepareForOutput(ArrayTuple& arrays,
                                          PortalTuple& portals,
-                                         vtkm::Id numValues)
+                                         vtkm::Id numValues,
+                                         vtkm::cont::Token& token)
   {
     vtkmstd::get<Index>(portals) =
-      vtkmstd::get<Index>(arrays).PrepareForOutput(numValues, DeviceTag());
-    Next::template PrepareForOutput<DeviceTag>(arrays, portals, numValues);
+      vtkmstd::get<Index>(arrays).PrepareForOutput(numValues, DeviceTag(), token);
+    Next::template PrepareForOutput<DeviceTag>(arrays, portals, numValues, token);
   }
 
   VTKM_CONT
@@ -204,17 +197,17 @@ struct ArrayTupleForEach<Index, Index, ArrayTuple>
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInput(const ArrayTuple&, PortalTuple&)
+  VTKM_CONT static void PrepareForInput(const ArrayTuple&, PortalTuple&, vtkm::cont::Token&)
   {
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForInPlace(ArrayTuple&, PortalTuple&)
+  VTKM_CONT static void PrepareForInPlace(ArrayTuple&, PortalTuple&, vtkm::cont::Token&)
   {
   }
 
   template <typename DeviceTag, typename PortalTuple>
-  VTKM_CONT static void PrepareForOutput(ArrayTuple&, PortalTuple&, vtkm::Id)
+  VTKM_CONT static void PrepareForOutput(ArrayTuple&, PortalTuple&, vtkm::Id, vtkm::cont::Token&)
   {
   }
 
@@ -235,10 +228,10 @@ template <typename Head, typename... Tail>
 struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head, Tail...>>
 {
   using Next = PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Tail...>>;
-  using PortalControlTuple = typename TupleTypePrepend<typename Head::PortalControl,
+  using PortalControlTuple = typename TupleTypePrepend<typename Head::WritePortalType,
                                                        typename Next::PortalControlTuple>::Type;
   using PortalConstControlTuple =
-    typename TupleTypePrepend<typename Head::PortalConstControl,
+    typename TupleTypePrepend<typename Head::ReadPortalType,
                               typename Next::PortalConstControlTuple>::Type;
 
   template <typename DeviceTag>
@@ -256,8 +249,8 @@ struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head, Tail...>>
 template <typename Head>
 struct PortalTupleTypeGeneratorImpl<vtkmstd::tuple<Head>>
 {
-  using PortalControlTuple = vtkmstd::tuple<typename Head::PortalControl>;
-  using PortalConstControlTuple = vtkmstd::tuple<typename Head::PortalConstControl>;
+  using PortalControlTuple = vtkmstd::tuple<typename Head::WritePortalType>;
+  using PortalConstControlTuple = vtkmstd::tuple<typename Head::ReadPortalType>;
 
   template <typename DeviceTag>
   struct ExecutionTypes
@@ -315,29 +308,30 @@ public:
 
   template <typename DeviceTag>
   VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalConstTuple PrepareForInput(
-    const ArrayTuple& arrays)
+    const ArrayTuple& arrays,
+    vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalConstTuple portals;
-    ForEachArray::template PrepareForInput<DeviceTag>(arrays, portals);
+    ForEachArray::template PrepareForInput<DeviceTag>(arrays, portals, token);
     return portals;
   }
 
   template <typename DeviceTag>
   VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple PrepareForInPlace(
-    ArrayTuple& arrays)
+    ArrayTuple& arrays,
+    vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalTuple portals;
-    ForEachArray::template PrepareForInPlace<DeviceTag>(arrays, portals);
+    ForEachArray::template PrepareForInPlace<DeviceTag>(arrays, portals, token);
     return portals;
   }
 
   template <typename DeviceTag>
-  VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple PrepareForOutput(
-    ArrayTuple& arrays,
-    vtkm::Id numValues)
+  VTKM_CONT static const typename ExecutionTypes<DeviceTag>::PortalTuple
+  PrepareForOutput(ArrayTuple& arrays, vtkm::Id numValues, vtkm::cont::Token& token)
   {
     typename ExecutionTypes<DeviceTag>::PortalTuple portals;
-    ForEachArray::template PrepareForOutput<DeviceTag>(arrays, portals, numValues);
+    ForEachArray::template PrepareForOutput<DeviceTag>(arrays, portals, numValues, token);
     return portals;
   }
 };
@@ -479,15 +473,54 @@ private:
   PortalTuple Portals;
 };
 
-template <typename ArrayTuple>
-struct VTKM_ALWAYS_EXPORT StorageTagCompositeVector
+} // namespace internal
+
+template <typename... StorageTags>
+struct VTKM_ALWAYS_EXPORT StorageTagCompositeVec
 {
 };
 
-template <typename ArrayTuple>
-class Storage<typename compvec::GetValueType<ArrayTuple>::ValueType,
-              StorageTagCompositeVector<ArrayTuple>>
+namespace internal
 {
+
+template <typename ArrayTuple>
+struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Use StorageTagCompositeVec instead.")
+  StorageTagCompositeVector
+{
+};
+
+template <typename... ArrayTs>
+struct CompositeVectorTraits
+{
+  // Need to check this here, since this traits struct is used in the
+  // ArrayHandleCompositeVector superclass definition before any other
+  // static_asserts could be used.
+  VTKM_STATIC_ASSERT_MSG(compvec::AllAreArrayHandles<ArrayTs...>::Value,
+                         "Template parameters for ArrayHandleCompositeVector "
+                         "must be a list of ArrayHandle types.");
+
+  using ValueType = typename compvec::GetValueType<vtkmstd::tuple<ArrayTs...>>::ValueType;
+  using StorageTag = vtkm::cont::StorageTagCompositeVec<typename ArrayTs::StorageTag...>;
+  using StorageType = Storage<ValueType, StorageTag>;
+  using Superclass = ArrayHandle<ValueType, StorageTag>;
+};
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+template <typename... Arrays>
+class Storage<typename compvec::GetValueType<vtkmstd::tuple<Arrays...>>::ValueType,
+              StorageTagCompositeVector<vtkmstd::tuple<Arrays...>>>
+  : CompositeVectorTraits<Arrays...>::StorageType
+{
+  using Superclass = typename CompositeVectorTraits<Arrays...>::StorageType;
+  using Superclass::Superclass;
+};
+VTKM_DEPRECATED_SUPPRESS_END
+
+template <typename T, typename... StorageTags>
+class Storage<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>,
+              vtkm::cont::StorageTagCompositeVec<StorageTags...>>
+{
+  using ArrayTuple = vtkmstd::tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
   using ForEachArray =
     compvec::ArrayTupleForEach<0, vtkmstd::tuple_size<ArrayTuple>::value, ArrayTuple>;
   using PortalTypes = compvec::PortalTupleTraits<ArrayTuple>;
@@ -508,6 +541,18 @@ public:
   VTKM_CONT
   Storage(const ArrayTuple& arrays)
     : Arrays(arrays)
+    , Valid(true)
+  {
+    using SizeValidator = compvec::ArraySizeValidator<ArrayTuple>;
+    if (!SizeValidator::Exec(this->Arrays, this->GetNumberOfValues()))
+    {
+      throw ErrorBadValue("All arrays must have the same number of values.");
+    }
+  }
+
+  template <typename... ArrayTypes>
+  VTKM_CONT Storage(const ArrayTypes&... arrays)
+    : Arrays(arrays...)
     , Valid(true)
   {
     using SizeValidator = compvec::ArraySizeValidator<ArrayTuple>;
@@ -578,12 +623,31 @@ private:
   bool Valid;
 };
 
-template <typename ArrayTuple, typename DeviceTag>
-class ArrayTransfer<typename compvec::GetValueType<ArrayTuple>::ValueType,
-                    StorageTagCompositeVector<ArrayTuple>,
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+template <typename... Arrays, typename DeviceTag>
+struct ArrayTransfer<typename compvec::GetValueType<vtkmstd::tuple<Arrays...>>::ValueType,
+                     StorageTagCompositeVector<vtkmstd::tuple<Arrays...>>,
+                     DeviceTag>
+  : ArrayTransfer<typename compvec::GetValueType<vtkmstd::tuple<Arrays...>>::ValueType,
+                  typename CompositeVectorTraits<Arrays...>::StorageType,
+                  DeviceTag>
+{
+  using Superclass =
+    ArrayTransfer<typename compvec::GetValueType<vtkmstd::tuple<Arrays...>>::ValueType,
+                  typename CompositeVectorTraits<Arrays...>::StorageType,
+                  DeviceTag>;
+  using Superclass::Superclass;
+};
+VTKM_DEPRECATED_SUPPRESS_END
+
+template <typename T, typename... StorageTags, typename DeviceTag>
+class ArrayTransfer<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags))>,
+                    vtkm::cont::StorageTagCompositeVec<StorageTags...>,
                     DeviceTag>
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceTag);
+
+  using ArrayTuple = vtkmstd::tuple<vtkm::cont::ArrayHandle<T, StorageTags>...>;
 
 public:
   using ValueType = typename compvec::GetValueType<ArrayTuple>::ValueType;
@@ -591,7 +655,7 @@ public:
 private:
   using ForEachArray =
     compvec::ArrayTupleForEach<0, vtkmstd::tuple_size<ArrayTuple>::value, ArrayTuple>;
-  using StorageTag = StorageTagCompositeVector<ArrayTuple>;
+  using StorageTag = vtkm::cont::StorageTagCompositeVec<StorageTags...>;
   using StorageType = internal::Storage<ValueType, StorageTag>;
   using ControlTraits = compvec::PortalTupleTraits<ArrayTuple>;
   using ExecutionTraits = typename ControlTraits::template ExecutionTypes<DeviceTag>;
@@ -614,24 +678,24 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token) const
   {
     return PortalConstExecution(
-      ControlTraits::template PrepareForInput<DeviceTag>(this->GetArrayTuple()));
+      ControlTraits::template PrepareForInput<DeviceTag>(this->GetArrayTuple(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalExecution(
-      ControlTraits::template PrepareForInPlace<DeviceTag>(this->GetArrayTuple()));
+      ControlTraits::template PrepareForInPlace<DeviceTag>(this->GetArrayTuple(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numValues)
+  PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token)
   {
     return PortalExecution(
-      ControlTraits::template PrepareForOutput<DeviceTag>(this->GetArrayTuple(), numValues));
+      ControlTraits::template PrepareForOutput<DeviceTag>(this->GetArrayTuple(), numValues, token));
   }
 
   VTKM_CONT
@@ -654,22 +718,6 @@ public:
 
 private:
   StorageType* Storage;
-};
-
-template <typename... ArrayTs>
-struct CompositeVectorTraits
-{
-  // Need to check this here, since this traits struct is used in the
-  // ArrayHandleCompositeVector superclass definition before any other
-  // static_asserts could be used.
-  VTKM_STATIC_ASSERT_MSG(compvec::AllAreArrayHandles<ArrayTs...>::Value,
-                         "Template parameters for ArrayHandleCompositeVector "
-                         "must be a list of ArrayHandle types.");
-
-  using ValueType = typename compvec::GetValueType<vtkmstd::tuple<ArrayTs...>>::ValueType;
-  using StorageTag = StorageTagCompositeVector<vtkmstd::tuple<ArrayTs...>>;
-  using StorageType = Storage<ValueType, StorageTag>;
-  using Superclass = ArrayHandle<ValueType, StorageTag>;
 };
 
 } // namespace internal
@@ -704,7 +752,7 @@ public:
 
   VTKM_CONT
   ArrayHandleCompositeVector(const ArrayTs&... arrays)
-    : Superclass(StorageType(vtkmstd::make_tuple(arrays...)))
+    : Superclass(StorageType(arrays...))
   {
   }
 };
@@ -742,6 +790,16 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
   }
 };
 
+template <typename T, typename... STs>
+struct SerializableTypeString<
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(STs))>,
+                          vtkm::cont::StorageTagCompositeVec<STs...>>>
+  : SerializableTypeString<
+      vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, STs>...>>
+{
+};
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename... AHs>
 struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
@@ -749,6 +807,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandle<
   : SerializableTypeString<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 } // vtkm::cont
 
@@ -831,6 +890,15 @@ public:
   }
 };
 
+template <typename T, typename... STs>
+struct Serialization<
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(STs))>,
+                          vtkm::cont::StorageTagCompositeVec<STs...>>>
+  : Serialization<vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, STs>...>>
+{
+};
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename... AHs>
 struct Serialization<vtkm::cont::ArrayHandle<
   typename vtkm::cont::internal::compvec::GetValueType<vtkmstd::tuple<AHs...>>::ValueType,
@@ -838,6 +906,7 @@ struct Serialization<vtkm::cont::ArrayHandle<
   : Serialization<vtkm::cont::ArrayHandleCompositeVector<AHs...>>
 {
 };
+VTKM_DEPRECATED_SUPPRESS_END
 } // diy
 /// @endcond SERIALIZATION
 

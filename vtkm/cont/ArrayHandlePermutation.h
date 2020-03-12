@@ -100,30 +100,35 @@ namespace vtkm
 namespace cont
 {
 
-namespace internal
-{
-
-template <typename IndexArrayType, typename ValueArrayType>
+template <typename IndexStorageTag, typename ValueStorageTag>
 struct VTKM_ALWAYS_EXPORT StorageTagPermutation
 {
 };
 
-template <typename IndexArrayType, typename ValueArrayType>
-class Storage<typename ValueArrayType::ValueType,
-              StorageTagPermutation<IndexArrayType, ValueArrayType>>
+namespace internal
 {
-  VTKM_IS_ARRAY_HANDLE(IndexArrayType);
-  VTKM_IS_ARRAY_HANDLE(ValueArrayType);
+
+template <typename T, typename IndexStorageTag, typename ValueStorageTag>
+class Storage<T, vtkm::cont::StorageTagPermutation<IndexStorageTag, ValueStorageTag>>
+{
+  VTKM_STATIC_ASSERT_MSG(
+    (vtkm::cont::internal::IsValidArrayHandle<vtkm::Id, IndexStorageTag>::value),
+    "Invalid index storage tag.");
+  VTKM_STATIC_ASSERT_MSG((vtkm::cont::internal::IsValidArrayHandle<T, ValueStorageTag>::value),
+                         "Invalid value storage tag.");
 
 public:
-  using ValueType = typename ValueArrayType::ValueType;
+  using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id, IndexStorageTag>;
+  using ValueArrayType = vtkm::cont::ArrayHandle<T, ValueStorageTag>;
+
+  using ValueType = T;
 
   using PortalType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                 typename ValueArrayType::PortalControl>;
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
+                                                 typename ValueArrayType::WritePortalType>;
   using PortalConstType =
-    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                 typename ValueArrayType::PortalConstControl>;
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::ReadPortalType,
+                                                 typename ValueArrayType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -143,16 +148,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->IndexArray.GetPortalConstControl(),
-                      this->ValueArray.GetPortalControl());
+    return PortalType(this->IndexArray.ReadPortal(), this->ValueArray.WritePortal());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->IndexArray.GetPortalConstControl(),
-                           this->ValueArray.GetPortalConstControl());
+    return PortalConstType(this->IndexArray.ReadPortal(), this->ValueArray.ReadPortal());
   }
 
   VTKM_CONT
@@ -194,17 +197,18 @@ private:
   bool Valid;
 };
 
-template <typename IndexArrayType, typename ValueArrayType, typename Device>
-class ArrayTransfer<typename ValueArrayType::ValueType,
-                    StorageTagPermutation<IndexArrayType, ValueArrayType>,
-                    Device>
+template <typename T, typename IndexStorageTag, typename ValueStorageTag, typename Device>
+class ArrayTransfer<T, StorageTagPermutation<IndexStorageTag, ValueStorageTag>, Device>
 {
 public:
-  using ValueType = typename ValueArrayType::ValueType;
+  using ValueType = T;
 
 private:
-  using StorageTag = StorageTagPermutation<IndexArrayType, ValueArrayType>;
+  using StorageTag = StorageTagPermutation<IndexStorageTag, ValueStorageTag>;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+
+  using IndexArrayType = typename StorageType::IndexArrayType;
+  using ValueArrayType = typename StorageType::ValueArrayType;
 
 public:
   using PortalControl = typename StorageType::PortalType;
@@ -228,21 +232,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->IndexArray.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->IndexArray.PrepareForInput(Device()),
-                                this->ValueArray.PrepareForInput(Device()));
+    return PortalConstExecution(this->IndexArray.PrepareForInput(Device(), token),
+                                this->ValueArray.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->IndexArray.PrepareForInput(Device()),
-                           this->ValueArray.PrepareForInPlace(Device()));
+    return PortalExecution(this->IndexArray.PrepareForInput(Device(), token),
+                           this->ValueArray.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     if (numberOfValues != this->GetNumberOfValues())
     {
@@ -264,8 +268,8 @@ public:
     }
 
     return PortalExecution(
-      this->IndexArray.PrepareForInput(Device()),
-      this->ValueArray.PrepareForOutput(this->ValueArray.GetNumberOfValues(), Device()));
+      this->IndexArray.PrepareForInput(Device(), token),
+      this->ValueArray.PrepareForOutput(this->ValueArray.GetNumberOfValues(), Device(), token));
   }
 
   VTKM_CONT
@@ -323,7 +327,8 @@ template <typename IndexArrayHandleType, typename ValueArrayHandleType>
 class ArrayHandlePermutation
   : public vtkm::cont::ArrayHandle<
       typename ValueArrayHandleType::ValueType,
-      internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>
+      vtkm::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
+                                        typename ValueArrayHandleType::StorageTag>>
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
@@ -336,7 +341,8 @@ public:
     (ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>),
     (vtkm::cont::ArrayHandle<
       typename ValueArrayHandleType::ValueType,
-      internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>));
+      vtkm::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
+                                        typename ValueArrayHandleType::StorageTag>>));
 
 private:
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
@@ -382,11 +388,12 @@ struct SerializableTypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
   }
 };
 
-template <typename IdxAH, typename ValAH>
+template <typename T, typename IdxST, typename ValST>
 struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<typename ValAH::ValueType,
-                          vtkm::cont::internal::StorageTagPermutation<IdxAH, ValAH>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagPermutation<IdxST, ValST>>>
+  : SerializableTypeString<
+      vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id, IdxST>,
+                                         vtkm::cont::ArrayHandle<T, ValST>>>
 {
 };
 }
@@ -422,11 +429,10 @@ public:
   }
 };
 
-template <typename IdxAH, typename ValAH>
-struct Serialization<
-  vtkm::cont::ArrayHandle<typename ValAH::ValueType,
-                          vtkm::cont::internal::StorageTagPermutation<IdxAH, ValAH>>>
-  : Serialization<vtkm::cont::ArrayHandlePermutation<IdxAH, ValAH>>
+template <typename T, typename IdxST, typename ValST>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagPermutation<IdxST, ValST>>>
+  : Serialization<vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id, IdxST>,
+                                                     vtkm::cont::ArrayHandle<T, ValST>>>
 {
 };
 

@@ -12,7 +12,7 @@
 
 #include <vtkm/Math.h>
 
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -742,12 +742,8 @@ struct TryAbsTests
   }
 };
 
-struct TypeListTagAbs
-  : vtkm::ListTagJoin<
-      vtkm::ListTagJoin<vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>, vtkm::TypeListTagIndex>,
-      vtkm::TypeListTagField>
-{
-};
+using TypeListAbs =
+  vtkm::ListAppend<vtkm::List<vtkm::Int32, vtkm::Int64>, vtkm::TypeListIndex, vtkm::TypeListField>;
 
 //-----------------------------------------------------------------------------
 static constexpr vtkm::Id BitOpSamples = 1024 * 1024;
@@ -817,22 +813,22 @@ struct TryBitOpTests
   }
 };
 
-using TypeListTagBitOp = vtkm::ListTagBase<vtkm::UInt32, vtkm::UInt64>;
+using TypeListBitOp = vtkm::List<vtkm::UInt32, vtkm::UInt64>;
 
 //-----------------------------------------------------------------------------
 template <typename Device>
 void RunMathTests()
 {
   std::cout << "Tests for scalar types." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryScalarFieldTests<Device>(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryScalarFieldTests<Device>(), vtkm::TypeListFieldScalar());
   std::cout << "Test for scalar and vector types." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(), vtkm::TypeListTagField());
+  vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(), vtkm::TypeListField());
   std::cout << "Test for exemplar types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
-  vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(), TypeListTagAbs());
+  vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(), TypeListAbs());
   std::cout << "Test all bit operations" << std::endl;
-  vtkm::testing::Testing::TryTypes(TryBitOpTests<Device>(), TypeListTagBitOp());
+  vtkm::testing::Testing::TryTypes(TryBitOpTests<Device>(), TypeListBitOp());
 }
 
 } // namespace UnitTestMathNamespace

@@ -23,7 +23,6 @@
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
 #include <vtkm/cont/arg/TypeCheck.h>
-#include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
@@ -49,47 +48,31 @@ namespace vtkm
 {
 namespace worklet
 {
-template <typename T>
-class Keys;
 namespace internal
 {
 
 template <typename Domain>
-inline auto scheduling_range(const Domain& inputDomain) -> decltype(inputDomain.GetNumberOfValues())
+inline auto SchedulingRange(const Domain& inputDomain) -> decltype(inputDomain.GetNumberOfValues())
 {
   return inputDomain.GetNumberOfValues();
 }
 
-template <typename KeyType>
-inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>& inputDomain)
-  -> decltype(inputDomain.GetInputRange())
-{
-  return inputDomain.GetInputRange();
-}
-
 template <typename Domain>
-inline auto scheduling_range(const Domain* const inputDomain)
+inline auto SchedulingRange(const Domain* const inputDomain)
   -> decltype(inputDomain->GetNumberOfValues())
 {
   return inputDomain->GetNumberOfValues();
 }
 
-template <typename KeyType>
-inline auto scheduling_range(const vtkm::worklet::Keys<KeyType>* const inputDomain)
-  -> decltype(inputDomain->GetInputRange())
-{
-  return inputDomain->GetInputRange();
-}
-
 template <typename Domain, typename SchedulingRangeType>
-inline auto scheduling_range(const Domain& inputDomain, SchedulingRangeType type)
+inline auto SchedulingRange(const Domain& inputDomain, SchedulingRangeType type)
   -> decltype(inputDomain.GetSchedulingRange(type))
 {
   return inputDomain.GetSchedulingRange(type);
 }
 
 template <typename Domain, typename SchedulingRangeType>
-inline auto scheduling_range(const Domain* const inputDomain, SchedulingRangeType type)
+inline auto SchedulingRange(const Domain* const inputDomain, SchedulingRangeType type)
   -> decltype(inputDomain->GetSchedulingRange(type))
 {
   return inputDomain->GetSchedulingRange(type);
@@ -305,6 +288,7 @@ struct DispatcherBaseTransportFunctor
   const InputDomainType& InputDomain; // Warning: this is a reference
   vtkm::Id InputRange;
   vtkm::Id OutputRange;
+  vtkm::cont::Token& Token; // Warning: this is a reference
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
@@ -313,10 +297,12 @@ struct DispatcherBaseTransportFunctor
   template <typename InputRangeType, typename OutputRangeType>
   VTKM_CONT DispatcherBaseTransportFunctor(const InputDomainType& inputDomain,
                                            const InputRangeType& inputRange,
-                                           const OutputRangeType& outputRange)
+                                           const OutputRangeType& outputRange,
+                                           vtkm::cont::Token& token)
     : InputDomain(inputDomain)
     , InputRange(FlatRange(inputRange))
     , OutputRange(FlatRange(outputRange))
+    , Token(token)
   {
   }
 
@@ -342,8 +328,11 @@ struct DispatcherBaseTransportFunctor
     vtkm::cont::arg::Transport<TransportTag, T, Device> transport;
 
     not_nullptr(invokeData, Index);
-    return transport(
-      as_ref(invokeData), as_ref(this->InputDomain), this->InputRange, this->OutputRange);
+    return transport(as_ref(invokeData),
+                     as_ref(this->InputDomain),
+                     this->InputRange,
+                     this->OutputRange,
+                     this->Token);
   }
 
 
@@ -727,6 +716,10 @@ private:
                                            ThreadRangeType&& threadRange,
                                            DeviceAdapter device) const
   {
+    // This token represents the scope of the execution objects. It should
+    // exist as long as things run on the device.
+    vtkm::cont::Token token;
+
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
     // contains the parameters passed to Invoke in the control environment. We
@@ -747,7 +740,7 @@ private:
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
-      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
+      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange, token));
 
     // Get the arrays used for scattering input to output.
     typename ScatterType::OutputToInputMapType outputToInputMap =
@@ -760,23 +753,27 @@ private:
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
-    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
-                           .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device))
-                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
-                         threadRange,
-                         device);
+    vtkm::internal::Invocation<ExecObjectParameters,
+                               typename Invocation::ControlInterface,
+                               typename Invocation::ExecutionInterface,
+                               Invocation::InputDomainIndex,
+                               decltype(outputToInputMap.PrepareForInput(device, token)),
+                               decltype(visitArray.PrepareForInput(device, token)),
+                               decltype(threadToOutputMap.PrepareForInput(device, token)),
+                               DeviceAdapter>
+      changedInvocation(execObjectParameters,
+                        outputToInputMap.PrepareForInput(device, token),
+                        visitArray.PrepareForInput(device, token),
+                        threadToOutputMap.PrepareForInput(device, token));
+
+    this->InvokeSchedule(changedInvocation, threadRange, device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT void InvokeSchedule(const Invocation& invocation,
-                                RangeType range,
-                                DeviceAdapter device) const
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
-
-    auto invocationForDevice = invocation.ChangeDeviceAdapterTag(device);
 
     // The TaskType class handles the magic of fetching values
     // for each instance and calling the worklet's function.
@@ -785,7 +782,7 @@ private:
     // vtkm::exec::internal::TaskSingular
     // vtkm::exec::internal::TaskTiling1D
     // vtkm::exec::internal::TaskTiling3D
-    auto task = TaskTypes::MakeTask(this->Worklet, invocationForDevice, range);
+    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
     Algorithm::ScheduleTask(task, range);
   }
 };

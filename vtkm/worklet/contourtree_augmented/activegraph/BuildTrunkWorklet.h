@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_build_trunk_worklet_h
-#define vtkm_worklet_contourtree_augmented_active_graph_build_trunk_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_build_trunk_worklet_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_build_trunk_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -71,7 +71,7 @@ class BuildTrunkWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn activeVertices,     // (input) activeVertices
-                                WholeArrayInOut hyperacrs); // (input/output) hyperarcs
+                                WholeArrayInOut hyperarcs); // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 
@@ -86,7 +86,7 @@ public:
   {
     // retrieve the corresponding chain extremum
     vtkm::Id hypernode = hyperarcsPortal.Get(vertexId);
-    vtkm::Id hypernodeId = maskedIndex(hypernode);
+    vtkm::Id hypernodeId = MaskedIndex(hypernode);
     vtkm::Id supernodeFlag = hypernode & IS_SUPERNODE;
 
     // the far end prunes to nothing
@@ -109,7 +109,7 @@ public:
 
           // retrieve the corresponding chain extremum
           indexType hypernode = hyperarcs[vertexID];
-          indexType hypernodeID = maskedIndex(hypernode);
+          indexType hypernodeID = MaskedIndex(hypernode);
           indexType supernodeFlag = hypernode & IS_SUPERNODE;
 
           // the far end prunes to nothing

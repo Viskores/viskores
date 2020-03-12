@@ -23,8 +23,15 @@ namespace vtkm
 namespace exec
 {
 
+
+
+
 struct CellLocatorBoundingIntervalHierarchyNode
 {
+#if defined(VTKM_CLANG)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnested-anon-types"
+#endif // gcc || clang
   vtkm::IdComponent Dimension;
   vtkm::Id ParentIndex;
   vtkm::Id ChildIndex;
@@ -40,6 +47,9 @@ struct CellLocatorBoundingIntervalHierarchyNode
       vtkm::Id Size;
     } Leaf;
   };
+#if defined(VTKM_CLANG)
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
   VTKM_EXEC_CONT
   CellLocatorBoundingIntervalHierarchyNode()
@@ -68,16 +78,17 @@ public:
                                            const CellIdArrayHandle& cellIds,
                                            const CellSetType& cellSet,
                                            const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                                           DeviceAdapter)
-    : Nodes(nodes.PrepareForInput(DeviceAdapter()))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter()))
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
-    , Coords(coords.PrepareForInput(DeviceAdapter()))
+                                           DeviceAdapter,
+                                           vtkm::cont::Token& token)
+    : Nodes(nodes.PrepareForInput(DeviceAdapter(), token))
+    , CellIds(cellIds.PrepareForInput(DeviceAdapter(), token))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
 
-  VTKM_EXEC_CONT virtual ~CellLocatorBoundingIntervalHierarchyExec() noexcept
+  VTKM_EXEC_CONT virtual ~CellLocatorBoundingIntervalHierarchyExec() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.

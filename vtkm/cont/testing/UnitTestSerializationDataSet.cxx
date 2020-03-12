@@ -15,12 +15,12 @@ using namespace vtkm::cont::testing::serialization;
 namespace
 {
 
-using FieldTypeList = vtkm::ListTagBase<vtkm::Float32, vtkm::Vec3f>;
-using CellSetTypes = vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>,
-                                       vtkm::cont::CellSetSingleType<>,
-                                       vtkm::cont::CellSetStructured<1>,
-                                       vtkm::cont::CellSetStructured<2>,
-                                       vtkm::cont::CellSetStructured<3>>;
+using FieldTypeList = vtkm::List<vtkm::Float32, vtkm::Vec3f>;
+using CellSetTypes = vtkm::List<vtkm::cont::CellSetExplicit<>,
+                                vtkm::cont::CellSetSingleType<>,
+                                vtkm::cont::CellSetStructured<1>,
+                                vtkm::cont::CellSetStructured<2>,
+                                vtkm::cont::CellSetStructured<3>>;
 
 using DataSetWrapper = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypes>;
 

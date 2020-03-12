@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 
@@ -20,10 +20,8 @@
 namespace
 {
 
-struct TimerTestDevices
-  : vtkm::ListTagAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG, vtkm::cont::DeviceAdapterTagAny>
-{
-};
+using TimerTestDevices =
+  vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST, vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
 
 constexpr long long waitTimeMilliseconds = 250;
 constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
@@ -61,57 +59,14 @@ struct Waiter
   }
 };
 
-bool CanTimeOnDevice(const vtkm::cont::Timer& timer, vtkm::cont::DeviceAdapterId device)
-{
-  if (device == vtkm::cont::DeviceAdapterTagAny())
-  {
-    // The timer can run on any device. It should pick up something (unless perhaps there are no
-    // devices, which would only happen if you explicitly disable serial, which we don't).
-    return true;
-  }
-  else if ((timer.GetDevice() == vtkm::cont::DeviceAdapterTagAny()) ||
-           (timer.GetDevice() == device))
-  {
-    // Device is specified and it is a match for the timer's device.
-    return vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(device);
-  }
-  else
-  {
-    // The requested device does not match the device of the timer.
-    return false;
-  }
-}
-
-struct CheckTimeForDeviceFunctor
-{
-  void operator()(vtkm::cont::DeviceAdapterId device,
-                  const vtkm::cont::Timer& timer,
-                  vtkm::Float64 expectedTime) const
-  {
-    std::cout << "    Checking time for device " << device.GetName() << std::endl;
-    if (CanTimeOnDevice(timer, device))
-    {
-      vtkm::Float64 elapsedTime = timer.GetElapsedTime(device);
-      VTKM_TEST_ASSERT(
-        elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
-      VTKM_TEST_ASSERT(elapsedTime < (expectedTime + waitTimeSeconds),
-                       "Timer counted too far or system really busy. ",
-                       elapsedTime);
-    }
-    else
-    {
-      std::cout << "      Device not supported. Expect 0 back and possible error in log."
-                << std::endl;
-      VTKM_TEST_ASSERT(timer.GetElapsedTime(device) == 0.0,
-                       "Disabled timer should return nothing.");
-    }
-  }
-};
-
 void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
 {
-  std::cout << "  Check time for " << expectedTime << "s" << std::endl;
-  vtkm::ListForEach(CheckTimeForDeviceFunctor(), TimerTestDevices(), timer, expectedTime);
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+  VTKM_TEST_ASSERT(
+    elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
+  VTKM_TEST_ASSERT(elapsedTime < (expectedTime + waitTimeSeconds),
+                   "Timer counted too far or system really busy. ",
+                   elapsedTime);
 }
 
 void DoTimerCheck(vtkm::cont::Timer& timer)
@@ -161,16 +116,30 @@ struct TimerCheckFunctor
     }
 
     {
-      std::cout << "Checking Timer on device " << device.GetName() << " set with constructor"
-                << std::endl;
       vtkm::cont::Timer timer(device);
       DoTimerCheck(timer);
     }
     {
-      std::cout << "Checking Timer on device " << device.GetName() << " reset" << std::endl;
       vtkm::cont::Timer timer;
       timer.Reset(device);
       DoTimerCheck(timer);
+    }
+    {
+      vtkm::cont::GetRuntimeDeviceTracker().DisableDevice(device);
+      vtkm::cont::Timer timer(device);
+      vtkm::cont::GetRuntimeDeviceTracker().ResetDevice(device);
+      DoTimerCheck(timer);
+    }
+    {
+      vtkm::cont::ScopedRuntimeDeviceTracker scoped(device);
+      vtkm::cont::Timer timer(device);
+      timer.Start();
+      VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
+      //simulate a device failing
+      scoped.DisableDevice(device);
+      Waiter waiter;
+      waiter.Wait();
+      CheckTime(timer, 0.0);
     }
   }
 };

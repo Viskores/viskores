@@ -134,7 +134,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
                    "new coordinates"
                    " number is wrong");
 
-  auto newCoordsP = newCoords.GetPortalConstControl();
+  auto newCoordsP = newCoords.ReadPortal();
   for (vtkm::Id i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(test_equal(newCoordsP.Get(i)[0], expectedCoords[vtkm::IdComponent(i)][0]),
@@ -145,7 +145,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
                      "result value does not match expected value");
   }
 
-  auto newPointFieldsPortal = newPointFields.GetPortalConstControl();
+  auto newPointFieldsPortal = newPointFields.ReadPortal();
   for (int i = 0; i < newPointFields.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(
@@ -179,7 +179,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
                    "new coordinates"
                    " number is wrong");
 
-  auto newCoordsP = newCoords.GetPortalConstControl();
+  auto newCoordsP = newCoords.ReadPortal();
   for (int i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(test_equal(newCoordsP.Get(i)[0], expectedCoords[i][0]),
@@ -192,7 +192,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
 
   const auto& connectivityArray = newCellset.GetConnectivityArray(vtkm::TopologyElementTagCell(),
                                                                   vtkm::TopologyElementTagPoint());
-  auto connectivityArrayPortal = connectivityArray.GetPortalConstControl();
+  auto connectivityArrayPortal = connectivityArray.ReadPortal();
   for (int i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(test_equal(connectivityArrayPortal.Get(i),
@@ -200,7 +200,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
                      "connectivity array result does not match expected value");
   }
 
-  auto newPointFieldsPortal = newPointFields.GetPortalConstControl();
+  auto newPointFieldsPortal = newPointFields.ReadPortal();
   for (int i = 0; i < newPointFields.GetNumberOfValues(); i++)
   {
     VTKM_TEST_ASSERT(

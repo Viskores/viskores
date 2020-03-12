@@ -49,32 +49,30 @@ public:
                              const vtkm::Id rowSize,
                              const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                              const RectilinearType& coords,
-                             DeviceAdapter)
+                             DeviceAdapter,
+                             vtkm::cont::Token& token)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType()))
-    , Coords(coords.PrepareForInput(DeviceAdapter()))
+    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
     , PointDimensions(cellSet.GetPointDimensions())
   {
     this->AxisPortals[0] = this->Coords.GetFirstPortal();
-    this->MinPoint[0] = coords.GetPortalConstControl().GetFirstPortal().Get(0);
-    this->MaxPoint[0] =
-      coords.GetPortalConstControl().GetFirstPortal().Get(this->PointDimensions[0] - 1);
+    this->MinPoint[0] = coords.ReadPortal().GetFirstPortal().Get(0);
+    this->MaxPoint[0] = coords.ReadPortal().GetFirstPortal().Get(this->PointDimensions[0] - 1);
 
     this->AxisPortals[1] = this->Coords.GetSecondPortal();
-    this->MinPoint[1] = coords.GetPortalConstControl().GetSecondPortal().Get(0);
-    this->MaxPoint[1] =
-      coords.GetPortalConstControl().GetSecondPortal().Get(this->PointDimensions[1] - 1);
+    this->MinPoint[1] = coords.ReadPortal().GetSecondPortal().Get(0);
+    this->MaxPoint[1] = coords.ReadPortal().GetSecondPortal().Get(this->PointDimensions[1] - 1);
     if (dimensions == 3)
     {
       this->AxisPortals[2] = this->Coords.GetThirdPortal();
-      this->MinPoint[2] = coords.GetPortalConstControl().GetThirdPortal().Get(0);
-      this->MaxPoint[2] =
-        coords.GetPortalConstControl().GetThirdPortal().Get(this->PointDimensions[2] - 1);
+      this->MinPoint[2] = coords.ReadPortal().GetThirdPortal().Get(0);
+      this->MaxPoint[2] = coords.ReadPortal().GetThirdPortal().Get(this->PointDimensions[2] - 1);
     }
   }
 
-  VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept
+  VTKM_EXEC_CONT virtual ~CellLocatorRectilinearGrid() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.

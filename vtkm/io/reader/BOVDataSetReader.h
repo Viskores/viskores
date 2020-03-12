@@ -248,7 +248,7 @@ private:
     ReadBuffer(fName, nTuples, buff);
     var.Allocate(nTuples);
     for (vtkm::Id i = 0; i < nTuples; i++)
-      var.GetPortalControl().Set(i, buff[(size_t)i]);
+      var.WritePortal().Set(i, buff[(size_t)i]);
   }
 
   template <typename T>
@@ -266,7 +266,7 @@ private:
       v[0] = buff[static_cast<size_t>(i * 3 + 0)];
       v[1] = buff[static_cast<size_t>(i * 3 + 1)];
       v[2] = buff[static_cast<size_t>(i * 3 + 2)];
-      var.GetPortalControl().Set(i, v);
+      var.WritePortal().Set(i, v);
     }
   }
 

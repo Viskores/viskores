@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
-#define vtkm_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_initialize_active_graph_vertices_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -108,14 +108,14 @@ public:
       // set the first edge and outDegrees for it
       outdegree.Set(activeIndex, outDegrees.Get(sortIndex));
       // store the vertex as a merge tree ID, remembering to suppress flags
-      hyperarcs.Set(activeIndex, maskedIndex(extrema.Get(sortIndex)));
+      hyperarcs.Set(activeIndex, MaskedIndex(extrema.Get(sortIndex)));
       // and store the vertex in the active vertex array
       activeVertices.Set(activeIndex, activeIndex);
     }
     // This operator implements the following loop from the serial code
-    //       for (indexType vertex = 0; vertex < mesh.sortIndices.size(); ++vertex)
+    //       for (indexType vertex = 0; vertex < mesh.SortIndices.size(); ++vertex)
     //             {
-    //             indexType sortIndex = mesh.sortIndices[vertex];
+    //             indexType sortIndex = mesh.SortIndices[vertex];
     //             if (outDegrees[sortIndex] != 1)
     //                     {
     //                     indexType activeIndex = inverseIndex[sortIndex];
@@ -126,7 +126,7 @@ public:
     //                     // set the first edge and outDegrees for it
     //                     outdegree[activeIndex] = outDegrees[sortIndex];
     //                     // store the vertex as a merge tree ID, remembering to suppress flags
-    //                     hyperarcs[activeIndex] = maskedIndex(extrema[sortIndex]);
+    //                     hyperarcs[activeIndex] = MaskedIndex(extrema[sortIndex]);
     //                     // and store the vertex in the active vertex array
     //                     activeVertices[activeIndex] = activeIndex;
     //                     }

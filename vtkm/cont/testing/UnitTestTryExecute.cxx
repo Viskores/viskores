@@ -82,7 +82,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
 
   inArray.Allocate(ARRAY_SIZE);
-  SetPortal(inArray.GetPortalControl());
+  SetPortal(inArray.WritePortal());
 
   TryExecuteTestFunctor functor;
 
@@ -92,7 +92,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   {
     VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
     VTKM_TEST_ASSERT(functor.NumCalls == 1, "Bad number of calls");
-    CheckPortal(outArray.GetPortalConstControl());
+    CheckPortal(outArray.ReadPortal());
   }
   else
   {
@@ -105,7 +105,7 @@ void TryExecuteTests(DeviceList, bool expectSuccess)
   if (expectSuccess)
   {
     VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
-    CheckPortal(outArray2.GetPortalConstControl());
+    CheckPortal(outArray2.ReadPortal());
   }
   else
   {
@@ -130,7 +130,7 @@ struct EdgeCaseFunctor
 void TryExecuteAllEdgeCases()
 {
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
-  using SingleValidList = vtkm::ListTagBase<ValidDevice>;
+  using SingleValidList = vtkm::List<ValidDevice>;
 
   std::cout << "TryExecute no Runtime, no Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor());
@@ -217,19 +217,19 @@ static void Run()
   TryExecuteAllEdgeCases();
 
   std::cout << "Try a list with a single entry." << std::endl;
-  using SingleValidList = vtkm::ListTagBase<ValidDevice>;
+  using SingleValidList = vtkm::List<ValidDevice>;
   TryExecuteTests(SingleValidList(), true);
 
   std::cout << "Try a list with two valid devices." << std::endl;
-  using DoubleValidList = vtkm::ListTagBase<ValidDevice, ValidDevice>;
+  using DoubleValidList = vtkm::List<ValidDevice, ValidDevice>;
   TryExecuteTests(DoubleValidList(), true);
 
   std::cout << "Try a list with only invalid device." << std::endl;
-  using SingleInvalidList = vtkm::ListTagBase<InvalidDevice>;
+  using SingleInvalidList = vtkm::List<InvalidDevice>;
   TryExecuteTests(SingleInvalidList(), false);
 
   std::cout << "Try a list with an invalid and valid device." << std::endl;
-  using InvalidAndValidList = vtkm::ListTagBase<InvalidDevice, ValidDevice>;
+  using InvalidAndValidList = vtkm::List<InvalidDevice, ValidDevice>;
   TryExecuteTests(InvalidAndValidList(), true);
 
   TryExecuteErrorTests();

@@ -30,7 +30,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT Contour : public vtkm::filter::FilterDataSetWithField<Contour>
 {
 public:
-  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
+  using SupportedTypes = vtkm::List<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
 
   VTKM_FILTER_EXPORT
   Contour();

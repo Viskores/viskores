@@ -79,20 +79,19 @@ void TestCrossProduct()
                    "Wrong number of results for CrossProduct worklet");
 
   //Test the canonical cases.
-  VTKM_TEST_ASSERT(
-    test_equal(outputArray.GetPortalConstControl().Get(0), vtkm::make_Vec(0, 0, 1)) &&
-      test_equal(outputArray.GetPortalConstControl().Get(1), vtkm::make_Vec(1, 0, 0)) &&
-      test_equal(outputArray.GetPortalConstControl().Get(2), vtkm::make_Vec(0, 1, 0)) &&
-      test_equal(outputArray.GetPortalConstControl().Get(3), vtkm::make_Vec(0, 0, -1)) &&
-      test_equal(outputArray.GetPortalConstControl().Get(4), vtkm::make_Vec(-1, 0, 0)) &&
-      test_equal(outputArray.GetPortalConstControl().Get(5), vtkm::make_Vec(0, -1, 0)),
-    "Wrong result for CrossProduct worklet");
+  VTKM_TEST_ASSERT(test_equal(outputArray.ReadPortal().Get(0), vtkm::make_Vec(0, 0, 1)) &&
+                     test_equal(outputArray.ReadPortal().Get(1), vtkm::make_Vec(1, 0, 0)) &&
+                     test_equal(outputArray.ReadPortal().Get(2), vtkm::make_Vec(0, 1, 0)) &&
+                     test_equal(outputArray.ReadPortal().Get(3), vtkm::make_Vec(0, 0, -1)) &&
+                     test_equal(outputArray.ReadPortal().Get(4), vtkm::make_Vec(-1, 0, 0)) &&
+                     test_equal(outputArray.ReadPortal().Get(5), vtkm::make_Vec(0, -1, 0)),
+                   "Wrong result for CrossProduct worklet");
 
   for (vtkm::Id i = 0; i < inputArray1.GetNumberOfValues(); i++)
   {
-    vtkm::Vec<T, 3> v1 = inputArray1.GetPortalConstControl().Get(i);
-    vtkm::Vec<T, 3> v2 = inputArray2.GetPortalConstControl().Get(i);
-    vtkm::Vec<T, 3> res = outputArray.GetPortalConstControl().Get(i);
+    vtkm::Vec<T, 3> v1 = inputArray1.ReadPortal().Get(i);
+    vtkm::Vec<T, 3> v2 = inputArray2.ReadPortal().Get(i);
+    vtkm::Vec<T, 3> res = outputArray.ReadPortal().Get(i);
 
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
     vtkm::Vec<T, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)), resN(vtkm::Normal(res));

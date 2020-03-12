@@ -48,13 +48,15 @@ struct transfer_color_table_to_device
 {
 
   template <typename DeviceAdapter>
-  inline bool operator()(DeviceAdapter device, vtkm::cont::ColorTable::TransferState&& state) const
+  inline bool operator()(DeviceAdapter device,
+                         vtkm::cont::ColorTable::TransferState&& state,
+                         vtkm::cont::Token& token) const
   {
-    auto p1 = state.ColorPosHandle.PrepareForInput(device);
-    auto p2 = state.ColorRGBHandle.PrepareForInput(device);
-    auto p3 = state.OpacityPosHandle.PrepareForInput(device);
-    auto p4 = state.OpacityAlphaHandle.PrepareForInput(device);
-    auto p5 = state.OpacityMidSharpHandle.PrepareForInput(device);
+    auto p1 = state.ColorPosHandle.PrepareForInput(device, token);
+    auto p2 = state.ColorRGBHandle.PrepareForInput(device, token);
+    auto p3 = state.OpacityPosHandle.PrepareForInput(device, token);
+    auto p4 = state.OpacityAlphaHandle.PrepareForInput(device, token);
+    auto p5 = state.OpacityMidSharpHandle.PrepareForInput(device, token);
 
     //The rest of the data member on portal are set when-ever the user
     //modifies the ColorTable instance and don't need to specified here
@@ -78,7 +80,9 @@ struct map_color_table
   template <typename DeviceAdapter, typename ColorTable, typename... Args>
   inline bool operator()(DeviceAdapter device, ColorTable&& colors, Args&&... args) const
   {
-    vtkm::worklet::colorconversion::TransferFunction transfer(colors->PrepareForExecution(device));
+    vtkm::cont::Token token;
+    vtkm::worklet::colorconversion::TransferFunction transfer(
+      colors->PrepareForExecution(device, token));
     vtkm::cont::Invoker invoke(device);
     invoke(transfer, std::forward<Args>(args)...);
     return true;
@@ -226,7 +230,7 @@ inline vtkm::cont::ArrayHandle<T> buildSampleHandle(vtkm::Int32 numSamples,
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(allocationSize);
 
-  auto portal = handle.GetPortalControl();
+  auto portal = handle.WritePortal();
   vtkm::Id index = 0;
 
   //Insert the below range first
@@ -348,7 +352,8 @@ bool ColorTable::Sample(vtkm::Int32 numSamples,
 
 //---------------------------------------------------------------------------
 const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
   //Build the ColorTable instance that is needed for execution
   if (this->NeedToCreateExecutionColorTable())
@@ -400,13 +405,20 @@ const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
   if (info.NeedsTransfer)
   {
     bool transfered = vtkm::cont::TryExecuteOnDevice(
-      device, detail::transfer_color_table_to_device{}, std::move(info));
+      device, detail::transfer_color_table_to_device{}, std::move(info), token);
     if (!transfered)
     {
       throwFailedRuntimeDeviceTransfer("ColorTable", device);
     }
   }
-  return this->GetExecutionHandle()->PrepareForExecution(device);
+  return this->GetExecutionHandle()->PrepareForExecution(device, token);
+}
+
+const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device) const
+{
+  vtkm::cont::Token token;
+  return this->PrepareForExecution(device, token);
 }
 }
 }

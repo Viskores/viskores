@@ -95,7 +95,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
 
   // Warp the coordinates
   std::uniform_real_distribution<vtkm::FloatDefault> warpFactor(-0.10f, 0.10f);
-  auto pointsPortal = points.GetPortalControl();
+  auto pointsPortal = points.WritePortal();
   for (vtkm::Id i = 0; i < pointsPortal.GetNumberOfValues(); ++i)
   {
     PointType warpVec(0);
@@ -130,7 +130,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
 
   for (vtkm::Id i = 0; i < count; ++i)
   {
-    cellIds.GetPortalControl().Set(i, cellIdGen(RandomGenerator));
+    cellIds.WritePortal().Set(i, cellIdGen(RandomGenerator));
 
     PointType pc(0.0f);
     vtkm::FloatDefault minPc = 1e-2f;
@@ -143,7 +143,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
       pc[c] = pcoordGen(RandomGenerator);
       sum += pc[c];
     }
-    pcoords.GetPortalControl().Set(i, pc);
+    pcoords.WritePortal().Set(i, pc);
   }
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
@@ -198,12 +198,9 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
-    VTKM_TEST_ASSERT(cellIds.GetPortalConstControl().Get(i) ==
-                       expCellIds.GetPortalConstControl().Get(i),
+    VTKM_TEST_ASSERT(cellIds.ReadPortal().Get(i) == expCellIds.ReadPortal().Get(i),
                      "Incorrect cell ids");
-    VTKM_TEST_ASSERT(test_equal(pcoords.GetPortalConstControl().Get(i),
-                                expPCoords.GetPortalConstControl().Get(i),
-                                1e-3),
+    VTKM_TEST_ASSERT(test_equal(pcoords.ReadPortal().Get(i), expPCoords.ReadPortal().Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
 }

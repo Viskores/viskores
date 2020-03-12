@@ -33,8 +33,9 @@ vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
   @ONLY)
-vtkm_install_headers(
-  vtkm/internal ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h)
+vtkm_install_headers(vtkm/internal
+  ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
+  )
 
 unset(VTKM_ENABLE_MPI)
 unset(VTKM_ENABLE_TBB)
@@ -62,7 +63,6 @@ set(headers
   IndexTag.h
   IndicesExtrude.h
   Invocation.h
-  ListTagDetail.h
   Unreachable.h
   Variant.h
   VariantDetail.h

@@ -13,7 +13,7 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/Windows.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/Types.h>
 
 #if defined(VTKM_MSVC) && !defined(VTKM_CUDA)
@@ -37,7 +37,7 @@ namespace internal
 class AtomicInterfaceControl
 {
 public:
-  using WordTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::UInt16, vtkm::UInt32, vtkm::UInt64>;
+  using WordTypes = vtkm::List<vtkm::UInt8, vtkm::UInt16, vtkm::UInt32, vtkm::UInt64>;
 
   // TODO These support UInt64, too. This should be benchmarked to see which
   // is faster.

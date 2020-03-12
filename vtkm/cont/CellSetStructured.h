@@ -115,9 +115,50 @@ public:
 
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
   typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
-    PrepareForInput(DeviceAdapter, VisitTopology, IncidentTopology) const;
+  PrepareForInput(DeviceAdapter, VisitTopology, IncidentTopology, vtkm::cont::Token&) const;
+
+  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(DeviceAdapter device,
+                    VisitTopology visitTopology,
+                    IncidentTopology incidentTopology) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
 
   void PrintSummary(std::ostream& out) const override;
+
+  // Cannot use the default implementation of the destructor because the CUDA compiler
+  // will attempt to create it for device, and then it will fail when it tries to call
+  // the destructor of the superclass.
+  ~CellSetStructured() override {}
+
+  CellSetStructured() = default;
+
+  CellSetStructured(const CellSetStructured& src)
+    : CellSet()
+    , Structure(src.Structure)
+  {
+  }
+
+  CellSetStructured& operator=(const CellSetStructured& src)
+  {
+    this->Structure = src.Structure;
+    return *this;
+  }
+
+  CellSetStructured(CellSetStructured&& src) noexcept : CellSet(),
+                                                        Structure(std::move(src.Structure))
+  {
+  }
+
+  CellSetStructured& operator=(CellSetStructured&& src) noexcept
+  {
+    this->Structure = std::move(src.Structure);
+    return *this;
+  }
 
 private:
   InternalsType Structure;

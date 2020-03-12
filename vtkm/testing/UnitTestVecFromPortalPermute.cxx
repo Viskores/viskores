@@ -98,7 +98,7 @@ struct VecFromPortalPermuteTestFunctor
 
 void VecFromPortalPermuteTest()
 {
-  vtkm::testing::Testing::TryTypes(VecFromPortalPermuteTestFunctor(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(VecFromPortalPermuteTestFunctor(), vtkm::TypeListCommon());
 }
 
 } // namespace UnitTestVecFromPortalPermuteNamespace

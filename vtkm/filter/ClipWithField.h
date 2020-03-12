@@ -29,7 +29,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT
   void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }

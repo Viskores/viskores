@@ -135,17 +135,24 @@ public:
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id start, vtkm::Id end, vtkm::Id inc, vtkm::Id j, vtkm::Id k) const
+  void operator()(const vtkm::Id3& size,
+                  vtkm::Id start,
+                  vtkm::Id end,
+                  vtkm::Id inc,
+                  vtkm::Id j,
+                  vtkm::Id k) const
   {
     vtkm::Id3 index(start, j, k);
-    for (vtkm::Id i = start; i < end; i += inc)
+    auto threadIndex1D = index[0] + size[0] * (index[1] + size[1] * index[2]);
+    for (vtkm::Id i = start; i < end; i += inc, threadIndex1D += inc)
     {
       index[0] = i;
       //Todo: rename this function to DoTaskInvokeWorklet
       vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
         this->Worklet,
         this->Invocation,
-        this->Worklet.GetThreadIndices(index,
+        this->Worklet.GetThreadIndices(threadIndex1D,
+                                       index,
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
                                        this->Invocation.ThreadToOutputMap,
@@ -178,7 +185,12 @@ public:
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id start, vtkm::Id end, vtkm::Id inc, vtkm::Id j, vtkm::Id k) const
+  void operator()(const vtkm::Id3& size,
+                  vtkm::Id start,
+                  vtkm::Id end,
+                  vtkm::Id inc,
+                  vtkm::Id j,
+                  vtkm::Id k) const
   {
     vtkm::Id3 index(start, j, k);
     for (vtkm::Id i = start; i < end; i += inc)

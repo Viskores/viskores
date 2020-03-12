@@ -23,7 +23,7 @@ class DotProduct : public vtkm::filter::FilterField<DotProduct>
 {
 public:
   //currently the DotProduct filter only works on vector data.
-  using SupportedTypes = TypeListTagVecCommon;
+  using SupportedTypes = TypeListVecCommon;
 
   VTKM_CONT
   DotProduct();

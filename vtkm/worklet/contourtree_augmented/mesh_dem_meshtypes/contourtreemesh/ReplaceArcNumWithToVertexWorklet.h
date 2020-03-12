@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_replace_arc_num_with_to_vertex_worklet_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_replace_arc_num_with_to_vertex_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_replace_arc_num_with_to_vertex_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_replace_arc_num_with_to_vertex_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -92,11 +92,11 @@ public:
   VTKM_EXEC void operator()(vtkm::Id& neighboursVal, const InFieldPortalType& arcsPortal) const
   {
     neighboursVal =
-      (neighboursVal % 2 == 0) ? maskedIndex(arcsPortal.Get(neighboursVal / 2)) : neighboursVal / 2;
+      (neighboursVal % 2 == 0) ? MaskedIndex(arcsPortal.Get(neighboursVal / 2)) : neighboursVal / 2;
     // In serial this worklet implements
     //  for (indexVector::size_type sortedArcNo = 0; sortedArcNo < neighbours.size(); ++sortedArcNo)
     //    {
-    //      neighbours[sortedArcNo] = (neighbours[sortedArcNo] % 2 == 0) ?  maskedIndex(arcs[neighbours[sortedArcNo]/2]) : neighbours[sortedArcNo]/2;
+    //      neighbours[sortedArcNo] = (neighbours[sortedArcNo] % 2 == 0) ?  MaskedIndex(arcs[neighbours[sortedArcNo]/2]) : neighbours[sortedArcNo]/2;
     //    }
   }
 

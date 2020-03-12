@@ -178,12 +178,13 @@ public:
                        const IdHandle& faceOffsets,
                        const IdHandle& cellConn,
                        const IdHandle& cellOffsets,
-                       const UCharHandle& shapes)
-    : FaceConnPortal(faceConnectivity.PrepareForInput(Device()))
-    , FaceOffsetsPortal(faceOffsets.PrepareForInput(Device()))
-    , CellConnPortal(cellConn.PrepareForInput(Device()))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device()))
-    , ShapesPortal(shapes.PrepareForInput(Device()))
+                       const UCharHandle& shapes,
+                       vtkm::cont::Token& token)
+    : FaceConnPortal(faceConnectivity.PrepareForInput(Device(), token))
+    , FaceOffsetsPortal(faceOffsets.PrepareForInput(Device(), token))
+    , CellConnPortal(cellConn.PrepareForInput(Device(), token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
+    , ShapesPortal(shapes.PrepareForInput(Device(), token))
   {
   }
 
@@ -218,7 +219,7 @@ public:
   VTKM_EXEC
   vtkm::UInt8 GetCellShape(const vtkm::Id& cellId) const override
   {
-    BOUNDS_CHECK(ShapesPortal, cellId)
+    BOUNDS_CHECK(ShapesPortal, cellId);
     return ShapesPortal.Get(cellId);
   }
 
@@ -253,10 +254,11 @@ public:
                      CountingHandle& cellOffsets,
                      vtkm::Int32 shapeId,
                      vtkm::Int32 numIndices,
-                     vtkm::Int32 numFaces)
-    : FaceConnPortal(faceConn.PrepareForInput(Device()))
-    , CellConnectivityPortal(cellConn.PrepareForInput(Device()))
-    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device()))
+                     vtkm::Int32 numFaces,
+                     vtkm::cont::Token& token)
+    : FaceConnPortal(faceConn.PrepareForInput(Device(), token))
+    , CellConnectivityPortal(cellConn.PrepareForInput(Device(), token))
+    , CellOffsetsPortal(cellOffsets.PrepareForInput(Device(), token))
     , ShapeId(shapeId)
     , NumIndices(numIndices)
     , NumFaces(numFaces)
@@ -308,8 +310,7 @@ private:
 public:
   MeshConnHandle() = default;
 
-  template <typename MeshConnType,
-            typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+  template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
   explicit MeshConnHandle(MeshConnType* meshConn,
                           bool aquireOwnership = true,
                           DeviceAdapterList devices = DeviceAdapterList())
@@ -318,7 +319,7 @@ public:
   }
 };
 
-template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+template <typename MeshConnType, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
 VTKM_CONT MeshConnHandle make_MeshConnHandle(MeshConnType&& func,
                                              DeviceAdapterList devices = DeviceAdapterList())
 {

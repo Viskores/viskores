@@ -55,19 +55,19 @@ public:
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
                            const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset = 0)
   {
     // We currently only support multidimensional indices on one-to-one input-
     // to-output mappings. (We don't have a use case otherwise.)
     // That is why we treat teh threadIndex as also the inputIndex and outputIndex
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = threadIndex1D;
+    this->OutputIndex = threadIndex1D;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
@@ -196,17 +196,17 @@ public:
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
-  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
                            const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset = 0)
   {
 
-    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex, LogicalIndexType());
-    const vtkm::Id index = connectivity.LogicalToFlatToIndex(logicalIndex);
+    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
 
-    this->ThreadIndex = index;
-    this->InputIndex = index;
-    this->OutputIndex = index;
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = threadIndex1D;
+    this->OutputIndex = threadIndex1D;
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);

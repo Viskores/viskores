@@ -141,12 +141,22 @@ public:
   };
 
   template <typename Device>
-  VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device) const
+  VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device,
+                                                                    vtkm::cont::Token& token) const
   {
-    return typename ExecutionTypes<Device>::Lookup(this->UniqueKeys.PrepareForInput(Device()),
-                                                   this->SortedValuesMap.PrepareForInput(Device()),
-                                                   this->Offsets.PrepareForInput(Device()),
-                                                   this->Counts.PrepareForInput(Device()));
+    return
+      typename ExecutionTypes<Device>::Lookup(this->UniqueKeys.PrepareForInput(device, token),
+                                              this->SortedValuesMap.PrepareForInput(device, token),
+                                              this->Offsets.PrepareForInput(device, token),
+                                              this->Counts.PrepareForInput(device, token));
+  }
+
+  template <typename Device>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<Device>::Lookup PrepareForInput(Device device) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, token);
   }
 
   VTKM_CONT
@@ -176,6 +186,20 @@ private:
 
 template <typename T>
 VTKM_CONT Keys<T>::Keys() = default;
+
+template <typename KeyType>
+inline auto SchedulingRange(const vtkm::worklet::Keys<KeyType>& inputDomain)
+  -> decltype(inputDomain.GetInputRange())
+{
+  return inputDomain.GetInputRange();
+}
+
+template <typename KeyType>
+inline auto SchedulingRange(const vtkm::worklet::Keys<KeyType>* const inputDomain)
+  -> decltype(inputDomain->GetInputRange())
+{
+  return inputDomain->GetInputRange();
+}
 }
 } // namespace vtkm::worklet
 
@@ -207,14 +231,15 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn, vtkm::worklet::Keys<KeyTyp
   ExecObjectType operator()(const ContObjectType& object,
                             const ContObjectType& inputDomain,
                             vtkm::Id,
-                            vtkm::Id) const
+                            vtkm::Id,
+                            vtkm::cont::Token& token) const
   {
     if (object != inputDomain)
     {
       throw vtkm::cont::ErrorBadValue("A Keys object must be the input domain.");
     }
 
-    return object.PrepareForInput(Device());
+    return object.PrepareForInput(Device(), token);
   }
 
   // If you get a compile error here, it means that you have used a KeysIn
@@ -241,7 +266,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, De
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
                                       const vtkm::worklet::Keys<KeyType>& keys,
                                       vtkm::Id,
-                                      vtkm::Id) const
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
     {
@@ -255,7 +281,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, De
     // maintaining the resources it points to. However, the entire state of the
     // portal should be self contained except for the data managed by the
     // object argument, which should stay in scope.
-    return groupedArray.PrepareForInput(Device());
+    return groupedArray.PrepareForInput(Device(), token);
   }
 };
 
@@ -276,7 +302,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType,
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
                                       const vtkm::worklet::Keys<KeyType>& keys,
                                       vtkm::Id,
-                                      vtkm::Id) const
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
     {
@@ -290,7 +317,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType,
     // maintaining the resources it points to. However, the entire state of the
     // portal should be self contained except for the data managed by the
     // object argument, which should stay in scope.
-    return groupedArray.PrepareForInPlace(Device());
+    return groupedArray.PrepareForInPlace(Device(), token);
   }
 };
 
@@ -311,12 +338,13 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
                                       const vtkm::worklet::Keys<KeyType>& keys,
                                       vtkm::Id,
-                                      vtkm::Id) const
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and
     // ArrayHandlePermutation cannot determine the actual size expected for the
     // target array (object), so we have to make sure it gets allocated here.
-    object.PrepareForOutput(keys.GetNumberOfValues(), Device());
+    object.PrepareForOutput(keys.GetNumberOfValues(), Device(), token);
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -325,7 +353,7 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
     // maintaining the resources it points to. However, the entire state of the
     // portal should be self contained except for the data managed by the
     // object argument, which should stay in scope.
-    return groupedArray.PrepareForOutput(keys.GetInputRange(), Device());
+    return groupedArray.PrepareForOutput(keys.GetInputRange(), Device(), token);
   }
 };
 }

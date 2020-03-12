@@ -80,10 +80,10 @@ struct DoStaticTestWorklet
     dispatcher.Invoke(&inputHandle, &outputHandleAsPtr, &inoutHandleAsPtr);
 
     std::cout << "Check results." << std::endl;
-    CheckPortal(outputHandle.GetPortalConstControl());
-    CheckPortal(inoutHandle.GetPortalConstControl());
-    CheckPortal(outputHandleAsPtr.GetPortalConstControl());
-    CheckPortal(inoutHandleAsPtr.GetPortalConstControl());
+    CheckPortal(outputHandle.ReadPortal());
+    CheckPortal(inoutHandle.ReadPortal());
+    CheckPortal(outputHandleAsPtr.ReadPortal());
+    CheckPortal(inoutHandleAsPtr.ReadPortal());
 
     std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
     inputHandle.Shrink(ARRAY_SIZE / 2);
@@ -129,11 +129,11 @@ struct DoVariantTestWorklet
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
       vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
-      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
-                        outputVariant.ResetTypes(vtkm::ListTagBase<T>{}),
-                        inoutVariant.ResetTypes(vtkm::ListTagBase<T>{}));
-      CheckPortal(outputHandle.GetPortalConstControl());
-      CheckPortal(inoutHandle.GetPortalConstControl());
+      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::List<T>{}),
+                        outputVariant.ResetTypes(vtkm::List<T>{}),
+                        inoutVariant.ResetTypes(vtkm::List<T>{}));
+      CheckPortal(outputHandle.ReadPortal());
+      CheckPortal(inoutHandle.ReadPortal());
     }
 
     { //Verify we can pass by pointer
@@ -142,18 +142,18 @@ struct DoVariantTestWorklet
 
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);
-      CheckPortal(outputHandle.GetPortalConstControl());
-      CheckPortal(inoutHandle.GetPortalConstControl());
+      CheckPortal(outputHandle.ReadPortal());
+      CheckPortal(inoutHandle.ReadPortal());
 
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       dispatcher.Invoke(inputHandle, &outputVariant, inoutHandle);
-      CheckPortal(outputHandle.GetPortalConstControl());
-      CheckPortal(inoutHandle.GetPortalConstControl());
+      CheckPortal(outputHandle.ReadPortal());
+      CheckPortal(inoutHandle.ReadPortal());
 
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       dispatcher.Invoke(inputHandle, outputHandle, &inoutVariant);
-      CheckPortal(outputHandle.GetPortalConstControl());
-      CheckPortal(inoutHandle.GetPortalConstControl());
+      CheckPortal(outputHandle.ReadPortal());
+      CheckPortal(inoutHandle.ReadPortal());
     }
   }
 };
@@ -176,7 +176,7 @@ void TestWorkletMapField(vtkm::cont::DeviceAdapterId id)
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
-                                   vtkm::TypeListTagCommon());
+                                   vtkm::TypeListCommon());
 }
 
 } // mapfield namespace

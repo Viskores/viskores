@@ -179,13 +179,14 @@ public:
   };
 
   template <typename DeviceAdapter>
-  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter,
+                                                          vtkm::cont::Token& token) const
   {
-    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter()),
-                                     this->ValueIndex.PrepareForInput(DeviceAdapter()),
-                                     this->EdgeFar.PrepareForInput(DeviceAdapter()),
-                                     this->EdgeNear.PrepareForInput(DeviceAdapter()),
-                                     this->ArcArray.PrepareForInput(DeviceAdapter()),
+    return ExecObject<DeviceAdapter>(this->Values.PrepareForInput(DeviceAdapter(), token),
+                                     this->ValueIndex.PrepareForInput(DeviceAdapter(), token),
+                                     this->EdgeFar.PrepareForInput(DeviceAdapter(), token),
+                                     this->EdgeNear.PrepareForInput(DeviceAdapter(), token),
+                                     this->ArcArray.PrepareForInput(DeviceAdapter(), token),
                                      this->IsJoinGraph);
   }
 }; // EdgePeakComparator

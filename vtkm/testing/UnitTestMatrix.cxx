@@ -593,14 +593,14 @@ void TestMatrices()
 {
   //  std::cout << "****** Rectangle tests" << std::endl;
   //  vtkm::testing::Testing::TryTypes(MatrixTestFunctor(),
-  //                                   vtkm::TypeListTagScalarAll());
+  //                                   vtkm::TypeListScalarAll());
 
   std::cout << "****** Square tests" << std::endl;
-  vtkm::testing::Testing::TryTypes(SquareMatrixTestFunctor(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(SquareMatrixTestFunctor(), vtkm::TypeListFieldScalar());
 
   //  std::cout << "***** Vector multiply tests" << std::endl;
   //  vtkm::testing::Testing::TryTypes(VectorMultFunctor(),
-  //                                   vtkm::TypeListTagVecAll());
+  //                                   vtkm::TypeListVecAll());
 }
 
 } // anonymous namespace

@@ -44,21 +44,21 @@ public:
   }
 
   VTKM_CONT
-  PortalConstType PrepareForInput(bool updateData)
+  PortalConstType PrepareForInput(bool updateData, vtkm::cont::Token& token)
   {
-    return this->Superclass::PrepareForInput(updateData);
+    return this->Superclass::PrepareForInput(updateData, token);
   }
 
   VTKM_CONT
-  PortalType PrepareForInPlace(bool updateData)
+  PortalType PrepareForInPlace(bool updateData, vtkm::cont::Token& token)
   {
-    return this->Superclass::PrepareForInPlace(updateData);
+    return this->Superclass::PrepareForInPlace(updateData, token);
   }
 
   VTKM_CONT
-  PortalType PrepareForOutput(vtkm::Id numberOfValues)
+  PortalType PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return this->Superclass::PrepareForOutput(numberOfValues);
+    return this->Superclass::PrepareForOutput(numberOfValues, token);
   }
 };
 

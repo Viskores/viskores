@@ -15,6 +15,8 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
+#include <vtkm/Deprecated.h>
+
 namespace vtkm
 {
 namespace cont
@@ -70,21 +72,59 @@ private:
 };
 }
 
-template <typename ArrayHandleType>
-class StorageTagReverse
+template <typename StorageTag>
+class VTKM_ALWAYS_EXPORT StorageTagReverse
 {
 };
 
 namespace internal
 {
 
-template <typename ArrayHandleType>
-class Storage<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>>
+namespace detail
+{
+
+template <typename T, typename ArrayOrStorage, bool IsArrayType>
+struct ReverseTypeArgImpl;
+
+template <typename T, typename Storage>
+struct ReverseTypeArgImpl<T, Storage, false>
+{
+  using StorageTag = Storage;
+  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
+};
+
+template <typename T, typename Array>
+struct ReverseTypeArgImpl<T, Array, true>
+{
+  VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
+                         "Used array with wrong type in ArrayHandleReverse.");
+  using StorageTag VTKM_DEPRECATED(
+    1.6,
+    "Use storage tag instead of array handle in StorageTagReverse.") = typename Array::StorageTag;
+  using ArrayHandle VTKM_DEPRECATED(
+    1.6,
+    "Use storage tag instead of array handle in StorageTagReverse.") =
+    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
+};
+
+template <typename T, typename ArrayOrStorage>
+struct ReverseTypeArg
+  : ReverseTypeArgImpl<T,
+                       ArrayOrStorage,
+                       vtkm::cont::internal::ArrayHandleCheck<ArrayOrStorage>::type::value>
+{
+};
+
+} // namespace detail
+
+template <typename T, typename ST>
+class Storage<T, StorageTagReverse<ST>>
 {
 public:
-  using ValueType = typename ArrayHandleType::ValueType;
-  using PortalType = ArrayPortalReverse<typename ArrayHandleType::PortalControl>;
-  using PortalConstType = ArrayPortalReverse<typename ArrayHandleType::PortalConstControl>;
+  using ValueType = T;
+  using ArrayHandleType = typename detail::ReverseTypeArg<T, ST>::ArrayHandle;
+  using PortalType = ArrayPortalReverse<typename ArrayHandleType::WritePortalType>;
+  using PortalConstType = ArrayPortalReverse<typename ArrayHandleType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -100,13 +140,10 @@ public:
 
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const
-  {
-    return PortalConstType(this->Array.GetPortalConstControl());
-  }
+  PortalConstType GetPortalConst() const { return PortalConstType(this->Array.ReadPortal()); }
 
   VTKM_CONT
-  PortalType GetPortal() { return PortalType(this->Array.GetPortalControl()); }
+  PortalType GetPortal() { return PortalType(this->Array.WritePortal()); }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
@@ -132,17 +169,16 @@ private:
   ArrayHandleType Array;
 }; // class storage
 
-template <typename ArrayHandleType, typename Device>
-class ArrayTransfer<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>, Device>
+template <typename T, typename ST, typename Device>
+class ArrayTransfer<T, StorageTagReverse<ST>, Device>
 {
-public:
-  using ValueType = typename ArrayHandleType::ValueType;
-
 private:
-  using StorageTag = StorageTagReverse<ArrayHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+  using StorageTag = StorageTagReverse<ST>;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
+  using ArrayHandleType = typename detail::ReverseTypeArg<T, ST>::ArrayHandle;
 
 public:
+  using ValueType = T;
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -161,21 +197,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()));
+    return PortalExecution(this->Array.PrepareForInPlace(Device(), token));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device(), token));
   }
 
   VTKM_CONT
@@ -203,18 +239,17 @@ private:
 /// order (i.e. from end to beginning).
 ///
 template <typename ArrayHandleType>
-class ArrayHandleReverse : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                          StorageTagReverse<ArrayHandleType>>
+class ArrayHandleReverse
+  : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                                   StorageTagReverse<typename ArrayHandleType::StorageTag>>
 
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleReverse,
-                             (ArrayHandleReverse<ArrayHandleType>),
-                             (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                      StorageTagReverse<ArrayHandleType>>));
-
-protected:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleReverse,
+    (ArrayHandleReverse<ArrayHandleType>),
+    (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                             StorageTagReverse<typename ArrayHandleType::StorageTag>>));
 
 public:
   ArrayHandleReverse(const ArrayHandleType& handle)
@@ -252,10 +287,9 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
   }
 };
 
-template <typename AH>
-struct SerializableTypeString<
-  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
-  : SerializableTypeString<vtkm::cont::ArrayHandleReverse<AH>>
+template <typename T, typename ST>
+struct SerializableTypeString<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagReverse<ST>>>
+  : SerializableTypeString<vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<T, ST>>>
 {
 };
 }
@@ -285,10 +319,9 @@ public:
   }
 };
 
-template <typename AH>
-struct Serialization<
-  vtkm::cont::ArrayHandle<typename AH::ValueType, vtkm::cont::StorageTagReverse<AH>>>
-  : Serialization<vtkm::cont::ArrayHandleReverse<AH>>
+template <typename T, typename ST>
+struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagReverse<ST>>>
+  : Serialization<vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<T, ST>>>
 {
 };
 

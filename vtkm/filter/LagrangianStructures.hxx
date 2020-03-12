@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -23,6 +24,23 @@ namespace vtkm
 {
 namespace filter
 {
+
+namespace detail
+{
+class ExtractParticlePosition : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn particle, FieldOut position);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  VTKM_EXEC void operator()(const vtkm::Particle& particle, vtkm::Vec3f& pt) const
+  {
+    pt = particle.Pos;
+  }
+};
+
+} //detail
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT LagrangianStructures::LagrangianStructures()
@@ -104,7 +122,9 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     vtkm::cont::ArrayHandle<vtkm::Vec3f> advectionPoints;
     vtkm::cont::ArrayCopy(lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
-    lcsOutputPoints = advectionResult.positions;
+
+    vtkm::cont::Invoker invoke;
+    invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);
   }
   // FTLE output field
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;

@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestCudaAlgorithms.cu
   UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaArrayHandleMultiplexer.cu
@@ -24,6 +25,7 @@ set(unit_tests
   UnitTestCudaDeviceAdapter.cu
   UnitTestCudaGeometry.cu
   UnitTestCudaImplicitFunction.cu
+  UnitTestCudaIterators.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorUniformGrid.cu

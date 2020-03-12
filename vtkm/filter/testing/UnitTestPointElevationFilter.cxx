@@ -79,9 +79,9 @@ void TestPointElevationNoPolicy()
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                resultArrayHandle.GetPortalConstControl().Get(i)),
-                     "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(
+      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
+      "Wrong result for PointElevation worklet");
   }
 }
 
@@ -110,9 +110,9 @@ void TestPointElevationWithPolicy()
   auto coordinates = inputData.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                resultArrayHandle.GetPortalConstControl().Get(i)),
-                     "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(
+      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
+      "Wrong result for PointElevation worklet");
   }
 }
 

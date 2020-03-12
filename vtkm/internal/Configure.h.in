@@ -106,13 +106,23 @@
 #define VTK_M_THIRDPARTY_GCC_WARNING_PRAGMAS
 #endif
 
-// Newer versions of clang have an unused-local-typedef warning, but not older
-// versions. This checks for the apple version of clang, which is different
-// than other clang compiled versions. If using a non-apple version of clang,
-// you might need to extend this condition.
+
 #if defined(VTKM_CLANG) && (__apple_build_version__ >= 7000072)
+// 1. Newer versions of clang have an unused-local-typedef warning, but not older
+// versions. This checks for the apple version of clang, which is different
+// than other clang compiled versions.
+// 2+. Suppress common issues found in third-party code such
+// as DIY
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
-  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-local-typedef\"") \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
+#elif defined(VTKM_CLANG)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
+  _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
 #else
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS
 #endif
@@ -154,6 +164,29 @@
 #else
 #define VTKM_THIRDPARTY_PRE_INCLUDE
 #define VTKM_THIRDPARTY_POST_INCLUDE
+#endif
+
+#include <cctype> //needed to get the __GLIBCXX__ macro
+#if defined(__GLIBCXX__) &&                                                                        \
+  (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626 ||                 \
+   __GLIBCXX__ == 20150623)
+// GCC release date mapping
+// 20160726 == 4.9.4
+// 20150626 == 4.9.3
+// 20150623 == 4.8.5
+// 20150422 == 5.1
+// 20141030 == 4.9.2
+// See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html#abi.versioning.__GLIBCXX__
+// Some context on why this check is useful
+// Components of the c++ standard such as `std::aligned_union` are not something
+// intrinsic to compiler but part of the standard library. Therefore support for these
+// features are determined by what standard library is used versus the compiler.
+// For example by default Intel, PGI, and IBM compilers use the standard library
+// that is provided by a systems default C++ compiler ( generally gcc ). For this
+// reason we have a define that states we are compiling with GLIBCXX_4 which
+// is missing some usefull C++ standard library components
+//
+#define VTKM_USING_GLIBCXX_4
 #endif
 
 //Determine if current compiler supports vectorization pragma's
@@ -278,30 +311,49 @@
   while (false)
 #endif
 
-// Use a trick to pass arguments containing commas through a macro. This is
-// helpful for mixing template code with macros.
-// See https://stackoverflow.com/questions/13842468
+/// \def VTKM_PASS_COMMAS(...)
+///
+/// A trick to pass arguments containing commas through a macro. This is
+/// helpful for mixing template code with macros.
+///
+/// See https://stackoverflow.com/questions/13842468
 #define VTKM_PASS_COMMAS(...) __VA_ARGS__
+
+/// \def VTKM_EXPAND(expr)
+///
+/// A utility macro to expand the arguments of macro before invoking it in the
+/// preprocessor. This is mostly used to handle the `__VA_ARGS__` created for
+/// variadic preprocessor macros. Often you will have to pass `__VA_ARGS__` to
+/// another macro to tease out particular parameters. For example, to get the
+/// first argument, you might make something like this.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg)
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+/// You would expect this pair of macros to give you the first argument or the
+/// token `no_arg` if no arguments were given, and for most compilers that
+/// is what you would get. But Visual Studio in particular has a weird
+/// interpretation of the standard that causes `__VA_ARGS__` to be treated
+/// as a single argument when passed to another macro. Consequently, for the
+/// example above, Visual Studio actually returns all args passed instead of
+/// the first. To get around the problem, you can wrap the entire call to
+/// the secondary macro in VTKM_EXPAND to get Visual Studio (and all other
+/// compilers) to properly treat `__VA_ARGS__` as separate arguments.
+///
+/// ```cpp
+/// #define GET_FIRST_ARGUMENT(...) VTKM_EXPAND(GET_FIRST_ARGUMENT_IMPL(__VA_ARGS__, no_arg))
+/// #define GET_FIRST_ARGUMENT_IMPL(first, ...) first
+/// ```
+///
+#define VTKM_EXPAND(expr) expr
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
 //this doesn't affect the resulting binary so we just suppress that warning
 //
 #pragma warning(disable:4503)
-
-//MSVC has a warning for using "unsafe" algorithms such as fill_n that can
-//easily overrun the end of unchecked pointers. The problem is that there
-//are lots of valid uses of these algorithms, and the signal that this is
-//a valid use is MSVC-specific. Even less fortunate is the fact that if
-//another header violates the warning, it is impossible to suppress it
-//because it happens in a system header file (xutility), which was included
-//far before the actual offending code occurred. Even less fortunate than
-//that, a boost header we (indirectly) use sets off this warning, cannot
-//be suppressed, and is not going to be fixed
-//(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to
-//turn off this problematic warning for everybody.
-//
-#pragma warning(disable:4996)
 
 //In VTK-m libraries, we are typically exporting (with declspec) classes rather
 //than the independent methods within the class. When you are exporting to a

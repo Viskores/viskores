@@ -76,7 +76,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
   ArrayHandleType arrayCopy;
   vtkm::cont::ArrayCopy(outArray, arrayCopy);
 
-  typename ArrayHandleType::PortalConstControl portal = arrayCopy.GetPortalConstControl();
+  typename ArrayHandleType::ReadPortalType portal = arrayCopy.ReadPortal();
   using VTraits = vtkm::VecTraits<ValueType>;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
@@ -246,7 +246,7 @@ void TrySpecialArrays()
 
   VTKM_TEST_ASSERT(compositeArray.GetNumberOfValues() == ARRAY_SIZE, "Wrong array size.");
 
-  auto compositePortal = compositeArray.GetPortalConstControl();
+  auto compositePortal = compositeArray.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     VTKM_TEST_ASSERT(test_equal(compositePortal.Get(index), vtkm::Id2(index, 295)), "Bad value.");

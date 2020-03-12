@@ -93,7 +93,7 @@ struct InvocationToFetch
 
   VTKM_EXEC static ExecObjectType GetParameterImpl(const Invocation& invocation, std::false_type)
   {
-    return invocation.Parameters.template GetParameter<ControlParameterIndex>();
+    return vtkm::internal::ParameterGet<ControlParameterIndex>(invocation.Parameters);
   }
 
   VTKM_EXEC static ExecObjectType GetParameter(const Invocation& invocation)

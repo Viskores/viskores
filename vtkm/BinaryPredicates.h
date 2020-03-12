@@ -16,36 +16,36 @@ namespace vtkm
 {
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
-/// returns True if and only if \c x is equal to \c y.
-/// Note: Requires Type \p T implement the == operator.
-struct Equal
-{
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
-  {
-    return x == y;
-  }
-};
-
-/// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x is not equal to \c y.
-/// Note: Requires Type \p T implement the != operator.
+/// @note: Requires that types T and U are comparable with !=.
 struct NotEqual
 {
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
   {
     return x != y;
   }
 };
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
+/// returns True if and only if \c x is equal to \c y.
+/// @note: Requires that types T and U are comparable with !=.
+struct Equal
+{
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
+  {
+    return x == y;
+  }
+};
+
+/// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x is less than \c y.
-/// Note: Requires Type \p T implement the < operator.
+/// @note: Requires that types T and U are comparable with <.
 struct SortLess
 {
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
   {
     return x < y;
   }
@@ -53,12 +53,12 @@ struct SortLess
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x is greater than \c y.
-/// Note: Requires Type \p T implement the < operator, as we invert the
-/// comparison
+/// @note: Requires that types T and U are comparable via operator<(U, T).
+
 struct SortGreater
 {
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
   {
     return y < x;
   }
@@ -66,12 +66,12 @@ struct SortGreater
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x and \c y are True.
-/// Note: Requires Type \p T to be convertible to \c bool or implement the
-/// && operator.
+/// @note: Requires that types T and U are comparable with &&.
+
 struct LogicalAnd
 {
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
   {
     return x && y;
   }
@@ -79,12 +79,11 @@ struct LogicalAnd
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x or \c y is True.
-/// Note: Requires Type \p T to be convertible to \c bool or implement the
-/// || operator.
+/// @note: Requires that types T and U are comparable with ||.
 struct LogicalOr
 {
-  template <typename T>
-  VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
+  template <typename T, typename U>
+  VTKM_EXEC_CONT bool operator()(const T& x, const U& y) const
   {
     return x || y;
   }

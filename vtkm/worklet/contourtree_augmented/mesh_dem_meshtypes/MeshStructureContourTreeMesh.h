@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_contourtree_mesh_execution_obect_mesh_structure_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_contourtree_mesh_execution_obect_mesh_structure_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_contourtree_mesh_execution_obect_mesh_structure_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_contourtree_mesh_execution_obect_mesh_structure_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
@@ -93,7 +93,7 @@ public:
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
   MeshStructureContourTreeMesh()
-    : getMax(false)
+    : GetMax(false)
   {
   }
 
@@ -102,36 +102,37 @@ public:
   MeshStructureContourTreeMesh(const cpp2_ns::IdArrayType neighbours,
                                const cpp2_ns::IdArrayType firstNeighbour,
                                const vtkm::Id maxneighbours,
-                               bool getmax)
-    : maxNeighbours(maxneighbours)
-    , getMax(getmax)
+                               bool getmax,
+                               vtkm::cont::Token& token)
+    : MaxNeighbours(maxneighbours)
+    , GetMax(getmax)
   {
-    neighboursPortal = neighbours.PrepareForInput(DeviceAdapter());
-    firstNeighbourPortal = firstNeighbour.PrepareForInput(DeviceAdapter());
+    this->NeighboursPortal = neighbours.PrepareForInput(DeviceAdapter(), token);
+    this->FirstNeighbourPortal = firstNeighbour.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC
-  vtkm::Id GetNumberOfVertices() const { return this->firstNeighbourPortal.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfVertices() const { return this->FirstNeighbourPortal.GetNumberOfValues(); }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return this->maxNeighbours; }
+  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return this->MaxNeighbours; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id neighbourNo) const
   { // GetNeighbourIndex
-    return neighboursPortal.Get(firstNeighbourPortal.Get(sortIndex) + neighbourNo);
+    return NeighboursPortal.Get(FirstNeighbourPortal.Get(sortIndex) + neighbourNo);
   } // GetNeighbourIndex
 
   // sets outgoing paths for saddles
   VTKM_EXEC
   inline vtkm::Id GetExtremalNeighbour(vtkm::Id sortIndex) const
   { // GetExtremalNeighbour()
-    vtkm::Id neighboursBeginIndex = firstNeighbourPortal.Get(sortIndex);
+    vtkm::Id neighboursBeginIndex = FirstNeighbourPortal.Get(sortIndex);
     vtkm::Id neighboursEndIndex = (sortIndex < this->GetNumberOfVertices() - 1)
-      ? (firstNeighbourPortal.Get(sortIndex + 1) - 1)
-      : (neighboursPortal.GetNumberOfValues() - 1);
-    vtkm::Id neighboursBegin = neighboursPortal.Get(neighboursBeginIndex);
-    vtkm::Id neighboursEnd = neighboursPortal.Get(neighboursEndIndex);
+      ? (FirstNeighbourPortal.Get(sortIndex + 1) - 1)
+      : (NeighboursPortal.GetNumberOfValues() - 1);
+    vtkm::Id neighboursBegin = NeighboursPortal.Get(neighboursBeginIndex);
+    vtkm::Id neighboursEnd = NeighboursPortal.Get(neighboursEndIndex);
 
     if (neighboursBeginIndex == neighboursEndIndex + 1)
     { // Empty list of neighbours, this should never happen
@@ -139,7 +140,7 @@ public:
     }
 
     vtkm::Id ret;
-    if (this->getMax)
+    if (this->GetMax)
     {
       ret = neighboursEnd;
       if (ret < sortIndex)
@@ -162,17 +163,17 @@ public:
     vtkm::Id sortIndex,
     bool getMaxComponents) const
   { // GetNeighbourComponentsMaskAndDegree()
-    vtkm::Id neighboursBeginIndex = firstNeighbourPortal.Get(sortIndex);
+    vtkm::Id neighboursBeginIndex = FirstNeighbourPortal.Get(sortIndex);
     vtkm::Id neighboursEndIndex = (sortIndex < this->GetNumberOfVertices() - 1)
-      ? firstNeighbourPortal.Get(sortIndex + 1)
-      : neighboursPortal.GetNumberOfValues();
+      ? FirstNeighbourPortal.Get(sortIndex + 1)
+      : NeighboursPortal.GetNumberOfValues();
     vtkm::Id numNeighbours = neighboursEndIndex - neighboursBeginIndex;
     vtkm::Id outDegree = 0;
     vtkm::Id neighbourComponentMask = 0;
     vtkm::Id currNeighbour = 0;
     for (vtkm::Id nbrNo = 0; nbrNo < numNeighbours; ++nbrNo)
     {
-      currNeighbour = neighboursPortal.Get(neighboursBeginIndex + nbrNo);
+      currNeighbour = NeighboursPortal.Get(neighboursBeginIndex + nbrNo);
       if ((getMaxComponents && (currNeighbour > sortIndex)) ||
           (!getMaxComponents && (currNeighbour < sortIndex)))
       {
@@ -185,10 +186,10 @@ public:
   } // GetNeighbourComponentsMaskAndDegree()
 
 private:
-  IdArrayPortalType neighboursPortal;
-  IdArrayPortalType firstNeighbourPortal;
-  vtkm::Id maxNeighbours;
-  bool getMax;
+  IdArrayPortalType NeighboursPortal;
+  IdArrayPortalType FirstNeighbourPortal;
+  vtkm::Id MaxNeighbours;
+  bool GetMax;
 
 }; // ExecutionObjec_MeshStructure_3Dt
 

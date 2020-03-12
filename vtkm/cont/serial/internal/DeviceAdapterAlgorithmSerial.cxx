@@ -58,7 +58,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
   {
     for (vtkm::Id j = 0; j < size[1]; ++j)
     {
-      functor(0, size[0], j, k);
+      functor(size, 0, size[0], j, k);
     }
   }
 

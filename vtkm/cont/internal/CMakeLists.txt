@@ -16,13 +16,13 @@ set(headers
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
+  ArrayPortalToken.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterListHelpers.h
-  DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
   KXSort.h

@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_ContourTable_h
-#define vtk_m_ContourTable_h
+#ifndef vtk_m_MarchingCellTables_h
+#define vtk_m_MarchingCellTables_h
 
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
@@ -20,7 +20,7 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace internal
+namespace marching_cells
 {
 
 // clang-format off
@@ -517,15 +517,15 @@ public:
   }
 
   template <typename DeviceAdapter>
-  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     ExecObject<DeviceAdapter> execObject;
     execObject.NumVerticesPerCellPortal =
-      this->NumVerticesPerCellArray.PrepareForInput(DeviceAdapter());
+      this->NumVerticesPerCellArray.PrepareForInput(DeviceAdapter(), token);
     execObject.NumTrianglesTableOffsetPortal =
-      this->NumTrianglesTableOffsetArray.PrepareForInput(DeviceAdapter());
+      this->NumTrianglesTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
     execObject.NumTrianglesTablePortal =
-      this->NumTrianglesTableArray.PrepareForInput(DeviceAdapter());
+      this->NumTrianglesTableArray.PrepareForInput(DeviceAdapter(), token);
     return execObject;
   }
 
@@ -589,14 +589,16 @@ public:
   };
 
   template <typename DeviceAdapter>
-  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  ExecObject<DeviceAdapter> PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
   {
     ExecObject<DeviceAdapter> execObject;
-    execObject.EdgeTablePortal = this->EdgeTableArray.PrepareForInput(DeviceAdapter());
-    execObject.EdgeTableOffsetPortal = this->EdgeTableOffsetArray.PrepareForInput(DeviceAdapter());
-    execObject.TriangleTablePortal = this->TriangleTableArray.PrepareForInput(DeviceAdapter());
+    execObject.EdgeTablePortal = this->EdgeTableArray.PrepareForInput(DeviceAdapter(), token);
+    execObject.EdgeTableOffsetPortal =
+      this->EdgeTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
+    execObject.TriangleTablePortal =
+      this->TriangleTableArray.PrepareForInput(DeviceAdapter(), token);
     execObject.TriangleTableOffsetPortal =
-      this->TriangleTableOffsetArray.PrepareForInput(DeviceAdapter());
+      this->TriangleTableOffsetArray.PrepareForInput(DeviceAdapter(), token);
     return execObject;
   }
 
@@ -624,4 +626,4 @@ private:
 }
 }
 }
-#endif // vtk_m_ContourTable_h
+#endif // vtk_m_MarchingCellTables_h

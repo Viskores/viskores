@@ -75,7 +75,7 @@ public:
   vtkm::Id GetNumberOfValues() const { return static_cast<vtkm::Id>(this->End - this->Begin); }
 
   VTKM_CONT
-  PortalConstType PrepareForInput(bool updateData)
+  PortalConstType PrepareForInput(bool updateData, vtkm::cont::Token&)
   {
     try
     {
@@ -99,7 +99,7 @@ public:
   }
 
   VTKM_CONT
-  PortalType PrepareForInPlace(bool updateData)
+  PortalType PrepareForInPlace(bool updateData, vtkm::cont::Token&)
   {
     try
     {
@@ -123,7 +123,7 @@ public:
   }
 
   VTKM_CONT
-  PortalType PrepareForOutput(vtkm::Id numberOfValues)
+  PortalType PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token&)
   {
     try
     {
@@ -251,7 +251,8 @@ private:
   {
     try
     {
-      this->PrepareForOutput(this->Storage->GetNumberOfValues());
+      vtkm::cont::Token token;
+      this->PrepareForOutput(this->Storage->GetNumberOfValues(), token);
 
       VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
                  "Copying host --> CUDA dev: %s.",

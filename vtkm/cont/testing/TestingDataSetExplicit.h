@@ -44,7 +44,7 @@ private:
 
     for (vtkm::Id i = 0; i < size; ++i)
     {
-      if (ah.GetPortalConstControl().Get(i) != expected[i])
+      if (ah.ReadPortal().Get(i) != expected[i])
       {
         return false;
       }
@@ -125,7 +125,7 @@ private:
       }
       for (vtkm::IdComponent cellIndex = 0; cellIndex < numIncidentCells; cellIndex++)
       {
-        vtkm::Id expectedCell = conn.GetPortalConstControl().Get(connectivityIndex + cellIndex);
+        vtkm::Id expectedCell = conn.ReadPortal().Get(connectivityIndex + cellIndex);
         std::set<vtkm::Id>::iterator foundCell = correctIncidentCells.find(expectedCell);
         VTKM_TEST_ASSERT(foundCell != correctIncidentCells.end(),
                          "An incident cell in the connectivity list is wrong or repeated.");

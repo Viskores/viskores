@@ -214,6 +214,8 @@ public:
   template <typename Invocation>
   VTKM_CONT void DoInvoke(Invocation& invocation) const
   {
+    using namespace vtkm::worklet::internal;
+
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
 
@@ -225,15 +227,15 @@ public:
     // an VariantArrayHandle that gets cast to one). The size of the domain
     // (number of threads/worklet instances) is equal to the size of the
     // array.
-    vtkm::Id fullSize = internal::scheduling_range(inputDomain);
+    vtkm::Id fullSize = SchedulingRange(inputDomain);
     vtkm::Id blockSize = fullSize / NumberOfBlocks;
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
 
-    using TransformFunctorType =
-      detail::DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface>;
-    using TransferFunctorType =
-      detail::DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface>;
+    using TransformFunctorType = vtkm::worklet::detail::DispatcherStreamingMapFieldTransformFunctor<
+      typename Invocation::ControlInterface>;
+    using TransferFunctorType = vtkm::worklet::detail::DispatcherStreamingMapFieldTransferFunctor<
+      typename Invocation::ControlInterface>;
 
     for (vtkm::Id block = 0; block < NumberOfBlocks; block++)
     {
@@ -282,8 +284,10 @@ private:
     using ExecObjectParameters =
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
+    vtkm::cont::Token token;
+
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
-      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
+      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange, token));
 
     // Get the arrays used for scattering input to output.
     typename ScatterType::OutputToInputMapType outputToInputMap =
@@ -296,13 +300,14 @@ private:
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
-    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
-                           .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-                           .ChangeVisitArray(visitArray.PrepareForInput(device))
-                           .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device)),
-                         outputRange,
-                         globalIndexOffset,
-                         device);
+    this->InvokeSchedule(
+      invocation.ChangeParameters(execObjectParameters)
+        .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device, token))
+        .ChangeVisitArray(visitArray.PrepareForInput(device, token))
+        .ChangeThreadToOutputMap(threadToOutputMap.PrepareForInput(device, token)),
+      outputRange,
+      globalIndexOffset,
+      device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>

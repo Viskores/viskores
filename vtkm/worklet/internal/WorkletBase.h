@@ -11,7 +11,6 @@
 #define vtk_m_worklet_internal_WorkletBase_h
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/TypeListTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
@@ -21,6 +20,7 @@
 #include <vtkm/exec/arg/OutputIndex.h>
 #include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/arg/ThreadIndicesBasic3D.h>
 #include <vtkm/exec/arg/VisitIndex.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
@@ -257,22 +257,49 @@ public:
   /// types.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T,
-            typename OutToInArrayType,
+  template <typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
-    const T& threadIndex,
+    const vtkm::Id& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
     const InputDomainType&,
-    const T& globalThreadIndexOffset = 0) const
+    const vtkm::Id& globalThreadIndexOffset = 0) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
       threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+  }
+
+  /// \brief Creates a \c ThreadIndices object.
+  ///
+  /// Worklet types can add additional indices by returning different object
+  /// types.
+  ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename OutToInArrayType,
+            typename VisitArrayType,
+            typename ThreadToOutArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic3D GetThreadIndices(
+    vtkm::Id threadIndex1D,
+    const vtkm::Id3& threadIndex3D,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
+    const InputDomainType&,
+    const vtkm::Id& globalThreadIndexOffset = 0) const
+  {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
+    return vtkm::exec::arg::ThreadIndicesBasic3D(threadIndex3D,
+                                                 threadIndex1D,
+                                                 outToIn.Get(outIndex),
+                                                 visit.Get(outIndex),
+                                                 outIndex,
+                                                 globalThreadIndexOffset);
   }
 };
 }

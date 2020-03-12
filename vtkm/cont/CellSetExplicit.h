@@ -167,7 +167,7 @@ public:
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
   VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
-  VTKM_CONT virtual ~CellSetExplicit();
+  VTKM_CONT virtual ~CellSetExplicit() override;
 
   VTKM_CONT vtkm::Id GetNumberOfCells() const override;
   VTKM_CONT vtkm::Id GetNumberOfPoints() const override;
@@ -239,7 +239,18 @@ public:
 
   template <typename Device, typename VisitTopology, typename IncidentTopology>
   VTKM_CONT typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
-    PrepareForInput(Device, VisitTopology, IncidentTopology) const;
+  PrepareForInput(Device, VisitTopology, IncidentTopology, vtkm::cont::Token&) const;
+
+  template <typename Device, typename VisitTopology, typename IncidentTopology>
+  VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  VTKM_CONT typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(Device device,
+                    VisitTopology visitTopology,
+                    IncidentTopology incidentTopology) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
+  }
 
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapesArrayType&
@@ -464,6 +475,8 @@ public:
 } // diy
 /// @endcond SERIALIZATION
 
+#ifndef vtk_m_cont_CellSetExplicit_hxx
 #include <vtkm/cont/CellSetExplicit.hxx>
+#endif //vtk_m_cont_CellSetExplicit_hxx
 
 #endif //vtk_m_cont_CellSetExplicit_h

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
@@ -73,38 +73,39 @@ template <typename DeviceAdapter>
 class MeshStructureFreudenthal2D : public mesh_dem::MeshStructure2D<DeviceAdapter>
 {
 public:
-  using sortIndicesPortalType =
+  using SortIndicesPortalType =
     typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using edgeBoundaryDetectionMasksPortalType =
-    typename m2d_freudenthal::edgeBoundaryDetectionMasksType::template ExecutionTypes<
+  using EdgeBoundaryDetectionMasksPortalType =
+    typename m2d_freudenthal::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
 
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
   MeshStructureFreudenthal2D()
     : mesh_dem::MeshStructure2D<DeviceAdapter>()
-    , getMax(false)
-    , nIncidentEdges(m2d_freudenthal::N_INCIDENT_EDGES)
+    , GetMax(false)
+    , NumIncidentEdges(m2d_freudenthal::N_INCIDENT_EDGES)
   {
   }
 
   // Main constructor used in the code
   MeshStructureFreudenthal2D(
-    vtkm::Id nrows,
     vtkm::Id ncols,
+    vtkm::Id nrows,
     vtkm::Int32 nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
-    const IdArrayType& sortOrder,
-    const m2d_freudenthal::edgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn)
-    : mesh_dem::MeshStructure2D<DeviceAdapter>(nrows, ncols)
-    , getMax(getmax)
-    , nIncidentEdges(nincident_edges)
+    const IdArrayType& SortOrder,
+    const m2d_freudenthal::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn,
+    vtkm::cont::Token& token)
+    : mesh_dem::MeshStructure2D<DeviceAdapter>(ncols, nrows)
+    , GetMax(getmax)
+    , NumIncidentEdges(nincident_edges)
   {
-    sortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter());
-    sortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
-    edgeBoundaryDetectionMasksPortal =
-      edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter());
+    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
+    this->SortOrderPortal = SortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeBoundaryDetectionMasksPortal =
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC
@@ -113,21 +114,21 @@ public:
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const
   { // GetNeighbourIndex
-    vtkm::Id meshIndex = this->sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = this->SortOrderPortal.Get(sortIndex);
     switch (edgeNo)
     {
       case 0:
-        return this->sortIndicesPortal.Get(meshIndex + 1); // row    , col + 1
+        return this->SortIndicesPortal.Get(meshIndex + 1); // row    , col + 1
       case 1:
-        return this->sortIndicesPortal.Get(meshIndex + this->nCols + 1); // row + 1, col + 1
+        return this->SortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // row + 1, col + 1
       case 2:
-        return this->sortIndicesPortal.Get(meshIndex + this->nCols); // row + 1, col
+        return this->SortIndicesPortal.Get(meshIndex + this->NumColumns); // row + 1, col
       case 3:
-        return this->sortIndicesPortal.Get(meshIndex - 1); // row    , col - 1
+        return this->SortIndicesPortal.Get(meshIndex - 1); // row    , col - 1
       case 4:
-        return this->sortIndicesPortal.Get(meshIndex - this->nCols - 1); // row - 1, col - 1
+        return this->SortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // row - 1, col - 1
       case 5:
-        return this->sortIndicesPortal.Get(meshIndex - this->nCols); // row - 1, col
+        return this->SortIndicesPortal.Get(meshIndex - this->NumColumns); // row - 1, col
       default:
         return -1; // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
     }
@@ -150,26 +151,26 @@ public:
   { // GetExtremalNeighbour()
     using namespace m2d_freudenthal;
     // convert to a mesh index
-    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->vertexRow(meshIndex);
-    vtkm::Id col = this->vertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+    vtkm::Id row = this->VertexRow(meshIndex);
+    vtkm::Id col = this->VertexColumn(meshIndex);
+    vtkm::Int8 boundaryConfig = ((col == 0) ? LeftBit : 0) |
+      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
+      ((row == this->NumRows - 1) ? BottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
-    for (vtkm::Id edgeNo = 0; edgeNo < this->nIncidentEdges; edgeNo++)
+    for (vtkm::Id edgeNo = 0; edgeNo < this->NumIncidentEdges; edgeNo++)
     { // per edge
       // ignore if at edge of data
-      if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
+      if (!(boundaryConfig & EdgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
         // calculate neighbour's ID and sort order
         vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
 
         // if it's not a valid destination, ignore it
-        if (getMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
+        if (GetMax ? (nbrSortIndex > sortIndex) : (nbrSortIndex < sortIndex))
         {
           // and save the destination
           return nbrSortIndex;
@@ -190,14 +191,14 @@ public:
     using namespace m2d_freudenthal;
     // get data portals
     // convert to a mesh index
-    vtkm::Id meshIndex = sortOrderPortal.Get(sortIndex);
+    vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->vertexRow(meshIndex);
-    vtkm::Id col = this->vertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((col == 0) ? leftBit : 0) |
-      ((col == this->nCols - 1) ? rightBit : 0) | ((row == 0) ? topBit : 0) |
-      ((row == this->nRows - 1) ? bottomBit : 0);
+    vtkm::Id row = this->VertexRow(meshIndex);
+    vtkm::Id col = this->VertexColumn(meshIndex);
+    vtkm::Int8 boundaryConfig = ((col == 0) ? LeftBit : 0) |
+      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
+      ((row == this->NumRows - 1) ? BottomBit : 0);
 
     // and initialise the mask
     vtkm::Id neighbourhoodMask = 0;
@@ -205,7 +206,7 @@ public:
     for (vtkm::Id edgeNo = 0; edgeNo < N_INCIDENT_EDGES; edgeNo++)
     { // per edge
       // ignore if at edge of data
-      if (!(boundaryConfig & edgeBoundaryDetectionMasksPortal.Get(edgeNo)))
+      if (!(boundaryConfig & EdgeBoundaryDetectionMasksPortal.Get(edgeNo)))
       {
         // calculate neighbour's ID and sort order
         vtkm::Id nbrSortIndex = GetNeighbourIndex(sortIndex, edgeNo);
@@ -269,11 +270,11 @@ public:
 #endif // gcc || clang
 
 private:
-  sortIndicesPortalType sortIndicesPortal;
-  sortIndicesPortalType sortOrderPortal;
-  edgeBoundaryDetectionMasksPortalType edgeBoundaryDetectionMasksPortal;
-  bool getMax;
-  vtkm::Id nIncidentEdges;
+  SortIndicesPortalType SortIndicesPortal;
+  SortIndicesPortalType SortOrderPortal;
+  EdgeBoundaryDetectionMasksPortalType EdgeBoundaryDetectionMasksPortal;
+  bool GetMax;
+  vtkm::Id NumIncidentEdges;
 
 }; // ExecutionObjec_MeshStructure_3Dt
 

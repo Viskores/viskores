@@ -17,12 +17,9 @@
 namespace
 {
 
-struct NonDefaultCellSetList
-  : vtkm::ListTagBase<
-      vtkm::cont::CellSetStructured<1>,
-      vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag>>
-{
-};
+using NonDefaultCellSetList =
+  vtkm::List<vtkm::cont::CellSetStructured<1>,
+             vtkm::cont::CellSetExplicit<vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag>>;
 
 template <typename ExpectedCellType>
 struct CheckFunctor
@@ -118,7 +115,7 @@ void TryCellSet(CellSetType cellSet, vtkm::cont::DynamicCellSetBase<CellSetList>
 {
   CheckDynamicCellSet(cellSet, dynamicCellSet);
 
-  CheckDynamicCellSet(cellSet, dynamicCellSet.ResetCellSetList(vtkm::ListTagBase<CellSetType>()));
+  CheckDynamicCellSet(cellSet, dynamicCellSet.ResetCellSetList(vtkm::List<CellSetType>()));
 
   TryNewInstance(cellSet, dynamicCellSet);
 }

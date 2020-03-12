@@ -12,7 +12,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -35,7 +34,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.GetPortalConstControl().Get(i) != expected[i])
+    if (ah.ReadPortal().Get(i) != expected[i])
     {
       return false;
     }
@@ -104,15 +103,6 @@ void TestDataSet_Explicit()
 
   subset.PrintSummary(std::cout);
 
-  using ExecObjectType = SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
-                                                    vtkm::TopologyElementTagCell,
-                                                    vtkm::TopologyElementTagPoint>::ExecObjectType;
-
-  ExecObjectType execConnectivity;
-  execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                                            vtkm::TopologyElementTagCell(),
-                                            vtkm::TopologyElementTagPoint());
-
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
@@ -122,7 +112,7 @@ void TestDataSet_Explicit()
   vtkm::Float32 expected[4] = { 30.1667f, 30.1667f, 30.1667f, 30.1667f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on explicit subset data");
   }
 }
@@ -149,13 +139,6 @@ void TestDataSet_Structured2D()
 
   subset.PrintSummary(std::cout);
 
-  //verify that we can call PrepareForInput on CellSetSingleType
-  using DeviceAdapterTag = vtkm::cont::DeviceAdapterTagSerial;
-
-  //verify that PrepareForInput exists
-  subset.PrepareForInput(
-    DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
@@ -164,7 +147,7 @@ void TestDataSet_Structured2D()
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }
@@ -191,11 +174,6 @@ void TestDataSet_Structured3D()
 
   subset.PrintSummary(std::cout);
 
-  //verify that PrepareForInput exists
-  subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
-                         vtkm::TopologyElementTagCell(),
-                         vtkm::TopologyElementTagPoint());
-
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
@@ -204,7 +182,7 @@ void TestDataSet_Structured3D()
   vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }

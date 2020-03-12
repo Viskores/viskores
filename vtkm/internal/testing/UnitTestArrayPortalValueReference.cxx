@@ -262,8 +262,8 @@ struct DoTestForType
     array.Allocate(ARRAY_SIZE);
 
     std::cout << "Set array using reference" << std::endl;
-    using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
-    PortalType portal = array.GetPortalControl();
+    using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::WritePortalType;
+    PortalType portal = array.WritePortal();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       SetReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
@@ -293,8 +293,8 @@ void DoTest()
   // simply doing a += (or similar) operation on them automatically creates a conversion warning
   // on some compilers. Since we want to test these operators, just remove the short types from
   // the list to avoid the warning.
-  vtkm::testing::Testing::TryTypes(
-    DoTestForType(), vtkm::ListTagBase<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
+  vtkm::testing::Testing::TryTypes(DoTestForType(),
+                                   vtkm::List<vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>());
 }
 
 } // anonymous namespace

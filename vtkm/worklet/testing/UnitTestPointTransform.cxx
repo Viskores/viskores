@@ -70,8 +70,8 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == result.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 
-  auto pointsPortal = points.GetPortalConstControl();
-  auto resultsPortal = result.GetPortalConstControl();
+  auto pointsPortal = points.ReadPortal();
+  auto resultsPortal = result.ReadPortal();
 
   for (vtkm::Id i = 0; i < points.GetNumberOfValues(); i++)
     VTKM_TEST_ASSERT(

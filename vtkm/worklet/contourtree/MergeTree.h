@@ -130,7 +130,7 @@ public:
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
   // size of mesh
-  vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
+  vtkm::Id nRows, nCols, nSlices, NumVertices, nLogSteps;
 
   // whether it is join or split tree
   bool isJoinTree;
@@ -180,16 +180,16 @@ MergeTree<T, StorageType>::MergeTree(const vtkm::cont::ArrayHandle<T, StorageTyp
   , nSlices(NSlices)
   , isJoinTree(IsJoinTree)
 {
-  nVertices = nRows * nCols * nSlices;
+  NumVertices = nRows * nCols * nSlices;
   nLogSteps = 1;
-  for (vtkm::Id shifter = nVertices; shifter != 0; shifter >>= 1)
+  for (vtkm::Id shifter = NumVertices; shifter != 0; shifter >>= 1)
     nLogSteps++;
 
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> nullArray(0, nVertices);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> nullArray(0, NumVertices);
 
-  mergeArcs.Allocate(nVertices);
-  extrema.Allocate(nVertices);
-  saddles.Allocate(nVertices);
+  mergeArcs.Allocate(NumVertices);
+  extrema.Allocate(NumVertices);
+  saddles.Allocate(NumVertices);
 
   vtkm::cont::ArrayCopy(nullArray, mergeArcs);
   vtkm::cont::ArrayCopy(nullArray, extrema);
@@ -209,9 +209,9 @@ void MergeTree<T, StorageType>::BuildRegularChains()
 #endif
   // 2. Create a temporary array so that we can alternate writing between them
   vtkm::cont::ArrayHandle<vtkm::Id> temporaryArcs;
-  temporaryArcs.Allocate(nVertices);
+  temporaryArcs.Allocate(NumVertices);
 
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
   ChainDoubler chainDoubler;
   vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
 
@@ -287,7 +287,7 @@ void MergeTree<T, StorageType>::ComputeAugmentedArcs(vtkm::cont::ArrayHandle<vtk
   DebugPrint("Sorting Complete");
 #endif
 
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> noVertArray(NO_VERTEX_ASSIGNED, nVertices);
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> noVertArray(NO_VERTEX_ASSIGNED, NumVertices);
   vtkm::cont::ArrayCopy(noVertArray, mergeArcs);
 
   vtkm::cont::ArrayHandleIndex critVertexIndexArray(nCriticalVerts);
@@ -313,13 +313,13 @@ void MergeTree<T, StorageType>::DebugPrint(const char* message)
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printLabelledBlock("Values", values, nRows * nSlices, nCols);
+  PrintLabelledBlock("Values", values, nRows * nSlices, nCols);
   std::cout << std::endl;
-  printLabelledBlock("MergeArcs", mergeArcs, nRows, nCols);
+  PrintLabelledBlock("MergeArcs", mergeArcs, nRows, nCols);
   std::cout << std::endl;
-  printLabelledBlock("Extrema", extrema, nRows, nCols);
+  PrintLabelledBlock("Extrema", extrema, nRows, nCols);
   std::cout << std::endl;
-  printLabelledBlock("Saddles", saddles, nRows, nCols);
+  PrintLabelledBlock("Saddles", saddles, nRows, nCols);
   std::cout << std::endl;
 } // DebugPrint()
 }

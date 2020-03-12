@@ -792,9 +792,10 @@ struct StructuredTrianglesFunctor
                             vtkm::cont::CellSetStructured<3>& cellSet) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::Token token;
     vtkm::worklet::DispatcherMapField<StructuredExternalTriangles> dispatch(
       StructuredExternalTriangles(cellSet.PrepareForInput(
-        Device(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())));
+        Device(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint(), token)));
 
     dispatch.SetDevice(Device());
     dispatch.Invoke(counting, triangles);
@@ -870,7 +871,7 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
     //
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
       singleType.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-    vtkm::UInt8 shapeType = shapes.GetPortalConstControl().Get(0);
+    vtkm::UInt8 shapeType = shapes.ReadPortal().Get(0);
     if (shapeType == CELL_SHAPE_HEXAHEDRON)
       type = UnstructuredSingle;
     if (shapeType == CELL_SHAPE_TETRA)

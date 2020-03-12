@@ -75,7 +75,7 @@ struct CopyValue : public vtkm::worklet::WorkletMapField
 template <typename T, typename S>
 void verify_results(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S> const& handle)
 {
-  auto portal = handle.GetPortalConstControl();
+  auto portal = handle.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == static_cast<vtkm::Id>(correct_x_coords.size()),
                    "coordinate portal size is incorrect");
 

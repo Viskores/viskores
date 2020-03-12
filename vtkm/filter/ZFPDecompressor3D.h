@@ -28,7 +28,7 @@ namespace filter
 class ZFPDecompressor3D : public vtkm::filter::FilterField<ZFPDecompressor3D>
 {
 public:
-  using SupportedTypes = vtkm::ListTagBase<vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
+  using SupportedTypes = vtkm::List<vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
 
   VTKM_CONT
   ZFPDecompressor3D();

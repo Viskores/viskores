@@ -62,10 +62,13 @@ template <typename ValueType>
 void TestPrepareForInput(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
+  auto lock = handle.Internals->GetLock();
+  void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+  void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInput.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInput.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -86,10 +89,13 @@ template <typename ValueType>
 void TestPrepareForInPlace(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
+  auto lock = handle.Internals->GetLock();
+  void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+  void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInPlace.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInPlace.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -111,10 +117,13 @@ void TestPrepareForOutput(bool managed)
 {
   // Should reuse a managed control pointer if buffer is large enough.
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
+  auto lock = handle.Internals->GetLock();
+  void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+  void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -135,14 +144,21 @@ template <typename ValueType>
 void TestReleaseResourcesExecution(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
-  void* origArray = handle.Internals->ExecutionArray;
+  void* origArray;
+  {
+    auto lock = handle.Internals->GetLock();
+    origArray = handle.Internals->Internals->GetExecutionArray(lock);
+  }
 
   handle.ReleaseResourcesExecution();
 
-  void* contArray = handle.Internals->ControlArray->GetBasePointer();
-  void* execArray = handle.Internals->ExecutionArray;
+  auto lock = handle.Internals->GetLock();
+  void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+  void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
 
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after ReleaseResourcesExecution.");
   VTKM_TEST_ASSERT(execArray == nullptr,
@@ -162,12 +178,19 @@ template <typename ValueType>
 void TestRoundTrip(bool managed)
 {
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
-  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
+  vtkm::cont::Token token;
+  handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda(), token);
+  token.DetachFromAll();
 
-  void* origContArray = handle.Internals->ControlArray->GetBasePointer();
+  void* origContArray;
   {
-    void* contArray = handle.Internals->ControlArray->GetBasePointer();
-    void* execArray = handle.Internals->ExecutionArray;
+    auto lock = handle.Internals->GetLock();
+    origContArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+  }
+  {
+    auto lock = handle.Internals->GetLock();
+    void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+    void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
     VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
     VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
     VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -186,7 +209,7 @@ void TestRoundTrip(bool managed)
 
   try
   {
-    handle.GetPortalControl();
+    handle.WritePortal();
   }
   catch (vtkm::cont::ErrorBadValue&)
   {
@@ -208,8 +231,9 @@ void TestRoundTrip(bool managed)
   }
 
   {
-    void* contArray = handle.Internals->ControlArray->GetBasePointer();
-    void* execArray = handle.Internals->ExecutionArray;
+    auto lock = handle.Internals->GetLock();
+    void* contArray = handle.Internals->Internals->GetControlArray(lock)->GetBasePointer();
+    void* execArray = handle.Internals->Internals->GetExecutionArray(lock);
     VTKM_TEST_ASSERT(contArray != nullptr, "No control array after GetPortalConst.");
     VTKM_TEST_ASSERT(execArray == nullptr, "Execution array not cleared after GetPortalConst.");
     VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),
@@ -254,12 +278,12 @@ struct ArgToTemplateType
 
 void Launch()
 {
-  using Types = vtkm::ListTagBase<vtkm::UInt8,
-                                  vtkm::Vec<vtkm::UInt8, 3>,
-                                  vtkm::Float32,
-                                  vtkm::Vec<vtkm::Float32, 4>,
-                                  vtkm::Float64,
-                                  vtkm::Vec<vtkm::Float64, 4>>;
+  using Types = vtkm::List<vtkm::UInt8,
+                           vtkm::Vec<vtkm::UInt8, 3>,
+                           vtkm::Float32,
+                           vtkm::Vec<vtkm::Float32, 4>,
+                           vtkm::Float64,
+                           vtkm::Vec<vtkm::Float64, 4>>;
   vtkm::testing::Testing::TryTypes(ArgToTemplateType(), Types());
 }
 

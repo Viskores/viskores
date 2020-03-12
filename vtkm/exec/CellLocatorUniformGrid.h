@@ -45,17 +45,18 @@ public:
                          const vtkm::Vec3f invSpacing,
                          const vtkm::Vec3f maxPoint,
                          const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                         DeviceAdapter)
+                         DeviceAdapter,
+                         vtkm::cont::Token& token)
     : CellDims(cellDims)
     , PointDims(pointDims)
     , Origin(origin)
     , InvSpacing(invSpacing)
     , MaxPoint(maxPoint)
-    , Coords(coords.PrepareForInput(DeviceAdapter()))
+    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
-  VTKM_EXEC_CONT virtual ~CellLocatorUniformGrid() noexcept
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformGrid() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.

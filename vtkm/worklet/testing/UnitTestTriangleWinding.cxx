@@ -58,15 +58,13 @@ void Validate(vtkm::cont::DataSet dataSet)
     cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto offsets =
     cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-  const auto offsetsTrim =
-    vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-  const auto cellArray = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+  const auto cellArray = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
   const auto cellNormalsVar = dataSet.GetCellField("normals").GetData();
   const auto cellNormalsArray = cellNormalsVar.Cast<vtkm::cont::ArrayHandle<MyNormalT>>();
 
-  const auto cellPortal = cellArray.GetPortalConstControl();
-  const auto cellNormals = cellNormalsArray.GetPortalConstControl();
-  const auto coords = coordsArray.GetPortalConstControl();
+  const auto cellPortal = cellArray.ReadPortal();
+  const auto cellNormals = cellNormalsArray.ReadPortal();
+  const auto coords = coordsArray.ReadPortal();
 
   const auto numCells = cellPortal.GetNumberOfValues();
   VTKM_TEST_ASSERT(numCells == cellNormals.GetNumberOfValues());

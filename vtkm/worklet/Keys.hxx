@@ -95,10 +95,11 @@ VTKM_CONT void Keys<T>::BuildArraysInternal(KeyArrayType& keys, vtkm::cont::Devi
                                      vtkm::Sum());
 
   // Get the offsets from the counts with a scan.
-  vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
+  vtkm::cont::Algorithm::ScanExtended(
     device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
-  VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
-  (void)offsetsTotal;                   // Shut up, compiler
+
+  VTKM_ASSERT(numKeys ==
+              vtkm::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
 }
 
 template <typename T>
@@ -123,10 +124,11 @@ VTKM_CONT void Keys<T>::BuildArraysInternalStable(const KeyArrayType& keys,
                                      vtkm::Sum());
 
   // Get the offsets from the counts with a scan.
-  vtkm::Id offsetsTotal = vtkm::cont::Algorithm::ScanExclusive(
-    vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
-  VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
-  (void)offsetsTotal;                   // Shut up, compiler
+  vtkm::cont::Algorithm::ScanExtended(
+    device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
+
+  VTKM_ASSERT(numKeys ==
+              vtkm::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
 }
 }
 }

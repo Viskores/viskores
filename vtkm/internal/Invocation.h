@@ -11,6 +11,7 @@
 #define vtk_m_internal_Invocation_h
 
 #include <vtkm/Types.h>
+#include <vtkm/internal/FunctionInterface.h>
 
 namespace vtkm
 {
@@ -110,6 +111,8 @@ struct Invocation
     , ThreadToOutputMap(threadToOutputMap)
   {
   }
+
+  Invocation(const Invocation&) = default;
 
   /// Defines a new \c Invocation type that is the same as this type except
   /// with the \c Parameters replaced.
@@ -342,7 +345,7 @@ struct Invocation
   VTKM_EXEC_CONT
   const InputDomainType& GetInputDomain() const
   {
-    return this->Parameters.template GetParameter<InputDomainIndex>();
+    return vtkm::internal::ParameterGet<InputDomainIndex>(this->Parameters);
   }
 
   /// The state of an \c Invocation object holds the parameters of the

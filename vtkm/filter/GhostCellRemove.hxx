@@ -216,16 +216,16 @@ bool CanStrip(const vtkm::cont::ArrayHandle<T, StorageType>& ghostField,
 {
   vtkm::cont::ArrayHandle<vtkm::Id> minmax;
   minmax.Allocate(6);
-  minmax.GetPortalControl().Set(0, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(1, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(2, std::numeric_limits<vtkm::Id>::max());
-  minmax.GetPortalControl().Set(3, std::numeric_limits<vtkm::Id>::min());
-  minmax.GetPortalControl().Set(4, std::numeric_limits<vtkm::Id>::min());
-  minmax.GetPortalControl().Set(5, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(0, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(1, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(2, std::numeric_limits<vtkm::Id>::max());
+  minmax.WritePortal().Set(3, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(4, std::numeric_limits<vtkm::Id>::min());
+  minmax.WritePortal().Set(5, std::numeric_limits<vtkm::Id>::min());
 
   invoke(RealMinMax<3>(cellDims, removeAllGhost, removeType), ghostField, minmax);
 
-  auto portal = minmax.GetPortalConstControl();
+  auto portal = minmax.ReadPortal();
   range = vtkm::RangeId3(
     portal.Get(0), portal.Get(3), portal.Get(1), portal.Get(4), portal.Get(2), portal.Get(5));
 

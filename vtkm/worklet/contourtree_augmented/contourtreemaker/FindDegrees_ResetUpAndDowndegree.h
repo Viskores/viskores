@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_reset_up_and_downdegree_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_reset_up_and_downdegree_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_reset_up_and_downdegree_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_find_degrees_reset_up_and_downdegree_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

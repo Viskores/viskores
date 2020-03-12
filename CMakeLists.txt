@@ -128,12 +128,17 @@ set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 # and the warnings are too strict for the parent project.
 vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful while developing VTK-m" ON)
 
+# By default VTK-m would install its README.md and LICENSE.md.
+# Some application might need not to install those, hence this option.
+vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
   VTKm_ENABLE_DEVELOPER_FLAGS
+  VTKm_NO_INSTALL_README_LICENSE
   )
 
 #-----------------------------------------------------------------------------
@@ -226,22 +231,24 @@ write_basic_package_version_file(
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 
+# Install the readme and license files.
+if (NOT VTKm_NO_INSTALL_README_LICENSE)
+install(FILES ${VTKm_SOURCE_DIR}/README.md
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  RENAME VTKmREADME.md
+  )
+install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
+  RENAME VTKmLICENSE.txt
+  )
+endif()
+
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(
     FILES
       ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
       ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-    )
-
-  # Install the readme and license files.
-  install(FILES ${VTKm_SOURCE_DIR}/README.md
-    DESTINATION ${VTKm_INSTALL_SHARE_DIR}
-    RENAME VTKmREADME.md
-    )
-  install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
-    DESTINATION ${VTKm_INSTALL_SHARE_DIR}
-    RENAME VTKmLICENSE.txt
     )
 
   # Install helper configure files.

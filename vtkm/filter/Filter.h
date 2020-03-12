@@ -182,9 +182,9 @@ public:
   /// \brief Specify which subset of types a filter supports.
   ///
   /// A filter is able to state what subset of types it supports
-  /// by default. By default we use ListTagUniversal to represent that the
+  /// by default. By default we use ListUniversal to represent that the
   /// filter accepts all types specified by the users provided policy
-  using SupportedTypes = vtkm::ListTagUniversal;
+  using SupportedTypes = vtkm::ListUniversal;
 
   /// \brief Specify which additional field storage to support.
   ///
@@ -194,7 +194,7 @@ public:
   /// For example, the filter might make sense to support ArrayHandleIndex or
   /// ArrayHandleConstant. If so, the storage of those additional types should be
   /// listed here.
-  using AdditionalFieldStorage = vtkm::ListTagEmpty;
+  using AdditionalFieldStorage = vtkm::ListEmpty;
 
   //@{
   /// \brief Specify which fields get passed from input to output.

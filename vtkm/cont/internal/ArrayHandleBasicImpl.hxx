@@ -96,162 +96,236 @@ VTKM_CONT bool ArrayHandle<T, StorageTagBasic>::operator!=(const ArrayHandle<VT,
 template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::StorageType& ArrayHandle<T, StorageTagBasic>::GetStorage()
 {
-  this->SyncControlArray();
-  this->Internals->CheckControlArrayValid();
+  LockType lock = this->GetLock();
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
 
-  return *(static_cast<StorageType*>(this->Internals->ControlArray));
+  return *(static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock)));
 }
 
 template <typename T>
 const typename ArrayHandle<T, StorageTagBasic>::StorageType&
 ArrayHandle<T, StorageTagBasic>::GetStorage() const
 {
-  this->SyncControlArray();
-  this->Internals->CheckControlArrayValid();
+  LockType lock = this->GetLock();
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
 
-  return *(static_cast<const StorageType*>(this->Internals->ControlArray));
+  return *(static_cast<const StorageType*>(this->Internals->Internals->GetControlArray(lock)));
 }
 
 template <typename T>
-typename ArrayHandle<T, StorageTagBasic>::PortalControl
+typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalType
 ArrayHandle<T, StorageTagBasic>::GetPortalControl()
 {
-  this->SyncControlArray();
-  this->Internals->CheckControlArrayValid();
+  LockType lock = this->GetLock();
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
-
 
   // If the user writes into the iterator we return, then the execution
   // array will become invalid. Play it safe and release the execution
   // resources. (Use the const version to preserve the execution array.)
-  this->ReleaseResourcesExecutionInternal();
-  StorageType* privStorage = static_cast<StorageType*>(this->Internals->ControlArray);
+  this->ReleaseResourcesExecutionInternal(lock);
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
   return privStorage->GetPortal();
 }
 
-
 template <typename T>
-typename ArrayHandle<T, StorageTagBasic>::PortalConstControl
+typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalConstType
 ArrayHandle<T, StorageTagBasic>::GetPortalConstControl() const
 {
-  this->SyncControlArray();
-  this->Internals->CheckControlArrayValid();
+  LockType lock = this->GetLock();
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
 
-  StorageType* privStorage = static_cast<StorageType*>(this->Internals->ControlArray);
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
   return privStorage->GetPortalConst();
+}
+
+template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::ReadPortalType
+ArrayHandle<T, StorageTagBasic>::ReadPortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->Internals->WaitToRead(lock, token);
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
+  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+  //is not valid
+
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+  token.Attach(this->Internals,
+               this->Internals->Internals->GetReadCount(lock),
+               lock,
+               &this->Internals->Internals->ConditionVariable);
+  return ArrayHandle<T, StorageTagBasic>::ReadPortalType(std::move(token),
+                                                         privStorage->GetPortalConst());
+}
+
+template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::WritePortalType
+ArrayHandle<T, StorageTagBasic>::WritePortal() const
+{
+  LockType lock = this->GetLock();
+  vtkm::cont::Token token;
+  this->Internals->WaitToWrite(lock, token);
+  this->SyncControlArray(lock);
+  this->Internals->CheckControlArrayValid(lock);
+  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+  //is not valid
+
+  // If the user writes into the iterator we return, then the execution
+  // array will become invalid. Play it safe and release the execution
+  // resources. (Use the const version to preserve the execution array.)
+  this->ReleaseResourcesExecutionInternal(lock);
+  StorageType* privStorage =
+    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+  token.Attach(this->Internals,
+               this->Internals->Internals->GetWriteCount(lock),
+               lock,
+               &this->Internals->Internals->ConditionVariable);
+  return ArrayHandle<T, StorageTagBasic>::WritePortalType(std::move(token),
+                                                          privStorage->GetPortal());
 }
 
 template <typename T>
 vtkm::Id ArrayHandle<T, StorageTagBasic>::GetNumberOfValues() const
 {
-  return this->Internals->GetNumberOfValues(sizeof(T));
+  LockType lock = this->GetLock();
+  return this->Internals->GetNumberOfValues(lock, sizeof(T));
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
-  this->Internals->Allocate(numberOfValues, sizeof(T));
+  LockType lock = this->GetLock();
+  this->Internals->Allocate(lock, numberOfValues, sizeof(T));
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
 {
-  this->Internals->Shrink(numberOfValues, sizeof(T));
+  LockType lock = this->GetLock();
+  this->Internals->Shrink(lock, numberOfValues, sizeof(T));
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecution()
 {
+  LockType lock = this->GetLock();
   // Save any data in the execution environment by making sure it is synced
   // with the control environment.
-  this->SyncControlArray();
-  this->Internals->ReleaseResourcesExecutionInternal();
+  this->SyncControlArray(lock);
+  this->Internals->ReleaseResourcesExecutionInternal(lock);
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::ReleaseResources()
 {
-  this->Internals->ReleaseResources();
+  LockType lock = this->GetLock();
+  this->Internals->ReleaseResources(lock);
 }
 
 template <typename T>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
+ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device,
+                                                 vtkm::cont::Token& token) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  this->PrepareForDevice(device);
+  LockType lock = this->GetLock();
+  this->PrepareForDevice(lock, device);
 
-  this->Internals->PrepareForInput(sizeof(T));
+  this->Internals->PrepareForInput(lock, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortalConst(
-    static_cast<T*>(this->Internals->ExecutionArray),
-    static_cast<T*>(this->Internals->ExecutionArrayEnd));
+    static_cast<T*>(this->Internals->Internals->GetExecutionArray(lock)),
+    static_cast<T*>(this->Internals->Internals->GetExecutionArrayEnd(lock)));
 }
 
 template <typename T>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals, DeviceAdapterTag device)
+ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals,
+                                                  DeviceAdapterTag device,
+                                                  vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  this->PrepareForDevice(device);
+  LockType lock = this->GetLock();
+  this->PrepareForDevice(lock, device);
 
-  this->Internals->PrepareForOutput(numVals, sizeof(T));
+  this->Internals->PrepareForOutput(lock, numVals, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortal(
-    static_cast<T*>(this->Internals->ExecutionArray),
-    static_cast<T*>(this->Internals->ExecutionArrayEnd));
+    static_cast<T*>(this->Internals->Internals->GetExecutionArray(lock)),
+    static_cast<T*>(this->Internals->Internals->GetExecutionArrayEnd(lock)));
 }
 
 template <typename T>
 template <typename DeviceAdapterTag>
 typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
+ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device,
+                                                   vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  this->PrepareForDevice(device);
+  LockType lock = this->GetLock();
+  this->PrepareForDevice(lock, device);
 
-  this->Internals->PrepareForInPlace(sizeof(T));
+  this->Internals->PrepareForInPlace(lock, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortal(
-    static_cast<T*>(this->Internals->ExecutionArray),
-    static_cast<T*>(this->Internals->ExecutionArrayEnd));
+    static_cast<T*>(this->Internals->Internals->GetExecutionArray(lock)),
+    static_cast<T*>(this->Internals->Internals->GetExecutionArrayEnd(lock)));
 }
 
 template <typename T>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag device) const
+void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(LockType& lock,
+                                                       DeviceAdapterTag device) const
 {
-  bool needToRealloc = this->Internals->PrepareForDevice(device, sizeof(T));
+  bool needToRealloc = this->Internals->PrepareForDevice(lock, device, sizeof(T));
   if (needToRealloc)
   {
-    this->Internals->ExecutionInterface =
+    this->Internals->Internals->SetExecutionInterface(
+      lock,
       new internal::ExecutionArrayInterfaceBasic<DeviceAdapterTag>(
-        *(this->Internals->ControlArray));
+        *(this->Internals->Internals->GetControlArray(lock))));
   }
 }
 
 template <typename T>
 DeviceAdapterId ArrayHandle<T, StorageTagBasic>::GetDeviceAdapterId() const
 {
-  return this->Internals->GetDeviceAdapterId();
+  LockType lock = this->GetLock();
+  return this->Internals->GetDeviceAdapterId(lock);
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::SyncControlArray() const
 {
-  this->Internals->SyncControlArray(sizeof(T));
+  LockType lock = this->GetLock();
+  this->Internals->SyncControlArray(lock, sizeof(T));
 }
 
 template <typename T>
-void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal()
+void ArrayHandle<T, StorageTagBasic>::SyncControlArray(LockType& lock) const
 {
-  this->Internals->ReleaseResourcesExecutionInternal();
+  this->Internals->SyncControlArray(lock, sizeof(T));
+}
+
+template <typename T>
+void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal(LockType& lock) const
+{
+  this->Internals->ReleaseResourcesExecutionInternal(lock);
 }
 }
 } // end namespace vtkm::cont

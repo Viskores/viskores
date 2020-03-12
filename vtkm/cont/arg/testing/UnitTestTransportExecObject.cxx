@@ -41,7 +41,7 @@ struct TestExecutionObject : public vtkm::cont::ExecutionObjectBase
   vtkm::Int32 Number;
 
   template <typename Device>
-  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device, vtkm::cont::Token&) const
   {
     ExecutionObject<Device> object;
     object.Number = this->Number;
@@ -73,8 +73,10 @@ void TryExecObjectTransport(Device)
   vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
     transport;
 
+  vtkm::cont::Token token;
+
   TestKernel<Device> kernel;
-  kernel.Object = transport(contObject, nullptr, 1, 1);
+  kernel.Object = transport(contObject, nullptr, 1, 1, token);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
 }

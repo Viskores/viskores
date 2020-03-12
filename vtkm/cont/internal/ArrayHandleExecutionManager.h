@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/Token.h>
 
 #include <vtkm/cont/internal/ArrayTransfer.h>
 
@@ -68,13 +69,13 @@ public:
   /// Returns a constant array portal valid in the execution environment.
   ///
   template <typename DeviceAdapter>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::PortalConst PrepareForInput(bool updateData,
-                                                                                DeviceAdapter)
+  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::PortalConst
+  PrepareForInput(bool updateData, DeviceAdapter, vtkm::cont::Token& token)
   {
     this->VerifyDeviceAdapter(DeviceAdapter());
 
     typename ExecutionTypes<DeviceAdapter>::PortalConst portal;
-    this->PrepareForInputImpl(updateData, &portal);
+    this->PrepareForInputImpl(updateData, &portal, token);
     return portal;
   }
 
@@ -85,13 +86,13 @@ public:
   /// Returns a read-write array portal valid in the execution environment.
   ///
   template <typename DeviceAdapter>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::Portal PrepareForInPlace(bool updateData,
-                                                                             DeviceAdapter)
+  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::Portal
+  PrepareForInPlace(bool updateData, DeviceAdapter, vtkm::cont::Token& token)
   {
     this->VerifyDeviceAdapter(DeviceAdapter());
 
     typename ExecutionTypes<DeviceAdapter>::Portal portal;
-    this->PrepareForInPlaceImpl(updateData, &portal);
+    this->PrepareForInPlaceImpl(updateData, &portal, token);
     return portal;
   }
 
@@ -103,13 +104,13 @@ public:
   /// Returns a writable array portal valid in the execution environment.
   ///
   template <typename DeviceAdapter>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::Portal PrepareForOutput(vtkm::Id numberOfValues,
-                                                                            DeviceAdapter)
+  VTKM_CONT typename ExecutionTypes<DeviceAdapter>::Portal
+  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapter, vtkm::cont::Token& token)
   {
     this->VerifyDeviceAdapter(DeviceAdapter());
 
     typename ExecutionTypes<DeviceAdapter>::Portal portal;
-    this->PrepareForOutputImpl(numberOfValues, &portal);
+    this->PrepareForOutputImpl(numberOfValues, &portal, token);
     return portal;
   }
 
@@ -153,11 +154,17 @@ public:
 protected:
   virtual vtkm::Id GetNumberOfValuesImpl() const = 0;
 
-  virtual void PrepareForInputImpl(bool updateData, void* portalExecutionVoid) = 0;
+  virtual void PrepareForInputImpl(bool updateData,
+                                   void* portalExecutionVoid,
+                                   vtkm::cont::Token& token) = 0;
 
-  virtual void PrepareForInPlaceImpl(bool updateData, void* portalExecutionVoid) = 0;
+  virtual void PrepareForInPlaceImpl(bool updateData,
+                                     void* portalExecutionVoid,
+                                     vtkm::cont::Token& token) = 0;
 
-  virtual void PrepareForOutputImpl(vtkm::Id numberOfValues, void* portalExecution) = 0;
+  virtual void PrepareForOutputImpl(vtkm::Id numberOfValues,
+                                    void* portalExecution,
+                                    vtkm::cont::Token& token) = 0;
 
   virtual void RetrieveOutputDataImpl(StorageType* storage) const = 0;
 
@@ -212,23 +219,25 @@ protected:
   vtkm::Id GetNumberOfValuesImpl() const { return this->Transfer.GetNumberOfValues(); }
 
   VTKM_CONT
-  void PrepareForInputImpl(bool updateData, void* portalExecutionVoid)
+  void PrepareForInputImpl(bool updateData, void* portalExecutionVoid, vtkm::cont::Token& token)
   {
-    PortalConstExecution portal = this->Transfer.PrepareForInput(updateData);
+    PortalConstExecution portal = this->Transfer.PrepareForInput(updateData, token);
     *reinterpret_cast<PortalConstExecution*>(portalExecutionVoid) = portal;
   }
 
   VTKM_CONT
-  void PrepareForInPlaceImpl(bool updateData, void* portalExecutionVoid)
+  void PrepareForInPlaceImpl(bool updateData, void* portalExecutionVoid, vtkm::cont::Token& token)
   {
-    PortalExecution portal = this->Transfer.PrepareForInPlace(updateData);
+    PortalExecution portal = this->Transfer.PrepareForInPlace(updateData, token);
     *reinterpret_cast<PortalExecution*>(portalExecutionVoid) = portal;
   }
 
   VTKM_CONT
-  void PrepareForOutputImpl(vtkm::Id numberOfValues, void* portalExecutionVoid)
+  void PrepareForOutputImpl(vtkm::Id numberOfValues,
+                            void* portalExecutionVoid,
+                            vtkm::cont::Token& token)
   {
-    PortalExecution portal = this->Transfer.PrepareForOutput(numberOfValues);
+    PortalExecution portal = this->Transfer.PrepareForOutput(numberOfValues, token);
     *reinterpret_cast<PortalExecution*>(portalExecutionVoid) = portal;
   }
 

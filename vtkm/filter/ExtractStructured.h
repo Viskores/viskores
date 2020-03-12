@@ -116,7 +116,7 @@ public:
 
 private:
   vtkm::RangeId3 VOI;
-  vtkm::Id3 SampleRate;
+  vtkm::Id3 SampleRate = { 1, 1, 1 };
   bool IncludeBoundary;
   bool IncludeOffset;
   vtkm::worklet::ExtractStructured Worklet;

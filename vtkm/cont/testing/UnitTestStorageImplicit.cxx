@@ -101,8 +101,7 @@ struct TemplatedTests
     TestImplicitStorage<T> portal;
     vtkm::cont::ArrayHandle<T, StorageTagType> implictHandle(portal);
     VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == ARRAY_SIZE, "handle has wrong size");
-    VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
-                     "portals first values should be 1");
+    VTKM_TEST_ASSERT(implictHandle.ReadPortal().Get(0) == T(1), "portals first values should be 1");
   }
 
   void operator()()

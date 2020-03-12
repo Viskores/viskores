@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_supernode_comparator_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_supernode_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_supernode_comparator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_contour_tree_supernode_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -75,19 +75,20 @@ public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  IdPortalType hyperparentsPortal;
-  IdPortalType supernodesPortal;
-  IdPortalType whenTransferredPortal;
+  IdPortalType HyperparentsPortal;
+  IdPortalType SupernodesPortal;
+  IdPortalType WhenTransferredPortal;
 
   // constructor
   VTKM_CONT
   ContourTreeSuperNodeComparatorImpl(const IdArrayType& hyperparents,
                                      const IdArrayType& supernodes,
-                                     const IdArrayType& whenTransferred)
+                                     const IdArrayType& whenTransferred,
+                                     vtkm::cont::Token& token)
   {
-    hyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter());
-    supernodesPortal = supernodes.PrepareForInput(DeviceAdapter());
-    whenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter());
+    this->HyperparentsPortal = hyperparents.PrepareForInput(DeviceAdapter(), token);
+    this->SupernodesPortal = supernodes.PrepareForInput(DeviceAdapter(), token);
+    this->WhenTransferredPortal = whenTransferred.PrepareForInput(DeviceAdapter(), token);
   }
 
   // () operator - gets called to do comparison
@@ -95,29 +96,29 @@ public:
   bool operator()(const vtkm::Id& leftComparand, const vtkm::Id& rightComparand) const
   { // operator()
     // first compare the iteration when they were transferred
-    vtkm::Id leftWhen = maskedIndex(whenTransferredPortal.Get(leftComparand));
-    vtkm::Id rightWhen = maskedIndex(whenTransferredPortal.Get(rightComparand));
+    vtkm::Id leftWhen = MaskedIndex(WhenTransferredPortal.Get(leftComparand));
+    vtkm::Id rightWhen = MaskedIndex(WhenTransferredPortal.Get(rightComparand));
     if (leftWhen < rightWhen)
       return true;
     if (leftWhen > rightWhen)
       return false;
 
     // next compare the left & right hyperparents
-    vtkm::Id leftHyperparent = hyperparentsPortal.Get(maskedIndex(leftComparand));
-    vtkm::Id rightHyperparent = hyperparentsPortal.Get(maskedIndex(rightComparand));
-    if (maskedIndex(leftHyperparent) < maskedIndex(rightHyperparent))
+    vtkm::Id leftHyperparent = this->HyperparentsPortal.Get(MaskedIndex(leftComparand));
+    vtkm::Id rightHyperparent = this->HyperparentsPortal.Get(MaskedIndex(rightComparand));
+    if (MaskedIndex(leftHyperparent) < MaskedIndex(rightHyperparent))
       return true;
-    if (maskedIndex(leftHyperparent) > maskedIndex(rightHyperparent))
+    if (MaskedIndex(leftHyperparent) > MaskedIndex(rightHyperparent))
       return false;
 
     // the parents are equal, so we compare the nodes, which are sort indices and thus indicate value
     // we will flip for ascending edges
-    vtkm::Id leftSupernode = supernodesPortal.Get(leftComparand);
-    vtkm::Id rightSupernode = supernodesPortal.Get(rightComparand);
+    vtkm::Id leftSupernode = SupernodesPortal.Get(leftComparand);
+    vtkm::Id rightSupernode = SupernodesPortal.Get(rightComparand);
     if (leftSupernode < rightSupernode)
-      return isAscending(leftHyperparent);
+      return IsAscending(leftHyperparent);
     else if (leftSupernode > rightSupernode)
-      return !isAscending(leftHyperparent);
+      return !IsAscending(leftHyperparent);
     else
       return false;
   } // operator()
@@ -138,10 +139,12 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  VTKM_CONT ContourTreeSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token)
   {
     return ContourTreeSuperNodeComparatorImpl<DeviceAdapter>(
-      this->Hyperparents, this->Supernodes, this->WhenTransferred);
+      this->Hyperparents, this->Supernodes, this->WhenTransferred, token);
   }
 
 private:

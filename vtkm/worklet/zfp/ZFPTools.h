@@ -92,7 +92,7 @@ T* GetVTKMPointer(vtkm::cont::ArrayHandle<T>& handle)
     PortalType;
   typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
   IteratorType iter =
-    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.GetPortalControl()).GetBegin();
+    vtkm::cont::ArrayPortalToIterators<PortalType>(handle.WritePortal()).GetBegin();
   return &(*iter);
 }
 

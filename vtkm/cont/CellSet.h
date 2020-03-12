@@ -27,6 +27,13 @@ namespace cont
 class VTKM_CONT_EXPORT CellSet
 {
 public:
+  CellSet() = default;
+  CellSet(const CellSet&) = default;
+  CellSet(CellSet&&) noexcept = default;
+
+  CellSet& operator=(const CellSet&) = default;
+  CellSet& operator=(CellSet&&) noexcept = default;
+
   virtual ~CellSet();
 
   virtual vtkm::Id GetNumberOfCells() const = 0;

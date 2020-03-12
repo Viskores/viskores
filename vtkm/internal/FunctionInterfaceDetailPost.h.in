@@ -101,45 +101,6 @@ $endfor\
 
 } // namespace detail
 
-//============================================================================
-
-// clang-format off
-
-$for(num_params in range(0, max_parameters+1))\
-/// \brief Create a \c FunctionInterface
-///
-/// \c make_FunctionInterface is a function that takes a variable number of
-/// arguments and returns a \c FunctionInterface object containing these
-/// objects. Since the return type for the function signature is not specified,
-/// you must always specify it as a template parameter
-///
-/// \code{.cpp}
-/// vtkm::internal::FunctionInterface<void(int,double,char)> functionInterface =
-///     vtkm::internal::make_FunctionInterface<void>(1, 2.5, 'a');
-/// \endcode
-///
-template<$template_params(num_params)>
-FunctionInterface<$signature(num_params)>
-make_FunctionInterface(
-$for(param_index in range(1,num_params+1))\
-  const $ptype(param_index)& p$(param_index)$comma_if(param_index<num_params)
-$endfor\
-  )
-{
-  detail::ParameterContainer<$signature(num_params)> container =
-    {
-$for(param_index in range(1,num_params+1))\
-    p$(param_index)$comma_if(param_index<num_params)
-$endfor\
-    };
-
-  return FunctionInterface<$signature(num_params)>{container};
-}
-
-$endfor\
-
-// clang-format off
-
 }
 } // namespace vtkm::internal
 

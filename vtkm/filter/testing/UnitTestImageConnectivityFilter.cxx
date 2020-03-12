@@ -58,7 +58,7 @@ void TestImageConnectivity()
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(
-      test_equal(resultArrayHandle.GetPortalConstControl().Get(i), componentExpected[size_t(i)]),
+      test_equal(resultArrayHandle.ReadPortal().Get(i), componentExpected[size_t(i)]),
       "Wrong result for ImageConnectivity");
   }
 }

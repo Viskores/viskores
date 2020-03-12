@@ -8,6 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+// This tests deprecated code until it is deleted.
+
 #include <vtkm/TypeListTag.h>
 
 #include <vtkm/Types.h>
@@ -16,6 +18,8 @@
 
 #include <set>
 #include <string>
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace
 {
@@ -273,3 +277,5 @@ int UnitTestTypeListTag(int argc, char* argv[])
 {
   return vtkm::testing::Testing::Run(TestLists, argc, argv);
 }
+
+VTKM_DEPRECATED_SUPPRESS_END

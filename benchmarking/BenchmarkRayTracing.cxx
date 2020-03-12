@@ -14,6 +14,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
@@ -31,114 +32,97 @@
 #include <string>
 #include <vector>
 
-using namespace vtkm::benchmarking;
-namespace vtkm
-{
-namespace benchmarking
+namespace
 {
 
-template <typename Precision, typename DeviceAdapter>
-struct BenchRayTracing
+// Hold configuration state (e.g. active device)
+vtkm::cont::InitializeResult Config;
+
+void BenchRayTracing(::benchmark::State& state)
 {
-  vtkm::rendering::raytracing::RayTracer Tracer;
-  vtkm::rendering::raytracing::Camera RayCamera;
-  vtkm::cont::ArrayHandle<vtkm::Id4> Indices;
-  vtkm::rendering::raytracing::Ray<Precision> Rays;
-  vtkm::cont::CoordinateSystem Coords;
-  vtkm::cont::DataSet Data;
+  const vtkm::Id3 dims(128, 128, 128);
 
-  VTKM_CONT ~BenchRayTracing() {}
+  vtkm::cont::testing::MakeTestDataSet maker;
+  auto dataset = maker.Make3DUniformDataSet3(dims);
+  auto coords = dataset.GetCoordinateSystem();
 
-  VTKM_CONT BenchRayTracing()
+  vtkm::rendering::Camera camera;
+  vtkm::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
+  camera.ResetToBounds(bounds);
+
+  vtkm::cont::DynamicCellSet cellset = dataset.GetCellSet();
+
+  vtkm::rendering::raytracing::TriangleExtractor triExtractor;
+  triExtractor.ExtractCells(cellset);
+
+  auto triIntersector = std::make_shared<vtkm::rendering::raytracing::TriangleIntersector>(
+    vtkm::rendering::raytracing::TriangleIntersector());
+
+  vtkm::rendering::raytracing::RayTracer tracer;
+  triIntersector->SetData(coords, triExtractor.GetTriangles());
+  tracer.AddShapeIntersector(triIntersector);
+
+  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+  vtkm::rendering::raytracing::Camera rayCamera;
+  rayCamera.SetParameters(camera, canvas);
+  vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
+  rayCamera.CreateRays(rays, coords.GetBounds());
+
+  rays.Buffers.at(0).InitConst(0.f);
+
+  vtkm::cont::Field field = dataset.GetField("pointvar");
+  vtkm::Range range = field.GetRange().ReadPortal().Get(0);
+
+  tracer.SetField(field, range);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
+  vtkm::cont::ColorTable table("cool to warm");
+  table.Sample(100, temp);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colors;
+  colors.Allocate(100);
+  auto portal = colors.WritePortal();
+  auto colorPortal = temp.ReadPortal();
+  constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+  for (vtkm::Id i = 0; i < 100; ++i)
   {
-    vtkm::Id3 dims(128, 128, 128);
-    vtkm::cont::testing::MakeTestDataSet maker;
-    Data = maker.Make3DUniformDataSet3(dims);
-    Coords = Data.GetCoordinateSystem();
-
-    vtkm::rendering::Camera camera;
-    vtkm::Bounds bounds = Data.GetCoordinateSystem().GetBounds();
-    camera.ResetToBounds(bounds);
-
-    vtkm::cont::DynamicCellSet cellset = Data.GetCellSet();
-
-    vtkm::rendering::raytracing::TriangleExtractor triExtractor;
-    triExtractor.ExtractCells(cellset);
-
-    auto triIntersector = std::make_shared<vtkm::rendering::raytracing::TriangleIntersector>(
-      vtkm::rendering::raytracing::TriangleIntersector());
-
-    triIntersector->SetData(Coords, triExtractor.GetTriangles());
-    Tracer.AddShapeIntersector(triIntersector);
-
-    vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
-    RayCamera.SetParameters(camera, canvas);
-    RayCamera.CreateRays(Rays, Coords.GetBounds());
-
-    Rays.Buffers.at(0).InitConst(0.f);
-
-    vtkm::cont::Field field = Data.GetField("pointvar");
-    vtkm::Range range = field.GetRange().GetPortalConstControl().Get(0);
-
-    Tracer.SetField(field, range);
-
-    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
-    vtkm::cont::ColorTable table("cool to warm");
-    table.Sample(100, temp);
-
-    vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colors;
-    colors.Allocate(100);
-    auto portal = colors.GetPortalControl();
-    auto colorPortal = temp.GetPortalConstControl();
-    constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
-    for (vtkm::Id i = 0; i < 100; ++i)
-    {
-      auto color = colorPortal.Get(i);
-      vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                       color[1] * conversionToFloatSpace,
-                       color[2] * conversionToFloatSpace,
-                       color[3] * conversionToFloatSpace);
-      portal.Set(i, t);
-    }
-
-    Tracer.SetColorMap(colors);
-    Tracer.Render(Rays);
+    auto color = colorPortal.Get(i);
+    vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                     color[1] * conversionToFloatSpace,
+                     color[2] * conversionToFloatSpace,
+                     color[3] * conversionToFloatSpace);
+    portal.Set(i, t);
   }
 
-  VTKM_CONT
-  vtkm::Float64 operator()()
+  tracer.SetColorMap(colors);
+  tracer.Render(rays);
+
+  vtkm::cont::Timer timer{ Config.Device };
+  for (auto _ : state)
   {
-    vtkm::cont::Timer timer{ DeviceAdapter() };
+    (void)_;
     timer.Start();
+    rayCamera.CreateRays(rays, coords.GetBounds());
+    tracer.Render(rays);
+    timer.Stop();
 
-    RayCamera.CreateRays(Rays, Coords.GetBounds());
-    try
-    {
-      Tracer.Render(Rays);
-    }
-    catch (vtkm::cont::ErrorBadValue& e)
-    {
-      std::cout << "exception " << e.what() << "\n";
-    }
-
-    return timer.GetElapsedTime();
+    state.SetIterationTime(timer.GetElapsedTime());
   }
-
-  VTKM_CONT
-  std::string Description() const { return "A ray tracing benchmark"; }
-};
-
-VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 }
-} // end namespace vtkm::benchmarking
 
+VTKM_BENCHMARK(BenchRayTracing);
+
+} // end namespace vtkm::benchmarking
 
 int main(int argc, char* argv[])
 {
-  auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  // Parse VTK-m options:
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
+  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>(), config.Device);
-  return 0;
+  // Setup device:
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS(argc, argv);
 }

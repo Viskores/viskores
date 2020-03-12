@@ -90,7 +90,7 @@ void TestTubeFilters()
 
   std::vector<vtkm::FloatDefault> ptVals = { 0,  0,  0,  0,  1,  1,  1,  2,  2,  2,  2,
                                              10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 12 };
-  auto portal = ptArr.GetPortalConstControl();
+  auto portal = ptArr.ReadPortal();
   for (vtkm::Id i = 0; i < 22; i++)
     VTKM_TEST_ASSERT(portal.Get(i) == ptVals[static_cast<std::size_t>(i)],
                      "Wrong value for point field");
@@ -104,7 +104,7 @@ void TestTubeFilters()
                                                101, 101, 101, 100, 100, 100, 101, 101, 101,
                                                110, 110, 110, 110, 110, 110, 111, 111, 111,
                                                111, 111, 111, 110, 110, 110, 111, 111, 111 };
-  portal = cellArr.GetPortalConstControl();
+  portal = cellArr.ReadPortal();
   for (vtkm::Id i = 0; i < 36; i++)
     VTKM_TEST_ASSERT(portal.Get(i) == cellVals[static_cast<std::size_t>(i)],
                      "Wrong value for cell field");

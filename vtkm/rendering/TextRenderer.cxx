@@ -230,33 +230,35 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
   using TextureCoordsArrayHandle = internal::RenderBitmapFontExecutor::TextureCoordsArrayHandle;
   ScreenCoordsArrayHandle screenCoords;
   TextureCoordsArrayHandle textureCoords;
-  screenCoords.Allocate(static_cast<vtkm::Id>(text.length()));
-  textureCoords.Allocate(static_cast<vtkm::Id>(text.length()));
-  ScreenCoordsArrayHandle::PortalControl screenCoordsPortal = screenCoords.GetPortalControl();
-  TextureCoordsArrayHandle::PortalControl textureCoordsPortal = textureCoords.GetPortalControl();
-  vtkm::Vec4f_32 charVertices, charUVs, charCoords;
-  for (std::size_t i = 0; i < text.length(); ++i)
   {
-    char c = text[i];
-    char nextchar = (i < text.length() - 1) ? text[i + 1] : 0;
-    Font.GetCharPolygon(c,
-                        fx,
-                        fy,
-                        charVertices[0],
-                        charVertices[2],
-                        charVertices[3],
-                        charVertices[1],
-                        charUVs[0],
-                        charUVs[2],
-                        charUVs[3],
-                        charUVs[1],
-                        nextchar);
-    charVertices = charVertices * scale;
-    vtkm::Id2 p0 = Canvas->GetScreenPoint(charVertices[0], charVertices[3], fz, transform);
-    vtkm::Id2 p1 = Canvas->GetScreenPoint(charVertices[2], charVertices[1], fz, transform);
-    charCoords = vtkm::Id4(p0[0], p1[1], p1[0], p0[1]);
-    screenCoordsPortal.Set(static_cast<vtkm::Id>(i), charCoords);
-    textureCoordsPortal.Set(static_cast<vtkm::Id>(i), charUVs);
+    screenCoords.Allocate(static_cast<vtkm::Id>(text.length()));
+    textureCoords.Allocate(static_cast<vtkm::Id>(text.length()));
+    ScreenCoordsArrayHandle::WritePortalType screenCoordsPortal = screenCoords.WritePortal();
+    TextureCoordsArrayHandle::WritePortalType textureCoordsPortal = textureCoords.WritePortal();
+    vtkm::Vec4f_32 charVertices, charUVs, charCoords;
+    for (std::size_t i = 0; i < text.length(); ++i)
+    {
+      char c = text[i];
+      char nextchar = (i < text.length() - 1) ? text[i + 1] : 0;
+      Font.GetCharPolygon(c,
+                          fx,
+                          fy,
+                          charVertices[0],
+                          charVertices[2],
+                          charVertices[3],
+                          charVertices[1],
+                          charUVs[0],
+                          charUVs[2],
+                          charUVs[3],
+                          charUVs[1],
+                          nextchar);
+      charVertices = charVertices * scale;
+      vtkm::Id2 p0 = Canvas->GetScreenPoint(charVertices[0], charVertices[3], fz, transform);
+      vtkm::Id2 p1 = Canvas->GetScreenPoint(charVertices[2], charVertices[1], fz, transform);
+      charCoords = vtkm::Id4(p0[0], p1[1], p1[0], p0[1]);
+      screenCoordsPortal.Set(static_cast<vtkm::Id>(i), charCoords);
+      textureCoordsPortal.Set(static_cast<vtkm::Id>(i), charUVs);
+    }
   }
 
   vtkm::cont::TryExecute(internal::RenderBitmapFontExecutor(screenCoords,

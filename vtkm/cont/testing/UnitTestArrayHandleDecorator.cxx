@@ -27,7 +27,7 @@ struct DecoratorTests
 {
   static constexpr vtkm::Id ARRAY_SIZE = 10;
 
-  // Decorator implemenation that demonstrates how to write invertible functors
+  // Decorator implementation that demonstrates how to write invertible functors
   // that combine three array handles with complex access logic. The resulting
   // ArrayHandleDecorator can be both read from and written to.
   //
@@ -212,6 +212,69 @@ struct DecoratorTests
     }
   };
 
+  // Decorator implementation that combines two source arrays using the formula
+  // `[source1] * 10 + [source2]` and supports resizing.
+  template <typename ValueType>
+  struct DecompositionDecorImpl
+  {
+    template <typename Portal1T, typename Portal2T>
+    struct Functor
+    {
+      Portal1T Portal1;
+      Portal2T Portal2;
+
+      VTKM_EXEC_CONT
+      ValueType operator()(vtkm::Id idx) const
+      {
+        return static_cast<ValueType>(this->Portal1.Get(idx) * 10 + this->Portal2.Get(idx));
+      }
+    };
+
+    template <typename Portal1T, typename Portal2T>
+    struct InverseFunctor
+    {
+      Portal1T Portal1;
+      Portal2T Portal2;
+
+      VTKM_EXEC_CONT
+      void operator()(vtkm::Id idx, const ValueType& val) const
+      {
+        this->Portal1.Set(idx, static_cast<ValueType>(std::floor(val / 10)));
+        this->Portal2.Set(idx, static_cast<ValueType>(std::fmod(val, 10)));
+      }
+    };
+
+    template <typename Portal1T, typename Portal2T>
+    VTKM_CONT Functor<typename std::decay<Portal1T>::type, typename std::decay<Portal2T>::type>
+    CreateFunctor(Portal1T&& p1, Portal2T&& p2) const
+    {
+      return { std::forward<Portal1T>(p1), std::forward<Portal2T>(p2) };
+    }
+
+    template <typename Portal1T, typename Portal2T>
+    VTKM_CONT
+      InverseFunctor<typename std::decay<Portal1T>::type, typename std::decay<Portal2T>::type>
+      CreateInverseFunctor(Portal1T&& p1, Portal2T&& p2) const
+    {
+      return { std::forward<Portal1T>(p1), std::forward<Portal2T>(p2) };
+    }
+
+    // Resize methods:
+    template <typename Array1T, typename Array2T>
+    VTKM_CONT void AllocateSourceArrays(vtkm::Id numVals, Array1T&& array1, Array2T&& array2) const
+    {
+      array1.Allocate(numVals);
+      array2.Allocate(numVals);
+    }
+
+    template <typename Array1T, typename Array2T>
+    VTKM_CONT void ShrinkSourceArrays(vtkm::Id numVals, Array1T&& array1, Array2T&& array2) const
+    {
+      array1.Shrink(numVals);
+      array2.Shrink(numVals);
+    }
+  };
+
   template <typename ValueType>
   void InversionTest() const
   {
@@ -255,7 +318,7 @@ struct DecoratorTests
         vtkm::cont::make_ArrayHandleDecorator(ARRAY_SIZE, InvertibleDecorImpl{}, ah1, ah2, ah3Copy);
 
       {
-        auto portalDecor = ahDecor.GetPortalConstControl();
+        auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 23 });
@@ -275,7 +338,7 @@ struct DecoratorTests
                             ahDecor);
 
       { // Accessing portal should give all 25s:
-        auto portalDecor = ahDecor.GetPortalConstControl();
+        auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 25 });
@@ -291,7 +354,7 @@ struct DecoratorTests
       }
 
       { // ah3Copy should have updated values:
-        auto portalAH3Copy = ah3Copy.GetPortalConstControl();
+        auto portalAH3Copy = ah3Copy.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalAH3Copy.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalAH3Copy.Get(0) == ValueType{ 15 });
@@ -320,9 +383,9 @@ struct DecoratorTests
     auto decorArray = vtkm::cont::make_ArrayHandleDecorator(ARRAY_SIZE, impl, ahCount, ahConst);
 
     {
-      auto decorPortal = decorArray.GetPortalConstControl();
-      auto countPortal = ahCount.GetPortalConstControl();
-      auto constPortal = ahConst.GetPortalConstControl();
+      auto decorPortal = decorArray.ReadPortal();
+      auto countPortal = ahCount.ReadPortal();
+      auto constPortal = ahConst.ReadPortal();
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
         VTKM_TEST_ASSERT(decorPortal.Get(i) == op(countPortal.Get(i), constPortal.Get(i)));
@@ -332,9 +395,9 @@ struct DecoratorTests
     vtkm::cont::ArrayHandle<ValueType> copiedInExec;
     vtkm::cont::ArrayCopy(decorArray, copiedInExec);
     {
-      auto copiedPortal = copiedInExec.GetPortalConstControl();
-      auto countPortal = ahCount.GetPortalConstControl();
-      auto constPortal = ahConst.GetPortalConstControl();
+      auto copiedPortal = copiedInExec.ReadPortal();
+      auto countPortal = ahCount.ReadPortal();
+      auto constPortal = ahConst.ReadPortal();
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
       {
         VTKM_TEST_ASSERT(copiedPortal.Get(i) == op(countPortal.Get(i), constPortal.Get(i)));
@@ -362,8 +425,8 @@ struct DecoratorTests
       ARRAY_SIZE, ScanExtendedToNumIndicesDecorImpl<ValueType>{}, scan);
 
     {
-      auto origPortal = numIndicesOrig.GetPortalConstControl();
-      auto decorPortal = numIndicesDecor.GetPortalConstControl();
+      auto origPortal = numIndicesOrig.ReadPortal();
+      auto decorPortal = numIndicesDecor.ReadPortal();
       VTKM_STATIC_ASSERT(VTKM_PASS_COMMAS(
         std::is_same<decltype(origPortal.Get(0)), decltype(decorPortal.Get(0))>::value));
       VTKM_TEST_ASSERT(origPortal.GetNumberOfValues() == decorPortal.GetNumberOfValues());
@@ -375,23 +438,209 @@ struct DecoratorTests
   }
 
   template <typename ValueType>
+  void DecompositionTest() const
+  {
+    vtkm::cont::ArrayHandle<ValueType> a1;
+    vtkm::cont::ArrayHandle<ValueType> a2;
+    auto decor =
+      vtkm::cont::make_ArrayHandleDecorator(0, DecompositionDecorImpl<ValueType>{}, a1, a2);
+
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 0);
+
+    decor.Allocate(5);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
+    {
+      auto decorPortal = decor.WritePortal();
+      decorPortal.Set(0, 13);
+      decorPortal.Set(1, 8);
+      decorPortal.Set(2, 43);
+      decorPortal.Set(3, 92);
+      decorPortal.Set(4, 117);
+    }
+
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 5);
+    {
+      auto a1Portal = a1.ReadPortal();
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(0), 1));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(1), 0));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(2), 4));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(3), 9));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(4), 11));
+    }
+
+    VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 5);
+    {
+      auto a2Portal = a2.ReadPortal();
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(0), 3));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(1), 8));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(2), 3));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(3), 2));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(4), 7));
+    }
+
+    decor.Shrink(3);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
+    {
+      auto decorPortal = decor.ReadPortal();
+      VTKM_TEST_ASSERT(test_equal(decorPortal.Get(0), 13));
+      VTKM_TEST_ASSERT(test_equal(decorPortal.Get(1), 8));
+      VTKM_TEST_ASSERT(test_equal(decorPortal.Get(2), 43));
+    }
+
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 3);
+    {
+      auto a1Portal = a1.ReadPortal();
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(0), 1));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(1), 0));
+      VTKM_TEST_ASSERT(test_equal(a1Portal.Get(2), 4));
+    }
+
+    VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 3);
+    {
+      auto a2Portal = a2.ReadPortal();
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(0), 3));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(1), 8));
+      VTKM_TEST_ASSERT(test_equal(a2Portal.Get(2), 3));
+    }
+  }
+
+  template <typename ValueType>
   void operator()(const ValueType) const
   {
-    InversionTest<ValueType>();
+    this->InversionTest<ValueType>();
 
-    BinaryOperatorTest<ValueType, vtkm::Maximum>();
-    BinaryOperatorTest<ValueType, vtkm::Minimum>();
-    BinaryOperatorTest<ValueType, vtkm::Add>();
-    BinaryOperatorTest<ValueType, vtkm::Subtract>();
-    BinaryOperatorTest<ValueType, vtkm::Multiply>();
+    this->BinaryOperatorTest<ValueType, vtkm::Maximum>();
+    this->BinaryOperatorTest<ValueType, vtkm::Minimum>();
+    this->BinaryOperatorTest<ValueType, vtkm::Add>();
+    this->BinaryOperatorTest<ValueType, vtkm::Subtract>();
+    this->BinaryOperatorTest<ValueType, vtkm::Multiply>();
 
-    ScanExtendedToNumIndicesTest<ValueType>();
+    this->ScanExtendedToNumIndicesTest<ValueType>();
+
+    this->DecompositionTest<ValueType>();
   }
 };
 
+// ArrayHandleDecorator that implements AllocateSourceArrays and ShrinkSourceArrays, thus allowing
+// it to be resized.
+struct ResizableDecorImpl
+{
+  // We don't actually read/write from this, so use a dummy functor:
+  struct Functor
+  {
+    VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id) const { return 0; }
+  };
+
+  template <typename... PortalTs>
+  VTKM_CONT Functor CreateFunctor(PortalTs...) const
+  {
+    return Functor{};
+  }
+
+  template <typename Array1T, typename Array2T>
+  void ShrinkSourceArrays(vtkm::Id newSize, Array1T& a1, Array2T& a2) const
+  {
+    VTKM_IS_ARRAY_HANDLE(Array1T);
+    VTKM_IS_ARRAY_HANDLE(Array2T);
+
+    // Resize each to 2*newSize:
+    a1.Shrink(2 * newSize);
+    a2.Shrink(2 * newSize);
+  }
+
+  template <typename Array1T, typename Array2T>
+  void AllocateSourceArrays(vtkm::Id newSize, Array1T& a1, Array2T& a2) const
+  {
+    VTKM_IS_ARRAY_HANDLE(Array1T);
+    VTKM_IS_ARRAY_HANDLE(Array2T);
+
+    // Resize each to 3*newSize:
+    a1.Allocate(3 * newSize);
+    a2.Allocate(3 * newSize);
+  }
+};
+
+// ArrayHandleDecorator that implements AllocateSourceArrays and ShrinkSourceArrays, thus allowing
+// it to be resized.
+struct NonResizableDecorImpl
+{
+  // We don't actually read/write from this, so use a dummy functor:
+  struct Functor
+  {
+    VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id) const { return 0; }
+  };
+
+  template <typename... PortalTs>
+  VTKM_CONT Functor CreateFunctor(PortalTs...) const
+  {
+    return Functor{};
+  }
+};
+
+void ResizeTest()
+{
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> a1;
+    vtkm::cont::ArrayHandle<vtkm::Id> a2;
+    ResizableDecorImpl impl;
+
+    auto decor = vtkm::cont::make_ArrayHandleDecorator(5, impl, a1, a2);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
+
+    decor.Allocate(10); // Should allocate a1&a2 to have 30 values:
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 30);
+    VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 30);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 10);
+    decor.Shrink(3); // Should resize a1&a2 to have 6 values:
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 6);
+    VTKM_TEST_ASSERT(a2.GetNumberOfValues() == 6);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
+  }
+
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> a1;
+    a1.Allocate(20);
+    vtkm::cont::ArrayHandle<vtkm::Id> a2;
+    a2.Allocate(20);
+    NonResizableDecorImpl impl;
+
+    auto decor = vtkm::cont::make_ArrayHandleDecorator(5, impl, a1, a2);
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
+
+    // Allocate and Shrink should throw an ErrorBadType:
+    bool threw = false;
+    try
+    {
+      decor.Allocate(10);
+    }
+    catch (vtkm::cont::ErrorBadType& e)
+    {
+      std::cerr << "Caught expected exception: " << e.what() << "\n";
+      threw = true;
+    }
+    VTKM_TEST_ASSERT(threw, "Allocate did not throw as expected.");
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
+
+    threw = false;
+    try
+    {
+      decor.Shrink(3);
+    }
+    catch (vtkm::cont::ErrorBadType& e)
+    {
+      std::cerr << "Caught expected exception: " << e.what() << "\n";
+      threw = true;
+    }
+    VTKM_TEST_ASSERT(threw, "Allocate did not throw as expected.");
+    VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 5);
+  }
+}
+
 void TestArrayHandleDecorator()
 {
-  vtkm::testing::Testing::TryTypes(DecoratorTests{}, vtkm::TypeListTagScalarAll{});
+  vtkm::testing::Testing::TryTypes(DecoratorTests{}, vtkm::TypeListScalarAll{});
+
+  ResizeTest();
 }
 
 } // anonymous namespace

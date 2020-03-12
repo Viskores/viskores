@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_merge_combined_other_start_index_worklet_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_merge_combined_other_start_index_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_combined_other_start_index_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_merge_combined_other_start_index_worklet_h
 
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>

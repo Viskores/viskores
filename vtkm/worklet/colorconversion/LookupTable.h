@@ -25,10 +25,7 @@ namespace worklet
 namespace colorconversion
 {
 
-struct LookupTableTypes
-  : vtkm::ListTagBase<vtkm::Vec3ui_8, vtkm::Vec4ui_8, vtkm::Vec3f_32, vtkm::Vec4f_64>
-{
-};
+using LookupTableTypes = vtkm::List<vtkm::Vec3ui_8, vtkm::Vec4ui_8, vtkm::Vec3f_32, vtkm::Vec4f_64>;
 
 struct LookupTable : public vtkm::worklet::WorkletMapField
 {

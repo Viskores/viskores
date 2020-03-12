@@ -59,6 +59,7 @@ set(headers
   CellSet.h
   CellSetExplicit.h
   CellSetExtrude.h
+  CellSetList.h
   CellSetListTag.h
   CellSetPermutation.h
   CellSetSingleType.h
@@ -73,6 +74,7 @@ set(headers
   DataSetFieldAdd.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
+  DeviceAdapterList.h
   DeviceAdapterListTag.h
   DeviceAdapterTag.h
   DynamicCellSet.h
@@ -104,9 +106,11 @@ set(headers
   StorageBasic.h
   StorageExtrude.h
   StorageImplicit.h
+  StorageList.h
   StorageListTag.h
   StorageVirtual.h
   Timer.h
+  Token.h
   TryExecute.h
   SerializableTypeString.h
   VariantArrayHandle.h
@@ -145,6 +149,7 @@ set(sources
   Logging.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
+  Token.cxx
   TryExecute.cxx
   )
 
@@ -211,6 +216,7 @@ if(TARGET vtkm::openmp)
 endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+target_link_libraries(vtkm_cont PUBLIC Threads::Threads)
 target_link_libraries(vtkm_cont PUBLIC vtkm_taotuple vtkm_optionparser vtkm_diy vtkm_lcl)
 if(TARGET vtkm_loguru)
   target_link_libraries(vtkm_cont PRIVATE vtkm_loguru)

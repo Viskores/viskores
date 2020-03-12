@@ -89,11 +89,11 @@ int main(int argc, char* argv[])
   vtkm::Id2 vdims;
   inFile >> vdims[0];
   inFile >> vdims[1];
-  std::size_t nVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
+  std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
 
   // read data
-  std::vector<vtkm::Float32> values(nVertices);
-  for (std::size_t vertex = 0; vertex < nVertices; vertex++)
+  std::vector<vtkm::Float32> values(numVertices);
+  for (std::size_t vertex = 0; vertex < numVertices; vertex++)
   {
     inFile >> values[vertex];
   }

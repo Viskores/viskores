@@ -339,8 +339,8 @@ struct TestEqualArrayHandle
       result.PushMessage("sizes don't match");
       return;
     }
-    auto portal1 = array1.GetPortalConstControl();
-    auto portal2 = array2.GetPortalConstControl();
+    auto portal1 = array1.ReadPortal();
+    auto portal2 = array2.ReadPortal();
     for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
     {
       if (!test_equal(portal1.Get(i), portal2.Get(i)))
@@ -480,7 +480,7 @@ inline VTKM_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset1,
   return result;
 }
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
+template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
 inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
                                                    const vtkm::cont::Field& f2,
                                                    FieldTypeList fTtypes = FieldTypeList())
@@ -509,8 +509,8 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
   return result;
 }
 
-template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG>
+template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST,
+          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
 inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& ds1,
                                                      const vtkm::cont::DataSet& ds2,
                                                      CellSetTypes ctypes = CellSetTypes(),

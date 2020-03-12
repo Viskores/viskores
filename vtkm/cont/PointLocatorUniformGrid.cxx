@@ -101,7 +101,8 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
   template <typename DeviceAdapter>
   VTKM_CONT bool operator()(DeviceAdapter,
                             const vtkm::cont::PointLocatorUniformGrid& self,
-                            ExecutionObjectHandleType& handle) const
+                            ExecutionObjectHandleType& handle,
+                            vtkm::cont::Token& token) const
   {
     auto rmin = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(self.Range[0].Min),
                                static_cast<vtkm::FloatDefault>(self.Range[1].Min),
@@ -114,10 +115,10 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
         rmin,
         rmax,
         self.Dims,
-        self.GetCoordinates().GetData().PrepareForInput(DeviceAdapter()),
-        self.PointIds.PrepareForInput(DeviceAdapter()),
-        self.CellLower.PrepareForInput(DeviceAdapter()),
-        self.CellUpper.PrepareForInput(DeviceAdapter()));
+        self.GetCoordinates().GetData().PrepareForInput(DeviceAdapter(), token),
+        self.PointIds.PrepareForInput(DeviceAdapter(), token),
+        self.CellLower.PrepareForInput(DeviceAdapter(), token),
+        self.CellUpper.PrepareForInput(DeviceAdapter(), token));
     handle.Reset(h);
     return true;
   }
@@ -125,10 +126,11 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
 
 VTKM_CONT void PointLocatorUniformGrid::PrepareExecutionObject(
   ExecutionObjectHandleType& execObjHandle,
-  vtkm::cont::DeviceAdapterId deviceId) const
+  vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::Token& token) const
 {
-  const bool success =
-    vtkm::cont::TryExecuteOnDevice(deviceId, PrepareExecutionObjectFunctor(), *this, execObjHandle);
+  const bool success = vtkm::cont::TryExecuteOnDevice(
+    deviceId, PrepareExecutionObjectFunctor(), *this, execObjHandle, token);
   if (!success)
   {
     throwFailedRuntimeDeviceTransfer("PointLocatorUniformGrid", deviceId);

@@ -47,10 +47,8 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractPoints filter");
 
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f,
-                     "Wrong point field data");
-    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 97.0f,
-                     "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 97.0f, "Wrong point field data");
   }
 
   void TestUniformByBox1() const
@@ -81,8 +79,7 @@ public:
 
     for (vtkm::Id i = 0; i < output.GetCellSet().GetNumberOfPoints(); i++)
     {
-      VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(i) == 0.0f,
-                       "Wrong point field data");
+      VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(i) == 0.0f, "Wrong point field data");
     }
   }
 

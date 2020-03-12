@@ -32,15 +32,8 @@ namespace worklet
 ///
 class VTKM_WORKLET_EXPORT MaskSelect : public internal::MaskBase
 {
-  struct MaskTypes : vtkm::ListTagBase<vtkm::Int32,
-                                       vtkm::Int64,
-                                       vtkm::UInt32,
-                                       vtkm::UInt64,
-                                       vtkm::Int8,
-                                       vtkm::UInt8,
-                                       char>
-  {
-  };
+  using MaskTypes =
+    vtkm::List<vtkm::Int32, vtkm::Int64, vtkm::UInt32, vtkm::UInt64, vtkm::Int8, vtkm::UInt8, char>;
   using VariantArrayHandleMask = vtkm::cont::VariantArrayHandleBase<MaskTypes>;
 
 public:

@@ -13,7 +13,7 @@
 
 #include <vtkm/internal/Configure.h>
 
-#include <assert.h>
+#include <cassert>
 
 /// \def VTKM_ASSERT(condition)
 ///
@@ -34,6 +34,7 @@
 #elif !defined(NDEBUG) && !defined(VTKM_NO_ASSERT)
 //Only assert if we are in debug mode and don't have VTKM_NO_ASSERT defined
 #define VTKM_ASSERT(condition) assert(condition)
+#define VTKM_ASSERTS_CHECKED
 #else
 #define VTKM_ASSERT(condition) (void)(condition)
 #endif

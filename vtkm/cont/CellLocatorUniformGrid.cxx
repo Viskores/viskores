@@ -54,9 +54,9 @@ void CellLocatorUniformGrid::Build()
   }
 
   UniformType uniformCoords = coords.GetData().Cast<UniformType>();
-  this->Origin = uniformCoords.GetPortalConstControl().GetOrigin();
+  this->Origin = uniformCoords.ReadPortal().GetOrigin();
 
-  vtkm::Vec3f spacing = uniformCoords.GetPortalConstControl().GetSpacing();
+  vtkm::Vec3f spacing = uniformCoords.ReadPortal().GetSpacing();
   vtkm::Vec3f unitLength;
   unitLength[0] = static_cast<vtkm::FloatDefault>(this->PointDims[0] - 1);
   unitLength[1] = static_cast<vtkm::FloatDefault>(this->PointDims[1] - 1);
@@ -80,10 +80,12 @@ struct CellLocatorUniformGridPrepareForExecutionFunctor
   template <typename DeviceAdapter, typename... Args>
   VTKM_CONT bool operator()(DeviceAdapter,
                             vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
+                            vtkm::cont::Token& token,
                             Args&&... args) const
   {
     using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter, dimensions>;
-    ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
+    ExecutionType* execObject =
+      new ExecutionType(std::forward<Args>(args)..., DeviceAdapter(), token);
     execLocator.Reset(execObject);
     return true;
   }
@@ -91,7 +93,8 @@ struct CellLocatorUniformGridPrepareForExecutionFunctor
 }
 
 const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
   bool success = true;
   if (this->Is3D)
@@ -99,6 +102,7 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<3>(),
                                              this->ExecutionObjectHandle,
+                                             token,
                                              this->CellDims,
                                              this->PointDims,
                                              this->Origin,
@@ -111,6 +115,7 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<2>(),
                                              this->ExecutionObjectHandle,
+                                             token,
                                              this->CellDims,
                                              this->PointDims,
                                              this->Origin,
@@ -122,7 +127,7 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
   {
     throwFailedRuntimeDeviceTransfer("CellLocatorUniformGrid", device);
   }
-  return this->ExecutionObjectHandle.PrepareForExecution(device);
+  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
 }
 
 } //namespace cont

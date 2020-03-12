@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -88,8 +88,8 @@ public:
   VTKM_CONT
   CombinedSimulatedSimplicityIndexComparator(const CombinedDataVector& val,
                                              const CombinedIndexVector& idx)
-    : values(val)
-    , indices(idx)
+    : Values(val)
+    , Indices(idx)
   {
   }
 
@@ -97,8 +97,8 @@ public:
   bool operator()(vtkm::Id i, vtkm::Id j) const
   { // operator()
     // get values
-    FieldType val_i = this->values[i];
-    FieldType val_j = this->values[j];
+    FieldType val_i = this->Values[i];
+    FieldType val_j = this->Values[j];
 
     // value comparison
     if (val_i < val_j)
@@ -107,8 +107,8 @@ public:
       return false;
 
     // get indices
-    vtkm::Id idx_i = this->indices[i];
-    vtkm::Id idx_j = this->indices[j];
+    vtkm::Id idx_i = this->Indices[i];
+    vtkm::Id idx_j = this->Indices[j];
     // index comparison for simulated simplicity
     if (idx_i < idx_j)
       return true;
@@ -120,9 +120,9 @@ public:
 
     /** //Original code
           { // operator()
-            // get values
-            dataType val_i = values[i];
-            dataType val_j = values[j];
+            // get Values
+            dataType val_i = Values[i];
+            dataType val_j = Values[j];
 
             // value comparison
             if (val_i < val_j)
@@ -130,9 +130,9 @@ public:
             if (val_j < val_i)
                 return false;
 
-            // get indices
-            indexType idx_i = indices[i];
-            indexType idx_j = indices[j];
+            // get Indices
+            indexType idx_i = Indices[i];
+            indexType idx_j = Indices[j];
             // index comparison for simulated simplicity
             if (idx_i < idx_j)
                 return true;
@@ -149,8 +149,8 @@ public:
   } // operator()
 
 private:
-  const CombinedDataVector& values;
-  const CombinedIndexVector& indices;
+  const CombinedDataVector& Values;
+  const CombinedIndexVector& Indices;
 };
 
 } // namespace mesh_dem_contourtree_mesh_inc

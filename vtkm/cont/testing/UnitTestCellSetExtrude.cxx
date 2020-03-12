@@ -61,7 +61,7 @@ struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
 template <typename T, typename S>
 void verify_topo(vtkm::cont::ArrayHandle<vtkm::Vec<T, 6>, S> const& handle, vtkm::Id expectedLen)
 {
-  auto portal = handle.GetPortalConstControl();
+  auto portal = handle.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == expectedLen, "topology portal size is incorrect");
 
   for (vtkm::Id i = 0; i < expectedLen - 1; ++i)

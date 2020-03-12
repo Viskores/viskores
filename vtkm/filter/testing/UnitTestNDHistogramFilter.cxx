@@ -104,10 +104,10 @@ void RunTest()
   outputData.GetField("Frequency").GetData().CopyTo(freqs);
   for (int i = 0; i < nonSparseBins; i++)
   {
-    vtkm::Id idx0 = binId0.GetPortalControl().Get(i);
-    vtkm::Id idx1 = binId1.GetPortalControl().Get(i);
-    vtkm::Id idx2 = binId2.GetPortalControl().Get(i);
-    vtkm::Id f = freqs.GetPortalControl().Get(i);
+    vtkm::Id idx0 = binId0.WritePortal().Get(i);
+    vtkm::Id idx1 = binId1.WritePortal().Get(i);
+    vtkm::Id idx2 = binId2.WritePortal().Get(i);
+    vtkm::Id f = freqs.WritePortal().Get(i);
     VTKM_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && idx2 == gtIdx2[i] && f == gtFreq[i],
                      "Incorrect ND-histogram Filter results");
   }

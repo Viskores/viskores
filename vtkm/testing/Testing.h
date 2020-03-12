@@ -13,11 +13,12 @@
 #include <vtkm/Bitset.h>
 #include <vtkm/Bounds.h>
 #include <vtkm/CellShape.h>
+#include <vtkm/List.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
-#include <vtkm/TypeListTag.h>
+#include <vtkm/TypeList.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
@@ -50,7 +51,6 @@
 
 #define VTKM_STRINGIFY_FIRST(...) VTKM_EXPAND(VTK_M_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
 #define VTK_M_STRINGIFY_FIRST_IMPL(first, ...) #first
-#define VTKM_EXPAND(x) x
 
 /// \def VTKM_TEST_ASSERT(condition, messages..)
 ///
@@ -83,27 +83,66 @@ namespace testing
 template <typename T>
 struct TypeName;
 
-#define VTK_M_BASIC_TYPE(type)                                                                     \
+#define VTK_M_BASIC_TYPE(type, name)                                                               \
   template <>                                                                                      \
   struct TypeName<type>                                                                            \
   {                                                                                                \
-    static std::string Name() { return #type; }                                                    \
+    static std::string Name() { return #name; }                                                    \
   }
 
-VTK_M_BASIC_TYPE(vtkm::Float32);
-VTK_M_BASIC_TYPE(vtkm::Float64);
-VTK_M_BASIC_TYPE(vtkm::Int8);
-VTK_M_BASIC_TYPE(vtkm::UInt8);
-VTK_M_BASIC_TYPE(vtkm::Int16);
-VTK_M_BASIC_TYPE(vtkm::UInt16);
-VTK_M_BASIC_TYPE(vtkm::Int32);
-VTK_M_BASIC_TYPE(vtkm::UInt32);
-VTK_M_BASIC_TYPE(vtkm::Int64);
-VTK_M_BASIC_TYPE(vtkm::UInt64);
-VTK_M_BASIC_TYPE(char);
+VTK_M_BASIC_TYPE(vtkm::Float32, F32);
+VTK_M_BASIC_TYPE(vtkm::Float64, F64);
+VTK_M_BASIC_TYPE(vtkm::Int8, I8);
+VTK_M_BASIC_TYPE(vtkm::UInt8, UI8);
+VTK_M_BASIC_TYPE(vtkm::Int16, I16);
+VTK_M_BASIC_TYPE(vtkm::UInt16, UI16);
+VTK_M_BASIC_TYPE(vtkm::Int32, I32);
+VTK_M_BASIC_TYPE(vtkm::UInt32, UI32);
+VTK_M_BASIC_TYPE(vtkm::Int64, I64);
+VTK_M_BASIC_TYPE(vtkm::UInt64, UI64);
 
-VTK_M_BASIC_TYPE(vtkm::Bounds);
-VTK_M_BASIC_TYPE(vtkm::Range);
+// types without vtkm::typedefs:
+VTK_M_BASIC_TYPE(char, char);
+VTK_M_BASIC_TYPE(long, long);
+VTK_M_BASIC_TYPE(unsigned long, unsigned long);
+
+#define VTK_M_BASIC_TYPE_HELPER(type) VTK_M_BASIC_TYPE(vtkm::type, type)
+
+// Special containers:
+VTK_M_BASIC_TYPE_HELPER(Bounds);
+VTK_M_BASIC_TYPE_HELPER(Range);
+
+// Special Vec types:
+VTK_M_BASIC_TYPE_HELPER(Vec2f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec2ui_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec3ui_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4f_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4f_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_8);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_16);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4i_64);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_8);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_16);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_32);
+VTK_M_BASIC_TYPE_HELPER(Vec4ui_64);
 
 #undef VTK_M_BASIC_TYPE
 
@@ -113,7 +152,7 @@ struct TypeName<vtkm::Vec<T, Size>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Vec< " << TypeName<T>::Name() << ", " << Size << " >";
+    stream << "Vec<" << TypeName<T>::Name() << ", " << Size << ">";
     return stream.str();
   }
 };
@@ -124,7 +163,7 @@ struct TypeName<vtkm::Matrix<T, numRows, numCols>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Matrix< " << TypeName<T>::Name() << ", " << numRows << ", " << numCols << " >";
+    stream << "Matrix<" << TypeName<T>::Name() << ", " << numRows << ", " << numCols << ">";
     return stream.str();
   }
 };
@@ -135,7 +174,7 @@ struct TypeName<vtkm::Pair<T, U>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Pair< " << TypeName<T>::Name() << ", " << TypeName<U>::Name() << " >";
+    stream << "Pair<" << TypeName<T>::Name() << ", " << TypeName<U>::Name() << ">";
     return stream.str();
   }
 };
@@ -146,9 +185,37 @@ struct TypeName<vtkm::Bitset<T>>
   static std::string Name()
   {
     std::stringstream stream;
-    stream << "vtkm::Bitset< " << TypeName<T>::Name() << " >";
+    stream << "Bitset<" << TypeName<T>::Name() << ">";
     return stream.str();
   }
+};
+
+template <typename T0, typename... Ts>
+struct TypeName<vtkm::List<T0, Ts...>>
+{
+  static std::string Name()
+  {
+    std::initializer_list<std::string> subtypeStrings = { TypeName<Ts>::Name()... };
+
+    std::stringstream stream;
+    stream << "List<" << TypeName<T0>::Name();
+    for (auto&& subtype : subtypeStrings)
+    {
+      stream << ", " << subtype;
+    }
+    stream << ">";
+    return stream.str();
+  }
+};
+template <>
+struct TypeName<vtkm::ListEmpty>
+{
+  static std::string Name() { return "ListEmpty"; }
+};
+template <>
+struct TypeName<vtkm::ListUniversal>
+{
+  static std::string Name() { return "ListUniversal"; }
 };
 
 namespace detail
@@ -376,15 +443,13 @@ public:
     vtkm::ListForEach(InternalPrintTypeAndInvoke<FunctionType>(function), TypeList());
   }
 
-  struct TypeListTagExemplarTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>
-  {
-  };
+  using TypeListExemplarTypes =
+    vtkm::List<vtkm::UInt8, vtkm::Id, vtkm::FloatDefault, vtkm::Vec3f_64>;
 
   template <typename FunctionType>
   static void TryTypes(const FunctionType& function)
   {
-    TryTypes(function, TypeListTagExemplarTypes());
+    TryTypes(function, TypeListExemplarTypes());
   }
 
   // Disabled: This very long list results is very long compile times.
@@ -396,7 +461,7 @@ public:
   //  template<typename FunctionType>
   //  static void TryAllTypes(const FunctionType &function)
   //  {
-  //    TryTypes(function, vtkm::TypeListTagAll());
+  //    TryTypes(function, vtkm::TypeListAll());
   //  }
 
   /// Runs templated \p function on all cell shapes defined in VTK-m. This is
@@ -568,6 +633,30 @@ struct TestEqualImpl<std::string, std::string>
                             vtkm::Float64 vtkmNotUsed(tolerance)) const
   {
     return string1 == string2;
+  }
+};
+template <typename T>
+struct TestEqualImpl<const char*, T>
+{
+  VTKM_CONT bool operator()(const char* string1, T value2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<std::string, T>()(string1, value2, tolerance);
+  }
+};
+template <typename T>
+struct TestEqualImpl<T, const char*>
+{
+  VTKM_CONT bool operator()(T value1, const char* string2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<T, std::string>()(value1, string2, tolerance);
+  }
+};
+template <>
+struct TestEqualImpl<const char*, const char*>
+{
+  VTKM_CONT bool operator()(const char* string1, const char* string2, vtkm::Float64 tolerance) const
+  {
+    return TestEqualImpl<std::string, std::string>()(string1, string2, tolerance);
   }
 };
 

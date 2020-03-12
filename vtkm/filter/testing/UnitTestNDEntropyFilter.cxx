@@ -190,7 +190,7 @@ void RunTest()
 
   vtkm::cont::ArrayHandle<vtkm::Float64> entropyHandle;
   outputData.GetField("Entropy").GetData().CopyTo(entropyHandle);
-  vtkm::Float64 e = entropyHandle.GetPortalControl().Get(0);
+  vtkm::Float64 e = entropyHandle.WritePortal().Get(0);
 
   VTKM_TEST_ASSERT(fabs(e - 7.457857) < 0.001,
                    "N-Dimentional entropy filter calculation is incorrect");

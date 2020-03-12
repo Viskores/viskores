@@ -65,9 +65,7 @@ template <typename T>
 class ComputePotentialBin : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn binId,         // (input) bin Id
                                 WholeArrayIn binCount, // (input) particles per bin

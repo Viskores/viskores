@@ -30,8 +30,7 @@ public:
 
     for (int i = 0; i < comps.GetNumberOfValues(); i++)
     {
-      VTKM_TEST_ASSERT(comps.GetPortalConstControl().Get(i) == 0,
-                       "Components has unexpected value.");
+      VTKM_TEST_ASSERT(comps.ReadPortal().Get(i) == 0, "Components has unexpected value.");
     }
   }
 };

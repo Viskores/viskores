@@ -224,8 +224,8 @@ namespace vtkm
 namespace cont
 {
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG,
-          typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST,
+          typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST>
 struct SerializableDataSet
 {
   SerializableDataSet() = default;

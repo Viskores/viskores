@@ -23,7 +23,7 @@ class CrossProduct : public vtkm::filter::FilterField<CrossProduct>
 {
 public:
   //currently the DotProduct filter only works on vector data.
-  using SupportedTypes = TypeListTagVecCommon;
+  using SupportedTypes = TypeListVecCommon;
 
   VTKM_CONT
   CrossProduct();

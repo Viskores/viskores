@@ -266,13 +266,13 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   IdArrayHandle discardKeys;
   IdArrayHandle segmentSizes;
   segmentSizes.Allocate(1);
-  segmentSizes.GetPortalControl().Set(0, numCells);
+  segmentSizes.WritePortal().Set(0, numCells);
   this->ProcessedCellIds.Allocate(numCells);
   vtkm::Id cellIdsOffset = 0;
 
   IdArrayHandle parentIndices;
   parentIndices.Allocate(1);
-  parentIndices.GetPortalControl().Set(0, -1);
+  parentIndices.WritePortal().Set(0, -1);
 
   while (!done)
   {
@@ -453,6 +453,7 @@ struct CellLocatorBIHPrepareForExecutionFunctor
   bool operator()(
     DeviceAdapter,
     const CellSetType& cellset,
+    vtkm::cont::Token& token,
     vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
     const vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>& nodes,
     const vtkm::cont::ArrayHandle<vtkm::Id>& processedCellIds,
@@ -461,7 +462,7 @@ struct CellLocatorBIHPrepareForExecutionFunctor
     using ExecutionType =
       vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
     ExecutionType* execObject =
-      new ExecutionType(nodes, processedCellIds, cellset, coords, DeviceAdapter());
+      new ExecutionType(nodes, processedCellIds, cellset, coords, DeviceAdapter(), token);
     bihExec.Reset(execObject);
     return true;
   }
@@ -470,11 +471,17 @@ struct CellLocatorBIHPrepareForExecutionFunctor
 struct BIHCellSetCaster
 {
   template <typename CellSet, typename... Args>
-  void operator()(CellSet&& cellset, vtkm::cont::DeviceAdapterId device, Args&&... args) const
+  void operator()(CellSet&& cellset,
+                  vtkm::cont::DeviceAdapterId device,
+                  vtkm::cont::Token& token,
+                  Args&&... args) const
   {
     //We need to go though CastAndCall first
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      device, CellLocatorBIHPrepareForExecutionFunctor(), cellset, std::forward<Args>(args)...);
+    const bool success = vtkm::cont::TryExecuteOnDevice(device,
+                                                        CellLocatorBIHPrepareForExecutionFunctor(),
+                                                        cellset,
+                                                        token,
+                                                        std::forward<Args>(args)...);
     if (!success)
     {
       throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", device);
@@ -485,15 +492,17 @@ struct BIHCellSetCaster
 
 
 const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
   this->GetCellSet().CastAndCall(BIHCellSetCaster{},
                                  device,
+                                 token,
                                  this->ExecutionObjectHandle,
                                  this->Nodes,
                                  this->ProcessedCellIds,
                                  this->GetCoordinates().GetData());
-  return this->ExecutionObjectHandle.PrepareForExecution(device);
+  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
   ;
 }
 

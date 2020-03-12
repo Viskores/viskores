@@ -281,12 +281,12 @@ void CylinderExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
     throw vtkm::cont::ErrorBadValue("Cylinder Extractor: scalar field must have one component");
   }
 
-  vtkm::Range range = rangeArray.GetPortalConstControl().Get(0);
+  vtkm::Range range = rangeArray.ReadPortal().Get(0);
 
   Radii.Allocate(this->CylIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(this->CylIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()));
+    .Invoke(this->CylIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
 }
 
 

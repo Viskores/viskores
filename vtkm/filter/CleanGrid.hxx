@@ -51,13 +51,10 @@ inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::Data
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     connectivity.Allocate(connectivitySize);
 
-    auto offsetsTrim =
-      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-
     this->Invoke(worklet::CellDeepCopy::PassCellStructure{},
                  deducedCellSet,
                  shapes,
-                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim));
+                 vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
     shapes.ReleaseResourcesExecution();
     offsets.ReleaseResourcesExecution();
     connectivity.ReleaseResourcesExecution();

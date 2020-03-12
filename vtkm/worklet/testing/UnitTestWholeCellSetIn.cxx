@@ -116,31 +116,28 @@ VTKM_CONT void TryCellConnectivity(const CellSetType& cellSet,
 
   TestWholeCellSetIn::RunCells(cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
-  std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
-            << std::endl;
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.GetPortalConstControl(),
+  std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
+  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
                                       vtkm::cont::make_ArrayHandleConstant(
                                         cellSet.GetNumberOfCells(), cellSet.GetNumberOfCells())
-                                        .GetPortalConstControl()),
+                                        .ReadPortal()),
                    "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   vtkm::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(shapeIds.GetPortalConstControl(), expectedShapeIds.GetPortalConstControl()),
-    "Incorrect shape Ids.");
+  VTKM_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
+                   "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   vtkm::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfIndices.GetPortalConstControl(),
-                                      expectedNumberOfIndices.GetPortalConstControl()),
-                   "Incorrect number of indices.");
+  VTKM_TEST_ASSERT(
+    test_equal_portals(numberOfIndices.ReadPortal(), expectedNumberOfIndices.ReadPortal()),
+    "Incorrect number of indices.");
 
   std::cout << "    Sum of indices: ";
   vtkm::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(connectionSum.GetPortalConstControl(), expectedSum.GetPortalConstControl()),
-    "Incorrect sum of indices.");
+  VTKM_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
+                   "Incorrect sum of indices.");
 }
 
 template <typename CellSetType,
@@ -161,31 +158,28 @@ VTKM_CONT void TryPointConnectivity(const CellSetType& cellSet,
   TestWholeCellSetIn::RunPoints(
     &cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
-  std::cout << "    Number of elements: " << numberOfElements.GetPortalConstControl().Get(0)
-            << std::endl;
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.GetPortalConstControl(),
+  std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
+  VTKM_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
                                       vtkm::cont::make_ArrayHandleConstant(
                                         cellSet.GetNumberOfPoints(), cellSet.GetNumberOfPoints())
-                                        .GetPortalConstControl()),
+                                        .ReadPortal()),
                    "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   vtkm::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(shapeIds.GetPortalConstControl(), expectedShapeIds.GetPortalConstControl()),
-    "Incorrect shape Ids.");
+  VTKM_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
+                   "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   vtkm::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
-  VTKM_TEST_ASSERT(test_equal_portals(numberOfIndices.GetPortalConstControl(),
-                                      expectedNumberOfIndices.GetPortalConstControl()),
-                   "Incorrect number of indices.");
+  VTKM_TEST_ASSERT(
+    test_equal_portals(numberOfIndices.ReadPortal(), expectedNumberOfIndices.ReadPortal()),
+    "Incorrect number of indices.");
 
   std::cout << "    Sum of indices: ";
   vtkm::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
-  VTKM_TEST_ASSERT(
-    test_equal_portals(connectionSum.GetPortalConstControl(), expectedSum.GetPortalConstControl()),
-    "Incorrect sum of indices.");
+  VTKM_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
+                   "Incorrect sum of indices.");
 }
 
 VTKM_CONT

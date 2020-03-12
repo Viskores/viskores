@@ -131,9 +131,9 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 template <typename T>
 void CompareArrays(vtkm::cont::ArrayHandle<T> array1, vtkm::cont::ArrayHandle<T> array2)
 {
-  using PortalType = typename vtkm::cont::ArrayHandle<T>::PortalConstControl;
-  PortalType portal1 = array1.GetPortalConstControl();
-  PortalType portal2 = array2.GetPortalConstControl();
+  using PortalType = typename vtkm::cont::ArrayHandle<T>::ReadPortalType;
+  PortalType portal1 = array1.ReadPortal();
+  PortalType portal2 = array2.ReadPortal();
 
   VTKM_TEST_ASSERT(portal1.GetNumberOfValues() == portal2.GetNumberOfValues(),
                    "Arrays are not the same length.");
@@ -190,7 +190,7 @@ void TestScatterWorklet(const TestScatterArrays& arrays)
   std::cout << "    Check visit." << std::endl;
   CompareArrays(visitCopy, arrays.VisitArray);
   std::cout << "    Check work id." << std::endl;
-  CheckPortal(captureWorkId.GetPortalConstControl());
+  CheckPortal(captureWorkId.ReadPortal());
 }
 
 void TestScatterCountingWithArrays(const TestScatterArrays& arrays)

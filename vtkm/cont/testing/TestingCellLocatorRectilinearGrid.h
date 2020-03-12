@@ -35,11 +35,14 @@ public:
   using RectilinearPortalType =
     typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  LocatorWorklet(vtkm::Bounds& bounds, vtkm::Id3& dims, const RectilinearType& coords)
+  LocatorWorklet(vtkm::Bounds& bounds,
+                 vtkm::Id3& dims,
+                 const RectilinearType& coords,
+                 vtkm::cont::Token& token)
     : Bounds(bounds)
     , Dims(dims)
   {
-    RectilinearPortalType coordsPortal = coords.PrepareForInput(DeviceAdapter());
+    RectilinearPortalType coordsPortal = coords.PrepareForInput(DeviceAdapter(), token);
     xAxis = coordsPortal.GetFirstPortal();
     yAxis = coordsPortal.GetSecondPortal();
     zAxis = coordsPortal.GetThirdPortal();
@@ -173,14 +176,15 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<PointType> parametric;
     vtkm::cont::ArrayHandle<bool> match;
+    vtkm::cont::Token token;
     LocatorWorklet<DeviceAdapter> worklet(
-      bounds, dims, coords.GetData().template Cast<RectilinearType>());
+      bounds, dims, coords.GetData().template Cast<RectilinearType>(), token);
 
     vtkm::worklet::DispatcherMapField<LocatorWorklet<DeviceAdapter>> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
-    auto matchPortal = match.GetPortalConstControl();
+    auto matchPortal = match.ReadPortal();
     for (vtkm::Id index = 0; index < match.GetNumberOfValues(); index++)
     {
       VTKM_TEST_ASSERT(matchPortal.Get(index), "Points do not match");
