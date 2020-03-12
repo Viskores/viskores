@@ -806,13 +806,10 @@ public:
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
-        auto pdOffsetsTrim = vtkm::cont::make_ArrayHandleView(
-          polyDataOffsets, 0, polyDataOffsets.GetNumberOfValues() - 1);
-
         passPolyDataCellsDispatcher.Invoke(
           inCellSet,
           polyDataShapes,
-          vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, pdOffsetsTrim),
+          vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
           polyDataCellIdMap);
       }
     }
@@ -884,7 +881,7 @@ public:
       originCells,
       originFaces,
       faceShapes,
-      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsetsTrim),
+      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets),
       faceToCellIdMap);
 
     if (!polyDataConnectivitySize)

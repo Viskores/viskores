@@ -91,7 +91,14 @@ public:
   ///
   /// This will open up the `ArrayHandle` for reading and/or writing.
   ///
-  VTKM_CONT void Detach() { this->Token->DetachFromAll(); }
+  VTKM_CONT void Detach()
+  {
+    this->Token->DetachFromAll();
+
+    // Reset this portal in case the superclass is holding other array portals with their own
+    // tokens. Detach is supposed to invalidate the array portal, so it is OK to do this.
+    *this = ArrayPortalToken<PortalType_>();
+  }
 
   /// \brief Get the `Token` of the `ArrayPortal`.
   ///

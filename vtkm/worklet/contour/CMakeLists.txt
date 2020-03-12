@@ -9,7 +9,10 @@
 ##============================================================================
 
 set(headers
-  ContourTables.h
+  CommonState.h
+  FieldPropagation.h
+  MarchingCells.h
+  MarchingCellTables.h
   )
 
 #-----------------------------------------------------------------------------
