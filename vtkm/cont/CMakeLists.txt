@@ -32,6 +32,7 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandlePhiloxURBG.h
   ArrayHandleSOA.h
   ArrayHandleStreaming.h
   ArrayHandleSwizzle.h

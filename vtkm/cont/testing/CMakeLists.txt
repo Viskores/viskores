@@ -47,6 +47,7 @@ set(unit_tests
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
+  UnitTestArrayHandlePhiloxURBG.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
