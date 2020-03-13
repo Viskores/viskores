@@ -58,9 +58,16 @@ const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 2, M0, C0>::round
 template <typename T, T M0, T C0, T M1, T C1>
 struct philox_parameters<T, 4, M0, C0, M1, C1>
 {
-  static const vtkm::Vec<T, 2> multipliers{ M0, M1 };
-  static const vtkm::Vec<T, 2> round_consts{ C0, C1 };
+  static const vtkm::Vec<T, 2> multipliers;
+  static const vtkm::Vec<T, 2> round_consts;
 };
+
+template <typename T, T M0, T C0, T M1, T C1>
+const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 4, M0, C0, M1, C1>::multipliers =
+  vtkm::Vec<T, 1>(M0, M1);
+template <typename T, T M0, T C0, T M1, T C1>
+const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 4, M0, C0, M1, C1>::round_consts =
+  vtkm::Vec<T, 1>(C0, C1);
 
 template <typename UIntType, std::size_t N, std::size_t R, UIntType... consts>
 class philox_functor;
