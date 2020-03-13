@@ -43,17 +43,17 @@ class philox_parameters;
 template <typename T, T M0, T C0>
 struct philox_parameters<T, 2, M0, C0>
 {
-  static const vtkm::Vec<T, 1> multipliers;
-  static const vtkm::Vec<T, 1> round_consts;
+  static constexpr vtkm::Vec<T, 1> multipliers() { return { M0 }; }
+  static constexpr vtkm::Vec<T, 1> round_consts() { return { C0 }; }
 };
 
-template <typename T, T M0, T C0>
-const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 2, M0, C0>::multipliers =
-  vtkm::Vec<T, 1>(M0);
-template <typename T, T M0, T C0>
-const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 2, M0, C0>::round_consts =
-  vtkm::Vec<T, 1>(C0);
-
+//template <typename T, T M0, T C0>
+//const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 2, M0, C0>::multipliers =
+//  vtkm::Vec<T, 1>(M0);
+//template <typename T, T M0, T C0>
+//const vtkm::Vec<T, 1> vtkm::prng::detail::philox_parameters<T, 2, M0, C0>::round_consts =
+//  vtkm::Vec<T, 1>(C0);
+#if 0
 // TODO: make it work with C++11
 template <typename T, T M0, T C0, T M1, T C1>
 struct philox_parameters<T, 4, M0, C0, M1, C1>
@@ -68,7 +68,7 @@ const vtkm::Vec<T, 2> vtkm::prng::detail::philox_parameters<T, 4, M0, C0, M1, C1
 template <typename T, T M0, T C0, T M1, T C1>
 const vtkm::Vec<T, 2> vtkm::prng::detail::philox_parameters<T, 4, M0, C0, M1, C1>::round_consts =
   vtkm::Vec<T, 2>(C0, C1);
-
+#endif
 template <typename UIntType, std::size_t N, std::size_t R, UIntType... consts>
 class philox_functor;
 
@@ -93,16 +93,16 @@ private:
   static VTKM_EXEC_CONT counters_type round(counters_type counters, keys_type round_keys)
   {
     vtkm::Vec<UIntType, 2> r =
-      mulhilo(philox_parameters<UIntType, 2, consts...>::multipliers[0], counters[0]);
+      mulhilo(philox_parameters<UIntType, 2, consts...>::multipliers()[0], counters[0]);
     return { r[1] ^ round_keys[0] ^ counters[1], r[0] };
   }
 
   static VTKM_EXEC_CONT keys_type bump_keys(keys_type keys)
   {
-    return { keys[0] + philox_parameters<UIntType, 2, consts...>::round_consts[0] };
+    return { keys[0] + philox_parameters<UIntType, 2, consts...>::round_consts()[0] };
   }
 };
-
+#if 0
 template <typename UIntType, std::size_t R, UIntType... consts>
 class philox_functor<UIntType, 4, R, consts...>
 {
@@ -138,7 +138,7 @@ public:
     return counters;
   }
 };
-
+#endif
 } // namespace detail
 
 using philox_functor2x32x7 = detail::philox_functor<vtkm::UInt32, 2, 7, 0xD256D193, 0x9E3779B9>;
