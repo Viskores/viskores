@@ -72,7 +72,7 @@ public:
   using counters_type = vtkm::Vec<UIntType, 2>;
   using keys_type = vtkm::Vec<UIntType, 1>;
 
-  constexpr VTKM_EXEC_CONT counters_type operator()(counters_type counters, keys_type keys) const
+  VTKM_EXEC_CONT counters_type operator()(counters_type counters, keys_type keys) const
   {
     for (std::size_t i = 0; i < R; ++i)
     {
@@ -83,14 +83,14 @@ public:
   }
 
 private:
-  static constexpr VTKM_EXEC_CONT counters_type round(counters_type counters, keys_type round_keys)
+  static VTKM_EXEC_CONT counters_type round(counters_type counters, keys_type round_keys)
   {
     vtkm::Vec<UIntType, 2> r =
       mulhilo(philox_parameters<UIntType, 2, consts...>::multipliers[0], counters[0]);
     return { r[1] ^ round_keys[0] ^ counters[1], r[0] };
   }
 
-  static constexpr VTKM_EXEC_CONT keys_type bump_keys(keys_type keys)
+  static VTKM_EXEC_CONT keys_type bump_keys(keys_type keys)
   {
     return { keys[0] + philox_parameters<UIntType, 2, consts...>::round_consts[0] };
   }
@@ -102,7 +102,7 @@ class philox_functor<UIntType, 4, R, consts...>
   using counters_type = vtkm::Vec<UIntType, 4>;
   using keys_type = vtkm::Vec<UIntType, 2>;
 
-  static constexpr VTKM_EXEC_CONT counters_type round(counters_type counters, keys_type round_keys)
+  static VTKM_EXEC_CONT counters_type round(counters_type counters, keys_type round_keys)
   {
     vtkm::Vec<UIntType, 2> r0 =
       mulhilo(philox_parameters<UIntType, 4, consts...>::multipliers[0], counters[0]);
@@ -113,7 +113,7 @@ class philox_functor<UIntType, 4, R, consts...>
     };
   }
 
-  static constexpr VTKM_EXEC_CONT keys_type bump_key(keys_type keys)
+  static VTKM_EXEC_CONT keys_type bump_key(keys_type keys)
   {
     keys[0] += philox_parameters<UIntType, 4, consts...>::round_consts[0];
     keys[1] += philox_parameters<UIntType, 4, consts...>::round_consts[1];
@@ -121,7 +121,7 @@ class philox_functor<UIntType, 4, R, consts...>
   }
 
 public:
-  constexpr VTKM_EXEC_CONT counters_type operator()(counters_type counters, keys_type keys) const
+  VTKM_EXEC_CONT counters_type operator()(counters_type counters, keys_type keys) const
   {
     for (std::size_t i = 0; i < R; ++i)
     {
