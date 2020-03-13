@@ -26,16 +26,18 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b
   return { lo, hi };
 }
 
-#if 0
-// FIXME: what to do with CUDA backend?
 constexpr VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt64, 2> mulhilo(vtkm::UInt64 a, vtkm::UInt64 b)
 {
+#ifdef VTKM_CUDA
+  vtkm::UInt64 lo = a * b;
+  vtkm::UInt64 hi = __umul64hi(a, b);
+#else
   __uint128_t r = static_cast<__uint128_t>(a) * static_cast<__uint128_t>(b);
   vtkm::UInt64 lo = static_cast<vtkm::UInt64>(r);
   vtkm::UInt64 hi = r >> 64;
+#endif
   return { lo, hi };
 }
-#endif
 
 template <typename UIntType, std::size_t N, UIntType... consts>
 struct philox_parameters;
@@ -47,13 +49,11 @@ struct philox_parameters<T, 2, M0, C0>
   static constexpr Vec<T, 1> round_consts = { C0 };
 };
 
-
-// TODO: make it work with C++11
 template <typename T, T M0, T C0, T M1, T C1>
 struct philox_parameters<T, 4, M0, C0, M1, C1>
 {
-  static const vtkm::Vec<T, 2> multipliers = { M0, M1 };
-  static const vtkm::Vec<T, 2> round_consts = { C0, C1 };
+  static constexpr vtkm::Vec<T, 2> multipliers = { M0, M1 };
+  static constexpr vtkm::Vec<T, 2> round_consts = { C0, C1 };
 };
 
 template <typename UIntType, std::size_t N, std::size_t R, UIntType... consts>
