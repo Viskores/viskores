@@ -162,7 +162,7 @@ include(VTKmCompilerFlags)
 
 
 # be available for use
-file(READ "${VTKm_SOURCE_DIR}/data/sentinel-data" data)
+file(READ "${VTKm_SOURCE_DIR}/README.md" data)
 if (NOT data STREQUAL "\n")
   message(WARNING
 
