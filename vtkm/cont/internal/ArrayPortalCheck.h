@@ -78,9 +78,14 @@ public:
   }
   VTKM_CONT ~ArrayPortalCheck() {}
 
+  // The Get and Set methods are marked for execution environment even though they won't
+  // work there. This is so that this class can be used in classes that work in both
+  // control and execution environments without having to suppress warnings in them all.
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsGets<PT>::value, int>::type = 0>
-  VTKM_CONT typename Superclass::ValueType Get(vtkm::Id index) const
+  VTKM_EXEC_CONT typename Superclass::ValueType Get(vtkm::Id index) const
   {
     if (!(*this->Valid))
     {
@@ -96,9 +101,10 @@ public:
     return this->Superclass::Get(index);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsSets<PT>::value, int>::type = 0>
-  VTKM_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
   {
     if (!(*this->Valid))
     {
