@@ -172,6 +172,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfPoints(vtkm::IdComponent
 {
   if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidFaceId;
   }
 
@@ -179,6 +180,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfPoints(vtkm::IdComponent
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfFaces(shape, numFaces));
   if (faceIndex >= numFaces)
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidFaceId;
   }
   detail::CellFaceTables table;
@@ -210,6 +212,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceShape(vtkm::IdComponent faceInde
 
   if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
   {
+    result = vtkm::CELL_SHAPE_EMPTY;
     return vtkm::ErrorCode::InvalidFaceId;
   }
 
@@ -252,6 +255,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceLocalIndex(vtkm::IdComponent poi
                                                            vtkm::IdComponent& result)
 {
   vtkm::IdComponent numPointsInFace;
+  result = -1;
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace < 1)
   {
@@ -300,6 +304,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceCanonicalId(
   vtkm::Id3& result)
 {
   vtkm::IdComponent numPointsInFace;
+  result = { -1 };
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace == 0)
   {

@@ -42,6 +42,7 @@ VTKM_EXEC vtkm::ErrorCode CellDerivativeImpl(
   const ParametricCoordType& pcoords,
   vtkm::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
+  result = { 0 };
   if ((field.GetNumberOfComponents() != tag.numberOfPoints()) ||
       (wCoords.GetNumberOfComponents() != tag.numberOfPoints()))
   {
@@ -82,8 +83,9 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType&,
                                          const WorldCoordType&,
                                          const vtkm::Vec<ParametricCoordType, 3>&,
                                          vtkm::CellShapeTagEmpty,
-                                         vtkm::Vec<typename FieldVecType::ComponentType, 3>)
+                                         vtkm::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
+  result = { 0 };
   return vtkm::ErrorCode::OperationOnEmptyCell;
 }
 
@@ -97,6 +99,7 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& field,
   vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints != wCoords.GetNumberOfComponents())
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -136,6 +139,7 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& field,
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   if ((numPoints <= 0) || (numPoints != wCoords.GetNumberOfComponents()))
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -186,14 +190,17 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& pointFieldValues,
                                          vtkm::CellShapeTagGeneric shape,
                                          vtkm::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(return CellDerivative(
-      pointFieldValues, worldCoordinateValues, parametricCoords, CellShapeTag(), result));
+    vtkmGenericCellShapeMacro(
+      status = CellDerivative(
+        pointFieldValues, worldCoordinateValues, parametricCoords, CellShapeTag(), result));
     default:
-      return vtkm::ErrorCode::InvalidShapeId;
+      result = { 0 };
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
-  return vtkm::ErrorCode::Success;
+  return status;
 }
 
 template <typename FieldVecType,

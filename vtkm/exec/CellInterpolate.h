@@ -40,6 +40,7 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolateImpl(VtkcCellShapeTag tag,
 {
   if (tag.numberOfPoints() != field.GetNumberOfComponents())
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -68,8 +69,9 @@ template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType&,
                                           const vtkm::Vec<ParametricCoordType, 3>&,
                                           vtkm::CellShapeTagEmpty,
-                                          typename FieldVecType::ComponentType&)
+                                          typename FieldVecType::ComponentType& result)
 {
+  result = { 0 };
   return vtkm::ErrorCode::OperationOnEmptyCell;
 }
 
@@ -83,6 +85,7 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& field,
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints < 1)
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -116,6 +119,7 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& field,
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints < 1)
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -162,13 +166,16 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
                                           vtkm::CellShapeTagGeneric shape,
                                           typename FieldVecType::ComponentType& result)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
     vtkmGenericCellShapeMacro(
-      return CellInterpolate(pointFieldValues, parametricCoords, CellShapeTag(), result));
+      status = CellInterpolate(pointFieldValues, parametricCoords, CellShapeTag(), result));
     default:
-      return vtkm::ErrorCode::InvalidShapeId;
+      result = { 0 };
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
+  return status;
 }
 
 //-----------------------------------------------------------------------------

@@ -300,8 +300,17 @@ struct ExternalFaces
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
         vtkm::IdComponent localFaceIndex;
-        vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, localFaceIndex);
-        faceConnectivity[facePointIndex] = inCellIndices[localFaceIndex];
+        vtkm::ErrorCode status =
+          vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, localFaceIndex);
+        if (status == vtkm::ErrorCode::Success)
+        {
+          faceConnectivity[facePointIndex] = inCellIndices[localFaceIndex];
+        }
+        else
+        {
+          // An error condition, but do we want to crash the operation?
+          faceConnectivity[facePointIndex] = 0;
+        }
       }
     }
 
@@ -559,8 +568,17 @@ public:
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
         vtkm::IdComponent localFaceIndex;
-        vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, localFaceIndex);
-        connectivityOut[facePointIndex] = inCellIndices[localFaceIndex];
+        vtkm::ErrorCode status =
+          vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, localFaceIndex);
+        if (status == vtkm::ErrorCode::Success)
+        {
+          connectivityOut[facePointIndex] = inCellIndices[localFaceIndex];
+        }
+        else
+        {
+          // An error condition, but do we want to crash the operation?
+          connectivityOut[facePointIndex] = 0;
+        }
       }
     }
   };

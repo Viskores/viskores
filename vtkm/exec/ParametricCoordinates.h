@@ -98,6 +98,7 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesCenter(
 {
   if (numPoints < 1)
   {
+    pcoords = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   switch (numPoints)
@@ -123,13 +124,16 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesCenter(
   vtkm::CellShapeTagGeneric shape,
   vtkm::Vec<ParametricCoordType, 3>& pcoords)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(
-      return ParametricCoordinatesCenter(numPoints, CellShapeTag(), pcoords));
+    vtkmGenericCellShapeMacro(status =
+                                ParametricCoordinatesCenter(numPoints, CellShapeTag(), pcoords));
     default:
-      return vtkm::ErrorCode::InvalidShapeId;
+      pcoords = { 0 };
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
+  return status;
 }
 
 template <typename ParametricCoordType, typename CellShapeTag>
@@ -177,10 +181,12 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
 
   if (numPoints != lclTag.numberOfPoints())
   {
+    pcoords = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   if ((pointIndex < 0) || (pointIndex >= numPoints))
   {
+    pcoords = { 0 };
     return vtkm::ErrorCode::InvalidPointId;
   }
 
@@ -227,6 +233,7 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
 {
   if (numPoints < 1)
   {
+    pcoords = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   switch (numPoints)
@@ -274,14 +281,16 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
   vtkm::CellShapeTagGeneric shape,
   vtkm::Vec<ParametricCoordType, 3>& pcoords)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
     vtkmGenericCellShapeMacro(
-      return ParametricCoordinatesPoint(numPoints, pointIndex, CellShapeTag(), pcoords));
+      status = ParametricCoordinatesPoint(numPoints, pointIndex, CellShapeTag(), pcoords));
     default:
       pcoords[0] = pcoords[1] = pcoords[2] = 0;
-      return vtkm::ErrorCode::InvalidShapeId;
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
+  return status;
 }
 
 template <typename ParametricCoordType, typename CellShapeTag>
@@ -426,13 +435,16 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesToWorldCoordinates(
   vtkm::CellShapeTagGeneric shape,
   typename WorldCoordVector::ComponentType& result)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(return ParametricCoordinatesToWorldCoordinates(
-      pointWCoords, pcoords, CellShapeTag(), result));
+    vtkmGenericCellShapeMacro(status = ParametricCoordinatesToWorldCoordinates(
+                                pointWCoords, pcoords, CellShapeTag(), result));
     default:
-      return vtkm::ErrorCode::InvalidShapeId;
+      result = { 0 };
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
+  return status;
 }
 
 template <typename WorldCoordVector, typename PCoordType, typename CellShapeTag>
@@ -468,6 +480,7 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinatesI
 {
   if (pointWCoords.GetNumberOfComponents() != tag.numberOfPoints())
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -495,8 +508,9 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
   const WorldCoordVector&,
   const typename WorldCoordVector::ComponentType&,
   vtkm::CellShapeTagEmpty,
-  typename WorldCoordVector::ComponentType&)
+  typename WorldCoordVector::ComponentType& result)
 {
+  result = { 0 };
   return vtkm::ErrorCode::OperationOnEmptyCell;
 }
 
@@ -509,6 +523,7 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
 {
   if (pointWCoords.GetNumberOfComponents() != 1)
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   result = typename WorldCoordVector::ComponentType(0, 0, 0);
@@ -525,6 +540,7 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
   vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
   if (numPoints < 1)
   {
+    result = { 0 };
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
 
@@ -626,13 +642,16 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
   vtkm::CellShapeTagGeneric shape,
   typename WorldCoordVector::ComponentType& result)
 {
+  vtkm::ErrorCode status;
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(return WorldCoordinatesToParametricCoordinates(
-      pointWCoords, wcoords, CellShapeTag(), result));
+    vtkmGenericCellShapeMacro(status = WorldCoordinatesToParametricCoordinates(
+                                pointWCoords, wcoords, CellShapeTag(), result));
     default:
-      return vtkm::ErrorCode::InvalidShapeId;
+      result = { 0 };
+      status = vtkm::ErrorCode::InvalidShapeId;
   }
+  return status;
 }
 
 template <typename WorldCoordVector, typename CellShapeTag>

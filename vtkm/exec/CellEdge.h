@@ -124,6 +124,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent 
 {
   if (numPoints != vtkm::CellTraits<CellShapeTag>::NUM_POINTS)
   {
+    numEdges = -1;
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   numEdges = detail::CellEdgeTables{}.NumEdges(CellShapeTag::Id);
@@ -136,6 +137,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent 
 {
   if (numPoints <= 0)
   {
+    numEdges = -1;
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   numEdges = numPoints;
@@ -148,6 +150,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent 
 {
   if (numPoints <= 0)
   {
+    numEdges = -1;
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   numEdges = detail::CellEdgeTables{}.NumEdges(vtkm::CELL_SHAPE_POLY_LINE);
@@ -198,10 +201,12 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
 {
   if ((pointIndex < 0) || (pointIndex > 1))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidPointId;
   }
   if ((edgeIndex < 0) || (edgeIndex >= detail::CellEdgeTables::MAX_NUM_EDGES))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidEdgeId;
   }
 
@@ -209,6 +214,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges));
   if (edgeIndex >= numEdges)
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidEdgeId;
   }
 
@@ -225,14 +231,17 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
 {
   if (numPoints < 3)
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidNumberOfPoints;
   }
   if ((pointIndex < 0) || (pointIndex > 1))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidPointId;
   }
   if ((edgeIndex < 0) || (edgeIndex >= numPoints))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidEdgeId;
   }
 
@@ -255,10 +264,12 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
 {
   if ((pointIndex < 0) || (pointIndex > 1))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidPointId;
   }
   if ((edgeIndex < 0) || (edgeIndex >= detail::CellEdgeTables::MAX_NUM_EDGES))
   {
+    result = -1;
     return vtkm::ErrorCode::InvalidEdgeId;
   }
 
@@ -272,6 +283,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
     detail::CellEdgeTables table;
     if (edgeIndex >= table.NumEdges(shape.Id))
     {
+      result = -1;
       return vtkm::ErrorCode::InvalidEdgeId;
     }
 
@@ -313,6 +325,8 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeCanonicalId(
   const GlobalPointIndicesVecType& globalPointIndicesVec,
   vtkm::Id2& result)
 {
+  result = { -1, -1 };
+
   vtkm::IdComponent localIndex0;
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, localIndex0));
   vtkm::Id pointIndex0 = globalPointIndicesVec[localIndex0];
