@@ -10,6 +10,8 @@
 #ifndef vtk_m_exec_CellLocator_h
 #define vtk_m_exec_CellLocator_h
 
+#include <vtkm/Deprecated.h>
+#include <vtkm/ErrorCode.h>
 #include <vtkm/Types.h>
 #include <vtkm/VirtualObjectBase.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -29,10 +31,23 @@ public:
   }
 
   VTKM_EXEC
-  virtual void FindCell(const vtkm::Vec3f& point,
-                        vtkm::Id& cellId,
-                        vtkm::Vec3f& parametric,
-                        const vtkm::exec::FunctorBase& worklet) const = 0;
+  virtual vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                   vtkm::Id& cellId,
+                                   vtkm::Vec3f& parametric) const = 0;
+
+  VTKM_EXEC
+  VTKM_DEPRECATED(1.6, "FindCell no longer takes worklet argument.")
+  void FindCell(const vtkm::Vec3f& point,
+                vtkm::Id& cellId,
+                vtkm::Vec3f& parametric,
+                const vtkm::exec::FunctorBase& worklet) const
+  {
+    vtkm::ErrorCode status = this->FindCell(point, cellId, parametric);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      worklet.RaiseError(vtkm::ErrorString(status));
+    }
+  }
 };
 
 } // namespace exec

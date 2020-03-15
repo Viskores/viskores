@@ -22,6 +22,9 @@
 #include <ctime>
 #include <random>
 
+#define CHECK_CALL(call)                                                                           \
+  VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
+
 namespace
 {
 
@@ -91,13 +94,6 @@ struct TestDerivativeFunctor
                          LinearField<FieldType> field,
                          vtkm::Vec<FieldType, 3> expectedGradient) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     vtkm::IdComponent numPoints = worldCoordinates.GetNumberOfComponents();
 
     vtkm::VecVariable<FieldType, MAX_POINTS> fieldValues;
@@ -119,9 +115,9 @@ struct TestDerivativeFunctor
       vtkm::FloatDefault totalWeight = 0;
       for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
       {
-        vtkm::Vec3f pointPcoords =
-          vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
-        VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+        vtkm::Vec3f pointPcoords;
+        CHECK_CALL(
+          vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pointPcoords));
         vtkm::FloatDefault weight = randomDist(g_RandomGenerator);
         pcoords = pcoords + weight * pointPcoords;
         totalWeight += weight;
@@ -130,9 +126,9 @@ struct TestDerivativeFunctor
 
       std::cout << "    Test derivative at " << pcoords << std::endl;
 
-      vtkm::Vec<FieldType, 3> computedGradient =
-        vtkm::exec::CellDerivative(fieldValues, worldCoordinates, pcoords, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec<FieldType, 3> computedGradient;
+      CHECK_CALL(vtkm::exec::CellDerivative(
+        fieldValues, worldCoordinates, pcoords, shape, computedGradient));
 
       std::cout << "     Computed: " << computedGradient << std::endl;
       // Note that some gradients (particularly those near the center of
@@ -149,19 +145,11 @@ struct TestDerivativeFunctor
               LinearField<FieldType> field,
               vtkm::Vec<FieldType, 3> expectedGradient) const
   {
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     vtkm::VecVariable<vtkm::Vec3f, MAX_POINTS> worldCoordinates;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec3f pcoords =
-        vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec3f pcoords;
+      CHECK_CALL(vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoords));
       vtkm::Vec3f wcoords = ParametricToWorld(pcoords);
       VTKM_TEST_ASSERT(test_equal(pcoords, WorldToParametric(wcoords)),
                        "Test world/parametric conversion broken.");
