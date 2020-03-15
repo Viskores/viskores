@@ -520,8 +520,6 @@ public:
 
     vtkm::Id cellId = currentCell;
 
-    vtkm::exec::FunctorBase fake_functor;
-
     while (!valid_cell)
     {
       // push forward and look for a new cell
@@ -530,8 +528,7 @@ public:
         query_distance += bumpDistance;
         vtkm::Vec<FloatType, 3> location = origin + rdir * (query_distance);
         vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-
-        locator->FindCell(location, cellId, pcoords, fake_functor);
+        locator->FindCell(location, cellId, pcoords);
       }
 
       currentCell = cellId;
@@ -1090,13 +1087,11 @@ public:
     const vtkm::Id colorMapSize = colorMap.GetNumberOfValues();
     const vtkm::Int32 cellShape = meshConn.GetCellShape(currentCell);
 
-    vtkm::exec::FunctorBase fake_functor;
     while (enterDistance <= currentDistance && currentDistance <= exitDistance)
     {
       vtkm::Vec<FloatType, 3> sampleLoc = origin + currentDistance * dir;
       vtkm::Float32 lerpedScalar;
-      bool validSample =
-        Sampler.SampleCell(points, scalars, sampleLoc, lerpedScalar, fake_functor, cellShape);
+      bool validSample = Sampler.SampleCell(points, scalars, sampleLoc, lerpedScalar, cellShape);
       if (!validSample)
       {
         //
