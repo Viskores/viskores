@@ -199,13 +199,12 @@ void TestContourUniformGrid()
   vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f };
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
+  auto result = isosurfaceFilter.Run(contourValue,
                                      cellSet,
                                      dataSet.GetCoordinateSystem(),
                                      pointFieldArray,
@@ -248,7 +247,7 @@ void TestContourExplicit()
   DataSetGenerator dataSetGenerator;
 
   vtkm::IdComponent Dimension = 10;
-  vtkm::Float32 contourValue = vtkm::Float32(.45);
+  std::vector<vtkm::Float32> contourValue{ 0.45f };
 
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
@@ -265,7 +264,7 @@ void TestContourExplicit()
   Contour.SetMergeDuplicatePoints(false);
 
   auto result = Contour.Run(
-    &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
+    contourValue, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
 
@@ -322,7 +321,7 @@ void TestContourClipped()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f };
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
@@ -330,8 +329,7 @@ void TestContourClipped()
   vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
+  auto result = isosurfaceFilter.Run(contourValue,
                                      cellSet,
                                      clipped.GetCoordinateSystem(),
                                      pointFieldArray,

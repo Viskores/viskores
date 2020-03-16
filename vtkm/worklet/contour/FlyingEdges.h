@@ -86,8 +86,7 @@ template <typename ValueType,
 vtkm::cont::CellSetSingleType<> execute(
   const vtkm::cont::CellSetStructured<3>& cells,
   const vtkm::cont::ArrayHandleUniformPointCoordinates& coordinateSystem,
-  const ValueType* isovalues,
-  const vtkm::Id numIsoValues,
+  const std::vector<ValueType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
   vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& points,
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
@@ -127,7 +126,7 @@ vtkm::cont::CellSetSingleType<> execute(
   sharedState.CellIdMap.Shrink(0);
 
   vtkm::cont::ArrayHandle<vtkm::Id> triangle_topology;
-  for (vtkm::Id i = 0; i < numIsoValues; ++i)
+  for (std::size_t i = 0; i < isovalues.size(); ++i)
   {
     ValueType isoval = isovalues[i];
 

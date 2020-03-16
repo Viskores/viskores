@@ -608,8 +608,7 @@ template <typename CellSetType,
 vtkm::cont::CellSetSingleType<> execute(
   const CellSetType& cells,
   const CoordinateSystem& coordinateSystem,
-  const ValueType* isovalues,
-  const vtkm::Id numIsoValues,
+  const std::vector<ValueType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
   vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
@@ -626,8 +625,7 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
-    vtkm::cont::make_ArrayHandle(isovalues, numIsoValues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated
@@ -664,7 +662,7 @@ vtkm::cont::CellSetSingleType<> execute(
             triTable);
   }
 
-  if (numIsoValues <= 1 || !sharedState.MergeDuplicatePoints)
+  if (isovalues.size() <= 1 || !sharedState.MergeDuplicatePoints)
   { //release memory early that we are not going to need again
     contourIds.ReleaseResources();
   }
@@ -676,7 +674,7 @@ vtkm::cont::CellSetSingleType<> execute(
     // are updated. That is because MergeDuplicates will internally update
     // the InterpolationWeights and InterpolationOriginCellIds arrays to be the correct for the
     // output. But for InterpolationEdgeIds we need to do it manually once done
-    if (numIsoValues == 1)
+    if (isovalues.size() == 1)
     {
       marching_cells::MergeDuplicates(invoker,
                                       sharedState.InterpolationEdgeIds, //keys
@@ -685,7 +683,7 @@ vtkm::cont::CellSetSingleType<> execute(
                                       originalCellIdsForPoints,         //values
                                       connectivity); // computed using lower bounds
     }
-    else if (numIsoValues > 1)
+    else
     {
       marching_cells::MergeDuplicates(
         invoker,

@@ -92,8 +92,7 @@ public:
             typename CoordinateType,
             typename StorageTagVertices>
   vtkm::cont::CellSetSingleType<> Run(
-    const ValueType* const isovalues,
-    const vtkm::Id numIsoValues,
+    const std::vector<ValueType>& isovalues,
     const CellSetType& cells,
     const CoordinateSystem& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
@@ -108,7 +107,6 @@ public:
                             coordinateSystem,
                             outputCells,
                             isovalues,
-                            numIsoValues,
                             input,
                             vertices,
                             normals,
@@ -125,8 +123,7 @@ public:
             typename StorageTagVertices,
             typename StorageTagNormals>
   vtkm::cont::CellSetSingleType<> Run(
-    const ValueType* const isovalues,
-    const vtkm::Id numIsoValues,
+    const std::vector<ValueType>& isovalues,
     const CellSetType& cells,
     const CoordinateSystem& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
@@ -141,7 +138,6 @@ public:
                             coordinateSystem,
                             outputCells,
                             isovalues,
-                            numIsoValues,
                             input,
                             vertices,
                             normals,
