@@ -235,12 +235,14 @@ private:
       }
 
       std::string typeName;
-      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::GetDataTypeName(typeName));
 
       out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
-      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::OutputFieldFunctor(out));
     }
   }
 
@@ -268,12 +270,14 @@ private:
       }
 
       std::string typeName;
-      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::GetDataTypeName(typeName));
 
       out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
-      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::OutputFieldFunctor(out));
     }
   }
 
