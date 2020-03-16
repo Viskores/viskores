@@ -226,29 +226,26 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
 
     template <typename T>
     VTKM_CONT explicit InternalStruct(T)
-      : ControlArrayValid(new bool)
+      : ControlArrayValid(new bool(false))
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>())
     {
-      *this->ControlArrayValid = false;
     }
 
     template <typename T>
     VTKM_CONT explicit InternalStruct(
       const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
-      : ControlArrayValid(new bool)
+      : ControlArrayValid(new bool(true))
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(storage))
     {
-      *this->ControlArrayValid = true;
     }
 
     VTKM_CONT
     template <typename T>
     explicit InternalStruct(vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>&& storage)
-      : ControlArrayValid(new bool)
+      : ControlArrayValid(new bool(true))
       , ControlArray(
           new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(std::move(storage)))
     {
-      *this->ControlArrayValid = true;
     }
 
     ~InternalStruct();

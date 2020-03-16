@@ -21,19 +21,17 @@ template <typename T, typename S>
 ArrayHandle<T, S>::InternalStruct::InternalStruct(
   const typename ArrayHandle<T, S>::StorageType& storage)
   : ControlArray(storage)
-  , ControlArrayValid(new bool)
+  , ControlArrayValid(new bool(true))
   , ExecutionArrayValid(false)
 {
-  *this->ControlArrayValid = true;
 }
 
 template <typename T, typename S>
 ArrayHandle<T, S>::InternalStruct::InternalStruct(typename ArrayHandle<T, S>::StorageType&& storage)
   : ControlArray(std::move(storage))
-  , ControlArrayValid(new bool)
+  , ControlArrayValid(new bool(true))
   , ExecutionArrayValid(false)
 {
-  *this->ControlArrayValid = true;
 }
 
 template <typename T, typename S>

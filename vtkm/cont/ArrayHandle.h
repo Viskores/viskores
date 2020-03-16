@@ -749,8 +749,7 @@ protected:
         // There may be array portals that already have a reference to the flag. Those portals
         // will stay in an invalid state whereas new portals will go to a valid state. To
         // handle both conditions, drop the old reference and create a new one.
-        this->ControlArrayValid.reset(new bool);
-        *this->ControlArrayValid = true;
+        this->ControlArrayValid.reset(new bool(true));
       }
       else // value == false and ControlArrayValid == true
       {
