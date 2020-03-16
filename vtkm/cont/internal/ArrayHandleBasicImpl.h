@@ -203,7 +203,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
 
   class VTKM_CONT_EXPORT InternalStruct
   {
-    mutable bool ControlArrayValid;
+    mutable std::shared_ptr<bool> ControlArrayValid;
     StorageBasicBase* ControlArray;
 
     mutable ExecutionArrayInterfaceBasicBase* ExecutionInterface = nullptr;
@@ -226,7 +226,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
 
     template <typename T>
     VTKM_CONT explicit InternalStruct(T)
-      : ControlArrayValid(false)
+      : ControlArrayValid(new bool(false))
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>())
     {
     }
@@ -234,7 +234,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
     template <typename T>
     VTKM_CONT explicit InternalStruct(
       const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
-      : ControlArrayValid(true)
+      : ControlArrayValid(new bool(true))
       , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(storage))
     {
     }
@@ -242,7 +242,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
     VTKM_CONT
     template <typename T>
     explicit InternalStruct(vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>&& storage)
-      : ControlArrayValid(true)
+      : ControlArrayValid(new bool(true))
       , ControlArray(
           new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(std::move(storage)))
     {
@@ -255,12 +255,25 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
     VTKM_CONT bool IsControlArrayValid(const LockType& lock) const
     {
       this->CheckLock(lock);
-      return this->ControlArrayValid;
+      return *this->ControlArrayValid;
     }
     VTKM_CONT void SetControlArrayValid(const LockType& lock, bool value)
     {
       this->CheckLock(lock);
-      this->ControlArrayValid = value;
+      if (!IsControlArrayValid(lock) && value)
+      {
+        // If we are changing the valid flag from false to true, then refresh the pointer.
+        // There may be array portals that already have a reference to the flag. Those portals
+        // will stay in an invalid state whereas new portals will go to a valid state. To
+        // handle both conditions, drop the old reference and create a new one.
+        this->ControlArrayValid.reset(new bool);
+      }
+      *this->ControlArrayValid = value;
+    }
+    VTKM_CONT std::shared_ptr<bool> GetControlArrayValidPointer(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return this->ControlArrayValid;
     }
     VTKM_CONT StorageBasicBase* GetControlArray(const LockType& lock) const
     {
@@ -347,9 +360,9 @@ public:
   using StorageTag = ::vtkm::cont::StorageTagBasic;
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
   using ValueType = T;
-  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalType>;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalType>;
   using ReadPortalType =
-    vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalConstType>;
+    vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalConstType>;
 
   using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
     typename StorageType::PortalType;

@@ -98,7 +98,6 @@ void TestScatterPermutation()
       portal.Set(j, val);
     }
     std::cout << "\n";
-    portal.Detach();
 
     RunTest(cellset, permutation);
   }

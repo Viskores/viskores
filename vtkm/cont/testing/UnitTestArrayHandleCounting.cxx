@@ -79,7 +79,9 @@ struct TemplatedTests
 
   using ArrayHandleType2 = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagCounting>;
 
-  using PortalType = typename ArrayHandleType::ReadPortalType;
+  using PortalType =
+    typename vtkm::cont::internal::Storage<ValueType,
+                                           typename ArrayHandleType::StorageTag>::PortalConstType;
 
   void operator()(const ValueType& startingValue, const ValueType& step)
   {
