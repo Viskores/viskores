@@ -586,7 +586,7 @@ public:
         }
       }
 
-      if (minDistance < maxDistance)
+      if (minDistance < maxDistance && minDistance > exitDistance)
       {
         enterDistance = minDistance;
         exitDistance = maxDistance;
