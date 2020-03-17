@@ -12,6 +12,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/TryExecute.h>
 

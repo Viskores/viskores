@@ -19,6 +19,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CastAndCall.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/StorageList.h>

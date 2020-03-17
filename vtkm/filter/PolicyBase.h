@@ -16,6 +16,7 @@
 #include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
@@ -32,19 +33,10 @@ template <typename Derived>
 struct PolicyBase
 {
   using FieldTypeList = VTKM_DEFAULT_TYPE_LIST;
-  using StorageList = vtkm::ListAppend<
-    VTKM_DEFAULT_STORAGE_LIST,
-    vtkm::List<
-      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag,
-      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>>;
+  using StorageList = VTKM_DEFAULT_STORAGE_LIST;
 
-  using StructuredCellSetList = vtkm::cont::CellSetListStructured;
-  using UnstructuredCellSetList = vtkm::cont::CellSetListUnstructured;
+  using StructuredCellSetList = VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED;
+  using UnstructuredCellSetList = VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED;
   using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST;
 };
 

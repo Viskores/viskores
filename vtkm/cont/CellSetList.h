@@ -10,10 +10,6 @@
 #ifndef vtk_m_cont_CellSetList_h
 #define vtk_m_cont_CellSetList_h
 
-#ifndef VTKM_DEFAULT_CELL_SET_LIST
-#define VTKM_DEFAULT_CELL_SET_LIST ::vtkm::cont::CellSetListCommon
-#endif
-
 #include <vtkm/List.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
