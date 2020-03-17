@@ -47,6 +47,7 @@ set(headers
   Swap.h
   TopologyElementTag.h
   Transform3D.h
+  Tuple.h
   TypeList.h
   TypeListTag.h
   Types.h
@@ -67,6 +68,7 @@ set(template_sources
 )
 
 vtkm_pyexpander_generated_file(Math.h)
+vtkm_pyexpander_generated_file(Tuple.h)
 
 vtkm_declare_headers(
   ${headers}
@@ -81,7 +83,6 @@ if(VTKm_ENABLE_LOGGING)
   add_subdirectory(thirdparty/loguru)
 endif()
 add_subdirectory(thirdparty/optionparser)
-add_subdirectory(thirdparty/taotuple)
 add_subdirectory(thirdparty/lcl)
 
 add_subdirectory(testing)

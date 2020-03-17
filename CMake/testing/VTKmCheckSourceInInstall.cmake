@@ -104,7 +104,7 @@ function(do_verify root_dir prefix)
   #Step 1. Setup the extensions to check, and all file and directory
   # extensions
   set(files_extensions
-    *.hpp #needed for diy and taotuple
+    *.hpp #needed for diy
     *.h
     *.hxx
     )

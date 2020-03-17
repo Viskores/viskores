@@ -9,14 +9,10 @@
 ##============================================================================
 
 set(headers
-  DispatcherBase.h
-  MaskBase.h
-  Placeholders.h
-  ScatterBase.h
-  TriangulateTables.h
-  WorkletBase.h
+  aligned_union.h
+  integer_sequence.h
+  is_trivially_copyable.h
+  void_t.h
   )
 
 vtkm_declare_headers(${headers})
-
-add_subdirectory(testing)
