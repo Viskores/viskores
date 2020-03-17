@@ -10,6 +10,7 @@
 #ifndef vtk_m_io_writer_DataSetWriter_h
 #define vtk_m_io_writer_DataSetWriter_h
 
+#include <cctype>
 #include <vtkm/CellShape.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
@@ -237,8 +238,15 @@ private:
       std::string typeName;
       vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
                               detail::GetDataTypeName(typeName));
-
-      out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
+      std::string name = field.GetName();
+      for (auto& c : name)
+      {
+        if (std::isspace(c))
+        {
+          c = '_';
+        }
+      }
+      out << "SCALARS " << name << " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
       vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
@@ -273,7 +281,16 @@ private:
       vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
                               detail::GetDataTypeName(typeName));
 
-      out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
+      std::string name = field.GetName();
+      for (auto& c : name)
+      {
+        if (std::isspace(c))
+        {
+          c = '_';
+        }
+      }
+
+      out << "SCALARS " << name << " " << typeName << " " << ncomps << std::endl;
       out << "LOOKUP_TABLE default" << std::endl;
 
       vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
