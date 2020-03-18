@@ -181,7 +181,6 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
 
@@ -214,7 +213,6 @@ public:
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
@@ -232,7 +230,6 @@ public:
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
@@ -253,7 +250,6 @@ public:
     this->VisitIndex = visitIndex;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
@@ -341,7 +337,6 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
 

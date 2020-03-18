@@ -58,6 +58,7 @@ set(unit_tests
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
   UnitTestSplitSharpEdges.cxx
+  UnitTestScatterAndMaskWithTopology.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
