@@ -26,19 +26,6 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b
   return { lo, hi };
 }
 
-VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt64, 2> mulhilo(vtkm::UInt64 a, vtkm::UInt64 b)
-{
-#ifdef VTKM_CUDA
-  vtkm::UInt64 lo = a * b;
-  vtkm::UInt64 hi = __umul64hi(a, b);
-#else
-  __uint128_t r = static_cast<__uint128_t>(a) * static_cast<__uint128_t>(b);
-  vtkm::UInt64 lo = static_cast<vtkm::UInt64>(r);
-  vtkm::UInt64 hi = r >> 64;
-#endif
-  return { lo, hi };
-}
-
 template <typename UIntType, std::size_t N, UIntType... consts>
 struct philox_parameters;
 
