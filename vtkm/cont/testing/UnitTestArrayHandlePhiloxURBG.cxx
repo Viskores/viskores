@@ -13,7 +13,7 @@
 
 void TestArrayHandlePhiloxURBG()
 {
-  auto actual0 = vtkm::cont::make_ArrayHandlePhiloxURBG(10);
+  auto actual0 = vtkm::cont::make_ArrayHandlePhiloxURBG(10, { 0 });
   // result from Random123 sample implementation of philox2x32x10
   std::vector<vtkm::UInt64> expected0{ 0x6cd10df2ff1dae59, 0x5f3adb6bdcdce855, 0x3fbb6394049f6998,
                                        0xbd592d1202a74512, 0x8a115b62c08084ef, 0x1411803b3bb7eefa,

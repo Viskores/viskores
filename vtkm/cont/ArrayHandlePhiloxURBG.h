@@ -1,6 +1,3 @@
-//
-// Created by ollie on 3/12/20.
-//
 //============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
@@ -13,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandlePhiloxURBG_h
 #define vtk_m_cont_ArrayHandlePhiloxURBG_h
 
+#include <random>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/prng/Philox.h>
 
@@ -63,7 +61,7 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandlePhiloxURBG,
                                 (vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>));
 
-  explicit ArrayHandlePhiloxURBG(vtkm::Id length, SeedType seed = {})
+  explicit ArrayHandlePhiloxURBG(vtkm::Id length, SeedType seed)
     : Superclass(detail::PhiloxFunctor(seed), length)
   {
   }
@@ -76,7 +74,7 @@ public:
 /// type safety for the parameters so user will not transpose two integer parameters.
 VTKM_CONT vtkm::cont::ArrayHandlePhiloxURBG make_ArrayHandlePhiloxURBG(
   vtkm::Id length,
-  vtkm::Vec<vtkm::UInt32, 1> seed = { 0 })
+  vtkm::Vec<vtkm::UInt32, 1> seed = { std::random_device{}() })
 {
   return vtkm::cont::ArrayHandlePhiloxURBG(length, seed);
 }

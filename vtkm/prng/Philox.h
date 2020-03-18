@@ -26,7 +26,7 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b
   return { lo, hi };
 }
 
-constexpr VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt64, 2> mulhilo(vtkm::UInt64 a, vtkm::UInt64 b)
+VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt64, 2> mulhilo(vtkm::UInt64 a, vtkm::UInt64 b)
 {
 #ifdef VTKM_CUDA
   vtkm::UInt64 lo = a * b;
