@@ -103,8 +103,46 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
+            typename std::enable_if<vtkm::internal::PortalSupportsGets3D<PT>::value, int>::type = 0>
+  VTKM_EXEC_CONT typename Superclass::ValueType Get(vtkm::Id3 index) const
+  {
+    if (!(*this->Valid))
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Fatal,
+                 "Attempted to read from an ArrayPortal whose data has been deleted.");
+      return typename Superclass::ValueType{};
+    }
+    // Technically, this is not perfectly thread safe. It is possible that the check above
+    // passed and then another thread has deleted the underlying array before we got here.
+    // However, any case in which this portal is used where such a condition can possible
+    // happen is a grevious error. In which case a different run is likely to give the
+    // correct error and the problem can be fixed.
+    return this->Superclass::Get(index);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsSets<PT>::value, int>::type = 0>
   VTKM_EXEC_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
+  {
+    if (!(*this->Valid))
+    {
+      VTKM_LOG_F(vtkm::cont::LogLevel::Fatal,
+                 "Attempted to write to an ArrayPortal whose data has been deleted.");
+      return;
+    }
+    // Technically, this is not perfectly thread safe. It is possible that the check above
+    // passed and then another thread has deleted the underlying array before we got here.
+    // However, any case in which this portal is used where such a condition can possible
+    // happen is a grevious error. In which case a different run is likely to give the
+    // correct error and the problem can be fixed.
+    this->Superclass::Set(index, value);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename PT = Superclass,
+            typename std::enable_if<vtkm::internal::PortalSupportsSets3D<PT>::value, int>::type = 0>
+  VTKM_EXEC_CONT void Set(vtkm::Id3 index, typename Superclass::ValueType value) const
   {
     if (!(*this->Valid))
     {
