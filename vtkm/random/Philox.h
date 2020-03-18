@@ -7,14 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_prng_Philox_h
-#define vtk_m_prng_Philox_h
+#ifndef vtk_m_random_Philox_h
+#define vtk_m_random_Philox_h
 
 #include <vtkm/Types.h>
 
 namespace vtkm
 {
-namespace prng
+namespace random
 {
 namespace detail
 {
@@ -132,6 +132,6 @@ public:
 using philox_functor2x32x7 = detail::philox_functor<vtkm::UInt32, 2, 7, 0xD256D193, 0x9E3779B9>;
 using philox_functor2x32x10 = detail::philox_functor<vtkm::UInt32, 2, 10, 0xD256D193, 0x9E3779B9>;
 
-} // namespace prng
+} // namespace random
 } // namespace vtkm
-#endif //vtk_m_prng_Philox_h
+#endif //vtk_m_random_Philox_h

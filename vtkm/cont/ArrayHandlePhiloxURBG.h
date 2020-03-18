@@ -12,7 +12,7 @@
 
 #include <random>
 #include <vtkm/cont/ArrayHandleImplicit.h>
-#include <vtkm/prng/Philox.h>
+#include <vtkm/random/Philox.h>
 
 namespace vtkm
 {
@@ -35,7 +35,7 @@ struct PhiloxFunctor
   VTKM_EXEC_CONT
   vtkm::UInt64 operator()(vtkm::Id index) const
   {
-    using philox_functor = vtkm::prng::philox_functor2x32x10;
+    using philox_functor = vtkm::random::philox_functor2x32x10;
     using counters_type = typename philox_functor::counters_type;
 
     // We deliberately use type punning to convert vtkm::Id into counters and then to

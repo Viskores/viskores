@@ -113,4 +113,4 @@ add_subdirectory(io)
 add_subdirectory(source)
 
 #add Pseudo Random Number Generator folder
-add_subdirectory(prng)
+add_subdirectory(random)

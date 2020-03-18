@@ -9,12 +9,12 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/prng/Philox.h>
+#include <vtkm/random/Philox.h>
 
 void TestPhiloxRNG2x32x7()
 {
-  vtkm::prng::philox_functor2x32x7 f2x32x7;
-  using counters_type = typename vtkm::prng::philox_functor2x32x7::counters_type;
+  vtkm::random::philox_functor2x32x7 f2x32x7;
+  using counters_type = typename vtkm::random::philox_functor2x32x7::counters_type;
 
   // test cases from original Random123 implementation
   VTKM_TEST_ASSERT(f2x32x7({}, {}) == counters_type{ 0x257a3673, 0xcd26be2a });
@@ -26,8 +26,8 @@ void TestPhiloxRNG2x32x7()
 
 void TestPhiloxRNG2x32x10()
 {
-  vtkm::prng::philox_functor2x32x10 f2x32x10;
-  using counters_type = typename vtkm::prng::philox_functor2x32x10::counters_type;
+  vtkm::random::philox_functor2x32x10 f2x32x10;
+  using counters_type = typename vtkm::random::philox_functor2x32x10::counters_type;
 
   // test cases from original Random123 implementation
   VTKM_TEST_ASSERT(f2x32x10({}, {}) == counters_type{ 0xff1dae59, 0x6cd10df2 });
