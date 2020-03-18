@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandlePhiloxURBG.h>
+#include <vtkm/cont/ArrayHandleRandomUniformBits.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void TestArrayHandlePhiloxURBG()
 {
-  auto actual0 = vtkm::cont::make_ArrayHandlePhiloxURBG(10, { 0 });
+  auto actual0 = vtkm::cont::ArrayHandleRandomUniformBits(10, { 0 });
   // result from Random123 sample implementation of philox2x32x10
   std::vector<vtkm::UInt64> expected0{ 0x6cd10df2ff1dae59, 0x5f3adb6bdcdce855, 0x3fbb6394049f6998,
                                        0xbd592d1202a74512, 0x8a115b62c08084ef, 0x1411803b3bb7eefa,
@@ -26,7 +26,7 @@ void TestArrayHandlePhiloxURBG()
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 
   // initialize with seed = 100, could be "iteration number" in actual use case.
-  auto actual100 = vtkm::cont::make_ArrayHandlePhiloxURBG(10, { 100 });
+  auto actual100 = vtkm::cont::ArrayHandleRandomUniformBits(10, { 100 });
   // result from Random123 sample implementation of philox2x32x10
   std::vector<vtkm::UInt64> expected100{
     0xbd35360836122ea3, 0xe033b74acce7aa5f, 0xc0fbb65cba93ecd7, 0xe3fee2812b77e480,

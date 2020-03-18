@@ -129,8 +129,8 @@ public:
 
 } // namespace detail
 
-using philox_functor2x32x7 = detail::philox_functor<vtkm::UInt32, 2, 7, 0xD256D193, 0x9E3779B9>;
-using philox_functor2x32x10 = detail::philox_functor<vtkm::UInt32, 2, 10, 0xD256D193, 0x9E3779B9>;
+using PhiloxFunctor2x32x7 = detail::philox_functor<vtkm::UInt32, 2, 7, 0xD256D193, 0x9E3779B9>;
+using PhiloxFunctor2x32x10 = detail::philox_functor<vtkm::UInt32, 2, 10, 0xD256D193, 0x9E3779B9>;
 
 } // namespace random
 } // namespace vtkm

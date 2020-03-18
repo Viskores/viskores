@@ -35,7 +35,7 @@ struct PhiloxFunctor
   VTKM_EXEC_CONT
   vtkm::UInt64 operator()(vtkm::Id index) const
   {
-    using philox_functor = vtkm::random::philox_functor2x32x10;
+    using philox_functor = vtkm::random::PhiloxFunctor2x32x10;
     using counters_type = typename philox_functor::counters_type;
 
     // We deliberately use type punning to convert vtkm::Id into counters and then to
@@ -52,32 +52,22 @@ private:
 }; // class PhiloxFunctor
 } // namespace detail
 
-class VTKM_ALWAYS_EXPORT ArrayHandlePhiloxURBG
+class VTKM_ALWAYS_EXPORT ArrayHandleRandomUniformBits
   : public vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>
 {
 public:
   using SeedType = vtkm::Vec<vtkm::UInt32, 1>;
 
-  VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandlePhiloxURBG,
+  VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleRandomUniformBits,
                                 (vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>));
 
-  explicit ArrayHandlePhiloxURBG(vtkm::Id length, SeedType seed)
+  /// The type of seed is specifically designed to be an vtkm::Vec<> to provide
+  /// type safety for the parameters so user will not transpose two integer parameters.
+  explicit ArrayHandleRandomUniformBits(vtkm::Id length, SeedType seed = { std::random_device{}() })
     : Superclass(detail::PhiloxFunctor(seed), length)
   {
   }
-}; // class ArrayHandlePhiloxURBG
-
-/// A convenience function for creating an ArrayHandlePhiloxURBG. It takes the
-/// size of the array and generates an array holding vtkm::Id from
-/// [std::numeric_limits<vtkm::UInt64>::min, std::numeric_limits<vtkm::UInt64>::max]
-/// The type of seed is specifically designed to be an vtkm::Vec<> to provide
-/// type safety for the parameters so user will not transpose two integer parameters.
-VTKM_CONT vtkm::cont::ArrayHandlePhiloxURBG make_ArrayHandlePhiloxURBG(
-  vtkm::Id length,
-  vtkm::Vec<vtkm::UInt32, 1> seed = { std::random_device{}() })
-{
-  return vtkm::cont::ArrayHandlePhiloxURBG(length, seed);
-}
+}; // class ArrayHandleRandomUniformBits
 }
 } // namespace vtkm::cont
 
