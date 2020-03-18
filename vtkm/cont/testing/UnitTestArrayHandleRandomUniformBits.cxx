@@ -11,7 +11,7 @@
 #include <vtkm/cont/ArrayHandleRandomUniformBits.h>
 #include <vtkm/cont/testing/Testing.h>
 
-void TestArrayHandlePhiloxURBG()
+void TestArrayHandleRandomUniformBits()
 {
   auto actual0 = vtkm::cont::ArrayHandleRandomUniformBits(10, { 0 });
   // result from Random123 sample implementation of philox2x32x10
@@ -38,7 +38,7 @@ void TestArrayHandlePhiloxURBG()
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 
-int UnitTestArrayHandlePhiloxURBG(int argc, char* argv[])
+int UnitTestArrayHandleRandomUniformBits(int argc, char** argv)
 {
-  return vtkm::cont::testing::Testing::Run(TestArrayHandlePhiloxURBG, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleRandomUniformBits, argc, argv);
 }
