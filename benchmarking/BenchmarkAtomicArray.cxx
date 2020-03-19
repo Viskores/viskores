@@ -506,11 +506,24 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(
 int main(int argc, char* argv[])
 {
   // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

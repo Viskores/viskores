@@ -388,6 +388,37 @@ static inline vtkm::Id ExecuteBenchmarks(int& argc,
 
   return static_cast<vtkm::Id>(num);
 }
+
+void InitializeArgs(int* argc, std::vector<char*>& args, vtkm::cont::InitializeOptions& opts)
+{
+  bool isHelp = false;
+
+  // Inject --help
+  if (*argc == 1)
+  {
+    const char* help = "--help"; // We want it to be static
+    args.push_back(const_cast<char*>(help));
+    *argc = *argc + 1;
+  }
+
+  args.push_back(nullptr);
+
+  for (size_t i = 0; i < static_cast<size_t>(*argc); ++i)
+  {
+    auto opt_s = std::string(args[i]);
+    if (opt_s == "--help" || opt_s == "-help" || opt_s == "-h")
+    {
+      isHelp = true;
+    }
+  }
+
+  if (!isHelp)
+  {
+    return;
+  }
+
+  opts = vtkm::cont::InitializeOptions::None;
+}
 }
 }
 } // end namespace vtkm::bench::detail
