@@ -74,6 +74,26 @@ public:
 
   template <vtkm::IdComponent Dimension>
   VTKM_EXEC ThreadIndicesPointNeighborhood(
+    const vtkm::Id3& threadIndex3D,
+    vtkm::Id threadIndex1D,
+    vtkm::Id inputIndex,
+    vtkm::IdComponent visitIndex,
+    vtkm::Id outputIndex,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
+                                             Dimension>& connectivity,
+    vtkm::Id globalThreadIndexOffset = 0)
+    : State(threadIndex3D, detail::To3D(connectivity.GetPointDimensions()))
+    , ThreadIndex(threadIndex1D)
+    , InputIndex(inputIndex)
+    , OutputIndex(outputIndex)
+    , VisitIndex(visitIndex)
+    , GlobalThreadIndexOffset(globalThreadIndexOffset)
+  {
+  }
+
+  template <vtkm::IdComponent Dimension>
+  VTKM_EXEC ThreadIndicesPointNeighborhood(
     vtkm::Id threadIndex,
     vtkm::Id inputIndex,
     vtkm::IdComponent visitIndex,

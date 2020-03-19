@@ -179,29 +179,67 @@ public:
                                                                       globalThreadIndexOffset);
   }
 
+  /// In the remaining methods and `constexpr` we determine at compilation time
+  /// which method definition will be actually used for GetThreadIndices.
+  ///
+  /// We want to avoid further function calls when we use WorkletMapTopology in which
+  /// ScatterType is set as ScatterIdentity and MaskType as MaskNone.
+  /// Otherwise, we call the default method defined at the bottom of this class.
+private:
+  static constexpr bool IsScatterIdentity =
+    std::is_same<ScatterType, vtkm::worklet::ScatterIdentity>::value;
+  static constexpr bool IsMaskNone = std::is_same<MaskType, vtkm::worklet::MaskNone>::value;
+
+  template <bool Cond, typename ReturnType>
+  using EnableFnWhen = typename std::enable_if<Cond, ReturnType>::type;
+
+public:
+  /// Optimized for ScatterIdentity and MaskNone
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
-            typename InputDomainType>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
-    vtkm::Id threadIndex1D,
-    const vtkm::Id3& threadIndex3D,
-    const OutToInArrayType& vtkmNotUsed(outToIn),
-    const VisitArrayType& vtkmNotUsed(visit),
-    const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
-    const InputDomainType& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0) const
+            typename InputDomainType,
+            bool S = IsScatterIdentity,
+            bool M = IsMaskNone>
+  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>>
+  GetThreadIndices(vtkm::Id threadIndex1D,
+                   const vtkm::Id3& threadIndex3D,
+                   const OutToInArrayType& vtkmNotUsed(outToIn),
+                   const VisitArrayType& vtkmNotUsed(visit),
+                   const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
+                   const InputDomainType& connectivity,
+                   vtkm::Id globalThreadIndexOffset = 0) const
   {
-    using ScatterCheck = std::is_same<ScatterType, vtkm::worklet::ScatterIdentity>;
-    VTKM_STATIC_ASSERT_MSG(ScatterCheck::value,
-                           "Scheduling on 3D topologies only works with default ScatterIdentity.");
-    using MaskCheck = std::is_same<MaskType, vtkm::worklet::MaskNone>;
-    VTKM_STATIC_ASSERT_MSG(MaskCheck::value,
-                           "Scheduling on 3D topologies only works with default MaskNone.");
-
     return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
       threadIndex3D, threadIndex1D, connectivity, globalThreadIndexOffset);
+  }
+
+  /// Default version
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename OutToInArrayType,
+            typename VisitArrayType,
+            typename ThreadToOutArrayType,
+            typename InputDomainType,
+            bool S = IsScatterIdentity,
+            bool M = IsMaskNone>
+  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>>
+  GetThreadIndices(vtkm::Id threadIndex1D,
+                   const vtkm::Id3& threadIndex3D,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const ThreadToOutArrayType& threadToOut,
+                   const InputDomainType& connectivity,
+                   vtkm::Id globalThreadIndexOffset = 0) const
+  {
+    const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
+    return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(threadIndex3D,
+                                                                      threadIndex1D,
+                                                                      outToIn.Get(outIndex),
+                                                                      visit.Get(outIndex),
+                                                                      outIndex,
+                                                                      connectivity,
+                                                                      globalThreadIndexOffset);
   }
 };
 
