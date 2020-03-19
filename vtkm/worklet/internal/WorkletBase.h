@@ -32,7 +32,9 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
 #include <vtkm/cont/arg/TypeCheckTagBitField.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
@@ -140,7 +142,7 @@ public:
   ///
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -158,7 +160,7 @@ public:
   ///
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -177,7 +179,7 @@ public:
   ///
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };

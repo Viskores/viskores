@@ -19,7 +19,9 @@
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
 #include <vtkm/cont/arg/TransportTagTopologyFieldIn.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 
 #include <vtkm/exec/arg/CellShape.h>
@@ -75,7 +77,7 @@ public:
   ///
   struct FieldInVisit : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<VisitTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -85,7 +87,7 @@ public:
   ///
   struct FieldInIncident : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<IncidentTopologyType>;
     using FetchTag = vtkm::exec::arg::FetchTagArrayTopologyMapIn;
   };
@@ -97,7 +99,7 @@ public:
   ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -107,7 +109,7 @@ public:
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
