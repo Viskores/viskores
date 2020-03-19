@@ -38,7 +38,7 @@ void TestArrayHandleRandomUniformBits()
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 
-int UnitTestArrayHandleRandomUniformBits(int argc, char** argv)
+int UnitTestArrayHandleRandomUniformBits(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayHandleRandomUniformBits, argc, argv);
 }
