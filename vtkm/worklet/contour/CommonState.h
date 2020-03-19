@@ -29,7 +29,7 @@ struct CommonState
   }
 
   bool MergeDuplicatePoints = true;
-  bool GenerateNormals = true;
+  bool GenerateNormals = false;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
   vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationEdgeIds;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;

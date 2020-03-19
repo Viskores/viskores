@@ -611,8 +611,8 @@ vtkm::cont::CellSetSingleType<> execute(
   const CellSetType& cells,
   const CoordinateSystem& coordinateSystem,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
-  vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices> vertices,
-  vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals> normals,
+  vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
   using vtkm::worklet::marching_cells::ClassifyCell;
