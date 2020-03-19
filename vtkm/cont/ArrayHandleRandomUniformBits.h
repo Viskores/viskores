@@ -52,6 +52,23 @@ private:
 }; // class PhiloxFunctor
 } // namespace detail
 
+/// \brief An \c ArrayHandle that provides a source of random bits
+///
+/// \c ArrayHandleRandomUniformBits is a specialization of ArrayHandleImplicit.
+/// It takes a user supplied seed and hash it with the a given index value. The
+/// hashed value is the value of the array at that position.
+///
+/// Currently, Philox2x32x10 as described in the
+///   "Parallel Random Numbers: As Easy as 1, 2, 3," Proceedings of the
+///   International Conference for High Performance Computing, Networking,
+///   Storage and Analysis (SC11)
+/// hash function.
+///
+/// Note: In contrast to traditional random number generator,
+/// ArrayHandleRandomUniformBits does not have "state", i.e. multiple calls
+/// the Get() method with the same index will always return the same hash value.
+/// To ge a new set of random bits, create a new ArrayHandleRandomUniformBits
+/// with a different seed.
 class VTKM_ALWAYS_EXPORT ArrayHandleRandomUniformBits
   : public vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>
 {
