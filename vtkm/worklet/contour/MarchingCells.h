@@ -429,8 +429,7 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-    vtkm::worklet::gradient::PointGradient<T> gradient;
+    vtkm::worklet::gradient::PointGradient gradient;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
   }
 
@@ -446,8 +445,6 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
@@ -459,7 +456,7 @@ public:
     vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
     vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
-    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    vtkm::worklet::gradient::StructuredPointGradient gradient;
     gradient(boundary, points, field, normal);
   }
 };
@@ -506,8 +503,7 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-    vtkm::worklet::gradient::PointGradient<T> gradient;
+    vtkm::worklet::gradient::PointGradient gradient;
     NormalType grad1;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
 
@@ -531,7 +527,6 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
@@ -543,7 +538,7 @@ public:
     vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
     vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
-    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    vtkm::worklet::gradient::StructuredPointGradient gradient;
     NormalType grad1;
     gradient(boundary, points, field, grad1);
 
