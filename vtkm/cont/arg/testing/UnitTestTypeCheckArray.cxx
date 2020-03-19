@@ -51,9 +51,9 @@ struct TryArraysOfType
     using CompositeArray = vtkm::cont::ArrayHandleCompositeVector<StandardArray, StandardArray>;
     VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, CompositeArray>::value),
                      "Composite array type check failed.");
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, CountingArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, CompositeArray>::value),
                      "Counting array type check failed.");
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, CountingArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, CompositeArray>::value),
                      "Counting array type check failed.");
 
     // Just some type that is not a valid array.
