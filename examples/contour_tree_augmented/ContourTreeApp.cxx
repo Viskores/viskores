@@ -930,6 +930,12 @@ int main(int argc, char* argv[])
                << ": "
                << ct.Hyperarcs.GetNumberOfValues()
                << std::endl);
+  // Print hyperstructure statistics
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+             std::endl
+               << ct.PrintHyperStructureStatistics(false)
+               << std::endl);
+
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;
   std::cerr << std::flush;
