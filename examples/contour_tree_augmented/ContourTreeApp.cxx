@@ -65,9 +65,11 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
+
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -229,14 +231,15 @@ int main(int argc, char* argv[])
   int numThreads = tbb::task_scheduler_init::default_num_threads();
   if (parser.hasOption("--numThreads"))
   {
-    // Print warning about mismatch between the --numThreads and -d/--device opton
-    VTKM_LOG_S_IF(vtkm::cont::LogLevel::Warn,
-                  device != vtkm::cont::DeviceAdapterTagTBB,
+    bool deviceIsTBB = (device == vtkm::cont::make_DeviceAdapterId(3));
+    // Print warning about mismatch between the --numThreads and -d/--device option
+    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Warn,
+                  deviceIsTBB,
                   "WARNING: Mismatch between --numThreads and -d/--device option."
                   "numThreads option requires the use of TBB as device. "
                   "Ignoring the numThread option.");
     // Set the number of threads to be used for TBB
-    if (device == vtkm::cont::DeviceAdapterTagTBB)
+    if (deviceIsTBB)
     {
       numThreads = std::stoi(parser.getOption("--numThreads"));
       tbb::task_scheduler_init schedulerInit(numThreads);
