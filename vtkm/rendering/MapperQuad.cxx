@@ -103,9 +103,10 @@ void MapperQuad::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   //
   // Create rays
   //
-  vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
-  cam.SetParameters(camera, *this->Internals->Canvas);
-  this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
+  vtkm::Int32 width = (vtkm::Int32) this->Internals->Canvas->GetWidth();
+  vtkm::Int32 height = (vtkm::Int32) this->Internals->Canvas->GetHeight();
+
+  this->Internals->RayCamera.SetParameters(camera, width, height);
 
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, shapeBounds);
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);

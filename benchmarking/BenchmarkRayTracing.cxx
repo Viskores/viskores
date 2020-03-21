@@ -64,7 +64,7 @@ void BenchRayTracing(::benchmark::State& state)
 
   vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
   vtkm::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(camera, canvas);
+  rayCamera.SetParameters(camera, vtkm::Int32(canvas.GetWidth()), vtkm::Int32(canvas.GetHeight()));
   vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
 
