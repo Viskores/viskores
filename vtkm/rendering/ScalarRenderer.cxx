@@ -135,7 +135,7 @@ ScalarRenderer::Result ScalarRenderer::Render(const vtkm::rendering::Camera& cam
     vtkm::Id comps = ranges.GetNumberOfValues();
     if (comps == 1)
     {
-      rangeMap[field.GetName()] = ranges.GetPortalControl().Get(0);
+      rangeMap[field.GetName()] = ranges.ReadPortal().Get(0);
       this->Internals->Tracer.AddField(field);
     }
   }
