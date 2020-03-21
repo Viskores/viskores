@@ -113,10 +113,8 @@ void MapperQuad::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
 
-
-
+  this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Tracer.SetField(scalarField, scalarRange);
-
   this->Internals->Tracer.SetColorMap(this->ColorMap);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
