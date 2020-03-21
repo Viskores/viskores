@@ -113,6 +113,7 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->RayCamera.SetParameters(camera, width, height);
 
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, shapeBounds);
+  this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
