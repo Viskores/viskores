@@ -227,15 +227,17 @@ void TestContourUniformGrid()
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
 
-  //Now try with vertex merging disabled
+  //Now try with vertex merging disabled. Since this
+  //we use FlyingEdges we now which does point merging for free
+  //so we should see the number of points not change
   mc.SetMergeDuplicatePoints(false);
   mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_ALL);
   result = mc.Execute(dataSet);
   {
     vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
 
-    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 480,
-                     "Should have less coordinates than the unmerged version");
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 72,
+                     "Shouldn't have less coordinates than the unmerged version");
 
     //verify that the number of cells is correct (160)
     vtkm::cont::DynamicCellSet dcells = result.GetCellSet();

@@ -233,7 +233,7 @@ void TestContourUniformGrid()
 
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == 160);
 
-  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 480);
+  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 72);
 }
 
 void TestContourExplicit()
