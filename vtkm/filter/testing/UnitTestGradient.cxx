@@ -31,28 +31,17 @@ void TestCellGradientUniform3D()
 
   gradient.SetActiveField("pointvar");
 
-  vtkm::cont::DataSet result = gradient.Execute(dataSet);
+  vtkm::cont::DataSet result;
 
-  VTKM_TEST_ASSERT(result.HasCellField("Gradient"), "Field missing.");
-
-  //verify that the vorticity and qcriterion fields don't exist
-  VTKM_TEST_ASSERT(result.HasField("Vorticity") == false,
-                   "scalar gradients can't generate vorticity");
-  VTKM_TEST_ASSERT(result.HasField("QCriterion") == false,
-                   "scalar gradients can't generate qcriterion");
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetField("Gradient").GetData().CopyTo(resultArrayHandle);
-  vtkm::Vec3f_64 expected[4] = {
-    { 10.025, 30.075, 60.125 },
-    { 10.025, 30.075, 60.125 },
-    { 10.025, 30.075, 60.175 },
-    { 10.025, 30.075, 60.175 },
-  };
-  for (int i = 0; i < 4; ++i)
+  // We provocate this exception
+  try
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellGradient filter on 3D uniform data");
+    result = gradient.Execute(dataSet);
+    VTKM_TEST_FAIL("Gradient attempted to compute Vorticity or QCriterion with scalars");
+  }
+  catch (vtkm::cont::ErrorFilterExecution&)
+  {
+    // We should exit in this catch
   }
 }
 

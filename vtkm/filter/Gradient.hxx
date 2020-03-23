@@ -52,6 +52,19 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
+  constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
+                                         vtkm::VecTraitsTagMultipleComponents>::value;
+
+  if (GetComputeQCriterion() && !isVector)
+  {
+    throw vtkm::cont::ErrorFilterExecution("scalar gradients can't generate qcriterion");
+  }
+
+  if (GetComputeVorticity() && !isVector)
+  {
+    throw vtkm::cont::ErrorFilterExecution("scalar gradients can't generate vorticity");
+  }
+
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
@@ -85,9 +98,6 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   {
     transpose_3x3(outArray);
   }
-
-  constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
-                                         vtkm::VecTraitsTagMultipleComponents>::value;
 
   vtkm::cont::Field::Association fieldAssociation(this->ComputePointGradient
                                                     ? vtkm::cont::Field::Association::POINTS
