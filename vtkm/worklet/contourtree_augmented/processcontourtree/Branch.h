@@ -73,6 +73,7 @@ template <typename T>
 class Branch
 {
 public:
+  vtkm::Id originalId;              // Index of the extremum in the mesh
   vtkm::Id Extremum;                // Index of the extremum in the mesh
   T ExtremumVal;                    // Value at the extremum:w
   vtkm::Id Saddle;                  // Index of the saddle in the mesh (or minimum for root branch)
@@ -108,7 +109,7 @@ public:
   ~Branch();
 
   // Compute list of relevant/interesting isovalues
-  void GetRelevantValues(int type, T eps, std::vector<T>& values) const;
+  void GetRelevantValues(int type, T eps, std::vector<std::pair<T, vtkm::Id>>& values) const;
 
   void AccumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const;
 
@@ -176,6 +177,7 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   // Reconstruct explicit branch decomposition from array representation
   for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
+    branches[branchID]->originalId = branchID;
     if (!NoSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       branches[branchID]->Saddle = MaskedIndex(
@@ -342,7 +344,9 @@ Branch<T>::~Branch()
 
 // TODO this recursive accumlation of values does not lend itself well to the use of VTKM data structures
 template <typename T>
-void Branch<T>::GetRelevantValues(int type, T eps, std::vector<T>& values) const
+void Branch<T>::GetRelevantValues(int type,
+                                  T eps,
+                                  std::vector<std::pair<T, vtkm::Id>>& values) const
 { // GetRelevantValues()
   T val;
 
@@ -364,7 +368,7 @@ void Branch<T>::GetRelevantValues(int type, T eps, std::vector<T>& values) const
       break;
   }
   if (Parent)
-    values.push_back(val);
+    values.push_back({ val, this->originalId });
   for (Branch* c : Children)
     c->GetRelevantValues(type, eps, values);
 } // GetRelevantValues()
