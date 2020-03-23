@@ -36,12 +36,9 @@ class TaskSingular : public vtkm::exec::TaskBase
 {
 public:
   VTKM_CONT
-  TaskSingular(const WorkletType& worklet,
-               const InvocationType& invocation,
-               vtkm::Id globalIndexOffset = 0)
+  TaskSingular(const WorkletType& worklet, const InvocationType& invocation)
     : Worklet(worklet)
     , Invocation(invocation)
-    , GlobalIndexOffset(globalIndexOffset)
   {
   }
 
@@ -62,8 +59,7 @@ public:
                                      this->Invocation.OutputToInputMap,
                                      this->Invocation.VisitArray,
                                      this->Invocation.ThreadToOutputMap,
-                                     this->Invocation.GetInputDomain(),
-                                     GlobalIndexOffset));
+                                     this->Invocation.GetInputDomain()));
   }
 
 private:
@@ -73,7 +69,6 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const InvocationType Invocation;
-  const vtkm::Id GlobalIndexOffset;
 };
 }
 }

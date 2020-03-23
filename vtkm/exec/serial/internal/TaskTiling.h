@@ -36,11 +36,7 @@ VTKM_NEVER_EXPORT void TaskTilingSetErrorBuffer(
 }
 
 template <typename WType, typename IType>
-VTKM_NEVER_EXPORT void TaskTiling1DExecute(void* w,
-                                           void* const v,
-                                           vtkm::Id globalIndexOffset,
-                                           vtkm::Id start,
-                                           vtkm::Id end)
+VTKM_NEVER_EXPORT void TaskTiling1DExecute(void* w, void* const v, vtkm::Id start, vtkm::Id end)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   using InvocationType = typename std::remove_cv<IType>::type;
@@ -58,17 +54,12 @@ VTKM_NEVER_EXPORT void TaskTiling1DExecute(void* w,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
                                 invocation->ThreadToOutputMap,
-                                invocation->GetInputDomain(),
-                                globalIndexOffset));
+                                invocation->GetInputDomain()));
   }
 }
 
 template <typename FType>
-VTKM_NEVER_EXPORT void FunctorTiling1DExecute(void* f,
-                                              void* const,
-                                              vtkm::Id,
-                                              vtkm::Id start,
-                                              vtkm::Id end)
+VTKM_NEVER_EXPORT void FunctorTiling1DExecute(void* f, void* const, vtkm::Id start, vtkm::Id end)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -82,7 +73,6 @@ VTKM_NEVER_EXPORT void FunctorTiling1DExecute(void* f,
 template <typename WType, typename IType>
 VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
                                            void* const v,
-                                           vtkm::Id globalIndexOffset,
                                            const vtkm::Id3& maxSize,
                                            vtkm::Id istart,
                                            vtkm::Id iend,
@@ -109,15 +99,13 @@ VTKM_NEVER_EXPORT void TaskTiling3DExecute(void* w,
                                 invocation->OutputToInputMap,
                                 invocation->VisitArray,
                                 invocation->ThreadToOutputMap,
-                                invocation->GetInputDomain(),
-                                globalIndexOffset));
+                                invocation->GetInputDomain()));
   }
 }
 
 template <typename FType>
 VTKM_NEVER_EXPORT void FunctorTiling3DExecute(void* f,
                                               void* const,
-                                              vtkm::Id vtkmNotUsed(globalIndexOffset),
                                               const vtkm::Id3& vtkmNotUsed(maxSize),
                                               vtkm::Id istart,
                                               vtkm::Id iend,
@@ -148,7 +136,6 @@ public:
   TaskTiling1D()
     : Worklet(nullptr)
     , Invocation(nullptr)
-    , GlobalIndexOffset(0)
   {
   }
 
@@ -161,7 +148,6 @@ public:
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
     , SetErrorBufferFunction(nullptr)
-    , GlobalIndexOffset(0)
   {
     //Setup the execute and set error buffer function pointers
     this->ExecuteFunction = &FunctorTiling1DExecute<FunctorType>;
@@ -174,12 +160,11 @@ public:
   /// This constructor supports any vtkm worklet and the associated invocation
   /// parameters that go along with it
   template <typename WorkletType, typename InvocationType>
-  TaskTiling1D(WorkletType& worklet, InvocationType& invocation, vtkm::Id globalIndexOffset)
+  TaskTiling1D(WorkletType& worklet, InvocationType& invocation)
     : Worklet(nullptr)
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
     , SetErrorBufferFunction(nullptr)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     //Setup the execute and set error buffer function pointers
     this->ExecuteFunction = &TaskTiling1DExecute<WorkletType, InvocationType>;
@@ -198,7 +183,6 @@ public:
     , Invocation(task.Invocation)
     , ExecuteFunction(task.ExecuteFunction)
     , SetErrorBufferFunction(task.SetErrorBufferFunction)
-    , GlobalIndexOffset(task.GlobalIndexOffset)
   {
   }
 
@@ -211,20 +195,18 @@ public:
 
   void operator()(vtkm::Id start, vtkm::Id end) const
   {
-    this->ExecuteFunction(this->Worklet, this->Invocation, this->GlobalIndexOffset, start, end);
+    this->ExecuteFunction(this->Worklet, this->Invocation, start, end);
   }
 
 protected:
   void* Worklet;
   void* Invocation;
 
-  using ExecuteSignature = void (*)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id);
+  using ExecuteSignature = void (*)(void*, void* const, vtkm::Id, vtkm::Id);
   ExecuteSignature ExecuteFunction;
 
   using SetErrorBufferSignature = void (*)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
-
-  const vtkm::Id GlobalIndexOffset;
 };
 
 // TaskTiling3D represents an execution pattern for a worklet
@@ -240,7 +222,6 @@ public:
   TaskTiling3D()
     : Worklet(nullptr)
     , Invocation(nullptr)
-    , GlobalIndexOffset(0)
   {
   }
 
@@ -253,7 +234,6 @@ public:
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
     , SetErrorBufferFunction(nullptr)
-    , GlobalIndexOffset(0)
   {
     //Setup the execute and set error buffer function pointers
     this->ExecuteFunction = &FunctorTiling3DExecute<FunctorType>;
@@ -264,12 +244,11 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  TaskTiling3D(WorkletType& worklet, InvocationType& invocation, vtkm::Id globalIndexOffset = 0)
+  TaskTiling3D(WorkletType& worklet, InvocationType& invocation)
     : Worklet(nullptr)
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
     , SetErrorBufferFunction(nullptr)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     // Setup the execute and set error buffer function pointers
     this->ExecuteFunction = &TaskTiling3DExecute<WorkletType, InvocationType>;
@@ -288,7 +267,6 @@ public:
     , Invocation(task.Invocation)
     , ExecuteFunction(task.ExecuteFunction)
     , SetErrorBufferFunction(task.SetErrorBufferFunction)
-    , GlobalIndexOffset(task.GlobalIndexOffset)
   {
   }
 
@@ -305,28 +283,19 @@ public:
                   vtkm::Id j,
                   vtkm::Id k) const
   {
-    this->ExecuteFunction(
-      this->Worklet, this->Invocation, this->GlobalIndexOffset, maxSize, istart, iend, j, k);
+    this->ExecuteFunction(this->Worklet, this->Invocation, maxSize, istart, iend, j, k);
   }
 
 protected:
   void* Worklet;
   void* Invocation;
 
-  using ExecuteSignature = void (*)(void*,
-                                    void* const,
-                                    vtkm::Id,
-                                    const vtkm::Id3&,
-                                    vtkm::Id,
-                                    vtkm::Id,
-                                    vtkm::Id,
-                                    vtkm::Id);
+  using ExecuteSignature =
+    void (*)(void*, void* const, const vtkm::Id3&, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id);
   ExecuteSignature ExecuteFunction;
 
   using SetErrorBufferSignature = void (*)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
-
-  const vtkm::Id GlobalIndexOffset;
 };
 }
 }

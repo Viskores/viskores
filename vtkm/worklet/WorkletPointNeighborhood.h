@@ -185,16 +185,12 @@ public:
     const ThreadToOutArrayType& threadToOut,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
-                                             Dimension>& inputDomain, //this should be explicitly
-    vtkm::Id globalThreadIndexOffset = 0) const
+                                             Dimension>& inputDomain //this should be explicit
+    ) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex,
-                                                           outToIn.Get(outIndex),
-                                                           visit.Get(outIndex),
-                                                           outIndex,
-                                                           inputDomain,
-                                                           globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 
 
@@ -226,11 +222,10 @@ public:
     const OutToInArrayType& vtkmNotUsed(outToIn),
     const VisitArrayType& vtkmNotUsed(visit),
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
-    const InputDomainType& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0) const
+    const InputDomainType& connectivity) const
   {
     return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
-      threadIndex3D, threadIndex1D, connectivity, globalThreadIndexOffset);
+      threadIndex3D, threadIndex1D, connectivity);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -246,8 +241,7 @@ public:
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
                    const ThreadToOutArrayType& threadToOut,
-                   const InputDomainType& connectivity,
-                   vtkm::Id globalThreadIndexOffset = 0) const
+                   const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
     return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex3D,
@@ -255,8 +249,7 @@ public:
                                                            outToIn.Get(outIndex),
                                                            visit.Get(outIndex),
                                                            outIndex,
-                                                           connectivity,
-                                                           globalThreadIndexOffset);
+                                                           connectivity);
   }
 };
 }

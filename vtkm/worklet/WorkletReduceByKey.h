@@ -177,16 +177,11 @@ public:
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType& inputDomain,
-    vtkm::Id globalThreadIndexOffset = 0) const
+    const InputDomainType& inputDomain) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex,
-                                                     outToIn.Get(outIndex),
-                                                     visit.Get(outIndex),
-                                                     outIndex,
-                                                     inputDomain,
-                                                     globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesReduceByKey(
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 };
 }

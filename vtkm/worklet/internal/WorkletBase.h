@@ -266,12 +266,11 @@ public:
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const vtkm::Id& globalThreadIndexOffset = 0) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 
   /// \brief Creates a \c ThreadIndices object.
@@ -290,16 +289,11 @@ public:
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const vtkm::Id& globalThreadIndexOffset = 0) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
-    return vtkm::exec::arg::ThreadIndicesBasic3D(threadIndex3D,
-                                                 threadIndex1D,
-                                                 outToIn.Get(outIndex),
-                                                 visit.Get(outIndex),
-                                                 outIndex,
-                                                 globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesBasic3D(
+      threadIndex3D, threadIndex1D, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 }
