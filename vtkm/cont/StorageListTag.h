@@ -31,7 +31,9 @@ struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   "Note that the new StorageListBasic cannot be subclassed.") StorageListTagBasic
   : vtkm::internal::ListAsListTag<StorageListBasic>
 {
+  /// @cond NONE
 };
+/// @endcond
 
 struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   1.6,
@@ -39,7 +41,9 @@ struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   "Note that the new StorageListSupported cannot be subclassed.") StorageListTagSupported
   : vtkm::internal::ListAsListTag<StorageListSupported>
 {
+  /// @cond NONE
 };
+/// @endcond
 
 namespace detail
 {
@@ -50,7 +54,9 @@ struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   "Note that the new VTKM_DEFAULT_STORAGE_LIST cannot be subclassed.") StorageListTagDefault
   : vtkm::internal::ListAsListTag<VTKM_DEFAULT_STORAGE_LIST>
 {
+  /// @cond NONE
 };
+/// @endcond
 
 } // namespace detail
 }

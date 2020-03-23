@@ -405,12 +405,16 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::WritePortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+  /// @cond NONE
   typename StorageType::PortalType GetPortalControl();
+  /// @endcond
   VTKM_CONT
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::ReadPortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+  /// @cond NONE
   typename StorageType::PortalConstType GetPortalConstControl() const;
+  /// @endcond
 
   VTKM_CONT ReadPortalType ReadPortal() const;
   VTKM_CONT WritePortalType WritePortal() const;

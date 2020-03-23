@@ -381,7 +381,10 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::WritePortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+
+  /// \cond NOPE
   typename StorageType::PortalType GetPortalControl();
+  /// \endcond
 
   /// Get the array portal of the control array.
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
@@ -394,7 +397,9 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::ReadPortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+  /// \cond NOPE
   typename StorageType::PortalConstType GetPortalConstControl() const;
+  /// \endcond
 
   /// \brief Get an array portal that can be used in the control environment.
   ///
