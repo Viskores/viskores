@@ -124,7 +124,7 @@ void ScalarRenderer::AddField(const vtkm::cont::Field& scalarField)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer(AddField): field must be a scalar");
   }
-  Ranges.push_back(ranges.GetPortalControl().Get(0));
+  Ranges.push_back(ranges.ReadPortal().Get(0));
   Fields.push_back(scalarField);
 }
 
