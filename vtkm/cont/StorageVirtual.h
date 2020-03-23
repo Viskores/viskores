@@ -33,7 +33,6 @@ class VTKM_ALWAYS_EXPORT ArrayPortalRef : public vtkm::ArrayPortalRef<T>
 
 public:
   ArrayPortalRef() = default;
-  ~ArrayPortalRef() = default;
 
   ArrayPortalRef(std::shared_ptr<vtkm::ArrayPortalVirtual<T>> portal, vtkm::Id numValues) noexcept
     : vtkm::ArrayPortalRef<T>(portal.get(), numValues),

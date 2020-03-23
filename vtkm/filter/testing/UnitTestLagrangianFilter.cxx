@@ -59,7 +59,6 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
       }
     }
   }
-  velocityPortal.Detach();
   dsf.AddPointField(dataset, "velocity", velocityField);
   return dataset;
 }

@@ -21,7 +21,7 @@ template <typename T, typename S>
 ArrayHandle<T, S>::InternalStruct::InternalStruct(
   const typename ArrayHandle<T, S>::StorageType& storage)
   : ControlArray(storage)
-  , ControlArrayValid(true)
+  , ControlArrayValid(new bool(true))
   , ExecutionArrayValid(false)
 {
 }
@@ -29,7 +29,7 @@ ArrayHandle<T, S>::InternalStruct::InternalStruct(
 template <typename T, typename S>
 ArrayHandle<T, S>::InternalStruct::InternalStruct(typename ArrayHandle<T, S>::StorageType&& storage)
   : ControlArray(std::move(storage))
-  , ControlArrayValid(true)
+  , ControlArrayValid(new bool(true))
   , ExecutionArrayValid(false)
 {
 }
@@ -160,15 +160,15 @@ template <typename T, typename S>
 typename ArrayHandle<T, S>::ReadPortalType ArrayHandle<T, S>::ReadPortal() const
 {
   LockType lock = this->GetLock();
-  vtkm::cont::Token token;
-  this->WaitToRead(lock, token);
+  {
+    vtkm::cont::Token token;
+    this->WaitToRead(lock, token);
+  }
 
   this->SyncControlArray(lock);
   if (this->Internals->IsControlArrayValid(lock))
   {
-    token.Attach(
-      *this, this->Internals->GetReadCount(lock), lock, &this->Internals->ConditionVariable);
-    return ReadPortalType(std::move(token),
+    return ReadPortalType(this->Internals->GetControlArrayValidPointer(lock),
                           this->Internals->GetControlArray(lock)->GetPortalConst());
   }
   else
@@ -182,8 +182,10 @@ template <typename T, typename S>
 typename ArrayHandle<T, S>::WritePortalType ArrayHandle<T, S>::WritePortal() const
 {
   LockType lock = this->GetLock();
-  vtkm::cont::Token token;
-  this->WaitToWrite(lock, token);
+  {
+    vtkm::cont::Token token;
+    this->WaitToWrite(lock, token);
+  }
 
   this->SyncControlArray(lock);
   if (this->Internals->IsControlArrayValid(lock))
@@ -192,9 +194,8 @@ typename ArrayHandle<T, S>::WritePortalType ArrayHandle<T, S>::WritePortal() con
     // array will become invalid. Play it safe and release the execution
     // resources. (Use the const version to preserve the execution array.)
     this->ReleaseResourcesExecutionInternal(lock);
-    token.Attach(
-      *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
-    return WritePortalType(std::move(token), this->Internals->GetControlArray(lock)->GetPortal());
+    return WritePortalType(this->Internals->GetControlArrayValidPointer(lock),
+                           this->Internals->GetControlArray(lock)->GetPortal());
   }
   else
   {

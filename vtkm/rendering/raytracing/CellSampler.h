@@ -62,12 +62,11 @@ VTKM_EXEC_CONT inline vtkm::Int32 GetNumberOfPoints<vtkm::CellShapeTagPyramid>(
   return 5;
 }
 
-template <typename P, typename S, typename WorkletType, typename CellShapeTagType>
+template <typename P, typename S, typename CellShapeTagType>
 VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
                                   const vtkm::Vec<S, 8>& scalars,
                                   const vtkm::Vec<P, 3>& sampleLocation,
                                   S& lerpedScalar,
-                                  const WorkletType& callingWorklet,
                                   const CellShapeTagType& shapeTag)
 {
 
@@ -79,9 +78,8 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     pointsVec.Append(points[i]);
     scalarVec.Append(scalars[i]);
   }
-  bool success = false; // ignored
-  vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    pointsVec, sampleLocation, shapeTag, success, callingWorklet);
+  vtkm::Vec<P, 3> pcoords;
+  vtkm::exec::WorldCoordinatesToParametricCoordinates(pointsVec, sampleLocation, shapeTag, pcoords);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -89,23 +87,22 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
   {
     validSample = false;
   }
-  lerpedScalar = vtkm::exec::CellInterpolate(scalarVec, pcoords, shapeTag, callingWorklet);
+  vtkm::exec::CellInterpolate(scalarVec, pcoords, shapeTag, lerpedScalar);
   return validSample;
 }
 
-template <typename S, typename P, typename WorkletType, typename CellShapeTagType>
+template <typename S, typename P, typename CellShapeTagType>
 VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>& points,
                                   const vtkm::Vec<S, 8>& scalars,
                                   const vtkm::Vec<P, 3>& sampleLocation,
                                   S& lerpedScalar,
-                                  const WorkletType& callingWorklet,
                                   const CellShapeTagType& vtkmNotUsed(shapeTag))
 {
 
   bool validSample = true;
-  bool success;
-  vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    points, sampleLocation, vtkm::CellShapeTagHexahedron(), success, callingWorklet);
+  vtkm::Vec<P, 3> pcoords;
+  vtkm::exec::WorldCoordinatesToParametricCoordinates(
+    points, sampleLocation, vtkm::CellShapeTagHexahedron(), pcoords);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -113,8 +110,7 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>&
   {
     validSample = false;
   }
-  lerpedScalar =
-    vtkm::exec::CellInterpolate(scalars, pcoords, vtkm::CellShapeTagHexahedron(), callingWorklet);
+  vtkm::exec::CellInterpolate(scalars, pcoords, vtkm::CellShapeTagHexahedron(), lerpedScalar);
   return validSample;
 }
 } // namespace detail
@@ -126,12 +122,11 @@ template <int CellType>
 class CellSampler
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& vtkmNotUsed(points),
                                         const vtkm::Vec<S, 8>& vtkmNotUsed(scalars),
                                         const vtkm::Vec<P, 3>& vtkmNotUsed(sampleLocation),
                                         S& vtkmNotUsed(lerpedScalar),
-                                        const WorkletType& vtkmNotUsed(callingWorklet),
                                         const vtkm::Int32& vtkmNotUsed(cellShape = CellType)) const
   {
     static_assert(CellType != CELL_SHAPE_ZOO && CellType != CELL_SHAPE_STRUCTURED &&
@@ -149,40 +144,35 @@ template <>
 class CellSampler<255>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
                                         const vtkm::Vec<S, 8>& scalars,
                                         const vtkm::Vec<P, 3>& sampleLocation,
                                         S& lerpedScalar,
-                                        const WorkletType& callingWorklet,
                                         const vtkm::Int32& cellShape) const
   {
     bool valid = false;
     if (cellShape == CELL_SHAPE_HEXAHEDRON)
     {
-      valid = detail::Sample(points,
-                             scalars,
-                             sampleLocation,
-                             lerpedScalar,
-                             callingWorklet,
-                             vtkm::CellShapeTagHexahedron());
+      valid = detail::Sample(
+        points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagHexahedron());
     }
 
     if (cellShape == CELL_SHAPE_TETRA)
     {
-      valid = detail::Sample(
-        points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagTetra());
+      valid =
+        detail::Sample(points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagTetra());
     }
 
     if (cellShape == CELL_SHAPE_WEDGE)
     {
-      valid = detail::Sample(
-        points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagWedge());
+      valid =
+        detail::Sample(points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagWedge());
     }
     if (cellShape == CELL_SHAPE_PYRAMID)
     {
-      valid = detail::Sample(
-        points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagPyramid());
+      valid =
+        detail::Sample(points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagPyramid());
     }
     return valid;
   }
@@ -195,21 +185,16 @@ template <>
 class CellSampler<CELL_SHAPE_HEXAHEDRON>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(
     const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     const vtkm::Vec<S, 8>& scalars,
     const vtkm::Vec<P, 3>& sampleLocation,
     S& lerpedScalar,
-    const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_HEXAHEDRON)) const
   {
-    return detail::Sample(points,
-                          scalars,
-                          sampleLocation,
-                          lerpedScalar,
-                          callingWorklet,
-                          vtkm::CellShapeTagHexahedron());
+    return detail::Sample(
+      points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagHexahedron());
   }
 };
 
@@ -221,22 +206,17 @@ template <>
 class CellSampler<CELL_SHAPE_STRUCTURED>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(
     const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     const vtkm::Vec<S, 8>& scalars,
     const vtkm::Vec<P, 3>& sampleLocation,
     S& lerpedScalar,
-    const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_HEXAHEDRON)) const
   {
     vtkm::VecAxisAlignedPointCoordinates<3> rPoints(points[0], points[6] - points[0]);
-    return detail::Sample(rPoints,
-                          scalars,
-                          sampleLocation,
-                          lerpedScalar,
-                          callingWorklet,
-                          vtkm::CellShapeTagHexahedron());
+    return detail::Sample(
+      rPoints, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagHexahedron());
   }
 };
 
@@ -247,17 +227,16 @@ template <>
 class CellSampler<CELL_SHAPE_PYRAMID>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(
     const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     const vtkm::Vec<S, 8>& scalars,
     const vtkm::Vec<P, 3>& sampleLocation,
     S& lerpedScalar,
-    const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_PYRAMID)) const
   {
     return detail::Sample(
-      points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagPyramid());
+      points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagPyramid());
   }
 };
 
@@ -269,17 +248,15 @@ template <>
 class CellSampler<CELL_SHAPE_TETRA>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(
     const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     const vtkm::Vec<S, 8>& scalars,
     const vtkm::Vec<P, 3>& sampleLocation,
     S& lerpedScalar,
-    const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_TETRA)) const
   {
-    return detail::Sample(
-      points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagTetra());
+    return detail::Sample(points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagTetra());
   }
 };
 
@@ -290,17 +267,15 @@ template <>
 class CellSampler<CELL_SHAPE_WEDGE>
 {
 public:
-  template <typename P, typename S, typename WorkletType>
+  template <typename P, typename S>
   VTKM_EXEC_CONT inline bool SampleCell(
     const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     const vtkm::Vec<S, 8>& scalars,
     const vtkm::Vec<P, 3>& sampleLocation,
     S& lerpedScalar,
-    const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_WEDGE)) const
   {
-    return detail::Sample(
-      points, scalars, sampleLocation, lerpedScalar, callingWorklet, vtkm::CellShapeTagWedge());
+    return detail::Sample(points, scalars, sampleLocation, lerpedScalar, vtkm::CellShapeTagWedge());
   }
 };
 }

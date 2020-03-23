@@ -79,8 +79,9 @@ public:
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
-    : Superclass(
-        typename Superclass::ReadPortalType(internal::ConstantFunctor<T>(value), numberOfValues))
+    : Superclass(typename internal::Storage<T, StorageTag>::PortalConstType(
+        internal::ConstantFunctor<T>(value),
+        numberOfValues))
   {
   }
 };

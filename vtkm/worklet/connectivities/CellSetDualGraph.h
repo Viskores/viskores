@@ -30,14 +30,16 @@ struct EdgeCount : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn, FieldOutCell numEdgesInCell);
 
-  using ExecutionSignature = _2(CellShape, PointCount);
+  using ExecutionSignature = void(CellShape, PointCount, _2);
 
   using InputDomain = _1;
 
   template <typename CellShapeTag>
-  VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag cellShape, vtkm::IdComponent pointCount) const
+  VTKM_EXEC void operator()(CellShapeTag cellShape,
+                            vtkm::IdComponent pointCount,
+                            vtkm::IdComponent& numEdges) const
   {
-    return vtkm::exec::CellEdgeNumberOfEdges(pointCount, cellShape, *this);
+    vtkm::exec::CellEdgeNumberOfEdges(pointCount, cellShape, numEdges);
   }
 };
 
@@ -63,8 +65,8 @@ struct EdgeExtract : public vtkm::worklet::WorkletVisitCellsWithPoints
                             EdgeIndexVecType& edgeIndices) const
   {
     cellIndexOut = cellIndex;
-    edgeIndices = vtkm::exec::CellEdgeCanonicalId(
-      pointIndices.GetNumberOfComponents(), visitIndex, cellShape, pointIndices, *this);
+    vtkm::exec::CellEdgeCanonicalId(
+      pointIndices.GetNumberOfComponents(), visitIndex, cellShape, pointIndices, edgeIndices);
   }
 };
 

@@ -69,7 +69,13 @@ public:
                             bool& match) const
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
-    locator->FindCell(pointIn, cellId, parametric, (*this));
+    vtkm::ErrorCode status = locator->FindCell(pointIn, cellId, parametric);
+    if ((status != vtkm::ErrorCode::Success) && (status != vtkm::ErrorCode::CellNotFound))
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+      match = false;
+      return;
+    }
     match = (calculated == cellId);
   }
 

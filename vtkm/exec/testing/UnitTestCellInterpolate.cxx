@@ -20,6 +20,9 @@
 
 #include <vtkm/testing/Testing.h>
 
+#define CHECK_CALL(call)                                                                           \
+  VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
+
 namespace
 {
 
@@ -63,22 +66,13 @@ struct TestInterpolateFunctor
     }
     averageValue = static_cast<ComponentType>(1.0 / numPoints) * averageValue;
 
-    // Stuff to fake running in the execution environment.
-    char messageBuffer[256];
-    messageBuffer[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(messageBuffer, 256);
-    vtkm::exec::FunctorBase workletProxy;
-    workletProxy.SetErrorMessageBuffer(errorMessage);
-
     std::cout << "  Test interpolated value at each cell node." << std::endl;
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
-      vtkm::Vec3f pcoord =
-        vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-      FieldType interpolatedValue =
-        vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec3f pcoord;
+      CHECK_CALL(vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoord));
+      FieldType interpolatedValue;
+      CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
       VTKM_TEST_ASSERT(test_equal(fieldValues[pointIndex], interpolatedValue),
                        "Interpolation at point not point value.");
@@ -87,11 +81,10 @@ struct TestInterpolateFunctor
     if (numPoints > 0)
     {
       std::cout << "  Test interpolated value at cell center." << std::endl;
-      vtkm::Vec3f pcoord = vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
-      FieldType interpolatedValue =
-        vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, workletProxy);
-      VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+      vtkm::Vec3f pcoord;
+      CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
+      FieldType interpolatedValue;
+      CHECK_CALL(vtkm::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
       std::cout << "AVG= " << averageValue << " interp= " << interpolatedValue << std::endl;
       VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),

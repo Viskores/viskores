@@ -100,10 +100,15 @@ private:
   {
     vtkm::Vec3f pCoords;
     vtkm::exec::ParametricCoordinatesPoint(
-      wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
+      wCoords.GetNumberOfComponents(), pointIndexForCell, cellShape, pCoords);
 
     //we need to add this to a return value
-    gradient += vtkm::exec::CellDerivative(field, wCoords, pCoords, cellShape, *this);
+    vtkm::Vec<OutValueType, 3> pointGradient;
+    auto status = vtkm::exec::CellDerivative(field, wCoords, pCoords, cellShape, pointGradient);
+    if (status == vtkm::ErrorCode::Success)
+    {
+      gradient += pointGradient;
+    }
   }
 
   template <typename CellSetInType>

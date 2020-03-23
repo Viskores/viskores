@@ -131,8 +131,32 @@ public:
     }
   }
 
-  VTKM_CONT
-  ~FieldSelection() {}
+  // Normally the default compiler construction of each of these would be fine,
+  // but we don't want any of them compiled for devices (like CUDA), so we have
+  // to explicitly mark them as VTKM_CONT.
+  VTKM_CONT FieldSelection(const FieldSelection& src)
+    : Mode(src.Mode)
+    , Fields(src.Fields)
+  {
+  }
+  VTKM_CONT FieldSelection(FieldSelection&& rhs)
+    : Mode(rhs.Mode)
+    , Fields(std::move(rhs.Fields))
+  {
+  }
+  VTKM_CONT FieldSelection& operator=(const FieldSelection& src)
+  {
+    this->Mode = src.Mode;
+    this->Fields = src.Fields;
+    return *this;
+  }
+  VTKM_CONT FieldSelection& operator=(FieldSelection&& rhs)
+  {
+    this->Mode = rhs.Mode;
+    this->Fields = std::move(rhs.Fields);
+    return *this;
+  }
+  VTKM_CONT ~FieldSelection() {}
 
   /// Returns true if the input field should be mapped to the output
   /// dataset.

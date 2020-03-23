@@ -53,6 +53,7 @@ public:
     //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
@@ -60,15 +61,36 @@ public:
                            const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset = 0)
   {
-    // We currently only support multidimensional indices on one-to-one input-
-    // to-output mappings. (We don't have a use case otherwise.)
-    // That is why we treat teh threadIndex as also the inputIndex and outputIndex
+    // This constructor handles multidimensional indices on one-to-one input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
 
     this->ThreadIndex = threadIndex1D;
     this->InputIndex = threadIndex1D;
     this->OutputIndex = threadIndex1D;
     this->VisitIndex = 0;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
+    //this->CellShape = connectivity.GetCellShape(index);
+    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           vtkm::Id inputIndex,
+                           vtkm::IdComponent visitIndex,
+                           vtkm::Id outputIndex,
+                           const ConnectivityType& connectivity,
+                           vtkm::Id globalThreadIndexOffset = 0)
+  {
+    // This constructor handles multidimensional indices on many-to-many input-to-output
+    auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
+
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     //this->CellShape = connectivity.GetCellShape(index);
@@ -159,7 +181,6 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
 
@@ -192,7 +213,6 @@ public:
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
@@ -210,9 +230,29 @@ public:
     this->VisitIndex = 0;
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
-    //this->CellShape = connectivity.GetCellShape(index);
     this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
+
+  ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
+                           vtkm::Id threadIndex1D,
+                           vtkm::Id inputIndex,
+                           vtkm::IdComponent visitIndex,
+                           vtkm::Id outputIndex,
+                           const ConnectivityType& connectivity,
+                           vtkm::Id globalThreadIndexOffset = 0)
+  {
+
+    const LogicalIndexType logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
+
+    this->ThreadIndex = threadIndex1D;
+    this->InputIndex = inputIndex;
+    this->OutputIndex = outputIndex;
+    this->VisitIndex = visitIndex;
+    this->LogicalIndex = logicalIndex;
+    this->IndicesIncident = connectivity.GetIndices(logicalIndex);
+    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
+  }
+
   /// \brief The logical index into the input domain.
   ///
   /// This is similar to \c GetIndex3D except the Vec size matches the actual
@@ -297,7 +337,6 @@ private:
   vtkm::Id OutputIndex;
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
-  //CellShapeTag CellShape;
   vtkm::Id GlobalThreadIndexOffset;
 };
 

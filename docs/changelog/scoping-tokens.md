@@ -158,15 +158,13 @@ the covers for most users.
 The `GetPortalConstControl` and `GetPortalControl` methods have been
 deprecated. Instead, the methods `ReadPortal` and `WritePortal` should be
 used. The calling signature is the same as their predecessors, but the
-returned portal contains a `Token` as part of its state and prevents and
-changes to the `ArrayHandle` it comes from. The `WritePortal` also prevents
-other reads from the array.
+returned portal contains a reference back to the original `ArrayHandle`.
+The reference keeps track of whether the memory allocation has changed.
 
-The advantage is that the returned portal will always be valid. However, it
-is now the case that a control portal can prevent something else from
-running. This means that control portals should drop scope as soon as
-possible. It is because of this behavior change that new methods were
-created instead of altering the old ones.
+If the `ArrayHandle` is changed while the `ArrayPortal` still exists,
+nothing will happen immediately. However, if the portal is subsequently
+accessed (i.e. `Set` or `Get` is called on it), then a fatal error will be
+reported to the log.
 
 ## Deadlocks
 
@@ -175,46 +173,38 @@ to able to be immediately invalidated), the scopes have the ability to
 cause operations to block. This can cause issues if the `ArrayHandle` is
 attempted to be used by multiple `Token`s at once.
 
-Care should be taken to ensure that a single thread does not attempt to use
-an `ArrayHandle` two ways at the same time.
+The following is a contrived example of causing a deadlock.
 
 ``` cpp
-auto portal = array.WritePortal();
-for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
-{
-  portal.Set(index, /* An interesting value */);
-}
-vtkm::cont::Invoker invoke;
-invoke(MyWorklet, array); // Oops. Deadlock here.
+vtkm::cont::Token token1;
+auto portal1 = array.PrepareForInPlace(Device{}, token1);
+
+vtkm::cont::Token token2;
+auto portal2 = array.PrepareForInput(Device{}, token2);
 ```
 
-In this example, the last line deadlocks because `portal` is still holding
-onto `array` for writing. When the worklet is invoked, it waits for
-everything to stop writing to `array` so that it can be safely be read.
-Instead, `portal` should be properly scoped.
+The last line will deadlock as `PrepareForInput` waits for `token1` to
+detach, which will never happen. To prevent this from happening, if you use
+the same `Token` on the array, it will always allow the action. Thus, the
+following will work fine.
 
 ``` cpp
-{
-  auto portal = array.GetPortalControl();
-  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
-  {
-    portal.Set(index, /* An interesting value */);
-  }
-}
-vtkm::cont::Invoker invoke;
-invoke(MyWorklet, array); // Runs fine because portal left scope
+vtkm::cont::Token token;
+
+auto portal1 = array.PrepareForInPlace(Device{}, token);
+auto portal2 = array.PrepareForInput(Device{}, token);
 ```
 
-Alternately, you can call `Detach` on the portal, which will invalidate the
-portal and unlock the `ArrayHandle`.
+This prevents deadlock during the invocation of a worklet (so long as no
+intermediate object tries to create its own `Token`, which would be bad
+practice).
 
-``` cpp
-auto portal = array.WritePortal();
-for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
-{
-  portal.Set(index, /* An interesting value */);
-}
-portal.Detach();
-vtkm::cont::Invoker invoke;
-invoke(MyWorklet, array); // Runs fine because portal detached
-```
+Deadlocks are more likely when actually running multiple threads in the
+control environment, but still pretty unlikely. One way it can occur is if
+you have one (or more) worklet that has two output fields. You then try to
+run the worklet(s) simultaneously on multiple threads. It could be that one
+thread locks the first output array and the other thread locks the second
+output array.
+
+However, having multiple threads trying to write to the same output arrays
+at the same time without its own coordination is probably a bad idea in itself.
