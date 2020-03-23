@@ -22,7 +22,7 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::UInt32, 2> mulhilo(vtkm::UInt32 a, vtkm::UInt32 b
 {
   vtkm::UInt64 r = static_cast<vtkm::UInt64>(a) * b;
   auto lo = static_cast<vtkm::UInt32>(r);
-  vtkm::UInt32 hi = r >> 32;
+  vtkm::UInt32 hi = static_cast<vtkm::UInt32>(r >> 32);
   return { lo, hi };
 }
 

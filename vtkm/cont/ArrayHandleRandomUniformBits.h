@@ -42,9 +42,9 @@ struct PhiloxFunctor
     // convert counters to vtkm::UInt64. All we need is a unique bit string as input
     // and output of the functor.
     auto idx = static_cast<vtkm::UInt64>(index);
-    counters_type counters = *reinterpret_cast<counters_type*>(&idx);
+    counters_type counters{ static_cast<vtkm::UInt32>(idx), static_cast<vtkm::UInt32>(idx >> 32) };
     counters_type result = philox_functor{}(counters, Seed);
-    return *reinterpret_cast<vtkm::UInt64*>(&result);
+    return static_cast<vtkm::UInt64>(result[0]) | static_cast<vtkm::UInt64>(result[1]) << 32;
   }
 
 private:
