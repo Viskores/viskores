@@ -55,6 +55,7 @@
 #define vtk_m_worklet_contourtree_augmented_process_contourtree_h
 
 // global includes
+#include "vtkm/cont/ArrayHandle.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -69,6 +70,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
@@ -1229,8 +1231,10 @@ public:
                   maxHowManyUsed.WritePortal());
 
     // Wrapper for std min & max
-    auto minOperator = [](vtkm::Id a, vtkm::Id b) { return std::min(a, b); };
-    auto maxOperator = [](vtkm::Id a, vtkm::Id b) { return std::max(a, b); };
+    auto minOperator = vtkm::Minimum();
+    auto maxOperator = vtkm::Maximum();
+
+    // Parallelisable with the HS
 
     timer.Stop();
     std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
@@ -1240,26 +1244,26 @@ public:
     timer.Start();
 
     // Parallelisable with the HS
-    findMinMaxNewSimple(contourTree.Supernodes.ReadPortal(),
-                        contourTree.Hypernodes.ReadPortal(),
-                        minHyperarcs.ReadPortal(),
-                        contourTree.Hyperparents.ReadPortal(),
-                        contourTree.WhenTransferred.ReadPortal(),
-                        minHowManyUsed.ReadPortal(),
-                        nIterations,
-                        minOperator,
-                        minValues.WritePortal());
+    findMinMaxNewSimple<decltype(minOperator)>(contourTree.Supernodes.ReadPortal(),
+                                               contourTree.Hypernodes.ReadPortal(),
+                                               minHyperarcs.ReadPortal(),
+                                               contourTree.Hyperparents.ReadPortal(),
+                                               contourTree.WhenTransferred.ReadPortal(),
+                                               minHowManyUsed.ReadPortal(),
+                                               nIterations,
+                                               minOperator,
+                                               minValues);
 
     // Parallelisable with the HS
-    findMinMaxNewSimple(contourTree.Supernodes.ReadPortal(),
-                        contourTree.Hypernodes.ReadPortal(),
-                        maxHyperarcs.ReadPortal(),
-                        contourTree.Hyperparents.ReadPortal(),
-                        contourTree.WhenTransferred.ReadPortal(),
-                        maxHowManyUsed.ReadPortal(),
-                        nIterations,
-                        maxOperator,
-                        maxValues.WritePortal());
+    findMinMaxNewSimple<decltype(maxOperator)>(contourTree.Supernodes.ReadPortal(),
+                                               contourTree.Hypernodes.ReadPortal(),
+                                               maxHyperarcs.ReadPortal(),
+                                               contourTree.Hyperparents.ReadPortal(),
+                                               contourTree.WhenTransferred.ReadPortal(),
+                                               maxHowManyUsed.ReadPortal(),
+                                               nIterations,
+                                               maxOperator,
+                                               maxValues);
 
     timer.Stop();
     std::cout << "---------------- Finding min/max took " << timer.GetElapsedTime() << " seconds."
@@ -1745,6 +1749,7 @@ public:
     }
   }
 
+  template <class BinaryFunctor>
   void static findMinMaxNewSimple(
     const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType supernodesPortal,
     const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType hypernodesPortal,
@@ -1753,8 +1758,8 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType whenTransferredPortal,
     const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType howManyUsedPortal,
     const vtkm::Id nIterations,
-    const std::function<vtkm::Id(vtkm::Id, vtkm::Id)> operation,
-    vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType minMaxIndex)
+    const BinaryFunctor operation,
+    vtkm::cont::ArrayHandle<vtkm::Id> minMaxIndex)
   {
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
@@ -1819,6 +1824,9 @@ public:
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
 
+      //const auto subarray = vtkm::cont::make_ArrayHandleView(minMaxIndex, firh, 4);
+
+
       //
       // For every hyperarc in the current iteration. Parallel.
       //
@@ -1834,19 +1842,23 @@ public:
         vtkm::Id lastSupernode =
           MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
 
+        auto subarray = vtkm::cont::make_ArrayHandleView(
+          minMaxIndex, firstSupernode, lastSupernode - firstSupernode);
+        vtkm::cont::Algorithm::ScanInclusive(subarray, subarray, operation);
+
         //
         // Prefix scan along the hyperarc chain. Parallel prefix scan.
         //
-        for (Id j = firstSupernode + 1; j < lastSupernode; j++)
-        {
-          Id vertex = j - 1;
-          Id parent = j;
+        //for (Id j = firstSupernode + 1; j < lastSupernode; j++)
+        //{
+        //Id vertex = j - 1;
+        //Id parent = j;
 
-          Id vertexValue = minMaxIndex.Get(vertex);
-          Id parentValue = minMaxIndex.Get(parent);
+        //Id vertexValue = minMaxIndex.Get(vertex);
+        //Id parentValue = minMaxIndex.Get(parent);
 
-          minMaxIndex.Set(parent, operation(vertexValue, parentValue));
-        }
+        //minMaxIndex.Set(parent, operation(vertexValue, parentValue));
+        //}
       }
 
       //
@@ -1873,57 +1885,12 @@ public:
         Id vertex = lastSupernode - 1;
         Id parent = MaskedIndex(hyperarcsPortal.Get(i));
 
-        Id vertexValue = minMaxIndex.Get(vertex);
-        Id parentValue = minMaxIndex.Get(parent);
+        Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
+        Id parentValue = minMaxIndex.ReadPortal().Get(parent);
 
-        minMaxIndex.Set(parent, operation(vertexValue, parentValue));
+        minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
       }
     }
-
-    //
-    // For every hyperarc. Working Version
-    //
-    //for (Id i = 0; i < hypernodesPortal.GetNumberOfValues() - 1; i++)
-    //{
-    //vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(i));
-    ////vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1));
-    //vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
-
-    ////
-    //// Prefix scan along the hyperarc chain
-    ////
-    //for (Id j = firstSupernode + 1; j < lastSupernode; j++)
-    //{
-    //Id vertex = j - 1;
-    //Id parent = j;
-
-    //Id vertexValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(vertex)));
-    //Id parentValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(parent)));
-
-    ////printf("Comparing %lld with value %lld with %lld with value %lld.\n", vertex, parent, vertexValue, parentValue);
-
-    //if ((true == isMin && vertexValue < parentValue) || (false == isMin && vertexValue > parentValue))
-    //{
-    //auto value = minMaxIndex.Get(vertex);
-    //minMaxIndex.Set(parent, value);
-    //}
-    //}
-
-    ////
-    //// Transfer the accumulated value to the tarted supernode
-    ////
-    //Id vertex = lastSupernode - 1;
-    //Id parent = MaskedIndex(hyperarcsPortal.Get(i));
-
-    //Id vertexValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(vertex)));
-    //Id parentValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(parent)));
-
-    //if ((true == isMin && vertexValue < parentValue) || (false == isMin && vertexValue > parentValue))
-    //{
-    //auto value = minMaxIndex.Get(vertex);
-    //minMaxIndex.Set(parent, minMaxIndex.Get(vertex));
-    //}
-    //}
   }
 
 
