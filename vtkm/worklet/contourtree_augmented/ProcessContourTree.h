@@ -82,6 +82,7 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourFirstNext.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
 
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 
@@ -614,18 +615,14 @@ public:
 
     std::cout << "We have this many iterations " << numLogSteps << std::endl;
 
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::PointerDoubling pointerDoubling(
+      nSupernodes);
+    vtkm::cont::Invoker Invoke;
 
     // use pointer-doubling to build the branches
     for (vtkm::Id iteration = 0; iteration < numLogSteps; iteration++)
     { // per iteration
-      // loop through the vertices, updating the chaining array
-      for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-        if (!IsTerminalElement(whichBranch.ReadPortal().Get(supernode)))
-        {
-          const auto currentValue =
-            MaskedIndex(whichBranch.ReadPortal().Get(whichBranch.ReadPortal().Get(supernode)));
-          whichBranch.WritePortal().Set(supernode, currentValue);
-        }
+      Invoke(pointerDoubling, whichBranch);
     } // per iteration
 
 

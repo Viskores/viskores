@@ -19,6 +19,7 @@ set(headers
   ComputeMinMaxValues.h
   SetTriangleSuperarcId.h
   EulerTour.h
+  PointerDoubling.h
  )
 
 #-----------------------------------------------------------------------------
