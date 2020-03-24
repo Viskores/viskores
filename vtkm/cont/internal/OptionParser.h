@@ -40,7 +40,9 @@ namespace internal
 #endif
 
 // Include from third party.
+// @cond NONE
 #include <vtkmoptionparser/optionparser.h>
+// @endcond
 
 // Now restore the header guards as before so that other includes of (possibly different versions
 // of) optionparser.h work as expected.

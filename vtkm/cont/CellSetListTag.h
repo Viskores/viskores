@@ -42,6 +42,7 @@ VTK_M_OLD_CELL_LIST_DEFINITION(Common);
 VTK_M_OLD_CELL_LIST_DEFINITION(Structured);
 VTK_M_OLD_CELL_LIST_DEFINITION(Unstructured);
 
+/// @cond NONE
 template <typename ShapesStorageTag = VTKM_DEFAULT_SHAPES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
@@ -53,10 +54,12 @@ struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
       CellSetListExplicit<ShapesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>>
 {
 };
+/// @endcond
 
 namespace detail
 {
 
+/// @cond NONE
 struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   1.6,
   "VTKM_DEFAULT_CELL_SET_LIST_TAG replaced by VTKM_DEFAULT_CELL_SET_LIST. "
@@ -64,6 +67,7 @@ struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(
   : vtkm::internal::ListAsListTag<VTKM_DEFAULT_CELL_SET_LIST>
 {
 };
+/// @endcond
 
 } // namespace detail
 }

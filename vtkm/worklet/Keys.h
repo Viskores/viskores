@@ -171,6 +171,7 @@ public:
   bool operator!=(const vtkm::worklet::Keys<KeyType>& other) const { return !(*this == other); }
 
 private:
+  /// @cond NONE
   KeyArrayHandleType UniqueKeys;
   vtkm::cont::ArrayHandle<vtkm::Id> SortedValuesMap;
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
@@ -182,6 +183,7 @@ private:
   template <typename KeyArrayType>
   VTKM_CONT void BuildArraysInternalStable(const KeyArrayType& keys,
                                            vtkm::cont::DeviceAdapterId device);
+  /// @endcond
 };
 
 template <typename T>
