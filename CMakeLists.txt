@@ -217,6 +217,7 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
+add_subdirectory(vtkmstd)
 add_subdirectory(vtkm)
 
 #-----------------------------------------------------------------------------

@@ -164,7 +164,7 @@ namespace internal
 {
 
 template <typename VtkmCellShapeTag>
-VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type make_VtkcCellShapeTag(
+VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type make_LclCellShapeTag(
   const VtkmCellShapeTag&,
   vtkm::IdComponent numPoints = 0)
 {
@@ -174,15 +174,15 @@ VTKM_EXEC_CONT inline typename CellShapeTagVtkmToVtkc<VtkmCellShapeTag>::Type ma
 }
 
 VTKM_EXEC_CONT
-inline lcl::Polygon make_VtkcCellShapeTag(const vtkm::CellShapeTagPolygon&,
-                                          vtkm::IdComponent numPoints = 0)
+inline lcl::Polygon make_LclCellShapeTag(const vtkm::CellShapeTagPolygon&,
+                                         vtkm::IdComponent numPoints = 0)
 {
   return lcl::Polygon(numPoints);
 }
 
 VTKM_EXEC_CONT
-inline lcl::Cell make_VtkcCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
-                                       vtkm::IdComponent numPoints = 0)
+inline lcl::Cell make_LclCellShapeTag(const vtkm::CellShapeTagGeneric& tag,
+                                      vtkm::IdComponent numPoints = 0)
 {
   return lcl::Cell(static_cast<std::int8_t>(tag.Id), numPoints);
 }

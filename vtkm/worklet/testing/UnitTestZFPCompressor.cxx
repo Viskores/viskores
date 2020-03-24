@@ -66,7 +66,6 @@ void Test1D(int rate)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
     }
-    hPortal.Detach();
 
     auto compressed = compressor.Compress(handle, rate, dims);
     //writeArray(compressed, "output.zfp");
@@ -104,7 +103,6 @@ void Test2D(int rate)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
     }
-    hPortal.Detach();
 
     auto compressed = compressor.Compress(handle, rate, dims);
     vtkm::cont::ArrayHandle<Scalar> decoded;
@@ -145,7 +143,6 @@ void Test3D(int rate)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
     }
-    hPortal.Detach();
 
     auto compressed = compressor.Compress(handle, rate, dims);
 

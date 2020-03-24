@@ -528,7 +528,7 @@ public:
         query_distance += bumpDistance;
         vtkm::Vec<FloatType, 3> location = origin + rdir * (query_distance);
         vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-        locator->FindCell(location, cellId, pcoords, *this);
+        locator->FindCell(location, cellId, pcoords);
       }
 
       currentCell = cellId;
@@ -586,7 +586,7 @@ public:
         }
       }
 
-      if (minDistance < maxDistance)
+      if (minDistance < maxDistance && minDistance > exitDistance)
       {
         enterDistance = minDistance;
         exitDistance = maxDistance;
@@ -1091,8 +1091,7 @@ public:
     {
       vtkm::Vec<FloatType, 3> sampleLoc = origin + currentDistance * dir;
       vtkm::Float32 lerpedScalar;
-      bool validSample =
-        Sampler.SampleCell(points, scalars, sampleLoc, lerpedScalar, *this, cellShape);
+      bool validSample = Sampler.SampleCell(points, scalars, sampleLoc, lerpedScalar, cellShape);
       if (!validSample)
       {
         //

@@ -53,6 +53,8 @@ ArrayHandleImpl::InternalStruct::~InternalStruct()
     this->ExecutionInterface->Free(execArray);
   }
 
+  this->SetControlArrayValid(lock, false);
+
   delete this->ControlArray;
   delete this->ExecutionInterface;
 }
@@ -98,6 +100,9 @@ void ArrayHandleImpl::Allocate(LockType& lock, vtkm::Id numberOfValues, vtkm::UI
   this->WaitToWrite(lock, vtkm::cont::Token{});
   this->ReleaseResourcesExecutionInternal(lock);
   this->Internals->GetControlArray(lock)->AllocateValues(numberOfValues, sizeOfT);
+  // Set to false and then to true to ensure anything pointing to an array before the allocate
+  // is invalidated.
+  this->Internals->SetControlArrayValid(lock, false);
   this->Internals->SetControlArrayValid(lock, true);
 }
 

@@ -56,6 +56,7 @@ set(headers
   ConfigureFor32.h
   ConfigureFor64.h
   ConnectivityStructuredInternals.h
+  DecayHelpers.h
   ExportMacros.h
   FunctionInterface.h
   FunctionInterfaceDetailPost.h

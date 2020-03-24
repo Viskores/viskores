@@ -69,7 +69,7 @@ struct Invoker
             typename std::enable_if<detail::scatter_or_mask<T>::value, int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& scatterOrMask, Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet, scatterOrMask);
@@ -94,7 +94,7 @@ struct Invoker
                          U&& scatterOrMaskB,
                          Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet, scatterOrMaskA, scatterOrMaskB);
@@ -112,7 +112,7 @@ struct Invoker
             typename std::enable_if<!detail::scatter_or_mask<T>::value, int>::type* = nullptr>
   inline void operator()(Worklet&& worklet, T&& t, Args&&... args) const
   {
-    using WorkletType = worklet::internal::remove_cvref<Worklet>;
+    using WorkletType = vtkm::internal::remove_cvref<Worklet>;
     using DispatcherType = typename WorkletType::template Dispatcher<WorkletType>;
 
     DispatcherType dispatcher(worklet);
