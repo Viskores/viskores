@@ -26,12 +26,6 @@ class TestWorkletMapTopo : public vtkm::worklet::WorkletVisitPointsWithCells
 public:
   using ControlSignature = void(CellSetIn topology, FieldInVisit pointCoords);
   using ExecutionSignature = void(_2, WorkIndex, InputIndex, OutputIndex, VisitIndex);
-
-  virtual VTKM_EXEC void operator()(const vtkm::Vec<int, 3>& vtkmNotUsed(coords),
-                                    const vtkm::Id& workIndex,
-                                    const vtkm::Id& inputIndex,
-                                    const vtkm::Id& outputIndex,
-                                    const vtkm::Id& visitIndex) const = 0;
 };
 
 class TestWorkletMapTopoIdentity : public TestWorkletMapTopo
@@ -43,7 +37,7 @@ public:
                             const vtkm::Id& workIndex,
                             const vtkm::Id& inputIndex,
                             const vtkm::Id& outputIndex,
-                            const vtkm::Id& visitIndex) const override
+                            const vtkm::Id& visitIndex) const
   {
     if (workIndex != inputIndex)
     {
@@ -69,7 +63,7 @@ public:
                             const vtkm::Id& workIndex,
                             const vtkm::Id& inputIndex,
                             const vtkm::Id& outputIndex,
-                            const vtkm::Id& visitIndex) const override
+                            const vtkm::Id& visitIndex) const
   {
     if ((workIndex / 2) != inputIndex)
     {
@@ -95,7 +89,7 @@ public:
                             const vtkm::Id& workIndex,
                             const vtkm::Id& inputIndex,
                             const vtkm::Id& outputIndex,
-                            const vtkm::Id& visitIndex) const override
+                            const vtkm::Id& visitIndex) const
   {
     if (workIndex != inputIndex)
     {
@@ -121,7 +115,7 @@ public:
                             const vtkm::Id& vtkmNotUsed(workIndex),
                             const vtkm::Id& vtkmNotUsed(inputIndex),
                             const vtkm::Id& vtkmNotUsed(outputIndex),
-                            const vtkm::Id& vtkmNotUsed(visitIndex)) const override
+                            const vtkm::Id& vtkmNotUsed(visitIndex)) const
   {
     // This method should never be called
     this->RaiseError("An element was selected, this test selects none.");
