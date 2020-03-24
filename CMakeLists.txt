@@ -170,7 +170,7 @@ if (NOT data STREQUAL "\n")
     " to obtain the testing data.")
   set(VTKm_ENABLE_TESTING off)
   if (CTEST_USE_LAUNCHERS)
-    set(CTEST_USE_LAUNCHERS OFF)
+    set(CTEST_USE_LAUNCHERS off)
   endif()
 endif()
 
