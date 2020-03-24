@@ -428,9 +428,12 @@ public:
     }
     else
     {
+      auto cellSetUnstructured =
+        cellset.ResetCellSetList(VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED{});
+
       vtkm::cont::ArrayHandle<vtkm::Id> segmentsPerCell;
       vtkm::worklet::DispatcherMapTopology<CountSegments> countInvoker;
-      countInvoker.Invoke(cellset, segmentsPerCell);
+      countInvoker.Invoke(cellSetUnstructured, segmentsPerCell);
 
       vtkm::Id total = 0;
       total = vtkm::cont::Algorithm::Reduce(segmentsPerCell, vtkm::Id(0));
@@ -440,7 +443,7 @@ public:
       outputIndices.Allocate(total);
 
       vtkm::worklet::DispatcherMapTopology<Cylinderize> cylInvoker;
-      cylInvoker.Invoke(cellset, cellOffsets, outputIndices);
+      cylInvoker.Invoke(cellSetUnstructured, cellOffsets, outputIndices);
 
       output = total;
     }

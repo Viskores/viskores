@@ -224,9 +224,11 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
   //
   if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
   {
+    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountPoints>(detail::CountPoints())
-      .Invoke(cells, points);
+      .Invoke(cellsExplicit, points);
 
     vtkm::Id totalPoints = 0;
     totalPoints = vtkm::cont::Algorithm::Reduce(points, vtkm::Id(0));
@@ -236,7 +238,7 @@ void SphereExtractor::SetPointIdsFromCells(const vtkm::cont::DynamicCellSet& cel
     PointIds.Allocate(totalPoints);
 
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
-      .Invoke(cells, cellOffsets, this->PointIds);
+      .Invoke(cellsExplicit, cellOffsets, this->PointIds);
   }
   else if (cells.IsSameType(SingleType()))
   {

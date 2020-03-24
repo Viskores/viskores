@@ -46,6 +46,13 @@ inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Vec<vtkm::Id, 1> index)
 {
   return vtkm::Id3(index[0], 1, 1);
 }
+
+/// Given a \c Vec of (semi) arbitrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
+inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Id index)
+{
+  return vtkm::Id3(index, 1, 1);
+}
 }
 
 /// \brief Container for thread information in a WorkletPointNeighborhood.

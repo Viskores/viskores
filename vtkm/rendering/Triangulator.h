@@ -682,9 +682,11 @@ public:
     }
     else
     {
+      auto cellSetUnstructured =
+        cellset.ResetCellSetList(VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED{});
       vtkm::cont::ArrayHandle<vtkm::Id> trianglesPerCell;
       vtkm::worklet::DispatcherMapTopology<CountTriangles>(CountTriangles())
-        .Invoke(cellset, trianglesPerCell);
+        .Invoke(cellSetUnstructured, trianglesPerCell);
 
       vtkm::Id totalTriangles = 0;
       totalTriangles = vtkm::cont::Algorithm::Reduce(trianglesPerCell, vtkm::Id(0));
@@ -694,7 +696,7 @@ public:
       outputIndices.Allocate(totalTriangles);
 
       vtkm::worklet::DispatcherMapTopology<Trianglulate>(Trianglulate())
-        .Invoke(cellset, cellOffsets, outputIndices);
+        .Invoke(cellSetUnstructured, cellOffsets, outputIndices);
 
       outputTriangles = totalTriangles;
     }

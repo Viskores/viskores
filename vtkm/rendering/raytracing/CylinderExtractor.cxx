@@ -255,9 +255,11 @@ void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet
   //
   if (cells.IsSameType(vtkm::cont::CellSetExplicit<>()))
   {
+    auto cellsExplicit = cells.Cast<vtkm::cont::CellSetExplicit<>>();
+
     vtkm::cont::ArrayHandle<vtkm::Id> points;
     vtkm::worklet::DispatcherMapTopology<detail::CountSegments>(detail::CountSegments())
-      .Invoke(cells, points);
+      .Invoke(cellsExplicit, points);
 
     vtkm::Id totalPoints = 0;
     totalPoints = vtkm::cont::Algorithm::Reduce(points, vtkm::Id(0));
@@ -267,7 +269,7 @@ void CylinderExtractor::SetCylinderIdsFromCells(const vtkm::cont::DynamicCellSet
     CylIds.Allocate(totalPoints);
 
     vtkm::worklet::DispatcherMapTopology<detail::Pointify>(detail::Pointify())
-      .Invoke(cells, cellOffsets, this->CylIds);
+      .Invoke(cellsExplicit, cellOffsets, this->CylIds);
   }
 }
 

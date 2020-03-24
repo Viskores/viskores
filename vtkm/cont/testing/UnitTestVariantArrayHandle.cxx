@@ -110,7 +110,7 @@ struct CheckFunctor
 
   template <typename T>
   void operator()(
-    const vtkm::cont::ArrayHandle<T, typename ArrayHandleWithUnusualStorage<T>::StorageTag>& array,
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>>& array,
     bool& vtkmNotUsed(calledBasic),
     bool& calledUnusual,
     bool& vtkmNotUsed(calledVirtual)) const
@@ -137,6 +137,12 @@ struct CheckFunctor
 
     auto portal = array.ReadPortal();
     CheckPortal(portal);
+  }
+
+  template <typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandle<T, S>&, bool&, bool&, bool&) const
+  {
+    VTKM_TEST_FAIL("Array resolved to unexpected type.");
   }
 };
 
