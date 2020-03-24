@@ -38,9 +38,6 @@ struct PhiloxFunctor
     using philox_functor = vtkm::random::PhiloxFunctor2x32x10;
     using counters_type = typename philox_functor::counters_type;
 
-    // We deliberately use type punning to convert vtkm::Id into counters and then to
-    // convert counters to vtkm::UInt64. All we need is a unique bit string as input
-    // and output of the functor.
     auto idx = static_cast<vtkm::UInt64>(index);
     counters_type counters{ static_cast<vtkm::UInt32>(idx), static_cast<vtkm::UInt32>(idx >> 32) };
     counters_type result = philox_functor{}(counters, Seed);
