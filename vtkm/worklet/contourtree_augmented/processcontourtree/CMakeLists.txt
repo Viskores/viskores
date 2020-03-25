@@ -20,6 +20,7 @@ set(headers
   SetTriangleSuperarcId.h
   EulerTour.h
   PointerDoubling.h
+  SweepHyperarcs.h
  )
 
 #-----------------------------------------------------------------------------
