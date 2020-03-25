@@ -18,7 +18,7 @@
 #include <vtkm/worklet/MaskSelect.h>
 #include <vtkm/worklet/ScatterUniform.h>
 
-namespace maptopology3d
+namespace
 {
 
 class TestWorkletMapTopo : public vtkm::worklet::WorkletVisitPointsWithCells
@@ -177,35 +177,36 @@ void TestWorkletMapField3d(vtkm::cont::DeviceAdapterId id)
   using HandleTypesToTest3D =
     vtkm::List<vtkm::Id, vtkm::Vec2i_32, vtkm::FloatDefault, vtkm::Vec3f_64>;
 
+  using HandleTypesToTest1D =
+    vtkm::List<vtkm::Int32, vtkm::Int64, vtkm::UInt32, vtkm::UInt64, vtkm::Int8, vtkm::UInt8, char>;
+
   std::cout << "Testing WorkletMapTopology with ScatterIdentity on device adapter: " << id.GetName()
             << std::endl;
 
-  vtkm::testing::Testing::TryTypes(maptopology3d::DoTestWorklet<TestWorkletMapTopoIdentity>(),
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoIdentity>(),
                                    HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with ScatterUniform on device adapter: " << id.GetName()
             << std::endl;
 
-  vtkm::testing::Testing::TryTypes(maptopology3d::DoTestWorklet<TestWorkletMapTopoUniform>(),
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoUniform>(),
                                    HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with MaskNone on device adapter: " << id.GetName()
             << std::endl;
 
-  vtkm::testing::Testing::TryTypes(maptopology3d::DoTestWorklet<TestWorkletMapTopoNone>(),
-                                   HandleTypesToTest3D());
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoNone>(), HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with MaskSelect on device adapter: " << id.GetName()
             << std::endl;
 
-  vtkm::testing::Testing::TryTypes(maptopology3d::DoTestWorklet<TestWorkletMapTopoSelect>(),
-                                   HandleTypesToTest3D());
+  vtkm::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoSelect>(),
+                                   HandleTypesToTest1D());
 }
 
-} // maptopology3d namespace
+} //  namespace
 
 int UnitTestScatterAndMaskWithTopology(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::RunOnDevice(
-    maptopology3d::TestWorkletMapField3d, argc, argv);
+  return vtkm::cont::testing::Testing::RunOnDevice(TestWorkletMapField3d, argc, argv);
 }
