@@ -94,9 +94,8 @@ public:
                                      vtkm::Id inputIndex,
                                      vtkm::IdComponent visitIndex,
                                      vtkm::Id outputIndex,
-                                     const ConnectivityType& connectivity,
-                                     vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, inputIndex, visitIndex, outputIndex, globalThreadIndexOffset)
+                                     const ConnectivityType& connectivity)
+    : Superclass(threadIndex, inputIndex, visitIndex, outputIndex)
     // The connectivity is stored in the invocation parameter at the given
     // input domain index. If this class is being used correctly, the type
     // of the domain will match the connectivity type used here. If there is
@@ -161,8 +160,7 @@ public:
                                      vtkm::Id inIndex,
                                      vtkm::IdComponent visitIndex,
                                      vtkm::Id outIndex,
-                                     const ConnectivityType& connectivity,
-                                     vtkm::Id globalThreadIndexOffset = 0)
+                                     const ConnectivityType& connectivity)
   {
     this->ThreadIndex = threadIndex;
     this->InputIndex = inIndex;
@@ -171,13 +169,11 @@ public:
     this->LogicalIndex = connectivity.FlatToLogicalToIndex(this->InputIndex);
     this->IndicesIncident = connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = connectivity.GetCellShape(this->InputIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                                      vtkm::Id threadIndex1D,
-                                     const ConnectivityType& connectivity,
-                                     const vtkm::Id globalThreadIndexOffset = 0)
+                                     const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on one-to-one input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -188,7 +184,6 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(threadIndex1D);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
@@ -196,8 +191,7 @@ public:
                                      vtkm::Id inIndex,
                                      vtkm::IdComponent visitIndex,
                                      vtkm::Id outIndex,
-                                     const ConnectivityType& connectivity,
-                                     const vtkm::Id globalThreadIndexOffset = 0)
+                                     const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on many-to-many input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -208,7 +202,6 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
     this->CellShape = connectivity.GetCellShape(threadIndex1D);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   /// \brief The index of the thread or work invocation.
@@ -262,9 +255,6 @@ public:
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
-
   /// \brief The indices of the incident elements.
   ///
   /// A topology map has "visited" and "incident" elements (e.g. points, cells,
@@ -305,7 +295,6 @@ private:
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
   CellShapeTag CellShape;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 
 // Specialization for permuted structured connectivity types.
@@ -333,8 +322,7 @@ public:
                                      vtkm::Id inputIndex,
                                      vtkm::IdComponent visitIndex,
                                      vtkm::Id outputIndex,
-                                     const PermutedConnectivityType& permutation,
-                                     vtkm::Id globalThreadIndexOffset = 0)
+                                     const PermutedConnectivityType& permutation)
   {
     this->ThreadIndex = threadIndex;
     this->InputIndex = inputIndex;
@@ -345,7 +333,6 @@ public:
     this->LogicalIndex = permutation.Connectivity.FlatToLogicalToIndex(permutedIndex);
     this->IndicesIncident = permutation.Connectivity.GetIndices(this->LogicalIndex);
     this->CellShape = permutation.Connectivity.GetCellShape(permutedIndex);
-    this->GlobalThreadIndexOffset = globalThreadIndexOffset;
   }
 
   /// \brief The index of the thread or work invocation.
@@ -399,9 +386,6 @@ public:
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
-
   /// \brief The indices of the incident elements.
   ///
   /// A topology map has "visited" and "incident" elements (e.g. points, cells,
@@ -442,7 +426,6 @@ private:
   LogicalIndexType LogicalIndex;
   IndicesIncidentType IndicesIncident;
   CellShapeTag CellShape;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 }
 }

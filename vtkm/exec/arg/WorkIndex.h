@@ -55,7 +55,7 @@ struct Fetch<FetchTag, vtkm::exec::arg::AspectTagWorkIndex, ThreadIndicesType, E
   VTKM_EXEC
   vtkm::Id Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
-    return indices.GetGlobalIndex();
+    return indices.GetThreadIndex();
   }
 
   VTKM_EXEC

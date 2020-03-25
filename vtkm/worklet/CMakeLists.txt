@@ -23,7 +23,6 @@ set(headers
   DispatcherMapTopology.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
-  DispatcherStreamingMapField.h
   DotProduct.h
   ExternalFaces.h
   ExtractGeometry.h

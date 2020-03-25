@@ -39,13 +39,11 @@ public:
   ThreadIndicesBasic(vtkm::Id threadIndex,
                      vtkm::Id inIndex,
                      vtkm::IdComponent visitIndex,
-                     vtkm::Id outIndex,
-                     vtkm::Id globalThreadIndexOffset = 0)
+                     vtkm::Id outIndex)
     : ThreadIndex(threadIndex)
     , InputIndex(inIndex)
     , OutputIndex(outIndex)
     , VisitIndex(visitIndex)
-    , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
 
@@ -95,18 +93,11 @@ public:
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  /// \brief The global index (for streaming).
-  ///
-  /// Global index (for streaming)
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->ThreadIndex); }
-
 private:
   vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 }
 }

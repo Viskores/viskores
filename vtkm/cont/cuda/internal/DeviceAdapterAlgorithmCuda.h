@@ -1862,25 +1862,19 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType> MakeTask(
-    WorkletType& worklet,
-    InvocationType& invocation,
-    vtkm::Id,
-    vtkm::Id globalIndexOffset = 0)
+  static vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>
+  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id)
   {
     using Task = vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>;
-    return Task(worklet, invocation, globalIndexOffset);
+    return Task(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType> MakeTask(
-    WorkletType& worklet,
-    InvocationType& invocation,
-    vtkm::Id3,
-    vtkm::Id globalIndexOffset = 0)
+  static vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType>
+  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id3)
   {
     using Task = vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType>;
-    return Task(worklet, invocation, globalIndexOffset);
+    return Task(worklet, invocation);
   }
 };
 }

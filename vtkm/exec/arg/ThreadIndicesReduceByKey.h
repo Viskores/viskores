@@ -39,9 +39,8 @@ public:
     vtkm::Id inIndex,
     vtkm::IdComponent visitIndex,
     vtkm::Id outIndex,
-    const vtkm::exec::internal::ReduceByKeyLookup<P1, P2, P3>& keyLookup,
-    vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, inIndex, visitIndex, outIndex, globalThreadIndexOffset)
+    const vtkm::exec::internal::ReduceByKeyLookup<P1, P2, P3>& keyLookup)
+    : Superclass(threadIndex, inIndex, visitIndex, outIndex)
     , ValueOffset(keyLookup.Offsets.Get(inIndex))
     , NumberOfValues(keyLookup.Counts.Get(inIndex))
   {

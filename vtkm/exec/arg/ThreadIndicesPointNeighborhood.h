@@ -68,14 +68,12 @@ public:
     vtkm::Id threadIndex1D,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
-                                             Dimension>& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0)
+                                             Dimension>& connectivity)
     : State(threadIndex3D, detail::To3D(connectivity.GetPointDimensions()))
     , ThreadIndex(threadIndex1D)
     , InputIndex(threadIndex1D)
     , OutputIndex(threadIndex1D)
     , VisitIndex(0)
-    , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
 
@@ -88,14 +86,12 @@ public:
     vtkm::Id outputIndex,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
-                                             Dimension>& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0)
+                                             Dimension>& connectivity)
     : State(threadIndex3D, detail::To3D(connectivity.GetPointDimensions()))
     , ThreadIndex(threadIndex1D)
     , InputIndex(inputIndex)
     , OutputIndex(outputIndex)
     , VisitIndex(visitIndex)
-    , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
 
@@ -107,15 +103,13 @@ public:
     vtkm::Id outputIndex,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
-                                             Dimension>& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0)
+                                             Dimension>& connectivity)
     : State(detail::To3D(connectivity.FlatToLogicalToIndex(inputIndex)),
             detail::To3D(connectivity.GetPointDimensions()))
     , ThreadIndex(threadIndex)
     , InputIndex(inputIndex)
     , OutputIndex(outputIndex)
     , VisitIndex(visitIndex)
-    , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
 
@@ -137,19 +131,12 @@ public:
   VTKM_EXEC
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
-  /// \brief The global index (for streaming).
-  ///
-  /// Global index (for streaming)
-  VTKM_EXEC
-  vtkm::Id GetGlobalIndex() const { return (this->GlobalThreadIndexOffset + this->OutputIndex); }
-
 private:
   vtkm::exec::BoundaryState State;
   vtkm::Id ThreadIndex;
   vtkm::Id InputIndex;
   vtkm::Id OutputIndex;
   vtkm::IdComponent VisitIndex;
-  vtkm::Id GlobalThreadIndexOffset;
 };
 }
 }
