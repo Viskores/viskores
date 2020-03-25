@@ -84,10 +84,9 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourFirstNext.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/SweepHyperarcs.h>
-
-#include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 
 
 
@@ -598,8 +597,10 @@ public:
     } // per supernode
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Propagating Branches took "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "III. Branch Neighbours Identified" << std::endl;
@@ -616,8 +617,6 @@ public:
     for (vtkm::Id shifter = nSupernodes; shifter != 0; shifter >>= 1)
       numLogSteps++;
 
-    std::cout << "We have this many iterations " << numLogSteps << std::endl;
-
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::PointerDoubling pointerDoubling(
       nSupernodes);
     vtkm::cont::Invoker Invoke;
@@ -630,8 +629,10 @@ public:
 
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Branch Point Doubling "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
@@ -661,8 +662,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Create Chain to Branch "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
 
     timer.Reset();
@@ -680,8 +683,10 @@ public:
     //auto branchParentPortal = branchParent.WritePortal();
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Array Coppying " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
@@ -709,8 +714,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Supernode Sorter " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -719,8 +726,10 @@ public:
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- VTKM Sorting " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -733,8 +742,10 @@ public:
     PermuteArray<vtkm::Id>(contourTree.Supernodes, supernodeSorter, permutedRegularID);
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Array Permuting " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;
@@ -754,8 +765,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Which Branch Initialisation "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -790,8 +803,10 @@ public:
     }   // per supernode
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Branch min/max setting "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "VI. Branches Set" << std::endl;
@@ -838,8 +853,10 @@ public:
     }   // per branch
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "----------------//---------------- Branch parents & Saddles setting "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
@@ -1153,8 +1170,10 @@ public:
 
     timer.Stop();
     vtkm::Float64 ellapsedTime = timer.GetElapsedTime();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds."
               << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1170,8 +1189,10 @@ public:
     auto maxPath = findSuperPathToRoot(contourTree.Superarcs.ReadPortal(), maxSuperNode);
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Finding min/max paths to the root took "
               << timer.GetElapsedTime() << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1195,8 +1216,10 @@ public:
     maxParents.WritePortal().Set(maxPath[0], 0);
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds."
               << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1222,6 +1245,19 @@ public:
       vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, maxHyperarcs.GetNumberOfValues()),
       maxHowManyUsed);
 
+    // Wrapper for std min & max
+    auto minOperator = vtkm::Minimum();
+    auto maxOperator = vtkm::Maximum();
+
+    timer.Stop();
+#ifdef DEBUG_PRINT
+    std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
+              << " seconds." << std::endl;
+#endif
+
+    timer.Reset();
+    timer.Start();
+
     editHyperarcs(contourTree.Hyperparents.ReadPortal(),
                   minPath,
                   minHyperarcs.WritePortal(),
@@ -1231,15 +1267,14 @@ public:
                   maxHyperarcs.WritePortal(),
                   maxHowManyUsed.WritePortal());
 
-    // Wrapper for std min & max
-    auto minOperator = vtkm::Minimum();
-    auto maxOperator = vtkm::Maximum();
+    timer.Stop();
+#ifdef DEBUG_PRINT
+    std::cout << "---------------- Editing hyperarcs took " << timer.GetElapsedTime() << " seconds."
+              << std::endl;
+#endif
 
     // Parallelisable with the HS
 
-    timer.Stop();
-    std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
 
     timer.Reset();
     timer.Start();
@@ -1267,8 +1302,10 @@ public:
                                                maxValues);
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Finding min/max took " << timer.GetElapsedTime() << " seconds."
               << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1279,8 +1316,10 @@ public:
     fixPath(maxOperator, maxPath, maxValues.WritePortal());
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Fixing path took " << timer.GetElapsedTime() << " seconds."
               << std::endl;
+#endif
 
     // Not parallelisable. Needs the HS
     //ProcessContourTree::findMinMaxNew(
@@ -1335,8 +1374,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Incorporating parent took " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     //for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
     //{
@@ -1414,8 +1455,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime() << " seconds."
               << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1449,8 +1492,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Setting subtree min/max " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1469,8 +1514,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     timer.Reset();
     timer.Start();
@@ -1502,8 +1549,10 @@ public:
     });
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds."
               << std::endl;
+#endif
 
     //for (int i = 0 ; i < arcs.size() ; i++)
     //{
@@ -1548,8 +1597,10 @@ public:
     }
 
     timer.Stop();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime()
               << " seconds." << std::endl;
+#endif
 
     //for (int i = 0 ; i < bestUpward.GetNumberOfValues() ; i++)
     //{
@@ -1571,8 +1622,10 @@ public:
 
     timer.Stop();
     ellapsedTime = timer.GetElapsedTime();
+#ifdef DEBUG_PRINT
     std::cout << "---------------- Computing branch data too  " << ellapsedTime << " seconds."
               << std::endl;
+#endif
 
     //printf("Working!");
 
