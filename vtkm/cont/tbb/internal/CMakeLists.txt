@@ -12,6 +12,7 @@ set(headers
   ArrayManagerExecutionTBB.h
   AtomicInterfaceExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
+  DeviceAdapterMemoryManagerTBB.h
   DeviceAdapterRuntimeDetectorTBB.h
   DeviceAdapterTagTBB.h
   ExecutionArrayInterfaceBasicTBB.h

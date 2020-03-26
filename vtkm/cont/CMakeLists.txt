@@ -146,6 +146,9 @@ set(sources
   ErrorBadType.cxx
   internal/ArrayHandleBasicImpl.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/Buffer.cxx
+  internal/DeviceAdapterMemoryManager.cxx
+  internal/DeviceAdapterMemoryManagerShared.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx

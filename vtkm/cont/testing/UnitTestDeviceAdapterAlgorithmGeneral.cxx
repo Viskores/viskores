@@ -71,6 +71,12 @@ public:
 namespace internal
 {
 
+template <>
+class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : public vtkm::cont::internal::DeviceAdapterMemoryManagerShared
+{
+};
+
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
   : public vtkm::cont::internal::ArrayManagerExecution<T,

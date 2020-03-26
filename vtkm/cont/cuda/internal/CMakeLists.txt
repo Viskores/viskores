@@ -13,6 +13,7 @@ set(headers
   AtomicInterfaceExecutionCuda.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
+  DeviceAdapterMemoryManagerCuda.h
   DeviceAdapterRuntimeDetectorCuda.h
   DeviceAdapterTagCuda.h
   DeviceAdapterTimerImplementationCuda.h
@@ -30,6 +31,7 @@ if (TARGET vtkm::cuda)
     ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmCuda.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterMemoryManagerCuda.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorCuda.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterTimerImplementationCuda.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu

@@ -11,6 +11,7 @@
 #define vtk_m_cont_RuntimeDeviceInformation_h
 
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
@@ -43,6 +44,15 @@ public:
   ///
   VTKM_CONT
   bool Exists(DeviceAdapterId id) const;
+
+  /// Returns a reference to a `DeviceAdapterMemoryManager` that will work with the
+  /// given device. This method will throw an exception if the device id is not a
+  /// real device (for example `DeviceAdapterTagAny`). If the device in question is
+  /// not valid, a `DeviceAdapterMemoryManager` will be returned, but attempting to
+  /// call any of the methods will result in a runtime exception.
+  ///
+  VTKM_CONT
+  vtkm::cont::internal::DeviceAdapterMemoryManagerBase& GetMemoryManager(DeviceAdapterId id) const;
 };
 }
 } // namespace vtkm::cont
