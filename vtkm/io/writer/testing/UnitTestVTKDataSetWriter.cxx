@@ -116,8 +116,8 @@ void TestVTKCompoundWrite()
   {
     for (vtkm::Id x = 0; x < dims[1]; ++x)
     {
-      double s = s_min + y * ds;
-      double t = t_min + x * dt;
+      double s = s_min + static_cast<vtkm::Float64>(y) * ds;
+      double t = t_min + static_cast<vtkm::Float64>(x) * dt;
       // This function is not meaningful:
       auto z = std::exp(std::complex<double>(s, t));
       points[idx] = { std::sqrt(std::norm(z)), std::arg(z) };
