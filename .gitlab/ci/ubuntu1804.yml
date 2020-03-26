@@ -1,0 +1,97 @@
+
+# Build on ubuntu1804 with TBB and OpenMP and test on ubuntu1804
+# Uses gcc 9
+# Uses MPICH2
+build:ubuntu1804_gcc9:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_build_linux
+  variables:
+    CC: "gcc-9"
+    CXX: "g++-9"
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "tbb+openmp+mpi"
+
+test:ubuntu1804_gcc9:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_test_linux
+  dependencies:
+    - build:ubuntu1804_gcc9
+  needs:
+    - build:ubuntu1804_gcc9
+
+# Build on ubuntu1804 with CUDA + MPI and test on ubuntu1804
+# Uses gcc 7.4
+# Uses MPICH2
+build:ubuntu1804_gcc7:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+    - large-memory
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_build_linux
+  variables:
+    CC: "gcc-7"
+    CXX: "g++-7"
+    VTKM_SETTINGS: "cuda+turing+mpi+64bit_floats"
+
+test:ubuntu1804_gcc7:
+  tags:
+    - test
+    - cuda-rt
+    - turing
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_test_linux
+  dependencies:
+    - build:ubuntu1804_gcc7
+  needs:
+    - build:ubuntu1804_gcc7
+
+# Build on ubuntu1804 with TBB and test on ubuntu1804
+# Uses clang 8
+build:ubuntu1804_clang8:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_build_linux
+  variables:
+    CC: "clang-8"
+    CXX: "clang++-8"
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "tbb+shared"
+
+test:ubuntu1804_clang8:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_test_linux
+  dependencies:
+    - build:ubuntu1804_clang8
+  needs:
+    - build:ubuntu1804_clang8

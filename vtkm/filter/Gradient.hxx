@@ -45,7 +45,7 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (!fieldMetadata.IsPointField())
   {

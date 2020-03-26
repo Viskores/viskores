@@ -101,30 +101,6 @@ void TestCellGradientUniform3DWithVectorField()
   }
 }
 
-void TestCellGradientExplicit()
-{
-  std::cout << "Testing Gradient Filter with cell output on Explicit data" << std::endl;
-
-  vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
-
-  vtkm::filter::Gradient gradient;
-  gradient.SetOutputFieldName("gradient");
-  gradient.SetActiveField("pointvar");
-
-  vtkm::cont::DataSet result = gradient.Execute(dataSet);
-
-  VTKM_TEST_ASSERT(result.HasCellField("gradient"), "Result field missing.");
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetCellField("gradient").GetData().CopyTo(resultArrayHandle);
-  vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
-  for (int i = 0; i < 2; ++i)
-  {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellGradient filter on 3D explicit data");
-  }
-}
 
 void TestPointGradientUniform3DWithVectorField()
 {
@@ -176,45 +152,17 @@ void TestPointGradientUniform3DWithVectorField()
   }
 }
 
-void TestPointGradientExplicit()
-{
-  std::cout << "Testing Gradient Filter with point output on Explicit data" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
-
-  vtkm::filter::Gradient gradient;
-  gradient.SetComputePointGradient(true);
-  gradient.SetOutputFieldName("gradient");
-  gradient.SetActiveField("pointvar");
-
-  vtkm::cont::DataSet result = gradient.Execute(dataSet);
-
-  VTKM_TEST_ASSERT(result.HasPointField("gradient"), "Result field missing.");
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> resultArrayHandle;
-  result.GetPointField("gradient").GetData().CopyTo(resultArrayHandle);
-
-  vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
-  for (int i = 0; i < 2; ++i)
-  {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellGradient filter on 3D explicit data");
-  }
-}
 
 void TestGradient()
 {
   TestCellGradientUniform3D();
   TestCellGradientUniform3DWithVectorField();
-  TestCellGradientExplicit();
-
   TestPointGradientUniform3DWithVectorField();
-  TestPointGradientExplicit();
 }
 }
 
-int UnitTestGradient(int argc, char* argv[])
+int UnitTestGradientUniform(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(TestGradient, argc, argv);
 }

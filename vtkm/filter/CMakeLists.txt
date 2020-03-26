@@ -147,8 +147,13 @@ set(sources_device
   ClipWithField.cxx
   ClipWithImplicitFunction.cxx
   Contour.cxx
+  ContourInteger.cxx
+  ContourScalar.cxx
   ExternalFaces.cxx
   ExtractStructured.cxx
+  GradientScalar.cxx
+  GradientUniformPoints.cxx
+  GradientVector.cxx
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx
