@@ -201,19 +201,17 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
             typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
-            typename InputDomainType,
-            typename G>
+            typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const G& globalThreadIndexOffset) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 
@@ -229,19 +227,17 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
             typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
-            typename InputDomainType,
-            typename G>
+            typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const G& globalThreadIndexOffset) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 

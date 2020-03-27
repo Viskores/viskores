@@ -25,7 +25,9 @@
 #include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSetStructured.h>
 
 #include <vtkm/exec/arg/Boundary.h>
@@ -110,7 +112,7 @@ public:
   ///
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
@@ -122,7 +124,7 @@ public:
   ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
@@ -134,7 +136,7 @@ public:
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
@@ -166,7 +168,7 @@ public:
   ///
   struct FieldInNeighborhood : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagArrayNeighborhoodIn;
   };
@@ -185,16 +187,12 @@ public:
     const ThreadToOutArrayType& threadToOut,
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
-                                             Dimension>& inputDomain, //this should be explicitly
-    vtkm::Id globalThreadIndexOffset = 0) const
+                                             Dimension>& inputDomain //this should be explicit
+    ) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex,
-                                                           outToIn.Get(outIndex),
-                                                           visit.Get(outIndex),
-                                                           outIndex,
-                                                           inputDomain,
-                                                           globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 
 
@@ -226,11 +224,10 @@ public:
     const OutToInArrayType& vtkmNotUsed(outToIn),
     const VisitArrayType& vtkmNotUsed(visit),
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
-    const InputDomainType& connectivity,
-    vtkm::Id globalThreadIndexOffset = 0) const
+    const InputDomainType& connectivity) const
   {
     return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
-      threadIndex3D, threadIndex1D, connectivity, globalThreadIndexOffset);
+      threadIndex3D, threadIndex1D, connectivity);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -246,8 +243,7 @@ public:
                    const OutToInArrayType& outToIn,
                    const VisitArrayType& visit,
                    const ThreadToOutArrayType& threadToOut,
-                   const InputDomainType& connectivity,
-                   vtkm::Id globalThreadIndexOffset = 0) const
+                   const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
     return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex3D,
@@ -255,8 +251,7 @@ public:
                                                            outToIn.Get(outIndex),
                                                            visit.Get(outIndex),
                                                            outIndex,
-                                                           connectivity,
-                                                           globalThreadIndexOffset);
+                                                           connectivity);
   }
 };
 }

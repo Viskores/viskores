@@ -36,9 +36,8 @@ public:
                        vtkm::Id threadIndex1D,
                        vtkm::Id inIndex,
                        vtkm::IdComponent visitIndex,
-                       vtkm::Id outIndex,
-                       vtkm::Id globalThreadIndexOffset)
-    : ThreadIndicesBasic(threadIndex1D, inIndex, visitIndex, outIndex, globalThreadIndexOffset)
+                       vtkm::Id outIndex)
+    : ThreadIndicesBasic(threadIndex1D, inIndex, visitIndex, outIndex)
     , ThreadIndex3D(threadIndex3D)
   {
   }

@@ -27,7 +27,9 @@ set(headers
   TransportTagWholeArrayInOut.h
   TransportTagWholeArrayOut.h
   TypeCheck.h
-  TypeCheckTagArray.h
+  TypeCheckTagArrayIn.h
+  TypeCheckTagArrayInOut.h
+  TypeCheckTagArrayOut.h
   TypeCheckTagAtomicArray.h
   TypeCheckTagBitField.h
   TypeCheckTagCellSet.h

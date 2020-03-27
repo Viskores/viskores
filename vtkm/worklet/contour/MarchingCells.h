@@ -429,8 +429,7 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-    vtkm::worklet::gradient::PointGradient<T> gradient;
+    vtkm::worklet::gradient::PointGradient gradient;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
   }
 
@@ -446,12 +445,10 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
@@ -459,7 +456,7 @@ public:
     vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
     vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
-    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    vtkm::worklet::gradient::StructuredPointGradient gradient;
     gradient(boundary, points, field, normal);
   }
 };
@@ -506,8 +503,7 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
-    vtkm::worklet::gradient::PointGradient<T> gradient;
+    vtkm::worklet::gradient::PointGradient gradient;
     NormalType grad1;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
 
@@ -531,11 +527,10 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
-    using T = typename WholeFieldIn::ValueType;
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     vtkm::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
-    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom, 0);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
     auto pointPortal = pointCoordinates.GetPortal();
@@ -543,7 +538,7 @@ public:
     vtkm::exec::FieldNeighborhood<decltype(pointPortal)> points(pointPortal, boundary);
     vtkm::exec::FieldNeighborhood<decltype(fieldPortal)> field(fieldPortal, boundary);
 
-    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    vtkm::worklet::gradient::StructuredPointGradient gradient;
     NormalType grad1;
     gradient(boundary, points, field, grad1);
 
@@ -602,22 +597,21 @@ struct GenerateNormals
 };
 
 //----------------------------------------------------------------------------
-template <typename ValueType,
-          typename CellSetType,
+template <typename CellSetType,
           typename CoordinateSystem,
+          typename ValueType,
           typename StorageTagField,
           typename StorageTagVertices,
           typename StorageTagNormals,
           typename CoordinateType,
           typename NormalType>
 vtkm::cont::CellSetSingleType<> execute(
-  const ValueType* isovalues,
-  const vtkm::Id numIsoValues,
   const CellSetType& cells,
   const CoordinateSystem& coordinateSystem,
+  const std::vector<ValueType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
-  vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices> vertices,
-  vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals> normals,
+  vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
   using vtkm::worklet::marching_cells::ClassifyCell;
@@ -631,8 +625,7 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
-    vtkm::cont::make_ArrayHandle(isovalues, numIsoValues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated
@@ -669,7 +662,7 @@ vtkm::cont::CellSetSingleType<> execute(
             triTable);
   }
 
-  if (numIsoValues <= 1 || !sharedState.MergeDuplicatePoints)
+  if (isovalues.size() <= 1 || !sharedState.MergeDuplicatePoints)
   { //release memory early that we are not going to need again
     contourIds.ReleaseResources();
   }
@@ -681,7 +674,7 @@ vtkm::cont::CellSetSingleType<> execute(
     // are updated. That is because MergeDuplicates will internally update
     // the InterpolationWeights and InterpolationOriginCellIds arrays to be the correct for the
     // output. But for InterpolationEdgeIds we need to do it manually once done
-    if (numIsoValues == 1)
+    if (isovalues.size() == 1)
     {
       marching_cells::MergeDuplicates(invoker,
                                       sharedState.InterpolationEdgeIds, //keys
@@ -690,7 +683,7 @@ vtkm::cont::CellSetSingleType<> execute(
                                       originalCellIdsForPoints,         //values
                                       connectivity); // computed using lower bounds
     }
-    else if (numIsoValues > 1)
+    else
     {
       marching_cells::MergeDuplicates(
         invoker,
@@ -724,14 +717,14 @@ vtkm::cont::CellSetSingleType<> execute(
   //now that the vertices have been generated we can generate the normals
   if (sharedState.GenerateNormals)
   {
-    vtkm::cont::CastAndCall(coordinateSystem,
-                            GenerateNormals{},
-                            invoker,
-                            normals,
-                            inputField,
-                            cells,
-                            sharedState.InterpolationEdgeIds,
-                            sharedState.InterpolationWeights);
+    GenerateNormals genNorms;
+    genNorms(coordinateSystem,
+             invoker,
+             normals,
+             inputField,
+             cells,
+             sharedState.InterpolationEdgeIds,
+             sharedState.InterpolationWeights);
   }
 
   return outputCells;

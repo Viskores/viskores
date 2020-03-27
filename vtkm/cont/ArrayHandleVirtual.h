@@ -270,5 +270,6 @@ VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Float64);
 }
 } //namespace vtkm::cont
 
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_ArrayHandleVirtual_h

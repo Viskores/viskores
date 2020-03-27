@@ -22,9 +22,6 @@ namespace filter
 class DotProduct : public vtkm::filter::FilterField<DotProduct>
 {
 public:
-  //currently the DotProduct filter only works on vector data.
-  using SupportedTypes = TypeListVecCommon;
-
   VTKM_CONT
   DotProduct();
 
@@ -123,11 +120,10 @@ public:
   //@}
 
   template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
-    vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   std::string SecondaryFieldName;

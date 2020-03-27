@@ -399,19 +399,17 @@ public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::openmp::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
-                                                             vtkm::Id,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id)
   {
-    return vtkm::exec::openmp::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::openmp::internal::TaskTiling1D(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::openmp::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
-                                                             vtkm::Id3,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id3)
   {
-    return vtkm::exec::openmp::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::openmp::internal::TaskTiling3D(worklet, invocation);
   }
 };
 }

@@ -10,10 +10,6 @@
 #ifndef vtk_m_TypeList_h
 #define vtk_m_TypeList_h
 
-#ifndef VTKM_DEFAULT_TYPE_LIST
-#define VTKM_DEFAULT_TYPE_LIST ::vtkm::TypeListCommon
-#endif
-
 #include <vtkm/List.h>
 #include <vtkm/Types.h>
 

@@ -25,16 +25,19 @@ namespace vtkm
 namespace cont
 {
 
+/// @cond NONE
 struct VTKM_DEPRECATED(1.6,
                        "DeviceAdapterListTagCommon replaced by DeviceAdapterListCommon. "
                        "Note that the new DeviceAdapterListCommon cannot be subclassed.")
   DeviceAdapterListTagCommon : vtkm::internal::ListAsListTag<DeviceAdapterListCommon>
 {
 };
+/// @endcond
 
 namespace detail
 {
 
+/// @cond NONE
 struct VTKM_DEPRECATED(
   1.6,
   "VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG replaced by VTKM_DEFAULT_DEVICE_ADAPTER_LIST. "
@@ -42,6 +45,7 @@ struct VTKM_DEPRECATED(
   DeviceAdapterListTagDefault : vtkm::internal::ListAsListTag<VTKM_DEFAULT_DEVICE_ADAPTER_LIST>
 {
 };
+/// @endcond
 
 } // namespace detail
 }
