@@ -11,6 +11,7 @@ build:ubuntu1604_gcc5:
   extends:
     - .ubuntu1604_cuda
     - .cmake_build_linux
+    - .only-default
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     VTKM_SETTINGS: "cuda+pascal"
@@ -27,6 +28,7 @@ build:ubuntu1604_gcc5:
 #   extends:
 #     - .ubuntu1604_cuda
 #     - .cmake_test_linux
+#     - .only-default
 #   dependencies:
 #     - build:ubuntu1604_gcc5
 #   needs:
@@ -42,6 +44,7 @@ build:ubuntu1604_gcc5:
 #   extends:
 #     - .ubuntu1804_cuda
 #     - .cmake_test_linux
+#     - .only-default
 #   dependencies:
 #     - build:ubuntu1604_gcc5
 #   needs:
@@ -61,6 +64,7 @@ build:ubuntu1604_gcc48:
     #enough CMake version that supports mpi
     - .ubuntu1604_cuda
     - .cmake_build_linux
+    - .only-default
   variables:
     CMAKE_BUILD_TYPE: Release
     #custom openmpi install location
@@ -76,6 +80,7 @@ test:ubuntu1604_gcc48:
   extends:
     - .ubuntu1604
     - .cmake_test_linux
+    - .only-default
   variables:
     #env flags to allow openmpi to run as root user
     OMPI_ALLOW_RUN_AS_ROOT: 1

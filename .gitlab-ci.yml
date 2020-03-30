@@ -68,6 +68,15 @@
   extends:
     - .docker_image
 
+.only-default: &only-default
+  only:
+    - master
+    - merge_requests
+    - tags
+
+.only-master: &only-master
+  only:
+    - master
 
 # General Longer Term Tasks:
 # - setup asan, and ubsan as sub-pipeline

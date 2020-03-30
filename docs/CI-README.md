@@ -117,6 +117,7 @@ build:ubuntu2004_$<compiler>:
   extends:
     - .ubuntu2004
     - .cmake_build_linux
+    - .only-default
   variables:
     CC: "$<c-compiler-command>"
     CXX: "$<cxx-compiler-command>"
@@ -176,6 +177,7 @@ test:ubuntu2004_$<compiler>:
   extends:
     - .ubuntu2004_cuda
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:ubuntu2004_$<compiler>
   needs:

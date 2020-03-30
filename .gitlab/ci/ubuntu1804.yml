@@ -11,6 +11,7 @@ build:ubuntu1804_gcc9:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
+    - .only-default
   variables:
     CC: "gcc-9"
     CXX: "g++-9"
@@ -26,6 +27,7 @@ test:ubuntu1804_gcc9:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:ubuntu1804_gcc9
   needs:
@@ -44,6 +46,7 @@ build:ubuntu1804_gcc7:
   extends:
     - .ubuntu1804_cuda
     - .cmake_build_linux
+    - .only-default
   variables:
     CC: "gcc-7"
     CXX: "g++-7"
@@ -60,6 +63,7 @@ test:ubuntu1804_gcc7:
   extends:
     - .ubuntu1804_cuda
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:ubuntu1804_gcc7
   needs:
@@ -76,6 +80,7 @@ build:ubuntu1804_clang8:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
+    - .only-default
   variables:
     CC: "clang-8"
     CXX: "clang++-8"
@@ -91,6 +96,7 @@ test:ubuntu1804_clang8:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:ubuntu1804_clang8
   needs:

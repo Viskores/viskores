@@ -10,6 +10,7 @@ build:rhel8:
   extends:
     - .rhel8
     - .cmake_build_linux
+    - .only-default
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
     VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
@@ -23,6 +24,7 @@ test:rhel8:
   extends:
     - .rhel8
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:rhel8
   needs:

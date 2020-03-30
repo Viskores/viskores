@@ -11,6 +11,7 @@ build:centos7_gcc48:
   extends:
     - .centos7
     - .cmake_build_linux
+    - .only-default
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
@@ -27,6 +28,7 @@ test:centos7_gcc48:
   extends:
     - .centos7
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:centos7_gcc48
   needs:
@@ -43,6 +45,7 @@ test:rhel8_test_centos7:
   extends:
     - .rhel8
     - .cmake_test_linux
+    - .only-default
   dependencies:
     - build:centos7_gcc48
   needs:
