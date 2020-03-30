@@ -21,6 +21,7 @@
 #     - openmp
 #     - openmpi
 #   * .gitlab/ci/ubuntu1804/base/
+#     - gcc 6.5
 #     - gcc 7.4
 #     - gcc 9
 #     - clang 8
@@ -59,7 +60,7 @@
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20200320"
+  image: "kitware/vtkm:ci-ubuntu1804-20200330"
   extends:
     - .docker_image
 
