@@ -51,8 +51,8 @@ public:
   {
   }
 
-  ArrayPortalExtractComponent& operator=(const ArrayPortalExtractComponent& src) = default;
-  ArrayPortalExtractComponent& operator=(ArrayPortalExtractComponent&& src) = default;
+  ArrayPortalExtractComponent& operator=(const ArrayPortalExtractComponent&) = default;
+  ArrayPortalExtractComponent& operator=(ArrayPortalExtractComponent&&) = default;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
