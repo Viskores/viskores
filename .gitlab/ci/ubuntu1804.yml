@@ -16,7 +16,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+openmp+mpi"
+    VTKM_SETTINGS: "tbb+openmp+mpi+shared"
 
 test:ubuntu1804_gcc9:
   tags:
@@ -68,6 +68,73 @@ test:ubuntu1804_gcc7:
     - build:ubuntu1804_gcc7
   needs:
     - build:ubuntu1804_gcc7
+
+
+# Build on ubuntu1804 with OpenMP and test on ubuntu1804
+# Uses gcc 7.4
+# Runs only on nightlies
+build:ubuntu1804_gcc7_2:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_build_linux
+    - .only-master
+  variables:
+    CC: "gcc-7"
+    CXX: "g++-7"
+    VTKM_SETTINGS: "openmp+shared+examples"
+
+test:ubuntu1804_gcc7_2:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_test_linux
+    - .only-master
+  dependencies:
+    - build:ubuntu1804_gcc7_2
+  needs:
+    - build:ubuntu1804_gcc7_2
+
+# Build on ubuntu1804 with OpenMP and test on ubuntu1804
+# Uses gcc 6.5
+# Runs only on nightlies
+build:ubuntu1804_gcc6:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_build_linux
+    - .only-master
+  variables:
+    CC: "gcc-6"
+    CXX: "g++-6"
+    VTKM_SETTINGS: "openmp+shared"
+
+test:ubuntu1804_gcc6:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1804
+    - .cmake_test_linux
+    - .only-master
+  dependencies:
+    - build:ubuntu1804_gcc6
+  needs:
+    - build:ubuntu1804_gcc6
 
 # Build on ubuntu1804 with TBB and test on ubuntu1804
 # Uses clang 8

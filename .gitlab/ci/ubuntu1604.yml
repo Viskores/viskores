@@ -69,7 +69,7 @@ build:ubuntu1604_gcc48:
     CMAKE_BUILD_TYPE: Release
     #custom openmpi install location
     CMAKE_PREFIX_PATH: "/opt/openmpi/"
-    VTKM_SETTINGS: "tbb+mpi"
+    VTKM_SETTINGS: "tbb+mpi+shared"
 
 test:ubuntu1604_gcc48:
   tags:
@@ -91,8 +91,37 @@ test:ubuntu1604_gcc48:
   needs:
     - build:ubuntu1604_gcc48
 
-# Todo:
-# Build on ubuntu1604 with TBB and test on ubuntu1804
-# Uses clang 3.8
-# Build on ubuntu1604 with TBB and test on ubuntu1604 and ubuntu1804
-# Uses clang 5.0, Debug??, Static/shared?
+
+# Build on ubuntu1604 with tbb and test on ubuntu1604
+# Uses clang 5
+build:ubuntu1604_clang5:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    #Requires the cuda docker image as it uses a sufficiently new
+    #enough CMake version that supports mpi
+    - .ubuntu1604
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "tbb+static+64bit_floats"
+
+test:ubuntu1604_clang5:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .ubuntu1604
+    - .cmake_test_linux
+    - .only-default
+
+  dependencies:
+    - build:ubuntu1604_clang5
+  needs:
+    - build:ubuntu1604_clang5

@@ -26,6 +26,15 @@ foreach(option IN LISTS options)
   elseif(64bit_floats STREQUAL option)
     set(VTKm_USE_DOUBLE_PRECISION "ON" CACHE STRING "")
 
+  elseif(examples STREQUAL option)
+    set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
+
+  elseif(docs STREQUAL option)
+    set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
+
+  elseif(benchmarks STREQUAL option)
+    set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
+
   elseif(mpi STREQUAL option)
     set(VTKm_ENABLE_MPI "ON" CACHE STRING "")
 
