@@ -162,8 +162,8 @@ include(VTKmCompilerFlags)
 
 
 # be available for use
-file(READ "${VTKm_SOURCE_DIR}/README.md" data)
-if (NOT data STREQUAL "\n")
+file(STRINGS "${VTKm_SOURCE_DIR}/README.md" sentinel_data LIMIT_COUNT 1)
+if (NOT sentinel_data STREQUAL "-- DO NOT MODIFY THIS LINE --")
   message(WARNING
 
 
