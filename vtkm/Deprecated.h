@@ -64,8 +64,8 @@
 
 // C++14 and better supports [[deprecated]]
 // Except in these cases:
-//   - nvcc on visual studio
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
+//   - nvcc
+#if !(defined(VTKM_CUDA))
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif
 
