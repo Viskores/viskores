@@ -194,7 +194,7 @@ set(sources
 vtkm_get_kit_name(kit_name kit_dir)
 
 # Some custom types included with VTK-m
-option(VTKm_USE_DEFAULT_TYPES_FOR_VTK "Compile VTK-m algorithms for use with types from VTK." OFF)
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK "Compile VTK-m algorithms for use with types from VTK." OFF)
 if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
   set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
 endif()
