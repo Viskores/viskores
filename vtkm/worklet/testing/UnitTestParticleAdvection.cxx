@@ -556,6 +556,7 @@ void TestIntegrators()
   const vtkm::Bounds bounds(0., 1., 0., 1., .0, .1);
   vtkm::cont::DataSet dataset = CreateUniformDataSet(bounds, dims);
 
+  const vtkm::Id nSeeds = 3;
   const vtkm::Id maxSteps = 10;
   const vtkm::FloatDefault stepSize = 0.01f;
 
@@ -565,8 +566,7 @@ void TestIntegrators()
     fieldData.push_back(vtkm::Vec3f(0., 0., 1.));
   FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData);
 
-
-  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldValues);
+  GridEvalType eval(dataset.GetCoordinateSystem(), dataset.GetCellSet(), fieldValues);
 
   //Generate three random points.
   std::vector<vtkm::Particle> points;
