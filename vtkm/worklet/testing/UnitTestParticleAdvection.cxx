@@ -547,6 +547,50 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
                    "Number of output particles does not match input.");
 }
 
+void TestIntegrators()
+{
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+
+  const vtkm::Id3 dims(5, 5, 5);
+  const vtkm::Bounds bounds(0., 1., 0., 1., .0, .1);
+  vtkm::cont::DataSet dataset = CreateUniformDataSet(bounds, dims);
+
+  const vtkm::Id maxSteps = 10;
+  const vtkm::FloatDefault stepSize = 0.01f;
+
+  vtkm::Id nElements = dims[0] * dims[1] * dims[2];
+  std::vector<vtkm::Vec3f> fieldData;
+  for (vtkm::Id i = 0; i < nElements; i++)
+    fieldData.push_back(vtkm::Vec3f(0., 0., 1.));
+  FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData);
+
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldValues);
+
+  //Generate three random points.
+  std::vector<vtkm::Particle> points;
+  points.push_back(vtkm::Particle(RandomPoint(bounds), 0));
+  points.push_back(vtkm::Particle(RandomPoint(bounds), 1));
+  points.push_back(vtkm::Particle(RandomPoint(bounds), 2));
+  auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
+
+  vtkm::worklet::ParticleAdvection pa;
+  vtkm::worklet::ParticleAdvectionResult res;
+  {
+    using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+    IntegratorType rk4(eval, stepSize);
+    res = pa.Run(rk4, seeds, maxSteps);
+    ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
+  }
+  {
+    using IntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvalType>;
+    IntegratorType euler(eval, stepSize);
+    res = pa.Run(euler, seeds, maxSteps);
+    ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
+  }
+}
+
 void TestParticleWorkletsWithDataSetTypes()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
@@ -812,6 +856,7 @@ void TestWorkletsBasic()
 
 void TestParticleAdvection()
 {
+  TestIntegrators();
   TestEvaluators();
   TestParticleStatus();
   TestWorkletsBasic();

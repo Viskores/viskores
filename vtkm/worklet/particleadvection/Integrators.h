@@ -352,13 +352,13 @@ public:
 
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
-                       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
+                       vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
                        typename EulerIntegrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     using FieldEvaluateExecType =
-      decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
+      vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>;
     using Superclass =
       Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
                                      typename EulerIntegrator::template ExecObject<Device>>;
