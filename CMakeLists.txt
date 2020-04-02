@@ -162,13 +162,15 @@ include(VTKmCompilerFlags)
 
 
 # be available for use
-file(READ "${VTKm_SOURCE_DIR}/README.md" data)
-if (NOT data STREQUAL "\n")
-  message(WARNING
+if (VTKm_ENABLE_TESTING)
+  file(STRINGS "${VTKm_SOURCE_DIR}/README.md" sentinel_data LIMIT_COUNT 1)
+  if (NOT sentinel_data STREQUAL "-- DO NOT MODIFY THIS LINE --")
+    message(WARNING
 
 
-    " to obtain the testing data.")
-  set(VTKm_ENABLE_TESTING off)
+      "to obtain the testing data.")
+    set(VTKm_ENABLE_TESTING off)
+  endif()
 endif()
 
 # We include the wrappers unconditionally as VTK-m expects the function to
