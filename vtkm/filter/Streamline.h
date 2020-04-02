@@ -27,7 +27,7 @@ namespace filter
 class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   Streamline();
@@ -39,7 +39,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec3f>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -59,7 +59,7 @@ public:
 private:
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> Seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
   vtkm::worklet::Streamline Worklet;
 };
 }

@@ -62,8 +62,8 @@ public:
   vtkm::Id GetMaxLeafSize() { return this->MaxLeafSize; }
 
   VTKM_CONT
-  const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const override;
+  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token) const override;
 
 protected:
   VTKM_CONT

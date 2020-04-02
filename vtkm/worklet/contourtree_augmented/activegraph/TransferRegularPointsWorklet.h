@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_transfer_regular_points_worklet_h
-#define vtkm_worklet_contourtree_augmented_active_graph_transfer_regular_points_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_transfer_regular_points_worklet_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_transfer_regular_points_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -81,13 +81,13 @@ public:
   // Default Constructor
   VTKM_EXEC_CONT
   TransferRegularPointsWorklet()
-    : isJoinGraph(true)
+    : IsJoinGraph(true)
   {
   }
 
   VTKM_EXEC_CONT
   TransferRegularPointsWorklet(bool joinGraph)
-    : isJoinGraph(joinGraph)
+    : IsJoinGraph(joinGraph)
   {
   }
 
@@ -100,19 +100,19 @@ public:
     // FindGoverningSaddles() set the hyperarcs of the extrema already
     // to ignore them, we check the IS_HYPERNODE flag
     vtkm::Id hyperarcId = hyperarcsPortal.Get(vertexId);
-    if (isHypernode(hyperarcId))
+    if (IsHypernode(hyperarcId))
       return;
 
     // we know it isn't a hypernode/pseudo-extrema, so we take the index
-    vtkm::Id hypernode = maskedIndex(hyperarcId);
+    vtkm::Id hypernode = MaskedIndex(hyperarcId);
 
     // since we know it points to a pseudo-extremum, we follow it's hyperarc
-    vtkm::Id saddleId = maskedIndex(hyperarcsPortal.Get(hypernode));
+    vtkm::Id saddleId = MaskedIndex(hyperarcsPortal.Get(hypernode));
 
     // now, we test whether the saddle is below this vertex
     // since in this version we have an invariant that the IDs are allocated in
     // strict sorted order, we just test indices (flipping for type of tree)
-    if (isJoinGraph ? (saddleId < vertexId) : (saddleId > vertexId))
+    if (IsJoinGraph ? (saddleId < vertexId) : (saddleId > vertexId))
     { // regular point to be pruned
       // at this point, the hyperarc is already correctly set, although
       // it will have a terminal flag set. We will do a lazy transfer of this
@@ -130,19 +130,19 @@ public:
                 // FindGoverningSaddles() set the hyperarcs of the extrema already
                 // to ignore them, we check the IS_HYPERNODE flag
                 indexType hyperarcID = hyperarcs[vertexID];
-                if (isHypernode(hyperarcID))
+                if (IsHypernode(hyperarcID))
                         continue;
 
                 // we know it isn't a hypernode/pseudo-extrema, so we take the index
-                indexType hypernode = maskedIndex(hyperarcID);
+                indexType hypernode = MaskedIndex(hyperarcID);
 
                 // since we know it points to a pseudo-extremum, we follow it's hyperarc
-                indexType saddleID = maskedIndex(hyperarcs[hypernode]);
+                indexType saddleID = MaskedIndex(hyperarcs[hypernode]);
 
                 // now, we test whether the saddle is below this vertex
                 // since in this version we have an invariant that the IDs are allocated in
                 // strict sorted order, we just test indices (flipping for type of tree)
-                if (isJoinGraph ? (saddleID < vertexID) : (saddleID > vertexID))
+                if (IsJoinGraph ? (saddleID < vertexID) : (saddleID > vertexID))
                         { // regular point to be pruned
                         // at this point, the hyperarc is already correctly set, although
                         // it will have a terminal flag set. We will do a lazy transfer of this
@@ -154,7 +154,7 @@ public:
   }
 
 private:
-  bool isJoinGraph; // join graph or split graph?
+  bool IsJoinGraph; // join graph or split graph?
 
 }; // TransferRegularPointsWorklet
 

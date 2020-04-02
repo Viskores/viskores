@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -84,33 +84,34 @@ class CombinedVectorDifferentFromNext
 {
 public:
   typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-    DeviceAdapter>::PortalConst sortOrderPortalType;
+    DeviceAdapter>::PortalConst SortOrderPortalType;
 
   VTKM_EXEC_CONT
   CombinedVectorDifferentFromNext()
-    : dataArray()
+    : DataArray()
   {
   }
 
   VTKM_CONT
   CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
-                                  const IdArrayType& sortOrder)
-    : dataArray(inDataArray)
+                                  const IdArrayType& sortOrder,
+                                  vtkm::cont::Token& token)
+    : DataArray(inDataArray)
   {
-    overallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter());
+    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id i) const
   {
-    vtkm::Id currGlobalIdx = (*dataArray)[overallSortOrderPortal.Get(i)];
-    vtkm::Id nextGlobalIdx = (*dataArray)[overallSortOrderPortal.Get(i + 1)];
+    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
+    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
     return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
   }
 
 private:
-  sortOrderPortalType overallSortOrderPortal;
-  const CombinedVector<T, DeviceAdapter>* dataArray;
+  SortOrderPortalType OverallSortOrderPortal;
+  const CombinedVector<T, DeviceAdapter>* DataArray;
 };
 
 

@@ -48,8 +48,6 @@ inline void SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera& camera,
                                                const vtkm::cont::Field&)
 {
   vtkm::Bounds b = coordBounds;
-  b.Z.Min = 0;
-  b.Z.Max = 4;
   camera = vtkm::rendering::Camera();
   camera.ResetToBounds(b);
   camera.Azimuth(static_cast<vtkm::Float32>(45.0));

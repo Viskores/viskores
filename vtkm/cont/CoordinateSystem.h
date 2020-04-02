@@ -24,8 +24,7 @@ namespace cont
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
-  using CoordinatesTypeList =
-    vtkm::ListTagBase<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
+  using CoordinatesTypeList = vtkm::List<vtkm::cont::ArrayHandleVirtualCoordinates::ValueType>;
 
 public:
   VTKM_CONT
@@ -39,7 +38,10 @@ public:
                              const vtkm::cont::VariantArrayHandleBase<TypeList>& data);
 
   template <typename T, typename Storage>
-  VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data);
+  VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data)
+    : Superclass(name, Association::POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
+  {
+  }
 
   /// This constructor of coordinate system sets up a regular grid of points.
   ///

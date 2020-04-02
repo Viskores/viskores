@@ -30,14 +30,30 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagOpenMP>::ScheduleTask(
   vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
   functor.SetErrorMessageBuffer(errorMessage);
 
-  static constexpr vtkm::Id CHUNK_SIZE = 1024;
+  // Divide n by chunks and round down to nearest power of two. Result is clamped between
+  // min and max:
+  auto computeChunkSize = [](vtkm::Id n, vtkm::Id chunks, vtkm::Id min, vtkm::Id max) -> vtkm::Id {
+    const vtkm::Id chunkSize = (n + chunks - 1) / chunks;
+    vtkm::Id result = 1;
+    while (result < chunkSize)
+    {
+      result *= 2;
+    }
+    result /= 2; // Round down
+    return std::min(max, std::max(min, result));
+  };
+
+  // Figure out how to chunk the data:
+  const vtkm::Id chunkSize = computeChunkSize(size, 256, 1, 1024);
+  const vtkm::Id numChunks = (size + chunkSize - 1) / chunkSize;
 
   VTKM_OPENMP_DIRECTIVE(parallel for
                         schedule(guided))
-  for (vtkm::Id i = 0; i < size; i += CHUNK_SIZE)
+  for (vtkm::Id i = 0; i < numChunks; ++i)
   {
-    const vtkm::Id end = std::min(i + CHUNK_SIZE, size);
-    functor(i, end);
+    const vtkm::Id first = i * chunkSize;
+    const vtkm::Id last = std::min((i + 1) * chunkSize, size);
+    functor(first, last);
   }
 
   if (errorMessage.IsErrorRaised())
@@ -116,7 +132,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagOpenMP>::ScheduleTask(
     {
       for (vtkm::Id j = startIJK[1]; j < endIJK[1]; ++j)
       {
-        functor(startIJK[0], endIJK[0], j, k);
+        functor(size, startIJK[0], endIJK[0], j, k);
       }
     }
   }

@@ -94,7 +94,7 @@ struct VecVariableTestFunctor
 
 void TestVecVariable()
 {
-  vtkm::testing::Testing::TryTypes(VecVariableTestFunctor(), vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(VecVariableTestFunctor(), vtkm::TypeListFieldScalar());
 }
 
 } // anonymous namespace

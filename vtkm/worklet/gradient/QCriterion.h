@@ -20,10 +20,7 @@ namespace worklet
 namespace gradient
 {
 
-struct QCriterionTypes
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>
-{
-};
+using QCriterionTypes = vtkm::List<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>;
 
 struct QCriterion : public vtkm::worklet::WorkletMapField
 {

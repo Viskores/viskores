@@ -94,7 +94,7 @@ struct TryType
 
 void TestExecObjectFetch()
 {
-  vtkm::testing::Testing::TryTypes(TryType(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryType(), vtkm::TypeListCommon());
 }
 
 } // anonymous namespace

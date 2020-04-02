@@ -23,8 +23,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(const vtkm::cont::DataSet
                                                        const std::string& name,
                                                        vtkm::cont::Field::Association assoc)
 {
-  return vtkm::cont::detail::FieldRangeComputeImpl(
-    dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  return vtkm::cont::detail::FieldRangeComputeImpl(dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST());
 }
 
 //-----------------------------------------------------------------------------
@@ -33,7 +32,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(const vtkm::cont::Partiti
                                                        const std::string& name,
                                                        vtkm::cont::Field::Association assoc)
 {
-  return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST());
 }
 }
 } // namespace vtkm::cont

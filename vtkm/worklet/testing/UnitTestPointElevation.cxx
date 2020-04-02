@@ -81,9 +81,9 @@ void TestPointElevation()
   auto coordinates = dataSet.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                result.GetPortalConstControl().Get(i)),
-                     "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(
+      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, result.ReadPortal().Get(i)),
+      "Wrong result for PointElevation worklet");
   }
 }
 

@@ -125,7 +125,7 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
   //values for equality.
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
   output.GetField(outputname).GetData().CopyTo(values);
-  auto portal1 = values.GetPortalConstControl();
+  auto portal1 = values.ReadPortal();
   if (portal1.GetNumberOfValues() != (vtkm::Id)expectedVals.size())
   {
     printf("Number of expected values for %s does not match.\n", outputname.c_str());

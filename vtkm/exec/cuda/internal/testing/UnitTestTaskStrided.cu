@@ -201,19 +201,17 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
             typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
-            typename InputDomainType,
-            typename G>
+            typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const G& globalThreadIndexOffset) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 
@@ -229,19 +227,17 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
             typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
-            typename InputDomainType,
-            typename G>
+            typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
     const T& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const G& globalThreadIndexOffset) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 
@@ -276,6 +272,8 @@ void TestNormalFunctorInvoke()
 {
   std::cout << "Testing normal worklet invoke." << std::endl;
 
+  vtkm::cont::Token token;
+
   vtkm::Id inputTestValues[3] = { 5, 5, 6 };
 
   vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(inputTestValues, 3);
@@ -283,8 +281,8 @@ void TestNormalFunctorInvoke()
 
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     vtkm::internal::make_FunctionInterface<void>(
-      TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
-      TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
+      TestExecObject(input.PrepareForInPlace(DeviceAdapter(), token)),
+      TestExecObject(output.PrepareForOutput(3, DeviceAdapter(), token)));
 
   std::cout << "  Try void return." << std::endl;
   TestWorkletProxy worklet;
@@ -295,18 +293,19 @@ void TestNormalFunctorInvoke()
 
   ScheduleTaskStrided<decltype(task1)><<<32, 256>>>(task1, 1, 2);
   cudaDeviceSynchronize();
+  token.DetachFromAll();
   input.SyncControlArray();
   output.SyncControlArray();
 
   VTKM_TEST_ASSERT(inputTestValues[1] == 5, "Input value changed.");
-  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(1) == inputTestValues[1] + 100 + 30,
+  VTKM_TEST_ASSERT(output.ReadPortal().Get(1) == inputTestValues[1] + 100 + 30,
                    "Output value not set right.");
 
   std::cout << "  Try return value." << std::endl;
 
   execObjects = vtkm::internal::make_FunctionInterface<void>(
-    TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
-    TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
+    TestExecObject(input.PrepareForInPlace(DeviceAdapter(), token)),
+    TestExecObject(output.PrepareForOutput(3, DeviceAdapter(), token)));
 
   InvocationType2 invocation2(execObjects);
 
@@ -315,11 +314,12 @@ void TestNormalFunctorInvoke()
 
   ScheduleTaskStrided<decltype(task2)><<<32, 256>>>(task2, 2, 3);
   cudaDeviceSynchronize();
+  token.DetachFromAll();
   input.SyncControlArray();
   output.SyncControlArray();
 
   VTKM_TEST_ASSERT(inputTestValues[2] == 6, "Input value changed.");
-  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(2) == inputTestValues[2] + 200 + 30 * 2,
+  VTKM_TEST_ASSERT(output.ReadPortal().Get(2) == inputTestValues[2] + 200 + 30 * 2,
                    "Output value not set right.");
 }
 
@@ -327,6 +327,8 @@ template <typename DeviceAdapter>
 void TestErrorFunctorInvoke()
 {
   std::cout << "Testing invoke with an error raised in the worklet." << std::endl;
+
+  vtkm::cont::Token token;
 
   vtkm::Id inputTestValue = 5;
   vtkm::Id outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
@@ -336,8 +338,8 @@ void TestErrorFunctorInvoke()
 
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     vtkm::internal::make_FunctionInterface<void>(
-      TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
-      TestExecObject(output.PrepareForInPlace(DeviceAdapter())));
+      TestExecObject(input.PrepareForInPlace(DeviceAdapter(), token)),
+      TestExecObject(output.PrepareForInPlace(DeviceAdapter(), token)));
 
   using TaskStrided1 =
     vtkm::exec::cuda::internal::TaskStrided1D<TestWorkletErrorProxy, InvocationType1>;

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_update_edge_sorter_h
-#define vtkm_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_update_edge_sorter_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_update_edge_sorter_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_transfer_saddle_starts_update_edge_sorter_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>

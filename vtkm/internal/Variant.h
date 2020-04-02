@@ -12,91 +12,11 @@
 
 #include <vtkm/internal/VariantDetail.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/Deprecated.h>
+#include <vtkm/List.h>
 
-
-// It would make sense to put this in its own header file, but it is hard to imagine needing
-// aligned_union anywhere else.
-#if (defined(VTKM_GCC) && (__GNUC__ == 4)) || defined(VTKM_ICC)
-
-#include <algorithm>
-namespace vtkmstd
-{
-
-template <std::size_t... Xs>
-struct max_size;
-template <std::size_t X>
-struct max_size<X>
-{
-  static constexpr std::size_t value = X;
-};
-template <std::size_t X0, std::size_t... Xs>
-struct max_size<X0, Xs...>
-{
-  static constexpr std::size_t other_value = max_size<Xs...>::value;
-  static constexpr std::size_t value = (other_value > X0) ? other_value : X0;
-};
-
-// This is to get around an apparent bug in GCC 4.8 where alianas(x) does not
-// seem to work when x is a constexpr. See
-// https://stackoverflow.com/questions/29879609/g-complains-constexpr-function-is-not-a-constant-expression
-template <std::size_t Alignment, std::size_t Size>
-struct aligned_data_block
-{
-  alignas(Alignment) char _s[Size];
-};
-
-template <std::size_t Len, class... Types>
-struct aligned_union
-{
-  static constexpr std::size_t alignment_value = vtkmstd::max_size<alignof(Types)...>::value;
-
-  using type =
-    vtkmstd::aligned_data_block<alignment_value, vtkmstd::max_size<Len, sizeof(Types)...>::value>;
-};
-} // namespace vtkmstd
-
-#else // aligned_union supported
-
-namespace vtkmstd
-{
-
-using std::aligned_union;
-
-} // namespace vtkmstd
-
-#endif
-
-// It would make sense to put this in its own header file.
-#if (defined(VTKM_GCC) && (__GNUC__ == 4))
-#define VTKM_IS_TRIVIALLY_COPYABLE_NOT_SUPPORTED 1
-
-namespace vtkmstd
-{
-
-// GCC 4.8 and 4.9 claim to support C++11, but do not support std::is_trivially_copyable.
-// There is no relyable way to get this information (since it has to come special from
-// the compiler). For our purposes, we will report as nothing being trivially copyable,
-// which causes us to call the constructors with everything. This should be fine unless
-// some other part of the compiler is trying to check for trivial copies (perhaps nvcc
-// on top of GCC 4.8).
-template <typename>
-struct is_trivially_copyable : std::false_type
-{
-};
-
-} // namespace vtkmstd
-
-#else // is_trivially_copyable supported
-
-namespace vtkmstd
-{
-
-using std::is_trivially_copyable;
-
-} // namespace vtkmstd
-
-#endif // is_trivially_copyable supported
+#include <vtkmstd/aligned_union.h>
+#include <vtkmstd/is_trivially_copyable.h>
 
 namespace vtkm
 {
@@ -199,7 +119,7 @@ struct VariantStorageImpl
   vtkm::IdComponent Index = -1;
 
   template <vtkm::IdComponent Index>
-  using TypeAt = typename vtkm::ListTypeAt<vtkm::ListTagBase<Ts...>, Index>::type;
+  using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
 
   VTKM_EXEC_CONT void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
   VTKM_EXEC_CONT const void* GetPointer() const
@@ -328,8 +248,7 @@ public:
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
   template <typename T>
-  using IndexOf = std::integral_constant<vtkm::IdComponent,
-                                         vtkm::ListIndexOf<vtkm::ListTagBase<Ts...>, T>::value>;
+  using IndexOf = vtkm::ListIndexOf<vtkm::List<Ts...>, T>;
 
   /// Returns the index for the given type (or -1 if that type is not in the list).
   ///
@@ -355,6 +274,7 @@ public:
   Variant& operator=(const Variant&) = default;
   Variant& operator=(Variant&&) = default;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT Variant(const T& src) noexcept
   {
@@ -366,6 +286,7 @@ public:
     this->Index = index;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
   VTKM_EXEC_CONT Variant(const T&& src) noexcept
   {
@@ -410,6 +331,7 @@ public:
   }
 
 private:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename... Args>
   VTKM_EXEC_CONT T& EmplaceImpl(Args&&... args)
   {
@@ -419,6 +341,7 @@ private:
     return *value;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename U, typename... Args>
   VTKM_EXEC_CONT T& EmplaceImpl(std::initializer_list<U> il, Args&&... args)
   {
@@ -498,8 +421,18 @@ public:
 
 /// \brief Convert a ListTag to a Variant.
 ///
+/// Depricated. Use ListAsVariant instead.
+///
 template <typename ListTag>
-using ListTagAsVariant = typename vtkm::ListTagApply<ListTag, vtkm::internal::Variant>::type;
+using ListTagAsVariant VTKM_DEPRECATED(
+  1.6,
+  "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
+  vtkm::ListApply<ListTag, vtkm::internal::Variant>;
+
+/// \brief Convert a `List` to a `Variant`.
+///
+template <typename List>
+using ListAsVariant = vtkm::ListApply<List, vtkm::internal::Variant>;
 }
 } // namespace vtkm::internal
 

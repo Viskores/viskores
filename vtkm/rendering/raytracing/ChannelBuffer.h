@@ -100,7 +100,8 @@ public:
     this->NumChannels = numChannels;
     this->Size = size;
 
-    this->Buffer.PrepareForOutput(this->Size * this->NumChannels, Device());
+    vtkm::cont::Token token;
+    this->Buffer.PrepareForOutput(this->Size * this->NumChannels, Device(), token);
   }
 
 
@@ -117,7 +118,8 @@ public:
       return;
 
     this->NumChannels = numChannels;
-    this->Buffer.PrepareForOutput(this->Size * this->NumChannels, Device());
+    vtkm::cont::Token token;
+    this->Buffer.PrepareForOutput(this->Size * this->NumChannels, Device(), token);
   }
 
   template <typename Device>
@@ -126,7 +128,8 @@ public:
     if (newSize < 0)
       throw vtkm::cont::ErrorBadValue("ChannelBuffer resize: Size must be greater than -1 ");
     this->Size = newSize;
-    this->Buffer.PrepareForOutput(this->Size * static_cast<vtkm::Id>(NumChannels), device);
+    vtkm::cont::Token token;
+    this->Buffer.PrepareForOutput(this->Size * static_cast<vtkm::Id>(NumChannels), device, token);
   }
 };
 }

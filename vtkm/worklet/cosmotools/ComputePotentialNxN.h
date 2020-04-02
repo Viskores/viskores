@@ -65,9 +65,7 @@ template <typename T>
 class ComputePotentialNxN : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn partId,      // (input) particle Id
                                 WholeArrayIn xLoc,   // (input) x location in domain

@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2d_freudenthal_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_2d_freudenthal_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_2d_freudenthal_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_2d_freudenthal_h
 
 #include <cstdlib>
 #include <vtkm/Types.h>
@@ -75,61 +75,65 @@ class Mesh_DEM_Triangulation_2D_Freudenthal : public Mesh_DEM_Triangulation_2D<T
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
-  m2d_freudenthal::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
+  m2d_freudenthal::EdgeBoundaryDetectionMasksType EdgeBoundaryDetectionMasks;
 
   //Mesh dependent helper functions
-  void setPrepareForExecutionBehavior(bool getMax);
+  void SetPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag) const;
+  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag,
+                                                            vtkm::cont::Token& token) const;
 
-  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols);
+  Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows);
 
   MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
 
 private:
-  bool useGetMax; // Define the behavior ofr the PrepareForExecution function
+  bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
 };                // class Mesh_DEM_Triangulation
 
 // creates input mesh
 template <typename T, typename StorageType>
 Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D_Freudenthal(
-  vtkm::Id nrows,
-  vtkm::Id ncols)
-  : Mesh_DEM_Triangulation_2D<T, StorageType>(nrows, ncols)
+  vtkm::Id ncols,
+  vtkm::Id nrows)
+  : Mesh_DEM_Triangulation_2D<T, StorageType>(ncols, nrows)
 
 {
-  edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m2d_freudenthal::edgeBoundaryDetectionMasks, m2d_freudenthal::N_INCIDENT_EDGES);
+  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+    m2d_freudenthal::EdgeBoundaryDetectionMasks, m2d_freudenthal::N_INCIDENT_EDGES);
 }
 
 template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::setPrepareForExecutionBehavior(
+void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::SetPrepareForExecutionBehavior(
   bool getMax)
 {
-  this->useGetMax = getMax;
+  this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename T, typename StorageType>
 template <typename DeviceTag>
 MeshStructureFreudenthal2D<DeviceTag>
-  Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
+Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::PrepareForExecution(
+  DeviceTag,
+  vtkm::cont::Token& token) const
 {
-  return MeshStructureFreudenthal2D<DeviceTag>(this->nRows,
-                                               this->nCols,
+  return MeshStructureFreudenthal2D<DeviceTag>(this->NumColumns,
+                                               this->NumRows,
                                                m2d_freudenthal::N_INCIDENT_EDGES,
-                                               this->useGetMax,
-                                               this->sortIndices,
-                                               this->sortOrder,
-                                               edgeBoundaryDetectionMasks);
+                                               this->UseGetMax,
+                                               this->SortIndices,
+                                               this->SortOrder,
+                                               this->EdgeBoundaryDetectionMasks,
+                                               token);
 }
 
 template <typename T, typename StorageType>
 MeshBoundary2DExec
 Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary2DExec(this->nRows, this->nCols, this->sortOrder);
+  return MeshBoundary2DExec(this->NumColumns, this->NumRows, this->SortOrder);
 }
 
 } // namespace contourtree_augmented

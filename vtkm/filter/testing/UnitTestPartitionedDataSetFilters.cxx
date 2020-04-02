@@ -98,8 +98,7 @@ void Result_Verify(const vtkm::cont::PartitionedDataSet& result,
     const vtkm::Id numValues = result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues();
     for (vtkm::Id i = 0; i < numValues; i++)
     {
-      VTKM_TEST_ASSERT(partitionArray.GetPortalConstControl().Get(i) ==
-                         sDataSetArray.GetPortalConstControl().Get(i),
+      VTKM_TEST_ASSERT(partitionArray.ReadPortal().Get(i) == sDataSetArray.ReadPortal().Get(i),
                        "result values incorrect");
     }
   }

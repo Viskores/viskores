@@ -12,7 +12,8 @@
 
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/CellSet.h>
-#include <vtkm/cont/CellSetListTag.h>
+#include <vtkm/cont/CellSetList.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
 
@@ -37,7 +38,7 @@ namespace cont
 /// to determine the type when running algorithms.
 ///
 /// By default, \c DynamicCellSet will assume that the value type in the array
-/// matches one of the types specified by \c VTKM_DEFAULT_CELL_SET_LIST_TAG.
+/// matches one of the types specified by \c VTKM_DEFAULT_CELL_SET_LIST.
 /// This list can be changed by using the \c ResetCellSetList method. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
@@ -53,7 +54,7 @@ namespace cont
 template <typename CellSetList>
 class VTKM_ALWAYS_EXPORT DynamicCellSetBase
 {
-  VTKM_IS_LIST_TAG(CellSetList);
+  VTKM_IS_LIST(CellSetList);
 
 public:
   VTKM_CONT
@@ -127,7 +128,7 @@ public:
 
   /// Changes the cell set types to try casting to when resolving this dynamic
   /// cell set, which is specified with a list tag like those in
-  /// CellSetListTag.h. Since C++ does not allow you to actually change the
+  /// CellSetList.h. Since C++ does not allow you to actually change the
   /// template arguments, this method returns a new dynamic cell setobject.
   /// This method is particularly useful to narrow down (or expand) the types
   /// when using a cell set of particular constraints.
@@ -136,14 +137,14 @@ public:
   VTKM_CONT DynamicCellSetBase<NewCellSetList> ResetCellSetList(
     NewCellSetList = NewCellSetList()) const
   {
-    VTKM_IS_LIST_TAG(NewCellSetList);
+    VTKM_IS_LIST(NewCellSetList);
     return DynamicCellSetBase<NewCellSetList>(*this);
   }
 
   /// Attempts to cast the held cell set to a specific concrete type, then call
   /// the given functor with the cast cell set. The cell sets tried in the cast
   /// are those in the \c CellSetList template argument of the \c
-  /// DynamicCellSetBase class (or \c VTKM_DEFAULT_CELL_SET_LIST_TAG for \c
+  /// DynamicCellSetBase class (or \c VTKM_DEFAULT_CELL_SET_LIST for \c
   /// DynamicCellSet). You can use \c ResetCellSetList to get different
   /// behavior from \c CastAndCall.
   ///
@@ -293,7 +294,7 @@ VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(Functor&& f, Args&&.
   }
 }
 
-using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST_TAG>;
+using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST>;
 
 namespace internal
 {

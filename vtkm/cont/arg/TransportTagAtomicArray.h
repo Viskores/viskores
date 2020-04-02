@@ -54,13 +54,14 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
   operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& array,
              const InputDomainType&,
              vtkm::Id,
-             vtkm::Id) const
+             vtkm::Id,
+             vtkm::cont::Token& token) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
     ExecType obj(array);
-    return obj.PrepareForExecution(Device());
+    return obj.PrepareForExecution(Device(), token);
   }
 };
 

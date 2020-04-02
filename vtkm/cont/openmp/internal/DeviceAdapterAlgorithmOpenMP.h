@@ -54,8 +54,9 @@ public:
       output.Allocate(0);
       return;
     }
-    auto inputPortal = input.PrepareForInput(DevTag());
-    auto outputPortal = output.PrepareForOutput(inSize, DevTag());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DevTag(), token);
+    auto outputPortal = output.PrepareForOutput(inSize, DevTag(), token);
     CopyHelper(inputPortal, outputPortal, 0, 0, inSize);
   }
 
@@ -86,9 +87,10 @@ public:
       output.Allocate(0);
       return;
     }
-    auto inputPortal = input.PrepareForInput(DevTag());
-    auto stencilPortal = stencil.PrepareForInput(DevTag());
-    auto outputPortal = output.PrepareForOutput(inSize, DevTag());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DevTag(), token);
+    auto stencilPortal = stencil.PrepareForInput(DevTag(), token);
+    auto outputPortal = output.PrepareForOutput(inSize, DevTag(), token);
 
     auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);
     auto stencilIter = vtkm::cont::ArrayPortalToIteratorBegin(stencilPortal);
@@ -113,6 +115,7 @@ public:
     }
 
     vtkm::Id numValues = helper.Reduce(outIter);
+    token.DetachFromAll();
     output.Shrink(numValues);
   }
 
@@ -168,8 +171,9 @@ public:
       }
     }
 
-    auto inputPortal = input.PrepareForInput(DevTag());
-    auto outputPortal = output.PrepareForInPlace(DevTag());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DevTag(), token);
+    auto outputPortal = output.PrepareForInPlace(DevTag(), token);
 
     CopyHelper(inputPortal, outputPortal, inputStartIndex, outputIndex, numberOfValuesToCopy);
 
@@ -193,7 +197,8 @@ public:
 
     using namespace vtkm::cont::openmp;
 
-    auto portal = input.PrepareForInput(DevTag());
+    vtkm::cont::Token token;
+    auto portal = input.PrepareForInput(DevTag(), token);
     const OpenMPReductionSupported<typename std::decay<U>::type> fastPath;
 
     return ReduceHelper::Execute(portal, initialValue, binary_functor, fastPath);
@@ -238,13 +243,15 @@ public:
       return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
-    using InPortalT = decltype(input.PrepareForInput(DevTag()));
-    using OutPortalT = decltype(output.PrepareForOutput(0, DevTag()));
+    vtkm::cont::Token token;
+    using InPortalT = decltype(input.PrepareForInput(DevTag(), token));
+    using OutPortalT = decltype(output.PrepareForOutput(0, DevTag(), token));
     using Impl = openmp::ScanInclusiveHelper<InPortalT, OutPortalT, BinaryFunctor>;
 
     vtkm::Id numVals = input.GetNumberOfValues();
-    Impl impl(
-      input.PrepareForInput(DevTag()), output.PrepareForOutput(numVals, DevTag()), binaryFunctor);
+    Impl impl(input.PrepareForInput(DevTag(), token),
+              output.PrepareForOutput(numVals, DevTag(), token),
+              binaryFunctor);
 
     return impl.Execute(vtkm::Id2(0, numVals));
   }
@@ -271,13 +278,14 @@ public:
       return initialValue;
     }
 
-    using InPortalT = decltype(input.PrepareForInput(DevTag()));
-    using OutPortalT = decltype(output.PrepareForOutput(0, DevTag()));
+    vtkm::cont::Token token;
+    using InPortalT = decltype(input.PrepareForInput(DevTag(), token));
+    using OutPortalT = decltype(output.PrepareForOutput(0, DevTag(), token));
     using Impl = openmp::ScanExclusiveHelper<InPortalT, OutPortalT, BinaryFunctor>;
 
     vtkm::Id numVals = input.GetNumberOfValues();
-    Impl impl(input.PrepareForInput(DevTag()),
-              output.PrepareForOutput(numVals, DevTag()),
+    Impl impl(input.PrepareForInput(DevTag(), token),
+              output.PrepareForOutput(numVals, DevTag(), token),
               binaryFunctor,
               initialValue);
 
@@ -339,7 +347,8 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    auto portal = values.PrepareForInPlace(DevTag());
+    vtkm::cont::Token token;
+    auto portal = values.PrepareForInPlace(DevTag(), token);
     auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
 
     using IterT = typename std::decay<decltype(iter)>::type;
@@ -347,6 +356,7 @@ public:
 
     Uniqifier uniquifier(iter, portal.GetNumberOfValues(), binary_compare);
     vtkm::Id outSize = uniquifier.Execute();
+    token.DetachFromAll();
     values.Shrink(outSize);
   }
 
@@ -389,19 +399,17 @@ public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::openmp::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
-                                                             vtkm::Id,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id)
   {
-    return vtkm::exec::openmp::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::openmp::internal::TaskTiling1D(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::openmp::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
                                                              const InvocationType& invocation,
-                                                             vtkm::Id3,
-                                                             vtkm::Id globalIndexOffset = 0)
+                                                             vtkm::Id3)
   {
-    return vtkm::exec::openmp::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::openmp::internal::TaskTiling3D(worklet, invocation);
   }
 };
 }

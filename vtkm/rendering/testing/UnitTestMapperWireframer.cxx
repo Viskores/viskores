@@ -67,7 +67,7 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(8);
-  auto connPortal = connectivity.GetPortalControl();
+  auto connPortal = connectivity.WritePortal();
   connPortal.Set(0, 0);
   connPortal.Set(1, 1);
 

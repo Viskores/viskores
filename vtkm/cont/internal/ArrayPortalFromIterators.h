@@ -91,6 +91,16 @@ public:
   VTKM_EXEC_CONT
   IteratorT GetIteratorBegin() const { return this->BeginIterator; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  IteratorT GetIteratorEnd() const
+  {
+    IteratorType iterator = this->BeginIterator;
+    using difference_type = typename std::iterator_traits<IteratorType>::difference_type;
+    iterator += static_cast<difference_type>(this->NumberOfValues);
+    return iterator;
+  }
+
 private:
   IteratorT BeginIterator;
   vtkm::Id NumberOfValues;
@@ -175,6 +185,16 @@ public:
   VTKM_EXEC_CONT
   IteratorT GetIteratorBegin() const { return this->BeginIterator; }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  IteratorT GetIteratorEnd() const
+  {
+    using difference_type = typename std::iterator_traits<IteratorType>::difference_type;
+    IteratorType iterator = this->BeginIterator;
+    iterator += static_cast<difference_type>(this->NumberOfValues);
+    return iterator;
+  }
+
 private:
   IteratorT BeginIterator;
   vtkm::Id NumberOfValues;
@@ -192,80 +212,5 @@ private:
 }
 }
 } // namespace vtkm::cont::internal
-
-namespace vtkm
-{
-namespace cont
-{
-
-/// Partial specialization of \c ArrayPortalToIterators for \c
-/// ArrayPortalFromIterators. Returns the original array rather than
-/// the portal wrapped in an \c IteratorFromArrayPortal.
-///
-template <typename IterType>
-class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<IterType>>
-{
-  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<IterType>;
-
-public:
-#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-  using IteratorType = IterType;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
-  ArrayPortalToIterators(const PortalType& portal)
-    : Iterator(portal.GetIteratorBegin())
-    , NumberOfValues(portal.GetNumberOfValues())
-  {
-  }
-
-#else // VTKM_MSVC
-  // The MSVC compiler issues warnings when using raw pointer math when in
-  // debug mode. To keep the compiler happy (and add some safety checks),
-  // wrap the iterator in checked_array_iterator.
-  using IteratorType = stdext::checked_array_iterator<IterType>;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_CONT
-  ArrayPortalToIterators(const PortalType& portal)
-    : Iterator(portal.GetIteratorBegin(), static_cast<size_t>(portal.GetNumberOfValues()))
-    , NumberOfValues(portal.GetNumberOfValues())
-  {
-  }
-
-#endif // VTKM_MSVC
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  IteratorType GetBegin() const { return this->Iterator; }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  IteratorType GetEnd() const
-  {
-    IteratorType iterator = this->Iterator;
-    using difference_type = typename std::iterator_traits<IteratorType>::difference_type;
-
-#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-    std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
-#else
-    //Visual Studio checked iterators throw exceptions when you try to advance
-    //nullptr iterators even if the advancement length is zero. So instead
-    //don't do the advancement at all
-    if (this->NumberOfValues > 0)
-    {
-      std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));
-    }
-#endif
-
-    return iterator;
-  }
-
-private:
-  IteratorType Iterator;
-  vtkm::Id NumberOfValues;
-};
-}
-} // namespace vtkm::cont
 
 #endif //vtk_m_cont_internal_ArrayPortalFromIterators_h

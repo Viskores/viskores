@@ -256,7 +256,7 @@ void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
                     const vtkm::Range& range,
                     vtkm::Float32 delta)
 {
-  vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
+  vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType binPortal = bins.ReadPortal();
 
   vtkm::Id sum = 0;
   for (vtkm::Id i = 0; i < numberOfBins; i++)

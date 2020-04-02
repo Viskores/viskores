@@ -66,7 +66,6 @@ VTKM_EXEC static void inv_lift(Int* p)
   z = *p;
   p += s;
   w = *p;
-  p += s;
 
   /*
   ** non-orthogonal transform
@@ -90,7 +89,6 @@ VTKM_EXEC static void inv_lift(Int* p)
   x <<= 1;
   x -= w;
 
-  p -= s;
   *p = w;
   p -= s;
   *p = z;

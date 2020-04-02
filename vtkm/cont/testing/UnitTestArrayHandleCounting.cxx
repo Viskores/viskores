@@ -77,11 +77,11 @@ struct TemplatedTests
 {
   using ArrayHandleType = vtkm::cont::ArrayHandleCounting<ValueType>;
 
-  using ArrayHandleType2 = vtkm::cont::ArrayHandle<
-    ValueType,
-    typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>;
+  using ArrayHandleType2 = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagCounting>;
 
-  using PortalType = typename ArrayHandleType::PortalConstControl;
+  using PortalType =
+    typename vtkm::cont::internal::Storage<ValueType,
+                                           typename ArrayHandleType::StorageTag>::PortalConstType;
 
   void operator()(const ValueType& startingValue, const ValueType& step)
   {
@@ -104,12 +104,12 @@ struct TemplatedTests
     ValueType properValue = startingValue;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      VTKM_TEST_ASSERT(arrayConst.GetPortalConstControl().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayConst.ReadPortal().Get(index) == properValue,
                        "Counting array using constructor has unexpected value.");
-      VTKM_TEST_ASSERT(arrayMake.GetPortalConstControl().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayMake.ReadPortal().Get(index) == properValue,
                        "Counting array using make has unexpected value.");
 
-      VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayHandle.ReadPortal().Get(index) == properValue,
                        "Counting array using raw array handle + tag has unexpected value.");
       properValue = properValue + step;
     }

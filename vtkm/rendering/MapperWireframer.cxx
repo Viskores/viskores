@@ -115,7 +115,9 @@ struct EdgesCounter : public vtkm::worklet::WorkletVisitCellsWithPoints
     }
     else
     {
-      return vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, *this);
+      vtkm::IdComponent numEdges;
+      vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges);
+      return numEdges;
     }
   }
 }; // struct EdgesCounter
@@ -149,10 +151,13 @@ struct EdgesExtracter : public vtkm::worklet::WorkletVisitCellsWithPoints
     }
     else
     {
-      p1 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
-        pointIndices.GetNumberOfComponents(), 0, visitIndex, shape, *this)];
-      p2 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
-        pointIndices.GetNumberOfComponents(), 1, visitIndex, shape, *this)];
+      vtkm::IdComponent localEdgeIndex;
+      vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 0, visitIndex, shape, localEdgeIndex);
+      p1 = pointIndices[localEdgeIndex];
+      vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 1, visitIndex, shape, localEdgeIndex);
+      p2 = pointIndices[localEdgeIndex];
     }
     // These indices need to be arranged in a definite order, as they will later be sorted to
     // detect duplicates
@@ -267,7 +272,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
       Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
       .Invoke(coords.GetData(),
-              inScalarField.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+              inScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
               newCoords,
               newScalars);
 

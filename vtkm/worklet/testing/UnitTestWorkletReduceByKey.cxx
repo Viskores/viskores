@@ -131,7 +131,7 @@ void TryKeyType(KeyType)
 
   vtkm::cont::ArrayHandle<KeyType> valuesToModify;
   valuesToModify.Allocate(ARRAY_SIZE);
-  SetPortal(valuesToModify.GetPortalControl());
+  SetPortal(valuesToModify.WritePortal());
 
   vtkm::cont::ArrayHandle<KeyType> writeKey;
 
@@ -146,17 +146,16 @@ void TryKeyType(KeyType)
     KeyType key = TestValue(index % NUM_UNIQUE, KeyType());
     KeyType value = TestValue(index, KeyType());
 
-    VTKM_TEST_ASSERT(test_equal(static_cast<KeyType>(key + value),
-                                valuesToModify.GetPortalConstControl().Get(index)),
-                     "Bad in/out value.");
+    VTKM_TEST_ASSERT(
+      test_equal(static_cast<KeyType>(key + value), valuesToModify.ReadPortal().Get(index)),
+      "Bad in/out value.");
 
-    VTKM_TEST_ASSERT(test_equal(key, writeKey.GetPortalConstControl().Get(index)),
-                     "Bad out value.");
+    VTKM_TEST_ASSERT(test_equal(key, writeKey.ReadPortal().Get(index)), "Bad out value.");
   }
 
   vtkm::cont::ArrayHandle<KeyType> keyPairIn;
   keyPairIn.Allocate(NUM_UNIQUE);
-  SetPortal(keyPairIn.GetPortalControl());
+  SetPortal(keyPairIn.WritePortal());
 
   vtkm::cont::ArrayHandle<KeyType> keyPairOut;
   keyPairOut.Allocate(NUM_UNIQUE);
@@ -169,9 +168,9 @@ void TryKeyType(KeyType)
 
   VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == NUM_UNIQUE,
                    "Reduced values output not sized correctly.");
-  CheckPortal(writeKey.GetPortalConstControl());
+  CheckPortal(writeKey.ReadPortal());
 
-  CheckPortal(keyPairOut.GetPortalConstControl());
+  CheckPortal(keyPairOut.ReadPortal());
 }
 
 void TestReduceByKey(vtkm::cont::DeviceAdapterId id)

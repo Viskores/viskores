@@ -52,14 +52,17 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayOut, ContObjectType, Dev
   using ExecObjectType = vtkm::exec::ExecutionWholeArray<ValueType, StorageTag, Device>;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(ContObjectType& array, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(ContObjectType& array,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
 
-    return ExecObjectType(array, array.GetNumberOfValues());
+    return ExecObjectType(array, array.GetNumberOfValues(), token);
   }
 };
 }

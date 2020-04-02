@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_TryExecute_h
 #define vtk_m_cont_TryExecute_h
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
@@ -115,7 +115,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   TryExecuteWrapper task;
   vtkm::ListForEach(task,
-                    VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
+                    VTKM_DEFAULT_DEVICE_ADAPTER_LIST(),
                     std::forward<Functor>(functor),
                     devId,
                     tracker,
@@ -165,7 +165,7 @@ inline bool TryExecuteImpl(vtkm::cont::DeviceAdapterId devId,
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
 ///
-/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
+/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST
 /// is used.
 ///
 template <typename Functor>
@@ -181,7 +181,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
                                   Args&&... args)
 {
   //determine if we are being passed a device adapter or runtime tracker as our argument
-  using is_deviceAdapter = typename std::is_base_of<vtkm::detail::ListRoot, Arg1>::type;
+  using is_deviceAdapter = vtkm::internal::IsList<Arg1>;
 
   return detail::TryExecuteImpl(devId,
                                 std::forward<Functor>(functor),
@@ -223,7 +223,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
 /// vtkm::cont::TryExecute(TryCallExample(), int{42});
 ///
 /// // Executing with a device list
-/// using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial>;
+/// using DeviceList = vtkm::List<vtkm::cont::DeviceAdapterTagSerial>;
 /// vtkm::cont::TryExecute(TryCallExample(), DeviceList(), int{42});
 ///
 /// \endcode
@@ -231,7 +231,7 @@ VTKM_CONT bool TryExecuteOnDevice(vtkm::cont::DeviceAdapterId devId,
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
 ///
-/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
+/// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST
 /// is used.
 ///
 template <typename Functor, typename... Args>

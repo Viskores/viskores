@@ -52,24 +52,24 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
   for (vtkm::Id i = 0; i < indices.GetNumberOfValues(); ++i)
   {
     // All unmasked indices should have been copied to the output.
-    vtkm::Id unmaskedIndex = indices.GetPortalConstControl().Get(i);
-    vtkm::Id writtenValue = outPointId.GetPortalConstControl().Get(unmaskedIndex);
-    VTKM_TEST_ASSERT(unmaskedIndex == writtenValue,
+    vtkm::Id unMaskedIndex = indices.ReadPortal().Get(i);
+    vtkm::Id writtenValue = outPointId.ReadPortal().Get(unMaskedIndex);
+    VTKM_TEST_ASSERT(unMaskedIndex == writtenValue,
                      "Did not pass unmasked index. Expected ",
-                     unmaskedIndex,
+                     unMaskedIndex,
                      ". Got ",
                      writtenValue);
 
     // Mark index as passed.
-    stencil.GetPortalControl().Set(unmaskedIndex, 1);
+    stencil.WritePortal().Set(unMaskedIndex, 1);
   }
 
   // Check that output that should not be written was not.
   for (vtkm::Id i = 0; i < numPoints; ++i)
   {
-    if (stencil.GetPortalConstControl().Get(i) == 0)
+    if (stencil.ReadPortal().Get(i) == 0)
     {
-      vtkm::Id foundValue = outPointId.GetPortalConstControl().Get(i);
+      vtkm::Id foundValue = outPointId.ReadPortal().Get(i);
       VTKM_TEST_ASSERT(foundValue == -1,
                        "Expected index ",
                        i,
@@ -106,15 +106,17 @@ void TestMaskIndices()
     // Note that it is possible that the same index will be written twice, which is generally
     // a bad idea with MaskIndices. However, the worklet will write the same value for each
     // instance, so we should still get the correct result.
-    auto portal = indices.GetPortalControl();
-    std::cout << "using indices:";
-    for (vtkm::Id j = 0; j < count; ++j)
     {
-      auto val = ptidDistribution(generator);
-      std::cout << " " << val;
-      portal.Set(j, val);
+      auto portal = indices.WritePortal();
+      std::cout << "using indices:";
+      for (vtkm::Id j = 0; j < count; ++j)
+      {
+        auto val = ptidDistribution(generator);
+        std::cout << " " << val;
+        portal.Set(j, val);
+      }
+      std::cout << "\n";
     }
-    std::cout << "\n";
 
     RunTest(cellset, indices);
   }

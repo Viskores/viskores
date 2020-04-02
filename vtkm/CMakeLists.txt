@@ -17,6 +17,7 @@ vtkm_install_headers(
   vtkm ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Version.h)
 
 set(headers
+  Algorithms.h
   Assert.h
   BinaryPredicates.h
   BinaryOperators.h
@@ -25,15 +26,19 @@ set(headers
   CellClassification.h
   CellShape.h
   CellTraits.h
+  Deprecated.h
+  ErrorCode.h
   Flags.h
   Geometry.h
   Hash.h
   ImplicitFunction.h
+  List.h
   ListTag.h
   Math.h
   Matrix.h
   NewtonsMethod.h
   Pair.h
+  Particle.h
   Range.h
   RangeId.h
   RangeId2.h
@@ -42,6 +47,8 @@ set(headers
   Swap.h
   TopologyElementTag.h
   Transform3D.h
+  Tuple.h
+  TypeList.h
   TypeListTag.h
   Types.h
   TypeTraits.h
@@ -61,6 +68,7 @@ set(template_sources
 )
 
 vtkm_pyexpander_generated_file(Math.h)
+vtkm_pyexpander_generated_file(Tuple.h)
 
 vtkm_declare_headers(
   ${headers}
@@ -75,7 +83,6 @@ if(VTKm_ENABLE_LOGGING)
   add_subdirectory(thirdparty/loguru)
 endif()
 add_subdirectory(thirdparty/optionparser)
-add_subdirectory(thirdparty/taotuple)
 add_subdirectory(thirdparty/lcl)
 
 add_subdirectory(testing)
@@ -106,3 +113,6 @@ add_subdirectory(io)
 
 #add the source folder
 add_subdirectory(source)
+
+#add Pseudo Random Number Generator folder
+add_subdirectory(random)

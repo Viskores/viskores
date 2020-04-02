@@ -87,10 +87,11 @@ template <typename Device>
 CellSetExtrude::ConnectivityP2C<Device> CellSetExtrude::PrepareForInput(
   Device,
   vtkm::TopologyElementTagCell,
-  vtkm::TopologyElementTagPoint) const
+  vtkm::TopologyElementTagPoint,
+  vtkm::cont::Token& token) const
 {
-  return ConnectivityP2C<Device>(this->Connectivity.PrepareForInput(Device{}),
-                                 this->NextNode.PrepareForInput(Device{}),
+  return ConnectivityP2C<Device>(this->Connectivity.PrepareForInput(Device{}, token),
+                                 this->NextNode.PrepareForInput(Device{}, token),
                                  this->NumberOfCellsPerPlane,
                                  this->NumberOfPointsPerPlane,
                                  this->NumberOfPlanes,
@@ -102,16 +103,17 @@ template <typename Device>
 VTKM_CONT CellSetExtrude::ConnectivityC2P<Device> CellSetExtrude::PrepareForInput(
   Device,
   vtkm::TopologyElementTagPoint,
-  vtkm::TopologyElementTagCell) const
+  vtkm::TopologyElementTagCell,
+  vtkm::cont::Token& token) const
 {
   if (!this->ReverseConnectivityBuilt)
   {
     const_cast<CellSetExtrude*>(this)->BuildReverseConnectivity(Device{});
   }
-  return ConnectivityC2P<Device>(this->RConnectivity.PrepareForInput(Device{}),
-                                 this->ROffsets.PrepareForInput(Device{}),
-                                 this->RCounts.PrepareForInput(Device{}),
-                                 this->PrevNode.PrepareForInput(Device{}),
+  return ConnectivityC2P<Device>(this->RConnectivity.PrepareForInput(Device{}, token),
+                                 this->ROffsets.PrepareForInput(Device{}, token),
+                                 this->RCounts.PrepareForInput(Device{}, token),
+                                 this->PrevNode.PrepareForInput(Device{}, token),
                                  this->NumberOfCellsPerPlane,
                                  this->NumberOfPointsPerPlane,
                                  this->NumberOfPlanes);

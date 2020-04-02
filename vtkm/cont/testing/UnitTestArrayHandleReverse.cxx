@@ -26,8 +26,7 @@ void TestArrayHandleReverseRead()
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == index,
-                     "Index array has unexpected value.");
+    VTKM_TEST_ASSERT(array.ReadPortal().Get(index) == index, "Index array has unexpected value.");
   }
 
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandleIndex> reverse =
@@ -35,8 +34,7 @@ void TestArrayHandleReverseRead()
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(reverse.GetPortalConstControl().Get(index) ==
-                       array.GetPortalConstControl().Get(9 - index),
+    VTKM_TEST_ASSERT(reverse.ReadPortal().Get(index) == array.ReadPortal().Get(9 - index),
                      "ArrayHandleReverse does not reverse array");
   }
 }
@@ -51,12 +49,12 @@ void TestArrayHandleReverseWrite()
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    reverse.GetPortalControl().Set(index, index);
+    reverse.WritePortal().Set(index, index);
   }
 
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VTKM_TEST_ASSERT(handle.GetPortalConstControl().Get(index) == (9 - index),
+    VTKM_TEST_ASSERT(handle.ReadPortal().Get(index) == (9 - index),
                      "ArrayHandleReverse does not reverse array");
   }
 }
@@ -80,8 +78,7 @@ void TestArrayHandleReverseScanInclusiveByKey()
     vtkm::cont::make_ArrayHandleReverse(vtkm::cont::make_ArrayHandle(expected, 10));
   for (int i = 0; i < 10; i++)
   {
-    VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(i) ==
-                       expected_reversed.GetPortalConstControl().Get(i),
+    VTKM_TEST_ASSERT(output.ReadPortal().Get(i) == expected_reversed.ReadPortal().Get(i),
                      "ArrayHandleReverse as output of ScanInclusiveByKey");
   }
   std::cout << std::endl;

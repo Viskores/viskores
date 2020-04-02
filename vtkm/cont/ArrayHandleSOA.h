@@ -17,7 +17,7 @@
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
 
-#include <vtkmtaotuple/include/tao/seq/make_integer_sequence.hpp>
+#include <vtkmstd/integer_sequence.h>
 
 #include <array>
 #include <limits>
@@ -70,7 +70,7 @@ public:
             typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex) const
   {
-    return this->Get(valueIndex, tao::seq::make_index_sequence<NUM_COMPONENTS>());
+    return this->Get(valueIndex, vtkmstd::make_index_sequence<NUM_COMPONENTS>());
   }
 
   template <typename SPT = SourcePortalType,
@@ -78,7 +78,7 @@ public:
             typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id valueIndex, const ValueType& value) const
   {
-    this->Set(valueIndex, value, tao::seq::make_index_sequence<NUM_COMPONENTS>());
+    this->Set(valueIndex, value, vtkmstd::make_index_sequence<NUM_COMPONENTS>());
   }
 
 private:
@@ -89,7 +89,7 @@ private:
   }
 
   template <std::size_t... I>
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex, tao::seq::index_sequence<I...>) const
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex, vtkmstd::index_sequence<I...>) const
   {
     return ValueType{ this->GetComponent<I>(valueIndex)... };
   }
@@ -105,7 +105,7 @@ private:
   template <std::size_t... I>
   VTKM_EXEC_CONT void Set(vtkm::Id valueIndex,
                           const ValueType& value,
-                          tao::seq::index_sequence<I...>) const
+                          vtkmstd::index_sequence<I...>) const
   {
     // Is there a better way to unpack an expression and execute them with no other side effects?
     (void)std::initializer_list<bool>{ this->SetComponent<I>(valueIndex, value)... };
@@ -182,11 +182,11 @@ struct ArrayHandleSOATraits
   using IsTrueVec = std::integral_constant<bool, (NUM_COMPONENTS > 1)>;
 
   using PortalControl = typename detail::SOAPortalChooser<ValueType,
-                                                          typename BaseArrayType::PortalControl,
+                                                          typename BaseArrayType::WritePortalType,
                                                           IsTrueVec>::Type;
   using PortalConstControl =
     typename detail::SOAPortalChooser<ValueType,
-                                      typename BaseArrayType::PortalConstControl,
+                                      typename BaseArrayType::ReadPortalType,
                                       IsTrueVec>::Type;
 
   template <typename Device>
@@ -282,7 +282,7 @@ public:
     VTKM_ASSERT(this->IsValid());
     return detail::MakeSOAPortal<PortalType>(
       this->Arrays, this->GetNumberOfValues(), [](BaseArrayType& array) {
-        return array.GetPortalControl();
+        return array.WritePortal();
       });
   }
 
@@ -291,7 +291,7 @@ public:
     VTKM_ASSERT(this->IsValid());
     return detail::MakeSOAPortal<PortalConstType>(
       this->Arrays, this->GetNumberOfValues(), [](const BaseArrayType& array) {
-        return array.GetPortalConstControl();
+        return array.ReadPortal();
       });
   }
 
@@ -349,27 +349,29 @@ public:
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
-  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) const
+  VTKM_CONT PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData),
+                                                 vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalConstExecution>(
-      this->Storage->GetArrays(), this->GetNumberOfValues(), [](const BaseArrayType& array) {
-        return array.PrepareForInput(Device{});
+      this->Storage->GetArrays(), this->GetNumberOfValues(), [&token](const BaseArrayType& array) {
+        return array.PrepareForInput(Device{}, token);
       });
   }
 
-  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) const
+  VTKM_CONT PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData),
+                                              vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalExecution>(
-      this->Storage->GetArrays(), this->GetNumberOfValues(), [](BaseArrayType& array) {
-        return array.PrepareForInPlace(Device{});
+      this->Storage->GetArrays(), this->GetNumberOfValues(), [&token](BaseArrayType& array) {
+        return array.PrepareForInPlace(Device{}, token);
       });
   }
 
-  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numValues) const
+  VTKM_CONT PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token& token) const
   {
     return detail::MakeSOAPortal<PortalExecution>(
-      this->Storage->GetArrays(), numValues, [numValues](BaseArrayType& array) {
-        return array.PrepareForOutput(numValues, Device{});
+      this->Storage->GetArrays(), numValues, [numValues, &token](BaseArrayType& array) {
+        return array.PrepareForOutput(numValues, Device{}, token);
       });
   }
 
@@ -675,6 +677,7 @@ struct Serialization<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagSO
 };
 
 } // namespace mangled_diy_namespace
+// @endcond SERIALIZATION
 
 //=============================================================================
 // Precompiled instances

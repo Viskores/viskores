@@ -67,7 +67,7 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle<T, S>& outputArray, const st
   using ValueType = T;
   using StorageType = vtkm::cont::internal::Storage<T, S>;
   using PortalConstType = typename StorageType::PortalConstType;
-  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  PortalConstType readPortal = outputArray.ReadPortal();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::vector<ValueType> result(readPortal.GetNumberOfValues());
   std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
@@ -82,13 +82,13 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>& outputArra
                       const std::string& name)
 {
   using ValueType = T;
-  using PortalConstType = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>::PortalConstControl;
-  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  using PortalConstType = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>::ReadPortalType;
+  PortalConstType readPortal = outputArray.ReadPortal();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
   for (int i = 0; i < outputArray.GetNumberOfValues(); ++i)
   {
-    std::cout << outputArray.GetPortalConstControl().Get(i);
+    std::cout << outputArray.ReadPortal().Get(i);
   }
   std::cout << std::endl;
 }
@@ -100,13 +100,13 @@ void OutputArrayDebug(
   const std::string& name)
 {
   using PortalConstType = typename vtkm::cont::
-    ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::PortalConstControl;
-  PortalConstType readPortal = outputArray.GetPortalConstControl();
+    ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::ReadPortalType;
+  PortalConstType readPortal = outputArray.ReadPortal();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
   for (int i = 0; i < outputArray.GetNumberOfValues(); ++i)
   {
-    std::cout << outputArray.GetPortalConstControl().Get(i);
+    std::cout << outputArray.ReadPortal().Get(i);
   }
   std::cout << std::endl;
 }

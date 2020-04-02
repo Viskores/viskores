@@ -94,34 +94,40 @@ private:
   using ArrayPortalConst =
     typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  using CoordsPortalType =
-    decltype(vtkm::cont::ArrayHandleVirtualCoordinates{}.PrepareForInput(DeviceAdapter{}));
+  using CoordsPortalType = decltype(vtkm::cont::ArrayHandleVirtualCoordinates{}.PrepareForInput(
+    DeviceAdapter{},
+    std::declval<vtkm::cont::Token&>()));
 
   using CellSetP2CExecType =
     decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},
                                                          vtkm::TopologyElementTagCell{},
-                                                         vtkm::TopologyElementTagPoint{}));
+                                                         vtkm::TopologyElementTagPoint{},
+                                                         std::declval<vtkm::cont::Token&>()));
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
   // should be added to test if the point actually falls on the cell.
   template <typename CellShapeTag, typename CoordsType>
-  VTKM_EXEC static bool PointInsideCell(FloatVec3 point,
-                                        CellShapeTag cellShape,
-                                        CoordsType cellPoints,
-                                        const vtkm::exec::FunctorBase& worklet,
-                                        FloatVec3& parametricCoordinates)
+  VTKM_EXEC static vtkm::ErrorCode PointInsideCell(FloatVec3 point,
+                                                   CellShapeTag cellShape,
+                                                   CoordsType cellPoints,
+                                                   FloatVec3& parametricCoordinates,
+                                                   bool& inside)
   {
     auto bounds = vtkm::internal::cl_uniform_bins::ComputeCellBounds(cellPoints);
     if (point[0] >= bounds.Min[0] && point[0] <= bounds.Max[0] && point[1] >= bounds.Min[1] &&
         point[1] <= bounds.Max[1] && point[2] >= bounds.Min[2] && point[2] <= bounds.Max[2])
     {
-      bool success = false;
-      parametricCoordinates = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-        cellPoints, point, cellShape, success, worklet);
-      return success && vtkm::exec::CellInside(parametricCoordinates, cellShape);
+      VTKM_RETURN_ON_ERROR(vtkm::exec::WorldCoordinatesToParametricCoordinates(
+        cellPoints, point, cellShape, parametricCoordinates));
+      inside = vtkm::exec::CellInside(parametricCoordinates, cellShape);
     }
-    return false;
+    else
+    {
+      inside = false;
+    }
+    // Return success error code even point is not inside this cell
+    return vtkm::ErrorCode::Success;
   }
 
 public:
@@ -132,31 +138,32 @@ public:
                                    const vtkm::cont::ArrayHandle<vtkm::Id>& cellCount,
                                    const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
                                    const CellSetType& cellSet,
-                                   const vtkm::cont::CoordinateSystem& coords)
+                                   const vtkm::cont::CoordinateSystem& coords,
+                                   vtkm::cont::Token& token)
     : TopLevel(topLevelGrid)
-    , LeafDimensions(leafDimensions.PrepareForInput(DeviceAdapter{}))
-    , LeafStartIndex(leafStartIndex.PrepareForInput(DeviceAdapter{}))
-    , CellStartIndex(cellStartIndex.PrepareForInput(DeviceAdapter{}))
-    , CellCount(cellCount.PrepareForInput(DeviceAdapter{}))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter{}))
+    , LeafDimensions(leafDimensions.PrepareForInput(DeviceAdapter{}, token))
+    , LeafStartIndex(leafStartIndex.PrepareForInput(DeviceAdapter{}, token))
+    , CellStartIndex(cellStartIndex.PrepareForInput(DeviceAdapter{}, token))
+    , CellCount(cellCount.PrepareForInput(DeviceAdapter{}, token))
+    , CellIds(cellIds.PrepareForInput(DeviceAdapter{}, token))
     , CellSet(cellSet.PrepareForInput(DeviceAdapter{},
                                       vtkm::TopologyElementTagCell{},
-                                      vtkm::TopologyElementTagPoint{}))
-    , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}))
+                                      vtkm::TopologyElementTagPoint{},
+                                      token))
+    , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}, token))
   {
   }
 
-  VTKM_EXEC_CONT virtual ~CellLocatorUniformBins() noexcept
+  VTKM_EXEC_CONT virtual ~CellLocatorUniformBins() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC
-  void FindCell(const FloatVec3& point,
-                vtkm::Id& cellId,
-                FloatVec3& parametric,
-                const vtkm::exec::FunctorBase& worklet) const override
+  vtkm::ErrorCode FindCell(const FloatVec3& point,
+                           vtkm::Id& cellId,
+                           FloatVec3& parametric) const override
   {
     using namespace vtkm::internal::cl_uniform_bins;
 
@@ -172,7 +179,7 @@ public:
       auto ldim = this->LeafDimensions.Get(binId);
       if (!ldim[0] || !ldim[1] || !ldim[2])
       {
-        return;
+        return vtkm::ErrorCode::CellNotFound;
       }
 
       auto leafGrid = ComputeLeafGrid(binId3, ldim, this->TopLevel);
@@ -192,14 +199,19 @@ public:
         auto indices = this->CellSet.GetIndices(cid);
         auto pts = vtkm::make_VecFromPortalPermute(&indices, this->Coords);
         FloatVec3 pc;
-        if (PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, worklet, pc))
+        bool inside;
+        VTKM_RETURN_ON_ERROR(
+          PointInsideCell(point, this->CellSet.GetCellShape(cid), pts, pc, inside));
+        if (inside)
         {
           cellId = cid;
           parametric = pc;
-          break;
+          return vtkm::ErrorCode::Success;
         }
       }
     }
+
+    return vtkm::ErrorCode::CellNotFound;
   }
 
 private:
@@ -254,8 +266,8 @@ public:
 
   void PrintSummary(std::ostream& out) const;
 
-  const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device) const override;
+  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token) const override;
 
 private:
   VTKM_CONT void Build() override;

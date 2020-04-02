@@ -44,6 +44,8 @@ public:
   template <typename Invocation>
   void DoInvoke(Invocation& invocation) const
   {
+    using namespace vtkm::worklet::internal;
+
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
 
@@ -60,7 +62,7 @@ public:
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BasicInvoke.
-    this->BasicInvoke(invocation, internal::scheduling_range(inputDomain));
+    this->BasicInvoke(invocation, SchedulingRange(inputDomain));
   }
 };
 }

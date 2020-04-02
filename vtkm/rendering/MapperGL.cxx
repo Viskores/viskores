@@ -29,10 +29,7 @@ namespace rendering
 namespace
 {
 
-struct TypeListTagId4 : vtkm::ListTagBase<vtkm::Vec<Id, 4>>
-{
-};
-using Id4Type = TypeListTagId4;
+using Id4Type = TypeListId4;
 
 class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {
@@ -212,8 +209,8 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
-    vtkm::Vec3f_32 pt = verts.GetPortalConstControl().Get(i);
-    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 pt = verts.ReadPortal().Get(i);
+    vtkm::Float32 s = scalar.ReadPortal().Get(i);
     if (logY)
       s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);
@@ -247,8 +244,8 @@ VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
-    vtkm::Vec3f_32 pt = verts.GetPortalConstControl().Get(i);
-    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    vtkm::Vec3f_32 pt = verts.ReadPortal().Get(i);
+    vtkm::Float32 s = scalar.ReadPortal().Get(i);
     if (logY)
       s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);

@@ -9,7 +9,17 @@
 ##============================================================================
 
 set(headers
-  ContourTables.h
+  CommonState.h
+  FieldPropagation.h
+  FlyingEdges.h
+  FlyingEdgesHelpers.h
+  FlyingEdgesPass1.h
+  FlyingEdgesPass2.h
+  FlyingEdgesPass4.h
+  FlyingEdgesPass5.h
+  FlyingEdgesTables.h
+  MarchingCellTables.h
+  MarchingCells.h
   )
 
 #-----------------------------------------------------------------------------

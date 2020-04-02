@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -42,13 +42,13 @@ struct TypeCheck<TypeCheckTagAtomicArray, ArrayType>
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
-  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
+  static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
 
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 {
-  static constexpr bool value = vtkm::ListContains<vtkm::cont::AtomicArrayTypeListTag, T>::value;
+  static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
 }
 }

@@ -20,10 +20,7 @@ namespace worklet
 namespace gradient
 {
 
-struct DivergenceTypes
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>
-{
-};
+using DivergenceTypes = vtkm::List<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>;
 
 
 struct Divergence : public vtkm::worklet::WorkletMapField

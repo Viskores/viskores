@@ -55,12 +55,9 @@ class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
 {
 public:
   using vecType = vtkm::Vec3f;
-  struct TypeListTagWarpVectorTags
-    : vtkm::ListTagBase<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                        vtkm::cont::ArrayHandle<vecType>::StorageTag>
-  {
-  };
-  using FieldStorageList = TypeListTagWarpVectorTags;
+  using TypeListWarpVectorTags = vtkm::List<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
+                                            vtkm::cont::ArrayHandle<vecType>::StorageTag>;
+  using FieldStorageList = TypeListWarpVectorTags;
 };
 
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
@@ -69,7 +66,7 @@ void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataS
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
   result.GetPointField("warpvector").GetData().CopyTo(outputArray);
-  auto outPortal = outputArray.GetPortalConstControl();
+  auto outPortal = outputArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)
   {

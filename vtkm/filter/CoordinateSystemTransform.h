@@ -25,10 +25,10 @@ class CylindricalCoordinateTransform
   : public vtkm::filter::FilterField<CylindricalCoordinateTransform>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
-  CylindricalCoordinateTransform();
+  CylindricalCoordinateTransform() = default;
 
   VTKM_CONT void SetCartesianToCylindrical() { Worklet.SetCartesianToCylindrical(); }
   VTKM_CONT void SetCylindricalToCartesian() { Worklet.SetCylindricalToCartesian(); }
@@ -46,20 +46,19 @@ private:
 class SphericalCoordinateTransform : public vtkm::filter::FilterField<SphericalCoordinateTransform>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
-  SphericalCoordinateTransform();
+  SphericalCoordinateTransform() = default;
 
   VTKM_CONT void SetCartesianToSpherical() { Worklet.SetCartesianToSpherical(); }
   VTKM_CONT void SetSphericalToCartesian() { Worklet.SetSphericalToCartesian(); }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<T, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy) const;
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                          const vtkm::filter::FieldMetadata&,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   vtkm::worklet::SphericalCoordinateTransform Worklet;

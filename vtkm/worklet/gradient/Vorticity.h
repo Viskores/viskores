@@ -20,10 +20,7 @@ namespace worklet
 namespace gradient
 {
 
-struct VorticityTypes
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>
-{
-};
+using VorticityTypes = vtkm::List<vtkm::Vec<vtkm::Vec3f_32, 3>, vtkm::Vec<vtkm::Vec3f_64, 3>>;
 
 
 struct Vorticity : public vtkm::worklet::WorkletMapField

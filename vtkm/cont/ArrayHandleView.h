@@ -11,6 +11,7 @@
 #define vtk_m_cont_ArrayHandleView_h
 
 #include <vtkm/Assert.h>
+#include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
@@ -81,22 +82,60 @@ private:
 
 } // namespace internal
 
-template <typename ArrayHandleType>
-struct StorageTagView
+template <typename StorageTag>
+struct VTKM_ALWAYS_EXPORT StorageTagView
 {
 };
 
 namespace internal
 {
 
-template <typename ArrayHandleType>
-class Storage<typename ArrayHandleType::ValueType, StorageTagView<ArrayHandleType>>
+namespace detail
 {
-public:
-  using ValueType = typename ArrayHandleType::ValueType;
 
-  using PortalType = ArrayPortalView<typename ArrayHandleType::PortalControl>;
-  using PortalConstType = ArrayPortalView<typename ArrayHandleType::PortalConstControl>;
+template <typename T, typename ArrayOrStorage, bool IsArrayType>
+struct ViewTypeArgImpl;
+
+template <typename T, typename Storage>
+struct ViewTypeArgImpl<T, Storage, false>
+{
+  using StorageTag = Storage;
+  using ArrayHandle = vtkm::cont::ArrayHandle<T, StorageTag>;
+};
+
+template <typename T, typename Array>
+struct ViewTypeArgImpl<T, Array, true>
+{
+  VTKM_STATIC_ASSERT_MSG((std::is_same<T, typename Array::ValueType>::value),
+                         "Used array with wrong type in ArrayHandleView.");
+  using StorageTag VTKM_DEPRECATED(1.6,
+                                   "Use storage tag instead of array handle in StorageTagView.") =
+    typename Array::StorageTag;
+  using ArrayHandle VTKM_DEPRECATED(1.6,
+                                    "Use storage tag instead of array handle in StorageTagView.") =
+    vtkm::cont::ArrayHandle<T, typename Array::StorageTag>;
+};
+
+template <typename T, typename ArrayOrStorage>
+struct ViewTypeArg
+  : ViewTypeArgImpl<T,
+                    ArrayOrStorage,
+                    vtkm::cont::internal::ArrayHandleCheck<ArrayOrStorage>::type::value>
+{
+};
+
+} // detail
+
+template <typename T, typename ST>
+class Storage<T, StorageTagView<ST>>
+{
+  using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
+
+public:
+  using ValueType = T;
+
+  using PortalType = ArrayPortalView<typename ArrayHandleType::WritePortalType>;
+  using PortalConstType = ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
 
   VTKM_CONT
   Storage()
@@ -119,14 +158,14 @@ public:
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(), this->StartIndex, this->NumValues);
+    return PortalType(this->Array.WritePortal(), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(), this->StartIndex, this->NumValues);
+    return PortalConstType(this->Array.ReadPortal(), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
@@ -174,17 +213,15 @@ private:
   bool Valid;
 };
 
-template <typename ArrayHandleType, typename Device>
-class ArrayTransfer<typename ArrayHandleType::ValueType, StorageTagView<ArrayHandleType>, Device>
+template <typename T, typename ST, typename Device>
+class ArrayTransfer<T, StorageTagView<ST>, Device>
 {
-public:
-  using ValueType = typename ArrayHandleType::ValueType;
-
 private:
-  using StorageTag = StorageTagView<ArrayHandleType>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagView<ST>>;
+  using ArrayHandleType = typename detail::ViewTypeArg<T, ST>::ArrayHandle;
 
 public:
+  using ValueType = T;
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
@@ -205,21 +242,21 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumValues; }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalConstExecution(
-      this->Array.PrepareForInput(Device()), this->StartIndex, this->NumValues);
+      this->Array.PrepareForInput(Device(), token), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
   {
     return PortalExecution(
-      this->Array.PrepareForInPlace(Device()), this->StartIndex, this->NumValues);
+      this->Array.PrepareForInPlace(Device(), token), this->StartIndex, this->NumValues);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     if (numberOfValues != this->GetNumberOfValues())
     {
@@ -240,9 +277,10 @@ public:
         "output of ArrayHandlePermutation.");
     }
 
-    return PortalExecution(this->Array.PrepareForOutput(this->Array.GetNumberOfValues(), Device()),
-                           this->StartIndex,
-                           this->NumValues);
+    return PortalExecution(
+      this->Array.PrepareForOutput(this->Array.GetNumberOfValues(), Device(), token),
+      this->StartIndex,
+      this->NumValues);
   }
 
   VTKM_CONT
@@ -266,16 +304,18 @@ private:
 } // namespace internal
 
 template <typename ArrayHandleType>
-class ArrayHandleView : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                       StorageTagView<ArrayHandleType>>
+class ArrayHandleView
+  : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                                   StorageTagView<typename ArrayHandleType::StorageTag>>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleView,
-                             (ArrayHandleView<ArrayHandleType>),
-                             (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                      StorageTagView<ArrayHandleType>>));
+  VTKM_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleView,
+    (ArrayHandleView<ArrayHandleType>),
+    (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                             StorageTagView<typename ArrayHandleType::StorageTag>>));
 
 private:
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;

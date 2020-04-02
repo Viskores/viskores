@@ -274,15 +274,15 @@ void TestNDimsHistMarginalization()
                           10, 2, 5, 1, 1, 1, 6, 7, 9, 6, 3, 3, 2, 3, 2, 2, 3, 2, 1, 1 };
 
   // Check result
-  vtkm::Id nonSparseBins = marginalBinIds[0].GetPortalControl().GetNumberOfValues();
+  vtkm::Id nonSparseBins = marginalBinIds[0].WritePortal().GetNumberOfValues();
   VTKM_TEST_ASSERT(nonSparseBins == gtNonSparseBins,
                    "Incorrect ND-histogram marginalization results");
 
   for (int i = 0; i < nonSparseBins; i++)
   {
-    vtkm::Id idx0 = marginalBinIds[0].GetPortalControl().Get(i);
-    vtkm::Id idx1 = marginalBinIds[1].GetPortalControl().Get(i);
-    vtkm::Id f = marginalFreqs.GetPortalControl().Get(i);
+    vtkm::Id idx0 = marginalBinIds[0].WritePortal().Get(i);
+    vtkm::Id idx1 = marginalBinIds[1].WritePortal().Get(i);
+    vtkm::Id f = marginalFreqs.WritePortal().Get(i);
     VTKM_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && f == gtFreq[i],
                      "Incorrect ND-histogram marginalization results");
   }

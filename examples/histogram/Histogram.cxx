@@ -43,8 +43,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals)
   vtkm::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalControl()),
+  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.WritePortal()),
+                vtkm::cont::ArrayPortalToIteratorEnd(handle.WritePortal()),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
   result.GetPartition(0).GetField("histogram").GetData().CopyTo(bins);
-  auto binPortal = bins.GetPortalConstControl();
+  auto binPortal = bins.ReadPortal();
   if (rank == 0)
   {
     // print histogram.

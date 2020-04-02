@@ -89,7 +89,7 @@ struct VecFromPortalTestFunctor
 
 void VecFromPortalTest()
 {
-  vtkm::testing::Testing::TryTypes(VecFromPortalTestFunctor(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(VecFromPortalTestFunctor(), vtkm::TypeListCommon());
 }
 
 } // namespace UnitTestVecFromPortalNamespace

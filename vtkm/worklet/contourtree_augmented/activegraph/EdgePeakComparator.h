@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_inc_edge_peak_comparator_h
-#define vtkm_worklet_contourtree_augmented_active_graph_inc_edge_peak_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_inc_edge_peak_comparator_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_inc_edge_peak_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -75,17 +75,16 @@ public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  IdPortalType edgeFarPortal;
-  IdPortalType edgeNearPortal;
-  bool isJoinGraph;
-
   // constructor - takes vectors as parameters
   VTKM_CONT
-  EdgePeakComparatorImpl(const IdArrayType& edgeFar, const IdArrayType& edgeNear, bool joinGraph)
-    : isJoinGraph(joinGraph)
+  EdgePeakComparatorImpl(const IdArrayType& edgeFar,
+                         const IdArrayType& edgeNear,
+                         bool joinGraph,
+                         vtkm::cont::Token& token)
+    : IsJoinGraph(joinGraph)
   { // constructor
-    edgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter());
-    edgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter());
+    this->EdgeFarPortal = edgeFar.PrepareForInput(DeviceAdapter(), token);
+    this->EdgeNearPortal = edgeNear.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -93,46 +92,52 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // start by comparing the indices of the far end
-    vtkm::Id farIndex1 = edgeFarPortal.Get(i);
-    vtkm::Id farIndex2 = edgeFarPortal.Get(j);
+    vtkm::Id farIndex1 = this->EdgeFarPortal.Get(i);
+    vtkm::Id farIndex2 = this->EdgeFarPortal.Get(j);
 
     // first compare the far end
     if (farIndex1 < farIndex2)
     {
-      return true ^ isJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
     if (farIndex2 < farIndex1)
     {
-      return false ^ isJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
 
     // then compare the indices of the near end (which are guaranteed to be sorted!)
-    vtkm::Id nearIndex1 = edgeNearPortal.Get(i);
-    vtkm::Id nearIndex2 = edgeNearPortal.Get(j);
+    vtkm::Id nearIndex1 = this->EdgeNearPortal.Get(i);
+    vtkm::Id nearIndex2 = this->EdgeNearPortal.Get(j);
 
     if (nearIndex1 < nearIndex2)
     {
-      return true ^ isJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
     if (nearIndex2 < nearIndex1)
     {
-      return false ^ isJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
 
     // if the near indices match, compare the edge IDs
     if (i < j)
     {
-      return false ^ isJoinGraph;
+      return false ^ this->IsJoinGraph;
     }
     if (j < i)
     {
-      return true ^ isJoinGraph;
+      return true ^ this->IsJoinGraph;
     }
 
     // fallback can happen when multiple paths end at same extremum
     return false;
   } // operator()
-};  // EdgePeakComparator
+
+private:
+  IdPortalType EdgeFarPortal;
+  IdPortalType EdgeNearPortal;
+  bool IsJoinGraph;
+
+}; // EdgePeakComparator
 
 class EdgePeakComparator : public vtkm::cont::ExecutionObjectBase
 {
@@ -147,9 +152,12 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT EdgePeakComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
-    return EdgePeakComparatorImpl<DeviceAdapter>(this->EdgeFar, this->EdgeNear, this->JoinGraph);
+    return EdgePeakComparatorImpl<DeviceAdapter>(
+      this->EdgeFar, this->EdgeNear, this->JoinGraph, token);
   }
 
 private:

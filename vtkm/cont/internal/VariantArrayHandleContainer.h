@@ -82,7 +82,7 @@ struct VTKM_ALWAYS_EXPORT VariantArrayHandleContainer final : public VariantArra
   {
   }
 
-  ~VariantArrayHandleContainer<T>() = default;
+  ~VariantArrayHandleContainer<T>() override = default;
 
   vtkm::Id GetNumberOfValues() const override { return this->Array.GetNumberOfValues(); }
 
@@ -122,7 +122,7 @@ private:
   {
     return (this->Array.GetNumberOfValues() == 0)
       ? 0
-      : vtkm::VecTraits<T>::GetNumberOfComponents(this->Array.GetPortalConstControl().Get(0));
+      : vtkm::VecTraits<T>::GetNumberOfComponents(this->Array.ReadPortal().Get(0));
   }
 };
 

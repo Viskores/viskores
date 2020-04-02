@@ -48,7 +48,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for Mask");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                       cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
+                       cellFieldArray.ReadPortal().Get(7) == 14.f,
                      "Wrong cell field data");
   }
 
@@ -74,7 +74,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 7), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
-                       cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
+                       cellFieldArray.ReadPortal().Get(2) == 18.f,
                      "Wrong cell field data");
   }
 
@@ -101,7 +101,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
+                       cellFieldArray.ReadPortal().Get(1) == 120.2f,
                      "Wrong cell field data");
   }
 

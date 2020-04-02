@@ -60,11 +60,11 @@ void CheckResult(const vtkm::filter::WarpScalar& filter, const vtkm::cont::DataS
   using vecType = vtkm::Vec3f;
   vtkm::cont::ArrayHandle<vecType> outputArray;
   result.GetPointField("warpscalar").GetData().CopyTo(outputArray);
-  auto outPortal = outputArray.GetPortalConstControl();
+  auto outPortal = outputArray.ReadPortal();
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> sfArray;
   result.GetPointField("scalarfactor").GetData().CopyTo(sfArray);
-  auto sfPortal = sfArray.GetPortalConstControl();
+  auto sfPortal = sfArray.ReadPortal();
 
   for (vtkm::Id j = 0; j < dim; ++j)
   {

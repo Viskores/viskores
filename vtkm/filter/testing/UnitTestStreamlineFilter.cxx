@@ -39,11 +39,11 @@ void TestStreamline()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray;
-  std::vector<vtkm::Vec3f> seeds(3);
-  seeds[0] = vtkm::Vec3f(.2f, 1.0f, .2f);
-  seeds[1] = vtkm::Vec3f(.2f, 2.0f, .2f);
-  seeds[2] = vtkm::Vec3f(.2f, 3.0f, .2f);
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  std::vector<vtkm::Particle> seeds(3);
+  seeds[0] = vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
+  seeds[1] = vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
+  seeds[2] = vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
@@ -61,7 +61,7 @@ void TestStreamline()
                    "Wrong number of coordinate systems in the output dataset");
 
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 60, "Wrong number of coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
 
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
@@ -76,11 +76,11 @@ void TestPathline()
   vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
   vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray;
-  std::vector<vtkm::Vec3f> seeds(3);
-  seeds[0] = vtkm::Vec3f(.2f, 1.0f, .2f);
-  seeds[1] = vtkm::Vec3f(.2f, 2.0f, .2f);
-  seeds[2] = vtkm::Vec3f(.2f, 3.0f, .2f);
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  std::vector<vtkm::Particle> seeds(3);
+  seeds[0] = vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
+  seeds[1] = vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
+  seeds[2] = vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
@@ -98,7 +98,7 @@ void TestPathline()
 
   //Validate the result is correct.
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 60, "Wrong number of coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
 
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");

@@ -59,10 +59,9 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
 
   for (vtkm::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(outPointId.GetPortalConstControl().Get(i) ==
-                       permutation.GetPortalConstControl().Get(i),
+    VTKM_TEST_ASSERT(outPointId.ReadPortal().Get(i) == permutation.ReadPortal().Get(i),
                      "output point ids do not match the permutation");
-    VTKM_TEST_ASSERT(outVisit.GetPortalConstControl().Get(i) == 0, "incorrect visit index");
+    VTKM_TEST_ASSERT(outVisit.ReadPortal().Get(i) == 0, "incorrect visit index");
   }
 }
 
@@ -90,7 +89,7 @@ void TestScatterPermutation()
     vtkm::cont::ArrayHandle<vtkm::Id> permutation;
     permutation.Allocate(count);
 
-    auto portal = permutation.GetPortalControl();
+    auto portal = permutation.WritePortal();
     std::cout << "using permutation:";
     for (vtkm::Id j = 0; j < count; ++j)
     {

@@ -107,10 +107,11 @@ public:
                                     vtkm::Id height,
                                     const TextureDataHandle& data,
                                     TextureFilterMode filterMode,
-                                    TextureWrapMode wrapMode)
+                                    TextureWrapMode wrapMode,
+                                    vtkm::cont::Token& token)
       : Width(width)
       , Height(height)
-      , Data(data.PrepareForInput(Device()))
+      , Data(data.PrepareForInput(Device(), token))
       , FilterMode(filterMode)
       , WrapMode(wrapMode)
     {
@@ -224,10 +225,12 @@ public:
     }
 
     template <typename Device>
-    VTKM_CONT Texture2DSamplerExecutionObject<Device> PrepareForExecution(Device) const
+    VTKM_CONT Texture2DSamplerExecutionObject<Device> PrepareForExecution(
+      Device,
+      vtkm::cont::Token& token) const
     {
       return Texture2DSamplerExecutionObject<Device>(
-        this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode);
+        this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode, token);
     }
 
   private:

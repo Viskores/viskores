@@ -69,23 +69,48 @@ namespace
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-class TestContourTreeUniform
+//
+//  Test regular single block contour tree construction
+//
+class TestContourTreeUniformAugmented
 {
+private:
+  //
+  //  Internal helper function to execute the contour tree and save repeat code in tests
+  //
+  vtkm::filter::ContourTreeAugmented RunContourTree(bool useMarchingCubes,
+                                                    unsigned int computeRegularStructure,
+                                                    unsigned int numDims = 2) const
+  {
+    // Create the input uniform cell set with values to contour
+    vtkm::cont::DataSet dataSet;
+    if (numDims == 2)
+    {
+      dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+    }
+    else if (numDims == 3)
+    {
+      dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+    }
+    vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
+    filter.SetActiveField("pointvar");
+    auto result = filter.Execute(dataSet);
+    return filter;
+  }
+
 public:
   //
   // Create a uniform 2D structured cell set as input with values for contours
   //
-  void TestContourTree_Mesh2D_Freudenthal() const
+  void TestContourTree_Mesh2D_Freudenthal(unsigned int computeRegularStructure = 1) const
   {
-    std::cout << "Testing ContourTree_PPP2 2D Mesh" << std::endl;
-
-    // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
-    bool useMarchingCubes = false;
-    bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
-    filter.SetActiveField("pointvar");
-    auto result = filter.Execute(dataSet);
+    std::cout << "Testing ContourTree_Augmented 2D Mesh. computeRegularStructure="
+              << computeRegularStructure << std::endl;
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(false,                   // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     2                        // use 2D mesh
+                     );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
@@ -94,7 +119,7 @@ public:
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           12" << std::endl;
@@ -107,35 +132,33 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(0), vtkm::make_Pair(0, 12)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 12)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(1), vtkm::make_Pair(4, 13)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(4, 13)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(2), vtkm::make_Pair(12, 13)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(12, 13)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(3), vtkm::make_Pair(12, 18)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(12, 18)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(4), vtkm::make_Pair(12, 20)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(12, 20)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(5), vtkm::make_Pair(13, 14)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(13, 14)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(6), vtkm::make_Pair(13, 19)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(13, 19)),
                      "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_Freudenthal() const
+  void TestContourTree_Mesh3D_Freudenthal(unsigned int computeRegularStructure = 1) const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh" << std::endl;
-
-    // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+    std::cout << "Testing ContourTree_Augmented 3D Mesh. computeRegularStructure="
+              << computeRegularStructure << std::endl;
 
     // Execute the filter
-    bool useMarchingCubes = false;
-    bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
-    filter.SetActiveField("pointvar");
-    auto result = filter.Execute(dataSet);
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(false,                   // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     3                        // use 2D mesh
+                     );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
@@ -144,7 +167,7 @@ public:
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0           67" << std::endl;
@@ -160,39 +183,37 @@ public:
     // Make sure the contour tree is correct
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(0), vtkm::make_Pair(0, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(1), vtkm::make_Pair(31, 42)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(31, 42)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(2), vtkm::make_Pair(42, 43)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(42, 43)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(3), vtkm::make_Pair(42, 56)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(42, 56)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(4), vtkm::make_Pair(56, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(56, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(5), vtkm::make_Pair(56, 92)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(56, 92)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(6), vtkm::make_Pair(62, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(62, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(7), vtkm::make_Pair(81, 92)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(81, 92)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(8), vtkm::make_Pair(92, 93)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), vtkm::make_Pair(92, 93)),
                      "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_MarchingCubes() const
+  void TestContourTree_Mesh3D_MarchingCubes(unsigned int computeRegularStructure = 1) const
   {
-    std::cout << "Testing ContourTree_PPP2 3D Mesh Marching Cubes" << std::endl;
-
-    // Create the input uniform cell set with values to contour
-    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. computeRegularStructure="
+              << computeRegularStructure << std::endl;
 
     // Execute the filter
-    bool useMarchingCubes = true;
-    bool computeRegularStructure = true;
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes, computeRegularStructure);
-    filter.SetActiveField("pointvar");
-    auto result = filter.Execute(dataSet);
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(true,                    // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     3                        // use 3D mesh
+                     );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
@@ -201,7 +222,7 @@ public:
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
-    vtkm::worklet::contourtree_augmented::printEdgePairArray(saddlePeak);
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
     // Print the expected contour tree
     std::cout << "Expected Contour Tree" << std::endl;
     std::cout << "           0          118" << std::endl;
@@ -218,40 +239,57 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 11),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(0), vtkm::make_Pair(0, 118)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 118)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(1), vtkm::make_Pair(31, 41)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(31, 41)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(2), vtkm::make_Pair(41, 43)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(41, 43)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(3), vtkm::make_Pair(41, 56)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(41, 56)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(4), vtkm::make_Pair(56, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(56, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(5), vtkm::make_Pair(56, 91)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(56, 91)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(6), vtkm::make_Pair(62, 67)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(62, 67)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(7), vtkm::make_Pair(67, 118)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(67, 118)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(8), vtkm::make_Pair(81, 91)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), vtkm::make_Pair(81, 91)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(9), vtkm::make_Pair(91, 93)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(9), vtkm::make_Pair(91, 93)),
                      "Wrong result for ContourTree filter");
-    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetPortalControl().Get(10), vtkm::make_Pair(118, 124)),
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(10), vtkm::make_Pair(118, 124)),
                      "Wrong result for ContourTree filter");
   }
 
   void operator()() const
   {
-    this->TestContourTree_Mesh2D_Freudenthal();
-    this->TestContourTree_Mesh3D_Freudenthal();
-    this->TestContourTree_Mesh3D_MarchingCubes();
+    // Test 2D Freudenthal with augmentation
+    this->TestContourTree_Mesh2D_Freudenthal(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh2D_Freudenthal(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh2D_Freudenthal(2);
+
+    // Test 3D Freudenthal with augmentation
+    this->TestContourTree_Mesh3D_Freudenthal(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh3D_Freudenthal(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh3D_Freudenthal(2);
+
+    // Test 3D marching cubes with augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes(2);
   }
 };
 }
 
 int UnitTestContourTreeUniformAugmentedFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniform(), argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformAugmented(), argc, argv);
 }

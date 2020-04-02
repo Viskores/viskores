@@ -172,13 +172,16 @@ void ComputeRConnTable(RConnTableT& rConnTable,
   auto& rOffsets = rConnTable.Offsets;
   const vtkm::Id rConnSize = conn.GetNumberOfValues();
 
-  const auto offInPortal = connTable.Offsets.PrepareForInput(Device{});
+  {
+    vtkm::cont::Token token;
+    const auto offInPortal = connTable.Offsets.PrepareForInput(Device{}, token);
 
-  PassThrough idxCalc{};
-  ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
+    PassThrough idxCalc{};
+    ConnIdxToCellIdCalc<decltype(offInPortal)> cellIdCalc{ offInPortal };
 
-  vtkm::cont::internal::ReverseConnectivityBuilder builder;
-  builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
+    vtkm::cont::internal::ReverseConnectivityBuilder builder;
+    builder.Run(conn, rConn, rOffsets, idxCalc, cellIdCalc, numberOfPoints, rConnSize, Device());
+  }
 
   rConnTable.Shapes = vtkm::cont::make_ArrayHandleConstant(
     static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);

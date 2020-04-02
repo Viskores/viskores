@@ -92,9 +92,24 @@ namespace diy
   template<class T>
   struct Serialization: public detail::Default
   {
-#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
-    //exempt power-pc clang variants due to: https://gitlab.kitware.com/vtk/vtk-m/issues/201
+// GCC release date mapping
+// 20160726 == 4.9.4
+// 20150626 == 4.9.3
+// 20150623 == 4.8.5
+// 20150422 == 5.1
+// 20141030 == 4.9.2
+// See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html#abi.versioning.__GLIBCXX__
+#if defined(__GLIBCXX__) &&                                                                        \
+  (__GLIBCXX__ < 20150422 || __GLIBCXX__ == 20160726 || __GLIBCXX__ == 20150626 ||                 \
+   __GLIBCXX__ == 20150623)
+#define VTKMDIY_USING_GLIBCXX_4
+#endif
+
+#if !defined(VTKMDIY_USING_GLIBCXX_4)
+    //exempt glibcxx-4 variants as they don't have is_trivially_copyable implemented
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
+#else
+# undef VTKMDIY_USING_GLIBCXX_4
 #endif
 
     static void         save(BinaryBuffer& bb, const T& x)          { bb.save_binary((const char*)  &x, sizeof(T)); }

@@ -56,12 +56,15 @@ struct TryArrayInOutType
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
       transport;
 
+    vtkm::cont::Token token;
+
     TestKernelInOut<PortalType> kernel;
-    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
+    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE, token);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
+    token.DetachFromAll();
 
-    typename ArrayHandleType::PortalConstControl portal = handle.GetPortalConstControl();
+    typename ArrayHandleType::ReadPortalType portal = handle.ReadPortal();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Portal has wrong number of values.");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -77,7 +80,7 @@ struct TryArrayInOutType
 template <typename Device>
 void TryArrayInOutTransport(Device)
 {
-  vtkm::testing::Testing::TryTypes(TryArrayInOutType<Device>(), vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryArrayInOutType<Device>(), vtkm::TypeListCommon());
 }
 
 void TestArrayInOutTransport()

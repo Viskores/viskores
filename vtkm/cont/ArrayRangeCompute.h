@@ -117,11 +117,10 @@ VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComput
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
 // Implementation of cartesian products
-template <typename T, typename ArrayType1, typename ArrayType2, typename ArrayType3>
+template <typename T, typename ST1, typename ST2, typename ST3>
 VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<
-    T,
-    vtkm::cont::internal::StorageTagCartesianProduct<ArrayType1, ArrayType2, ArrayType3>>& input,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>,
+                                vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   vtkm::cont::ArrayHandle<vtkm::Range> result;
@@ -130,20 +129,20 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   vtkm::cont::ArrayHandle<vtkm::Range> componentRangeArray;
   vtkm::Range componentRange;
 
-  ArrayType1 firstArray = input.GetStorage().GetFirstArray();
+  vtkm::cont::ArrayHandle<T, ST1> firstArray = input.GetStorage().GetFirstArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(firstArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(0, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(0, componentRange);
 
-  ArrayType2 secondArray = input.GetStorage().GetSecondArray();
+  vtkm::cont::ArrayHandle<T, ST2> secondArray = input.GetStorage().GetSecondArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(secondArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(1, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(1, componentRange);
 
-  ArrayType3 thirdArray = input.GetStorage().GetThirdArray();
+  vtkm::cont::ArrayHandle<T, ST3> thirdArray = input.GetStorage().GetThirdArray();
   componentRangeArray = vtkm::cont::ArrayRangeCompute(thirdArray, device);
-  componentRange = componentRangeArray.GetPortalConstControl().Get(0);
-  result.GetPortalControl().Set(2, componentRange);
+  componentRange = componentRangeArray.ReadPortal().Get(0);
+  result.WritePortal().Set(2, componentRange);
 
   return result;
 }

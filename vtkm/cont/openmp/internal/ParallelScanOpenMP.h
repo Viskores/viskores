@@ -72,8 +72,8 @@ struct Adder : public ScanBody
     // Pad the node out to the size of a cache line to prevent false sharing:
     static constexpr size_t DataSize =
       sizeof(NodeImpl) + sizeof(vtkm::Id2) + 3 * sizeof(NodeWrapper*) + sizeof(bool);
-    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, CACHE_LINE_SIZE);
-    static constexpr size_t PaddingSize = NumCacheLines * CACHE_LINE_SIZE - DataSize;
+    static constexpr size_t NumCacheLines = CeilDivide<size_t>(DataSize, VTKM_CACHE_LINE_SIZE);
+    static constexpr size_t PaddingSize = NumCacheLines * VTKM_CACHE_LINE_SIZE - DataSize;
     unsigned char Padding[PaddingSize];
   };
 

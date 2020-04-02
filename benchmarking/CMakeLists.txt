@@ -7,18 +7,24 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
+
+# Find Google Benchmark. Note that benchmark_DIR must be pointed at an
+# installation, not a build directory.
+find_package(benchmark REQUIRED)
+
 function(add_benchmark)
   set(options)
   set(oneValueArgs NAME FILE)
   set(multiValueArgs LIBS)
   cmake_parse_arguments(VTKm_AB
-    "${options}" "${oneValueArgs}" "${multiValueArgs}"
-    ${ARGN}
-    )
+          "${options}" "${oneValueArgs}" "${multiValueArgs}"
+          ${ARGN}
+          )
   set(exe_name ${VTKm_AB_NAME})
 
   add_executable(${exe_name} ${VTKm_AB_FILE})
   target_link_libraries(${exe_name} PRIVATE ${VTKm_AB_LIBS})
+  target_link_libraries(${exe_name} PRIVATE benchmark::benchmark)
   vtkm_add_drop_unused_function_flags(${exe_name})
   vtkm_add_target_information(${exe_name})
 

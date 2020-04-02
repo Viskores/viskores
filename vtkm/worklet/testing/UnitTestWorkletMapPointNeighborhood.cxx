@@ -210,7 +210,7 @@ static void TestMaxNeighborValue()
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
   dispatcher.Invoke(
-    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet3D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
     dataSet3D.GetCellSet(),
     output);
 
@@ -219,13 +219,13 @@ static void TestMaxNeighborValue()
                                    170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f };
   for (int i = 0; i < 18; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected3D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected3D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet1();
   dispatcher.Invoke(
-    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+    dataSet2D.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
     dataSet2D.GetCellSet(),
     output);
 
@@ -236,7 +236,7 @@ static void TestMaxNeighborValue()
 
   for (int i = 0; i < 25; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(output.GetPortalConstControl().Get(i), expected2D[i]),
+    VTKM_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected2D[i]),
                      "Wrong result for MaxNeighborValue worklet");
   }
 }

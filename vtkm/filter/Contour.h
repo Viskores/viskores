@@ -30,7 +30,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT Contour : public vtkm::filter::FilterDataSetWithField<Contour>
 {
 public:
-  using SupportedTypes = vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
+  using SupportedTypes = vtkm::List<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
 
   VTKM_FILTER_EXPORT
   Contour();
@@ -150,8 +150,56 @@ private:
   vtkm::worklet::Contour Worklet;
 };
 
-#ifndef vtkm_filter_Contour_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(Contour);
+#ifndef vtkm_filter_ContourExecute_cxx
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Int8>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
 #endif
 }
 } // namespace vtkm::filter

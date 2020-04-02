@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_meshextrema_h
-#define vtkm_worklet_contourtree_augmented_meshextrema_h
+#ifndef vtk_m_worklet_contourtree_augmented_meshextrema_h
+#define vtk_m_worklet_contourtree_augmented_meshextrema_h
 
 #include <iomanip>
 
@@ -81,10 +81,10 @@ class MeshExtrema
 public:
   vtkm::cont::Invoker Invoke;
   // arrays for peaks & pits
-  IdArrayType peaks;
-  IdArrayType pits;
-  vtkm::Id nVertices;
-  vtkm::Id nLogSteps;
+  IdArrayType Peaks;
+  IdArrayType Pits;
+  vtkm::Id NumVertices;
+  vtkm::Id NumLogSteps;
 
   // constructor
   VTKM_CONT
@@ -106,23 +106,23 @@ public:
 
 
 inline MeshExtrema::MeshExtrema(vtkm::Id meshSize)
-  : peaks()
-  , pits()
-  , nVertices(meshSize)
-  , nLogSteps(0)
+  : Peaks()
+  , Pits()
+  , NumVertices(meshSize)
+  , NumLogSteps(0)
 { // MeshExrema
   // Compute the number of log steps required in this pass
-  nLogSteps = 1;
-  for (vtkm::Id shifter = nVertices; shifter != 0; shifter >>= 1)
-    nLogSteps++;
+  NumLogSteps = 1;
+  for (vtkm::Id shifter = NumVertices; shifter != 0; shifter >>= 1)
+    this->NumLogSteps++;
 
   // Allocate memory for the peaks and pits
-  peaks.Allocate(nVertices);
-  pits.Allocate(nVertices);
-  // TODO Check if we really need to set the peaks and pits to zero or whether it is enough to allocate them
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> constZeroArray(0, nVertices);
-  vtkm::cont::Algorithm::Copy(constZeroArray, peaks);
-  vtkm::cont::Algorithm::Copy(constZeroArray, pits);
+  Peaks.Allocate(NumVertices);
+  Pits.Allocate(NumVertices);
+  // TODO Check if we really need to set the Peaks and pits to zero or whether it is enough to allocate them
+  vtkm::cont::ArrayHandleConstant<vtkm::Id> constZeroArray(0, NumVertices);
+  vtkm::cont::Algorithm::Copy(constZeroArray, Peaks);
+  vtkm::cont::Algorithm::Copy(constZeroArray, Pits);
 } // MeshExtrema
 
 
@@ -130,15 +130,15 @@ inline void MeshExtrema::BuildRegularChains(bool isMaximal)
 { // BuildRegularChains()
   // Create vertex index array -- note, this is a fancy vtk-m array, i.e, the full array
   // is not actually allocated but the array only acts like a sequence of numbers
-  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
-  IdArrayType& extrema = isMaximal ? peaks : pits;
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(NumVertices);
+  IdArrayType& extrema = isMaximal ? Peaks : Pits;
 
   // Create the PointerDoubling worklet and corresponding dispatcher
   vtkm::worklet::contourtree_augmented::PointerDoubling pointerDoubler;
 
   // Iterate to perform pointer-doubling to build chains to extrema (i.e., maxima or minima)
   // depending on whether we are computing a JoinTree or a SplitTree
-  for (vtkm::Id logStep = 0; logStep < this->nLogSteps; logStep++)
+  for (vtkm::Id logStep = 0; logStep < this->NumLogSteps; logStep++)
   {
     this->Invoke(pointerDoubler,
                  vertexIndexArray, // input
@@ -150,16 +150,22 @@ inline void MeshExtrema::BuildRegularChains(bool isMaximal)
 template <class MeshType>
 inline void MeshExtrema::SetStarts(MeshType& mesh, bool isMaximal)
 {
-  mesh.setPrepareForExecutionBehavior(isMaximal);
+  mesh.SetPrepareForExecutionBehavior(isMaximal);
   mesh_extrema_inc_ns::SetStarts setStartsWorklet;
-  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.nVertices);
+  vtkm::cont::ArrayHandleIndex sortIndexArray(mesh.NumVertices);
   if (isMaximal)
   {
-    this->Invoke(setStartsWorklet, sortIndexArray, mesh, peaks);
+    this->Invoke(setStartsWorklet,
+                 sortIndexArray, // input
+                 mesh,           // input
+                 Peaks);         // output
   }
   else
   {
-    this->Invoke(setStartsWorklet, sortIndexArray, mesh, pits);
+    this->Invoke(setStartsWorklet,
+                 sortIndexArray, // input
+                 mesh,           // input
+                 Pits);          // output
   }
   DebugPrint("Regular Starts Set", __FILE__, __LINE__);
 }
@@ -177,9 +183,9 @@ inline void MeshExtrema::DebugPrint(const char* message, const char* fileName, l
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printHeader(peaks.GetNumberOfValues());
-  printIndices("Peaks", peaks);
-  printIndices("Pits", pits);
+  PrintHeader(Peaks.GetNumberOfValues());
+  PrintIndices("Peaks", Peaks);
+  PrintIndices("Pits", Pits);
 #else
   // Prevent unused parameter warning
   (void)message;

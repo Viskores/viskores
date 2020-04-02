@@ -139,11 +139,12 @@ public:
                                 vtkm::cont::ArrayHandle<vtkm::IdComponent> numberOfIndices,
                                 vtkm::cont::ArrayHandle<vtkm::Id> connectivity,
                                 vtkm::cont::ArrayHandle<vtkm::Id> offsets,
-                                ClipStats stats)
-    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device()))
-    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device()))
-    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device()))
-    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device()))
+                                ClipStats stats,
+                                vtkm::cont::Token& token)
+    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device(), token))
+    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device(), token))
+    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device(), token))
+    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device(), token))
   {
   }
 
@@ -196,10 +197,12 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(Device) const
+  VTKM_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(
+    Device,
+    vtkm::cont::Token& token) const
   {
     ExecutionConnectivityExplicit<Device> execConnectivity(
-      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats);
+      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats, token);
     return execConnectivity;
   }
 
@@ -218,13 +221,9 @@ class Clip
 {
   // Add support for invert
 public:
-  struct TypeClipStats : vtkm::ListTagBase<ClipStats>
-  {
-  };
+  using TypeClipStats = vtkm::List<ClipStats>;
 
-  struct TypeEdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
-  {
-  };
+  using TypeEdgeInterp = vtkm::List<EdgeInterpolation>;
 
   class ComputeStats : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
@@ -757,9 +756,7 @@ public:
   {
   public:
     using ValueType = typename ArrayHandleType::ValueType;
-    struct TypeMappedValue : vtkm::ListTagBase<ValueType>
-    {
-    };
+    using TypeMappedValue = vtkm::List<ValueType>;
 
     InterpolateField(vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolationArray,
                      vtkm::cont::ArrayHandle<vtkm::Id> inCellInterpolationKeys,

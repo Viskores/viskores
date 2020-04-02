@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_permute_arcs_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_permute_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_permute_arcs_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_permute_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -85,22 +85,22 @@ public:
                             const InFieldPortalType& shSortIndexPortal,
                             const OutFieldPortalType& contourTreeSHArcsPortal) const
   {
-    if (noSuchElement(sharc))
+    if (NoSuchElement(sharc))
       contourTreeSHArcsPortal.Set(supernode, (vtkm::Id)NO_SUCH_ELEMENT);
     else
       contourTreeSHArcsPortal.Set(
-        supernode, shSortIndexPortal.Get(maskedIndex(sharc)) | (sharc & IS_ASCENDING));
+        supernode, shSortIndexPortal.Get(MaskedIndex(sharc)) | (sharc & IS_ASCENDING));
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+      for (vtkm::Id supernode = 0; supernode < contourTree.Supernodes.size(); supernode++)
                 { // per node
                 vtkm::Id superarc = permutedSuperarcs[supernode];
 
-                if (noSuchElement(superarc))
+                if (NoSuchElement(superarc))
                         contourTree.superarcs[supernode] = NO_SUCH_ELEMENT;
                 else
-                        contourTree.superarcs[supernode] = superSortIndex[maskedIndex(superarc)] | (superarc & IS_ASCENDING);
+                        contourTree.superarcs[supernode] = superSortIndex[MaskedIndex(superarc)] | (superarc & IS_ASCENDING);
                 } // per node
       */
   }

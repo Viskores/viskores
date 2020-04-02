@@ -65,9 +65,7 @@ template <typename T>
 class ComputeBins : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn xLoc,    // (input) x location in halo
                                 FieldIn yLoc,    // (input) y location in halo

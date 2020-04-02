@@ -47,7 +47,9 @@ set(unit_tests
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
+  UnitTestArrayHandleRandomUniformBits.cxx
   UnitTestArrayHandleSwizzle.cxx
+  UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
@@ -79,8 +81,10 @@ set(unit_tests
   UnitTestScopedRuntimeDeviceTracker.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
+  UnitTestStorageList.cxx
   UnitTestStorageListTag.cxx
   UnitTestTimer.cxx
+  UnitTestToken.cxx
   UnitTestTryExecute.cxx
   UnitTestVariantArrayHandle.cxx
   )

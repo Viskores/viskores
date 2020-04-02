@@ -60,15 +60,15 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
 
   vtkm::worklet::Streamline streamline;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   auto res = streamline.Run(rk4, seedArray, this->NumberOfSteps);
 
   //compute surface from streamlines
   vtkm::cont::ArrayHandle<vtkm::Vec3f> srfPoints;
   vtkm::cont::CellSetSingleType<> srfCells;
-  vtkm::cont::CoordinateSystem slCoords("coordinates", res.positions);
-  this->Worklet.Run(slCoords, res.polyLines, srfPoints, srfCells);
+  vtkm::cont::CoordinateSystem slCoords("coordinates", res.Positions);
+  this->Worklet.Run(slCoords, res.PolyLines, srfPoints, srfCells);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", srfPoints);

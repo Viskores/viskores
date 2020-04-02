@@ -26,7 +26,7 @@ class Entropy : public vtkm::filter::FilterField<Entropy>
 {
 public:
   //currently the Entropy filter only works on scalar data.
-  using SupportedTypes = TypeListTagScalarAll;
+  using SupportedTypes = TypeListScalarAll;
 
   //Construct a histogram which is used to compute the entropy with a default of 10 bins
   VTKM_CONT

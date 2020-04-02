@@ -43,14 +43,20 @@ struct Transport<vtkm::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentT
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
-  using ExecObjectType = decltype(
-    std::declval<ContObjectType>().PrepareForInput(Device(), VisitTopology(), IncidentTopology()));
+  using ExecObjectType =
+    decltype(std::declval<ContObjectType>().PrepareForInput(Device(),
+                                                            VisitTopology(),
+                                                            IncidentTopology(),
+                                                            std::declval<vtkm::cont::Token&>()));
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType
-  operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id,
+                                      vtkm::cont::Token& token) const
   {
-    return object.PrepareForInput(Device(), VisitTopology(), IncidentTopology());
+    return object.PrepareForInput(Device(), VisitTopology(), IncidentTopology(), token);
   }
 };
 }

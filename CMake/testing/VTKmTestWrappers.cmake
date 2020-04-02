@@ -22,6 +22,7 @@ include(VTKmWrappers)
 #   TEST_ARGS <argument_list>
 #   MPI
 #   ALL_BACKENDS
+#   USE_VTKM_JOB_POOL
 #   <options>
 #   )
 #
@@ -46,7 +47,7 @@ function(vtkm_unit_tests)
   endif()
 
   set(options)
-  set(global_options ${options} MPI ALL_BACKENDS)
+  set(global_options ${options} USE_VTKM_JOB_POOL MPI ALL_BACKENDS)
   set(oneValueArgs BACKEND NAME LABEL)
   set(multiValueArgs SOURCES LIBRARIES DEFINES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
@@ -102,6 +103,12 @@ function(vtkm_unit_tests)
   # For Testing Purposes, we will set the default logging level to INFO
   list(APPEND vtkm_default_test_log_level "-v" "INFO")
 
+  # Add the path to the data directory so tests can find and use data files for testing
+  list(APPEND VTKm_UT_TEST_ARGS "--data-dir=${VTKm_SOURCE_DIR}/data/data")
+
+  # Add the path to the location where regression test images are to be stored
+  list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
+
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
     set(test_prog "${test_prog}_mpi")
@@ -136,6 +143,11 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
+
+  if(VTKm_UT_USE_VTKM_JOB_POOL)
+    vtkm_setup_job_pool()
+    set_property(TARGET ${test_prog} PROPERTY JOB_POOL_COMPILE vtkm_pool)
+  endif()
 
   list(LENGTH per_device_command_line_arguments number_of_devices)
   foreach(index RANGE ${number_of_devices})

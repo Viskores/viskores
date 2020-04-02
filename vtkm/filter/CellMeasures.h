@@ -30,7 +30,7 @@ template <typename IntegrationType>
 class CellMeasures : public vtkm::filter::FilterCell<CellMeasures<IntegrationType>>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   CellMeasures();

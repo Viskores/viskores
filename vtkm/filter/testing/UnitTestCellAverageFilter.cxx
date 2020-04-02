@@ -35,7 +35,7 @@ void TestCellAverageRegular3D()
     vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
     for (vtkm::Id i = 0; i < 4; ++i)
     {
-      VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+      VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                        "Wrong result for CellAverage worklet on 3D regular data");
     }
   }
@@ -57,7 +57,7 @@ void TestCellAverageRegular3D()
     for (vtkm::Id i = 0; i < 4; ++i)
     {
       vtkm::Vec3f expectedVec(expected[i][0], expected[i][1], expected[i][2]);
-      vtkm::Vec3f computedVec(resultPointArray.GetPortalConstControl().Get(i));
+      vtkm::Vec3f computedVec(resultPointArray.ReadPortal().Get(i));
       VTKM_TEST_ASSERT(test_equal(computedVec, expectedVec),
                        "Wrong result for CellAverage worklet on 3D regular data");
     }
@@ -85,7 +85,7 @@ void TestCellAverageRegular2D()
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2D regular data");
   }
 }
@@ -111,7 +111,7 @@ void TestCellAverageExplicit()
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 3D regular data");
   }
 }

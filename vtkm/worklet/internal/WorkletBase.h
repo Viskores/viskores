@@ -11,7 +11,6 @@
 #define vtk_m_worklet_internal_WorkletBase_h
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/TypeListTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
@@ -21,6 +20,7 @@
 #include <vtkm/exec/arg/OutputIndex.h>
 #include <vtkm/exec/arg/ThreadIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/arg/ThreadIndicesBasic3D.h>
 #include <vtkm/exec/arg/VisitIndex.h>
 #include <vtkm/exec/arg/WorkIndex.h>
 
@@ -32,7 +32,9 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayIn.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
-#include <vtkm/cont/arg/TypeCheckTagArray.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayIn.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayInOut.h>
+#include <vtkm/cont/arg/TypeCheckTagArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
 #include <vtkm/cont/arg/TypeCheckTagBitField.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
@@ -140,7 +142,7 @@ public:
   ///
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayIn;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -158,7 +160,7 @@ public:
   ///
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -177,7 +179,7 @@ public:
   ///
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
     using TransportTag = vtkm::cont::arg::TransportTagWholeArrayInOut;
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
@@ -257,22 +259,43 @@ public:
   /// types.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T,
-            typename OutToInArrayType,
+  template <typename OutToInArrayType,
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
-    const T& threadIndex,
+    const vtkm::Id& threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
-    const InputDomainType&,
-    const T& globalThreadIndexOffset = 0) const
+    const InputDomainType&) const
   {
     vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesBasic(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, globalThreadIndexOffset);
+      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
+  }
+
+  /// \brief Creates a \c ThreadIndices object.
+  ///
+  /// Worklet types can add additional indices by returning different object
+  /// types.
+  ///
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename OutToInArrayType,
+            typename VisitArrayType,
+            typename ThreadToOutArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic3D GetThreadIndices(
+    vtkm::Id threadIndex1D,
+    const vtkm::Id3& threadIndex3D,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const ThreadToOutArrayType& threadToOut,
+    const InputDomainType&) const
+  {
+    vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
+    return vtkm::exec::arg::ThreadIndicesBasic3D(
+      threadIndex3D, threadIndex1D, outToIn.Get(outIndex), visit.Get(outIndex), outIndex);
   }
 };
 }

@@ -33,18 +33,10 @@ struct IntegrateOverSolid : IntegrateOver
 };
 
 // Lists of acceptable types of integration
-struct ArcLength : vtkm::ListTagBase<IntegrateOverCurve>
-{
-};
-struct Area : vtkm::ListTagBase<IntegrateOverSurface>
-{
-};
-struct Volume : vtkm::ListTagBase<IntegrateOverSolid>
-{
-};
-struct AllMeasures : vtkm::ListTagBase<IntegrateOverSolid, IntegrateOverSurface, IntegrateOverCurve>
-{
-};
+using ArcLength = vtkm::List<IntegrateOverCurve>;
+using Area = vtkm::List<IntegrateOverSurface>;
+using Volume = vtkm::List<IntegrateOverSolid>;
+using AllMeasures = vtkm::List<IntegrateOverSolid, IntegrateOverSurface, IntegrateOverCurve>;
 
 namespace worklet
 {
@@ -105,19 +97,19 @@ protected:
         // Fall through to return 0 measure.
         break;
       case 1:
-        if (vtkm::ListContains<IntegrationTypeList, IntegrateOverCurve>::value)
+        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverCurve>::value)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
         }
         break;
       case 2:
-        if (vtkm::ListContains<IntegrationTypeList, IntegrateOverSurface>::value)
+        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSurface>::value)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
         }
         break;
       case 3:
-        if (vtkm::ListContains<IntegrationTypeList, IntegrateOverSolid>::value)
+        if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSolid>::value)
         {
           return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
         }

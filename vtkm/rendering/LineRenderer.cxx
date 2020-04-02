@@ -56,9 +56,9 @@ void LineRenderer::RenderLine(const vtkm::Vec3f_64& point0,
   vtkm::Id dy = -vtkm::Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
   vtkm::Id err = dx + dy, err2 = 0;
   auto colorPortal =
-    vtkm::rendering::Canvas::ColorBufferType(Canvas->GetColorBuffer()).GetPortalControl();
+    vtkm::rendering::Canvas::ColorBufferType(Canvas->GetColorBuffer()).WritePortal();
   auto depthPortal =
-    vtkm::rendering::Canvas::DepthBufferType(Canvas->GetDepthBuffer()).GetPortalControl();
+    vtkm::rendering::Canvas::DepthBufferType(Canvas->GetDepthBuffer()).WritePortal();
   vtkm::Vec4f_32 colorC = color.Components;
 
   while (x0 >= 0 && x0 < Canvas->GetWidth() && y0 >= 0 && y0 < Canvas->GetHeight())

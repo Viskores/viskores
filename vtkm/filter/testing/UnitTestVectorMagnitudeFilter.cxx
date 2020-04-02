@@ -47,9 +47,9 @@ void TestVectorMagnitude()
   result.GetPointField("magnitude").GetData().CopyTo(resultArrayHandle);
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(std::sqrt(3 * fvars[i] * fvars[i]),
-                                resultArrayHandle.GetPortalConstControl().Get(i)),
-                     "Wrong result for Magnitude worklet");
+    VTKM_TEST_ASSERT(
+      test_equal(std::sqrt(3 * fvars[i] * fvars[i]), resultArrayHandle.ReadPortal().Get(i)),
+      "Wrong result for Magnitude worklet");
   }
 }
 }

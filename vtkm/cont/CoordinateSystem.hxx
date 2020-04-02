@@ -41,7 +41,7 @@ VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordi
   const vtkm::cont::VariantArrayHandleBase<TypeList>& array)
 {
   vtkm::cont::ArrayHandleVirtualCoordinates output;
-  vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListTagFieldVec3{}),
+  vtkm::cont::CastAndCall(array.ResetTypes(vtkm::TypeListFieldVec3{}),
                           MakeArrayHandleVirtualCoordinatesFunctor{},
                           output);
   return output;
@@ -53,13 +53,6 @@ VTKM_CONT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::VariantArrayHandleBase<TypeList>& data)
   : Superclass(name, Association::POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
-{
-}
-
-template <typename T, typename Storage>
-VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
-                                             const vtkm::cont::ArrayHandle<T, Storage>& data)
-  : Superclass(name, Association::POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
 {
 }
 

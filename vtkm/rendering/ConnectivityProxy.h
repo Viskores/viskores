@@ -34,6 +34,8 @@ public:
   ConnectivityProxy(const vtkm::cont::DynamicCellSet& cellset,
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);
+  // Do not allow the default constructor
+  ConnectivityProxy() = delete;
   ~ConnectivityProxy();
   enum RenderMode
   {
@@ -52,9 +54,11 @@ public:
   void SetCompositeBackground(bool on);
   void SetDebugPrints(bool on);
   void SetUnitScalar(vtkm::Float32 unitScalar);
+  void SetEpsilon(vtkm::Float64 epsilon); // epsilon for bumping lost rays
 
   vtkm::Bounds GetSpatialBounds();
   vtkm::Range GetScalarFieldRange();
+  vtkm::Range GetScalarRange();
 
   void Trace(const vtkm::rendering::Camera& camera, vtkm::rendering::CanvasRayTracer* canvas);
   void Trace(vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays);
@@ -67,10 +71,6 @@ protected:
   struct InternalsType;
   struct BoundsFunctor;
   std::shared_ptr<InternalsType> Internals;
-
-private:
-  // Do not allow the default constructor
-  ConnectivityProxy();
 };
 }
 } //namespace vtkm::rendering

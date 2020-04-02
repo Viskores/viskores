@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3d_freudenthal_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_triangulation_3d_freudenthal_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_freudenthal_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_freudenthal_h
 
 #include <cstdlib>
 #include <vtkm/Types.h>
@@ -78,66 +78,70 @@ class Mesh_DEM_Triangulation_3D_Freudenthal : public Mesh_DEM_Triangulation_3D<T
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
-  m3d_freudenthal::edgeBoundaryDetectionMasksType edgeBoundaryDetectionMasks;
-  m3d_freudenthal::neighbourOffsetsType neighbourOffsets;
-  m3d_freudenthal::linkComponentCaseTableType linkComponentCaseTable;
+  m3d_freudenthal::EdgeBoundaryDetectionMasksType EdgeBoundaryDetectionMasks;
+  m3d_freudenthal::NeighbourOffsetsType NeighbourOffsets;
+  m3d_freudenthal::LinkComponentCaseTableType LinkComponentCaseTable;
 
   // Mesh helper functions
-  void setPrepareForExecutionBehavior(bool getMax);
+  void SetPrepareForExecutionBehavior(bool getMax);
 
   template <typename DeviceTag>
-  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag) const;
+  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag,
+                                                            vtkm::cont::Token& token) const;
 
-  Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id nrows, vtkm::Id ncols, vtkm::Id nslices);
+  Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices);
 
   MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
 
 private:
-  bool useGetMax; // Define the behavior ofr the PrepareForExecution function
+  bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
 };                // class Mesh_DEM_Triangulation
 
 // creates input mesh
 template <typename T, typename StorageType>
 Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_3D_Freudenthal(
-  vtkm::Id nrows,
   vtkm::Id ncols,
+  vtkm::Id nrows,
   vtkm::Id nslices)
-  : Mesh_DEM_Triangulation_3D<T, StorageType>(nrows, ncols, nslices)
+  : Mesh_DEM_Triangulation_3D<T, StorageType>(ncols, nrows, nslices)
 
 {
   // Initialize the case tables in vtkm
-  edgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal::edgeBoundaryDetectionMasks, m3d_freudenthal::N_INCIDENT_EDGES);
-  neighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal::neighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3));
-  linkComponentCaseTable = vtkm::cont::make_ArrayHandle(m3d_freudenthal::linkComponentCaseTable,
-                                                        m3d_freudenthal::LINK_COMPONENT_CASES);
+  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
+    m3d_freudenthal::EdgeBoundaryDetectionMasks, m3d_freudenthal::N_INCIDENT_EDGES);
+  this->NeighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
+    m3d_freudenthal::NeighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3));
+  this->LinkComponentCaseTable = vtkm::cont::make_ArrayHandle(
+    m3d_freudenthal::LinkComponentCaseTable, m3d_freudenthal::LINK_COMPONENT_CASES);
 }
 
 
 template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::setPrepareForExecutionBehavior(
+void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::SetPrepareForExecutionBehavior(
   bool getMax)
 {
-  this->useGetMax = getMax;
+  this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename T, typename StorageType>
 template <typename DeviceTag>
 MeshStructureFreudenthal3D<DeviceTag>
-  Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(DeviceTag) const
+Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::PrepareForExecution(
+  DeviceTag,
+  vtkm::cont::Token& token) const
 {
-  return MeshStructureFreudenthal3D<DeviceTag>(this->nRows,
-                                               this->nCols,
-                                               this->nSlices,
+  return MeshStructureFreudenthal3D<DeviceTag>(this->NumColumns,
+                                               this->NumRows,
+                                               this->NumSlices,
                                                m3d_freudenthal::N_INCIDENT_EDGES,
-                                               this->useGetMax,
-                                               this->sortIndices,
-                                               this->sortOrder,
-                                               edgeBoundaryDetectionMasks,
-                                               neighbourOffsets,
-                                               linkComponentCaseTable);
+                                               this->UseGetMax,
+                                               this->SortIndices,
+                                               this->SortOrder,
+                                               this->EdgeBoundaryDetectionMasks,
+                                               this->NeighbourOffsets,
+                                               this->LinkComponentCaseTable,
+                                               token);
 }
 
 
@@ -145,7 +149,7 @@ template <typename T, typename StorageType>
 MeshBoundary3DExec
 Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->nRows, this->nCols, this->nSlices, this->sortOrder);
+  return MeshBoundary3DExec(this->NumColumns, this->NumRows, this->NumSlices, this->SortOrder);
 }
 
 } // namespace contourtree_augmented

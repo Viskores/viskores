@@ -83,18 +83,18 @@ std::vector<vtkm::Id> ComputeCellToPointExpected(const CellSetType& cellset,
   std::vector<bool> permutationMask(static_cast<std::size_t>(cellset.GetNumberOfCells()), false);
   for (vtkm::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {
-    permutationMask[static_cast<std::size_t>(permutation.GetPortalConstControl().Get(i))] = true;
+    permutationMask[static_cast<std::size_t>(permutation.ReadPortal().Get(i))] = true;
   }
 
   vtkm::Id numberOfPoints = cellset.GetNumberOfPoints();
   std::vector<vtkm::Id> expected(static_cast<std::size_t>(numberOfPoints), 0);
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
-    vtkm::Id offset = indexOffsets.GetPortalConstControl().Get(i);
-    vtkm::Id count = numIndices.GetPortalConstControl().Get(i);
+    vtkm::Id offset = indexOffsets.ReadPortal().Get(i);
+    vtkm::Id count = numIndices.ReadPortal().Get(i);
     for (vtkm::Id j = 0; j < count; ++j)
     {
-      vtkm::Id cellId = connectivity.GetPortalConstControl().Get(offset++);
+      vtkm::Id cellId = connectivity.ReadPortal().Get(offset++);
       if (permutationMask[static_cast<std::size_t>(cellId)])
       {
         ++expected[static_cast<std::size_t>(i)];
@@ -121,8 +121,8 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
                    "result length not equal to number of cells");
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) ==
-                       cellset.GetNumberOfPointsInCell(permutation.GetPortalConstControl().Get(i)),
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) ==
+                       cellset.GetNumberOfPointsInCell(permutation.ReadPortal().Get(i)),
                      "incorrect result");
   }
 
@@ -134,7 +134,7 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
   auto expected = ComputeCellToPointExpected(cellset, permutation);
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected[static_cast<std::size_t>(i)],
+    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == expected[static_cast<std::size_t>(i)],
                      "incorrect result");
   }
   std::cout << "Testing resource releasing in CellSetPermutation:\n";

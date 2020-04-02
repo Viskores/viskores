@@ -10,6 +10,9 @@
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -146,10 +149,67 @@ struct TemplatedTests
                  WRITE_VALUE);
   }
 
+  void TestSimpleIterators()
+  {
+    std::array<T, ARRAY_SIZE> array;
+    T* begin = array.data();
+    T* end = begin + ARRAY_SIZE;
+    const T* cbegin = begin;
+    const T* cend = end;
+    vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::make_ArrayHandle(begin, ARRAY_SIZE);
+
+    std::cout
+      << "  Testing ArrayPortalToIterators(ArrayPortalFromIterators) gets back simple iterator."
+      << std::endl;
+    {
+      auto portal = vtkm::cont::internal::ArrayPortalFromIterators<T*>(begin, end);
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(begin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(begin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
+    }
+    {
+      auto portal = vtkm::cont::internal::ArrayPortalFromIterators<const T*>(cbegin, cend);
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(cbegin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(cbegin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
+    }
+
+    std::cout << "  Testing that basic ArrayHandle has simple iterators." << std::endl;
+    {
+      auto portal = arrayHandle.WritePortal();
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(begin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(begin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
+    }
+    {
+      auto portal = arrayHandle.ReadPortal();
+      auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+      VTKM_TEST_ASSERT(vtkm::cont::TypeToString(cbegin) == vtkm::cont::TypeToString(iter),
+                       "Expected iterator type ",
+                       vtkm::cont::TypeToString(cbegin),
+                       " but got ",
+                       vtkm::cont::TypeToString(iter));
+      VTKM_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
+    }
+  }
+
   void operator()()
   {
     TestIteratorRead();
     TestIteratorWrite();
+    TestSimpleIterators();
   }
 };
 
@@ -163,9 +223,48 @@ struct TestFunctor
   }
 };
 
+// Defines minimal API needed for ArrayPortalToIterators to detect and
+// use custom iterators:
+struct SpecializedIteratorAPITestPortal
+{
+  using IteratorType = int;
+  IteratorType GetIteratorBegin() const { return 32; }
+  IteratorType GetIteratorEnd() const { return 13; }
+};
+
+void TestCustomIterator()
+{
+  std::cout << "  Testing custom iterator detection." << std::endl;
+
+  // Dummy portal type for this test:
+  using PortalType = SpecializedIteratorAPITestPortal;
+  using ItersType = vtkm::cont::ArrayPortalToIterators<PortalType>;
+
+  PortalType portal;
+  ItersType iters{ portal };
+
+  VTKM_TEST_ASSERT(
+    std::is_same<typename ItersType::IteratorType, typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(
+    std::is_same<decltype(iters.GetBegin()), typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(
+    std::is_same<decltype(iters.GetEnd()), typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(iters.GetBegin() == 32);
+  VTKM_TEST_ASSERT(iters.GetEnd() == 13);
+
+  // Convenience API, too:
+  VTKM_TEST_ASSERT(std::is_same<decltype(vtkm::cont::ArrayPortalToIteratorBegin(portal)),
+                                typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(std::is_same<decltype(vtkm::cont::ArrayPortalToIteratorEnd(portal)),
+                                typename PortalType::IteratorType>::value);
+  VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorBegin(portal) == 32);
+  VTKM_TEST_ASSERT(vtkm::cont::ArrayPortalToIteratorEnd(portal) == 13);
+}
+
 void TestArrayPortalToIterators()
 {
   vtkm::testing::Testing::TryTypes(TestFunctor());
+  TestCustomIterator();
 }
 
 } // Anonymous namespace

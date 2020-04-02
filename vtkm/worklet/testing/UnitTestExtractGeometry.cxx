@@ -47,7 +47,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == nCells &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 110.f,
+                       cellFieldArray.ReadPortal().Get(0) == 110.f,
                      "Wrong cell field data");
   }
 
@@ -88,7 +88,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
+                       cellFieldArray.ReadPortal().Get(1) == 120.2f,
                      "Wrong cell field data");
   }
 
@@ -122,7 +122,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == nCells &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 4.f,
+                       cellFieldArray.ReadPortal().Get(1) == 4.f,
                      "Wrong cell field data");
   }
 
@@ -155,7 +155,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == nCells &&
-                       cellFieldArray.GetPortalConstControl().Get(2) == 5.f,
+                       cellFieldArray.ReadPortal().Get(2) == 5.f,
                      "Wrong cell field data");
   }
 
@@ -195,7 +195,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                       cellFieldArray.GetPortalConstControl().Get(0) == 21.f,
+                       cellFieldArray.ReadPortal().Get(0) == 21.f,
                      "Wrong cell field data");
   }
 
@@ -235,7 +235,7 @@ public:
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 22.f,
+                       cellFieldArray.ReadPortal().Get(1) == 22.f,
                      "Wrong cell field data");
   }
 

@@ -104,9 +104,7 @@ public:
   {
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     connectivity.Allocate(connectivityLength);
-    const auto offsetsTrim =
-      vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-    auto connWrap = vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsetsTrim);
+    auto connWrap = vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets);
     vtkm::cont::Invoker{ Device{} }(WriteConnectivity{}, cs, connWrap);
     return connectivity;
   }
@@ -166,11 +164,11 @@ private:
   using InShapesArrayType = typename BaseCellSetType::ShapesArrayType;
   using InNumIndicesArrayType = typename BaseCellSetType::NumIndicesArrayType;
 
-  using ShapesStorageTag = StorageTagPermutation<PermutationArrayHandleType, InShapesArrayType>;
   using ConnectivityStorageTag = vtkm::cont::ArrayHandle<vtkm::Id>::StorageTag;
   using OffsetsStorageTag = vtkm::cont::ArrayHandle<vtkm::Id>::StorageTag;
   using NumIndicesStorageTag =
-    StorageTagPermutation<PermutationArrayHandleType, InNumIndicesArrayType>;
+    typename vtkm::cont::ArrayHandlePermutation<PermutationArrayHandleType,
+                                                InNumIndicesArrayType>::StorageTag;
 
 
 public:
@@ -278,6 +276,12 @@ template <typename OriginalCellSetType_,
             vtkm::cont::ArrayHandle<vtkm::Id, VTKM_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG>>
 class CellSetPermutation : public CellSet
 {
+  VTKM_IS_CELL_SET(OriginalCellSetType_);
+  VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType_);
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_same<vtkm::Id, typename PermutationArrayHandleType_::ValueType>::value),
+    "Must use ArrayHandle with value type of Id for permutation array.");
+
 public:
   using OriginalCellSetType = OriginalCellSetType_;
   using PermutationArrayHandleType = PermutationArrayHandleType_;
@@ -297,6 +301,23 @@ public:
     , ValidCellIds()
     , FullCellSet()
   {
+  }
+
+  ~CellSetPermutation() override {}
+
+  CellSetPermutation(const CellSetPermutation& src)
+    : CellSet()
+    , ValidCellIds(src.ValidCellIds)
+    , FullCellSet(src.FullCellSet)
+  {
+  }
+
+
+  CellSetPermutation& operator=(const CellSetPermutation& src)
+  {
+    this->ValidCellIds = src.ValidCellIds;
+    this->FullCellSet = src.FullCellSet;
+    return *this;
   }
 
   VTKM_CONT
@@ -329,18 +350,17 @@ public:
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override
   {
     return this->FullCellSet.GetNumberOfPointsInCell(
-      this->ValidCellIds.GetPortalConstControl().Get(cellIndex));
+      this->ValidCellIds.ReadPortal().Get(cellIndex));
   }
 
   vtkm::UInt8 GetCellShape(vtkm::Id id) const override
   {
-    return this->FullCellSet.GetCellShape(this->ValidCellIds.GetPortalConstControl().Get(id));
+    return this->FullCellSet.GetCellShape(this->ValidCellIds.ReadPortal().Get(id));
   }
 
   void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
   {
-    return this->FullCellSet.GetCellPointIds(this->ValidCellIds.GetPortalConstControl().Get(id),
-                                             ptids);
+    return this->FullCellSet.GetCellPointIds(this->ValidCellIds.ReadPortal().Get(id), ptids);
   }
 
   std::shared_ptr<CellSet> NewInstance() const override
@@ -419,21 +439,26 @@ public:
                                     vtkm::TopologyElementTagCell,
                                     vtkm::TopologyElementTagPoint>::ExecObjectType
   PrepareForInput(Device device,
-                  vtkm::TopologyElementTagCell from,
-                  vtkm::TopologyElementTagPoint to) const
+                  vtkm::TopologyElementTagCell visitTopology,
+                  vtkm::TopologyElementTagPoint incidentTopology,
+                  vtkm::cont::Token& token) const
   {
     using ConnectivityType = typename ExecutionTypes<Device,
                                                      vtkm::TopologyElementTagCell,
                                                      vtkm::TopologyElementTagPoint>::ExecObjectType;
-    return ConnectivityType(this->ValidCellIds.PrepareForInput(device),
-                            this->FullCellSet.PrepareForInput(device, from, to));
+    return ConnectivityType(
+      this->ValidCellIds.PrepareForInput(device, token),
+      this->FullCellSet.PrepareForInput(device, visitTopology, incidentTopology, token));
   }
 
   template <typename Device>
   VTKM_CONT typename ExecutionTypes<Device,
                                     vtkm::TopologyElementTagPoint,
                                     vtkm::TopologyElementTagCell>::ExecObjectType
-  PrepareForInput(Device device, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell) const
+  PrepareForInput(Device device,
+                  vtkm::TopologyElementTagPoint,
+                  vtkm::TopologyElementTagCell,
+                  vtkm::cont::Token& token) const
   {
     if (!this->VisitPointsWithCells.ElementsValid)
     {
@@ -445,8 +470,17 @@ public:
     using ConnectivityType = typename ExecutionTypes<Device,
                                                      vtkm::TopologyElementTagPoint,
                                                      vtkm::TopologyElementTagCell>::ExecObjectType;
-    return ConnectivityType(this->VisitPointsWithCells.Connectivity.PrepareForInput(device),
-                            this->VisitPointsWithCells.Offsets.PrepareForInput(device));
+    return ConnectivityType(this->VisitPointsWithCells.Connectivity.PrepareForInput(device, token),
+                            this->VisitPointsWithCells.Offsets.PrepareForInput(device, token));
+  }
+
+  template <typename Device, typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+    typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
+    PrepareForInput(Device device, VisitTopology visitTopology, IncidentTopology incidentTopology)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
   VTKM_CONT
@@ -494,6 +528,8 @@ public:
   {
   }
 
+  ~CellSetPermutation() override {}
+
   VTKM_CONT
   void Fill(const PermutationArrayHandleType2& validCellIds,
             const CellSetPermutation<CellSetType, PermutationArrayHandleType1>& cellset)
@@ -502,7 +538,10 @@ public:
     this->FullCellSet = cellset.GetFullCellSet();
   }
 
-  std::shared_ptr<CellSet> NewInstance() const { return std::make_shared<CellSetPermutation>(); }
+  std::shared_ptr<CellSet> NewInstance() const override
+  {
+    return std::make_shared<CellSetPermutation>();
+  }
 };
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>

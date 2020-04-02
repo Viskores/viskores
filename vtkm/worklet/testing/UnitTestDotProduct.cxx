@@ -83,8 +83,8 @@ void TestDotProduct()
 
   for (vtkm::Id i = 0; i < inputArray1.GetNumberOfValues(); i++)
   {
-    vtkm::Vec<T, 3> v1 = inputArray1.GetPortalConstControl().Get(i);
-    vtkm::Vec<T, 3> v2 = inputArray2.GetPortalConstControl().Get(i);
+    vtkm::Vec<T, 3> v1 = inputArray1.ReadPortal().Get(i);
+    vtkm::Vec<T, 3> v2 = inputArray2.ReadPortal().Get(i);
     T ans = answer[static_cast<std::size_t>(i)];
 
     VTKM_TEST_ASSERT(test_equal(ans, vtkm::Dot(v1, v2)), "Wrong result for dot product");

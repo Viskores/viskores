@@ -23,7 +23,7 @@ namespace filter
 class ThresholdPoints : public vtkm::filter::FilterDataSetWithField<ThresholdPoints>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT
   ThresholdPoints();

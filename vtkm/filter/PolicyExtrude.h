@@ -20,7 +20,7 @@
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
 #include <vtkm/cont/CellSetExtrude.h>
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/filter/PolicyDefault.h>
 
 namespace vtkm
@@ -31,11 +31,11 @@ namespace filter
 struct VTKM_ALWAYS_EXPORT PolicyExtrude : vtkm::filter::PolicyBase<PolicyExtrude>
 {
 public:
-  using UnstructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetExtrude>;
-  using AllCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetExtrude>;
+  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetExtrude>;
+  using AllCellSetList = vtkm::List<vtkm::cont::CellSetExtrude>;
   //Todo: add in Cylinder storage tag when it is written
   using CoordinateStorageList =
-    vtkm::ListTagBase<vtkm::cont::StorageTagBasic, vtkm::cont::internal::StorageTagExtrude>;
+    vtkm::List<vtkm::cont::StorageTagBasic, vtkm::cont::internal::StorageTagExtrude>;
 };
 }
 }

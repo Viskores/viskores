@@ -119,10 +119,10 @@ public:
       vtkm::cont::Invoker invoke;
       do
       {
-        updateRequired.GetPortalControl().Set(0, 0); //reset the atomic state
+        updateRequired.WritePortal().Set(0, 0); //reset the atomic state
         invoke(detail::ImageGraft{}, input, components, pixels, components, updateRequired);
         invoke(PointerJumping{}, components);
-      } while (updateRequired.GetPortalControl().Get(0) > 0);
+      } while (updateRequired.WritePortal().Get(0) > 0);
 
       // renumber connected component to the range of [0, number of components).
       vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
@@ -165,7 +165,7 @@ public:
            const vtkm::cont::VariantArrayHandleBase<T>& pixels,
            OutputPortalType& componentsOut) const
   {
-    using Types = vtkm::TypeListTagScalarAll;
+    using Types = vtkm::TypeListScalarAll;
     vtkm::cont::CastAndCall(pixels.ResetTypes(Types{}), RunImpl(), input, componentsOut);
   }
 
@@ -182,7 +182,7 @@ public:
            const vtkm::cont::ArrayHandle<T, S>& pixels,
            OutputPortalType& componentsOut) const
   {
-    input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
+    input.ResetCellSetList(vtkm::cont::CellSetListStructured())
       .CastAndCall(ResolveDynamicCellSet(), pixels, componentsOut);
   }
 };

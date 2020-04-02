@@ -87,7 +87,7 @@ public:
     return *this;
   }
 
-  virtual ~CellSetSingleType() {}
+  virtual ~CellSetSingleType() override {}
 
   /// First method to add cells -- one at a time.
   VTKM_CONT
@@ -144,7 +144,7 @@ public:
           "Inconsistent number of points in cells for CellSetSingleType.");
       }
     }
-    auto conn = this->Data->CellPointIds.Connectivity.GetPortalControl();
+    auto conn = this->Data->CellPointIds.Connectivity.WritePortal();
     for (vtkm::IdComponent iVert = 0; iVert < numVertices; ++iVert)
     {
       conn.Set(this->Data->ConnectivityAdded + iVert, Traits::GetComponent(ids, iVert));

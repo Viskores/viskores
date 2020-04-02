@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
-#define vtkm_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_init_to_combined_sort_order_arrays_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -98,22 +98,22 @@ public:
                             const OutFieldPortalType& thisToCombinedSortOrderPortal,
                             const OutFieldPortalType& otherToCombinedSortOrderPortal) const
   {
-    if (isThis(overallSortOrderVal))
+    if (IsThis(overallSortOrderVal))
     {
-      thisToCombinedSortOrderPortal.Set(maskedIndex(overallSortOrderVal), overallSortIndexVal);
+      thisToCombinedSortOrderPortal.Set(MaskedIndex(overallSortOrderVal), overallSortIndexVal);
     }
     else
     {
-      otherToCombinedSortOrderPortal.Set(maskedIndex(overallSortOrderVal), overallSortIndexVal);
+      otherToCombinedSortOrderPortal.Set(MaskedIndex(overallSortOrderVal), overallSortIndexVal);
     }
 
     // In serial this worklet implements the following operation
     // for (indexVector::size_type i = 0; i < overallSortOrder.size(); ++i)
     //   {
-    //     if (CombinedIndexVector::isThis(overallSortOrder[i]))
-    //         thisToCombinedSortOrder[maskedIndex(overallSortOrder[maskedIndex(i)])] = overallSortIndex[i];
+    //     if (CombinedIndexVector::IsThis(overallSortOrder[i]))
+    //         thisToCombinedSortOrder[MaskedIndex(overallSortOrder[MaskedIndex(i)])] = overallSortIndex[i];
     //     else
-    //         otherToCombinedSortOrder[maskedIndex(overallSortOrder[maskedIndex(i)])] = overallSortIndex[i];
+    //         otherToCombinedSortOrder[MaskedIndex(overallSortOrder[MaskedIndex(i)])] = overallSortIndex[i];
     //   }
   }
 

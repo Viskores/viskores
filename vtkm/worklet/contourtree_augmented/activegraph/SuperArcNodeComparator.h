@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_inc_super_arc_node_comparator_h
-#define vtkm_worklet_contourtree_augmented_active_graph_inc_super_arc_node_comparator_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_inc_super_arc_node_comparator_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_inc_super_arc_node_comparator_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -76,15 +76,14 @@ public:
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  IdPortalType superparentsPortal;
-  bool isJoinSweep;
-
   // constructor - takes vectors as parameters
   VTKM_CONT
-  SuperArcNodeComparatorImpl(const IdArrayType& superparents, bool joinSweep)
-    : isJoinSweep(joinSweep)
+  SuperArcNodeComparatorImpl(const IdArrayType& superparents,
+                             bool joinSweep,
+                             vtkm::cont::Token& token)
+    : IsJoinSweep(joinSweep)
   { // constructor
-    superparentsPortal = superparents.PrepareForInput(DeviceAdapter());
+    SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -92,26 +91,31 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     // first make sure we have the "top" end set correctly
-    vtkm::Id superarcI = superparentsPortal.Get(i);
-    vtkm::Id superarcJ = superparentsPortal.Get(j);
+    vtkm::Id superarcI = this->SuperparentsPortal.Get(i);
+    vtkm::Id superarcJ = this->SuperparentsPortal.Get(j);
 
     // now test on that
     if (superarcI < superarcJ)
-      return false ^ isJoinSweep;
+      return false ^ this->IsJoinSweep;
     if (superarcJ < superarcI)
-      return true ^ isJoinSweep;
+      return true ^ this->IsJoinSweep;
 
     // if that fails, we share the hyperarc, and sort on supernode index
     // since that's guaranteed to be pre-sorted
     if (i < j)
-      return false ^ isJoinSweep;
+      return false ^ this->IsJoinSweep;
     if (j < i)
-      return true ^ isJoinSweep;
+      return true ^ this->IsJoinSweep;
 
     // fallback just in case
     return false;
   } // operator()
-};  // SuperArcNodeComparatorImpl
+
+private:
+  IdPortalType SuperparentsPortal;
+  bool IsJoinSweep;
+
+}; // SuperArcNodeComparatorImpl
 
 class SuperArcNodeComparator : public vtkm::cont::ExecutionObjectBase
 {
@@ -125,9 +129,11 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter) const
+  VTKM_CONT SuperArcNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter,
+    vtkm::cont::Token& token) const
   {
-    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep);
+    return SuperArcNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->JoinSweep, token);
   }
 
 private:

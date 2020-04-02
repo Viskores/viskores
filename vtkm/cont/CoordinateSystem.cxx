@@ -77,18 +77,16 @@ template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandle<
     vtkm::Vec3f_32,
-    vtkm::cont::internal::StorageTagCartesianProduct<
-      vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>>>&);
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&);
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandle<
     vtkm::Vec3f_64,
-    vtkm::cont::internal::StorageTagCartesianProduct<
-      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>,
-      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>>>&);
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>&);
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::ArrayHandle<

@@ -16,6 +16,8 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
+  UnitTestContourFilterCustomPolicy.cxx
+  UnitTestContourFilterNormals.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
@@ -29,7 +31,8 @@ set(unit_tests
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
   UnitTestFieldToColors.cxx
-  UnitTestGradient.cxx
+  UnitTestGradientExplicit.cxx
+  UnitTestGradientUniform.cxx
   UnitTestGhostCellClassify.cxx
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
@@ -68,4 +71,5 @@ vtkm_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES vtkm_filter vtkm_source
   ALL_BACKENDS
+  USE_VTKM_JOB_POOL
   )

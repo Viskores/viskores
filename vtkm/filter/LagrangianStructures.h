@@ -28,7 +28,7 @@ namespace filter
 class LagrangianStructures : public vtkm::filter::FilterDataSetWithField<LagrangianStructures>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagFieldVec3;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   LagrangianStructures();
 

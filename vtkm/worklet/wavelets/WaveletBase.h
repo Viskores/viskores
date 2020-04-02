@@ -248,7 +248,7 @@ public:
   template <typename ArrayType>
   typename ArrayType::ValueType DeviceMaxAbs(const ArrayType& array)
   {
-    typename ArrayType::ValueType initVal = array.GetPortalConstControl().Get(0);
+    typename ArrayType::ValueType initVal = array.ReadPortal().Get(0);
     return vtkm::cont::Algorithm::Reduce(array, initVal, maxAbsFunctor());
   }
 
@@ -316,7 +316,7 @@ public:
     std::cerr << str << std::endl;
     for (vtkm::Id i = 0; i < arr.GetNumberOfValues(); i++)
     {
-      std::cerr << arr.GetPortalConstControl().Get(i) << "  ";
+      std::cerr << arr.ReadPortal().Get(i) << "  ";
       if (i % dimX == dimX - 1)
       {
         std::cerr << std::endl;

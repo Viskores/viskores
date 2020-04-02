@@ -111,15 +111,20 @@ private:
 
       for (int n = 0; n < 2; ++n)
       {
-        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        vtkm::cont::Token token;
+        virtual_object_detail::TransformerFunctor tfnctr(
+          this->Handle->PrepareForExecution(device, token));
         ArrayTransform transformed(*this->Input, tfnctr);
 
         FloatArrayHandle output;
         Algorithm::Copy(transformed, output);
-        auto portal = output.GetPortalConstControl();
+        auto portal = output.ReadPortal();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i * i), "\tIncorrect result");
+          vtkm::FloatDefault expected = TestValue(i, vtkm::FloatDefault{});
+          expected = expected * expected;
+          VTKM_TEST_ASSERT(
+            test_equal(portal.Get(i), expected), "Expected ", expected, " but got ", portal.Get(i));
         }
         std::cout << "\tSuccess." << std::endl;
 
@@ -158,16 +163,20 @@ private:
       this->Mul->SetMultiplicand(2);
       for (int n = 0; n < 2; ++n)
       {
-        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        vtkm::cont::Token token;
+        virtual_object_detail::TransformerFunctor tfnctr(
+          this->Handle->PrepareForExecution(device, token));
         ArrayTransform transformed(*this->Input, tfnctr);
 
         FloatArrayHandle output;
         Algorithm::Copy(transformed, output);
-        auto portal = output.GetPortalConstControl();
+        auto portal = output.ReadPortal();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i) * this->Mul->GetMultiplicand(),
-                           "\tIncorrect result");
+          vtkm::FloatDefault expected =
+            TestValue(i, vtkm::FloatDefault{}) * this->Mul->GetMultiplicand();
+          VTKM_TEST_ASSERT(
+            test_equal(portal.Get(i), expected), "Expected ", expected, " but got ", portal.Get(i));
         }
         std::cout << "\tSuccess." << std::endl;
 
@@ -190,11 +199,7 @@ public:
   {
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> input;
     input.Allocate(ARRAY_LEN);
-    auto portal = input.GetPortalControl();
-    for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
-    {
-      portal.Set(i, vtkm::FloatDefault(i));
-    }
+    SetPortal(input.WritePortal());
 
     TransformerHandle handle;
 

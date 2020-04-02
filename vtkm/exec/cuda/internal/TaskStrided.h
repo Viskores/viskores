@@ -54,11 +54,10 @@ template <typename WType, typename IType>
 class TaskStrided1D : public TaskStrided
 {
 public:
-  TaskStrided1D(const WType& worklet, const IType& invocation, vtkm::Id globalIndexOffset = 0)
+  TaskStrided1D(const WType& worklet, const IType& invocation)
     : TaskStrided()
     , Worklet(worklet)
     , Invocation(invocation)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     this->SetErrorBufferFunction = &TaskStridedSetErrorBuffer<WType>;
     //Bind the Worklet to void*
@@ -78,8 +77,7 @@ public:
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
                                        this->Invocation.ThreadToOutputMap,
-                                       this->Invocation.GetInputDomain(),
-                                       this->GlobalIndexOffset));
+                                       this->Invocation.GetInputDomain()));
     }
   }
 
@@ -90,7 +88,6 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const IType Invocation;
-  const vtkm::Id GlobalIndexOffset;
 };
 
 template <typename WType>
@@ -123,11 +120,10 @@ template <typename WType, typename IType>
 class TaskStrided3D : public TaskStrided
 {
 public:
-  TaskStrided3D(const WType& worklet, const IType& invocation, vtkm::Id globalIndexOffset = 0)
+  TaskStrided3D(const WType& worklet, const IType& invocation)
     : TaskStrided()
     , Worklet(worklet)
     , Invocation(invocation)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     this->SetErrorBufferFunction = &TaskStridedSetErrorBuffer<WType>;
     //Bind the Worklet to void*
@@ -135,22 +131,28 @@ public:
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id start, vtkm::Id end, vtkm::Id inc, vtkm::Id j, vtkm::Id k) const
+  void operator()(const vtkm::Id3& size,
+                  vtkm::Id start,
+                  vtkm::Id end,
+                  vtkm::Id inc,
+                  vtkm::Id j,
+                  vtkm::Id k) const
   {
     vtkm::Id3 index(start, j, k);
-    for (vtkm::Id i = start; i < end; i += inc)
+    auto threadIndex1D = index[0] + size[0] * (index[1] + size[1] * index[2]);
+    for (vtkm::Id i = start; i < end; i += inc, threadIndex1D += inc)
     {
       index[0] = i;
       //Todo: rename this function to DoTaskInvokeWorklet
       vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
         this->Worklet,
         this->Invocation,
-        this->Worklet.GetThreadIndices(index,
+        this->Worklet.GetThreadIndices(threadIndex1D,
+                                       index,
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
                                        this->Invocation.ThreadToOutputMap,
-                                       this->Invocation.GetInputDomain(),
-                                       this->GlobalIndexOffset));
+                                       this->Invocation.GetInputDomain()));
     }
   }
 
@@ -161,7 +163,6 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const IType Invocation;
-  const vtkm::Id GlobalIndexOffset;
 };
 
 template <typename WType>
@@ -178,7 +179,12 @@ public:
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id start, vtkm::Id end, vtkm::Id inc, vtkm::Id j, vtkm::Id k) const
+  void operator()(const vtkm::Id3& size,
+                  vtkm::Id start,
+                  vtkm::Id end,
+                  vtkm::Id inc,
+                  vtkm::Id j,
+                  vtkm::Id k) const
   {
     vtkm::Id3 index(start, j, k);
     for (vtkm::Id i = start; i < end; i += inc)

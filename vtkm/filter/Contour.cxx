@@ -67,8 +67,5 @@ VTKM_FILTER_EXPORT vtkm::Float64 Contour::GetIsoValue(vtkm::Id index) const
 {
   return this->IsoValues[static_cast<std::size_t>(index)];
 }
-
-//-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(Contour);
 }
 }

@@ -105,8 +105,7 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandle<U>& array)
   count = std::min(count, array.GetNumberOfValues());
   std::cout << std::setw(15) << msg << ": ";
   for (vtkm::Id i = 0; i < count; i++)
-    std::cout << std::setprecision(3) << std::setw(5) << array.GetPortalConstControl().Get(i)
-              << " ";
+    std::cout << std::setprecision(3) << std::setw(5) << array.ReadPortal().Get(i) << " ";
   std::cout << std::endl;
 }
 
@@ -117,7 +116,7 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandleReverse<vtkm::cont::Arra
   count = std::min(count, array.GetNumberOfValues());
   std::cout << std::setw(15) << msg << ": ";
   for (vtkm::Id i = 0; i < count; i++)
-    std::cout << std::setw(5) << array.GetPortalConstControl().Get(i) << " ";
+    std::cout << std::setw(5) << array.ReadPortal().Get(i) << " ";
   std::cout << std::endl;
 }
 }

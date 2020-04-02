@@ -41,7 +41,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.GetPortalConstControl().Get(i) != expected[i])
+    if (ah.ReadPortal().Get(i) != expected[i])
     {
       return false;
     }
@@ -120,7 +120,7 @@ void TestClippingExplicit()
   bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
              clipValue,
              invertClip);
 
@@ -176,7 +176,7 @@ void TestClippingStructured()
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(),
-             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListTagFieldScalar()),
+             ds.GetField("scalars").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
              clipValue,
              invertClip);
 

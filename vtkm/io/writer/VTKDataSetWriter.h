@@ -10,6 +10,7 @@
 #ifndef vtk_m_io_writer_DataSetWriter_h
 #define vtk_m_io_writer_DataSetWriter_h
 
+#include <cctype>
 #include <vtkm/CellShape.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
@@ -67,7 +68,7 @@ private:
       {
         out << " 0";
       }
-      out << std::endl;
+      out << '\n';
     }
   }
 
@@ -81,7 +82,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
   {
-    this->Output(array.GetPortalConstControl());
+    this->Output(array.ReadPortal());
   }
 };
 
@@ -105,7 +106,7 @@ private:
       {
         out << (c == 0 ? "" : " ") << VecType::GetComponent(value, c);
       }
-      out << std::endl;
+      out << '\n';
     }
   }
 
@@ -119,7 +120,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
   {
-    this->Output(array.GetPortalConstControl());
+    this->Output(array.ReadPortal());
   }
 };
 
@@ -155,7 +156,7 @@ private:
 
     vtkm::Id npoints = cdata.GetNumberOfValues();
     out << "POINTS " << npoints << " "
-        << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name() << " " << std::endl;
+        << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name() << " " << '\n';
 
     detail::OutputPointsFunctor{ out }(cdata);
   }
@@ -171,7 +172,7 @@ private:
       conn_length += 1 + cellSet.GetNumberOfPointsInCell(i);
     }
 
-    out << "CELLS " << nCells << " " << conn_length << std::endl;
+    out << "CELLS " << nCells << " " << conn_length << '\n';
 
     for (vtkm::Id i = 0; i < nCells; ++i)
     {
@@ -179,17 +180,17 @@ private:
       vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
       cellSet.GetIndices(i, ids);
       out << nids;
-      auto IdPortal = ids.GetPortalConstControl();
+      auto IdPortal = ids.ReadPortal();
       for (int j = 0; j < nids; ++j)
         out << " " << IdPortal.Get(j);
-      out << std::endl;
+      out << '\n';
     }
 
-    out << "CELL_TYPES " << nCells << std::endl;
+    out << "CELL_TYPES " << nCells << '\n';
     for (vtkm::Id i = 0; i < nCells; ++i)
     {
       vtkm::Id shape = cellSet.GetCellShape(i);
-      out << shape << std::endl;
+      out << shape << '\n';
     }
   }
 
@@ -197,15 +198,15 @@ private:
   {
     vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
 
-    out << "CELLS " << nCells << " " << nCells * 2 << std::endl;
+    out << "CELLS " << nCells << " " << nCells * 2 << '\n';
     for (int i = 0; i < nCells; i++)
     {
-      out << "1 " << i << std::endl;
+      out << "1 " << i << '\n';
     }
-    out << "CELL_TYPES " << nCells << std::endl;
+    out << "CELL_TYPES " << nCells << '\n';
     for (int i = 0; i < nCells; i++)
     {
-      out << vtkm::CELL_SHAPE_VERTEX << std::endl;
+      out << vtkm::CELL_SHAPE_VERTEX << '\n';
     }
   }
 
@@ -230,17 +231,26 @@ private:
 
       if (!wrote_header)
       {
-        out << "POINT_DATA " << npoints << std::endl;
+        out << "POINT_DATA " << npoints << '\n';
         wrote_header = true;
       }
 
       std::string typeName;
-      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::GetDataTypeName(typeName));
+      std::string name = field.GetName();
+      for (auto& c : name)
+      {
+        if (std::isspace(c))
+        {
+          c = '_';
+        }
+      }
+      out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
+      out << "LOOKUP_TABLE default" << '\n';
 
-      out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
-      out << "LOOKUP_TABLE default" << std::endl;
-
-      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::OutputFieldFunctor(out));
     }
   }
 
@@ -263,23 +273,34 @@ private:
 
       if (!wrote_header)
       {
-        out << "CELL_DATA " << ncells << std::endl;
+        out << "CELL_DATA " << ncells << '\n';
         wrote_header = true;
       }
 
       std::string typeName;
-      vtkm::cont::CastAndCall(field, detail::GetDataTypeName(typeName));
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::GetDataTypeName(typeName));
 
-      out << "SCALARS " << field.GetName() << " " << typeName << " " << ncomps << std::endl;
-      out << "LOOKUP_TABLE default" << std::endl;
+      std::string name = field.GetName();
+      for (auto& c : name)
+      {
+        if (std::isspace(c))
+        {
+          c = '_';
+        }
+      }
 
-      vtkm::cont::CastAndCall(field, detail::OutputFieldFunctor(out));
+      out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
+      out << "LOOKUP_TABLE default" << '\n';
+
+      vtkm::cont::CastAndCall(field.GetData().ResetTypes(TypeListAll{}),
+                              detail::OutputFieldFunctor(out));
     }
   }
 
   static void WriteDataSetAsPoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   {
-    out << "DATASET UNSTRUCTURED_GRID" << std::endl;
+    out << "DATASET UNSTRUCTURED_GRID" << '\n';
     WritePoints(out, dataSet);
     WriteVertexCells(out, dataSet);
   }
@@ -289,7 +310,7 @@ private:
                                          const vtkm::cont::DataSet& dataSet,
                                          const CellSetType& cellSet)
   {
-    out << "DATASET UNSTRUCTURED_GRID" << std::endl;
+    out << "DATASET UNSTRUCTURED_GRID" << '\n';
     WritePoints(out, dataSet);
     WriteExplicitCells(out, cellSet);
   }
@@ -300,7 +321,7 @@ private:
                                        const vtkm::cont::CellSetStructured<DIM>& cellSet)
   {
     ///\todo: support uniform/rectilinear
-    out << "DATASET STRUCTURED_GRID" << std::endl;
+    out << "DATASET STRUCTURED_GRID" << '\n';
 
     auto pointDimensions = cellSet.GetPointDimensions();
     using VTraits = vtkm::VecTraits<decltype(pointDimensions)>;
@@ -315,9 +336,11 @@ private:
 
   static void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, bool just_points = false)
   {
-    out << "# vtk DataFile Version 3.0" << std::endl;
-    out << "vtk output" << std::endl;
-    out << "ASCII" << std::endl;
+    // The Paraview parser cannot handle scientific notation:
+    out << std::fixed;
+    out << "# vtk DataFile Version 3.0" << '\n';
+    out << "vtk output" << '\n';
+    out << "ASCII" << '\n';
 
     if (just_points)
     {

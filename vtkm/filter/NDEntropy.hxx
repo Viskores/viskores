@@ -48,7 +48,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   vtkm::Float64 entropy = ndEntropy.Run();
 
   entropyHandle.Allocate(1);
-  entropyHandle.GetPortalControl().Set(0, entropy);
+  entropyHandle.WritePortal().Set(0, entropy);
 
 
   vtkm::cont::DataSet outputData;

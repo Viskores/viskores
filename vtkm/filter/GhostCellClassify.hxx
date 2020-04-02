@@ -22,7 +22,7 @@
 
 namespace
 {
-struct TypeUInt8 : vtkm::ListTagBase<vtkm::UInt8>
+struct TypeUInt8 : vtkm::List<vtkm::UInt8>
 {
 };
 

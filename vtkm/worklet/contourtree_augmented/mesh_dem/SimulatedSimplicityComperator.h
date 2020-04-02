@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
-#define vtkm_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_simlated_simplicity_comperator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -115,10 +115,10 @@ public:
 
   template <typename DeviceAdapter>
   VTKM_CONT SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>
-  PrepareForExecution(DeviceAdapter device) const
+  PrepareForExecution(DeviceAdapter device, vtkm::cont::Token& token) const
   {
     return SimulatedSimplicityIndexComparatorImpl<T, StorageType, DeviceAdapter>(
-      this->Values.PrepareForInput(device));
+      this->Values.PrepareForInput(device, token));
   }
 
 private:

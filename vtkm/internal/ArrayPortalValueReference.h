@@ -49,6 +49,14 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
+  ArrayPortalValueReference(const ArrayPortalValueReference& ref)
+    : Portal(ref.Portal)
+    , Index(ref.Index)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   ValueType Get() const { return this->Portal.Get(this->Index); }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -70,7 +78,7 @@ struct ArrayPortalValueReference
   void Set(const ValueType& value) const { this->Portal.Set(this->Index, value); }
 
   VTKM_CONT
-  void Swap(const ArrayPortalValueReference<ArrayPortalType>& rhs) const throw()
+  void Swap(const ArrayPortalValueReference<ArrayPortalType>& rhs) const noexcept
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure

@@ -83,11 +83,9 @@ static void PartitionedDataSetTest()
   Field2GlobeRange.Include(Set2Field2Range);
 
   using vtkm::cont::FieldRangeCompute;
-  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").GetPortalConstControl().Get(0) ==
-                     Field1GlobeRange,
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").ReadPortal().Get(0) == Field1GlobeRange,
                    "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").GetPortalConstControl().Get(0) ==
-                     Field2GlobeRange,
+  VTKM_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").ReadPortal().Get(0) == Field2GlobeRange,
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)

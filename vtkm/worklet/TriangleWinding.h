@@ -202,8 +202,8 @@ public:
 
         cellShapes.ReleaseResourcesExecution();
 
-        auto rangeSizes = rangeHandleSizes.GetPortalConstControl().Get(0);
-        auto rangeShapes = rangeHandleShapes.GetPortalConstControl().Get(0);
+        auto rangeSizes = rangeHandleSizes.ReadPortal().Get(0);
+        auto rangeShapes = rangeHandleShapes.ReadPortal().Get(0);
 
         const bool sameSize = vtkm::Abs(rangeSizes.Max - rangeSizes.Min) < 0.5;
         const bool sameShape = vtkm::Abs(rangeShapes.Max - rangeShapes.Min) < 0.5;
@@ -245,9 +245,7 @@ public:
         conn.Allocate(connSize);
 
         // Trim the last value off for the group vec array:
-        auto offsetsTrim =
-          vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+        auto connGroupVec = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
         WorkletWindToCellNormalsGeneric worklet;
         invoker(worklet, cellSet, coords, cellNormals, connGroupVec);
@@ -291,9 +289,7 @@ public:
 
       const auto& offsets =
         cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      auto offsetsTrim =
-        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
@@ -337,9 +333,7 @@ public:
 
       const auto& offsets =
         cellSet.GetOffsetsArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
-      auto offsetsTrim =
-        vtkm::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
-      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsetsTrim);
+      auto cells = vtkm::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);

@@ -144,7 +144,7 @@ void RunEdgeCases()
   dispatcher.SetDevice(Device());
   dispatcher.Invoke(bad, sane, result);
 
-  auto portal = result.GetPortalConstControl();
+  auto portal = result.ReadPortal();
 
   //the first 6 values should be nan
   VTKM_TEST_ASSERT(vtkm::IsNan(portal.Get(0)), "Value should be NaN.");

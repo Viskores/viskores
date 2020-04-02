@@ -143,160 +143,19 @@ struct AtType<Index, R(ArgTypes...)>
   using type = brigand::at_c<brigand::list<R, ArgTypes...>, Index>;
 };
 
-template <typename Collection, typename NewType>
-struct AppendType;
-template <template <typename...> class L, typename T, typename NT, typename... U>
-struct AppendType<L<T, U...>, NT>
-{
-  using type = T(U..., NT);
-};
-
-template <typename Collection>
-struct AsSigType;
-template <template <typename...> class L, typename T, typename... U>
-struct AsSigType<L<T, U...>>
-{
-  using type = T(U...);
-};
-
-template <typename Components, vtkm::IdComponent ParameterIndex, typename NewType>
-class ReplaceType
-{
-  using Index = std::integral_constant<std::size_t, (std::size_t)ParameterIndex>;
-  using split = brigand::split_at<Components, Index>;
-  using front = brigand::push_back<brigand::front<split>, NewType>;
-  using back = brigand::pop_front<brigand::back<split>>;
-  using replaced = brigand::append<front, back>;
-
-public:
-  using type = typename AsSigType<replaced>::type;
-};
-
-
-//============================================================================
-
-template <int ParameterIndex>
-struct ParameterContainerAccess;
-
-$for(param_index in range(1, max_parameters+1))\
-template <>
-struct ParameterContainerAccess<$(param_index)>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT const typename AtType<$(param_index), FunctionSignature>::type& Get(
-    const ParameterContainer<FunctionSignature>& parameters)
-  {
-    return parameters.Parameter$(param_index);
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignature>
-  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
-                          const typename AtType<$(param_index), FunctionSignature>::type& value)
-  {
-    parameters.Parameter$(param_index) = value;
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
-  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
-                           const ParameterContainer<FunctionSignatureSrc>& src)
-  {
-    dest.Parameter$(param_index) = std::move(src.Parameter$(param_index));
-  }
-};
-
-$endfor\
-
-//============================================================================
-template <vtkm::IdComponent NumToCopy>
-struct CopyAllParameters;
-
-
-$for(num_params in range(1, max_parameters+1))\
-template <>
-struct CopyAllParameters<$(num_params)>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
-  {
-$for(param_index in range(1, num_params+1))\
-    dest.Parameter$(param_index) = src.Parameter$(param_index);
-$endfor\
-  }
-};
-$endfor\
-
-template <>
-struct CopyAllParameters<0>
-{
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename DestSignature, typename SrcSignature>
-  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>&,
-                           const vtkm::internal::detail::ParameterContainer<SrcSignature>&)
-  {
-    // Nothing to copy.
-  }
-};
-
-
 //============================================================================
 
 // clang-format off
 
-$for(num_params in range(0, max_parameters+1))\
-$# Invoke functions need both control and execution versions
-$for(environment in ['Cont', 'Exec'])\
-$# Invoke functions also need to accept const and non-const versions of the functor
-$for(functor_const in ['const ', ''])\
+$for(param_index in range(1, max_parameters+1))\
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Functor,
-          typename TransformFunctor,
-          $template_params(num_params)>
-VTKM_$(environment.upper()) void DoInvoke$(environment)($(functor_const)Functor& f,
-                            ParameterContainer<$signature(num_params)>& parameters,
-                            FunctionInterfaceReturnContainer<$ptype(0)>& result,
-                            const TransformFunctor& transform)
+template <typename FunctionSignature>
+VTKM_EXEC_CONT auto ParameterGet(const ParameterContainer<FunctionSignature>& parameters,
+                                 vtkm::internal::IndexTag<$(param_index)>)
+  -> decltype(parameters.Parameter$(param_index)) const&
 {
-$if(num_params < 1)\
-  (void)parameters;
-  result.Value = transform(f());
-$else\
-  result.Value = transform(f(
-$for(param_index in range(1, num_params))\
-                             transform(parameters.Parameter$(param_index)),
-$endfor\
-                             transform(parameters.Parameter$(num_params))));
-$endif\
+  return parameters.Parameter$(param_index);
 }
-
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Functor,
-          typename TransformFunctor$comma_if(num_params>0)
-          $template_params(num_params,1)>
-VTKM_$(environment.upper()) void DoInvoke$(environment)($(functor_const)Functor& f,
-                            ParameterContainer<$signature(num_params,'void')>& parameters,
-                            FunctionInterfaceReturnContainer<void>&,
-                            const TransformFunctor& transform)
-{
-$if(num_params < 1)\
-  (void)parameters;
-  (void)transform;
-  f();
-$else\
-  f(
-$for(param_index in range(1, num_params))\
-    transform(parameters.Parameter$(param_index)),
-$endfor\
-    transform(parameters.Parameter$(num_params)));
-$endif\
-}
-
-$endfor\
-$endfor\
 $endfor\
 
 // clang-format on
@@ -309,63 +168,29 @@ struct FunctionInterfaceStaticTransformType;
 // clang-format off
 
 $for(num_params in range(0, max_parameters))\
-$# Transform functions need both control and execution versions
-$for(environment in ['Cont', 'Exec'])\
+$for(environment in ['Cont'])\
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Transform,
-          $template_params(num_params,0,'Original'),
-          $template_params(num_params,0,'Transformed')>
-VTKM_$(environment.upper()) void DoStaticTransform$(environment)(
+template <typename Result,
+          typename Transform,
+          $template_params(num_params,0,'Original')>
+VTKM_$(environment.upper()) Result DoStaticTransform$(environment)(
   const Transform& transform,
-  ParameterContainer<$signature(num_params,ptype(0,'Original'),'Original')>& originalParameters,
-  ParameterContainer<$signature(num_params,ptype(0,'Transformed'),'Transformed')>& transformedParameters)
+  ParameterContainer<$signature(num_params,ptype(0,'Original'),'Original')>& originalParameters)
 {
 $if(num_params < 1)\
   (void)transform;
   (void)originalParameters;
-  (void)transformedParameters;
 $else\
+  return Result{
 $for(param_index in range(1, num_params+1))\
-  transformedParameters.Parameter$(param_index) =
-    transform(originalParameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
+    transform(originalParameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>())$comma_if(param_index<num_params)
 $endfor\
+  };
 $endif\
 }
 
 $endfor\
 $endfor\
-// clang-format on
-
-//============================================================================
-
-// clang-format off
-
-$for(num_params in range(0, max_parameters))\
-$# ForEach functions need both control and execution versions
-$for(environment in ['Cont', 'Exec'])\
-$# ForEach functions also need to accept const and non-const versions of the FunctionInterface
-$for(function_interface_const in ['const ', ''])\
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename Functor,
-          $template_params(num_params)>
-VTKM_$(environment.upper()) void DoForEach$(environment)(
-  const Functor& f,
-  $(function_interface_const)ParameterContainer<$signature(num_params)>& parameters)
-{
-$if(num_params < 1)\
-  (void)f;
-  (void)parameters;
-$else\
-$for(param_index in range(1, num_params+1))\
-  f(parameters.Parameter$(param_index), vtkm::internal::IndexTag<$(param_index)>());
-$endfor\
-$endif\
-}
-
-$endfor\
-$endfor\
-$endfor\
-
 // clang-format on
 
 } // namespace detail

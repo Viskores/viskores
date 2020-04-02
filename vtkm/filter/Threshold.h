@@ -33,7 +33,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
-  using SupportedTypes = vtkm::TypeListTagScalarAll;
+  using SupportedTypes = vtkm::TypeListScalarAll;
 
   VTKM_CONT
   void SetLowerThreshold(vtkm::Float64 value) { this->LowerValue = value; }

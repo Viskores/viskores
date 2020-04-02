@@ -27,7 +27,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::D
                                                              const std::string& name,
                                                              vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  return detail::FieldRangeGlobalComputeImpl(dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST());
 }
 
 //-----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const std::string& name,
   vtkm::cont::Field::Association assoc)
 {
-  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG());
+  return detail::FieldRangeGlobalComputeImpl(pds, name, assoc, VTKM_DEFAULT_TYPE_LIST());
 }
 
 //-----------------------------------------------------------------------------
@@ -54,8 +54,8 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
   }
 
   std::vector<vtkm::Range> v_ranges(static_cast<size_t>(ranges.GetNumberOfValues()));
-  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.GetPortalConstControl()),
-            vtkm::cont::ArrayPortalToIteratorEnd(ranges.GetPortalConstControl()),
+  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(ranges.ReadPortal()),
+            vtkm::cont::ArrayPortalToIteratorEnd(ranges.ReadPortal()),
             v_ranges.begin());
 
   using VectorOfRangesT = std::vector<vtkm::Range>;

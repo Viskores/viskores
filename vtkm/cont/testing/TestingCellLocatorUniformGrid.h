@@ -69,7 +69,13 @@ public:
                             bool& match) const
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
-    locator->FindCell(pointIn, cellId, parametric, (*this));
+    vtkm::ErrorCode status = locator->FindCell(pointIn, cellId, parametric);
+    if ((status != vtkm::ErrorCode::Success) && (status != vtkm::ErrorCode::CellNotFound))
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+      match = false;
+      return;
+    }
     match = (calculated == cellId);
   }
 
@@ -149,7 +155,7 @@ public:
     dispatcher.SetDevice(DeviceAdapter());
     dispatcher.Invoke(points, locator, cellIds, parametric, match);
 
-    auto matchPortal = match.GetPortalConstControl();
+    auto matchPortal = match.ReadPortal();
     for (vtkm::Id index = 0; index < match.GetNumberOfValues(); index++)
     {
       VTKM_TEST_ASSERT(matchPortal.Get(index), "Points do not match");

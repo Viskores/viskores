@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_set_augmented_merge_arcs_h
-#define vtkm_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_set_augmented_merge_arcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_set_augmented_merge_arcs_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_maker_inc_augment_merge_tree_set_augmented_merge_arcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -115,7 +115,7 @@ public:
       // we therefore retrieve the superarc to test
       vtkm::Id mergetreeSuperarc = mergetreeSuperarcsPortal.Get(mergetreeSuperparent);
       // if it is flagged as -infinity, preserve it
-      if (noSuchElement(mergetreeSuperarc))
+      if (NoSuchElement(mergetreeSuperarc))
       {
         augmentedMergetreeSuperarcsPortal.Set(supernodeID, (vtkm::Id)NO_SUCH_ELEMENT);
       }
@@ -123,7 +123,7 @@ public:
       else
       {
         augmentedMergetreeSuperarcsPortal.Set(
-          supernodeID, newMergetreeIDPortal.Get(maskedIndex(mergetreeSuperarc)));
+          supernodeID, newMergetreeIDPortal.Get(MaskedIndex(mergetreeSuperarc)));
       }
     } // last supernode
     else
@@ -154,11 +154,11 @@ public:
                   // we therefore retrieve the superarc to test
                   vtkm::Id joinSuperarc = joinTree.superarcs[joinSuperparent];
                   // if it is flagged as -infinity, preserve it
-                  if (noSuchElement(joinSuperarc))
+                  if (NoSuchElement(joinSuperarc))
                           augmentedJoinSuperarcs[supernodeID] = NO_SUCH_ELEMENT;
                   else
                   // otherwise, we use the new Join ID of the join superarc
-                          augmentedJoinSuperarcs[supernodeID] = newJoinID[maskedIndex(joinSuperarc)];
+                          augmentedJoinSuperarcs[supernodeID] = newJoinID[MaskedIndex(joinSuperarc)];
                   } // last supernode
           else
                   // otherwise, converts supernode ID of neighbour & use it

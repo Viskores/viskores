@@ -23,7 +23,6 @@ set(headers
   DispatcherMapTopology.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
-  DispatcherStreamingMapField.h
   DotProduct.h
   ExternalFaces.h
   ExtractGeometry.h
@@ -144,6 +143,7 @@ vtkm_library(
   TEMPLATE_SOURCES ${header_impls}
   HEADERS ${headers}
   DEVICE_SOURCES ${sources_device}
+  USE_VTKM_JOB_POOL
   )
 target_link_libraries(vtkm_worklet PUBLIC vtkm_cont)
 

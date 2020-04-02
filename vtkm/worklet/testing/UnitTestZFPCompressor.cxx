@@ -60,8 +60,8 @@ void Test1D(int rate)
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
-    auto hPortal = handle.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
@@ -71,7 +71,7 @@ void Test1D(int rate)
     //writeArray(compressed, "output.zfp");
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
-    auto oport = decoded.GetPortalConstControl();
+    auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
       std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
@@ -97,8 +97,8 @@ void Test2D(int rate)
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
-    auto hPortal = handle.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
@@ -107,7 +107,7 @@ void Test2D(int rate)
     auto compressed = compressor.Compress(handle, rate, dims);
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
-    auto oport = decoded.GetPortalConstControl();
+    auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
       std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
@@ -137,8 +137,8 @@ void Test3D(int rate)
     const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().GetPortalControl();
-    auto hPortal = handle.GetPortalControl();
+    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
       hPortal.Set(i, static_cast<Scalar>(fPortal.Get(i)));
@@ -148,7 +148,7 @@ void Test3D(int rate)
 
     vtkm::cont::ArrayHandle<Scalar> decoded;
     decompressor.Decompress(compressed, decoded, rate, dims);
-    auto oport = decoded.GetPortalConstControl();
+    auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
       std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)

@@ -36,7 +36,7 @@ void TestImageMedian()
 
   //verified by hand
   {
-    auto portal = resultArrayHandle.GetPortalConstControl();
+    auto portal = resultArrayHandle.ReadPortal();
     std::cout << "spot to verify x = 1, y = 1, z = 0 is: ";
     vtkm::Float32 temp = portal.Get(1 + pdims[0]);
     std::cout << temp << std::endl << std::endl;

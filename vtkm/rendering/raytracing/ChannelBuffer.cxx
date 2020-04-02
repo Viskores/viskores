@@ -9,8 +9,11 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleCast.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Field.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
@@ -156,8 +159,8 @@ public:
     , ChannelNum(channel)
   {
   }
-  using ControlSignature = void(FieldOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, WorkIndex);
+  using ControlSignature = void(FieldOut, WholeArrayIn, FieldIn);
+  using ExecutionSignature = void(_1, _2, _3);
   template <typename T, typename BufferPortalType>
   VTKM_EXEC void operator()(T& outValue,
                             const BufferPortalType& inBuffer,
@@ -170,34 +173,6 @@ public:
 }; //class Extract Channel
 
 template <typename Precision>
-struct ExtractChannelFunctor
-{
-  ChannelBuffer<Precision>* Self;
-  vtkm::cont::ArrayHandle<Precision> Output;
-  vtkm::Int32 Channel;
-
-  ExtractChannelFunctor(ChannelBuffer<Precision>* self,
-                        vtkm::cont::ArrayHandle<Precision> output,
-                        const vtkm::Int32 channel)
-    : Self(self)
-    , Output(output)
-    , Channel(channel)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device device)
-  {
-    Output.PrepareForOutput(Self->GetSize(), device);
-    vtkm::worklet::DispatcherMapField<ExtractChannel> dispatcher(
-      ExtractChannel(Self->GetNumChannels(), Channel));
-    dispatcher.SetDevice(Device());
-    dispatcher.Invoke(Output, Self->Buffer);
-    return true;
-  }
-};
-
-template <typename Precision>
 ChannelBuffer<Precision> ChannelBuffer<Precision>::GetChannel(const vtkm::Int32 channel)
 {
   if (channel < 0 || channel >= this->NumChannels)
@@ -208,9 +183,13 @@ ChannelBuffer<Precision> ChannelBuffer<Precision>::GetChannel(const vtkm::Int32 
   {
     return output;
   }
-  ExtractChannelFunctor<Precision> functor(this, output.Buffer, channel);
 
-  vtkm::cont::TryExecute(functor);
+  vtkm::cont::Invoker invoke;
+  invoke(ExtractChannel(this->GetNumChannels(), channel),
+         output.Buffer,
+         this->Buffer,
+         vtkm::cont::ArrayHandleIndex(this->GetSize()));
+
   return output;
 }
 
@@ -272,13 +251,17 @@ struct ExpandFunctorSignature
   template <typename Device>
   bool operator()(Device device)
   {
-    vtkm::Id totalSize = OutputLength * static_cast<vtkm::Id>(NumChannels);
-    Output->Buffer.PrepareForOutput(totalSize, device);
-    ChannelBufferOperations::InitChannels(*Output, Signature, device);
 
-    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(NumChannels)));
+    vtkm::Id totalSize = this->OutputLength * static_cast<vtkm::Id>(this->NumChannels);
+    {
+      vtkm::cont::Token token;
+      this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    }
+    ChannelBufferOperations::InitChannels(*this->Output, this->Signature, device);
+
+    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(this->NumChannels)));
     dispatcher.SetDevice(Device());
-    dispatcher.Invoke(Input, SparseIndexes, Output->Buffer);
+    dispatcher.Invoke(this->Input, this->SparseIndexes, this->Output->Buffer);
 
     return true;
   }
@@ -313,13 +296,17 @@ struct ExpandFunctor
   template <typename Device>
   bool operator()(Device device)
   {
-    vtkm::Id totalSize = OutputLength * static_cast<vtkm::Id>(NumChannels);
-    Output->Buffer.PrepareForOutput(totalSize, device);
-    ChannelBufferOperations::InitConst(*Output, InitVal, device);
 
-    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(NumChannels)));
+    vtkm::Id totalSize = this->OutputLength * static_cast<vtkm::Id>(this->NumChannels);
+    {
+      vtkm::cont::Token token;
+      this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    }
+    ChannelBufferOperations::InitConst(*this->Output, this->InitVal, device);
+
+    vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(this->NumChannels)));
     dispatcher.SetDevice(Device());
-    dispatcher.Invoke(Input, SparseIndexes, Output->Buffer);
+    dispatcher.Invoke(this->Input, this->SparseIndexes, this->Output->Buffer);
 
     return true;
   }
@@ -397,7 +384,7 @@ ChannelBuffer<Precision> ChannelBuffer<Precision>::ExpandBuffer(
   const vtkm::Id outputSize,
   vtkm::cont::ArrayHandle<Precision> signature)
 {
-  VTKM_ASSERT(this->NumChannels == signature.GetPortalConstControl().GetNumberOfValues());
+  VTKM_ASSERT(this->NumChannels == signature.ReadPortal().GetNumberOfValues());
   ChannelBuffer<Precision> output(this->NumChannels, outputSize);
 
   output.SetName(this->Name);

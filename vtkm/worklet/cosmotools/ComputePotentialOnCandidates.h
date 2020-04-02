@@ -65,9 +65,7 @@ template <typename T>
 class ComputePotentialOnCandidates : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
+  using TagType = vtkm::List<T>;
 
   using ControlSignature = void(FieldIn partId,      // (input) particle is part of M
                                 WholeArrayIn xLoc,   // (input) x location in domain

@@ -572,7 +572,7 @@ VTKM_CONT void LinearBVHBuilder::SortAABBS(BVHData& bvh, bool singleAABB)
   // primitive
   if (singleAABB)
   {
-    auto iterPortal = iterator.GetPortalControl();
+    auto iterPortal = iterator.WritePortal();
     for (int i = 0; i < 2; ++i)
     {
       iterPortal.Set(i, 0);
@@ -597,12 +597,12 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
   {
     numberOfAABBs = 2;
     singleAABB = true;
-    vtkm::Float32 xmin = linearBVH.AABB.xmins.GetPortalControl().Get(0);
-    vtkm::Float32 ymin = linearBVH.AABB.ymins.GetPortalControl().Get(0);
-    vtkm::Float32 zmin = linearBVH.AABB.zmins.GetPortalControl().Get(0);
-    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.GetPortalControl().Get(0);
-    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.GetPortalControl().Get(0);
-    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.GetPortalControl().Get(0);
+    vtkm::Float32 xmin = linearBVH.AABB.xmins.WritePortal().Get(0);
+    vtkm::Float32 ymin = linearBVH.AABB.ymins.WritePortal().Get(0);
+    vtkm::Float32 zmin = linearBVH.AABB.zmins.WritePortal().Get(0);
+    vtkm::Float32 xmax = linearBVH.AABB.xmaxs.WritePortal().Get(0);
+    vtkm::Float32 ymax = linearBVH.AABB.ymaxs.WritePortal().Get(0);
+    vtkm::Float32 zmax = linearBVH.AABB.zmaxs.WritePortal().Get(0);
 
     linearBVH.AABB.xmins.Allocate(2);
     linearBVH.AABB.ymins.Allocate(2);
@@ -612,12 +612,12 @@ VTKM_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
     linearBVH.AABB.zmaxs.Allocate(2);
     for (int i = 0; i < 2; ++i)
     {
-      linearBVH.AABB.xmins.GetPortalControl().Set(i, xmin);
-      linearBVH.AABB.ymins.GetPortalControl().Set(i, ymin);
-      linearBVH.AABB.zmins.GetPortalControl().Set(i, zmin);
-      linearBVH.AABB.xmaxs.GetPortalControl().Set(i, xmax);
-      linearBVH.AABB.ymaxs.GetPortalControl().Set(i, ymax);
-      linearBVH.AABB.zmaxs.GetPortalControl().Set(i, zmax);
+      linearBVH.AABB.xmins.WritePortal().Set(i, xmin);
+      linearBVH.AABB.ymins.WritePortal().Set(i, ymin);
+      linearBVH.AABB.zmins.WritePortal().Set(i, zmin);
+      linearBVH.AABB.xmaxs.WritePortal().Set(i, xmax);
+      linearBVH.AABB.ymaxs.WritePortal().Set(i, ymax);
+      linearBVH.AABB.zmaxs.WritePortal().Set(i, zmax);
     }
   }
 

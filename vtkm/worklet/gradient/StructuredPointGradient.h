@@ -22,12 +22,6 @@ namespace worklet
 namespace gradient
 {
 
-template <typename T>
-struct StructuredPointGradientInType : vtkm::ListTagBase<T>
-{
-};
-
-template <typename T>
 struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
 {
 
@@ -53,9 +47,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     vtkm::Vec<CT, 3> xi, eta, zeta;
     this->Jacobian(inputPoints, boundary, xi, eta, zeta); //store the metrics in xi,eta,zeta
 
-    T dxi = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
-    T deta = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
-    T dzeta = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
+    auto dxi = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
+    auto deta = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
+    auto dzeta = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
     dxi = (boundary.IsRadiusInXBoundary(1) ? dxi * 0.5f : dxi);
     deta = (boundary.IsRadiusInYBoundary(1) ? deta * 0.5f : deta);
@@ -88,13 +82,20 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     r[1] = (boundary.IsRadiusInYBoundary(1) ? r[1] * 0.5f : r[1]);
     r[2] = (boundary.IsRadiusInZBoundary(1) ? r[2] * 0.5f : r[2]);
 
-    const T dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
-    const T dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
-    const T dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
+    auto dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
+    auto dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
+    auto dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
+#if (defined(VTKM_CUDA) && defined(VTKM_GCC))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
     outputGradient[0] = static_cast<OT>(dx * r[0]);
     outputGradient[1] = static_cast<OT>(dy * r[1]);
     outputGradient[2] = static_cast<OT>(dz * r[2]);
+#if (defined(VTKM_CUDA) && defined(VTKM_GCC))
+#pragma GCC diagnostic pop
+#endif
   }
 
   //we need to pass the coordinates into this function, and instead

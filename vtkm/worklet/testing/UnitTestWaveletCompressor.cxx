@@ -231,9 +231,9 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   timer.Start();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
-                     "WaveletCompressor 3D failed...");
+    VTKM_TEST_ASSERT(
+      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
+      "WaveletCompressor 3D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
@@ -298,9 +298,9 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   timer.Start();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
-                     "WaveletCompressor 2D failed...");
+    VTKM_TEST_ASSERT(
+      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
+      "WaveletCompressor 2D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
@@ -359,9 +359,9 @@ void TestDecomposeReconstruct1D(vtkm::Float64 cratio)
   timer.Start();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(reconstructArray.GetPortalConstControl().Get(i),
-                                inputArray.GetPortalConstControl().Get(i)),
-                     "WaveletCompressor 1D failed...");
+    VTKM_TEST_ASSERT(
+      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
+      "WaveletCompressor 1D failed...");
   }
   elapsedTime = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime << std::endl;

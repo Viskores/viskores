@@ -27,9 +27,11 @@ public:
   MeshConnContainer();
   virtual ~MeshConnContainer();
 
-  virtual const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId) = 0;
+  virtual const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
+                                                vtkm::cont::Token& token) = 0;
 
-  MeshWrapper PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId);
+  MeshWrapper PrepareForExecution(const vtkm::cont::DeviceAdapterId deviceId,
+                                  vtkm::cont::Token& token);
 
   template <typename T>
   VTKM_CONT void FindEntryImpl(Ray<T>& rays);
@@ -79,7 +81,8 @@ public:
 
   virtual ~UnstructuredContainer();
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId);
+  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
+                                        vtkm::cont::Token& token) override;
 };
 
 class StructuredContainer : public MeshConnContainer
@@ -102,7 +105,8 @@ public:
                       const vtkm::cont::CoordinateSystem& coords,
                       Id4Handle& triangles);
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId) override;
+  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
+                                        vtkm::cont::Token& token) override;
 
 }; //structure mesh conn
 
@@ -138,7 +142,8 @@ public:
                               IdHandle& faceConn,
                               Id4Handle& externalFaces);
 
-  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId) override;
+  const MeshConnectivityBase* Construct(const vtkm::cont::DeviceAdapterId deviceId,
+                                        vtkm::cont::Token& token) override;
 
 }; //UnstructuredSingleContainer
 }

@@ -32,7 +32,7 @@ void TestArrayHandleUniformPointCoordinates()
                    "Array computed wrong number of points.");
 
   std::cout << "Getting array portal." << std::endl;
-  vtkm::internal::ArrayPortalUniformPointCoordinates portal = arrayHandle.GetPortalConstControl();
+  auto portal = arrayHandle.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == NUM_POINTS, "Portal has wrong number of points.");
   VTKM_TEST_ASSERT(portal.GetRange3() == DIMENSIONS, "Portal range is wrong.");
 

@@ -48,9 +48,8 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
 
   for (unsigned int i = 0; i < static_cast<unsigned int>(expected.size()); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(resultArrayHandle.GetPortalConstControl().Get(vtkm::Id(i)), expected[i]),
-      "Wrong result for CellMeasure filter");
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(vtkm::Id(i)), expected[i]),
+                     "Wrong result for CellMeasure filter");
   }
 }
 

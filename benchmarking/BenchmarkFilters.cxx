@@ -10,11 +10,11 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
 #include <vtkm/Range.h>
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetExplicit.h>
@@ -81,46 +81,16 @@
 // If the fields are not specified, the first field with the correct association
 // is used. If no such field exists, one will be generated from the data.
 
-// The number of benchmarks can be reduced using the ReducedOptions argument.
-// All filters will be tested, but fewer variants will be used.
-
 // For the TBB/OpenMP implementations, the number of threads can be customized
 // using a "NumThreads [numThreads]" argument.
 
 namespace
 {
 
+// Hold configuration state (e.g. active device):
+vtkm::cont::InitializeResult Config;
 
-// unscoped enum so we can use bitwise ops without a lot of hassle:
-enum BenchmarkName
-{
-  NONE = 0,
-  GRADIENT = 1,
-  THRESHOLD = 1 << 1,
-  THRESHOLD_POINTS = 1 << 2,
-  CELL_AVERAGE = 1 << 3,
-  POINT_AVERAGE = 1 << 4,
-  WARP_SCALAR = 1 << 5,
-  WARP_VECTOR = 1 << 6,
-  MARCHING_CUBES = 1 << 7,
-  EXTERNAL_FACES = 1 << 8,
-  TETRAHEDRALIZE = 1 << 9,
-  VERTEX_CLUSTERING = 1 << 10,
-  CELL_TO_POINT = 1 << 11,
-
-  ALL = GRADIENT | THRESHOLD | THRESHOLD_POINTS | CELL_AVERAGE | POINT_AVERAGE | WARP_SCALAR |
-    WARP_VECTOR |
-    MARCHING_CUBES |
-    EXTERNAL_FACES |
-    TETRAHEDRALIZE |
-    VERTEX_CLUSTERING |
-    CELL_TO_POINT
-};
-
-static const std::string DIVIDER(40, '-');
-
-// The input dataset we'll use on the filters (must be global, as we can't
-// pass args to the benchmark functors).
+// The input dataset we'll use on the filters:
 static vtkm::cont::DataSet InputDataSet;
 // The point scalars to use:
 static std::string PointScalarsName;
@@ -128,20 +98,24 @@ static std::string PointScalarsName;
 static std::string CellScalarsName;
 // The point vectors to use:
 static std::string PointVectorsName;
-// Use fewer variants of each benchmark
-static bool ReducedOptions;
+
+bool InputIsStructured()
+{
+  return InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
+    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
+    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
+}
 
 // Limit the filter executions to only consider the following types, otherwise
 // compile times and binary sizes are nuts.
-using FieldTypes = vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
+using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
-using StructuredCellList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<3>>;
+using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
 
 using UnstructuredCellList =
-  vtkm::ListTagBase<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
+  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
 
-using AllCellList = vtkm::ListTagJoin<StructuredCellList, UnstructuredCellList>;
-
+using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
 
 class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
 {
@@ -153,654 +127,457 @@ public:
   using AllCellSetList = AllCellList;
 };
 
-// Class implementing all filter benchmarks:
-class BenchmarkFilters
+enum GradOpts : int
 {
-  using Timer = vtkm::cont::Timer;
+  Gradient = 1,
+  PointGradient = 1 << 1,
+  Divergence = 1 << 2,
+  Vorticity = 1 << 3,
+  QCriterion = 1 << 4,
+  RowOrdering = 1 << 5,
+  ScalarInput = 1 << 6
+};
 
-  enum GradOpts
+void BenchGradient(::benchmark::State& state, int options)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  vtkm::filter::Gradient filter;
+
+  if (options & ScalarInput)
   {
-    Gradient = 1,
-    PointGradient = 1 << 1,
-    Divergence = 1 << 2,
-    Vorticity = 1 << 3,
-    QCriterion = 1 << 4,
-    RowOrdering = 1 << 5,
-    ScalarInput = 1 << 6
+    // Some outputs require vectors:
+    if (options & Divergence || options & Vorticity || options & QCriterion)
+    {
+      throw vtkm::cont::ErrorInternal("A requested gradient output is "
+                                      "incompatible with scalar input.");
+    }
+    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  }
+  else
+  {
+    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+  }
+
+  filter.SetComputeGradient(static_cast<bool>(options & Gradient));
+  filter.SetComputePointGradient(static_cast<bool>(options & PointGradient));
+  filter.SetComputeDivergence(static_cast<bool>(options & Divergence));
+  filter.SetComputeVorticity(static_cast<bool>(options & Vorticity));
+  filter.SetComputeQCriterion(static_cast<bool>(options & QCriterion));
+
+  if (options & RowOrdering)
+  {
+    filter.SetRowMajorOrdering();
+  }
+  else
+  {
+    filter.SetColumnMajorOrdering();
+  }
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+
+#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                                \
+  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); }              \
+  VTKM_BENCHMARK(BenchGradient##Name)
+
+VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(Vector, Gradient);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(VectorRow, Gradient | RowOrdering);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(Point, PointGradient);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(Divergence, Divergence);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(Vorticity, Vorticity);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(QCriterion, QCriterion);
+VTKM_PRIVATE_GRADIENT_BENCHMARK(All,
+                                Gradient | PointGradient | Divergence | Vorticity | QCriterion);
+
+#undef VTKM_PRIVATE_GRADIENT_BENCHMARK
+
+void BenchThreshold(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  // Lookup the point scalar range
+  const auto range = []() -> vtkm::Range {
+    auto ptScalarField =
+      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+  }();
+
+  // Extract points with values between 25-75% of the range
+  vtkm::Float64 quarter = range.Length() / 4.;
+  vtkm::Float64 mid = range.Center();
+
+  vtkm::filter::Threshold filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetLowerThreshold(mid - quarter);
+  filter.SetUpperThreshold(mid + quarter);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchThreshold);
+
+void BenchThresholdPoints(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool compactPoints = static_cast<bool>(state.range(0));
+
+  // Lookup the point scalar range
+  const auto range = []() -> vtkm::Range {
+    auto ptScalarField =
+      InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    return vtkm::cont::ArrayGetValue(0, ptScalarField.GetRange());
+  }();
+
+  // Extract points with values between 25-75% of the range
+  vtkm::Float64 quarter = range.Length() / 4.;
+  vtkm::Float64 mid = range.Center();
+
+  vtkm::filter::ThresholdPoints filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetLowerThreshold(mid - quarter);
+  filter.SetUpperThreshold(mid + quarter);
+  filter.SetCompactPoints(compactPoints);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK_OPTS(BenchThresholdPoints, ->ArgName("CompactPts")->DenseRange(0, 1));
+
+void BenchCellAverage(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  vtkm::filter::CellAverage filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchCellAverage);
+
+void BenchPointAverage(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  vtkm::filter::PointAverage filter;
+  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchPointAverage);
+
+void BenchWarpScalar(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  vtkm::filter::WarpScalar filter{ 2. };
+  filter.SetUseCoordinateSystemAsField(true);
+  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchWarpScalar);
+
+void BenchWarpVector(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  vtkm::filter::WarpVector filter{ 2. };
+  filter.SetUseCoordinateSystemAsField(true);
+  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchWarpVector);
+
+void BenchContour(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+
+  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(0));
+  const bool mergePoints = static_cast<bool>(state.range(1));
+  const bool normals = static_cast<bool>(state.range(2));
+  const bool fastNormals = static_cast<bool>(state.range(3));
+
+  vtkm::filter::Contour filter;
+  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+
+  // Set up some equally spaced contours, with the min/max slightly inside the
+  // scalar range:
+  const vtkm::Range scalarRange = []() -> vtkm::Range {
+    auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    return vtkm::cont::ArrayGetValue(0, field.GetRange());
+  }();
+  const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
+  const auto minIsoVal = scalarRange.Min + (step / 2.);
+
+  filter.SetNumberOfIsoValues(numIsoVals);
+  for (vtkm::Id i = 0; i < numIsoVals; ++i)
+  {
+    filter.SetIsoValue(i, minIsoVal + (step * static_cast<vtkm::Float64>(i)));
+  }
+
+  filter.SetMergeDuplicatePoints(mergePoints);
+  filter.SetGenerateNormals(normals);
+  filter.SetComputeFastNormalsForStructured(fastNormals);
+  filter.SetComputeFastNormalsForUnstructured(fastNormals);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
+  {
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
+
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+
+void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
+{
+  bm->ArgNames({ "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
+
+  auto helper = [&](const vtkm::Id numIsoVals) {
+    bm->Args({ numIsoVals, 0, 0, 0 });
+    bm->Args({ numIsoVals, 1, 0, 0 });
+    bm->Args({ numIsoVals, 0, 1, 0 });
+    bm->Args({ numIsoVals, 0, 1, 1 });
   };
 
-  template <typename, typename DeviceAdapter>
-  struct BenchGradient
+  helper(1);
+  helper(3);
+  helper(12);
+}
+VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+
+void BenchExternalFaces(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const bool compactPoints = static_cast<bool>(state.range(0));
+
+  vtkm::filter::ExternalFaces filter;
+  filter.SetCompactPoints(compactPoints);
+
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
   {
-    vtkm::filter::Gradient Filter;
-    int Options;
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
 
-    VTKM_CONT
-    BenchGradient(int options)
-      : Options(options)
-    {
-      if (options & ScalarInput)
-      {
-        // Some outputs require vectors:
-        if (options & Divergence || options & Vorticity || options & QCriterion)
-        {
-          throw vtkm::cont::ErrorInternal("A requested gradient output is "
-                                          "incompatible with scalar input.");
-        }
-        this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      }
-      else
-      {
-        this->Filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
-      }
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK_OPTS(BenchExternalFaces, ->ArgName("Compact")->DenseRange(0, 1));
 
-      this->Filter.SetComputeGradient(static_cast<bool>(options & Gradient));
-      this->Filter.SetComputePointGradient(static_cast<bool>(options & PointGradient));
-      this->Filter.SetComputeDivergence(static_cast<bool>(options & Divergence));
-      this->Filter.SetComputeVorticity(static_cast<bool>(options & Vorticity));
-      this->Filter.SetComputeQCriterion(static_cast<bool>(options & QCriterion));
+void BenchTetrahedralize(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-      if (options & RowOrdering)
-      {
-        this->Filter.SetRowMajorOrdering();
-      }
-      else
-      {
-        this->Filter.SetColumnMajorOrdering();
-      }
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Gradient (";
-      if (this->Options & Gradient)
-      {
-        desc << "Gradient,";
-      }
-      if (this->Options & PointGradient)
-      {
-        desc << "PointGradient,";
-      }
-      if (this->Options & Divergence)
-      {
-        desc << "Divergence,";
-      }
-      if (this->Options & Vorticity)
-      {
-        desc << "Vorticity,";
-      }
-      if (this->Options & QCriterion)
-      {
-        desc << "QCriterion,";
-      }
-      if (this->Options & RowOrdering)
-      {
-        desc << "RowOrdering,";
-      }
-      else
-      {
-        desc << "ColumnOrdering,";
-      }
-      if (this->Options & ScalarInput)
-      {
-        desc << "ScalarInput";
-      }
-      else
-      {
-        desc << "VectorInput";
-      }
-
-      desc << ")";
-
-      return desc.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(GradientScalar, BenchGradient, Gradient | ScalarInput);
-  VTKM_MAKE_BENCHMARK(GradientVector, BenchGradient, Gradient);
-  VTKM_MAKE_BENCHMARK(GradientVectorRow, BenchGradient, Gradient | RowOrdering);
-  VTKM_MAKE_BENCHMARK(GradientPoint, BenchGradient, PointGradient);
-  VTKM_MAKE_BENCHMARK(GradientDivergence, BenchGradient, Divergence);
-  VTKM_MAKE_BENCHMARK(GradientVorticity, BenchGradient, Vorticity);
-  VTKM_MAKE_BENCHMARK(GradientQCriterion, BenchGradient, QCriterion);
-  VTKM_MAKE_BENCHMARK(GradientKitchenSink,
-                      BenchGradient,
-                      Gradient | PointGradient | Divergence | Vorticity | QCriterion);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchThreshold
+  // This filter only supports structured datasets:
+  if (!InputIsStructured())
   {
-    vtkm::filter::Threshold Filter;
+    state.SkipWithError("Tetrahedralize Filter requires structured data.");
+    return;
+  }
 
-    VTKM_CONT
-    BenchThreshold()
-    {
-      auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      auto rangeHandle = field.GetRange();
-      auto range = rangeHandle.GetPortalConstControl().Get(0);
+  vtkm::filter::Tetrahedralize filter;
 
-      // Extract points with values between 25-75% of the range
-      vtkm::Float64 quarter = range.Length() / 4.;
-      vtkm::Float64 mid = range.Center();
-
-      this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      this->Filter.SetLowerThreshold(mid - quarter);
-      this->Filter.SetUpperThreshold(mid + quarter);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet);
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "Threshold"; }
-  };
-  VTKM_MAKE_BENCHMARK(Threshold, BenchThreshold);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchThresholdPoints
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
   {
-    bool CompactPoints;
-    vtkm::filter::ThresholdPoints Filter;
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
 
-    VTKM_CONT
-    BenchThresholdPoints(bool compactPoints)
-      : CompactPoints(compactPoints)
-    {
-      auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      auto rangeHandle = field.GetRange();
-      auto range = rangeHandle.GetPortalConstControl().Get(0);
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchTetrahedralize);
 
-      // Extract points with values between 25-75% of the range
-      vtkm::Float64 quarter = range.Length() / 4.;
-      vtkm::Float64 mid = range.Center();
+void BenchVertexClustering(::benchmark::State& state)
+{
+  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const vtkm::Id numDivs = static_cast<vtkm::Id>(state.range(0));
 
-      this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      this->Filter.SetLowerThreshold(mid - quarter);
-      this->Filter.SetUpperThreshold(mid + quarter);
-
-      this->Filter.SetCompactPoints(this->CompactPoints);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "ThresholdPoints"; }
-  };
-  VTKM_MAKE_BENCHMARK(ThresholdPoints, BenchThresholdPoints, false);
-  VTKM_MAKE_BENCHMARK(ThresholdPointsCompact, BenchThresholdPoints, true);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchCellAverage
+  // This filter only supports unstructured datasets:
+  if (InputIsStructured())
   {
-    vtkm::filter::CellAverage Filter;
+    state.SkipWithError("VertexClustering Filter requires unstructured data.");
+    return;
+  }
 
-    VTKM_CONT
-    BenchCellAverage()
-    {
-      this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    }
+  vtkm::filter::VertexClustering filter;
+  filter.SetNumberOfDivisions({ numDivs });
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet);
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "CellAverage"; }
-  };
-  VTKM_MAKE_BENCHMARK(CellAverage, BenchCellAverage);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchPointAverage
+  BenchmarkFilterPolicy policy;
+  vtkm::cont::Timer timer{ device };
+  for (auto _ : state)
   {
-    vtkm::filter::PointAverage Filter;
+    (void)_;
+    timer.Start();
+    auto result = filter.Execute(InputDataSet, policy);
+    ::benchmark::DoNotOptimize(result);
+    timer.Stop();
 
-    VTKM_CONT
-    BenchPointAverage()
-    {
-      this->Filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
-    }
+    state.SetIterationTime(timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK_OPTS(BenchVertexClustering,
+                      ->RangeMultiplier(2)
+                      ->Range(32, 1024)
+                      ->ArgName("NumDivs"));
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet);
-      (void)result;
-      return timer.GetElapsedTime();
-    }
+// Helper for resetting the reverse connectivity table:
+struct PrepareForInput
+{
+  mutable vtkm::cont::Timer Timer;
 
-    VTKM_CONT
-    std::string Description() const { return "PointAverage"; }
-  };
-  VTKM_MAKE_BENCHMARK(PointAverage, BenchPointAverage);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchWarpScalar
+  PrepareForInput()
+    : Timer{ Config.Device }
   {
-    vtkm::filter::WarpScalar Filter;
+  }
 
-    VTKM_CONT
-    BenchWarpScalar()
-      : Filter(2.)
-    {
-      this->Filter.SetUseCoordinateSystemAsField(true);
-      this->Filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
-      this->Filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "WarpScalar"; }
-  };
-  VTKM_MAKE_BENCHMARK(WarpScalar, BenchWarpScalar);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchWarpVector
+  void operator()(const vtkm::cont::CellSet& cellSet) const
   {
-    vtkm::filter::WarpVector Filter;
-
-    VTKM_CONT
-    BenchWarpVector()
-      : Filter(2.)
+    static bool warned{ false };
+    if (!warned)
     {
-      this->Filter.SetUseCoordinateSystemAsField(true);
-      this->Filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
+      std::cerr << "Invalid cellset type for benchmark.\n";
+      cellSet.PrintSummary(std::cerr);
+      warned = true;
     }
+  }
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "WarpVector"; }
-  };
-  VTKM_MAKE_BENCHMARK(WarpVector, BenchWarpVector);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchContour
+  template <typename T1, typename T2, typename T3>
+  VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
   {
-    vtkm::filter::Contour Filter;
+    vtkm::cont::TryExecuteOnDevice(Config.Device, *this, cellSet);
+  }
 
-    VTKM_CONT
-    BenchContour(vtkm::Id numIsoVals, bool mergePoints, bool normals, bool fastNormals)
-      : Filter()
-    {
-      this->Filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-
-      // Set up some equally spaced contours:
-      auto field = InputDataSet.GetField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      auto range = field.GetRange().GetPortalConstControl().Get(0);
-      auto step = range.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
-      this->Filter.SetNumberOfIsoValues(numIsoVals);
-      auto val = range.Min + step;
-      for (vtkm::Id i = 0; i < numIsoVals; ++i)
-      {
-        this->Filter.SetIsoValue(i, val);
-        val += step;
-      }
-
-      this->Filter.SetMergeDuplicatePoints(mergePoints);
-      this->Filter.SetGenerateNormals(normals);
-      this->Filter.SetComputeFastNormalsForStructured(fastNormals);
-      this->Filter.SetComputeFastNormalsForUnstructured(fastNormals);
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet);
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "Contour numIsoVal=" << this->Filter.GetNumberOfIsoValues() << " "
-           << "mergePoints=" << this->Filter.GetMergeDuplicatePoints() << " "
-           << "normals=" << this->Filter.GetGenerateNormals() << " "
-           << "fastNormals=" << this->Filter.GetComputeFastNormalsForStructured();
-      return desc.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(Contour1FFF, BenchContour, 1, false, false, false);
-  VTKM_MAKE_BENCHMARK(Contour3FFF, BenchContour, 3, false, false, false);
-  VTKM_MAKE_BENCHMARK(Contour12FFF, BenchContour, 12, false, false, false);
-  VTKM_MAKE_BENCHMARK(Contour1TFF, BenchContour, 1, true, false, false);
-  VTKM_MAKE_BENCHMARK(Contour3TFF, BenchContour, 3, true, false, false);
-  VTKM_MAKE_BENCHMARK(Contour12TFF, BenchContour, 12, true, false, false);
-  VTKM_MAKE_BENCHMARK(Contour1FTF, BenchContour, 1, false, true, false);
-  VTKM_MAKE_BENCHMARK(Contour3FTF, BenchContour, 3, false, true, false);
-  VTKM_MAKE_BENCHMARK(Contour12FTF, BenchContour, 12, false, true, false);
-  VTKM_MAKE_BENCHMARK(Contour1FTT, BenchContour, 1, false, true, true);
-  VTKM_MAKE_BENCHMARK(Contour3FTT, BenchContour, 3, false, true, true);
-  VTKM_MAKE_BENCHMARK(Contour12FTT, BenchContour, 12, false, true, true);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchExternalFaces
+  template <typename T1, typename T2, typename T3, typename DeviceTag>
+  VTKM_CONT bool operator()(DeviceTag, const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
   {
-    vtkm::filter::ExternalFaces Filter;
+    // Why does CastAndCall insist on making the cellset const?
+    using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3>;
+    CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
+    mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
 
-    VTKM_CONT
-    BenchExternalFaces(bool compactPoints)
-      : Filter()
-    {
-      this->Filter.SetCompactPoints(compactPoints);
-    }
+    vtkm::cont::Token token;
+    this->Timer.Start();
+    auto result = cellSet.PrepareForInput(
+      DeviceTag{}, vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}, token);
+    ::benchmark::DoNotOptimize(result);
+    this->Timer.Stop();
 
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet);
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "ExternalFaces";
-      if (this->Filter.GetCompactPoints())
-      {
-        desc << " (compact points)";
-      }
-      return desc.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(ExternalFaces, BenchExternalFaces, false);
-  VTKM_MAKE_BENCHMARK(ExternalFacesCompact, BenchExternalFaces, true);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchTetrahedralize
-  {
-    vtkm::filter::Tetrahedralize Filter;
-
-    VTKM_CONT
-    BenchTetrahedralize()
-      : Filter()
-    {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const { return "Tetrahedralize"; }
-  };
-  VTKM_MAKE_BENCHMARK(Tetrahedralize, BenchTetrahedralize);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchVertexClustering
-  {
-    vtkm::filter::VertexClustering Filter;
-
-    VTKM_CONT
-    BenchVertexClustering(vtkm::Id ndims)
-      : Filter()
-    {
-      this->Filter.SetNumberOfDivisions({ ndims });
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      Timer timer{ DeviceAdapter() };
-      timer.Start();
-      auto result = this->Filter.Execute(InputDataSet, BenchmarkFilterPolicy());
-      (void)result;
-      return timer.GetElapsedTime();
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      vtkm::Id dims = this->Filter.GetNumberOfDivisions()[0];
-      std::ostringstream desc;
-      desc << "VertexClustering filter (" << dims << "x" << dims << "x" << dims << ")";
-      return desc.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(VertexClustering32, BenchVertexClustering, 32);
-  VTKM_MAKE_BENCHMARK(VertexClustering64, BenchVertexClustering, 64);
-  VTKM_MAKE_BENCHMARK(VertexClustering128, BenchVertexClustering, 128);
-  VTKM_MAKE_BENCHMARK(VertexClustering256, BenchVertexClustering, 256);
-  VTKM_MAKE_BENCHMARK(VertexClustering512, BenchVertexClustering, 512);
-  VTKM_MAKE_BENCHMARK(VertexClustering1024, BenchVertexClustering, 1024);
-
-  template <typename, typename DeviceAdapter>
-  struct BenchCellToPoint
-  {
-    struct PrepareForInput
-    {
-      mutable double Time{ 0 };
-
-      void operator()(const vtkm::cont::CellSet& cellSet) const
-      {
-        static bool warned{ false };
-        if (!warned)
-        {
-          std::cerr << "Invalid cellset type for benchmark.\n";
-          cellSet.PrintSummary(std::cerr);
-          warned = true;
-        }
-      }
-
-      template <typename T1, typename T2, typename T3>
-      VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
-      {
-        { // Why does CastAndCall insist on making the cellset const?
-          using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3>;
-          CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-          mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{},
-                                     vtkm::TopologyElementTagCell{});
-        }
-
-        Timer timer{ DeviceAdapter() };
-        timer.Start();
-        cellSet.PrepareForInput(
-          DeviceAdapter(), vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
-        this->Time = timer.GetElapsedTime();
-      }
-    };
-
-    VTKM_CONT
-    BenchCellToPoint() {}
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
-      auto cellset = InputDataSet.GetCellSet();
-      PrepareForInput functor;
-      cellset.CastAndCall(functor);
-      return functor.Time;
-    }
-
-    VTKM_CONT
-    std::string Description() const
-    {
-      std::ostringstream desc;
-      desc << "CellToPoint table construction";
-      return desc.str();
-    }
-  };
-  VTKM_MAKE_BENCHMARK(CellToPoint, BenchCellToPoint);
-
-public:
-  static VTKM_CONT int Run(int benches, vtkm::cont::DeviceAdapterId id)
-  {
-    // This has no influence on the benchmarks. See issue #286.
-    auto dummyTypes = vtkm::ListTagBase<vtkm::Int32>{};
-
-    std::cout << DIVIDER << "\nRunning Filter benchmarks\n";
-
-    if (benches & BenchmarkName::GRADIENT)
-    {
-      if (ReducedOptions)
-      {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
-      }
-      else
-      {
-        VTKM_RUN_BENCHMARK(GradientScalar, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientVector, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientVectorRow, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientPoint, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientDivergence, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientVorticity, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientQCriterion, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(GradientKitchenSink, dummyTypes, id);
-      }
-    }
-    if (benches & BenchmarkName::THRESHOLD)
-    {
-      VTKM_RUN_BENCHMARK(Threshold, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::THRESHOLD_POINTS)
-    {
-      VTKM_RUN_BENCHMARK(ThresholdPoints, dummyTypes, id);
-      VTKM_RUN_BENCHMARK(ThresholdPointsCompact, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::CELL_AVERAGE)
-    {
-      VTKM_RUN_BENCHMARK(CellAverage, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::POINT_AVERAGE)
-    {
-      VTKM_RUN_BENCHMARK(PointAverage, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::WARP_SCALAR)
-    {
-      VTKM_RUN_BENCHMARK(WarpScalar, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::WARP_VECTOR)
-    {
-      VTKM_RUN_BENCHMARK(WarpVector, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::MARCHING_CUBES)
-    {
-      if (ReducedOptions)
-      {
-        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
-      }
-      else
-      {
-        VTKM_RUN_BENCHMARK(Contour1FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour3FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour1TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour3TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12TFF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour1FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour3FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FTF, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour1FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour3FTT, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(Contour12FTT, dummyTypes, id);
-      }
-    }
-    if (benches & BenchmarkName::EXTERNAL_FACES)
-    {
-      VTKM_RUN_BENCHMARK(ExternalFaces, dummyTypes, id);
-      VTKM_RUN_BENCHMARK(ExternalFacesCompact, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::TETRAHEDRALIZE)
-    {
-      VTKM_RUN_BENCHMARK(Tetrahedralize, dummyTypes, id);
-    }
-    if (benches & BenchmarkName::VERTEX_CLUSTERING)
-    {
-      if (ReducedOptions)
-      {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
-      }
-      else
-      {
-        VTKM_RUN_BENCHMARK(VertexClustering32, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering64, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering128, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering256, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering512, dummyTypes, id);
-        VTKM_RUN_BENCHMARK(VertexClustering1024, dummyTypes, id);
-      }
-    }
-    if (benches & BenchmarkName::CELL_TO_POINT)
-    {
-      VTKM_RUN_BENCHMARK(CellToPoint, dummyTypes, id);
-    }
-
-    return 0;
+    return true;
   }
 };
+
+void BenchReverseConnectivityGen(::benchmark::State& state)
+{
+  if (InputIsStructured())
+  {
+    state.SkipWithError("ReverseConnectivityGen requires unstructured data.");
+    return;
+  }
+
+  auto cellset = InputDataSet.GetCellSet();
+  PrepareForInput functor;
+  for (auto _ : state)
+  {
+    (void)_;
+    cellset.CastAndCall(functor);
+    state.SetIterationTime(functor.Timer.GetElapsedTime());
+  }
+}
+VTKM_BENCHMARK(BenchReverseConnectivityGen);
 
 // Generates a Vec3 field from point coordinates.
 struct PointVectorGenerator : public vtkm::worklet::WorkletMapField
@@ -870,9 +647,9 @@ struct NumberOfComponents
   }
 };
 
-void FindFields(bool needPointScalars, bool needCellScalars, bool needPointVectors)
+void FindFields()
 {
-  if (needPointScalars && PointScalarsName.empty())
+  if (PointScalarsName.empty())
   {
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
@@ -881,13 +658,13 @@ void FindFields(bool needPointScalars, bool needCellScalars, bool needPointVecto
           NumberOfComponents::Check(field) == 1)
       {
         PointScalarsName = field.GetName();
-        std::cout << "Found PointScalars: " << PointScalarsName << "\n";
+        std::cerr << "[FindFields] Found PointScalars: " << PointScalarsName << "\n";
         break;
       }
     }
   }
 
-  if (needCellScalars && CellScalarsName.empty())
+  if (CellScalarsName.empty())
   {
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
@@ -896,13 +673,13 @@ void FindFields(bool needPointScalars, bool needCellScalars, bool needPointVecto
           NumberOfComponents::Check(field) == 1)
       {
         CellScalarsName = field.GetName();
-        std::cout << "Found CellScalars: " << CellScalarsName << "\n";
+        std::cerr << "[FindFields] CellScalars: " << CellScalarsName << "\n";
         break;
       }
     }
   }
 
-  if (needPointVectors && PointVectorsName.empty())
+  if (PointVectorsName.empty())
   {
     for (vtkm::Id i = 0; i < InputDataSet.GetNumberOfFields(); ++i)
     {
@@ -911,17 +688,17 @@ void FindFields(bool needPointScalars, bool needCellScalars, bool needPointVecto
           NumberOfComponents::Check(field) == 3)
       {
         PointVectorsName = field.GetName();
-        std::cout << "Found CellVectors: " << PointVectorsName << "\n";
+        std::cerr << "[FindFields] Found PointVectors: " << PointVectorsName << "\n";
         break;
       }
     }
   }
 }
 
-void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVectors)
+void CreateMissingFields()
 {
   // Do point vectors first, so we can generate the scalars from them if needed
-  if (needPointVectors && PointVectorsName.empty())
+  if (PointVectorsName.empty())
   {
     // Construct them from the coordinates:
     auto coords = InputDataSet.GetCoordinateSystem();
@@ -935,17 +712,12 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
     InputDataSet.AddField(
       vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::POINTS, pvecs));
     PointVectorsName = "GeneratedPointVectors";
-    std::cout << "Generated point vectors '" << PointVectorsName << "' from "
-                                                                    "coordinate data.\n";
+    std::cerr << "[CreateFields] Generated point vectors '" << PointVectorsName
+              << "' from coordinate data.\n";
   }
 
-  if (needPointScalars && PointScalarsName.empty())
+  if (PointScalarsName.empty())
   {
-    // Attempt to construct them from a cell field:
-    if (CellScalarsName.empty())
-    { // attempt to find a set of cell scalars in the input:
-      FindFields(false, true, false);
-    }
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
       vtkm::filter::PointAverage avg;
@@ -955,22 +727,13 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
       InputDataSet.AddField(
         outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
       PointScalarsName = "GeneratedPointScalars";
-      std::cout << "Generated point scalars '" << PointScalarsName << "' from "
-                                                                      "cell scalars, '"
-                << CellScalarsName << "'.\n";
+      std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
+                << "' from cell scalars, '" << CellScalarsName << "'.\n";
     }
     else
-    { // Attempt to construct them from point vectors:
-      if (PointVectorsName.empty())
-      {
-        FindFields(false, false, true);
-      }
-      if (PointVectorsName.empty())
-      {
-        CreateFields(false, false, true); // cannot fail
-      }
-
+    {
       // Compute the magnitude of the vectors:
+      VTKM_ASSERT(!PointVectorsName.empty());
       vtkm::filter::VectorMagnitude mag;
       mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
       mag.SetOutputFieldName("GeneratedPointScalars");
@@ -978,69 +741,23 @@ void CreateFields(bool needPointScalars, bool needCellScalars, bool needPointVec
       InputDataSet.AddField(
         outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::POINTS));
       PointScalarsName = "GeneratedPointScalars";
-      std::cout << "Generated point scalars '" << PointScalarsName << "' from "
-                                                                      "point vectors, '"
-                << PointVectorsName << "'.\n";
+      std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
+                << "' from point vectors, '" << PointVectorsName << "'.\n";
     }
   }
 
-  if (needCellScalars && CellScalarsName.empty())
-  {
-    // Attempt to construct them from a point field:
-    if (PointScalarsName.empty())
-    { // attempt to find a set of point scalars in the input:
-      FindFields(true, false, false);
-    }
-    if (!PointScalarsName.empty())
-    { // Generate from found point field:
-      vtkm::filter::CellAverage avg;
-      avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
-      avg.SetOutputFieldName("GeneratedCellScalars");
-      auto outds = avg.Execute(InputDataSet);
-      InputDataSet.AddField(
-        outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::CELL_SET));
-      CellScalarsName = "GeneratedCellScalars";
-      std::cout << "Generated cell scalars '" << CellScalarsName << "' from "
-                                                                    "point scalars, '"
-                << PointScalarsName << "'.\n";
-    }
-  }
-}
-
-void AssertFields(bool needPointScalars, bool needCellScalars, bool needPointVectors)
-{
-  if (needPointScalars)
-  {
-    if (PointScalarsName.empty())
-    {
-      throw vtkm::cont::ErrorInternal("PointScalarsName not set!");
-    }
-    if (!InputDataSet.HasField(PointScalarsName, vtkm::cont::Field::Association::POINTS))
-    {
-      throw vtkm::cont::ErrorInternal("PointScalars field not in dataset!");
-    }
-  }
-  if (needCellScalars)
-  {
-    if (CellScalarsName.empty())
-    {
-      throw vtkm::cont::ErrorInternal("CellScalarsName not set!");
-    }
-    if (!InputDataSet.HasField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET))
-    {
-      throw vtkm::cont::ErrorInternal("CellScalars field not in dataset!");
-    }
-  }
-  if (needPointVectors)
-  {
-    if (PointVectorsName.empty())
-    {
-      throw vtkm::cont::ErrorInternal("PointVectorsName not set!");
-    }
-    if (!InputDataSet.HasField(PointVectorsName, vtkm::cont::Field::Association::POINTS))
-    {
-      throw vtkm::cont::ErrorInternal("PointVectors field not in dataset!");
-    }
+  if (CellScalarsName.empty())
+  { // Attempt to construct them from a point field:
+    VTKM_ASSERT(!PointScalarsName.empty());
+    vtkm::filter::CellAverage avg;
+    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
+    avg.SetOutputFieldName("GeneratedCellScalars");
+    auto outds = avg.Execute(InputDataSet);
+    InputDataSet.AddField(
+      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::CELL_SET));
+    CellScalarsName = "GeneratedCellScalars";
+    std::cerr << "[CreateFields] Generated cell scalars '" << CellScalarsName
+              << "' from point scalars, '" << PointScalarsName << "'.\n";
   }
 }
 
@@ -1102,33 +819,26 @@ enum optionIndex
   CELL_SCALARS,
   POINT_VECTORS,
   WAVELET_DIM,
-  TETRA,
-  REDUCED_OPTIONS
+  TETRA
 };
 
-int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& config)
+void InitDataSet(int& argc, char** argv)
 {
   int numThreads = 0;
-  int benches = BenchmarkName::NONE;
   std::string filename;
   vtkm::Id waveletDim = 256;
   bool tetra = false;
-  bool needPointScalars = false;
-  bool needCellScalars = false;
-  bool needPointVectors = false;
-
-  ReducedOptions = false;
 
   namespace option = vtkm::cont::internal::option;
 
   std::vector<option::Descriptor> usage;
   std::string usageHeader{ "Usage: " };
   usageHeader.append(argv[0]);
-  usageHeader.append(" [options] [benchmarks]");
+  usageHeader.append(" [input data options] [benchmark options]");
   usage.push_back({ UNKNOWN, 0, "", "", Arg::None, usageHeader.c_str() });
-  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Options are:" });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Input data options are:" });
   usage.push_back({ HELP, 0, "h", "help", Arg::None, "  -h, --help\tDisplay this help." });
-  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, config.Usage.c_str() });
+  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, Config.Usage.c_str() });
   usage.push_back({ NUM_THREADS,
                     0,
                     "",
@@ -1173,23 +883,6 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
                     "tetra",
                     Arg::None,
                     "  --tetra \tTetrahedralize data set before running benchmark." });
-  usage.push_back({ REDUCED_OPTIONS,
-                    0,
-                    "",
-                    "reduced-options",
-                    Arg::None,
-                    "  --reduced-options \tRun fewer variants of each filter. " });
-  usage.push_back({ UNKNOWN, 0, "", "", Arg::None, "Benchmarks are one or more of:" });
-  usage.push_back({ UNKNOWN,
-                    0,
-                    "",
-                    "",
-                    Arg::None,
-                    "\tgradient, threshold, threshold_points, cell_average, point_average, "
-                    "warp_scalar, warp_vector, marching_cubes, external_faces, "
-                    "tetrahedralize, cell_to_point" });
-  usage.push_back(
-    { UNKNOWN, 0, "", "", Arg::None, "If no benchmarks are listed, all will be run." });
   usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
 
 
@@ -1198,15 +891,9 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
   option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
 
-  if (options[UNKNOWN])
-  {
-    std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
-    option::printUsage(std::cerr, usage.data());
-    exit(1);
-  }
-
   if (options[HELP])
   {
+    // FIXME: Print google benchmark usage too
     option::printUsage(std::cerr, usage.data());
     exit(0);
   }
@@ -1215,10 +902,10 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   {
     std::istringstream parse(options[NUM_THREADS].arg);
     parse >> numThreads;
-    if (config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
-        config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
+    if (Config.Device == vtkm::cont::DeviceAdapterTagTBB() ||
+        Config.Device == vtkm::cont::DeviceAdapterTagOpenMP())
     {
-      std::cout << "Selected " << numThreads << " " << config.Device.GetName() << " threads."
+      std::cout << "Selected " << numThreads << " " << Config.Device.GetName() << " threads."
                 << std::endl;
     }
     else
@@ -1252,79 +939,6 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   }
 
   tetra = (options[TETRA] != nullptr);
-  ReducedOptions = (options[REDUCED_OPTIONS] != nullptr);
-
-  for (int i = 0; i < commandLineParse.nonOptionsCount(); ++i)
-  {
-    std::string arg = commandLineParse.nonOption(i);
-    std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
-      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    });
-    if (arg == "gradient")
-    {
-      benches |= BenchmarkName::GRADIENT;
-      needPointScalars = true;
-      needPointVectors = true;
-    }
-    else if (arg == "threshold")
-    {
-      benches |= BenchmarkName::THRESHOLD;
-      needPointScalars = true;
-    }
-    else if (arg == "threshold_points")
-    {
-      benches |= BenchmarkName::THRESHOLD_POINTS;
-      needPointScalars = true;
-    }
-    else if (arg == "cell_average")
-    {
-      benches |= BenchmarkName::CELL_AVERAGE;
-      needPointScalars = true;
-    }
-    else if (arg == "point_average")
-    {
-      benches |= BenchmarkName::POINT_AVERAGE;
-      needCellScalars = true;
-    }
-    else if (arg == "warp_scalar")
-    {
-      benches |= BenchmarkName::WARP_SCALAR;
-      needPointScalars = true;
-      needPointVectors = true;
-    }
-    else if (arg == "warp_vector")
-    {
-      benches |= BenchmarkName::WARP_VECTOR;
-      needPointVectors = true;
-    }
-    else if (arg == "marching_cubes")
-    {
-      benches |= BenchmarkName::MARCHING_CUBES;
-      needPointScalars = true;
-    }
-    else if (arg == "external_faces")
-    {
-      benches |= BenchmarkName::EXTERNAL_FACES;
-    }
-    else if (arg == "tetrahedralize")
-    {
-      benches |= BenchmarkName::TETRAHEDRALIZE;
-    }
-    else if (arg == "vertex_clustering")
-    {
-      benches |= BenchmarkName::VERTEX_CLUSTERING;
-    }
-    else if (arg == "cell_to_point")
-    {
-      benches |= BenchmarkName::CELL_TO_POINT;
-    }
-    else
-    {
-      std::cerr << "Unrecognized benchmark: " << arg << std::endl;
-      option::printUsage(std::cerr, usage.data());
-      return 1;
-    }
-  }
 
 #ifdef VTKM_ENABLE_TBB
   // Must not be destroyed as long as benchmarks are running:
@@ -1335,102 +949,110 @@ int BenchmarkBody(int argc, char** argv, const vtkm::cont::InitializeResult& con
   omp_set_num_threads((numThreads > 0) ? numThreads : omp_get_max_threads());
 #endif
 
-  if (benches == BenchmarkName::NONE)
+  // Now go back through the arg list and remove anything that is not in the list of
+  // unknown options or non-option arguments.
+  int destArg = 1;
+  // This is copy/pasted from vtkm::cont::Initialize(), should probably be abstracted eventually:
+  for (int srcArg = 1; srcArg < argc; ++srcArg)
   {
-    benches = BenchmarkName::ALL;
-    needPointScalars = true;
-    needCellScalars = true;
-    needPointVectors = true;
+    std::string thisArg{ argv[srcArg] };
+    bool copyArg = false;
+
+    // Special case: "--" gets removed by optionparser but should be passed.
+    if (thisArg == "--")
+    {
+      copyArg = true;
+    }
+    for (const option::Option* opt = options[UNKNOWN]; !copyArg && opt != nullptr;
+         opt = opt->next())
+    {
+      if (thisArg == opt->name)
+      {
+        copyArg = true;
+      }
+      if ((opt->arg != nullptr) && (thisArg == opt->arg))
+      {
+        copyArg = true;
+      }
+      // Special case: optionparser sometimes removes a single "-" from an option
+      if (thisArg.substr(1) == opt->name)
+      {
+        copyArg = true;
+      }
+    }
+    for (int nonOpt = 0; !copyArg && nonOpt < commandLineParse.nonOptionsCount(); ++nonOpt)
+    {
+      if (thisArg == commandLineParse.nonOption(nonOpt))
+      {
+        copyArg = true;
+      }
+    }
+    if (copyArg)
+    {
+      if (destArg != srcArg)
+      {
+        argv[destArg] = argv[srcArg];
+      }
+      ++destArg;
+    }
   }
+  argc = destArg;
 
   // Load / generate the dataset
+  vtkm::cont::Timer inputGenTimer{ Config.Device };
+  inputGenTimer.Start();
+
   if (!filename.empty())
   {
-    std::cout << "Loading file: " << filename << "\n";
+    std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
     vtkm::io::reader::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
   }
   else
   {
-    std::cout << "Generating " << waveletDim << "x" << waveletDim << "x" << waveletDim
+    std::cerr << "[InitDataSet] Generating " << waveletDim << "x" << waveletDim << "x" << waveletDim
               << " wavelet...\n";
     vtkm::source::Wavelet source;
-    source.SetExtent({ 0 }, { waveletDim });
+    source.SetExtent({ 0 }, { waveletDim - 1 });
 
     InputDataSet = source.Execute();
   }
 
   if (tetra)
   {
-    std::cout << "Tetrahedralizing dataset...\n";
+    std::cerr << "[InitDataSet] Tetrahedralizing dataset...\n";
     vtkm::filter::Tetrahedralize tet;
     tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
     InputDataSet = tet.Execute(InputDataSet);
   }
 
-  bool isStructured = InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
-    InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
+  FindFields();
+  CreateMissingFields();
 
-  // Check for incompatible options
-  if (benches & BenchmarkName::TETRAHEDRALIZE && !isStructured)
-  {
-    std::cout << "Warning: Cannot benchmark vtkm::filter::Tetrahedralize on "
-                 "unstructured datasets. Removing from options.\n";
-    benches = benches ^ BenchmarkName::TETRAHEDRALIZE;
-  }
-  if (benches & BenchmarkName::VERTEX_CLUSTERING && isStructured)
-  {
-    std::cout << "Warning: Cannot benchmark vtkm::filter::VertexClustering on "
-                 "structured dataset. Removing from options.\n";
-    benches = benches ^ BenchmarkName::VERTEX_CLUSTERING;
-  }
-  if (benches & BenchmarkName::CELL_TO_POINT && isStructured)
-  {
-    std::cout << "Info: CellToPoint benchmark is trivial on structured datasets. "
-                 "Removing from options.\n";
-    benches = benches ^ BenchmarkName::CELL_TO_POINT;
-  }
+  inputGenTimer.Stop();
 
-  // Check to see what fields already exist in the input:
-  FindFields(needPointScalars, needCellScalars, needPointVectors);
-
-  // Create any missing fields:
-  CreateFields(needPointScalars, needCellScalars, needPointVectors);
-
-  // Assert that required fields exist:
-  AssertFields(needPointScalars, needCellScalars, needPointVectors);
-
-  std::cout << "\nDataSet Summary:\n";
-  InputDataSet.PrintSummary(std::cout);
-  std::cout << "\n";
-
-  //now actually execute the benchmarks
-  int result = BenchmarkFilters::Run(benches, config.Device);
-
-  // Explicitly free resources before exit.
-  InputDataSet.Clear();
-
-  return result;
+  std::cerr << "[InitDataSet] DataSet initialization took " << inputGenTimer.GetElapsedTime()
+            << " seconds.\n\n-----------------";
 }
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  int retval = 1;
-  try
-  {
-    retval = BenchmarkBody(argc, argv, config);
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Benchmark encountered an exception: " << e.what() << "\n";
-    return 1;
-  }
+  // Setup device:
+  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
 
-  return retval;
+  InitDataSet(argc, argv);
+
+  const std::string dataSetSummary = []() -> std::string {
+    std::ostringstream out;
+    InputDataSet.PrintSummary(out);
+    return out.str();
+  }();
+
+  // handle benchmarking related args and run benchmarks:
+  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, dataSetSummary);
 }

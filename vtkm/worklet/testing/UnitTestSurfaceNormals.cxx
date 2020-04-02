@@ -29,7 +29,7 @@ void TestFacetedSurfaceNormals(const vtkm::cont::DataSet& dataset, NormalsArrayH
                               { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
                               { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
                               { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
-  auto portal = normals.GetPortalConstControl();
+  auto portal = normals.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect faceNormals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {
@@ -51,7 +51,7 @@ void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
                               { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
                               { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
                               { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
-  auto portal = pointNormals.GetPortalConstControl();
+  auto portal = pointNormals.ReadPortal();
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect pointNormals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {

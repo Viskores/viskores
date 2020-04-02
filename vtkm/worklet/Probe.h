@@ -48,7 +48,7 @@ public:
                               vtkm::Id& cellId,
                               vtkm::Vec3f& pcoords) const
     {
-      locator->FindCell(point, cellId, pcoords, *this);
+      locator->FindCell(point, cellId, pcoords);
     }
   };
 
@@ -124,10 +124,10 @@ public:
           for (vtkm::Id i = minp[0]; i <= maxp[0]; ++i)
           {
             auto pt = portal.Get(vtkm::Id3(i, j, k));
-            bool success = false;
-            auto pc = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-              cellPoints, pt, cellShape, success, *this);
-            if (success && vtkm::exec::CellInside(pc, cellShape))
+            CoordsType pc;
+            vtkm::ErrorCode status =
+              vtkm::exec::WorldCoordinatesToParametricCoordinates(cellPoints, pt, cellShape, pc);
+            if ((status == vtkm::ErrorCode::Success) && vtkm::exec::CellInside(pc, cellShape))
             {
               auto pointId = i + portal.GetDimensions()[0] * (j + portal.GetDimensions()[1] * k);
               cellIds.Set(pointId, cellId);
@@ -199,7 +199,7 @@ public:
       {
         auto indices = cells.GetIndices(cellId);
         auto pointVals = vtkm::make_VecFromPortalPermute(&indices, in);
-        out = vtkm::exec::CellInterpolate(pointVals, pc, cells.GetCellShape(cellId), *this);
+        vtkm::exec::CellInterpolate(pointVals, pc, cells.GetCellShape(cellId), out);
       }
     }
   };
@@ -207,7 +207,7 @@ public:
   /// Intepolate the input point field data at the points of the geometry
   template <typename T,
             typename Storage,
-            typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+            typename InputCellSetTypeList = VTKM_DEFAULT_CELL_SET_LIST>
   vtkm::cont::ArrayHandle<T> ProcessPointField(
     const vtkm::cont::ArrayHandle<T, Storage>& field,
     InputCellSetTypeList icsTypes = InputCellSetTypeList()) const

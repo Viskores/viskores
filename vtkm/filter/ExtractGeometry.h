@@ -39,7 +39,7 @@ class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:
   //currently the ExtractGeometry filter only works on scalar data.
-  using SupportedTypes = TypeListTagScalarAll;
+  using SupportedTypes = TypeListScalarAll;
 
   VTKM_CONT
   ExtractGeometry();

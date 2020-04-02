@@ -57,20 +57,21 @@ int main(int argc, char** argv)
 
   //create seeds randomly placed withing the bounding box of the data.
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  std::vector<vtkm::Vec3f> seeds;
+  std::vector<vtkm::Particle> seeds;
 
-  for (int i = 0; i < numSeeds; i++)
+  for (vtkm::Id i = 0; i < numSeeds; i++)
   {
-    vtkm::Vec3f p;
+    vtkm::Particle p;
     vtkm::FloatDefault rx = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault ry = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault rz = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
-    p[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
-    p[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
-    p[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
+    p.Pos[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
+    p.Pos[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
+    p.Pos[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
+    p.ID = i;
     seeds.push_back(p);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
   //compute streamlines
   vtkm::filter::Streamline streamline;

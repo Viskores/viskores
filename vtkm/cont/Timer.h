@@ -10,9 +10,9 @@
 #ifndef vtk_m_cont_Timer_h
 #define vtk_m_cont_Timer_h
 
-#include <vtkm/ListTag.h>
+#include <vtkm/List.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
@@ -24,7 +24,7 @@ namespace cont
 {
 namespace detail
 {
-class EnabledDeviceTimerImpls;
+struct EnabledDeviceTimerImpls;
 }
 
 /// A class that can be used to time operations in VTK-m that might be occuring
@@ -58,7 +58,6 @@ public:
   /// Resets the timer and changes the device to time on.
   VTKM_CONT void Reset(vtkm::cont::DeviceAdapterId device);
 
-  /// Start would call Reset function before starting the timer for convenience
   VTKM_CONT void Start();
 
   VTKM_CONT void Stop();
@@ -73,15 +72,13 @@ public:
   /// Get the elapsed time measured by the given device adapter. If no device is
   /// specified, the max time of all device measurements will be returned.
   VTKM_CONT
-  vtkm::Float64 GetElapsedTime(
-    vtkm::cont::DeviceAdapterId id = vtkm::cont::DeviceAdapterTagAny()) const;
+  vtkm::Float64 GetElapsedTime() const;
 
   /// Returns the device for which this timer is synchronized. If the device adapter has the same
   /// id as DeviceAdapterTagAny, then the timer will synchronize all devices.
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
 
 private:
-  VTKM_CONT void Init();
   /// Some timers are ill-defined when copied, so disallow that for all timers.
   VTKM_CONT Timer(const Timer&) = delete;
   VTKM_CONT void operator=(const Timer&) = delete;

@@ -32,7 +32,7 @@ void TestCellMeasureUniform3D()
   vtkm::Float32 expected[4] = { 1.f, 1.f, 1.f, 1.f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(vtkm::Id(i)), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(vtkm::Id(i)), expected[i]),
                      "Wrong result for CellMeasure worklet on 3D uniform data");
   }
 }
@@ -55,7 +55,7 @@ void TestCellMeasureWorklet(vtkm::cont::DataSet& dataset,
 
   for (unsigned int i = 0; i < static_cast<unsigned int>(expected.size()); ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(vtkm::Id(i)), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(vtkm::Id(i)), expected[i]),
                      "Wrong result for CellMeasure filter");
   }
 }
@@ -106,7 +106,7 @@ void TestCellMeasure()
   TestCellMeasureWorklet(data,
                          "explicit dataset 6 (empty)",
                          { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.0f, 0.0f },
-                         vtkm::ListTagBase<>());
+                         vtkm::List<>());
 }
 }
 

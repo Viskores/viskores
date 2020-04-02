@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtkm_worklet_contourtree_augmented_active_graph_set_super_arcs_set_tree_superarcs_h
-#define vtkm_worklet_contourtree_augmented_active_graph_set_super_arcs_set_tree_superarcs_h
+#ifndef vtk_m_worklet_contourtree_augmented_active_graph_set_super_arcs_set_tree_superarcs_h
+#define vtk_m_worklet_contourtree_augmented_active_graph_set_super_arcs_set_tree_superarcs_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -76,7 +76,7 @@ public:
     WholeArrayIn superId,               // (input) superID from the active graph
     WholeArrayIn hyperId,               // (input) hyperID from the active graph
     WholeArrayOut treeSuperarcs,        // (output) superarcs from the tree
-    WholeArrayOut treeFirstSuperchild); // (output) firstSuperchild from the tree
+    WholeArrayOut treeFirstSuperchild); // (output) FirstSuperchild from the tree
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
@@ -120,10 +120,10 @@ public:
       // this needs to point to the supernode at the "bottom" end of the hyperarc
       vtkm::Id prunesTo = hyperarcsPortal.Get(hyperparent);
 
-      if (noSuchElement(prunesTo))
+      if (NoSuchElement(prunesTo))
         treeSuperarcsPortal.Set(supernode, (vtkm::Id)NO_SUCH_ELEMENT);
       else
-        treeSuperarcsPortal.Set(supernode, superIDPortal.Get(maskedIndex(prunesTo)));
+        treeSuperarcsPortal.Set(supernode, superIDPortal.Get(MaskedIndex(prunesTo)));
 
       // we also need to set the first superchild for the hypergraph
       treeFirstSuperchildPortal.Set(hyperIDPortal.Get(hyperparent), supernode);
@@ -140,7 +140,7 @@ public:
       for (indexType supernode = 0; supernode < nSupernodes; supernode++)
       { // per supernode
         // retrieve the actual supernode ID in the graph
-        indexType graphIndex = tree.supernodes[supernode];
+        indexType graphIndex = tree.Supernodes[supernode];
         // retrieve the hyperparent (which is still a graph index, not a hypernode index)
         indexType hyperparent = tree.hyperparents[supernode];
 
@@ -167,13 +167,13 @@ public:
             // this needs to point to the supernode at the "bottom" end of the hyperarc
             indexType prunesTo = hyperarcs[hyperparent];
 
-            if (noSuchElement(prunesTo))
+            if (NoSuchElement(prunesTo))
               tree.superarcs[supernode] = NO_SUCH_ELEMENT;
             else
-              tree.superarcs[supernode] = superID[maskedIndex(prunesTo)];
+              tree.superarcs[supernode] = superID[MaskedIndex(prunesTo)];
 
             // we also need to set the first superchild for the hypergraph
-            tree.firstSuperchild[hyperID[hyperparent]] = supernode;
+            tree.FirstSuperchild[hyperID[hyperparent]] = supernode;
           } // first supernode
         // all others just point to their neighbour
         else

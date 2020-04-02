@@ -269,7 +269,7 @@ public:
            int maxOrder,
            vtkm::cont::DataSet& output) const
   {
-    input.ResetCellSetList(vtkm::cont::CellSetListTagStructured())
+    input.ResetCellSetList(vtkm::cont::CellSetListStructured())
       .CastAndCall(ResolveDynamicCellSet(), pixels, this->Spacing, this->Radius, maxOrder, output);
   }
 

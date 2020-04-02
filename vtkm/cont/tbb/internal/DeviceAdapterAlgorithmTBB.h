@@ -43,9 +43,11 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     const vtkm::Id inSize = input.GetNumberOfValues();
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB());
-    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagTBB());
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB(), token);
+    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagTBB(), token);
 
     tbb::CopyPortals(inputPortal, outputPortal, 0, 0, inSize);
   }
@@ -69,13 +71,16 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     vtkm::Id inputSize = input.GetNumberOfValues();
     VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
     vtkm::Id outputSize =
-      tbb::CopyIfPortals(input.PrepareForInput(DeviceAdapterTagTBB()),
-                         stencil.PrepareForInput(DeviceAdapterTagTBB()),
-                         output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
+      tbb::CopyIfPortals(input.PrepareForInput(DeviceAdapterTagTBB(), token),
+                         stencil.PrepareForInput(DeviceAdapterTagTBB(), token),
+                         output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
                          unary_predicate);
+    token.DetachFromAll();
     output.Shrink(outputSize);
   }
 
@@ -129,8 +134,9 @@ public:
       }
     }
 
-    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB());
-    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagTBB());
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB(), token);
+    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagTBB(), token);
 
     tbb::CopyPortals(
       inputPortal, outputPortal, inputStartIndex, outputIndex, numberOfElementsToCopy);
@@ -153,8 +159,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    return tbb::ReducePortals(
-      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()), initialValue, binary_functor);
+    vtkm::cont::Token token;
+    return tbb::ReducePortals(input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB(), token),
+                              initialValue,
+                              binary_functor);
   }
 
   template <typename T,
@@ -172,14 +180,17 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
+
     vtkm::Id inputSize = keys.GetNumberOfValues();
     VTKM_ASSERT(inputSize == values.GetNumberOfValues());
-    vtkm::Id outputSize =
-      tbb::ReduceByKeyPortals(keys.PrepareForInput(DeviceAdapterTagTBB()),
-                              values.PrepareForInput(DeviceAdapterTagTBB()),
-                              keys_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
-                              values_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
-                              binary_functor);
+    vtkm::Id outputSize = tbb::ReduceByKeyPortals(
+      keys.PrepareForInput(DeviceAdapterTagTBB(), token),
+      values.PrepareForInput(DeviceAdapterTagTBB(), token),
+      keys_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
+      values_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
+      binary_functor);
+    token.DetachFromAll();
     keys_output.Shrink(outputSize);
     values_output.Shrink(outputSize);
   }
@@ -190,9 +201,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
     return tbb::ScanInclusivePortals(
-      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB(), token),
+      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB(), token),
       vtkm::Add());
   }
 
@@ -203,9 +215,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
     return tbb::ScanInclusivePortals(
-      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB(), token),
+      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB(), token),
       binary_functor);
   }
 
@@ -215,9 +228,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
     return tbb::ScanExclusivePortals(
-      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB(), token),
+      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB(), token),
       vtkm::Add(),
       vtkm::TypeTraits<T>::ZeroInitialization());
   }
@@ -230,9 +244,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
+    vtkm::cont::Token token;
     return tbb::ScanExclusivePortals(
-      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB(), token),
+      output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB(), token),
       binary_functor,
       initialValue);
   }
@@ -307,8 +322,12 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
-    vtkm::Id outputSize =
-      tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB()), binary_compare);
+    vtkm::Id outputSize;
+    {
+      vtkm::cont::Token token;
+      outputSize =
+        tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB(), token), binary_compare);
+    }
     values.Shrink(outputSize);
   }
 
@@ -393,19 +412,17 @@ public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling1D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id,
-                                                          vtkm::Id globalIndexOffset = 0)
+                                                          vtkm::Id)
   {
-    return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling3D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id3,
-                                                          vtkm::Id globalIndexOffset = 0)
+                                                          vtkm::Id3)
   {
-    return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation);
   }
 };
 }

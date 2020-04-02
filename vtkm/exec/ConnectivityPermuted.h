@@ -50,6 +50,11 @@ public:
   {
   }
 
+  ConnectivityPermutedVisitCellsWithPoints& operator=(
+    const ConnectivityPermutedVisitCellsWithPoints& src) = default;
+  ConnectivityPermutedVisitCellsWithPoints& operator=(
+    ConnectivityPermutedVisitCellsWithPoints&& src) = default;
+
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return this->Portal.GetNumberOfValues(); }
 

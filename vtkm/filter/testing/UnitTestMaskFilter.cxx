@@ -40,7 +40,7 @@ public:
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                       cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
+                       cellFieldArray.ReadPortal().Get(7) == 14.f,
                      "Wrong mask data");
   }
 
@@ -61,7 +61,7 @@ public:
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
-                       cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
+                       cellFieldArray.ReadPortal().Get(2) == 18.f,
                      "Wrong mask data");
   }
 
@@ -82,7 +82,7 @@ public:
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
+                       cellFieldArray.ReadPortal().Get(1) == 120.2f,
                      "Wrong mask data");
   }
 

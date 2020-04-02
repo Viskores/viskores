@@ -30,7 +30,6 @@ protected:
   std::vector<std::shared_ptr<ShapeIntersector>> Intersectors;
   Camera camera;
   vtkm::cont::Field ScalarField;
-  vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
   vtkm::Id NumberOfShapes;
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   vtkm::Range ScalarRange;
