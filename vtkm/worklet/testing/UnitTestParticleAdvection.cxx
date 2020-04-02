@@ -522,10 +522,21 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
                    "Number of output particles does not match input.");
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).NumSteps <= maxSteps,
-                     "Too many steps taken in particle advection");
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
-                     "Bad status in particle advection");
+    auto stepsTaken = res.Particles.ReadPortal().Get(i).NumSteps;
+    VTKM_TEST_ASSERT(stepsTaken <= maxSteps, "Too many steps taken in particle advection");
+    std::cout << i << " : " << stepsTaken << std::endl;
+    if (stepsTaken < maxSteps)
+    {
+      std::cout << "stat : " << res.Particles.ReadPortal().Get(i).Status << std::endl;
+      VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
+                       "Bad status in particle advectioni, expected OK");
+    }
+    else
+    {
+      std::cout << "stat : " << res.Particles.ReadPortal().Get(i).Status << std::endl;
+      VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckTerminate(),
+                       "Bad status in particle advection, expected TERM");
+    }
   }
 }
 
@@ -573,17 +584,20 @@ void TestIntegrators()
   points.push_back(vtkm::Particle(RandomPoint(bounds), 0));
   points.push_back(vtkm::Particle(RandomPoint(bounds), 1));
   points.push_back(vtkm::Particle(RandomPoint(bounds), 2));
-  auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
 
   vtkm::worklet::ParticleAdvection pa;
   vtkm::worklet::ParticleAdvectionResult res;
   {
+    std::cout << "RK4" << std::endl;
+    auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
     IntegratorType rk4(eval, stepSize);
     res = pa.Run(rk4, seeds, maxSteps);
     ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
   }
   {
+    std::cout << "Euler" << std::endl;
+    auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvalType>;
     IntegratorType euler(eval, stepSize);
     res = pa.Run(euler, seeds, maxSteps);
