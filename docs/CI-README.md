@@ -71,10 +71,58 @@ Current gitlab runner tags for VTK-m are:
         run the VTK-m tests
 
 # How to use docker builders locally
-## Setting up docker
+
+When diagnosing issues from the docker builders it can be useful to iterate locally on a 
+solution.
+
+If you haven't set up docker locally we recommend following the official getting started guide:
+    - https://docs.docker.com/get-started/
+
+
 ## Setting up nvidia runtime
+
+To properly test VTK-m inside docker containers when the CUDA backend is enabled you will need
+to have installed the nvidia-container-runtime ( https://github.com/NVIDIA/nvidia-container-runtime )
+and be using a recent version of docker ( we recommend docker-ce )
+
+
+Once nvidia-container-runtime is installed you will want the default-runtime be `nvidia` so
+that `docker run` will automatically support gpus. The easiest way to do so is to add
+the following to your `/etc/docker/daemon.json`
+
+```
+{
+ "default-runtime": "nvidia",
+    "runtimes": {
+        "nvidia": {
+            "path": "/usr/bin/nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    },
+}
+```
+
 ## Running docker images
 
+To simplify reproducing docker based CI workers locally, VTK-m has python program that handles all the
+work automatically for you.
+
+The program is located in `[Utilities/CI/reproduce_ci_env.py ]` and requires python3 and pyyaml. 
+
+To use the program is really easy! The following two commands will create the `build:rhel8` gitlab-ci
+worker as a docker image and setup a container just as how gitlab-ci would be before the actual
+compilation of VTK-m. Instead of doing the compilation, instead you will be given an interactive shell. 
+
+```
+./reproduce_ci_env.py create rhel8
+./reproduce_ci_env.py run rhel8
+```
+
+To compile VTK-m from the the interactive shell you would do the following:
+```
+> src]# cd build/
+> build]# cmake --build .
+```
 
 # How to Add/Update Kitware Gitlab CI
 
