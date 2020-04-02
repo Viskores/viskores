@@ -29,3 +29,6 @@ echo "Set up git gitlab-push" &&
 git config alias.gitlab-sync '!bash Utilities/GitSetup/git-gitlab-sync' &&
 echo "Set up git gitlab-sync" &&
 true
+
+SetupForDevelopment=1
+git config hooks.SetupForDevelopment ${SetupForDevelopment_VERSION}
