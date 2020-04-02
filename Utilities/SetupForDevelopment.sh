@@ -3,6 +3,8 @@
 cd "${BASH_SOURCE%/*}/.." &&
 Utilities/GitSetup/setup-user && echo &&
 Utilities/GitSetup/setup-hooks && echo &&
+
+
 (Utilities/GitSetup/setup-upstream ||
  echo 'Failed to setup origin.  Run this again to retry.') && echo &&
 (Utilities/GitSetup/setup-gitlab ||
@@ -27,3 +29,6 @@ echo "Set up git gitlab-push" &&
 git config alias.gitlab-sync '!bash Utilities/GitSetup/git-gitlab-sync' &&
 echo "Set up git gitlab-sync" &&
 true
+
+SetupForDevelopment=1
+git config hooks.SetupForDevelopment ${SetupForDevelopment_VERSION}

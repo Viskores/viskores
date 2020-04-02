@@ -169,9 +169,6 @@ if (NOT data STREQUAL "\n")
 
     " to obtain the testing data.")
   set(VTKm_ENABLE_TESTING off)
-  if (CTEST_USE_LAUNCHERS)
-    set(CTEST_USE_LAUNCHERS off)
-  endif()
 endif()
 
 # We include the wrappers unconditionally as VTK-m expects the function to
@@ -342,6 +339,8 @@ if (VTKm_ENABLE_TESTING)
   # installed version of VTK-m.
   include(testing/VTKmTestInstall)
   vtkm_test_install()
+else ()
+  set(CTEST_USE_LAUNCHERS off)
 endif()
 
 #-----------------------------------------------------------------------------
