@@ -251,6 +251,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   vtkm::cont::DynamicCellSet cellSet = inCellSet;
 
   bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
+  bool is2D = cellSet.IsSameType(vtkm::cont::CellSetStructured<2>());
 
   vtkm::cont::CoordinateSystem actualCoords = coords;
   vtkm::cont::Field actualField = inScalarField;
@@ -301,7 +302,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
   }
 
-  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D;
+  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D && !is2D;
   if (doExternalFaces)
   {
     // If internal zones are to be hidden, the number of edges processed can be reduced by
