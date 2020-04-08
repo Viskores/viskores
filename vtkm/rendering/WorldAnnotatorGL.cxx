@@ -8,14 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/rendering/WorldAnnotatorGL.h>
-
 #include <vtkm/Matrix.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/DecodePNG.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/WorldAnnotatorGL.h>
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
@@ -103,7 +102,7 @@ void WorldAnnotatorGL::RenderText(vtkm::Float32 scale,
     const std::vector<unsigned char>& rawpngdata = this->Font.GetRawImageData();
 
     std::vector<unsigned char> rgba;
-    unsigned long width, height;
+    unsigned width, height;
     int error = vtkm::rendering::DecodePNG(rgba, width, height, &rawpngdata[0], rawpngdata.size());
     if (error != 0)
     {

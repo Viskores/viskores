@@ -523,7 +523,8 @@ bool Canvas::LoadFont() const
   const std::vector<unsigned char>& rawPNG = Internals->Font.GetRawImageData();
   std::vector<unsigned char> rgba;
   unsigned long textureWidth, textureHeight;
-  auto error = DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
+  auto error =
+    vtkm::rendering::DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
   if (error != 0)
   {
     return false;

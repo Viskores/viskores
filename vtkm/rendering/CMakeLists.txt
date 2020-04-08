@@ -88,7 +88,7 @@ set(sources
   DecodePNG.cxx
   EncodePNG.cxx
   raytracing/Logger.cxx
-  )
+)
 
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
@@ -103,6 +103,7 @@ set(device_sources
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
   ConnectivityProxy.cxx
+  DecodePNG.cxx
   LineRenderer.cxx
   Mapper.cxx
   MapperConnectivity.cxx

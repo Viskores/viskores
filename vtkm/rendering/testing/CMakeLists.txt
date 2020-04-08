@@ -27,7 +27,7 @@ set(unit_tests
   UnitTestScalarRenderer.cxx
 )
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering)
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering vtkm_lodepng)
 
 if(VTKm_ENABLE_GL_CONTEXT)
   # message(STATUS "rendering testing/glfw needs a FindGLFW")
