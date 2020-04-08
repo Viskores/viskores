@@ -290,6 +290,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
 
     vtkm::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
+
     cellSet = vtkm::cont::DynamicCellSet(newCellSet);
   }
   bool isLines = false;
