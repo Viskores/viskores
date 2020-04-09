@@ -63,8 +63,15 @@ foreach(option IN LISTS options)
 endforeach()
 
 set(CTEST_USE_LAUNCHERS "ON" CACHE STRING "")
-set(CMAKE_C_COMPILER_LAUNCHER "sccache" CACHE STRING "")
-set(CMAKE_CXX_COMPILER_LAUNCHER "sccache" CACHE STRING "")
-if(VTKm_ENABLE_CUDA)
-  set(CMAKE_CUDA_COMPILER_LAUNCHER "sccache" CACHE STRING "")
+
+# We need to store the absolute path so that
+# the launcher still work even when sccache isn't
+# on our path.
+find_program(SCCACHE_COMMAND NAMES sccache)
+if(SCCACHE_COMMAND)
+  set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
+  set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
+  if(VTKm_ENABLE_CUDA)
+    set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
+  endif()
 endif()

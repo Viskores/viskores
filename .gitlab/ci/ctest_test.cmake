@@ -33,7 +33,10 @@ ctest_test(APPEND
   EXCLUDE "${test_exclusions}"
   REPEAT "UNTIL_PASS:3"
   )
-ctest_submit(PARTS Test)
+
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_submit(PARTS Test)
+endif()
 
 if (test_result)
   message(FATAL_ERROR

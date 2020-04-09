@@ -24,7 +24,10 @@ message(STATUS "CTEST_BUILD_FLAGS: ${CTEST_BUILD_FLAGS}")
 ctest_build(APPEND
   NUMBER_WARNINGS num_warnings
   RETURN_VALUE build_result)
-ctest_submit(PARTS Build)
+
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_submit(PARTS Build)
+endif()
 
 if (build_result)
   message(FATAL_ERROR

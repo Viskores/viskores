@@ -105,8 +105,8 @@ stages:
     - sccache --show-stats
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
-  script:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
     - sccache --show-stats
   artifacts:
