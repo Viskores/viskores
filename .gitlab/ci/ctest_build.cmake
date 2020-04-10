@@ -10,8 +10,6 @@
 ##
 ##=============================================================================
 
-cmake_minimum_required(VERSION 3.8)
-
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
 include("$ENV{CI_PROJECT_DIR}/build/CIState.cmake")
