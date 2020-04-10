@@ -128,6 +128,8 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Id> triangle_topology;
   for (std::size_t i = 0; i < isovalues.size(); ++i)
   {
+    auto multiContourCellOffset = sharedState.CellIdMap.GetNumberOfValues();
+    auto multiContourPointOffset = sharedState.InterpolationWeights.GetNumberOfValues();
     ValueType isoval = isovalues[i];
 
     //----------------------------------------------------------------------------
@@ -161,16 +163,16 @@ vtkm::cont::CellSetSingleType<> execute(
       detail::extend_by(triangle_topology, 3 * sumTris);
       detail::extend_by(sharedState.CellIdMap, sumTris);
 
-      //By using the current length of points array as the starting value we
-      //handle multiple contours, by propagating the correct write offset
-      auto newPointSize = vtkm::cont::Algorithm::ScanExclusive(
-        metaDataLinearSums, metaDataLinearSums, vtkm::Sum{}, points.GetNumberOfValues());
+
+      auto newPointSize =
+        vtkm::cont::Algorithm::ScanExclusive(metaDataLinearSums, metaDataLinearSums);
       detail::extend_by(sharedState.InterpolationEdgeIds, newPointSize);
       detail::extend_by(sharedState.InterpolationWeights, newPointSize);
 
       //----------------------------------------------------------------------------
       // PASS 4: Process voxel rows and generate topology, and interpolation state
-      ComputePass4<ValueType, AxisToSum> worklet4(isoval, pdims);
+      ComputePass4<ValueType, AxisToSum> worklet4(
+        isoval, pdims, multiContourCellOffset, multiContourPointOffset);
       invoke(worklet4,
              metaDataMesh2D,
              metaDataSums,
