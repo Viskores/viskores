@@ -101,7 +101,7 @@ stages:
   before_script:
     - .gitlab/ci/config/sccache.sh
     - export PATH=$PWD/.gitlab:$PATH
-    - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
+    - SCCACHE_IDLE_TIMEOUT=1200 sccache --start-server
     - sccache --show-stats
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
