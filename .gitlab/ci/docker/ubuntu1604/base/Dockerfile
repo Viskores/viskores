@@ -38,10 +38,10 @@ RUN mkdir /opt/openmpi && \
     make install
 
 # Provide a consistent CMake path across all images
-# Install CMake 3.8 as it is the minium for non-cuda builds
+# Install CMake 3.12 as it is the minium for non-cuda builds
 RUN mkdir /opt/cmake && \
-    curl -L https://github.com/Kitware/CMake/releases/download/v3.8.2/cmake-3.8.2-Linux-x86_64.sh > cmake-3.8.2-Linux-x86_64.sh && \
-    sh cmake-3.8.2-Linux-x86_64.sh --prefix=/opt/cmake/ --exclude-subdir --skip-license
+    curl -L https://github.com/Kitware/CMake/releases/download/v3.12.4/cmake-3.12.4-Linux-x86_64.sh > cmake-3.12.4-Linux-x86_64.sh && \
+    sh cmake-3.12.4-Linux-x86_64.sh --prefix=/opt/cmake/ --exclude-subdir --skip-license
 
 # Provide CMake 3.17 so we can re-run tests easily
 # This will be used when we run just the tests

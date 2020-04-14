@@ -50,7 +50,7 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
-cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 
 # Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)

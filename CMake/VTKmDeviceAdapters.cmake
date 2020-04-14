@@ -86,7 +86,6 @@ endif()
 
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
-  cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
