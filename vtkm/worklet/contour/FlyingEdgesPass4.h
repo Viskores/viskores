@@ -55,7 +55,7 @@ VTKM_EXEC inline void generate_tris(vtkm::Id inputCellId,
                                     vtkm::UInt8 edgeCase,
                                     vtkm::UInt8 numTris,
                                     vtkm::Id* edgeIds,
-                                    vtkm::Int32& triId,
+                                    vtkm::Id& triId,
                                     const WholeConnField& conn,
                                     const WholeCellIdField& cellIds)
 {
@@ -84,22 +84,23 @@ VTKM_EXEC inline void generate_tris(vtkm::Id inputCellId,
 //----------------------------------------------------------------------------
 template <typename AxisToSum, typename FieldInPointId3>
 VTKM_EXEC inline void init_voxelIds(AxisToSum,
+                                    vtkm::Id writeOffset,
                                     vtkm::UInt8 edgeCase,
                                     const FieldInPointId3& axis_sums,
                                     vtkm::Id* edgeIds)
 {
   auto* edgeUses = data::GetEdgeUses(edgeCase);
-  edgeIds[0] = axis_sums[0][AxisToSum::xindex]; // x-edges
-  edgeIds[1] = axis_sums[1][AxisToSum::xindex];
-  edgeIds[2] = axis_sums[3][AxisToSum::xindex];
-  edgeIds[3] = axis_sums[2][AxisToSum::xindex];
-  edgeIds[4] = axis_sums[0][AxisToSum::yindex]; // y-edges
+  edgeIds[0] = writeOffset + axis_sums[0][AxisToSum::xindex]; // x-edges
+  edgeIds[1] = writeOffset + axis_sums[1][AxisToSum::xindex];
+  edgeIds[2] = writeOffset + axis_sums[3][AxisToSum::xindex];
+  edgeIds[3] = writeOffset + axis_sums[2][AxisToSum::xindex];
+  edgeIds[4] = writeOffset + axis_sums[0][AxisToSum::yindex]; // y-edges
   edgeIds[5] = edgeIds[4] + edgeUses[4];
-  edgeIds[6] = axis_sums[3][AxisToSum::yindex];
+  edgeIds[6] = writeOffset + axis_sums[3][AxisToSum::yindex];
   edgeIds[7] = edgeIds[6] + edgeUses[6];
-  edgeIds[8] = axis_sums[0][AxisToSum::zindex]; // z-edges
+  edgeIds[8] = writeOffset + axis_sums[0][AxisToSum::zindex]; // z-edges
   edgeIds[9] = edgeIds[8] + edgeUses[8];
-  edgeIds[10] = axis_sums[1][AxisToSum::zindex];
+  edgeIds[10] = writeOffset + axis_sums[1][AxisToSum::zindex];
   edgeIds[11] = edgeIds[10] + edgeUses[10];
 }
 
@@ -121,19 +122,24 @@ VTKM_EXEC inline void advance_voxelIds(vtkm::UInt8 const* const edgeUses, vtkm::
   edgeIds[11] = edgeIds[10] + edgeUses[11];
 }
 
-
-
 template <typename T, typename AxisToSum>
 struct ComputePass4 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 
   vtkm::Id3 PointDims;
   T IsoValue;
+  vtkm::Id CellWriteOffset;
+  vtkm::Id PointWriteOffset;
 
   ComputePass4() {}
-  ComputePass4(T value, const vtkm::Id3& pdims)
+  ComputePass4(T value,
+               const vtkm::Id3& pdims,
+               vtkm::Id multiContourCellOffset,
+               vtkm::Id multiContourPointOffset)
     : PointDims(pdims)
     , IsoValue(value)
+    , CellWriteOffset(multiContourCellOffset)
+    , PointWriteOffset(multiContourPointOffset)
   {
   }
 
@@ -176,12 +182,13 @@ struct ComputePass4 : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
     //This works as cellTriCount was computed with ScanExtended
     //and therefore has one more entry than the number of cells
-    vtkm::Int32 cell_tri_offset = cellTriCount.Get(oidx);
-    vtkm::Int32 next_tri_offset = cellTriCount.Get(oidx + 1);
+    vtkm::Id cell_tri_offset = cellTriCount.Get(oidx);
+    vtkm::Id next_tri_offset = cellTriCount.Get(oidx + 1);
     if (cell_tri_offset == next_tri_offset)
     { //we produce nothing
       return;
     }
+    cell_tri_offset += this->CellWriteOffset;
 
     // find adjusted trim values.
     vtkm::Id left = vtkm::Min(axis_mins[0], axis_mins[1]);
@@ -242,7 +249,7 @@ struct ComputePass4 : public vtkm::worklet::WorkletVisitCellsWithPoints
     const vtkm::Id3 increments = compute_incs3d(pdims);
     vtkm::Id edgeIds[12];
     auto edgeCase = getEdgeCase(edges, startPos, (axis_inc * left));
-    init_voxelIds(AxisToSum{}, edgeCase, axis_sums, edgeIds);
+    init_voxelIds(AxisToSum{}, this->PointWriteOffset, edgeCase, axis_sums, edgeIds);
     for (vtkm::Id i = left; i < right; ++i) // run along the trimmed voxels
     {
       ijk[AxisToSum::xindex] = i;
