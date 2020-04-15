@@ -21,6 +21,8 @@ set(headers
   EulerTour.h
   PointerDoubling.h
   SweepHyperarcs.h
+  PrefixScanHyperarcs.h
+  AddDependentWeightHypersweep.h
  )
 
 #-----------------------------------------------------------------------------

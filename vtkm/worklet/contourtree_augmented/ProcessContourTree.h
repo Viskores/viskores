@@ -55,6 +55,7 @@
 #define vtk_m_worklet_contourtree_augmented_process_contourtree_h
 
 // global includes
+#include "vtkm/BinaryOperators.h"
 #include "vtkm/cont/ArrayHandle.h"
 #include <algorithm>
 #include <iomanip>
@@ -80,14 +81,17 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/SuperNodeBranchComparator.h>
 
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/AddDependentWeightHypersweep.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeBestUpDown.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourFirstNext.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/PrefixScanHyperarcs.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/SweepHyperarcs.h>
 
+//#define DEBUG_PRINT
 
 
 namespace process_contourtree_inc_ns =
@@ -1135,7 +1139,7 @@ public:
   void static ComputeHeightBranchDecompositionNew(const ContourTree& contourTree,
                                                   const cont::ArrayHandle<Float64> fieldValues,
                                                   const IdArrayType& ctSortOrder,
-                                                  const bool useParallelMinMaxSearch,
+                                                  const bool printTime,
                                                   const vtkm::Id nIterations,
                                                   IdArrayType& whichBranch,
                                                   IdArrayType& branchMinimum,
@@ -1152,80 +1156,78 @@ public:
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
 
-    // STAGE I:  Find the upward and downwards weight for each superarc, and set up arrays
-    IdArrayType bestUpward;
-    IdArrayType bestDownward;
+    // Set up bestUpward and bestDownward array, these are the things we want to compute in this routine.
+    IdArrayType bestUpward, bestDownward;
     vtkm::cont::ArrayCopy(noSuchElementArray, bestUpward);
     vtkm::cont::ArrayCopy(noSuchElementArray, bestDownward);
 
-    IdArrayType minValues, minParents, maxValues, maxParents;
-    vtkm::cont::ArrayCopy(contourTree.Superarcs, minParents);
-    vtkm::cont::ArrayCopy(contourTree.Superarcs, maxParents);
+    // maxValues and minValues store the values from the max and min hypersweep respectively.
+    IdArrayType minValues, maxValues;
     vtkm::cont::ArrayCopy(noSuchElementArray, maxValues);
     vtkm::cont::ArrayCopy(noSuchElementArray, minValues);
 
+    // Store the direction of the superarcs in the min and max hypersweep (find a way to get rid of these, the only differing direction is on the path from the root to the min/max).
+    IdArrayType minParents, maxParents;
+    vtkm::cont::ArrayCopy(contourTree.Superarcs, minParents);
+    vtkm::cont::ArrayCopy(contourTree.Superarcs, maxParents);
+
+    // Cache the glonal minimum and global maximum (these will be the roots in the min and max hypersweep)
     Id minSuperNode = MaskedIndex(contourTree.Superparents.ReadPortal().Get(0));
     Id maxSuperNode = MaskedIndex(
       contourTree.Superparents.ReadPortal().Get(contourTree.Nodes.GetNumberOfValues() - 1));
 
     timer.Stop();
     vtkm::Float64 ellapsedTime = timer.GetElapsedTime();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds."
+                << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
 
-    //
-    // Find the path from the global minimum to the root
-    //
+    // Find the path from the global minimum to the root, not parallelisable (but it's fast, no need to parallelise)
     auto minPath = findSuperPathToRoot(contourTree.Superarcs.ReadPortal(), minSuperNode);
 
-    //
-    // Find the path from the global minimum to the root
-    //
+    // Find the path from the global minimum to the root, not parallelisable (but it's fast, no need to parallelise)
     auto maxPath = findSuperPathToRoot(contourTree.Superarcs.ReadPortal(), maxSuperNode);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Finding min/max paths to the root took "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Finding min/max paths to the root took "
+                << timer.GetElapsedTime() << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
-    //
-    // Reroot to the global min. Trivially Parallel.
-    //
-    for (decltype(minPath.size()) i = 1; i < minPath.size(); i++)
-    //for (vtkm::Id n = minPath.size(),  i = 1 ; i < n ; i++)
+
+    // Reserve the direction of the superarcs on the min path.
+    for (uint i = 1; i < minPath.size(); i++)
     {
       minParents.WritePortal().Set(minPath[i], minPath[i - 1]);
     }
     minParents.WritePortal().Set(minPath[0], 0);
 
-    //
-    // Reroot to the global max. Trivially Parallel.
-    //
-    for (vtkm::Id i = 1; i < maxPath.size(); i++)
+    // Reserve the direction of the superarcs on the max path.
+    for (uint i = 1; i < maxPath.size(); i++)
     {
       maxParents.WritePortal().Set(maxPath[i], maxPath[i - 1]);
     }
     maxParents.WritePortal().Set(maxPath[0], 0);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds."
+                << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
-    //
-    // Set an initial value, suppose every vertex is its own min/max. Trivially Parallel.
-    //
+
+    // Set an initial value, suppose every vertex is its own min/max. Trivially Parallel. @TODO REmove this, set in one line.
     for (vtkm::Id i = 0; i < minValues.GetNumberOfValues(); i++)
     {
       const auto value = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(i));
@@ -1233,10 +1235,12 @@ public:
       maxValues.WritePortal().Set(i, value);
     }
 
+    // Thse arrays hold the changes hyperarcs in the min and max hypersweep respectively
     vtkm::cont::ArrayHandle<vtkm::Id> minHyperarcs, maxHyperarcs;
     vtkm::cont::ArrayCopy(contourTree.Hyperarcs, minHyperarcs);
     vtkm::cont::ArrayCopy(contourTree.Hyperarcs, maxHyperarcs);
 
+    // These arrays hold the number of nodes in each hypearcs that are on the min or max path for the min and max hypersweep respectively.
     vtkm::cont::ArrayHandle<vtkm::Id> minHowManyUsed, maxHowManyUsed;
     vtkm::cont::ArrayCopy(
       vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, maxHyperarcs.GetNumberOfValues()),
@@ -1245,15 +1249,12 @@ public:
       vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, maxHyperarcs.GetNumberOfValues()),
       maxHowManyUsed);
 
-    // Wrapper for std min & max
-    auto minOperator = vtkm::Minimum();
-    auto maxOperator = vtkm::Maximum();
-
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
@@ -1268,58 +1269,59 @@ public:
                   maxHowManyUsed.WritePortal());
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Editing hyperarcs took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- HS ---------------- Editing hyperarcs took "
+                << timer.GetElapsedTime() << " seconds." << std::endl;
+    }
 
     // Parallelisable with the HS
-
-
     timer.Reset();
     timer.Start();
 
-    // Parallelisable with the HS
-    findMinMaxNewSimple<decltype(minOperator)>(contourTree.Supernodes,
-                                               contourTree.Hypernodes,
-                                               minHyperarcs,
-                                               contourTree.Hyperparents,
-                                               contourTree.WhenTransferred,
-                                               minHowManyUsed,
-                                               nIterations,
-                                               minOperator,
-                                               minValues);
+    // Minimum Hypersweep on the edited minHyperarcs
+    findMinMaxNewSimple<decltype(vtkm::Minimum())>(contourTree.Supernodes,
+                                                   contourTree.Hypernodes,
+                                                   minHyperarcs,
+                                                   contourTree.Hyperparents,
+                                                   contourTree.WhenTransferred,
+                                                   minHowManyUsed,
+                                                   nIterations,
+                                                   vtkm::Minimum(),
+                                                   minValues);
 
-    // Parallelisable with the HS
-    findMinMaxNewSimple<decltype(maxOperator)>(contourTree.Supernodes,
-                                               contourTree.Hypernodes,
-                                               maxHyperarcs,
-                                               contourTree.Hyperparents,
-                                               contourTree.WhenTransferred,
-                                               maxHowManyUsed,
-                                               nIterations,
-                                               maxOperator,
-                                               maxValues);
+    // Maximum Hypersweep on the edited minHyperarcs
+    findMinMaxNewSimple<decltype(vtkm::Maximum())>(contourTree.Supernodes,
+                                                   contourTree.Hypernodes,
+                                                   maxHyperarcs,
+                                                   contourTree.Hyperparents,
+                                                   contourTree.WhenTransferred,
+                                                   maxHowManyUsed,
+                                                   nIterations,
+                                                   vtkm::Maximum(),
+                                                   maxValues);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Finding min/max took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- HS ---------------- Finding min/max took "
+                << timer.GetElapsedTime() << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
 
     // Parallel via prefix scan
-    fixPath(minOperator, minPath, minValues.WritePortal());
+    fixPath(vtkm::Minimum(), minPath, minValues.WritePortal());
 
-    fixPath(maxOperator, maxPath, maxValues.WritePortal());
+    fixPath(vtkm::Maximum(), maxPath, maxValues.WritePortal());
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Fixing path took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- HS ---------------- Fixing path took "
+                << timer.GetElapsedTime() << " seconds." << std::endl;
+    }
 
     // Not parallelisable. Needs the HS
     //ProcessContourTree::findMinMaxNew(
@@ -1374,10 +1376,11 @@ public:
     }
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Incorporating parent took " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Incorporating parent took " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     //for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
     //{
@@ -1455,10 +1458,11 @@ public:
     }
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
@@ -1492,10 +1496,11 @@ public:
     }
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Setting subtree min/max " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Setting subtree min/max " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
@@ -1514,10 +1519,11 @@ public:
     }
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     timer.Reset();
     timer.Start();
@@ -1549,10 +1555,11 @@ public:
     });
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds."
+                << std::endl;
+    }
 
     //for (int i = 0 ; i < arcs.size() ; i++)
     //{
@@ -1597,10 +1604,11 @@ public:
     }
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime()
+                << " seconds." << std::endl;
+    }
 
     //for (int i = 0 ; i < bestUpward.GetNumberOfValues() ; i++)
     //{
@@ -1622,10 +1630,11 @@ public:
 
     timer.Stop();
     ellapsedTime = timer.GetElapsedTime();
-#ifdef DEBUG_PRINT
-    std::cout << "---------------- Computing branch data too  " << ellapsedTime << " seconds."
-              << std::endl;
-#endif
+    if (true == printTime)
+    {
+      std::cout << "---------------- Computing branch data too  " << ellapsedTime << " seconds."
+                << std::endl;
+    }
 
     //printf("Working!");
 
@@ -1734,7 +1743,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType parentsPortal,
     vtkm::Id vertex)
   {
-    // Initialise things
+    // Initialise the empty path and starting vertex
     std::vector<vtkm::Id> path;
     vtkm::Id current = vertex;
 
@@ -1876,84 +1885,104 @@ public:
     // Set the sentinel at the end of the array
     firstHypernodePerIterationPortal.Set(nIterations, hypernodesPortal.GetNumberOfValues());
 
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::PrefixScanHyperarcs<
+      BinaryFunctor>
+      prefixScanHyperarcsWorklet(operation);
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::AddDependentWeightHypersweep<
+      BinaryFunctor>
+      addDependentWeightHypersweepWorklet(operation);
+
     //
     // For every iteration do prefix scan on all hyperarcs and then transfer to their target supernode
     //
     for (vtkm::Id iteration = 0; iteration < nIterations; iteration++)
     {
+      // Determine the first and last hypernode in the current iteration (all hypernodes between them are also in the current iteration)
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
+
+      // Array containing the Ids of the hyperarcs in the current iteration
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> iterationHyperarcs(
+        firstHypernode, 1, lastHypernode - firstHypernode);
+
+      // Prefix scan along all hyperarcs in the current iteration, @TODO This does not do a prefix sum yet, figure it out.
+      vtkm::cont::Invoker Invoke;
+      Invoke(prefixScanHyperarcsWorklet, iterationHyperarcs, hypernodes, howManyUsed, minMaxIndex);
+
+      // Transfer the value accumulated in the last entry of the prefix scan to the hypernode's targe supernode
+      Invoke(addDependentWeightHypersweepWorklet,
+             iterationHyperarcs,
+             hypernodes,
+             hyperarcs,
+             howManyUsed,
+             minMaxIndex);
+
+
+
 
       //
       // For every hyperarc in the current iteration. Parallel.
       //
-      for (Id i = firstHypernode; i < lastHypernode; i++)
-      {
-        // If it's the last hyperacs (there's nothing to do it's just the root)
-        if (i >= hypernodesPortal.GetNumberOfValues() - 1)
-        {
-          continue;
-        }
+      //for (Id i = firstHypernode; i < lastHypernode; i++)
+      //{
+      //// If it's the last hyperacs (there's nothing to do it's just the root)
+      //if (i >= hypernodesPortal.GetNumberOfValues() - 1) { continue; }
 
-        vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(i));
-        vtkm::Id lastSupernode =
-          MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
+      //vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(i));
+      //vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
 
-        //
-        // Prefix scan along the hyperarc chain. Parallel prefix scan.
-        //
-        int threshold = 100;
-        if (lastSupernode - firstSupernode > threshold)
-        {
-          auto subarray = vtkm::cont::make_ArrayHandleView(
-            minMaxIndex, firstSupernode, lastSupernode - firstSupernode);
-          vtkm::cont::Algorithm::ScanInclusive(subarray, subarray, operation);
-        }
+      ////
+      //// Prefix scan along the hyperarc chain. Parallel prefix scan.
+      ////
+      //int threshold = 1000;
+      //if (lastSupernode - firstSupernode > threshold)
+      //{
+      //auto subarray = vtkm::cont::make_ArrayHandleView(minMaxIndex, firstSupernode, lastSupernode - firstSupernode);
+      //vtkm::cont::Algorithm::ScanInclusive(subarray, subarray, operation);
+      //}
 
-        else
-        {
-          for (Id j = firstSupernode + 1; j < lastSupernode; j++)
-          {
-            Id vertex = j - 1;
-            Id parent = j;
+      //else
+      //{
+      //for (Id j = firstSupernode + 1; j < lastSupernode; j++)
+      //{
+      //Id vertex = j - 1;
+      //Id parent = j;
 
-            Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
-            Id parentValue = minMaxIndex.ReadPortal().Get(parent);
+      //Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
+      //Id parentValue = minMaxIndex.ReadPortal().Get(parent);
 
-            minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
-          }
-        }
-      }
+      //minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
+      //}
+      //}
+      //}
 
       //
-      // Serial, but can be made parallel if we sort the hypearcs by destination and do a prefix sum on the destination. The only problem is that figuring that out requries a serial pass anyway.
+      // Serial, but can be made parallel if we sort the hypearcs by destination and do a prefix sum on the destination.
+      // The only problem is that figuring that out requries a serial pass anyway.
       // So we might as well do all of it in serial.
+      // Furthermore the degree of the mesh is limiting this.
       //
-      for (Id i = firstHypernode; i < lastHypernode; i++)
-      {
-        // If it's the last hyperacs (there's nothing to do it's just the root)
-        if (i >= hypernodesPortal.GetNumberOfValues() - 1)
-        {
-          continue;
-        }
+      //for (Id i = firstHypernode; i < lastHypernode; i++)
+      //{
+      //// If it's the last hyperacs (there's nothing to do it's just the root)
+      //if (i >= hypernodesPortal.GetNumberOfValues() - 1) { continue; }
 
-        //
-        // The value of the prefix scan is now accumulated in the last supernode of the hyperarc. Transfer is to the target
-        //
-        vtkm::Id lastSupernode =
-          MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
+      ////
+      //// The value of the prefix scan is now accumulated in the last supernode of the hyperarc. Transfer is to the target
+      ////
+      //vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
 
-        //
-        // Transfer the accumulated value to the target supernode
-        //
-        Id vertex = lastSupernode - 1;
-        Id parent = MaskedIndex(hyperarcsPortal.Get(i));
+      ////
+      //// Transfer the accumulated value to the target supernode
+      ////
+      //Id vertex = lastSupernode - 1;
+      //Id parent = MaskedIndex(hyperarcsPortal.Get(i));
 
-        Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
-        Id parentValue = minMaxIndex.ReadPortal().Get(parent);
+      //Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
+      //Id parentValue = minMaxIndex.ReadPortal().Get(parent);
 
-        minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
-      }
+      //minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
+      //}
     }
   }
 
