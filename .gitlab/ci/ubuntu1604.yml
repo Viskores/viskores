@@ -60,9 +60,7 @@ build:ubuntu1604_gcc48:
     - docker
     - linux
   extends:
-    #Requires the cuda docker image as it uses a sufficiently new
-    #enough CMake version that supports mpi
-    - .ubuntu1604_cuda
+    - .ubuntu1604
     - .cmake_build_linux
     - .only-default
   variables:
