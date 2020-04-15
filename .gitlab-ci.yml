@@ -137,7 +137,7 @@ stages:
 
 .cmake_test_linux: &cmake_test_linux
   stage: test
-  timeout:  30 minutes
+  timeout:  50 minutes
   interruptible: true
   script:
     #Need to use our custom ctest-latest symlink
