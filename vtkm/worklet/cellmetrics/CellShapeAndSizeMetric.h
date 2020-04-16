@@ -57,7 +57,7 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
                                          const PointCoordVecType& pts,
                                          const OutType& avgArea,
                                          CellShapeType shape,
-                                         const vtkm::exec::FunctorBase&)
+                                         vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -73,11 +73,11 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
                                          const PointCoordVecType& pts,
                                          const OutType& avgArea,
                                          vtkm::CellShapeTagTriangle tag,
-                                         const vtkm::exec::FunctorBase& worklet)
+                                         vtkm::ErrorCode& ec)
 {
   OutType rss = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-    numPts, pts, avgArea, tag, worklet);
-  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, worklet);
+    numPts, pts, avgArea, tag, ec);
+  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, ec);
   OutType q = rss * shape;
   return OutType(q);
 }
@@ -87,11 +87,11 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
                                          const PointCoordVecType& pts,
                                          const OutType& avgArea,
                                          vtkm::CellShapeTagQuad tag,
-                                         const vtkm::exec::FunctorBase& worklet)
+                                         vtkm::ErrorCode& ec)
 {
   OutType rss = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-    numPts, pts, avgArea, tag, worklet);
-  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, worklet);
+    numPts, pts, avgArea, tag, ec);
+  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, ec);
   OutType q = rss * shape;
   return OutType(q);
 }
@@ -103,11 +103,11 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
                                          const PointCoordVecType& pts,
                                          const OutType& avgVolume,
                                          vtkm::CellShapeTagTetra tag,
-                                         const vtkm::exec::FunctorBase& worklet)
+                                         vtkm::ErrorCode& ec)
 {
   OutType rss = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-    numPts, pts, avgVolume, tag, worklet);
-  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, worklet);
+    numPts, pts, avgVolume, tag, ec);
+  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, ec);
   OutType q = rss * shape;
   return OutType(q);
 }
@@ -117,11 +117,11 @@ VTKM_EXEC OutType CellShapeAndSizeMetric(const vtkm::IdComponent& numPts,
                                          const PointCoordVecType& pts,
                                          const OutType& avgVolume,
                                          vtkm::CellShapeTagHexahedron tag,
-                                         const vtkm::exec::FunctorBase& worklet)
+                                         vtkm::ErrorCode& ec)
 {
   OutType rss = vtkm::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
-    numPts, pts, avgVolume, tag, worklet);
-  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, worklet);
+    numPts, pts, avgVolume, tag, ec);
+  OutType shape = vtkm::worklet::cellmetrics::CellShapeMetric<OutType>(numPts, pts, tag, ec);
   OutType q = rss * shape;
   return OutType(q);
 }

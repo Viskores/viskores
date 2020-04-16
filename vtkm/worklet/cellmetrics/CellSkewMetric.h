@@ -43,12 +43,12 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellSkewMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  CellShapeType shape,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
   UNUSED(shape);
-  UNUSED(worklet);
+  UNUSED(ec);
   return OutType(-1.0);
 }
 
@@ -56,10 +56,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellSkewMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  vtkm::CellShapeTagHexahedron,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
   using Scalar = OutType;
   using Vector = typename PointCoordVecType::ComponentType;
   Vector X1 = (pts[1] - pts[0]) + (pts[2] - pts[3]) + (pts[5] - pts[4]) + (pts[6] - pts[7]);
@@ -84,10 +84,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellSkewMetric(const vtkm::IdComponent& numPts,
                                  const PointCoordVecType& pts,
                                  vtkm::CellShapeTagQuad,
-                                 const vtkm::exec::FunctorBase& worklet)
+                                 vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;
   using Vector = typename PointCoordVecType::ComponentType;
