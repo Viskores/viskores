@@ -56,6 +56,7 @@
 
 // global includes
 #include "vtkm/BinaryOperators.h"
+#include "vtkm/BinaryPredicates.h"
 #include "vtkm/cont/ArrayHandle.h"
 #include <algorithm>
 #include <iomanip>
@@ -87,6 +88,7 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeEulerTourList.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/ComputeMinMaxValues.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/EulerTour.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/HypwersweepWorklets.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PrefixScanHyperarcs.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/SweepHyperarcs.h>
@@ -1279,6 +1281,9 @@ public:
     timer.Reset();
     timer.Start();
 
+    const auto minOperator = vtkm::Minimum();
+    const auto maxOperator = vtkm::Maximum();
+
     // Minimum Hypersweep on the edited minHyperarcs
     findMinMaxNewSimple<decltype(vtkm::Minimum())>(contourTree.Supernodes,
                                                    contourTree.Hypernodes,
@@ -1343,37 +1348,44 @@ public:
     timer.Reset();
     timer.Start();
 
-    //
-    // Incorporate the edge into the max subtree, Parallelisable. No HS
-    //
-    for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
-    {
-      Id parent = MaskedIndex(maxParents.ReadPortal().Get(i));
+    vtkm::cont::Invoker Invoke;
 
-      Id subtreeValue = maxValues.ReadPortal().Get(i);
-      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
+    //vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateEdge<decltype(vtkm::Minimum())> minIncorporateEdge(minOperator);
+    //vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateEdge<decltype(vtkm::Maximum())> maxIncorporateEdge(maxOperator);
 
-      if (parentValue > subtreeValue)
-      {
-        maxValues.WritePortal().Set(i, parentValue);
-      }
-    }
+    //Invoke(maxIncorporateEdge,
+    //maxParents,
+    //contourTree.Supernodes,
+    //maxValues
+    //);
+    //Invoke(minIncorporateEdge,
+    //minParents,
+    //contourTree.Supernodes,
+    //minValues
+    //);
+
+    //for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
+    //{
+    //Id parent = MaskedIndex(maxParents.ReadPortal().Get(i));
+
+    //Id subtreeValue = maxValues.ReadPortal().Get(i);
+    //Id parentValue  = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
+
+    //maxValues.WritePortal().Set(i, vtkm::Maximum()(subtreeValue, parentValue));
+    //}
 
     //
     // Incorporate the edge into the min subtree, Parallelisable. No HS
     //
-    for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
-    {
-      Id parent = MaskedIndex(minParents.ReadPortal().Get(i));
+    //for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
+    //{
+    //Id parent = MaskedIndex(minParents.ReadPortal().Get(i));
 
-      Id subtreeValue = minValues.ReadPortal().Get(i);
-      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
+    //Id subtreeValue = minValues.ReadPortal().Get(i);
+    //Id parentValue  = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
 
-      if (parentValue < subtreeValue)
-      {
-        minValues.WritePortal().Set(i, parentValue);
-      }
-    }
+    //minValues.WritePortal().Set(i, vtkm::Minimum()(subtreeValue, parentValue));
+    //}
 
     timer.Stop();
     if (true == printTime)
@@ -1393,20 +1405,49 @@ public:
     //{
     //printf("The min value in the subtree defined by the edge (%lld, %lld) is %lld.\n", i, maskedIndex(minParents.GetPortalConstControl().Get(i)), minValues.GetPortalConstControl().Get(i));
     //}
+
     //
     // Make array for each arc (i, j, subtreeHeight, subtreeMin), then for with that first and second criteria
     //
-    struct EdgeData
+    class EdgeData
     {
+    public:
       Id i;
       Id j;
       Id subtreeMin;
       Id subtreeMax;
       bool upEdge;
       Float64 subtreeHeight;
+
+      bool operator<(const EdgeData& b) const
+      {
+        if (this->i == b.i)
+        {
+          if (this->upEdge == b.upEdge)
+          {
+            if (this->subtreeHeight == b.subtreeHeight)
+            {
+              return this->subtreeMin < b.subtreeMin;
+            }
+            else
+            {
+              return this->subtreeHeight > b.subtreeHeight;
+            }
+          }
+          else
+          {
+            return this->upEdge < b.upEdge;
+          }
+        }
+        else
+        {
+          return this->i < b.i;
+        }
+      }
     };
-    //std::vector<EdgeData> arcs(contourTree.Superarcs.GetNumberOfValues()*2 - 2);
-    std::vector<EdgeData> arcs;
+
+    vtkm::cont::ArrayHandle<EdgeData> arcs;
+    arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     timer.Reset();
     timer.Start();
@@ -1414,6 +1455,7 @@ public:
     //
     // Set arc endpoints. Parallelisable. No HS.
     //
+    int edges = 0;
     for (vtkm::Id i = 0; i < contourTree.Superarcs.GetNumberOfValues(); i++)
     {
       Id parent = MaskedIndex(contourTree.Superarcs.ReadPortal().Get(i));
@@ -1424,38 +1466,47 @@ public:
       EdgeData edge;
       edge.i = i;
       edge.j = parent;
+      edge.upEdge = IsAscending((contourTree.Superarcs.ReadPortal().Get(i)));
 
       EdgeData oppositeEdge;
       oppositeEdge.i = parent;
       oppositeEdge.j = i;
+      oppositeEdge.upEdge = !edge.upEdge;
 
-      //arcs[2*i] = edge;
-      //arcs[2*i + 1] = oppositeEdge;
 
-      arcs.push_back(edge);
-      arcs.push_back(oppositeEdge);
+      // Is it in the direction of the minRootedTree?
+      if (MaskedIndex(minParents.ReadPortal().Get(edge.j)) == edge.i)
+      {
+        edge.subtreeMin = minValues.ReadPortal().Get(edge.j);
+        oppositeEdge.subtreeMin = 0;
+      }
+      else
+      {
+        oppositeEdge.subtreeMin = minValues.ReadPortal().Get(oppositeEdge.j);
+        edge.subtreeMin = 0;
+      }
+
+      // Is it in the direction of the maxRootedTree?
+      if (MaskedIndex(maxParents.ReadPortal().Get(edge.j)) == edge.i)
+      {
+        edge.subtreeMax = maxValues.ReadPortal().Get(edge.j);
+        oppositeEdge.subtreeMax = contourTree.Arcs.GetNumberOfValues() - 1;
+      }
+      else
+      {
+        oppositeEdge.subtreeMax = maxValues.ReadPortal().Get(oppositeEdge.j);
+        edge.subtreeMax = contourTree.Arcs.GetNumberOfValues() - 1;
+      }
+
+      // We cannot use i here because one of the vertices is skipped (the root one and we don't know where it is)
+      arcs.WritePortal().Set(edges++, edge);
+      arcs.WritePortal().Set(edges++, oppositeEdge);
     }
 
 
     //
     // Set whether an arc is up or down arcs. Parallelisable. No HS.
     //
-    for (vtkm::Id i = 0; i < arcs.size(); i++)
-    {
-      EdgeData edge = arcs[i];
-
-      Id iRegularId = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(edge.i));
-      Id jRegularId = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(edge.j));
-
-      if (iRegularId < jRegularId)
-      {
-        arcs[i].upEdge = true;
-      }
-      else
-      {
-        arcs[i].upEdge = false;
-      }
-    }
 
     timer.Stop();
     if (true == printTime)
@@ -1468,54 +1519,26 @@ public:
     timer.Start();
 
     //
-    // Set the min and max for every subtree defined by an arc. Parallelisable. No HS.
-    //
-    for (vtkm::Id i = 0; i < arcs.size(); i++)
-    {
-      EdgeData edge = arcs[i];
-
-      // Is it in the direction of the minRootedTree?
-      if (MaskedIndex(minParents.ReadPortal().Get(edge.j)) == edge.i)
-      {
-        arcs[i].subtreeMin = minValues.ReadPortal().Get(edge.j);
-      }
-      else
-      {
-        arcs[i].subtreeMin = 0;
-      }
-
-      // Is it in the direction of the maxRootedTree?
-      if (MaskedIndex(maxParents.ReadPortal().Get(edge.j)) == edge.i)
-      {
-        arcs[i].subtreeMax = maxValues.ReadPortal().Get(edge.j);
-      }
-      else
-      {
-        arcs[i].subtreeMax = contourTree.Arcs.GetNumberOfValues() - 1;
-      }
-    }
-
-    timer.Stop();
-    if (true == printTime)
-    {
-      std::cout << "---------------- Setting subtree min/max " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
-    }
-
-    timer.Reset();
-    timer.Start();
-
-    //
     // Set subtree height based on the best min & max. Parallelisable.
     //
-    for (vtkm::Id i = 0; i < arcs.size(); i++)
+    for (vtkm::Id i = 0; i < arcs.GetNumberOfValues(); i++)
     {
-      Float64 minIsoval =
-        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(arcs[i].subtreeMin));
-      Float64 maxIsoval =
-        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(arcs[i].subtreeMax));
+      EdgeData edge = arcs.ReadPortal().Get(i);
 
-      arcs[i].subtreeHeight = maxIsoval - minIsoval;
+      Float64 minIsoval =
+        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(edge.subtreeMin));
+      Float64 maxIsoval =
+        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(edge.subtreeMax));
+      Float64 vertexIsoval = fieldValues.ReadPortal().Get(
+        ctSortOrder.ReadPortal().Get(contourTree.Supernodes.ReadPortal().Get(edge.i)));
+
+      // We need to incorporate the value of the vertex into the height of the tree (otherwise leafs edges have 0 persistence)
+      minIsoval = minOperator(minIsoval, vertexIsoval);
+      maxIsoval = maxOperator(maxIsoval, vertexIsoval);
+
+      edge.subtreeHeight = maxIsoval - minIsoval;
+
+      arcs.WritePortal().Set(i, edge);
     }
 
     timer.Stop();
@@ -1528,31 +1551,7 @@ public:
     timer.Reset();
     timer.Start();
 
-    // Sort Criteria a.i, a.upEdge, a.subtreeHeight, a.subtreeMin. Parallelisable.
-    std::sort(arcs.begin(), arcs.end(), [](const EdgeData& a, const EdgeData& b) {
-      if (a.i == b.i)
-      {
-        if (a.upEdge == b.upEdge)
-        {
-          if (a.subtreeHeight == b.subtreeHeight)
-          {
-            return a.subtreeMin < b.subtreeMin;
-          }
-          else
-          {
-            return a.subtreeHeight > b.subtreeHeight;
-          }
-        }
-        else
-        {
-          return a.upEdge < b.upEdge;
-        }
-      }
-      else
-      {
-        return a.i < b.i;
-      }
-    });
+    vtkm::cont::Algorithm::Sort(arcs, vtkm::SortLess());
 
     timer.Stop();
     if (true == printTime)
@@ -1561,44 +1560,38 @@ public:
                 << std::endl;
     }
 
-    //for (int i = 0 ; i < arcs.size() ; i++)
-    //{
-    //if (i > 0 && arcs[i].i != arcs[i-1].i)
-    //{
-    //std::cout << std::endl;
-    //}
-    //printf ("Arc (%2lld, %2lld) has upEdge %1d, has subtreeMin = %2lld, subtreeMax = %2lld, and subtreeHeight = %f.\n", arcs[i].i, arcs[i].j, arcs[i].upEdge, arcs[i].subtreeMin, arcs[i].subtreeMax, arcs[i].subtreeHeight);
-    //}
-
     timer.Reset();
     timer.Start();
 
     //
     // Set bestUp and bestDown. Parallelisable
     //
-    for (vtkm::Id i = 0; i < arcs.size(); i++)
+    for (vtkm::Id i = 0; i < arcs.GetNumberOfValues(); i++)
     {
       if (i == 0)
       {
-        if (arcs[0].upEdge == 0)
+        if (arcs.ReadPortal().Get(0).upEdge == 0)
         {
-          bestDownward.WritePortal().Set(arcs[0].i, arcs[0].j);
+          bestDownward.WritePortal().Set(arcs.ReadPortal().Get(0).i, arcs.ReadPortal().Get(0).j);
         }
         else
         {
-          bestUpward.WritePortal().Set(arcs[0].i, arcs[0].j);
+          bestUpward.WritePortal().Set(arcs.ReadPortal().Get(0).i, arcs.ReadPortal().Get(0).j);
         }
       }
       else
       {
-        if (arcs[i].upEdge == 0 && arcs[i].i != arcs[i - 1].i)
+        if (arcs.ReadPortal().Get(i).upEdge == 0 &&
+            arcs.ReadPortal().Get(i).i != arcs.ReadPortal().Get(i - 1).i)
         {
-          bestDownward.WritePortal().Set(arcs[i].i, arcs[i].j);
+          bestDownward.WritePortal().Set(arcs.ReadPortal().Get(i).i, arcs.ReadPortal().Get(i).j);
         }
 
-        if (arcs[i].upEdge == 1 && (arcs[i].i != arcs[i - 1].i || arcs[i - 1].upEdge == 0))
+        if (arcs.ReadPortal().Get(i).upEdge == 1 &&
+            (arcs.ReadPortal().Get(i).i != arcs.ReadPortal().Get(i - 1).i ||
+             arcs.ReadPortal().Get(i - 1).upEdge == 0))
         {
-          bestUpward.WritePortal().Set(arcs[i].i, arcs[i].j);
+          bestUpward.WritePortal().Set(arcs.ReadPortal().Get(i).i, arcs.ReadPortal().Get(i).j);
         }
       }
     }
@@ -1901,19 +1894,21 @@ public:
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
 
-      // Prefix scan along all hyperarcs in the current iteration
-      auto subarray = vtkm::cont::make_ArrayHandleView(
-        minMaxIndex, firstHypernode, lastHypernode - firstHypernode);
-      auto subarrayKeys = vtkm::cont::make_ArrayHandleView(
-        hyperparents, firstHypernode, lastHypernode - firstHypernode);
-      vtkm::cont::Algorithm::ScanInclusiveByKey(subarray, subarrayKeys, subarray, operation);
-
       // Array containing the Ids of the hyperarcs in the current iteration
       vtkm::cont::ArrayHandleCounting<vtkm::Id> iterationHyperarcs(
         firstHypernode, 1, lastHypernode - firstHypernode);
 
-      // Transfer the value accumulated in the last entry of the prefix scan to the hypernode's targe supernode
+      // Prefix scan along all hyperarcs in the current iteration, @TODO This does not do a prefix sum yet, figure it out.
       vtkm::cont::Invoker Invoke;
+      Invoke(prefixScanHyperarcsWorklet, iterationHyperarcs, hypernodes, howManyUsed, minMaxIndex);
+
+      // Prefix scan along all hyperarcs in the current iteration
+      //auto subarrayValues = vtkm::cont::make_ArrayHandleView(minMaxIndex, firstHypernode, lastHypernode - firstHypernode);
+      //auto subarrayKeys = vtkm::cont::make_ArrayHandleView(hyperparents, firstHypernode, lastHypernode - firstHypernode);
+      //vtkm::cont::Algorithm::ScanInclusiveByKey(subarrayKeys, subarrayValues, subarrayValues, operation);
+
+      // Transfer the value accumulated in the last entry of the prefix scan to the hypernode's targe supernode
+      //vtkm::cont::Invoker Invoke;
       Invoke(addDependentWeightHypersweepWorklet,
              iterationHyperarcs,
              hypernodes,

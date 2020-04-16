@@ -23,6 +23,7 @@ set(headers
   SweepHyperarcs.h
   PrefixScanHyperarcs.h
   AddDependentWeightHypersweep.h
+  HypwersweepWorklets.h
  )
 
 #-----------------------------------------------------------------------------
