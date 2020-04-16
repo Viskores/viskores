@@ -28,6 +28,10 @@ test:ubuntu1804_gcc9:
     - .ubuntu1804
     - .cmake_test_linux
     - .only-default
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
   dependencies:
     - build:ubuntu1804_gcc9
   needs:
@@ -98,6 +102,10 @@ test:ubuntu1804_gcc7_2:
     - .ubuntu1804
     - .cmake_test_linux
     - .only-master
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
   dependencies:
     - build:ubuntu1804_gcc7_2
   needs:
@@ -131,6 +139,10 @@ test:ubuntu1804_gcc6:
     - .ubuntu1804
     - .cmake_test_linux
     - .only-master
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 3
   dependencies:
     - build:ubuntu1804_gcc6
   needs:
