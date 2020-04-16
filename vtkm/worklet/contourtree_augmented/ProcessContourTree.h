@@ -1901,15 +1901,19 @@ public:
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
 
+      // Prefix scan along all hyperarcs in the current iteration
+      auto subarray = vtkm::cont::make_ArrayHandleView(
+        minMaxIndex, firstHypernode, lastHypernode - firstHypernode);
+      auto subarrayKeys = vtkm::cont::make_ArrayHandleView(
+        hyperparents, firstHypernode, lastHypernode - firstHypernode);
+      vtkm::cont::Algorithm::ScanInclusiveByKey(subarray, subarrayKeys, subarray, operation);
+
       // Array containing the Ids of the hyperarcs in the current iteration
       vtkm::cont::ArrayHandleCounting<vtkm::Id> iterationHyperarcs(
         firstHypernode, 1, lastHypernode - firstHypernode);
 
-      // Prefix scan along all hyperarcs in the current iteration, @TODO This does not do a prefix sum yet, figure it out.
-      vtkm::cont::Invoker Invoke;
-      Invoke(prefixScanHyperarcsWorklet, iterationHyperarcs, hypernodes, howManyUsed, minMaxIndex);
-
       // Transfer the value accumulated in the last entry of the prefix scan to the hypernode's targe supernode
+      vtkm::cont::Invoker Invoke;
       Invoke(addDependentWeightHypersweepWorklet,
              iterationHyperarcs,
              hypernodes,
