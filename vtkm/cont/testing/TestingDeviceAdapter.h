@@ -16,6 +16,7 @@
 
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -1703,6 +1704,57 @@ private:
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
+  static VTKM_CONT void TestScanInclusiveByKeyInPlace()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key In Place" << std::endl;
+
+
+    const vtkm::Id inputLength = 10;
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+    const vtkm::Id expectedLength = 10;
+    vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
+
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+
+    Algorithm::ScanInclusiveByKey(keys, values, values);
+    VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    for (auto i = 0; i < expectedLength; i++)
+    {
+      const vtkm::Id v = values.ReadPortal().Get(i);
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+    }
+  }
+  static VTKM_CONT void TestScanInclusiveByKeyInPlaceWithFancyArray()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key In Place with a Fancy Array" << std::endl;
+
+
+    const vtkm::Id inputLength = 10;
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+    const vtkm::Id expectedLength = 10;
+    vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
+
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    vtkm::cont::ArrayHandleCast<vtkm::FloatDefault, IdArrayHandle> castValues(values);
+
+    Algorithm::ScanInclusiveByKey(keys, castValues, castValues);
+    VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    for (auto i = 0; i < expectedLength; i++)
+    {
+      const vtkm::Id v = values.ReadPortal().Get(i);
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+    }
+  }
 
   static VTKM_CONT void TestScanExclusiveByKeyOne()
   {
@@ -1826,6 +1878,59 @@ private:
     for (vtkm::Id i = 0; i < expectedLength; i++)
     {
       const vtkm::Id v = valuesOut.ReadPortal().Get(i);
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+    }
+  }
+  static VTKM_CONT void TestScanExclusiveByKeyInPlace()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key In Place" << std::endl;
+
+
+    const vtkm::Id inputLength = 10;
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    vtkm::Id init = 5;
+
+    const vtkm::Id expectedLength = 10;
+    vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
+
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+
+    Algorithm::ScanExclusiveByKey(keys, values, values, init, vtkm::Add());
+    VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    for (auto i = 0; i < expectedLength; i++)
+    {
+      const vtkm::Id v = values.ReadPortal().Get(i);
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+    }
+  }
+  static VTKM_CONT void TestScanExclusiveByKeyInPlaceWithFancyArray()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key In Place with a Fancy Array" << std::endl;
+
+
+    const vtkm::Id inputLength = 10;
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    vtkm::FloatDefault init = 5;
+
+    const vtkm::Id expectedLength = 10;
+    vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
+
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    vtkm::cont::ArrayHandleCast<vtkm::FloatDefault, IdArrayHandle> castValues(values);
+
+    Algorithm::ScanExclusiveByKey(keys, castValues, castValues, init, vtkm::Add());
+    VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    for (auto i = 0; i < expectedLength; i++)
+    {
+      const vtkm::Id v = values.ReadPortal().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
@@ -2982,11 +3087,15 @@ private:
       TestScanInclusiveByKeyTwo();
       TestScanInclusiveByKeyLarge();
       TestScanInclusiveByKey();
+      TestScanInclusiveByKeyInPlace();
+      TestScanInclusiveByKeyInPlaceWithFancyArray();
 
       TestScanExclusiveByKeyOne();
       TestScanExclusiveByKeyTwo();
       TestScanExclusiveByKeyLarge();
       TestScanExclusiveByKey();
+      TestScanExclusiveByKeyInPlace();
+      TestScanExclusiveByKeyInPlaceWithFancyArray();
 
       TestSort();
       TestSortWithComparisonObject();
