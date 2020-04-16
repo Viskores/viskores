@@ -912,7 +912,7 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      vtkm::cont::ArrayHandle<ValueT, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<ValueT> reducedValues;
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);
