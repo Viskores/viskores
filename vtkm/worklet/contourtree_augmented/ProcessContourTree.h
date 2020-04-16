@@ -1405,104 +1405,16 @@ public:
     //{
     //printf("The min value in the subtree defined by the edge (%lld, %lld) is %lld.\n", i, maskedIndex(minParents.GetPortalConstControl().Get(i)), minValues.GetPortalConstControl().Get(i));
     //}
-
-    //
-    // Make array for each arc (i, j, subtreeHeight, subtreeMin), then for with that first and second criteria
-    //
-    class EdgeData
-    {
-    public:
-      Id i;
-      Id j;
-      Id subtreeMin;
-      Id subtreeMax;
-      bool upEdge;
-      Float64 subtreeHeight;
-
-      bool operator<(const EdgeData& b) const
-      {
-        if (this->i == b.i)
-        {
-          if (this->upEdge == b.upEdge)
-          {
-            if (this->subtreeHeight == b.subtreeHeight)
-            {
-              return this->subtreeMin < b.subtreeMin;
-            }
-            else
-            {
-              return this->subtreeHeight > b.subtreeHeight;
-            }
-          }
-          else
-          {
-            return this->upEdge < b.upEdge;
-          }
-        }
-        else
-        {
-          return this->i < b.i;
-        }
-      }
-    };
-
-    vtkm::cont::ArrayHandle<EdgeData> arcs;
+    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     timer.Reset();
     timer.Start();
 
-    //
-    // Set arc endpoints. Parallelisable. No HS.
-    //
-    int edges = 0;
-    for (vtkm::Id i = 0; i < contourTree.Superarcs.GetNumberOfValues(); i++)
-    {
-      Id parent = MaskedIndex(contourTree.Superarcs.ReadPortal().Get(i));
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::InitialiseArcs initArcs(
+      0, contourTree.Arcs.GetNumberOfValues() - 1, minPath[minPath.size() - 1]);
 
-      if (parent == 0)
-        continue;
-
-      EdgeData edge;
-      edge.i = i;
-      edge.j = parent;
-      edge.upEdge = IsAscending((contourTree.Superarcs.ReadPortal().Get(i)));
-
-      EdgeData oppositeEdge;
-      oppositeEdge.i = parent;
-      oppositeEdge.j = i;
-      oppositeEdge.upEdge = !edge.upEdge;
-
-
-      // Is it in the direction of the minRootedTree?
-      if (MaskedIndex(minParents.ReadPortal().Get(edge.j)) == edge.i)
-      {
-        edge.subtreeMin = minValues.ReadPortal().Get(edge.j);
-        oppositeEdge.subtreeMin = 0;
-      }
-      else
-      {
-        oppositeEdge.subtreeMin = minValues.ReadPortal().Get(oppositeEdge.j);
-        edge.subtreeMin = 0;
-      }
-
-      // Is it in the direction of the maxRootedTree?
-      if (MaskedIndex(maxParents.ReadPortal().Get(edge.j)) == edge.i)
-      {
-        edge.subtreeMax = maxValues.ReadPortal().Get(edge.j);
-        oppositeEdge.subtreeMax = contourTree.Arcs.GetNumberOfValues() - 1;
-      }
-      else
-      {
-        oppositeEdge.subtreeMax = maxValues.ReadPortal().Get(oppositeEdge.j);
-        edge.subtreeMax = contourTree.Arcs.GetNumberOfValues() - 1;
-      }
-
-      // We cannot use i here because one of the vertices is skipped (the root one and we don't know where it is)
-      arcs.WritePortal().Set(edges++, edge);
-      arcs.WritePortal().Set(edges++, oppositeEdge);
-    }
-
+    Invoke(initArcs, minParents, maxParents, minValues, maxValues, contourTree.Superarcs, arcs);
 
     //
     // Set whether an arc is up or down arcs. Parallelisable. No HS.
@@ -1515,31 +1427,15 @@ public:
                 << " seconds." << std::endl;
     }
 
+    //
+    // Compute the height of all subtrees using the min and max
+    //
     timer.Reset();
     timer.Start();
 
-    //
-    // Set subtree height based on the best min & max. Parallelisable.
-    //
-    for (vtkm::Id i = 0; i < arcs.GetNumberOfValues(); i++)
-    {
-      EdgeData edge = arcs.ReadPortal().Get(i);
-
-      Float64 minIsoval =
-        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(edge.subtreeMin));
-      Float64 maxIsoval =
-        fieldValues.ReadPortal().Get(ctSortOrder.ReadPortal().Get(edge.subtreeMax));
-      Float64 vertexIsoval = fieldValues.ReadPortal().Get(
-        ctSortOrder.ReadPortal().Get(contourTree.Supernodes.ReadPortal().Get(edge.i)));
-
-      // We need to incorporate the value of the vertex into the height of the tree (otherwise leafs edges have 0 persistence)
-      minIsoval = minOperator(minIsoval, vertexIsoval);
-      maxIsoval = maxOperator(maxIsoval, vertexIsoval);
-
-      edge.subtreeHeight = maxIsoval - minIsoval;
-
-      arcs.WritePortal().Set(i, edge);
-    }
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeSubtreeHeight
+      computeSubtreeHeight;
+    Invoke(computeSubtreeHeight, fieldValues, ctSortOrder, contourTree.Supernodes, arcs);
 
     timer.Stop();
     if (true == printTime)
@@ -1548,6 +1444,9 @@ public:
                 << " seconds." << std::endl;
     }
 
+    //
+    // Sort to find the bestUp and Down
+    //
     timer.Reset();
     timer.Start();
 
@@ -1560,41 +1459,15 @@ public:
                 << std::endl;
     }
 
-    timer.Reset();
-    timer.Start();
 
     //
     // Set bestUp and bestDown. Parallelisable
     //
-    for (vtkm::Id i = 0; i < arcs.GetNumberOfValues(); i++)
-    {
-      if (i == 0)
-      {
-        if (arcs.ReadPortal().Get(0).upEdge == 0)
-        {
-          bestDownward.WritePortal().Set(arcs.ReadPortal().Get(0).i, arcs.ReadPortal().Get(0).j);
-        }
-        else
-        {
-          bestUpward.WritePortal().Set(arcs.ReadPortal().Get(0).i, arcs.ReadPortal().Get(0).j);
-        }
-      }
-      else
-      {
-        if (arcs.ReadPortal().Get(i).upEdge == 0 &&
-            arcs.ReadPortal().Get(i).i != arcs.ReadPortal().Get(i - 1).i)
-        {
-          bestDownward.WritePortal().Set(arcs.ReadPortal().Get(i).i, arcs.ReadPortal().Get(i).j);
-        }
+    timer.Reset();
+    timer.Start();
 
-        if (arcs.ReadPortal().Get(i).upEdge == 1 &&
-            (arcs.ReadPortal().Get(i).i != arcs.ReadPortal().Get(i - 1).i ||
-             arcs.ReadPortal().Get(i - 1).upEdge == 0))
-        {
-          bestUpward.WritePortal().Set(arcs.ReadPortal().Get(i).i, arcs.ReadPortal().Get(i).j);
-        }
-      }
-    }
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::SetBestUpDown setBestUpDown;
+    Invoke(setBestUpDown, bestUpward, bestDownward, arcs);
 
     timer.Stop();
     if (true == printTime)
@@ -1602,12 +1475,6 @@ public:
       std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime()
                 << " seconds." << std::endl;
     }
-
-    //for (int i = 0 ; i < bestUpward.GetNumberOfValues() ; i++)
-    //{
-    //printf("The bestUP   of %2lld is %2lld.\n", i, bestUpward.GetPortalConstControl().Get(i));
-    //printf("The bestDown of %2lld is %2lld.\n\n", i, bestDownward.GetPortalConstControl().Get(i));
-    //}
 
     timer.Reset();
     timer.Start();

@@ -146,6 +146,42 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
   return fString;
 } // FlagString()
 
+class EdgeData
+{
+public:
+  Id i;
+  Id j;
+  Id subtreeMin;
+  Id subtreeMax;
+  bool upEdge;
+  Float64 subtreeHeight;
+
+  bool operator<(const EdgeData& b) const
+  {
+    if (this->i == b.i)
+    {
+      if (this->upEdge == b.upEdge)
+      {
+        if (this->subtreeHeight == b.subtreeHeight)
+        {
+          return this->subtreeMin < b.subtreeMin;
+        }
+        else
+        {
+          return this->subtreeHeight > b.subtreeHeight;
+        }
+      }
+      else
+      {
+        return this->upEdge < b.upEdge;
+      }
+    }
+    else
+    {
+      return this->i < b.i;
+    }
+  }
+};
 
 
 } // namespace contourtree_augmented

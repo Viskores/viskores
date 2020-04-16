@@ -70,90 +70,173 @@ namespace process_contourtree_inc
 {
 
 
-
-
-template <typename Operator>
-class IncorporateEdge : public vtkm::worklet::WorkletMapField
+class InitialiseArcs : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn minParents,
-                                WholeArrayIn supernodes,
-                                WholeArrayOut minMaxValues);
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  typedef void ControlSignature(WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  Operator op;
-  VTKM_EXEC_CONT IncorporateEdge(Operator _op)
-    : op(_op)
+  vtkm::Id globalMinSortedIndex, globalMaxSortedIndex, rootSupernodeId;
+
+  VTKM_EXEC_CONT InitialiseArcs(vtkm::Id _globalMinSortedIndex,
+                                vtkm::Id _globalMaxSortedIndex,
+                                vtkm::Id _rootSupernodeId)
+    : globalMinSortedIndex(_globalMinSortedIndex)
+    , globalMaxSortedIndex(_globalMaxSortedIndex)
+    , rootSupernodeId(_rootSupernodeId)
   {
   }
 
-  template <typename IdWholeArrayInPortalType, typename IdWholeArrayOutPortalType>
+  template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
   VTKM_EXEC void operator()(const vtkm::Id currentId,
-                            const IdWholeArrayInPortalType& parentsPortal,
-                            const IdWholeArrayInPortalType& supernodesPortal,
-                            const IdWholeArrayOutPortalType& minMaxValuesPortal) const
+                            const IdWholeArrayInPortalType& minParentsPortal,
+                            const IdWholeArrayInPortalType& maxParentsPortal,
+                            const IdWholeArrayInPortalType& minValuesPortal,
+                            const IdWholeArrayInPortalType& maxValuesPortal,
+                            const IdWholeArrayInPortalType& superarcsPortal,
+                            const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
-    Id parent = MaskedIndex(parentsPortal.Get(currentId));
-    Id subtreeValue = minMaxValuesPortal.Get(currentId);
-    Id parentValue = MaskedIndex(supernodesPortal.Get(parent));
-    minMaxValuesPortal.Set(currentId, op(parentValue, subtreeValue));
+    Id i = currentId;
+    Id parent = MaskedIndex(superarcsPortal.Get(i));
+    if (parent == 0)
+      return;
+
+    EdgeData edge;
+    edge.i = i;
+    edge.j = parent;
+    edge.upEdge = IsAscending((superarcsPortal.Get(i)));
+
+    EdgeData oppositeEdge;
+    oppositeEdge.i = parent;
+    oppositeEdge.j = i;
+    oppositeEdge.upEdge = !edge.upEdge;
+
+
+    // Is it in the direction of the minRootedTree?
+    if (MaskedIndex(minParentsPortal.Get(edge.j)) == edge.i)
+    {
+      edge.subtreeMin = minValuesPortal.Get(edge.j);
+      oppositeEdge.subtreeMin = globalMinSortedIndex;
+    }
+    else
+    {
+      oppositeEdge.subtreeMin = minValuesPortal.Get(oppositeEdge.j);
+      edge.subtreeMin = globalMinSortedIndex;
+    }
+
+    // Is it in the direction of the maxRootedTree?
+    if (MaskedIndex(maxParentsPortal.Get(edge.j)) == edge.i)
+    {
+      edge.subtreeMax = maxValuesPortal.Get(edge.j);
+      oppositeEdge.subtreeMax = globalMaxSortedIndex;
+    }
+    else
+    {
+      oppositeEdge.subtreeMax = maxValuesPortal.Get(oppositeEdge.j);
+      edge.subtreeMax = globalMaxSortedIndex;
+    }
+
+    // Compensate for the missing edge where the root is
+    if (i > rootSupernodeId)
+    {
+      i--;
+    }
+
+    // We cannot use i here because one of the vertices is skipped (the root one and we don't know where it is)
+    arcsPortal.Set(i * 2, edge);
+    arcsPortal.Set(i * 2 + 1, oppositeEdge);
   }
 }; // ComputeMinMaxValues
 
 
 
 
-class GetOppositeValue : public vtkm::worklet::WorkletMapField
+class ComputeSubtreeHeight : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn minParents,
-                                WholeArrayIn maxParents,
-                                WholeArrayIn minValues,
-                                WholeArrayIn maxValues,
-                                WholeArrayInOut arcs);
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4, _5);
-  using InputDomain = _1;
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayIn, WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _4;
 
-  vtkm::Id globalMinSortedIndex, globalMaxSortedIndex;
-  VTKM_EXEC_CONT GetOppositeValue(vtkm::Id _globalMinSortedIndex, vtkm::Id _globalMaxSortedIndex)
-    : globalMinSortedIndex(_globalMinSortedIndex)
-    , globalMaxSortedIndex(_globalMaxSortedIndex)
+  VTKM_EXEC_CONT ComputeSubtreeHeight() {}
+
+  template <typename Float64WholeArrayInPortalType,
+            typename IdWholeArrayInPortalType,
+            typename EdgeWholeArrayInOutPortal>
+  VTKM_EXEC void operator()(const vtkm::Id currentId,
+                            const Float64WholeArrayInPortalType& fieldValuesPortal,
+                            const IdWholeArrayInPortalType& ctSortOrderPortal,
+                            const IdWholeArrayInPortalType& supernodesPortal,
+                            const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
+    Id i = currentId;
+    EdgeData edge = arcsPortal.Get(i);
+
+    Float64 minIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.subtreeMin));
+    Float64 maxIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.subtreeMax));
+    Float64 vertexIsoval =
+      fieldValuesPortal.Get(ctSortOrderPortal.Get(supernodesPortal.Get(edge.i)));
+
+    // We need to incorporate the value of the vertex into the height of the tree (otherwise leafs edges have 0 persistence)
+    minIsoval = vtkm::Minimum()(minIsoval, vertexIsoval);
+    maxIsoval = vtkm::Maximum()(maxIsoval, vertexIsoval);
+
+    edge.subtreeHeight = maxIsoval - minIsoval;
+
+    arcsPortal.Set(i, edge);
   }
+}; // ComputeMinMaxValues
+
+
+
+
+class SetBestUpDown : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayInOut, WholeArrayInOut, WholeArrayIn);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using InputDomain = _3;
+
+  VTKM_EXEC_CONT SetBestUpDown() {}
 
   template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
   VTKM_EXEC void operator()(const vtkm::Id currentId,
-                            const IdWholeArrayInPortalType& minParents,
-                            const IdWholeArrayInPortalType& maxParents,
-                            const IdWholeArrayInPortalType& minValues,
-                            const IdWholeArrayInPortalType& maxValues,
-                            const EdgeWholeArrayInOutPortal& arcs) const
+                            const IdWholeArrayInPortalType& bestUpwardPortal,
+                            const IdWholeArrayInPortalType& bestDownwardPortal,
+                            const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
-    auto i = currentId;
-    auto edge = arcs.Get(i);
+    vtkm::Id i = currentId;
 
-    // Is it in the direction of the minRootedTree?
-    if (MaskedIndex(minParents.ReadPortal().Get(edge.j)) == edge.i)
+    if (i == 0)
     {
-      edge.subtreeMin = minValues.ReadPortal().Get(edge.j);
+      if (arcsPortal.Get(0).upEdge == 0)
+      {
+        bestDownwardPortal.Set(arcsPortal.Get(0).i, arcsPortal.Get(0).j);
+      }
+      else
+      {
+        bestUpwardPortal.Set(arcsPortal.Get(0).i, arcsPortal.Get(0).j);
+      }
     }
     else
     {
-      edge.subtreeMin = globalMinSortedIndex;
-    }
+      if (arcsPortal.Get(i).upEdge == 0 && arcsPortal.Get(i).i != arcsPortal.Get(i - 1).i)
+      {
+        bestDownwardPortal.Set(arcsPortal.Get(i).i, arcsPortal.Get(i).j);
+      }
 
-    // Is it in the direction of the maxRootedTree?
-    if (MaskedIndex(maxParents.ReadPortal().Get(edge.j)) == edge.i)
-    {
-      edge.subtreeMax = maxValues.ReadPortal().Get(edge.j);
+      if (arcsPortal.Get(i).upEdge == 1 &&
+          (arcsPortal.Get(i).i != arcsPortal.Get(i - 1).i || arcsPortal.Get(i - 1).upEdge == 0))
+      {
+        bestUpwardPortal.Set(arcsPortal.Get(i).i, arcsPortal.Get(i).j);
+      }
     }
-    else
-    {
-      edge.subtreeMax = globalMinSortedIndex;
-    }
-
-    arcs.Set(i, edge);
   }
 }; // ComputeMinMaxValues
 
