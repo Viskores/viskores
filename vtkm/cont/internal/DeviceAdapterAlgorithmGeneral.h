@@ -619,7 +619,7 @@ public:
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
-      vtkm::cont::ArrayHandle<U, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<U> reducedValues;
 
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);
