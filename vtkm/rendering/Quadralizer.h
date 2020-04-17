@@ -113,7 +113,8 @@ public:
     {
       if (DIM == 2)
       {
-        // Do nothing mark says
+        outputIndices.Set(
+          cellIndex, { cellIndex, cellIndices[0], cellIndices[1], cellIndices[2], cellIndices[3] });
       }
       else if (DIM == 3)
       {
@@ -123,7 +124,8 @@ public:
         vtkm::Id4 idx;
         idx[0] = 0;
         idx[1] = 1;
-        idx[2] = 5, idx[3] = 4;
+        idx[2] = 5;
+        idx[3] = 4;
         cell2quad(idx, quad, offset, cellIndices, outputIndices);
 
         idx[0] = 1;
@@ -300,24 +302,38 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 5>>& outputIndices,
            vtkm::Id& output)
   {
+    vtkm::cont::Invoker invoke;
+
     if (cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
       vtkm::cont::CellSetStructured<3> cellSetStructured3D =
         cellset.Cast<vtkm::cont::CellSetStructured<3>>();
       const vtkm::Id numCells = cellSetStructured3D.GetNumberOfCells();
 
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
+      vtkm::cont::ArrayHandleIndex cellIdxs(numCells);
       outputIndices.Allocate(numCells * QUAD_PER_CSS);
-      vtkm::worklet::DispatcherMapTopology<SegmentedStructured<3>> segInvoker;
-      segInvoker.Invoke(cellSetStructured3D, cellIdxs, outputIndices);
+      invoke(SegmentedStructured<3>{}, cellSetStructured3D, cellIdxs, outputIndices);
 
       output = numCells * QUAD_PER_CSS;
     }
+    else if (cellset.IsSameType(vtkm::cont::CellSetStructured<2>()))
+    {
+      vtkm::cont::CellSetStructured<2> cellSetStructured2D =
+        cellset.Cast<vtkm::cont::CellSetStructured<2>>();
+      const vtkm::Id numCells = cellSetStructured2D.GetNumberOfCells();
+
+      vtkm::cont::ArrayHandleIndex cellIdxs(numCells);
+      outputIndices.Allocate(numCells);
+      invoke(SegmentedStructured<2>{}, cellSetStructured2D, cellIdxs, outputIndices);
+
+      output = numCells;
+    }
     else
     {
+      auto cellSetUnstructured =
+        cellset.ResetCellSetList(VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED{});
       vtkm::cont::ArrayHandle<vtkm::Id> quadsPerCell;
-      vtkm::worklet::DispatcherMapTopology<CountQuads> countInvoker;
-      countInvoker.Invoke(cellset, quadsPerCell);
+      invoke(CountQuads{}, cellSetUnstructured, quadsPerCell);
 
       vtkm::Id total = 0;
       total = vtkm::cont::Algorithm::Reduce(quadsPerCell, vtkm::Id(0));
@@ -326,8 +342,7 @@ public:
       vtkm::cont::Algorithm::ScanExclusive(quadsPerCell, cellOffsets);
       outputIndices.Allocate(total);
 
-      vtkm::worklet::DispatcherMapTopology<Quadralize> quadInvoker;
-      quadInvoker.Invoke(cellset, cellOffsets, outputIndices);
+      invoke(Quadralize{}, cellSetUnstructured, cellOffsets, outputIndices);
 
       output = total;
     }

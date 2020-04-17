@@ -17,7 +17,7 @@
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
 
-#include <vtkmtaotuple/include/tao/seq/make_integer_sequence.hpp>
+#include <vtkmstd/integer_sequence.h>
 
 #include <array>
 #include <limits>
@@ -70,7 +70,7 @@ public:
             typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex) const
   {
-    return this->Get(valueIndex, tao::seq::make_index_sequence<NUM_COMPONENTS>());
+    return this->Get(valueIndex, vtkmstd::make_index_sequence<NUM_COMPONENTS>());
   }
 
   template <typename SPT = SourcePortalType,
@@ -78,7 +78,7 @@ public:
             typename = typename std::enable_if<Supported::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id valueIndex, const ValueType& value) const
   {
-    this->Set(valueIndex, value, tao::seq::make_index_sequence<NUM_COMPONENTS>());
+    this->Set(valueIndex, value, vtkmstd::make_index_sequence<NUM_COMPONENTS>());
   }
 
 private:
@@ -89,7 +89,7 @@ private:
   }
 
   template <std::size_t... I>
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex, tao::seq::index_sequence<I...>) const
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id valueIndex, vtkmstd::index_sequence<I...>) const
   {
     return ValueType{ this->GetComponent<I>(valueIndex)... };
   }
@@ -105,7 +105,7 @@ private:
   template <std::size_t... I>
   VTKM_EXEC_CONT void Set(vtkm::Id valueIndex,
                           const ValueType& value,
-                          tao::seq::index_sequence<I...>) const
+                          vtkmstd::index_sequence<I...>) const
   {
     // Is there a better way to unpack an expression and execute them with no other side effects?
     (void)std::initializer_list<bool>{ this->SetComponent<I>(valueIndex, value)... };
@@ -677,6 +677,7 @@ struct Serialization<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagSO
 };
 
 } // namespace mangled_diy_namespace
+// @endcond SERIALIZATION
 
 //=============================================================================
 // Precompiled instances

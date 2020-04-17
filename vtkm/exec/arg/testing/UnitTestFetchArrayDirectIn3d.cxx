@@ -102,7 +102,7 @@ struct FetchArrayDirectIn3DTests
         for (vtkm::Id i = 0; i < ARRAY_SIZE[0]; i++, index1d++)
         {
           index3d[0] = i;
-          vtkm::exec::arg::ThreadIndicesBasic3D indices(index3d, index1d, index1d, 0, index1d, 0);
+          vtkm::exec::arg::ThreadIndicesBasic3D indices(index3d, index1d, index1d, 0, index1d);
           T value = fetch.Load(indices, execObject);
           VTKM_TEST_ASSERT(test_equal(value, TestValue(index1d, T())),
                            "Got invalid value from Load.");

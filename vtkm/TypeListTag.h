@@ -58,14 +58,16 @@ VTK_M_OLD_TYPE_LIST_DEFINITION(VecUncommon);
 
 // Special definition of TypeListTagCommon to give descriptive warning when
 // VTKM_DEFAULT_TYPE_LIST_TAG is used.
+/// @cond NONE
 struct VTKM_ALWAYS_EXPORT
 VTKM_DEPRECATED(
   1.6,
   "VTKM_DEFAULT_TYPE_LIST_TAG replaced by VTKM_DEFAULT_TYPE_LIST. "
   "Note that the new VTKM_DEFAULT_TYPE_LIST cannot be subclassed.")
-TypeListTagDefault : vtkm::internal::ListAsListTag<VTKM_DEFAULT_TYPE_LIST>
+TypeListTagDefault : vtkm::internal::ListAsListTag<vtkm::TypeListCommon>
 {
 };
+/// @endcond
 
 } // namespace internal
 

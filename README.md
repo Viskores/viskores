@@ -70,9 +70,7 @@ VTK-m Requires:
       + MSVC 2015+
       + Intel 17.0.4+
   + [CMake](http://www.cmake.org/download/)
-      + CMake 3.8+
-      + CMake 3.11+ (for Visual Studio generator)
-      + CMake 3.12+ (for OpenMP support)
+      + CMake 3.12+
       + CMake 3.13+ (for CUDA support)
 
 Optional dependencies are:
@@ -105,18 +103,18 @@ Optional dependencies are:
 
 VTK-m has been tested on the following configurations:c
   + On Linux
-      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0, Clang 5.0, 6.0, 7.0, Intel 17.0.4, Intel 19.0.0
-      + CMake 3.13.3, 3.14.1
-      + CUDA 9.2.148, 10.0.130, 10.1.105
+      + GCC 4.8.5, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
+      + CMake 3.12, 3.13, 3.16, 3.17
+      + CUDA 9.2.148, 10.0.130, 10.1.105, 10.2.89
       + TBB 4.4 U2, 2017 U7
   + On Windows
       + Visual Studio 2015, 2017
-      + CMake 3.8.2, 3.11.1, 3.12.4
+      + CMake 3.12, 3.17
       + CUDA 10.1
       + TBB 2017 U3, 2018 U2
   + On MacOS
       + AppleClang 9.1
-      + CMake 3.12.3
+      + CMake 3.12
       + TBB 2018
 
 

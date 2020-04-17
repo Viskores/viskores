@@ -11,6 +11,7 @@
 #define vtk_m_cont_ArrayHandleGroupVecVariable_h
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayPortal.h>
@@ -69,22 +70,14 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const { return this->OffsetsPortal.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const { return this->OffsetsPortal.GetNumberOfValues() - 1; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
     vtkm::Id offsetIndex = this->OffsetsPortal.Get(index);
-    vtkm::Id nextOffsetIndex;
-    if (index + 1 < this->GetNumberOfValues())
-    {
-      nextOffsetIndex = this->OffsetsPortal.Get(index + 1);
-    }
-    else
-    {
-      nextOffsetIndex = this->SourcePortal.GetNumberOfValues();
-    }
+    vtkm::Id nextOffsetIndex = this->OffsetsPortal.Get(index + 1);
 
     return ValueType(this->SourcePortal,
                      static_cast<vtkm::IdComponent>(nextOffsetIndex - offsetIndex),
@@ -221,7 +214,7 @@ public:
   vtkm::Id GetNumberOfValues() const
   {
     VTKM_ASSERT(this->Valid);
-    return this->OffsetsArray.GetNumberOfValues();
+    return this->OffsetsArray.GetNumberOfValues() - 1;
   }
 
   VTKM_CONT
@@ -234,7 +227,7 @@ public:
   void Shrink(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(this->Valid);
-    this->OffsetsArray.Shrink(numberOfValues);
+    this->OffsetsArray.Shrink(numberOfValues + 1);
   }
 
   VTKM_CONT
@@ -307,7 +300,7 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->OffsetsArray.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const { return this->OffsetsArray.GetNumberOfValues() - 1; }
 
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
@@ -327,7 +320,7 @@ public:
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
   {
     // Cannot reallocate an ArrayHandleGroupVecVariable
-    VTKM_ASSERT(numberOfValues == this->OffsetsArray.GetNumberOfValues());
+    VTKM_ASSERT(numberOfValues == this->OffsetsArray.GetNumberOfValues() - 1);
     return PortalExecution(
       this->SourceArray.PrepareForOutput(this->SourceArray.GetNumberOfValues(), Device(), token),
       this->OffsetsArray.PrepareForInput(Device(), token));
@@ -371,7 +364,7 @@ private:
 /// value contains values from the last offset to the end of the array.
 ///
 /// For example, if you have an array handle with the 9 values
-/// 0,1,2,3,4,5,6,7,8 an offsets array handle with the 3 values 0,4,6 and give
+/// 0,1,2,3,4,5,6,7,8 an offsets array handle with the 4 values 0,4,6,9 and give
 /// them to an \c ArrayHandleGroupVecVariable, you get an array that looks like
 /// it contains three values of Vec-like objects with the data [0,1,2,3],
 /// [4,5], and [6,7,8].
@@ -463,10 +456,12 @@ VTKM_CONT void ConvertNumComponentsToOffsets(
   vtkm::Id& sourceArraySize,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
+  using namespace vtkm::cont;
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
-  sourceArraySize = vtkm::cont::Algorithm::ScanExclusive(
-    device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
+  Algorithm::ScanExtended(device, make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
+
+  sourceArraySize = ArrayGetValue(offsetsArray.GetNumberOfValues() - 1, offsetsArray);
 }
 
 template <typename NumComponentsArrayType, typename OffsetsStorage>
@@ -477,8 +472,8 @@ VTKM_CONT void ConvertNumComponentsToOffsets(
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
-  vtkm::Id dummy;
-  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, device);
+  vtkm::cont::Algorithm::ScanExtended(
+    device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
 }
 
 template <typename NumComponentsArrayType>

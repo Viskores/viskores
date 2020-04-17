@@ -38,7 +38,10 @@ public:
                              const vtkm::cont::VariantArrayHandleBase<TypeList>& data);
 
   template <typename T, typename Storage>
-  VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data);
+  VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data)
+    : Superclass(name, Association::POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
+  {
+  }
 
   /// This constructor of coordinate system sets up a regular grid of points.
   ///

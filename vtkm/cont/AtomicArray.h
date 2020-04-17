@@ -25,6 +25,7 @@ namespace cont
 
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
+/// @cond NONE
 using AtomicArrayTypeList = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::UInt64, vtkm::Int64>;
 
 struct VTKM_DEPRECATED(1.6,
@@ -33,6 +34,7 @@ struct VTKM_DEPRECATED(1.6,
   : vtkm::internal::ListAsListTag<AtomicArrayTypeList>
 {
 };
+/// @endcond
 
 
 /// A class that can be used to atomically operate on an array of values safely
@@ -88,7 +90,9 @@ public:
   }
 
 private:
+  /// @cond NONE
   vtkm::cont::ArrayHandle<T> Handle;
+  /// @endcond
 };
 }
 } // namespace vtkm::exec

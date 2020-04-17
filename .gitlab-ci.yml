@@ -1,0 +1,153 @@
+
+# Docker Images:
+#
+# - CentOS 7
+#   * .gitlab/ci/docker/centos7/cuda10.2/
+#     - cuda
+#     - gcc 4.8.5
+#   * .gitlab/ci/rhel8/cuda10.2/
+#     - cuda
+#     - gcc 8.2.1
+#   * .gitlab/ci/ubuntu1604/base/
+#     - gcc 4.8
+#     - clang 3.8
+#     - clang 5.0
+#     - tbb
+#     - openmpi
+#   * .gitlab/ci/ubuntu1604/cuda9.2/
+#     - cuda
+#     - gcc 5.4
+#     - tbb
+#     - openmp
+#     - openmpi
+#   * .gitlab/ci/ubuntu1804/base/
+#     - gcc 6.5
+#     - gcc 7.4
+#     - gcc 9
+#     - clang 8
+#     - tbb
+#     - openmp
+#     - mpich2
+#   * .gitlab/ci/ubuntu1804/cuda10.1/
+#     - cuda
+#     - gcc 7.4
+#     - tbb
+#     - openmp
+#     - mpich2
+
+.docker_image: &docker_image
+  variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
+
+.centos7: &centos7
+  image: "kitware/vtkm:ci-centos7_cuda10.2-20200410"
+  extends:
+    - .docker_image
+
+.rhel8: &rhel8
+  image: "kitware/vtkm:ci-rhel8_cuda10.2-20200410"
+  extends:
+    - .docker_image
+
+.ubuntu1604: &ubuntu1604
+  image: "kitware/vtkm:ci-ubuntu1604-20200410"
+  extends:
+    - .docker_image
+
+.ubuntu1604_cuda: &ubuntu1604_cuda
+  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20200410"
+  extends:
+    - .docker_image
+
+.ubuntu1804: &ubuntu1804
+  image: "kitware/vtkm:ci-ubuntu1804-20200410"
+  extends:
+    - .docker_image
+
+.ubuntu1804_cuda: &ubuntu1804_cuda
+  image: "kitware/vtkm:ci-ubuntu1804_cuda10.1-20200410"
+  extends:
+    - .docker_image
+
+.only-default: &only-default
+  only:
+    - master
+    - merge_requests
+    - tags
+
+.only-master: &only-master
+  only:
+    - master
+
+# General Longer Term Tasks:
+# - setup asan, and ubsan as sub-pipeline
+# - setup clang tidy as sub-pipeline
+#
+# Current Tasks:
+# - Determine if we can get sccache to work with CUDA
+# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/issues/447
+#   Note: Centos7 doesn't work as they ship separate standard library
+#   headers for each version. We will have to figure out something else
+#   like using spack or building llvm/clang from source
+
+stages:
+  - build
+  - test
+
+.cmake_build_linux: &cmake_build_linux
+  stage: build
+  timeout:  2 hours
+  interruptible: true
+  before_script:
+    - .gitlab/ci/config/sccache.sh
+    - export PATH=$PWD/.gitlab:$PATH
+    - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
+    - sccache --show-stats
+    - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - sccache --show-stats
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The artifacts of the build.
+      - build/bin/
+      - build/include/
+      - build/lib/
+
+      # CTest and CMake install files.
+      # XXX(globbing): Can be simplified with support from
+      # https://gitlab.com/gitlab-org/gitlab-runner/issues/4840
+      #
+      # Note: this also captures our CIState.cmake file
+      - build/CMakeCache.txt
+      - build/*.cmake
+      - build/*/*.cmake
+      - build/*/*/*.cmake
+      - build/*/*/*/*.cmake
+      - build/*/*/*/*/*.cmake
+      - build/*/*/*/*/*/*.cmake
+      - build/Testing/
+
+      # CDash files.
+      - build/DartConfiguration.tcl
+
+.cmake_test_linux: &cmake_test_linux
+  stage: test
+  timeout:  50 minutes
+  interruptible: true
+  script:
+    #Need to use our custom ctest-latest symlink
+    #This will allow us to use 3.17+ which has support
+    #for running failed tests multiple times so failures
+    #due to system load are not reported
+    - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+
+include:
+  - local: '/.gitlab/ci/centos7.yml'
+  - local: '/.gitlab/ci/rhel8.yml'
+  - local: '/.gitlab/ci/ubuntu1604.yml'
+  - local: '/.gitlab/ci/ubuntu1804.yml'

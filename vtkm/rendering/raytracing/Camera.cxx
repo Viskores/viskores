@@ -494,17 +494,31 @@ Camera::~Camera()
 
 VTKM_CONT
 void Camera::SetParameters(const vtkm::rendering::Camera& camera,
-                           vtkm::rendering::CanvasRayTracer& canvas)
+                           const vtkm::Int32 width,
+                           const vtkm::Int32 height)
 {
   this->SetUp(camera.GetViewUp());
   this->SetLookAt(camera.GetLookAt());
   this->SetPosition(camera.GetPosition());
   this->SetZoom(camera.GetZoom());
   this->SetFieldOfView(camera.GetFieldOfView());
-  this->SetHeight(static_cast<vtkm::Int32>(canvas.GetHeight()));
-  this->SetWidth(static_cast<vtkm::Int32>(canvas.GetWidth()));
+  this->SetHeight(height);
+  this->SetWidth(width);
   this->CameraView = camera;
-  Canvas = canvas;
+}
+
+VTKM_DEPRECATED(1.6, "Use the canvas width and height rather than the canvas itself.")
+VTKM_CONT void Camera::SetParameters(const vtkm::rendering::Camera& camera,
+                                     vtkm::rendering::CanvasRayTracer& canvas)
+{
+  this->SetUp(camera.GetViewUp());
+  this->SetLookAt(camera.GetLookAt());
+  this->SetPosition(camera.GetPosition());
+  this->SetZoom(camera.GetZoom());
+  this->SetFieldOfView(camera.GetFieldOfView());
+  this->SetHeight(vtkm::Int32(canvas.GetHeight()));
+  this->SetWidth(vtkm::Int32(canvas.GetWidth()));
+  this->CameraView = camera;
 }
 
 

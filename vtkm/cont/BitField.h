@@ -501,12 +501,10 @@ public:
   using ArrayHandleType = ArrayHandle<WordTypeDefault, StorageTagBasic>;
 
   /// The BitPortal used in the control environment.
-  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<
-    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>>;
+  using WritePortalType = detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
 
   /// A read-only BitPortal used in the control environment.
-  using ReadPortalType = vtkm::cont::internal::ArrayPortalToken<
-    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>>;
+  using ReadPortalType = detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
 
   using PortalControl VTKM_DEPRECATED(1.6, "Use BitField::WritePortalType instead.") =
     detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
@@ -638,7 +636,7 @@ public:
   VTKM_CONT WritePortalType WritePortal() const
   {
     auto dataPortal = this->Internals->Data.WritePortal();
-    return WritePortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+    return WritePortalType{ dataPortal, this->Internals->NumberOfBits };
   }
 
   /// \brief Get a read-only portal to the data that is usable from the control environment.
@@ -647,7 +645,7 @@ public:
   VTKM_CONT ReadPortalType ReadPortal() const
   {
     auto dataPortal = this->Internals->Data.ReadPortal();
-    return ReadPortalType{ dataPortal.GetToken(), dataPortal, this->Internals->NumberOfBits };
+    return ReadPortalType{ dataPortal, this->Internals->NumberOfBits };
   }
 
   VTKM_CONT

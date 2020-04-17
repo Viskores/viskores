@@ -22,8 +22,8 @@ namespace filter
 class CrossProduct : public vtkm::filter::FilterField<CrossProduct>
 {
 public:
-  //currently the DotProduct filter only works on vector data.
-  using SupportedTypes = TypeListVecCommon;
+  //CrossProduct filter only works on vec3 data.
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   VTKM_CONT
   CrossProduct();

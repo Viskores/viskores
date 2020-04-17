@@ -62,9 +62,8 @@ public:
   {
     vtkm::Id cellId;
     Point parametric;
-    vtkm::exec::FunctorBase tmp;
 
-    Locator->FindCell(point, cellId, parametric, tmp);
+    Locator->FindCell(point, cellId, parametric);
     return cellId != -1;
   }
 
@@ -95,10 +94,9 @@ public:
   {
     vtkm::Id cellId;
     Point parametric;
-    vtkm::exec::FunctorBase tmp;
     GridEvaluatorStatus status;
 
-    Locator->FindCell(point, cellId, parametric, tmp);
+    Locator->FindCell(point, cellId, parametric);
     if (cellId == -1)
     {
       status.SetFail();
@@ -114,7 +112,7 @@ public:
 
     for (vtkm::IdComponent i = 0; i < nVerts; i++)
       fieldValues.Append(Field.Get(ptIndices[i]));
-    out = vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, tmp);
+    vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
 
     status.SetOk();
     return status;

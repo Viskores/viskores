@@ -126,7 +126,7 @@ public:
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
-    : Superclass(typename Superclass::ReadPortalType(start, step, length))
+    : Superclass(internal::ArrayPortalCounting<CountingValueType>(start, step, length))
   {
   }
 };

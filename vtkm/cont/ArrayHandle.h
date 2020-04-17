@@ -35,8 +35,8 @@
 #include <vector>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
+#include <vtkm/cont/internal/ArrayPortalCheck.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
-#include <vtkm/cont/internal/ArrayPortalToken.h>
 
 namespace vtkm
 {
@@ -262,9 +262,9 @@ public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
   using ValueType = T;
   using StorageTag = StorageTag_;
-  using WritePortalType = vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalType>;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalType>;
   using ReadPortalType =
-    vtkm::cont::internal::ArrayPortalToken<typename StorageType::PortalConstType>;
+    vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalConstType>;
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {
@@ -381,7 +381,10 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::WritePortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+
+  /// \cond NOPE
   typename StorageType::PortalType GetPortalControl();
+  /// \endcond
 
   /// Get the array portal of the control array.
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
@@ -394,7 +397,9 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use ArrayHandle::ReadPortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
+  /// \cond NOPE
   typename StorageType::PortalConstType GetPortalConstControl() const;
+  /// \endcond
 
   /// \brief Get an array portal that can be used in the control environment.
   ///
@@ -454,6 +459,9 @@ public:
     this->WaitToWrite(lock, vtkm::cont::Token{});
     this->ReleaseResourcesExecutionInternal(lock);
     this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
+    // Set to false and then to true to ensure anything pointing to an array before the allocate
+    // is invalidated.
+    this->Internals->SetControlArrayValid(lock, false);
     this->Internals->SetControlArrayValid(lock, true);
   }
 
@@ -601,8 +609,7 @@ public:
     this->SyncControlArray(lock);
   }
 
-  // Probably should make this private, but ArrayHandleStreaming needs access.
-protected:
+private:
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
   /// function should keep the returned lock and let it go out of scope
   /// when the lock is no longer needed.
@@ -690,7 +697,7 @@ protected:
   class VTKM_ALWAYS_EXPORT InternalStruct
   {
     mutable StorageType ControlArray;
-    mutable bool ControlArrayValid = false;
+    mutable std::shared_ptr<bool> ControlArrayValid;
 
     mutable std::unique_ptr<ExecutionManagerType> ExecutionArray;
     mutable bool ExecutionArrayValid = false;
@@ -711,28 +718,52 @@ protected:
     InternalStruct(const StorageType& storage);
     InternalStruct(StorageType&& storage);
 
-#ifdef VTKM_ASSERTS_CHECKED
     ~InternalStruct()
     {
       // It should not be possible to destroy this array if any tokens are still attached to it.
       LockType lock(this->Mutex);
       VTKM_ASSERT((*this->GetReadCount(lock) == 0) && (*this->GetWriteCount(lock) == 0));
+      this->SetControlArrayValid(lock, false);
     }
-#else
-    ~InternalStruct() = default;
-#endif
 
     // To access any feature in InternalStruct, you must have locked the mutex. You have
     // to prove it by passing in a reference to a std::unique_lock.
     VTKM_CONT bool IsControlArrayValid(const LockType& lock) const
     {
       this->CheckLock(lock);
-      return this->ControlArrayValid;
+      if (!this->ControlArrayValid)
+      {
+        return false;
+      }
+      else
+      {
+        return *this->ControlArrayValid;
+      }
     }
     VTKM_CONT void SetControlArrayValid(const LockType& lock, bool value)
     {
       this->CheckLock(lock);
-      this->ControlArrayValid = value;
+      if (IsControlArrayValid(lock) == value)
+      {
+        return;
+      }
+      if (value) // ControlArrayValid == false or nullptr
+      {
+        // If we are changing the valid flag from false to true, then refresh the pointer.
+        // There may be array portals that already have a reference to the flag. Those portals
+        // will stay in an invalid state whereas new portals will go to a valid state. To
+        // handle both conditions, drop the old reference and create a new one.
+        this->ControlArrayValid.reset(new bool(true));
+      }
+      else // value == false and ControlArrayValid == true
+      {
+        *this->ControlArrayValid = false;
+      }
+    }
+    VTKM_CONT std::shared_ptr<bool> GetControlArrayValidPointer(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return this->ControlArrayValid;
     }
     VTKM_CONT StorageType* GetControlArray(const LockType& lock) const
     {

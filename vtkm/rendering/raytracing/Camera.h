@@ -27,7 +27,6 @@ class VTKM_RENDERING_EXPORT Camera
 
 private:
   struct PixelDataFunctor;
-  vtkm::rendering::CanvasRayTracer Canvas;
   vtkm::Int32 Height;
   vtkm::Int32 Width;
   vtkm::Int32 SubsetWidth;
@@ -61,8 +60,12 @@ public:
 
   VTKM_CONT
   void SetParameters(const vtkm::rendering::Camera& camera,
-                     vtkm::rendering::CanvasRayTracer& canvas);
+                     const vtkm::Int32 width,
+                     const vtkm::Int32 height);
 
+  VTKM_CONT
+  void SetParameters(const vtkm::rendering::Camera& camera,
+                     vtkm::rendering::CanvasRayTracer& canvas);
 
   VTKM_CONT
   void SetHeight(const vtkm::Int32& height);

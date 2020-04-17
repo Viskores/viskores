@@ -10,8 +10,8 @@
 #ifndef vtk_m_worklet_internal_ScatterBase_h
 #define vtk_m_worklet_internal_ScatterBase_h
 
+#include <vtkm/internal/DecayHelpers.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/worklet/internal/DecayHelpers.h>
 
 namespace vtkm
 {
@@ -29,7 +29,7 @@ struct VTKM_ALWAYS_EXPORT ScatterBase
 };
 
 template <typename T>
-using is_scatter = std::is_base_of<ScatterBase, remove_cvref<T>>;
+using is_scatter = std::is_base_of<ScatterBase, vtkm::internal::remove_cvref<T>>;
 }
 }
 }

@@ -12,6 +12,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -250,10 +251,12 @@ struct ExpandFunctorSignature
   template <typename Device>
   bool operator()(Device device)
   {
-    vtkm::cont::Token token;
 
     vtkm::Id totalSize = this->OutputLength * static_cast<vtkm::Id>(this->NumChannels);
-    this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    {
+      vtkm::cont::Token token;
+      this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    }
     ChannelBufferOperations::InitChannels(*this->Output, this->Signature, device);
 
     vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(this->NumChannels)));
@@ -293,10 +296,12 @@ struct ExpandFunctor
   template <typename Device>
   bool operator()(Device device)
   {
-    vtkm::cont::Token token;
 
     vtkm::Id totalSize = this->OutputLength * static_cast<vtkm::Id>(this->NumChannels);
-    this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    {
+      vtkm::cont::Token token;
+      this->Output->Buffer.PrepareForOutput(totalSize, device, token);
+    }
     ChannelBufferOperations::InitConst(*this->Output, this->InitVal, device);
 
     vtkm::worklet::DispatcherMapField<Expand> dispatcher((Expand(this->NumChannels)));

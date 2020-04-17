@@ -25,6 +25,39 @@ namespace vtkm
 namespace cont
 {
 
+// A control-side version of ArrayPortalRef that also manages the object created.
+template <typename T>
+class VTKM_ALWAYS_EXPORT ArrayPortalRef : public vtkm::ArrayPortalRef<T>
+{
+  std::shared_ptr<vtkm::ArrayPortalVirtual<T>> ManagedPortal;
+
+public:
+  ArrayPortalRef() = default;
+
+  ArrayPortalRef(std::shared_ptr<vtkm::ArrayPortalVirtual<T>> portal, vtkm::Id numValues) noexcept
+    : vtkm::ArrayPortalRef<T>(portal.get(), numValues),
+      ManagedPortal(portal)
+  {
+  }
+};
+
+} // namespace cont
+
+template <typename T>
+inline vtkm::cont::ArrayPortalRef<T> make_ArrayPortalRef(
+  std::shared_ptr<vtkm::ArrayPortalVirtual<T>> portal,
+  vtkm::Id numValues)
+{
+  return vtkm::cont::ArrayPortalRef<T>(portal, numValues);
+}
+
+} // namespace vtkm
+
+namespace vtkm
+{
+namespace cont
+{
+
 struct VTKM_ALWAYS_EXPORT StorageTagVirtual
 {
 };
@@ -122,11 +155,11 @@ public:
 
   //This needs to cause a host side sync!
   //This needs to work before we execute on a device
-  const vtkm::internal::PortalVirtualBase* WritePortal();
+  std::unique_ptr<vtkm::internal::PortalVirtualBase>&& WritePortal();
 
   //This needs to cause a host side sync!
   //This needs to work before we execute on a device
-  const vtkm::internal::PortalVirtualBase* ReadPortal() const;
+  std::unique_ptr<vtkm::internal::PortalVirtualBase>&& ReadPortal() const;
 
   /// Returns the DeviceAdapterId for the current device. If there is no device
   /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
@@ -170,8 +203,7 @@ private:
                                        vtkm::Id numberOfValues,
                                        vtkm::cont::DeviceAdapterId devId);
 
-  //These might need to exist in TransferInfoArray
-  mutable bool HostUpToDate = false;
+  //This might need to exist in TransferInfoArray
   mutable bool DeviceUpToDate = false;
   std::shared_ptr<vtkm::cont::internal::TransferInfoArray> DeviceTransferState =
     std::make_shared<vtkm::cont::internal::TransferInfoArray>();
@@ -230,8 +262,8 @@ class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
 public:
   using ValueType = T;
 
-  using PortalType = vtkm::ArrayPortalRef<T>;
-  using PortalConstType = vtkm::ArrayPortalRef<T>;
+  using PortalType = vtkm::cont::ArrayPortalRef<T>;
+  using PortalConstType = vtkm::cont::ArrayPortalRef<T>;
 
   Storage() = default;
 
@@ -249,14 +281,16 @@ public:
   PortalType GetPortal()
   {
     return make_ArrayPortalRef(
-      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->WritePortal()),
+      std::shared_ptr<vtkm::ArrayPortalVirtual<T>>(reinterpret_cast<vtkm::ArrayPortalVirtual<T>*>(
+        this->VirtualStorage->WritePortal().release())),
       this->GetNumberOfValues());
   }
 
   PortalConstType GetPortalConst() const
   {
     return make_ArrayPortalRef(
-      static_cast<const vtkm::ArrayPortalVirtual<T>*>(this->VirtualStorage->ReadPortal()),
+      std::shared_ptr<vtkm::ArrayPortalVirtual<T>>(reinterpret_cast<vtkm::ArrayPortalVirtual<T>*>(
+        this->VirtualStorage->ReadPortal().release())),
       this->GetNumberOfValues());
   }
 
