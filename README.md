@@ -202,7 +202,7 @@ scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
 vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
 view.Initialize();
 view.Paint();
-view.SaveAs("demo_output.pnm");
+view.SaveAs("demo_output.png");
 ```
 
 A minimal CMakeLists.txt such as the following one can be used to build this

@@ -124,7 +124,11 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
   view.Initialize();
   view.Paint();
+  // We can save the file as a .NetBPM:
   std::string output_filename = "tube_output_" + std::to_string(numSides) + "_sides.pnm";
+  view.SaveAs(output_filename);
+  // Or as a .png:
+  output_filename = "tube_output_" + std::to_string(numSides) + "_sides.png";
   view.SaveAs(output_filename);
 }
 

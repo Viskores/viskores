@@ -583,13 +583,14 @@ void Canvas::SaveAs(const std::string& fileName) const
 
   if (ends_with(fileName, ".png"))
   {
-    std::vector<unsigned char> img(static_cast<size_t>(width * height));
+    std::vector<unsigned char> img(static_cast<size_t>(4 * width * height));
     for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
     {
       for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)
       {
         vtkm::Vec4f_32 tuple = colorPortal.Get(yIndex * width + xIndex);
-        size_t idx = static_cast<size_t>(4 * width * yIndex + 4 * xIndex);
+        // y = 0 is the top of a .png file.
+        size_t idx = static_cast<size_t>(4 * width * (height - 1 - yIndex) + 4 * xIndex);
         img[idx + 0] = (unsigned char)(tuple[0] * 255);
         img[idx + 1] = (unsigned char)(tuple[1] * 255);
         img[idx + 2] = (unsigned char)(tuple[2] * 255);
