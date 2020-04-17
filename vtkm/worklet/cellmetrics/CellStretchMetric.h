@@ -52,12 +52,12 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellStretchMetric(const vtkm::IdComponent& numPts,
                                     const PointCoordVecType& pts,
                                     CellShapeType shape,
-                                    const vtkm::exec::FunctorBase& worklet)
+                                    vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
   UNUSED(shape);
-  UNUSED(worklet);
+  UNUSED(ec);
   return OutType(-1.0);
 }
 
@@ -65,10 +65,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellStretchMetric(const vtkm::IdComponent& numPts,
                                     const PointCoordVecType& pts,
                                     vtkm::CellShapeTagQuad,
-                                    const vtkm::exec::FunctorBase& worklet)
+                                    vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;
   using Vector = typename PointCoordVecType::ComponentType;
@@ -91,10 +91,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellStretchMetric(const vtkm::IdComponent& numPts,
                                     const PointCoordVecType& pts,
                                     vtkm::CellShapeTagHexahedron,
-                                    const vtkm::exec::FunctorBase& worklet)
+                                    vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;
   using Vector = typename PointCoordVecType::ComponentType;

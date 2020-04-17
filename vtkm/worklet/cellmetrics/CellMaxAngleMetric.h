@@ -54,7 +54,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellMaxAngleMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      CellShapeType shape,
-                                     const vtkm::exec::FunctorBase&)
+                                     vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -75,11 +75,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAngleMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      vtkm::CellShapeTagTriangle,
-                                     const vtkm::exec::FunctorBase& worklet)
+                                     vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Minimum angle metric (triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -121,11 +121,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellMaxAngleMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      vtkm::CellShapeTagQuad,
-                                     const vtkm::exec::FunctorBase& worklet)
+                                     vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Minimum angle metric(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

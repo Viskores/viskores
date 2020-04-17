@@ -91,6 +91,8 @@ protected:
 #pragma push
 #pragma diag_suppress = code_is_unreachable
 #endif
+
+    vtkm::ErrorCode ec;
     switch (vtkm::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS)
     {
       case 0:
@@ -99,19 +101,19 @@ protected:
       case 1:
         if (vtkm::ListHas<IntegrationTypeList, IntegrateOverCurve>::value)
         {
-          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
+          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 2:
         if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSurface>::value)
         {
-          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
+          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       case 3:
         if (vtkm::ListHas<IntegrationTypeList, IntegrateOverSolid>::value)
         {
-          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), *this);
+          return vtkm::exec::CellMeasure<OutType>(numPts, pts, CellShapeType(), ec);
         }
         break;
       default:

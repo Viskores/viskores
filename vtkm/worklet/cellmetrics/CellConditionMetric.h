@@ -54,7 +54,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       CellShapeType shape,
-                                      const vtkm::exec::FunctorBase&)
+                                      vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -69,11 +69,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagTriangle,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 3)
   {
-    worklet.RaiseError("Condition metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -101,10 +101,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagQuad,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   UNUSED(numPts);
-  UNUSED(worklet);
+  UNUSED(ec);
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;
   using Vector = typename PointCoordVecType::ComponentType;
@@ -141,11 +141,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagTetra,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Condition metric(tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
   using Scalar = OutType;
@@ -187,10 +187,10 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellConditionMetric(const vtkm::IdComponent& numPts,
                                       const PointCoordVecType& pts,
                                       vtkm::CellShapeTagHexahedron,
-                                      const vtkm::exec::FunctorBase& worklet)
+                                      vtkm::ErrorCode& ec)
 {
   return CellMaxAspectFrobeniusMetric<OutType, PointCoordVecType>(
-    numPts, pts, vtkm::CellShapeTagHexahedron(), worklet);
+    numPts, pts, vtkm::CellShapeTagHexahedron(), ec);
 }
 }
 }
