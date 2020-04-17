@@ -113,7 +113,6 @@ test:ubuntu1804_gcc7_2:
 
 # Build on ubuntu1804 with OpenMP and test on ubuntu1804
 # Uses gcc 6.5
-# Runs only on nightlies
 build:ubuntu1804_gcc6:
   tags:
     - build
@@ -123,7 +122,7 @@ build:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_build_linux
-    - .only-master
+    - .only-default
   variables:
     CC: "gcc-6"
     CXX: "g++-6"
@@ -138,7 +137,7 @@ test:ubuntu1804_gcc6:
   extends:
     - .ubuntu1804
     - .cmake_test_linux
-    - .only-master
+    - .only-default
   variables:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
