@@ -1,0 +1,53 @@
+
+# Build on centos8 with serial and test on centos8
+# Uses gcc 8.2.1
+build:centos8_sanitizer:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .centos8
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VTKM_SETTINGS: "serial+shared+asan+leak"
+
+test:centos8_asan:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - privileged
+  extends:
+    - .centos8
+    - .cmake_memcheck_linux
+    - .only-default
+  variables:
+    CTEST_MEMORYCHECK_TYPE: LeakSanitizer
+  dependencies:
+    - build:centos8_sanitizer
+  needs:
+    - build:centos8_sanitizer
+
+test:centos8_leak:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - privileged
+  extends:
+    - .centos8
+    - .cmake_memcheck_linux
+    - .only-default
+  variables:
+    CTEST_MEMORYCHECK_TYPE: AddressSanitizer
+  dependencies:
+    - build:centos8_sanitizer
+  needs:
+    - build:centos8_sanitizer
