@@ -28,7 +28,7 @@ vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
                        std::size_t out_size);
 
 VTKM_RENDERING_EXPORT
-vtkm::UInt32 SavePNG(std::string filename,
+vtkm::UInt32 SavePNG(std::string const& filename,
                      std::vector<unsigned char> const& image,
                      unsigned long width,
                      unsigned long height);
