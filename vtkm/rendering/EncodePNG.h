@@ -20,7 +20,6 @@ namespace vtkm
 namespace rendering
 {
 
-//
 VTKM_RENDERING_EXPORT
 vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
                        unsigned long width,

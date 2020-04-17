@@ -28,12 +28,12 @@ vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
                        std::vector<unsigned char>& output_png)
 {
   // The default is 8 bit RGBA; does anyone care to have more options?
+  // We can certainly add them in a backwards-compatible way if need be.
   vtkm::UInt32 error = vtkm::png::lodepng::encode(output_png, image, width, height);
   if (error)
   {
-    // TODO: Use logging framework instead:
-    std::cerr << "PNG Encoder error number " << error << ": " << png::lodepng_error_text(error)
-              << "\n";
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "LodePNG Encoder error number " << error << ": " << png::lodepng_error_text(error));
   }
   return error;
 }
@@ -54,7 +54,8 @@ vtkm::UInt32 SavePNG(std::string const& filename,
 
   if (!ends_with(filename, ".png"))
   {
-    std::cerr << "PNG filename must end with .png\n";
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "File " << filename << " does not end with .png; this is required.");
   }
 
   std::vector<unsigned char> output_png;
