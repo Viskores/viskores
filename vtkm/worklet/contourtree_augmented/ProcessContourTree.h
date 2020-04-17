@@ -58,6 +58,7 @@
 #include "vtkm/BinaryOperators.h"
 #include "vtkm/BinaryPredicates.h"
 #include "vtkm/cont/ArrayHandle.h"
+#include "vtkm/cont/ArrayHandleCounting.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -1229,18 +1230,34 @@ public:
     timer.Reset();
     timer.Start();
 
-    // Set an initial value, suppose every vertex is its own min/max. Trivially Parallel. @TODO REmove this, set in one line.
-    for (vtkm::Id i = 0; i < minValues.GetNumberOfValues(); i++)
-    {
-      const auto value = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(i));
-      minValues.WritePortal().Set(i, value);
-      maxValues.WritePortal().Set(i, value);
-    }
+    vtkm::cont::Invoker Invoke;
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::UnmaskArray unmaskArrayWorklet;
+
+    Invoke(unmaskArrayWorklet, minValues);
+    Invoke(unmaskArrayWorklet, maxValues);
 
     // Thse arrays hold the changes hyperarcs in the min and max hypersweep respectively
     vtkm::cont::ArrayHandle<vtkm::Id> minHyperarcs, maxHyperarcs;
     vtkm::cont::ArrayCopy(contourTree.Hyperarcs, minHyperarcs);
     vtkm::cont::ArrayCopy(contourTree.Hyperarcs, maxHyperarcs);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> minHyperparents, maxHyperparents;
+    vtkm::cont::ArrayCopy(contourTree.Hyperparents, minHyperparents);
+    vtkm::cont::ArrayCopy(contourTree.Hyperparents, maxHyperparents);
+
+    for (uint i = 0; i < minPath.size(); i++)
+    {
+      // Set a unique dummy Id (something that the prefix scan by key will leave alone)
+      minHyperparents.WritePortal().Set(minPath[i],
+                                        contourTree.Hypernodes.GetNumberOfValues() + minPath[i]);
+    }
+
+    for (uint i = 0; i < maxPath.size(); i++)
+    {
+      // Set a unique dummy Id (something that the prefix scan by key will leave alone)
+      maxHyperparents.WritePortal().Set(maxPath[i],
+                                        contourTree.Hypernodes.GetNumberOfValues() + maxPath[i]);
+    }
 
     // These arrays hold the number of nodes in each hypearcs that are on the min or max path for the min and max hypersweep respectively.
     vtkm::cont::ArrayHandle<vtkm::Id> minHowManyUsed, maxHowManyUsed;
@@ -1289,6 +1306,7 @@ public:
                                                    contourTree.Hypernodes,
                                                    minHyperarcs,
                                                    contourTree.Hyperparents,
+                                                   minHyperparents,
                                                    contourTree.WhenTransferred,
                                                    minHowManyUsed,
                                                    nIterations,
@@ -1300,6 +1318,7 @@ public:
                                                    contourTree.Hypernodes,
                                                    maxHyperarcs,
                                                    contourTree.Hyperparents,
+                                                   maxHyperparents,
                                                    contourTree.WhenTransferred,
                                                    maxHowManyUsed,
                                                    nIterations,
@@ -1328,83 +1347,6 @@ public:
                 << timer.GetElapsedTime() << " seconds." << std::endl;
     }
 
-    // Not parallelisable. Needs the HS
-    //ProcessContourTree::findMinMaxNew(
-    //contourTree.Supernodes.ReadPortal(),
-    //minParents.ReadPortal(),
-    //true,
-    //minSuperNode,
-    //minValues.WritePortal()
-    //);
-
-    //ProcessContourTree::findMinMaxNew(
-    //contourTree.Supernodes.ReadPortal(),
-    //maxParents.ReadPortal(),
-    //false,
-    //maxSuperNode,
-    //maxValues.WritePortal()
-    //);
-
-    timer.Reset();
-    timer.Start();
-
-    vtkm::cont::Invoker Invoke;
-
-    //vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateEdge<decltype(vtkm::Minimum())> minIncorporateEdge(minOperator);
-    //vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateEdge<decltype(vtkm::Maximum())> maxIncorporateEdge(maxOperator);
-
-    //Invoke(maxIncorporateEdge,
-    //maxParents,
-    //contourTree.Supernodes,
-    //maxValues
-    //);
-    //Invoke(minIncorporateEdge,
-    //minParents,
-    //contourTree.Supernodes,
-    //minValues
-    //);
-
-    //for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
-    //{
-    //Id parent = MaskedIndex(maxParents.ReadPortal().Get(i));
-
-    //Id subtreeValue = maxValues.ReadPortal().Get(i);
-    //Id parentValue  = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
-
-    //maxValues.WritePortal().Set(i, vtkm::Maximum()(subtreeValue, parentValue));
-    //}
-
-    //
-    // Incorporate the edge into the min subtree, Parallelisable. No HS
-    //
-    //for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
-    //{
-    //Id parent = MaskedIndex(minParents.ReadPortal().Get(i));
-
-    //Id subtreeValue = minValues.ReadPortal().Get(i);
-    //Id parentValue  = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
-
-    //minValues.WritePortal().Set(i, vtkm::Minimum()(subtreeValue, parentValue));
-    //}
-
-    timer.Stop();
-    if (true == printTime)
-    {
-      std::cout << "---------------- Incorporating parent took " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
-    }
-
-    //for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
-    //{
-    //printf("The max value in the subtree defined by the edge (%lld, %lld) is %lld.\n", i, maskedIndex(maxParents.GetPortalConstControl().Get(i)), maxValues.GetPortalConstControl().Get(i));
-    //}
-
-    //cout << "---------------------" << endl;
-
-    //for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
-    //{
-    //printf("The min value in the subtree defined by the edge (%lld, %lld) is %lld.\n", i, maskedIndex(minParents.GetPortalConstControl().Get(i)), minValues.GetPortalConstControl().Get(i));
-    //}
     vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
@@ -1677,6 +1619,7 @@ public:
                                   const vtkm::cont::ArrayHandle<vtkm::Id> hypernodes,
                                   const vtkm::cont::ArrayHandle<vtkm::Id> hyperarcs,
                                   const vtkm::cont::ArrayHandle<vtkm::Id> hyperparents,
+                                  const vtkm::cont::ArrayHandle<vtkm::Id> hyperparentKeys,
                                   const vtkm::cont::ArrayHandle<vtkm::Id> whenTransferred,
                                   const vtkm::cont::ArrayHandle<vtkm::Id> howManyUsed,
                                   const vtkm::Id nIterations,
@@ -1760,23 +1703,26 @@ public:
       // Determine the first and last hypernode in the current iteration (all hypernodes between them are also in the current iteration)
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
+      lastHypernode = vtkm::Minimum()(lastHypernode, hypernodes.GetNumberOfValues() - 1);
+      vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(firstHypernode));
+      vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(lastHypernode));
+      lastSupernode = vtkm::Minimum()(lastSupernode, hyperparents.GetNumberOfValues() - 1);
+
+      // Prefix scan along all hyperarcs in the current iteration
+      auto subarrayValues = vtkm::cont::make_ArrayHandleView(
+        minMaxIndex, firstSupernode, lastSupernode - firstSupernode);
+      auto subarrayKeys = vtkm::cont::make_ArrayHandleView(
+        hyperparentKeys, firstSupernode, lastSupernode - firstSupernode);
+      vtkm::cont::Algorithm::ScanInclusiveByKey(
+        subarrayKeys, subarrayValues, subarrayValues, operation);
 
       // Array containing the Ids of the hyperarcs in the current iteration
       vtkm::cont::ArrayHandleCounting<vtkm::Id> iterationHyperarcs(
         firstHypernode, 1, lastHypernode - firstHypernode);
 
-      // Prefix scan along all hyperarcs in the current iteration, @TODO This does not do a prefix sum yet, figure it out.
-      vtkm::cont::Invoker Invoke;
-      Invoke(prefixScanHyperarcsWorklet, iterationHyperarcs, hypernodes, howManyUsed, minMaxIndex);
-
-      // Prefix scan along all hyperarcs in the current iteration
-      //auto subarrayValues = vtkm::cont::make_ArrayHandleView(minMaxIndex, firstHypernode, lastHypernode - firstHypernode);
-      //auto subarrayKeys = vtkm::cont::make_ArrayHandleView(hyperparents, firstHypernode, lastHypernode - firstHypernode);
-      //vtkm::cont::Algorithm::ScanInclusiveByKey(subarrayKeys, subarrayValues, subarrayValues, operation);
-
       // Transfer the value accumulated in the last entry of the prefix scan to the hypernode's targe supernode
-      //vtkm::cont::Invoker Invoke;
-      Invoke(addDependentWeightHypersweepWorklet,
+      vtkm::cont::Invoker invoke;
+      invoke(addDependentWeightHypersweepWorklet,
              iterationHyperarcs,
              hypernodes,
              hyperarcs,
@@ -1784,7 +1730,9 @@ public:
              minMaxIndex);
 
 
-
+      //
+      // Remnants of the serial version. Here for debugging.
+      //
 
       //
       // For every hyperarc in the current iteration. Parallel.
@@ -1821,6 +1769,7 @@ public:
       //}
       //}
       //}
+
 
       //
       // Serial, but can be made parallel if we sort the hypearcs by destination and do a prefix sum on the destination.

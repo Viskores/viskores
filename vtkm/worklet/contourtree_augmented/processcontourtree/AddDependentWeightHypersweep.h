@@ -98,13 +98,13 @@ public:
             typename IdWholeArrayIn,
             typename IdWholeArrayInOut>
   VTKM_EXEC void operator()(const vtkm::Id hyperarcId,
-                            const IdWholeArrayHandleCountingIn& iterationHypernodes,
+                            const IdWholeArrayHandleCountingIn& iterationHypernodesPortal,
                             const IdWholeArrayIn& hypernodesPortal,
                             const IdWholeArrayIn& hyperarcsPortal,
                             const IdWholeArrayIn& howManyUsedPortal,
                             const IdWholeArrayInOut& minMaxIndexPortal) const
   {
-    int i = iterationHypernodes.Get(hyperarcId);
+    Id i = iterationHypernodesPortal.Get(hyperarcId);
 
     // If it's the last hyperacs (there's nothing to do it's just the root)
     if (i >= hypernodesPortal.GetNumberOfValues() - 1)
@@ -126,7 +126,19 @@ public:
     Id vertexValue = minMaxIndexPortal.Get(vertex);
     Id parentValue = minMaxIndexPortal.Get(parent);
 
-    minMaxIndexPortal.Set(parent, op(vertexValue, parentValue));
+    //Id writeValue = op(vertexValue, parentValue);
+
+    vtkm::Int32 cur = minMaxIndexPortal.Get(parent); // Load the current value at idx
+    vtkm::Int32 newVal;                              // will hold the result of the multiplication
+    vtkm::Int32 expect; // will hold the expected value before multiplication
+
+    do
+    {
+      expect = cur;                  // Used to ensure the value hasn't changed since reading
+      newVal = op(cur, vertexValue); // the actual multiplication
+    } while ((cur = minMaxIndexPortal.CompareAndSwap(parent, newVal, expect)) != expect);
+
+    //minMaxIndexPortal.Set(parent, writeValue);
   }
 }; // ComputeMinMaxValues
 } // process_contourtree_inc

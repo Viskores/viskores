@@ -241,6 +241,28 @@ public:
 }; // ComputeMinMaxValues
 
 
+class UnmaskArray : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1);
+  using InputDomain = _1;
+
+
+  // Default Constructor
+  VTKM_EXEC_CONT UnmaskArray() {}
+
+  template <typename IdWholeArrayInPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id currentId,
+                            const IdWholeArrayInPortalType& maskedArrayPortal) const
+  {
+    const auto currentValue = maskedArrayPortal.Get(currentId);
+    maskedArrayPortal.Set(currentId, MaskedIndex(currentValue));
+  }
+}; // ComputeMinMaxValues
+
+
 
 
 } // process_contourtree_inc
