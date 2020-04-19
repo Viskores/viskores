@@ -1346,6 +1346,37 @@ public:
       std::cout << "---------------- HS ---------------- Fixing path took "
                 << timer.GetElapsedTime() << " seconds." << std::endl;
     }
+    //
+    // Incorporate the edge into the max subtree, Parallelisable. No HS
+    //
+    for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
+    {
+      Id parent = MaskedIndex(maxParents.ReadPortal().Get(i));
+
+      Id subtreeValue = maxValues.ReadPortal().Get(i);
+      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
+
+      if (parentValue > subtreeValue)
+      {
+        maxValues.WritePortal().Set(i, parentValue);
+      }
+    }
+
+    //
+    // Incorporate the edge into the min subtree, Parallelisable. No HS
+    //
+    for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
+    {
+      Id parent = MaskedIndex(minParents.ReadPortal().Get(i));
+
+      Id subtreeValue = minValues.ReadPortal().Get(i);
+      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
+
+      if (parentValue < subtreeValue)
+      {
+        minValues.WritePortal().Set(i, parentValue);
+      }
+    }
 
     vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);

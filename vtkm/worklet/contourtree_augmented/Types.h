@@ -164,7 +164,14 @@ public:
       {
         if (this->subtreeHeight == b.subtreeHeight)
         {
-          return this->subtreeMin < b.subtreeMin;
+          if (this->subtreeMin == b.subtreeMin)
+          {
+            return this->subtreeMax > b.subtreeMax;
+          }
+          else
+          {
+            return this->subtreeMin < b.subtreeMin;
+          }
         }
         else
         {
