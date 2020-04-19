@@ -1166,8 +1166,8 @@ public:
 
     // maxValues and minValues store the values from the max and min hypersweep respectively.
     IdArrayType minValues, maxValues;
-    vtkm::cont::ArrayCopy(noSuchElementArray, maxValues);
-    vtkm::cont::ArrayCopy(noSuchElementArray, minValues);
+    vtkm::cont::ArrayCopy(contourTree.Supernodes, maxValues);
+    vtkm::cont::ArrayCopy(contourTree.Supernodes, minValues);
 
     // Store the direction of the superarcs in the min and max hypersweep (find a way to get rid of these, the only differing direction is on the path from the root to the min/max).
     IdArrayType minParents, maxParents;
