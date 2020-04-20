@@ -14,7 +14,7 @@ build:centos8_sanitizer:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+shared+asan+leak"
+    VTKM_SETTINGS: "serial+shared+openmp+asan+leak"
 
 test:centos8_sanitizer:
   tags:
@@ -28,6 +28,7 @@ test:centos8_sanitizer:
     - .cmake_memcheck_linux
     - .only-default
   variables:
+    OMP_NUM_THREADS: 4
     CTEST_MEMORYCHECK_TYPE: LeakSanitizer
   dependencies:
     - build:centos8_sanitizer
