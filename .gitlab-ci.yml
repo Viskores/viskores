@@ -5,22 +5,27 @@
 #   * .gitlab/ci/docker/centos7/cuda10.2/
 #     - cuda
 #     - gcc 4.8.5
-#   * .gitlab/ci/rhel8/cuda10.2/
+#   * .gitlab/ci/docker/centos8/base/
+#     - gcc 8.3.1
+#     - clang 8.0.1
+#     - openmp
+#     - asan, ubsan
+#   * .gitlab/ci/docker/rhel8/cuda10.2/
 #     - cuda
 #     - gcc 8.2.1
-#   * .gitlab/ci/ubuntu1604/base/
+#   * .gitlab/ci/docker/ubuntu1604/base/
 #     - gcc 4.8
 #     - clang 3.8
 #     - clang 5.0
 #     - tbb
 #     - openmpi
-#   * .gitlab/ci/ubuntu1604/cuda9.2/
+#   * .gitlab/ci/docker/ubuntu1604/cuda9.2/
 #     - cuda
 #     - gcc 5.4
 #     - tbb
 #     - openmp
 #     - openmpi
-#   * .gitlab/ci/ubuntu1804/base/
+#   * .gitlab/ci/docker/ubuntu1804/base/
 #     - gcc 6.5
 #     - gcc 7.4
 #     - gcc 9
@@ -28,7 +33,7 @@
 #     - tbb
 #     - openmp
 #     - mpich2
-#   * .gitlab/ci/ubuntu1804/cuda10.1/
+#   * .gitlab/ci/docker/ubuntu1804/cuda10.1/
 #     - cuda
 #     - gcc 7.4
 #     - tbb
@@ -41,6 +46,11 @@
 
 .centos7: &centos7
   image: "kitware/vtkm:ci-centos7_cuda10.2-20200410"
+  extends:
+    - .docker_image
+
+.centos8: &centos8
+  image: "kitware/vtkm:ci-centos8-20200410"
   extends:
     - .docker_image
 
@@ -146,8 +156,16 @@ stages:
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
 
+.cmake_memcheck_linux: &cmake_memcheck_linux
+  stage: test
+  timeout:  2 hours
+  interruptible: true
+  script:
+    - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+
 include:
   - local: '/.gitlab/ci/centos7.yml'
+  - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'

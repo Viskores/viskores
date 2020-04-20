@@ -201,10 +201,9 @@ if (VTKm_ENABLE_TESTING)
   # faux variadic template code
   find_package(Pyexpander QUIET)
 
-  #-----------------------------------------------------------------------------
   # Setup compiler flags for dynamic analysis if needed
-  include(VTKmCompilerDynamicAnalysisFlags)
-  vtkm_check_sanitizer_build()
+  include(testing/VTKmCompilerDynamicAnalysisFlags)
+
 endif (VTKm_ENABLE_TESTING)
 
 #-----------------------------------------------------------------------------

@@ -63,6 +63,16 @@ if (CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
   set(CTEST_BUILD_FLAGS "-j${nproc}")
 endif ()
 
+if(DEFINED ENV{CTEST_MEMORYCHECK_TYPE})
+  set(env_value "$ENV{CTEST_MEMORYCHECK_TYPE}")
+  list(APPEND optional_variables "set(CTEST_MEMORYCHECK_TYPE ${env_value})")
+endif()
+
+if(DEFINED ENV{CTEST_MEMORYCHECK_SANITIZER_OPTIONS})
+  set(env_value "$ENV{CTEST_MEMORYCHECK_SANITIZER_OPTIONS}")
+  list(APPEND optional_variables "set(CTEST_MEMORYCHECK_SANITIZER_OPTIONS ${env_value})")
+endif()
+
 #We need to do write this information out to a file in the build directory
 set(state
 "
@@ -77,6 +87,8 @@ set(state
   set(CTEST_BUILD_FLAGS \"${CTEST_BUILD_FLAGS}\")
 
   set(CTEST_TRACK ${CTEST_TRACK})
+
+  ${optional_variables}
 "
 )
 file(WRITE ${CTEST_BINARY_DIRECTORY}/CIState.cmake "${state}")

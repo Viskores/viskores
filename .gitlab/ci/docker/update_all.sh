@@ -10,6 +10,10 @@ cd centos7/cuda10.2
 sudo docker build -t kitware/vtkm:ci-centos7_cuda10.2-$date .
 cd ../..
 
+cd centos8/base
+sudo docker build -t kitware/vtkm:ci-centos8-$date .
+cd ../..
+
 cd rhel8/cuda10.2
 sudo docker build -t kitware/vtkm:ci-rhel8_cuda10.2-$date .
 cd ../..
