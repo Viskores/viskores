@@ -29,4 +29,3 @@ test:rhel8:
     - build:rhel8
   needs:
     - build:rhel8
-

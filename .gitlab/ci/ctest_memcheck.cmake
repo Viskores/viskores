@@ -26,6 +26,11 @@ if(NOT CTEST_MEMORYCHECK_SANITIZER_OPTIONS)
   set(CTEST_MEMORYCHECK_SANITIZER_OPTIONS "$ENV{CTEST_MEMORYCHECK_SANITIZER_OPTIONS}")
 endif()
 
+if(NOT CTEST_MEMORYCHECK_SUPPRESSIONS_FILE)
+  if(CTEST_MEMORYCHECK_TYPE STREQUAL "LeakSanitizer")
+    set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE "${CTEST_SOURCE_DIRECTORY}/CMake/testing/lsan.supp")
+  endif()
+endif()
 
 set(test_exclusions
   # placeholder for tests to exclude
@@ -46,6 +51,10 @@ ctest_memcheck(
 ctest_submit(PARTS Memcheck)
 
 if (defects)
-  message(FATAL_ERROR
-    "Found ${defects} memcheck defects")
+  message(FATAL_ERROR "Found ${defects} memcheck defects")
+endif ()
+
+
+if (test_result)
+  message(FATAL_ERROR "Failed to test")
 endif ()
