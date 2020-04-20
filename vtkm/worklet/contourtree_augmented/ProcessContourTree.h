@@ -1275,8 +1275,12 @@ public:
                 << " seconds." << std::endl;
     }
 
+    // Total HS Timer
     timer.Reset();
     timer.Start();
+
+    //timer.Reset();
+    //timer.Start();
 
     editHyperarcs(contourTree.Hyperparents.ReadPortal(),
                   minPath,
@@ -1287,16 +1291,15 @@ public:
                   maxHyperarcs.WritePortal(),
                   maxHowManyUsed.WritePortal());
 
-    timer.Stop();
-    if (true == printTime)
-    {
-      std::cout << "---------------- HS ---------------- Editing hyperarcs took "
-                << timer.GetElapsedTime() << " seconds." << std::endl;
-    }
+    //timer.Stop();
+    //if(true == printTime)
+    //{
+    //std::cout << "---------------- HS ---------------- Editing hyperarcs took " << timer.GetElapsedTime() << " seconds." << std::endl;
+    //}
 
     // Parallelisable with the HS
-    timer.Reset();
-    timer.Start();
+    //timer.Reset();
+    //timer.Start();
 
     const auto minOperator = vtkm::Minimum();
     const auto maxOperator = vtkm::Maximum();
@@ -1325,25 +1328,30 @@ public:
                                                    vtkm::Maximum(),
                                                    maxValues);
 
-    timer.Stop();
-    if (true == printTime)
-    {
-      std::cout << "---------------- HS ---------------- Finding min/max took "
-                << timer.GetElapsedTime() << " seconds." << std::endl;
-    }
+    //timer.Stop();
+    //if(true == printTime)
+    //{
+    //std::cout << "---------------- HS ---------------- Finding min/max took " << timer.GetElapsedTime() << " seconds." << std::endl;
+    //}
 
-    timer.Reset();
-    timer.Start();
+    //timer.Reset();
+    //timer.Start();
 
     // Parallel via prefix scan
     fixPath(vtkm::Minimum(), minPath, minValues.WritePortal());
 
     fixPath(vtkm::Maximum(), maxPath, maxValues.WritePortal());
 
+    //timer.Stop();
+    //if(true == printTime)
+    //{
+    //std::cout << "---------------- HS ---------------- Fixing path took " << timer.GetElapsedTime() << " seconds." << std::endl;
+    //}
+
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- HS ---------------- Fixing path took "
+      std::cout << "---------------- HS TOTAL ---------------- Total Hypersweep took "
                 << timer.GetElapsedTime() << " seconds." << std::endl;
     }
     //
