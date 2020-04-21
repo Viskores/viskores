@@ -3051,7 +3051,6 @@ private:
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
 
-#if 0
       TestArrayTransfer();
       TestOutOfMemory();
       TestTimer();
@@ -3062,7 +3061,6 @@ private:
 
       TestReduce();
       TestReduceWithComparisonObject();
-#endif
       TestReduceWithFancyArrays();
 
       TestReduceByKey();
