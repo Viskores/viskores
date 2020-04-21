@@ -552,6 +552,7 @@ public:
 #endif
 
     ProcessContourTree::ComputeBranchData(contourTree,
+                                          false,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -563,6 +564,7 @@ public:
 
   // routine to compute the branch decomposition by volume
   void static ComputeBranchData(const ContourTree& contourTree,
+                                const bool printTime,
                                 IdArrayType& whichBranch,
                                 IdArrayType& branchMinimum,
                                 IdArrayType& branchMaximum,
@@ -578,11 +580,6 @@ public:
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
 
-    // Set up portals
-    //auto bestUpwardPortal = bestUpward.WritePortal();
-    //auto bestDownwardPortal = bestDownward.WritePortal();
-    //auto whichBranchPortal = whichBranch.WritePortal();
-
     vtkm::cont::Timer timer;
     timer.Start();
 
@@ -591,23 +588,17 @@ public:
     // Otherwise, let whichBranch(u) = BestUp(u) | TERMINAL to mark the end of the side branch
     // NB 1: Leaves already have the flag set, but it's redundant so its safe
     // NB 2: We don't need to do it downwards because it's symmetric
-    for (vtkm::Id supernode = 0; supernode != nSupernodes; supernode++)
-    { // per supernode
-      vtkm::Id bestUp = bestUpward.ReadPortal().Get(supernode);
-      if (NoSuchElement(bestUp))
-        // flag it as an upper leaf
-        whichBranch.WritePortal().Set(supernode, TERMINAL_ELEMENT | supernode);
-      else if (bestDownward.ReadPortal().Get(bestUp) == supernode)
-        whichBranch.WritePortal().Set(supernode, bestUp);
-      else
-        whichBranch.WritePortal().Set(supernode, TERMINAL_ELEMENT | supernode);
-    } // per supernode
+    vtkm::cont::Invoker invoke;
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::PropagateBestUpDown
+      propagateBestUpDownWorklet;
+    invoke(propagateBestUpDownWorklet, bestUpward, bestDownward, whichBranch);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Propagating Branches took "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Propagating Branches took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Propagating Branches took.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "III. Branch Neighbours Identified" << std::endl;
@@ -626,20 +617,20 @@ public:
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::PointerDoubling pointerDoubling(
       nSupernodes);
-    vtkm::cont::Invoker Invoke;
 
     // use pointer-doubling to build the branches
     for (vtkm::Id iteration = 0; iteration < numLogSteps; iteration++)
     { // per iteration
-      Invoke(pointerDoubling, whichBranch);
+      invoke(pointerDoubling, whichBranch);
     } // per iteration
 
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Branch Point Doubling "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Branch Point Doubling " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Branch Point Doubling.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "IV. Branch Chains Propagated" << std::endl;
@@ -651,28 +642,30 @@ public:
     timer.Reset();
     timer.Start();
 
-    // STAGE V:  Create an array of branches. To do this, first we need a temporary array storing
-    // which existing leaf corresponds to which branch.  It is possible to estimate the correct number
-    // by counting leaves, but for parallel, we'll need a compression anyway
-    // V A.  Set up the ID lookup for branches
-    vtkm::Id nBranches = 0;
+    // Initialise
     IdArrayType chainToBranch;
-    vtkm::cont::ArrayCopy(noSuchElementArray, chainToBranch);
-    //auto chainToBranchPortal = chainToBranch.WritePortal();
-    for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-    {
-      // test whether the supernode points to itself to find the top ends
-      if (MaskedIndex(whichBranch.ReadPortal().Get(supernode)) == supernode)
-      {
-        chainToBranch.WritePortal().Set(supernode, nBranches++);
-      }
-    }
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nSupernodes), chainToBranch);
+
+    // Set 1 to every relevant
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::PrepareChainToBranch
+      prepareChainToBranchWorklet;
+    invoke(prepareChainToBranchWorklet, whichBranch, chainToBranch);
+
+    // Prefix scanto get IDs
+    vtkm::cont::Algorithm::ScanInclusive(chainToBranch, chainToBranch);
+
+    vtkm::Id nBranches = chainToBranch.ReadPortal().Get(chainToBranch.GetNumberOfValues() - 1);
+
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::FinaliseChainToBranch
+      finaliseChainToBranchWorklet;
+    invoke(finaliseChainToBranchWorklet, whichBranch, chainToBranch);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Create Chain to Branch "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Create Chain to Branch " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Create Chain to Branch.\n", timer.GetElapsedTime());
+    }
 
 
     timer.Reset();
@@ -684,16 +677,13 @@ public:
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchMaximum);
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchSaddle);
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchParent);
-    //auto branchMinimumPortal = branchMinimum.WritePortal();
-    //auto branchMaximumPortal = branchMaximum.WritePortal();
-    //auto branchSaddlePortal = branchSaddle.WritePortal();
-    //auto branchParentPortal = branchParent.WritePortal();
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Array Coppying " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Array Coppying " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Array Coppying.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "V. Branch Arrays Created" << std::endl;
@@ -709,22 +699,16 @@ public:
     timer.Reset();
     timer.Start();
 
-    // STAGE VI:  Sort all supernodes by [whichBranch, regular index] to get the sequence along the branch
-    // Assign the upper end of the branch as an ID (for now).
-    // VI A.  Create the sorting array, then sort
     IdArrayType supernodeSorter;
-    supernodeSorter.Allocate(nSupernodes);
-    //auto supernodeSorterPortal = supernodeSorter.WritePortal();
-    for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-    {
-      supernodeSorter.WritePortal().Set(supernode, supernode);
-    }
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, nSupernodes),
+                          supernodeSorter);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Supernode Sorter " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Supernode Sorter " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Supernode Sorter.\n", timer.GetElapsedTime());
+    }
 
     timer.Reset();
     timer.Start();
@@ -733,10 +717,11 @@ public:
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- VTKM Sorting " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- VTKM Sorting " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for VTKM Sorting.\n", timer.GetElapsedTime());
+    }
 
     timer.Reset();
     timer.Start();
@@ -749,10 +734,11 @@ public:
     PermuteArray<vtkm::Id>(contourTree.Supernodes, supernodeSorter, permutedRegularID);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Array Permuting " << timer.GetElapsedTime()
-              << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Array Permuting " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Array Permuting.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;
@@ -764,56 +750,31 @@ public:
 
     timer.Reset();
     timer.Start();
-    // VI B. And reset the whichBranch to use the new branch IDs
-    for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-    {
-      const auto currentValue = MaskedIndex(whichBranch.ReadPortal().Get(supernode));
-      whichBranch.WritePortal().Set(supernode, chainToBranch.ReadPortal().Get(currentValue));
-    }
+
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::WhichBranchNewId
+      whichBranchNewIdWorklet;
+    invoke(whichBranchNewIdWorklet, chainToBranch, whichBranch);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Which Branch Initialisation "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Which Branch Initialisation " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Which Branch Initialisation.\n", timer.GetElapsedTime());
+    }
 
     timer.Reset();
     timer.Start();
 
-    // VI C.  For each segment, the highest element sets up the upper end, the lowest element sets the low end
-    for (vtkm::Id supernode = 0; supernode < nSupernodes; supernode++)
-    { // per supernode
-      // retrieve supernode & branch IDs
-      vtkm::Id supernodeID = supernodeSorter.ReadPortal().Get(supernode);
-      vtkm::Id branchID = whichBranch.ReadPortal().Get(supernodeID);
-      // save the branch ID as the owner
-      // use LHE of segment to set branch minimum
-      if (supernode == 0)
-      { // sn = 0
-        branchMinimum.WritePortal().Set(branchID, supernodeID);
-      } // sn = 0
-      else if (branchID !=
-               whichBranch.ReadPortal().Get(supernodeSorter.ReadPortal().Get(supernode - 1)))
-      { // LHE
-        branchMinimum.WritePortal().Set(branchID, supernodeID);
-      } // LHE
-      // use RHE of segment to set branch maximum
-      if (supernode == nSupernodes - 1)
-      { // sn = max
-        branchMaximum.WritePortal().Set(branchID, supernodeID);
-      } // sn = max
-      else if (branchID !=
-               whichBranch.ReadPortal().Get(supernodeSorter.ReadPortal().Get(supernode + 1)))
-      { // RHE
-        branchMaximum.WritePortal().Set(branchID, supernodeID);
-      } // RHE
-    }   // per supernode
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::BranchMinMaxSet
+      branchMinMaxSetWorklet(nSupernodes);
+    invoke(branchMinMaxSetWorklet, supernodeSorter, whichBranch, branchMinimum, branchMaximum);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Branch min/max setting "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Branch min/max setting " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Branch min/max setting.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "VI. Branches Set" << std::endl;
@@ -827,43 +788,23 @@ public:
     timer.Reset();
     timer.Start();
 
-    // STAGE VII: For each branch, set its parent (initially) to NO_SUCH_ELEMENT
-    // Then test upper & lower ends of each branch (in their segments) to see whether they are leaves
-    // At most one is a leaf. In the case of the master branch, both are
-    // So, non-leaf ends set the parent branch to the branch owned by the BestUp/BestDown corresponding
-    // while leaf ends do nothing. At the end of this, the master branch still has -1 as the parent,
-    // while all other branches have their parents correctly set
-    // BTW: This is inefficient, and we need to compress down the list of branches
-    for (vtkm::Id branchID = 0; branchID < nBranches; branchID++)
-    { // per branch
-      vtkm::Id branchMax = branchMaximum.ReadPortal().Get(branchID);
-      // check whether the maximum is NOT a leaf
-      if (!NoSuchElement(bestUpward.ReadPortal().Get(branchMax)))
-      { // points to a saddle
-        branchSaddle.WritePortal().Set(branchID,
-                                       MaskedIndex(bestUpward.ReadPortal().Get(branchMax)));
-        // if not, then the bestUp points to a saddle vertex at which we join the parent
-        branchParent.WritePortal().Set(
-          branchID, whichBranch.ReadPortal().Get(bestUpward.ReadPortal().Get(branchMax)));
-      } // points to a saddle
-      // now do the same with the branch minimum
-      vtkm::Id branchMin = branchMinimum.ReadPortal().Get(branchID);
-      // test whether NOT a lower leaf
-      if (!NoSuchElement(bestDownward.ReadPortal().Get(branchMin)))
-      { // points to a saddle
-        branchSaddle.WritePortal().Set(branchID,
-                                       MaskedIndex(bestDownward.ReadPortal().Get(branchMin)));
-        // if not, then the bestUp points to a saddle vertex at which we join the parent
-        branchParent.WritePortal().Set(
-          branchID, whichBranch.ReadPortal().Get(bestDownward.ReadPortal().Get(branchMin)));
-      } // points to a saddle
-    }   // per branch
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::BranchSaddleParentSet
+      branchSaddleParentSetWorklet;
+    invoke(branchSaddleParentSetWorklet,
+           whichBranch,
+           branchMinimum,
+           branchMaximum,
+           bestDownward,
+           bestUpward,
+           branchSaddle,
+           branchParent);
 
     timer.Stop();
-#ifdef DEBUG_PRINT
-    std::cout << "----------------//---------------- Branch parents & Saddles setting "
-              << timer.GetElapsedTime() << " seconds." << std::endl;
-#endif
+    if (true == printTime)
+    {
+      //std::cout << "----------------//---------------- Branch parents & Saddles setting " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Branch parents & Saddles setting.\n", timer.GetElapsedTime());
+    }
 
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
@@ -1128,6 +1069,7 @@ public:
            );
 
     ProcessContourTree::ComputeBranchData(contourTree,
+                                          false,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -1150,6 +1092,12 @@ public:
                                                   IdArrayType& branchSaddle,
                                                   IdArrayType& branchParent)
   { // ComputeHeightBranchDecomposition()
+
+    vtkm::cont::Timer timerTotal;
+    timerTotal.Start();
+
+    vtkm::cont::Timer timerTotalAll;
+    timerTotalAll.Start();
 
     vtkm::cont::Timer timer;
     timer.Start();
@@ -1183,8 +1131,8 @@ public:
     vtkm::Float64 ellapsedTime = timer.GetElapsedTime();
     if (true == printTime)
     {
-      std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds."
-                << std::endl;
+      //std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds." << std::endl;
+      printf("%.6f for Initialising Array.\n", timer.GetElapsedTime());
     }
 
     timer.Reset();
@@ -1199,8 +1147,8 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Finding min/max paths to the root took "
-                << timer.GetElapsedTime() << " seconds." << std::endl;
+      //std::cout << "---------------- Finding min/max paths to the root took \t\t" << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Finding min/max paths to the root.\n", timer.GetElapsedTime());
     }
 
     timer.Reset();
@@ -1223,8 +1171,8 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds."
-                << std::endl;
+      //std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Rerooting.\n", timer.GetElapsedTime());
     }
 
     timer.Reset();
@@ -1271,40 +1219,31 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
+      //std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Initialising more stuff.\n", timer.GetElapsedTime());
     }
 
     // Total HS Timer
     timer.Reset();
     timer.Start();
 
+
     //timer.Reset();
     //timer.Start();
+
+    //
+    // Min Hypersweep
+    //
+    const auto minOperator = vtkm::Minimum();
 
     editHyperarcs(contourTree.Hyperparents.ReadPortal(),
                   minPath,
                   minHyperarcs.WritePortal(),
                   minHowManyUsed.WritePortal());
-    editHyperarcs(contourTree.Hyperparents.ReadPortal(),
-                  maxPath,
-                  maxHyperarcs.WritePortal(),
-                  maxHowManyUsed.WritePortal());
 
-    //timer.Stop();
-    //if(true == printTime)
-    //{
-    //std::cout << "---------------- HS ---------------- Editing hyperarcs took " << timer.GetElapsedTime() << " seconds." << std::endl;
-    //}
+    vtkm::cont::Timer hypersweepTimer;
+    hypersweepTimer.Start();
 
-    // Parallelisable with the HS
-    //timer.Reset();
-    //timer.Start();
-
-    const auto minOperator = vtkm::Minimum();
-    const auto maxOperator = vtkm::Maximum();
-
-    // Minimum Hypersweep on the edited minHyperarcs
     findMinMaxNewSimple<decltype(vtkm::Minimum())>(contourTree.Supernodes,
                                                    contourTree.Hypernodes,
                                                    minHyperarcs,
@@ -1316,7 +1255,25 @@ public:
                                                    vtkm::Minimum(),
                                                    minValues);
 
-    // Maximum Hypersweep on the edited minHyperarcs
+    hypersweepTimer.Stop();
+    if (true == printTime)
+    {
+      //std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for the Min Hypersweep.\n", hypersweepTimer.GetElapsedTime());
+    }
+
+    fixPath(vtkm::Minimum(), minPath, minValues.WritePortal());
+
+    //
+    // Max Hypersweep
+    //
+    const auto maxOperator = vtkm::Maximum();
+
+    editHyperarcs(contourTree.Hyperparents.ReadPortal(),
+                  maxPath,
+                  maxHyperarcs.WritePortal(),
+                  maxHowManyUsed.WritePortal());
+
     findMinMaxNewSimple<decltype(vtkm::Maximum())>(contourTree.Supernodes,
                                                    contourTree.Hypernodes,
                                                    maxHyperarcs,
@@ -1328,69 +1285,44 @@ public:
                                                    vtkm::Maximum(),
                                                    maxValues);
 
-    //timer.Stop();
-    //if(true == printTime)
-    //{
-    //std::cout << "---------------- HS ---------------- Finding min/max took " << timer.GetElapsedTime() << " seconds." << std::endl;
-    //}
-
-    //timer.Reset();
-    //timer.Start();
-
-    // Parallel via prefix scan
-    fixPath(vtkm::Minimum(), minPath, minValues.WritePortal());
-
     fixPath(vtkm::Maximum(), maxPath, maxValues.WritePortal());
-
-    //timer.Stop();
-    //if(true == printTime)
-    //{
-    //std::cout << "---------------- HS ---------------- Fixing path took " << timer.GetElapsedTime() << " seconds." << std::endl;
-    //}
 
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- HS TOTAL ---------------- Total Hypersweep took "
-                << timer.GetElapsedTime() << " seconds." << std::endl;
+      //std::cout << "---------------- HS TOTAL ---------------- Total Hypersweep took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for HS TOTAL ---------------- Total Hypersweep.\n", timer.GetElapsedTime());
     }
-    //
-    // Incorporate the edge into the max subtree, Parallelisable. No HS
-    //
-    for (Id i = 0; i < maxValues.GetNumberOfValues(); i++)
-    {
-      Id parent = MaskedIndex(maxParents.ReadPortal().Get(i));
-
-      Id subtreeValue = maxValues.ReadPortal().Get(i);
-      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
-
-      if (parentValue > subtreeValue)
-      {
-        maxValues.WritePortal().Set(i, parentValue);
-      }
-    }
-
-    //
-    // Incorporate the edge into the min subtree, Parallelisable. No HS
-    //
-    for (Id i = 0; i < minValues.GetNumberOfValues(); i++)
-    {
-      Id parent = MaskedIndex(minParents.ReadPortal().Get(i));
-
-      Id subtreeValue = minValues.ReadPortal().Get(i);
-      Id parentValue = MaskedIndex(contourTree.Supernodes.ReadPortal().Get(parent));
-
-      if (parentValue < subtreeValue)
-      {
-        minValues.WritePortal().Set(i, parentValue);
-      }
-    }
-
-    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
-    arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     timer.Reset();
     timer.Start();
+
+    IdArrayType maxValuesCopy, minValuesCopy;
+    vtkm::cont::ArrayCopy(maxValues, maxValuesCopy);
+    vtkm::cont::ArrayCopy(minValues, minValuesCopy);
+
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<decltype(
+      vtkm::Minimum())>
+      incorporateParentMinimumWorklet(minOperator);
+    Invoke(incorporateParentMinimumWorklet, minParents, contourTree.Supernodes, minValues);
+
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<decltype(
+      vtkm::Maximum())>
+      incorporateParentMaximumWorklet(maxOperator);
+    Invoke(incorporateParentMaximumWorklet, maxParents, contourTree.Supernodes, maxValues);
+
+    timer.Stop();
+    if (true == printTime)
+    {
+      //std::cout << "---------------- Incorporating Parent took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Incorporating Parent.\n", timer.GetElapsedTime());
+    }
+
+    timer.Reset();
+    timer.Start();
+
+    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
+    arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::InitialiseArcs initArcs(
       0, contourTree.Arcs.GetNumberOfValues() - 1, minPath[minPath.size() - 1]);
@@ -1404,8 +1336,8 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
+      //std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Initialising arcs.\n", timer.GetElapsedTime());
     }
 
     //
@@ -1421,8 +1353,8 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
+      //std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Computing subtree height.\n", timer.GetElapsedTime());
     }
 
     //
@@ -1436,8 +1368,8 @@ public:
     timer.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds."
-                << std::endl;
+      //std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Sorting.\n", timer.GetElapsedTime());
     }
 
 
@@ -1451,16 +1383,22 @@ public:
     Invoke(setBestUpDown, bestUpward, bestDownward, arcs);
 
     timer.Stop();
+    timerTotal.Stop();
     if (true == printTime)
     {
-      std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime()
-                << " seconds." << std::endl;
+      //std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for Setting bestUp/Down.\n", timer.GetElapsedTime());
+      //std::cout << "---------------- TOTAL TIME for 1st Part is  " << timerTotal.GetElapsedTime() << " seconds." << std::endl;
+      printf("%.6f for TOTAL TIME for 1st Part.\n", timerTotal.GetElapsedTime());
+      printf("\n\n");
     }
+
 
     timer.Reset();
     timer.Start();
 
     ProcessContourTree::ComputeBranchData(contourTree,
+                                          printTime,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -1473,8 +1411,8 @@ public:
     ellapsedTime = timer.GetElapsedTime();
     if (true == printTime)
     {
-      std::cout << "---------------- Computing branch data too  " << ellapsedTime << " seconds."
-                << std::endl;
+      printf("%.6f for Computing branch data.\n", timer.GetElapsedTime());
+      printf("%.6f TOTAL BRANCH Decomposition.\n", timerTotalAll.GetElapsedTime());
     }
 
     //printf("Working!");

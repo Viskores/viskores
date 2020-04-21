@@ -262,6 +262,247 @@ public:
   }
 }; // ComputeMinMaxValues
 
+class PropagateBestUpDown : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using InputDomain = _3;
+
+
+  // Default Constructor
+  VTKM_EXEC_CONT PropagateBestUpDown() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernodeId,
+                            const IdWholeArrayInPortalType& bestUpwardPortal,
+                            const IdWholeArrayInPortalType& bestDownwardPortal,
+                            const IdWholeArrayOutPortalType& whichBranchPortal) const
+  {
+    vtkm::Id bestUp = bestUpwardPortal.Get(supernodeId);
+    if (NoSuchElement(bestUp))
+    {
+      // flag it as an upper leaf
+      whichBranchPortal.Set(supernodeId, TERMINAL_ELEMENT | supernodeId);
+    }
+    else if (bestDownwardPortal.Get(bestUp) == supernodeId)
+      whichBranchPortal.Set(supernodeId, bestUp);
+    else
+      whichBranchPortal.Set(supernodeId, TERMINAL_ELEMENT | supernodeId);
+  }
+}; // ComputeMinMaxValues
+
+class WhichBranchNewId : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2);
+  using InputDomain = _2;
+
+
+  // Default Constructor
+  VTKM_EXEC_CONT WhichBranchNewId() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernode,
+                            const IdWholeArrayInPortalType& chainToBranchPortal,
+                            const IdWholeArrayInOutPortalType& whichBranchPortal) const
+  {
+    const auto currentValue = MaskedIndex(whichBranchPortal.Get(supernode));
+    whichBranchPortal.Set(supernode, chainToBranchPortal.Get(currentValue));
+  }
+}; // ComputeMinMaxValues
+
+class BranchMinMaxSet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayInOut, WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _2;
+
+  vtkm::Id nSupernodes;
+
+  // Default Constructor
+  VTKM_EXEC_CONT BranchMinMaxSet(vtkm::Id _nSupernodes)
+    : nSupernodes(_nSupernodes)
+  {
+  }
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernode,
+                            const IdWholeArrayInPortalType& supernodeSorterPortal,
+                            const IdWholeArrayInPortalType& whichBranchPortal,
+                            const IdWholeArrayInOutPortalType& branchMinimumPortal,
+                            const IdWholeArrayInOutPortalType& branchMaximumPortal) const
+  {
+    // retrieve supernode & branch IDs
+    vtkm::Id supernodeID = supernodeSorterPortal.Get(supernode);
+    vtkm::Id branchID = whichBranchPortal.Get(supernodeID);
+    // save the branch ID as the owner
+    // use LHE of segment to set branch minimum
+    if (supernode == 0)
+    { // sn = 0
+      branchMinimumPortal.Set(branchID, supernodeID);
+    } // sn = 0
+    else if (branchID != whichBranchPortal.Get(supernodeSorterPortal.Get(supernode - 1)))
+    { // LHE
+      branchMinimumPortal.Set(branchID, supernodeID);
+    } // LHE
+    // use RHE of segment to set branch maximum
+    if (supernode == nSupernodes - 1)
+    { // sn = max
+      branchMaximumPortal.Set(branchID, supernodeID);
+    } // sn = max
+    else if (branchID != whichBranchPortal.Get(supernodeSorterPortal.Get(supernode + 1)))
+    { // RHE
+      branchMaximumPortal.Set(branchID, supernodeID);
+    } // RHE
+  }
+}; // ComputeMinMaxValues
+
+class BranchSaddleParentSet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayIn,
+                                WholeArrayInOut,
+                                WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4, _5, _6, _7);
+  using InputDomain = _2;
+
+  // Default Constructor
+  VTKM_EXEC_CONT BranchSaddleParentSet() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id branchID,
+                            const IdWholeArrayInPortalType& whichBranchPortal,
+                            const IdWholeArrayInPortalType& branchMinimumPortal,
+                            const IdWholeArrayInPortalType& branchMaximumPortal,
+                            const IdWholeArrayInPortalType& bestDownwardPortal,
+                            const IdWholeArrayInPortalType& bestUpwardPortal,
+                            const IdWholeArrayInOutPortalType& branchSaddlePortal,
+                            const IdWholeArrayInOutPortalType& branchParentPortal) const
+  {
+    vtkm::Id branchMax = branchMaximumPortal.Get(branchID);
+    // check whether the maximum is NOT a leaf
+    if (!NoSuchElement(bestUpwardPortal.Get(branchMax)))
+    { // points to a saddle
+      branchSaddlePortal.Set(branchID, MaskedIndex(bestUpwardPortal.Get(branchMax)));
+      // if not, then the bestUp points to a saddle vertex at which we join the parent
+      branchParentPortal.Set(branchID, whichBranchPortal.Get(bestUpwardPortal.Get(branchMax)));
+    } // points to a saddle
+    // now do the same with the branch minimum
+    vtkm::Id branchMin = branchMinimumPortal.Get(branchID);
+    // test whether NOT a lower leaf
+    if (!NoSuchElement(bestDownwardPortal.Get(branchMin)))
+    { // points to a saddle
+      branchSaddlePortal.Set(branchID, MaskedIndex(bestDownwardPortal.Get(branchMin)));
+      // if not, then the bestUp points to a saddle vertex at which we join the parent
+      branchParentPortal.Set(branchID, whichBranchPortal.Get(bestDownwardPortal.Get(branchMin)));
+    } // points to a saddle
+  }
+}; // ComputeMinMaxValues
+
+
+
+class PrepareChainToBranch : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2);
+  using InputDomain = _1;
+
+
+  // Default Constructor
+  VTKM_EXEC_CONT PrepareChainToBranch() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernode,
+                            const IdWholeArrayInPortalType& whichBranchPortal,
+                            const IdWholeArrayInOutPortalType& chainToBranchPortal) const
+  {
+    // test whether the supernode points to itself to find the top ends
+    if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+    {
+      chainToBranchPortal.Set(supernode, 1);
+    }
+  }
+}; // ComputeMinMaxValues
+
+
+class FinaliseChainToBranch : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2);
+  using InputDomain = _1;
+
+  VTKM_EXEC_CONT FinaliseChainToBranch() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernode,
+                            const IdWholeArrayInPortalType& whichBranchPortal,
+                            const IdWholeArrayInOutPortalType& chainToBranchPortal) const
+  {
+    // test whether the supernode points to itself to find the top ends
+    if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
+    {
+      const auto value = chainToBranchPortal.Get(supernode);
+      chainToBranchPortal.Set(supernode, value - 1);
+    }
+    else
+    {
+      chainToBranchPortal.Set(supernode, NO_SUCH_ELEMENT);
+    }
+  }
+}; // ComputeMinMaxValues
+
+
+
+
+template <typename Operator>
+class IncorporateParent : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayInOut);
+
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using InputDomain = _1;
+
+  Operator op;
+
+  // Default Constructor
+  VTKM_EXEC_CONT IncorporateParent(Operator _op)
+    : op(_op)
+  {
+  }
+
+  template <typename IdWholeArrayIn, typename IdWholeArrayInOut>
+  VTKM_EXEC void operator()(const vtkm::Id superarcId,
+                            const IdWholeArrayIn& parentsPortal,
+                            const IdWholeArrayIn& supernodesPortal,
+                            const IdWholeArrayInOut& hypersweepValuesPortal) const
+  {
+    Id i = superarcId;
+
+    Id parent = MaskedIndex(parentsPortal.Get(i));
+
+    Id subtreeValue = hypersweepValuesPortal.Get(i);
+    Id parentValue = MaskedIndex(supernodesPortal.Get(parent));
+
+    hypersweepValuesPortal.Set(i, op(subtreeValue, parentValue));
+  }
+}; // ComputeMinMaxValues
+
 
 
 
