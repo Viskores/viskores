@@ -1040,12 +1040,23 @@ void InitDataSet(int& argc, char** argv)
 int main(int argc, char* argv[])
 {
   auto opts = vtkm::cont::InitializeOptions::RequireDevice;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
 
-  InitDataSet(argc, argv);
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    InitDataSet(argc, args.data());
+  }
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;
@@ -1054,5 +1065,5 @@ int main(int argc, char* argv[])
   }();
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, dataSetSummary);
+  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
 }
