@@ -14,6 +14,7 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/DecodePNG.h>
+#include <vtkm/rendering/EncodePNG.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
 #include <vtkm/rendering/WorldAnnotator.h>
@@ -568,11 +569,41 @@ void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& vtkmNotUsed(cam
 void Canvas::SaveAs(const std::string& fileName) const
 {
   this->RefreshColorBuffer();
-  std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
+  auto ends_with = [](std::string const& value, std::string const& ending) {
+    if (ending.size() > value.size())
+    {
+      return false;
+    }
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+  };
+
+  ColorBufferType::ReadPortalType colorPortal = GetColorBuffer().ReadPortal();
   vtkm::Id width = GetWidth();
   vtkm::Id height = GetHeight();
+
+  if (ends_with(fileName, ".png"))
+  {
+    std::vector<unsigned char> img(static_cast<size_t>(4 * width * height));
+    for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
+    {
+      for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)
+      {
+        vtkm::Vec4f_32 tuple = colorPortal.Get(yIndex * width + xIndex);
+        // y = 0 is the top of a .png file.
+        size_t idx = static_cast<size_t>(4 * width * (height - 1 - yIndex) + 4 * xIndex);
+        img[idx + 0] = (unsigned char)(tuple[0] * 255);
+        img[idx + 1] = (unsigned char)(tuple[1] * 255);
+        img[idx + 2] = (unsigned char)(tuple[2] * 255);
+        img[idx + 3] = (unsigned char)(tuple[3] * 255);
+      }
+    }
+
+    SavePNG(fileName, img, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
+    return;
+  }
+
+  std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
   of << "P6" << std::endl << width << " " << height << std::endl << 255 << std::endl;
-  ColorBufferType::ReadPortalType colorPortal = GetColorBuffer().ReadPortal();
   for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
   {
     for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)

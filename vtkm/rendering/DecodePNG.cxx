@@ -14,8 +14,6 @@
 #include <vtkm/internal/Configure.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#define LODEPNG_NO_COMPILE_ENCODER
-#define LODEPNG_NO_COMPILE_DISK
 #include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.cpp>
 VTKM_THIRDPARTY_PRE_INCLUDE
 

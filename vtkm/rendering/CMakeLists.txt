@@ -51,6 +51,7 @@ set(headers
   ConnectivityProxy.h
   Cylinderizer.h
   DecodePNG.h
+  EncodePNG.h
   LineRenderer.h
   MatrixHelpers.h
   Scene.h
@@ -85,6 +86,7 @@ set(sources
   Camera.cxx
   Color.cxx
   DecodePNG.cxx
+  EncodePNG.cxx
   raytracing/Logger.cxx
   )
 
