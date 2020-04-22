@@ -39,8 +39,8 @@ target_include_directories(vtkm_lodepng INTERFACE
 )
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-  install(DIRECTORY vtkmlodepng
-    DESTINATION "${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lodepng/"
+  install(FILES ${headers}
+    DESTINATION "${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lodepng/vtkmlodepng/"
   )
 endif()
 
