@@ -35,6 +35,24 @@ PortalTypeConst MakePortal(const void* buffer, vtkm::Id numValues)
                          static_cast<const T*>(buffer) + static_cast<std::size_t>(numValues));
 };
 
+void VectorDeleter(void* container)
+{
+  std::vector<T>* v = reinterpret_cast<std::vector<T>*>(container);
+  delete v;
+}
+
+void VectorReallocator(void*& memory,
+                       void*& container,
+                       vtkm::BufferSizeType oldSize,
+                       vtkm::BufferSizeType newSize)
+{
+  std::vector<T>* v = reinterpret_cast<std::vector<T>*>(container);
+  VTKM_TEST_ASSERT(v->size() == static_cast<std::size_t>(oldSize));
+  VTKM_TEST_ASSERT(memory == &v->front());
+
+  v->resize(static_cast<std::size_t>(newSize));
+  memory = &v->front();
+}
 struct VectorDeleter
 {
   std::shared_ptr<std::vector<T>> Data;
@@ -110,10 +128,15 @@ void DoTest()
   VTKM_TEST_ASSERT(!buffer.IsAllocatedOnDevice(device));
 
   std::cout << "Reset with device data" << std::endl;
-  VectorDeleter vectorDeleter(ARRAY_SIZE);
-  void* devicePointer = &vectorDeleter.Data->front();
+  std::vector<T> v(ARRAY_SIZE);
+  void* devicePointer = &v.front();
   SetPortal(MakePortal(devicePointer, ARRAY_SIZE));
-  buffer.Reset(devicePointer, BUFFER_SIZE, std::move(vectorDeleter), device);
+  buffer.Reset(vtkm::cont::internal::BufferInfo(device,
+                                                devicePointer,
+                                                new std::vector<T>(std::move(v)),
+                                                BUFFER_SIZE,
+                                                VectorDeleter,
+                                                VectorReallocator));
   VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE);
   VTKM_TEST_ASSERT(!buffer.IsAllocatedOnHost());
   VTKM_TEST_ASSERT(buffer.IsAllocatedOnDevice(device));

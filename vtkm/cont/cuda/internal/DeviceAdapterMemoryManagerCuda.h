@@ -26,22 +26,18 @@ class VTKM_CONT_EXPORT DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCu
   : public DeviceAdapterMemoryManagerBase
 {
 public:
-  VTKM_CONT std::shared_ptr<BufferInfo> Allocate(vtkm::BufferSizeType size) override;
+  VTKM_CONT vtkm::cont::internal::BufferInfo Allocate(vtkm::BufferSizeType size) const override;
 
-  VTKM_CONT std::shared_ptr<BufferInfo> ManageArray(std::shared_ptr<vtkm::UInt8> buffer,
-                                                    vtkm::BufferSizeType size) override;
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override;
 
-  VTKM_CONT void Reallocate(std::shared_ptr<vtkm::cont::internal::BufferInfo> buffer,
-                            vtkm::BufferSizeType newSize) override;
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyHostToDevice(
+    const vtkm::cont::internal::BufferInfo& src) const override;
 
-  VTKM_CONT std::shared_ptr<vtkm::cont::internal::BufferInfo> CopyHostToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfoHost> src) override;
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyDeviceToHost(
+    const vtkm::cont::internal::BufferInfo& src) const override;
 
-  VTKM_CONT std::shared_ptr<vtkm::cont::internal::BufferInfoHost> CopyDeviceToHost(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> src) override;
-
-  VTKM_CONT std::shared_ptr<vtkm::cont::internal::BufferInfo> CopyDeviceToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> src) override;
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
+    const vtkm::cont::internal::BufferInfo& src) const override;
 };
 }
 }

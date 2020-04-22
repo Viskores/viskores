@@ -10,7 +10,6 @@
 
 
 set(unit_tests
-  UnitTestArrayManagerExecutionShareWithControl.cxx
   UnitTestArrayPortalFromIterators.cxx
   UnitTestBuffer.cxx
   UnitTestIteratorFromArrayPortal.cxx

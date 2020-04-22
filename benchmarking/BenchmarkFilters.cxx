@@ -24,7 +24,6 @@
 #include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/OptionParser.h>

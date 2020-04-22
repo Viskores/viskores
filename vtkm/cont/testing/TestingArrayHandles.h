@@ -78,15 +78,44 @@ template <class DeviceAdapterTag>
 struct TestingArrayHandles
 {
 
+  template <typename PortalType>
+  struct PortalExecObjectWrapper : vtkm::cont::ExecutionObjectBase
+  {
+    PortalType Portal;
+    PortalExecObjectWrapper(const PortalType& portal)
+      : Portal(portal)
+    {
+    }
+
+    PortalType PrepareForExecution(DeviceAdapterTag, vtkm::cont::Token&) const
+    {
+      return this->Portal;
+    }
+
+    template <typename OtherDevice>
+    PortalType PrepareForExecution(OtherDevice, vtkm::cont::Token&) const
+    {
+      VTKM_TEST_FAIL("Executing on wrong device.");
+      return this->Portal;
+    }
+  };
+
+  template <typename PortalType>
+  static PortalExecObjectWrapper<PortalType> WrapPortal(const PortalType& portal)
+  {
+    return PortalExecObjectWrapper<PortalType>(portal);
+  }
+
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn, FieldOut);
-    using ExecutionSignature = _2(_1);
+    using ControlSignature = void(FieldIn, ExecObject, FieldOut);
+    using ExecutionSignature = _3(_2, InputIndex);
 
-    template <class ValueType>
-    VTKM_EXEC ValueType operator()(const ValueType& inValue) const
+    template <typename PortalType>
+    VTKM_EXEC typename PortalType::ValueType operator()(const PortalType& portal,
+                                                        vtkm::Id index) const
     {
-      return inValue;
+      return portal.Get(index);
     }
   };
 
@@ -162,6 +191,7 @@ private:
     template <typename T>
     VTKM_CONT void operator()(T) const
     {
+      std::cout << "Creating array with user-allocated memory." << std::endl;
       std::vector<T> buffer(ARRAY_SIZE);
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
@@ -186,7 +216,7 @@ private:
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
+        DispatcherPassThrough().Invoke(arrayHandle, WrapPortal(executionPortal), result);
         array_handle_testing::CheckArray(result);
       }
 
@@ -200,7 +230,7 @@ private:
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
+        DispatcherPassThrough().Invoke(arrayHandle, WrapPortal(executionPortal), result);
         array_handle_testing::CheckArray(result);
       }
 
@@ -208,33 +238,18 @@ private:
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
+        arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
 
         //we can't verify output contents as those aren't fetched, we
         //can just make sure the allocation didn't throw an exception
       }
 
-      { //as output with a length larger than the memory provided by the user
-        //this should fail
-        bool gotException = false;
-        try
-        {
-          //you should not be able to allocate a size larger than the
-          //user provided and get the results
-          vtkm::cont::Token token;
-          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
-          token.DetachFromAll();
-          arrayHandle.WritePortal();
-        }
-        catch (vtkm::cont::Error&)
-        {
-          gotException = true;
-        }
-        VTKM_TEST_ASSERT(gotException,
-                         "PrepareForOutput should fail when asked to "
-                         "re-allocate user provided memory.");
+      { //an output with a length larger than the memory provided by the user
+        //this should drop the user's data
+        vtkm::cont::Token token;
+        arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
+        token.DetachFromAll();
+        arrayHandle.WritePortal();
       }
     }
   };
@@ -252,9 +267,7 @@ private:
       }
 
       auto user_free_function = [](void* ptr) { delete[] static_cast<T*>(ptr); };
-      vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> storage(
-        buffer, ARRAY_SIZE, user_free_function);
-      vtkm::cont::ArrayHandle<T> arrayHandle(std::move(storage));
+      vtkm::cont::ArrayHandleBasic<T> arrayHandle(buffer, ARRAY_SIZE, user_free_function);
 
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "ArrayHandle has wrong number of entries.");
@@ -272,7 +285,7 @@ private:
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
+        DispatcherPassThrough().Invoke(arrayHandle, WrapPortal(executionPortal), result);
         array_handle_testing::CheckArray(result);
       }
 
@@ -286,7 +299,7 @@ private:
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
+        DispatcherPassThrough().Invoke(arrayHandle, WrapPortal(executionPortal), result);
         array_handle_testing::CheckArray(result);
       }
 
@@ -294,9 +307,7 @@ private:
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
         vtkm::cont::Token token;
-        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
+        arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
         token.DetachFromAll();
 
         //we can't verify output contents as those aren't fetched, we
@@ -369,6 +380,12 @@ private:
         vtkm::cont::Token token;
         using ExecutionPortalType =
           typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+
+        // Reset array data.
+        Algorithm::Schedule(AssignTestValue<T, ExecutionPortalType>{ arrayHandle.PrepareForOutput(
+                              ARRAY_SIZE * 2, DeviceAdapterTag{}, token) },
+                            ARRAY_SIZE * 2);
+
         ExecutionPortalType executionPortal =
           arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
 

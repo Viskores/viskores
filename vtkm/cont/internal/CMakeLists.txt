@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayExportMacros.h
-  ArrayHandleBasicImpl.h
-  ArrayHandleBasicImpl.hxx
   ArrayHandleExecutionManager.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h

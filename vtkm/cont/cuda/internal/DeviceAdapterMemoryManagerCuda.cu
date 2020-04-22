@@ -18,160 +18,147 @@
 namespace
 {
 
-/// Deletes a pointer declared with the CUDA API
-struct CudaDeleter
-{
-  VTKM_CONT void operator()(void* buffer) const
-  {
-    VTKM_ASSERT(buffer != nullptr);
-    vtkm::cont::cuda::internal::CudaAllocator::Free(buffer);
-  }
-};
-
-struct BufferInfoCuda : vtkm::cont::internal::BufferInfo
-{
-  std::shared_ptr<vtkm::UInt8> CudaBuffer;
-  vtkm::BufferSizeType Size;
-
-  VTKM_CONT BufferInfoCuda(const std::shared_ptr<vtkm::UInt8> buffer, vtkm::BufferSizeType size)
-    : CudaBuffer(buffer)
-    , Size(size)
-  {
-  }
-
-  VTKM_CONT void* GetPointer() const override { return this->CudaBuffer.get(); }
-
-  VTKM_CONT vtkm::BufferSizeType GetSize() const override { return this->Size; }
-};
-
-} // anonymous namespace
-
-std::shared_ptr<vtkm::cont::internal::BufferInfo> vtkm::cont::internal::DeviceAdapterMemoryManager<
-  vtkm::cont::DeviceAdapterTagCuda>::Allocate(vtkm::BufferSizeType size)
+void* CudaAllocate(vtkm::BufferSizeType size)
 {
   try
   {
-    vtkm::UInt8* buffer = static_cast<vtkm::UInt8*>(
-      vtkm::cont::cuda::internal::CudaAllocator::Allocate(static_cast<std::size_t>(size)));
-    std::shared_ptr<vtkm::UInt8> bufferPtr(buffer, CudaDeleter{});
-    return std::shared_ptr<vtkm::cont::internal::BufferInfo>(new BufferInfoCuda(bufferPtr, size));
+    return vtkm::cont::cuda::internal::CudaAllocator::Allocate(static_cast<std::size_t>(size));
   }
   catch (const std::exception& error)
   {
     std::ostringstream err;
-    err << "Failed to allocate " << size << " bytes on device: " << error.what();
+    err << "Failed to allocate " << size << " bytes on CUDA device: " << error.what();
     throw vtkm::cont::ErrorBadAllocation(err.str());
   }
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfo> vtkm::cont::internal::DeviceAdapterMemoryManager<
-  vtkm::cont::DeviceAdapterTagCuda>::ManageArray(std::shared_ptr<vtkm::UInt8> buffer,
-                                                 vtkm::BufferSizeType size)
+void CudaDelete(void* memory)
 {
-  return std::shared_ptr<vtkm::cont::internal::BufferInfo>(new BufferInfoCuda(buffer, size));
-}
-
-void vtkm::cont::internal::DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::Reallocate(
-  std::shared_ptr<vtkm::cont::internal::BufferInfo> b,
-  vtkm::BufferSizeType newSize)
-{
-  BufferInfoCuda* buffer = dynamic_cast<BufferInfoCuda*>(b.get());
-  VTKM_ASSERT(buffer);
-
-  if (newSize <= buffer->Size)
+  if (memory != nullptr)
   {
-    // Just reuse the buffer. (Would be nice to free up memory.)
-    buffer->Size = newSize;
+    vtkm::cont::cuda::internal::CudaAllocator::Free(memory);
   }
-  else
+};
+
+void CudaReallocate(void*& memory,
+                    void*& container,
+                    vtkm::BufferSizeType oldSize,
+                    vtkm::BufferSizeType newSize)
+{
+  VTKM_ASSERT(memory == container);
+
+  if (newSize > oldSize)
   {
     // Make a new buffer
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> newBufferInfo = this->Allocate(newSize);
-    BufferInfoCuda* newBuffer = dynamic_cast<BufferInfoCuda*>(newBufferInfo.get());
-    VTKM_ASSERT(newBuffer != nullptr);
+    void* newMemory = CudaAllocate(newSize);
 
     // Copy the data to the new buffer
-    VTKM_CUDA_CALL(cudaMemcpyAsync(newBuffer->GetPointer(),
-                                   buffer->GetPointer(),
-                                   static_cast<std::size_t>(buffer->Size),
+    VTKM_CUDA_CALL(cudaMemcpyAsync(newMemory,
+                                   memory,
+                                   static_cast<std::size_t>(oldSize),
                                    cudaMemcpyDeviceToDevice,
                                    cudaStreamPerThread));
 
     // Reset the buffer in the passed in info
-    *buffer = *newBuffer;
+    memory = container = newMemory;
+  }
+  else
+  {
+    // Just reuse the buffer.
   }
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfo> vtkm::cont::internal::
-  DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfoHost> src)
+} // anonymous namespace
+
+namespace vtkm
 {
+namespace cont
+{
+namespace internal
+{
+
+vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManager<
+  vtkm::cont::DeviceAdapterTagCuda>::Allocate(vtkm::BufferSizeType size) const
+{
+  void* memory = CudaAllocate(size);
+  return vtkm::cont::internal::BufferInfo(
+    vtkm::cont::DeviceAdapterTagCuda{}, memory, memory, size, CudaDelete, CudaReallocate);
+}
+
+vtkm::cont::DeviceAdapterId
+DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::GetDevice() const
+{
+  return vtkm::cont::DeviceAdapterTagCuda{};
+}
+
+vtkm::cont::internal::BufferInfo
+DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDevice(
+  const vtkm::cont::internal::BufferInfo& src) const
+{
+  VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{});
+
   using vtkm::cont::cuda::internal::CudaAllocator;
-  if (CudaAllocator::IsManagedPointer(src->GetPointer()))
+  if (CudaAllocator::IsManagedPointer(src.GetPointer()))
   {
     // In the current code structure, we don't know whether this buffer is going to be used
     // for input or output. (Currently, I don't think there is any difference.)
-    CudaAllocator::PrepareForOutput(src->GetPointer(), static_cast<std::size_t>(src->GetSize()));
+    CudaAllocator::PrepareForOutput(src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
 
     // The provided control pointer is already cuda managed and can be accessed on the device
     // via unified memory. Just shallow copy the pointer.
-    return std::shared_ptr<vtkm::cont::internal::BufferInfo>(
-      new BufferInfoCuda(src->GetSharedPointer(), src->GetSize()));
+    return vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagCuda{});
   }
   else
   {
     // Make a new buffer
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> destInfo = this->Allocate(src->GetSize());
-    BufferInfoCuda* dest = dynamic_cast<BufferInfoCuda*>(destInfo.get());
-    VTKM_ASSERT(dest != nullptr);
+    vtkm::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
 
     // Copy the data to the new buffer
     VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
                "Copying host --> CUDA dev: %s (%lld bytes)",
-               vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(src->GetSize())).c_str(),
-               src->GetSize());
+               vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(src.GetSize())).c_str(),
+               src.GetSize());
 
-    VTKM_CUDA_CALL(cudaMemcpyAsync(dest->GetPointer(),
-                                   src->GetPointer(),
-                                   static_cast<std::size_t>(src->GetSize()),
+    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
+                                   src.GetPointer(),
+                                   static_cast<std::size_t>(src.GetSize()),
                                    cudaMemcpyHostToDevice,
                                    cudaStreamPerThread));
 
-    return destInfo;
+    return dest;
   }
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfoHost> vtkm::cont::internal::
-  DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToHost(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> src_)
+vtkm::cont::internal::BufferInfo
+DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToHost(
+  const vtkm::cont::internal::BufferInfo& src) const
 {
   using vtkm::cont::cuda::internal::CudaAllocator;
-  BufferInfoCuda* src = dynamic_cast<BufferInfoCuda*>(src_.get());
-  VTKM_ASSERT(src != nullptr);
+  VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagCuda{});
 
-  std::shared_ptr<vtkm::cont::internal::BufferInfoHost> dest;
+  vtkm::cont::internal::BufferInfo dest;
 
-  if (CudaAllocator::IsManagedPointer(src->GetPointer()))
+  if (CudaAllocator::IsManagedPointer(src.GetPointer()))
   {
     // The provided control pointer is already cuda managed and can be accessed on the host
     // via unified memory. Just shallow copy the pointer.
-    CudaAllocator::PrepareForControl(src->GetPointer(), static_cast<std::size_t>(src->Size));
-    dest.reset(new vtkm::cont::internal::BufferInfoHost(src->CudaBuffer, src->Size));
+    CudaAllocator::PrepareForControl(src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
+    dest = vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagCuda{});
   }
   else
   {
     // Make a new buffer
-    dest.reset(new vtkm::cont::internal::BufferInfoHost(src->Size));
+    dest = vtkm::cont::internal::AllocateOnHost(src.GetSize());
 
     // Copy the data to the new buffer
     VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
                "Copying CUDA dev --> host: %s (%lld bytes)",
-               vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(src->Size)).c_str(),
-               src->Size);
+               vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(src.GetSize())).c_str(),
+               src.GetSize());
 
-    VTKM_CUDA_CALL(cudaMemcpyAsync(dest->GetPointer(),
-                                   src->GetPointer(),
-                                   static_cast<std::size_t>(src->Size),
+    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
+                                   src.GetPointer(),
+                                   static_cast<std::size_t>(src.GetSize()),
                                    cudaMemcpyDeviceToHost,
                                    cudaStreamPerThread));
   }
@@ -185,16 +172,19 @@ std::shared_ptr<vtkm::cont::internal::BufferInfoHost> vtkm::cont::internal::
   return dest;
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfo> vtkm::cont::internal::
-  DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> src)
+vtkm::cont::internal::BufferInfo
+DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToDevice(
+  const vtkm::cont::internal::BufferInfo& src) const
 {
-  std::shared_ptr<vtkm::cont::internal::BufferInfo> dest = this->Allocate(src->GetSize());
-  VTKM_CUDA_CALL(cudaMemcpyAsync(dest->GetPointer(),
-                                 src->GetPointer(),
-                                 static_cast<std::size_t>(src->GetSize()),
+  vtkm::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
+  VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
+                                 src.GetPointer(),
+                                 static_cast<std::size_t>(src.GetSize()),
                                  cudaMemcpyDeviceToDevice,
                                  cudaStreamPerThread));
 
   return dest;
 }
+}
+}
+} // namespace vtkm::cont::internal

@@ -25,6 +25,10 @@ template <>
 class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagSerial>
   : public vtkm::cont::internal::DeviceAdapterMemoryManagerShared
 {
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override
+  {
+    return vtkm::cont::DeviceAdapterTagSerial{};
+  }
 };
 }
 }

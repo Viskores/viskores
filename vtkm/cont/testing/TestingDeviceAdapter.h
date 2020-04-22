@@ -27,7 +27,6 @@
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
@@ -529,107 +528,57 @@ private:
       ARRAY_SIZE * static_cast<vtkm::BufferSizeType>(sizeof(T));
 
     // Set up buffer on host.
-    std::shared_ptr<vtkm::cont::internal::BufferInfoHost> hostBufferSrc(
-      new vtkm::cont::internal::BufferInfoHost(BUFFER_SIZE));
-    VTKM_TEST_ASSERT(hostBufferSrc->GetSize() == BUFFER_SIZE);
-    SetPortal(makePortal(*hostBufferSrc));
+    vtkm::cont::internal::BufferInfo hostBufferSrc =
+      vtkm::cont::internal::AllocateOnHost(BUFFER_SIZE);
+    VTKM_TEST_ASSERT(hostBufferSrc.GetSize() == BUFFER_SIZE);
+    SetPortal(makePortal(hostBufferSrc));
 
     vtkm::cont::internal::DeviceAdapterMemoryManager<DeviceAdapterTag> memoryManager;
 
     std::cout << "Allocate a buffer." << std::endl;
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> allocatedMemory =
-      memoryManager.Allocate(BUFFER_SIZE);
-    VTKM_TEST_ASSERT(allocatedMemory->GetSize() == BUFFER_SIZE);
+    vtkm::cont::internal::BufferInfo allocatedMemory = memoryManager.Allocate(BUFFER_SIZE);
+    VTKM_TEST_ASSERT(allocatedMemory.GetSize() == BUFFER_SIZE);
 
     std::cout << "Copy data from host to device." << std::endl;
     allocatedMemory = memoryManager.CopyHostToDevice(hostBufferSrc);
 
     std::cout << "Copy data within device." << std::endl;
-    std::shared_ptr<vtkm::cont::internal::BufferInfo> workingMemory =
+    vtkm::cont::internal::BufferInfo workingMemory =
       memoryManager.CopyDeviceToDevice(allocatedMemory);
-    VTKM_TEST_ASSERT(workingMemory->GetSize() == BUFFER_SIZE);
+    VTKM_TEST_ASSERT(workingMemory.GetSize() == BUFFER_SIZE);
 
     std::cout << "Copy data back to host." << std::endl;
-    std::shared_ptr<vtkm::cont::internal::BufferInfoHost> hostBufferDest =
-      memoryManager.CopyDeviceToHost(workingMemory);
-    VTKM_TEST_ASSERT(hostBufferDest->GetSize() == BUFFER_SIZE);
-    CheckPortal(makePortal(*hostBufferDest));
+    vtkm::cont::internal::BufferInfo hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE);
+    CheckPortal(makePortal(hostBufferDest));
 
     std::cout << "Shrink a buffer (and preserve memory)" << std::endl;
     memoryManager.Reallocate(workingMemory, BUFFER_SIZE / 2);
     hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
-    VTKM_TEST_ASSERT(hostBufferDest->GetSize() == BUFFER_SIZE / 2);
-    CheckPortal(makePortal(*hostBufferDest));
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE / 2);
+    CheckPortal(makePortal(hostBufferDest));
 
     std::cout << "Grow a buffer (and preserve memory)" << std::endl;
     memoryManager.Reallocate(workingMemory, BUFFER_SIZE * 2);
     hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
-    VTKM_TEST_ASSERT(hostBufferDest->GetSize() == BUFFER_SIZE * 2);
-    hostBufferDest->Allocate(BUFFER_SIZE / 2, vtkm::CopyFlag::On);
-    CheckPortal(makePortal(*hostBufferDest));
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE * 2);
+    hostBufferDest.Reallocate(BUFFER_SIZE / 2);
+    CheckPortal(makePortal(hostBufferDest));
 
     std::cout << "Make sure data is actually available on the device." << std::endl;
     // This actually requires running schedule.
     workingMemory = memoryManager.CopyDeviceToDevice(allocatedMemory);
-    Algorithm::Schedule(MakeAddArrayKernel(makePortal(*workingMemory)), ARRAY_SIZE);
+    Algorithm::Schedule(MakeAddArrayKernel(makePortal(workingMemory)), ARRAY_SIZE);
 
     hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
 
-    PortalType portal = makePortal(*hostBufferDest);
+    PortalType portal = makePortal(hostBufferDest);
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
     for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       T expected = TestValue(index, T()) + T(index);
       T computed = portal.Get(index);
       VTKM_TEST_ASSERT(test_equal(expected, computed), expected, " != ", computed);
-    }
-  }
-
-  static VTKM_CONT void TestArrayTransfer()
-  {
-    std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing ArrayHandle Transfer" << std::endl;
-
-    using StorageType = vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic>;
-
-    // Create original input array.
-    StorageType storage;
-    storage.Allocate(ARRAY_SIZE * 2);
-
-    StorageType::PortalType portal = storage.GetPortal();
-    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE * 2,
-                     "Storage portal has unexpected size.");
-
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
-      portal.Set(index, TestValue(index, vtkm::Id()));
-    }
-
-    vtkm::cont::ArrayHandle<vtkm::Id> handle(std::move(storage));
-
-    // Do an operation just so we know the values are placed in the execution
-    // environment and they change. We are only calling on half the array
-    // because we are about to shrink.
-    {
-      vtkm::cont::Token token;
-      Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
-                          ARRAY_SIZE);
-    }
-
-    // Change size.
-    handle.Shrink(ARRAY_SIZE);
-
-    VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
-                     "Shrink did not set size of array handle correctly.");
-
-    // Get the array back and check its values.
-    auto checkPortal = handle.ReadPortal();
-    VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE, "Storage portal wrong size.");
-
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
-      VTKM_TEST_ASSERT(checkPortal.Get(index) == TestValue(index, vtkm::Id()) + index,
-                       "Did not get correct values from array.");
     }
   }
 
@@ -3179,7 +3128,6 @@ private:
       std::cout << "Doing DeviceAdapter tests" << std::endl;
 
       TestMemoryTransfer();
-      TestArrayTransfer();
       TestOutOfMemory();
       TestTimer();
       TestVirtualObjectTransfer();

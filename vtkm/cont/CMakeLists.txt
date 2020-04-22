@@ -13,6 +13,7 @@ set(headers
   ArrayCopy.h
   ArrayGetValues.h
   ArrayHandle.h
+  ArrayHandleBasic.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
@@ -106,7 +107,6 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageBasic.h
   StorageExtrude.h
   StorageImplicit.h
   StorageList.h
@@ -131,21 +131,19 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageBasic.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx
   )
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  internal/ArrayHandleBasicImpl.cxx
-  internal/ArrayManagerExecutionShareWithControl.cxx
   internal/Buffer.cxx
   internal/DeviceAdapterMemoryManager.cxx
   internal/DeviceAdapterMemoryManagerShared.cxx
@@ -155,7 +153,6 @@ set(sources
   Logging.cxx
   ParticleArrayCopy.cxx
   RuntimeDeviceTracker.cxx
-  StorageBasic.cxx
   Token.cxx
   TryExecute.cxx
   )

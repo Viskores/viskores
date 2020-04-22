@@ -18,12 +18,10 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/ErrorInternal.h>
-#include <vtkm/cont/SerializableTypeString.h>
-#include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Token.h>
 
 #include <vtkm/internal/ArrayPortalHelpers.h>
@@ -38,6 +36,39 @@
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/ArrayPortalCheck.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+#include <vtkm/cont/internal/Buffer.h>
+
+namespace vtkm
+{
+namespace cont
+{
+
+// Normally this would be defined in ArrayHandleBasic.h, but we need this declared early for
+// the default storage.
+
+/// A tag for the basic implementation of a Storage object.
+struct VTKM_ALWAYS_EXPORT StorageTagBasic
+{
+};
+}
+} // namespace vtkm::cont
+
+#if VTKM_STORAGE == VTKM_STORAGE_BASIC
+
+#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::StorageTagBasic
+
+#elif VTKM_STORAGE == VTKM_STORAGE_ERROR
+
+#include <vtkm/cont/internal/StorageError.h>
+#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::internal::StorageTagError
+
+#elif (VTKM_STORAGE == VTKM_STORAGE_UNDEFINED) || !defined(VTKM_STORAGE)
+
+#ifndef VTKM_DEFAULT_STORAGE_TAG
+#warning If array storage is undefined, VTKM_DEFAULT_STORAGE_TAG must be defined.
+#endif
+
+#endif
 
 namespace vtkm
 {
@@ -846,44 +877,447 @@ private:
   std::shared_ptr<InternalStruct> Internals;
 };
 
-/// A convenience function for creating an ArrayHandle from a standard C array.
-///
-template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
-make_ArrayHandle(const T* array, vtkm::Id length, vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+namespace detail
 {
-  using ArrayHandleType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
-  if (copy == vtkm::CopyFlag::On)
-  {
-    ArrayHandleType handle;
-    handle.Allocate(length);
-    std::copy(array, array + length, vtkm::cont::ArrayPortalToIteratorBegin(handle.WritePortal()));
-    return handle;
-  }
-  else
-  {
-    using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
-    return ArrayHandleType(StorageType(array, length));
-  }
-}
 
-/// A convenience function for creating an ArrayHandle from an std::vector.
-///
-template <typename T, typename Allocator>
-VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(
-  const std::vector<T, Allocator>& array,
-  vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+VTKM_CONT_EXPORT VTKM_CONT void ArrayHandleReleaseResourcesExecution(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers);
+
+VTKM_CONT_EXPORT VTKM_CONT bool ArrayHandleIsOnDevice(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers,
+  vtkm::cont::DeviceAdapterId device);
+
+VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapterId(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers);
+
+} // namespace detail
+
+/// This new style of ArrayHandle will eventually replace the classic ArrayHandle
+template <typename T, typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
+class VTKM_ALWAYS_EXPORT ArrayHandleNewStyle : public internal::ArrayHandleBase
 {
-  if (!array.empty())
+public:
+  using ValueType = T;
+  using StorageTag = StorageTag_;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+
+  using ReadPortalType = typename StorageType::ReadPortalType;
+  using WritePortalType = typename StorageType::WritePortalType;
+
+  static constexpr vtkm::IdComponent NUMBER_OF_BUFFERS = StorageType::NUMBER_OF_BUFFERS;
+  static constexpr vtkm::IdComponent GetNumberOfBuffers() { return NUMBER_OF_BUFFERS; }
+
+  // TODO: Deprecate this
+  template <typename Device>
+  struct ExecutionTypes
   {
-    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
-  }
-  else
+    using Portal = WritePortalType;
+    using PortalConst = ReadPortalType;
+  };
+
+  using PortalControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::WritePortalType instead.") =
+    WritePortalType;
+  using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
+    ReadPortalType;
+
+  /// Constructs an empty ArrayHandle.
+  ///
+  VTKM_CONT ArrayHandleNewStyle()
+    : Internals(std::make_shared<InternalsStruct>())
   {
-    // Vector empty. Just return an empty array handle.
-    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
   }
-}
+
+  /// Copy constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated copy constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& src)
+    : Internals(src.Internals)
+  {
+  }
+
+  /// Move constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated move constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT ArrayHandleNewStyle(
+    vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>&& src) noexcept
+    : Internals(std::move(src.Internals))
+  {
+  }
+
+  ///@{
+  /// Special constructor for subclass specializations that need to set the
+  /// initial state array. Used when pulling data from other sources.
+  ///
+  VTKM_CONT ArrayHandleNewStyle(const std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                const StorageType& storage = StorageType())
+    : Internals(std::make_shared<InternalsStruct>(&buffers.front(), storage))
+  {
+    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Internals->Buffers.size()) ==
+                GetNumberOfBuffers());
+  }
+
+  VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::internal::Buffer* buffers,
+                                const StorageType& storage = StorageType())
+    : Internals(std::make_shared<InternalsStruct>(buffers, storage))
+  {
+  }
+  ///@}
+
+  /// Destructs an empty ArrayHandle.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated destructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  VTKM_CONT ~ArrayHandleNewStyle() {}
+
+  /// \brief Copies an ArrayHandle
+  ///
+  VTKM_CONT
+  vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& operator=(
+    const vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& src)
+  {
+    this->Internals = src.Internals;
+    return *this;
+  }
+
+  /// \brief Move and Assignment of an ArrayHandle
+  ///
+  VTKM_CONT
+  vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& operator=(
+    vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>&& src) noexcept
+  {
+    this->Internals = std::move(src.Internals);
+    return *this;
+  }
+
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
+  ///
+  VTKM_CONT
+  bool operator==(const ArrayHandle<ValueType, StorageTag>& rhs) const
+  {
+    return this->Internals == rhs.Internals;
+  }
+
+  VTKM_CONT
+  bool operator!=(const ArrayHandle<ValueType, StorageTag>& rhs) const
+  {
+    return this->Internals != rhs.Internals;
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator==(const ArrayHandle<VT, ST>&) const
+  {
+    return false; // different valuetype and/or storage
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const
+  {
+    return true; // different valuetype and/or storage
+  }
+
+  /// Get the storage.
+  ///
+  VTKM_CONT const StorageType& GetStorage() const { return this->Internals->Storage; }
+
+  /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
+  ///
+  /// \deprecated Use `WritePortal` instead.
+  ///
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::WritePortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+
+  /// \cond NOPE
+  WritePortalType GetPortalControl() const { return this->WritePortal(); }
+  /// \endcond
+
+  /// Get the array portal of the control array.
+  /// Since worklet invocations are asynchronous and this routine is a synchronization point,
+  /// exceptions maybe thrown for errors from previously executed worklets.
+  ///
+  /// \deprecated Use `ReadPortal` instead.
+  ///
+  VTKM_CONT
+  VTKM_DEPRECATED(1.6,
+                  "Use ArrayHandle::ReadPortal() instead. "
+                  "Note that the returned portal will lock the array while it is in scope.")
+  /// \cond NOPE
+  ReadPortalType GetPortalConstControl() const { return this->ReadPortal(); }
+  /// \endcond
+
+  /// \brief Get an array portal that can be used in the control environment.
+  ///
+  /// The returned array can be used in the control environment to read values from the array. (It
+  /// is not possible to write to the returned portal. That is `Get` will work on the portal, but
+  /// `Set` will not.)
+  ///
+  /// **Note:** The returned portal cannot be used in the execution environment. This is because
+  /// the portal will not work on some devices like GPUs. To get a portal that will work in the
+  /// execution environment, use `PrepareForInput`.
+  ///
+  VTKM_CONT ReadPortalType ReadPortal() const
+  {
+    vtkm::cont::Token token;
+    return this->Internals->Storage.CreateReadPortal(
+      this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
+  }
+
+  /// \brief Get an array portal that can be used in the control environment.
+  ///
+  /// The returned array can be used in the control environment to reand and write values to the
+  /// array.
+  ///
+  /// **Note:** The returned portal cannot be used in the execution environment. This is because
+  /// the portal will not work on some devices like GPUs. To get a portal that will work in the
+  /// execution environment, use `PrepareForInput`.
+  ///
+  VTKM_CONT WritePortalType WritePortal() const
+  {
+    vtkm::cont::Token token;
+
+    return this->Internals->Storage.CreateWritePortal(
+      this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
+  }
+
+  /// Returns the number of entries in the array.
+  ///
+  VTKM_CONT vtkm::Id GetNumberOfValues() const
+  {
+    return this->Internals->Storage.GetNumberOfValues(this->GetBuffers());
+  }
+
+  /// \brief Allocates an array large enough to hold the given number of values.
+  ///
+  /// The allocation may be done on an already existing array. If so, then the data
+  /// are preserved as best as possible if the preserve flag is set to `vtkm::CopyFlag::On`.
+  /// If the preserve flag is set to `vtkm::CopyFlag::Off` (the default), any existing data
+  /// could be wiped out.
+  ///
+  /// This method can throw `ErrorBadAllocation` if the array cannot be allocated or
+  /// `ErrorBadValue` if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  ///
+  VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::CopyFlag preserve = vtkm::CopyFlag::Off)
+  {
+    this->Internals->Storage.ResizeBuffers(numberOfValues, this->GetBuffers(), preserve);
+  }
+
+  /// Deprecate this.
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
+  {
+    this->Allocate(numberOfValues, vtkm::CopyFlag::On);
+  }
+
+  /// Releases any resources being used in the execution environment (that are
+  /// not being shared by the control environment).
+  ///
+  VTKM_CONT void ReleaseResourcesExecution()
+  {
+    detail::ArrayHandleReleaseResourcesExecution(this->Internals->Buffers);
+  }
+
+  /// Releases all resources in both the control and execution environments.
+  ///
+  VTKM_CONT void ReleaseResources() { this->Allocate(0); }
+
+  /// Prepares this array to be used as an input to an operation in the
+  /// execution environment. If necessary, copies data to the execution
+  /// environment. Can throw an exception if this array does not yet contain
+  /// any data. Returns a portal that can be used in code running in the
+  /// execution environment.
+  ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
+  VTKM_CONT ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                           vtkm::cont::Token& token) const
+  {
+    return this->Internals->Storage.CreateReadPortal(this->GetBuffers(), device, token);
+  }
+
+  /// Prepares this array to be used in an in-place operation (both as input
+  /// and output) in the execution environment. If necessary, copies data to
+  /// the execution environment. Can throw an exception if this array does not
+  /// yet contain any data. Returns a portal that can be used in code running
+  /// in the execution environment.
+  ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
+  VTKM_CONT WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
+                                              vtkm::cont::Token& token) const
+  {
+    return this->Internals->Storage.CreateWritePortal(this->GetBuffers(), device, token);
+  }
+
+  /// Prepares (allocates) this array to be used as an output from an operation
+  /// in the execution environment. The internal state of this class is set to
+  /// have valid data in the execution array with the assumption that the array
+  /// will be filled soon (i.e. before any other methods of this object are
+  /// called). Returns a portal that can be used in code running in the
+  /// execution environment.
+  ///
+  /// The `Token` object provided will be attached to this `ArrayHandle`.
+  /// The returned portal is guaranteed to be valid while the `Token` is
+  /// still attached and in scope. Other operations on this `ArrayHandle`
+  /// that would invalidate the returned portal will block until the `Token`
+  /// is released. Likewise, this method will block if another `Token` is
+  /// already attached. This can potentially lead to deadlocks.
+  ///
+  VTKM_CONT WritePortalType PrepareForOutput(vtkm::Id numberOfValues,
+                                             vtkm::cont::DeviceAdapterId device,
+                                             vtkm::cont::Token& token)
+  {
+    this->Allocate(numberOfValues, vtkm::CopyFlag::Off);
+    return this->Internals->Storage.CreateWritePortal(this->GetBuffers(), device, token);
+  }
+
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(DeviceAdapterTag) const
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInput(DeviceAdapterTag{}, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal
+    PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForOutput(numberOfValues, DeviceAdapterTag{}, token);
+  }
+  template <typename DeviceAdapterTag>
+  VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
+    typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag)
+  {
+    vtkm::cont::Token token;
+    return this->PrepareForInPlace(DeviceAdapterTag{}, token);
+  }
+
+  /// Returns true if the ArrayHandle's data is on the given device. If the data are on the given
+  /// device, then preparing for that device should not require any data movement.
+  ///
+  VTKM_CONT bool IsOnDevice(vtkm::cont::DeviceAdapterId device) const
+  {
+    return detail::ArrayHandleIsOnDevice(this->Internals->Buffers, device);
+  }
+
+  /// Returns true if the ArrayHandle's data is on the host. If the data are on the given
+  /// device, then calling `ReadPortal` or `WritePortal` should not require any data movement.
+  ///
+  VTKM_CONT bool IsOnHost() const
+  {
+    return this->IsOnDevice(vtkm::cont::DeviceAdapterTagUndefined{});
+  }
+
+  /// Returns a DeviceAdapterId for a device currently allocated on. If there is no device
+  /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
+  /// returned.
+  ///
+  /// Note that in a multithreaded environment the validity of this result can
+  /// change.
+  ///
+  /// TODO: Deprecate this method in favor of IsOnDevice since the data can be on multiple
+  /// devices at once.
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterId() const
+  {
+    return detail::ArrayHandleGetDeviceAdapterId(this->Internals->Buffers);
+  }
+
+  /// Synchronizes the control array with the execution array. If either the
+  /// user array or control array is already valid, this method does nothing
+  /// (because the data is already available in the control environment).
+  /// Although the internal state of this class can change, the method is
+  /// declared const because logically the data does not.
+  ///
+  VTKM_CONT void SyncControlArray() const
+  {
+    // Creating a host read portal will force the data to be synced to the host.
+    this->ReadPortal();
+  }
+
+  /// \brief Enqueue a token for access to this ArrayHandle.
+  ///
+  /// This method places the given `Token` into the queue of `Token`s waiting for
+  /// access to this `ArrayHandle` and then returns immediately. When this token
+  /// is later used to get data from this `ArrayHandle` (for example, in a call to
+  /// `PrepareForInput`), it will use this place in the queue while waiting for
+  /// access.
+  ///
+  /// This method is to be used to ensure that a set of accesses to an `ArrayHandle`
+  /// that happen on multiple threads occur in a specified order. For example, if
+  /// you spawn of a job to modify data in an `ArrayHandle` and then spawn off a job
+  /// that reads that same data, you need to make sure that the first job gets
+  /// access to the `ArrayHandle` before the second. If they both just attempt to call
+  /// their respective `Prepare` methods, there is no guarantee which order they
+  /// will occur. Having the spawning thread first call this method will ensure the order.
+  ///
+  /// \warning After calling this method it is required to subsequently
+  /// call a method like one of the `Prepare` methods that attaches the token
+  /// to this `ArrayHandle`. Otherwise, the enqueued token will block any subsequent
+  /// access to the `ArrayHandle`, even if the `Token` is destroyed.
+  ///
+  VTKM_CONT void Enqueue(const vtkm::cont::Token& token) const
+  {
+    for (auto&& buffer : this->Internals->Buffers)
+    {
+      buffer.Enqueue(token);
+    }
+  }
+
+  /// Returns the internal `Buffer` structures that hold the data.
+  ///
+  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
+  {
+    return &this->Internals->Buffers.front();
+  }
+
+private:
+  struct InternalsStruct
+  {
+    mutable std::vector<vtkm::cont::internal::Buffer> Buffers;
+    mutable StorageType Storage;
+
+    VTKM_CONT InternalsStruct()
+      : Buffers(GetNumberOfBuffers())
+    {
+    }
+
+    VTKM_CONT InternalsStruct(const vtkm::cont::internal::Buffer* buffers,
+                              const StorageType& storage)
+      : Buffers(GetNumberOfBuffers())
+      , Storage(storage)
+    {
+      std::copy(buffers, buffers + GetNumberOfBuffers(), this->Buffers.begin());
+    }
+  };
+  std::shared_ptr<InternalsStruct> Internals;
+};
 
 namespace detail
 {
@@ -999,93 +1433,12 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 }
 } //namespace vtkm::cont
 
-//=============================================================================
-// Specializations of serialization related classes
-/// @cond SERIALIZATION
-namespace vtkm
-{
-namespace cont
-{
-
-template <typename T>
-struct SerializableTypeString<ArrayHandle<T>>
-{
-  static VTKM_CONT const std::string& Get()
-  {
-    static std::string name = "AH<" + SerializableTypeString<T>::Get() + ">";
-    return name;
-  }
-};
-
-namespace internal
-{
-
-template <typename T, typename S>
-void VTKM_CONT ArrayHandleDefaultSerialization(vtkmdiy::BinaryBuffer& bb,
-                                               const vtkm::cont::ArrayHandle<T, S>& obj);
-
-} // internal
-}
-} // vtkm::cont
-
-namespace mangled_diy_namespace
-{
-
-template <typename T>
-struct Serialization<vtkm::cont::ArrayHandle<T>>
-{
-  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::ArrayHandle<T>& obj)
-  {
-    vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
-  }
-
-  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandle<T>& obj);
-};
-
-} // diy
-/// @endcond SERIALIZATION
+#ifndef vtk_m_cont_ArrayHandleBasic_h
+#include <vtkm/cont/ArrayHandleBasic.h>
+#endif
 
 #ifndef vtk_m_cont_ArrayHandle_hxx
 #include <vtkm/cont/ArrayHandle.hxx>
 #endif
-
-#ifndef vtk_m_cont_internal_ArrayHandleBasicImpl_h
-#include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
-#endif
-
-#include <vtkm/cont/internal/ArrayExportMacros.h>
-
-#ifndef vtkm_cont_ArrayHandle_cxx
-
-namespace vtkm
-{
-namespace cont
-{
-
-#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>;              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
-
-VTKM_ARRAYHANDLE_EXPORT(char)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt8)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Int16)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt16)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Int32)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt32)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Int64)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::UInt64)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Float32)
-VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
-
-#undef VTKM_ARRAYHANDLE_EXPORT
-}
-} // end vtkm::cont
-
-#endif // !vtkm_cont_ArrayHandle_cxx
 
 #endif //vtk_m_cont_ArrayHandle_h

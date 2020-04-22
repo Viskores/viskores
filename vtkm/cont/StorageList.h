@@ -12,8 +12,8 @@
 
 #include <vtkm/List.h>
 
+#include <vtkm/cont/ArrayHandleBasic.h>
 #include <vtkm/cont/Storage.h>
-#include <vtkm/cont/StorageBasic.h>
 
 namespace vtkm
 {

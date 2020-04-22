@@ -15,7 +15,6 @@
 #include <vtkm/List.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/StorageVirtual.h>
 
 #include <vtkm/cont/AtomicArray.h>

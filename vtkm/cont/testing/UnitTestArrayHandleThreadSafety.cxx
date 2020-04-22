@@ -244,46 +244,12 @@ void ThreadsIncrementToArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> 
 }
 
 template <typename Storage>
-void InvalidateControlPortal(vtkm::cont::ArrayHandle<ValueType, Storage> array)
-{
-  std::cout << "  Starting invalidate control portal" << std::endl;
-  auto writePortal = array.WritePortal();
-
-  {
-    // PrepareForInPlace should invalidate the local control portal. It should work, but
-    // further use of writePortal will be invalid.
-    vtkm::cont::Token token;
-    array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
-
-#if 0
-    std::cout << "    This should result in an error in the log and possibly a crash." << std::endl;
-    // Unfortunately, there is no way to check this other than visual inspection or outright crash
-    writePortal.Get(0);
-#endif
-  }
-
-  auto readPortal = array.ReadPortal();
-
-  {
-    vtkm::cont::Token token;
-    array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
-
-#if 0
-    std::cout << "    This should result in an error in the log and possibly a crash." << std::endl;
-    // Unfortunately, there is no way to check this other than visual inspection or outright crash
-    readPortal.Get(0);
-#endif
-  }
-}
-
-template <typename Storage>
 void DoThreadSafetyTest(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   ThreadsIncrementToArray(array);
   ThreadsCheckArray(array);
   ThreadsDecrementArray(array);
   ThreadsIncrementToArrayOrdered(array);
-  InvalidateControlPortal(array);
 }
 
 void DoTest()

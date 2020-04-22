@@ -48,6 +48,7 @@ unset(VTKM_NO_ASSERT)
 
 
 set(headers
+  ArrayPortalBasic.h
   ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h

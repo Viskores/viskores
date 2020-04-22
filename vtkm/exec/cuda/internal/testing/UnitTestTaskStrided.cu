@@ -40,13 +40,16 @@ namespace
 
 struct TestExecObject
 {
+  using PortalType =
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<vtkm::cont::DeviceAdapterTagCuda>::Portal;
+
   VTKM_EXEC_CONT
-  TestExecObject(vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> portal)
+  TestExecObject(PortalType portal)
     : Portal(portal)
   {
   }
 
-  vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> Portal;
+  PortalType Portal;
 };
 
 struct MyOutputToInputMapPortal

@@ -41,7 +41,7 @@ struct BufferHelper;
 /// data in this buffer is managed in the host and across the devices supported by VTK-m. `Buffer`
 /// will allocate memory and transfer data as necessary.
 ///
-class VTKM_CONT_EXPORT Buffer
+class VTKM_CONT_EXPORT Buffer final
 {
   class InternalsStruct;
   std::shared_ptr<InternalsStruct> Internals;
@@ -52,6 +52,14 @@ public:
   /// \brief Create an empty `Buffer`.
   ///
   VTKM_CONT Buffer();
+
+  VTKM_CONT Buffer(const Buffer& src);
+  VTKM_CONT Buffer(Buffer&& src);
+
+  VTKM_CONT ~Buffer();
+
+  VTKM_CONT Buffer& operator=(const Buffer& src);
+  VTKM_CONT Buffer& operator=(Buffer&& src);
 
   /// \brief Returns the number of bytes held by the buffer.
   ///
@@ -78,6 +86,10 @@ public:
 
   /// \brief Returns `true` if the buffer is allocated on the given device.
   ///
+  /// If `device` is `DeviceAdapterTagUnknown`, then this returns the same value as
+  /// `IsAllocatedOnHost`. If `device` is `DeviceAdapterTagAny`, then this returns true if
+  /// allocated on any device.
+  ///
   VTKM_CONT bool IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const;
 
   /// \brief Returns a readable host (control environment) pointer to the buffer.
@@ -93,6 +105,9 @@ public:
   /// Memory will be allocated and data will be copied as necessary. The memory at the pointer will
   /// be valid as long as `token` is still in scope. Any write operation to this buffer will be
   /// blocked until the `token` goes out of scope.
+  ///
+  /// If `device` is `DeviceAdapterTagUnknown`, then this has the same behavior as
+  /// `ReadPointerHost`. It is an error to set `device` to `DeviceAdapterTagAny`.
   ///
   VTKM_CONT const void* ReadPointerDevice(vtkm::cont::DeviceAdapterId device,
                                           vtkm::cont::Token& token) const;
@@ -111,8 +126,25 @@ public:
   /// be valid as long as `token` is still in scope. Any read or write operation to this buffer
   /// will be blocked until the `token` goes out of scope.
   ///
+  /// If `device` is `DeviceAdapterTagUnknown`, then this has the same behavior as
+  /// `WritePointerHost`. It is an error to set `device` to `DeviceAdapterTagAny`.
+  ///
   VTKM_CONT void* WritePointerDevice(vtkm::cont::DeviceAdapterId device,
                                      vtkm::cont::Token& token) const;
+
+  /// \brief Enqueue a token for access to the buffer.
+  ///
+  /// This method places the given `Token` into the queue of `Token`s waiting for
+  /// access to this `Buffer` and then returns immediately. When this token
+  /// is later used to get data from this `Buffer` (for example, in a call to
+  /// `ReadPointerDevice`), it will use this place in the queue while waiting for
+  ///
+  /// \warning After calling this method it is required to subsequently call a
+  /// method that attaches the token to this `Buffer`. Otherwise, the enqueued
+  /// token will block any subsequent access to the `ArrayHandle`, even if the
+  /// `Token` is destroyed.
+  ///
+  VTKM_CONT void Enqueue(const vtkm::cont::Token& token) const;
 
   /// @{
   /// \brief Copies the data from this buffer to the target buffer.
@@ -126,72 +158,43 @@ public:
                           vtkm::cont::DeviceAdapterId device) const;
   /// @}
 
-  /// \brief Resets the `Buffer` to the memory allocated at the given pointer.
+  /// \brief Resets the `Buffer` to the memory allocated at the information.
   ///
   /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The
-  /// provided `shared_ptr` should have a deleter that appropriately deletes the buffer when
-  /// it is no longer used.
+  /// `BufferInfo` object self-describes the pointer, size, and device of the memory.
   ///
-  VTKM_CONT void Reset(const std::shared_ptr<vtkm::UInt8> buffer,
-                       vtkm::BufferSizeType numberOfBytes);
+  VTKM_CONT void Reset(const vtkm::cont::internal::BufferInfo& buffer);
 
-  /// \brief Resets the `Buffer` to the memory allocated at the given pointer on a device.
+  /// \brief Gets the `BufferInfo` object to the memory allocated on the host.
   ///
-  /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The pointer
-  /// is assumed to be memory in the given `device`. The provided `shared_ptr` should have a
-  /// deleter that appropriately deletes the buffer when it is no longer used. This is likely a
-  /// device-specific function.
-  ///
-  VTKM_CONT void Reset(const std::shared_ptr<vtkm::UInt8> buffer,
-                       vtkm::BufferSizeType numberOfBytes,
-                       vtkm::cont::DeviceAdapterId device);
+  VTKM_CONT vtkm::cont::internal::BufferInfo GetHostBufferInfo() const;
 
-  /// \brief Resets the `Buffer` to the memory allocated at the given pointer.
+  /// \brief Gets the `BufferInfo` object to the memory allocated on the given device.
   ///
-  /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The memory
-  /// is assumed to be deleted with the standard `delete[]` keyword.
+  /// If the device is `DeviceAdapterTagUndefined`, the pointer for the host is returned. It is
+  /// invalid to select `DeviceAdapterTagAny`.
   ///
-  /// Note that the size passed in is the number of bytes, not the number of values.
-  ///
-  template <typename T>
-  VTKM_CONT void Reset(T* buffer, vtkm::BufferSizeType numberOfBytes)
+  VTKM_CONT vtkm::cont::internal::BufferInfo GetDeviceBufferInfo(
+    vtkm::cont::DeviceAdapterId device) const;
+
+  VTKM_CONT bool operator==(const vtkm::cont::internal::Buffer& rhs) const
   {
-    this->Reset(buffer, numberOfBytes, std::default_delete<T[]>{});
+    return (this->Internals == rhs.Internals);
   }
 
-  /// \brief Resets the `Buffer` to the memory allocated at the given pointer.
-  ///
-  /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The
-  /// `deleter` is an object with an `operator()(void*)` that will properly delete the provided
-  /// buffer.
-  ///
-  /// Note that the size passed in is the number of bytes, not the number of values.
-  ///
-  template <typename T, typename Deleter>
-  VTKM_CONT void Reset(T* buffer, vtkm::BufferSizeType numberOfBytes, Deleter deleter)
+  VTKM_CONT bool operator!=(const vtkm::cont::internal::Buffer& rhs) const
   {
-    std::shared_ptr<vtkm::UInt8> sharedP(reinterpret_cast<vtkm::UInt8*>(buffer), deleter);
-    this->Reset(sharedP, numberOfBytes);
-  }
-
-  /// \brief Resets the `Buffer` to the memory allocated at the given pointer on a device.
-  ///
-  /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The
-  /// `deleter` is an object with an `operator()(void*)` that will properly delete the provided
-  /// buffer. This is likely a device-specific function.
-  ///
-  /// Note that the size passed in is the number of bytes, not the number of values.
-  ///
-  template <typename T, typename Deleter>
-  VTKM_CONT void Reset(T* buffer,
-                       vtkm::BufferSizeType numberOfBytes,
-                       Deleter deleter,
-                       vtkm::cont::DeviceAdapterId device)
-  {
-    std::shared_ptr<vtkm::UInt8> sharedP(reinterpret_cast<vtkm::UInt8*>(buffer), deleter);
-    this->Reset(sharedP, numberOfBytes, device);
+    return (this->Internals != rhs.Internals);
   }
 };
+
+template <typename... ResetArgs>
+VTKM_CONT vtkm::cont::internal::Buffer MakeBuffer(ResetArgs&&... resetArgs)
+{
+  vtkm::cont::internal::Buffer buffer;
+  buffer.Reset(vtkm::cont::internal::BufferInfo(std::forward<ResetArgs>(resetArgs)...));
+  return buffer;
+}
 }
 }
 } // namespace vtkm::cont::internal
@@ -207,27 +210,6 @@ struct VTKM_CONT_EXPORT Serialization<vtkm::cont::internal::Buffer>
 {
   static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::internal::Buffer& obj);
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::internal::Buffer& obj);
-};
-
-template <vtkm::IdComponent N>
-struct Serialization<vtkm::Vec<vtkm::cont::internal::Buffer, N>>
-{
-  static VTKM_CONT void save(BinaryBuffer& bb,
-                             const vtkm::Vec<vtkm::cont::internal::Buffer, N>& obj)
-  {
-    for (vtkm::IdComponent index = 0; index < N; ++index)
-    {
-      vtkmdiy::save(bb, obj[index]);
-    }
-  }
-
-  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::Vec<vtkm::cont::internal::Buffer, N>& obj)
-  {
-    for (vtkm::IdComponent index = 0; index < N; ++index)
-    {
-      vtkmdiy::load(bb, obj[index]);
-    }
-  }
 };
 
 } // diy

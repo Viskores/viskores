@@ -10,92 +10,46 @@
 
 #include <vtkm/cont/internal/DeviceAdapterMemoryManagerShared.h>
 
-#include <algorithm>
+#include <cstring>
 
-namespace
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
 {
 
-class BufferInfoShared : public vtkm::cont::internal::BufferInfo
+vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::Allocate(
+  vtkm::BufferSizeType size) const
 {
-  std::shared_ptr<vtkm::cont::internal::BufferInfoHost> HostBuffer;
-
-public:
-  VTKM_CONT BufferInfoShared()
-    : HostBuffer(new vtkm::cont::internal::BufferInfoHost)
-  {
-  }
-
-  VTKM_CONT BufferInfoShared(std::shared_ptr<vtkm::cont::internal::BufferInfoHost> hostBuffer)
-    : HostBuffer(hostBuffer)
-  {
-  }
-
-  template <typename... Ts>
-  VTKM_CONT BufferInfoShared(Ts&&... bufferInfoHostArgs)
-    : HostBuffer(new vtkm::cont::internal::BufferInfoHost(std::forward<Ts>(bufferInfoHostArgs)...))
-  {
-  }
-
-  VTKM_CONT void* GetPointer() const override { return this->HostBuffer->GetPointer(); }
-
-  VTKM_CONT vtkm::BufferSizeType GetSize() const override { return this->HostBuffer->GetSize(); }
-
-  VTKM_CONT std::shared_ptr<vtkm::cont::internal::BufferInfoHost> GetHostBuffer() const
-  {
-    return this->HostBuffer;
-  }
-};
-
-} // anonymous namespace
-
-std::shared_ptr<vtkm::cont::internal::BufferInfo>
-vtkm::cont::internal::DeviceAdapterMemoryManagerShared::Allocate(vtkm::BufferSizeType size)
-{
-  return std::shared_ptr<vtkm::cont::internal::BufferInfo>(new BufferInfoShared(size));
+  return vtkm::cont::internal::BufferInfo(vtkm::cont::internal::AllocateOnHost(size),
+                                          this->GetDevice());
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfo>
-vtkm::cont::internal::DeviceAdapterMemoryManagerShared::ManageArray(
-  std::shared_ptr<vtkm::UInt8> buffer,
-  vtkm::BufferSizeType size)
+vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyHostToDevice(
+  const vtkm::cont::internal::BufferInfo& src) const
 {
-  return std::shared_ptr<vtkm::cont::internal::BufferInfo>(new BufferInfoShared(buffer, size));
+  VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{});
+  return vtkm::cont::internal::BufferInfo(src, this->GetDevice());
 }
 
-void vtkm::cont::internal::DeviceAdapterMemoryManagerShared::Reallocate(
-  std::shared_ptr<vtkm::cont::internal::BufferInfo> b,
-  vtkm::BufferSizeType newSize)
+vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyDeviceToHost(
+  const vtkm::cont::internal::BufferInfo& src) const
 {
-  BufferInfoShared* buffer = dynamic_cast<BufferInfoShared*>(b.get());
-  VTKM_ASSERT(buffer != nullptr);
-
-  buffer->GetHostBuffer()->Allocate(newSize, vtkm::CopyFlag::On);
+  VTKM_ASSERT(src.GetDevice() == this->GetDevice());
+  return vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagUndefined{});
 }
 
-std::shared_ptr<vtkm::cont::internal::BufferInfo>
-vtkm::cont::internal::DeviceAdapterMemoryManagerShared::CopyHostToDevice(
-  std::shared_ptr<vtkm::cont::internal::BufferInfoHost> src)
+vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyDeviceToDevice(
+  const vtkm::cont::internal::BufferInfo& src) const
 {
-  return std::shared_ptr<vtkm::cont::internal::BufferInfo>(new BufferInfoShared(src));
-}
+  VTKM_ASSERT(src.GetDevice() == this->GetDevice());
 
-std::shared_ptr<vtkm::cont::internal::BufferInfoHost>
-vtkm::cont::internal::DeviceAdapterMemoryManagerShared::CopyDeviceToHost(
-  std::shared_ptr<vtkm::cont::internal::BufferInfo> src)
-{
-  BufferInfoShared* buffer = dynamic_cast<BufferInfoShared*>(src.get());
-  VTKM_ASSERT(buffer != nullptr);
-
-  return buffer->GetHostBuffer();
+  vtkm::BufferSizeType size = src.GetSize();
+  vtkm::cont::internal::BufferInfo dest = this->Allocate(size);
+  std::memcpy(dest.GetPointer(), src.GetPointer(), static_cast<std::size_t>(size));
+  return dest;
 }
-
-std::shared_ptr<vtkm::cont::internal::BufferInfo>
-vtkm::cont::internal::DeviceAdapterMemoryManagerShared::CopyDeviceToDevice(
-  std::shared_ptr<vtkm::cont::internal::BufferInfo> src)
-{
-  BufferInfoShared* dest = new BufferInfoShared(src->GetSize());
-  vtkm::UInt8* srcP = reinterpret_cast<vtkm::UInt8*>(src->GetPointer());
-  vtkm::UInt8* destP = reinterpret_cast<vtkm::UInt8*>(dest->GetPointer());
-  std::copy(srcP, srcP + src->GetSize(), destP);
-  return std::shared_ptr<vtkm::cont::internal::BufferInfo>(dest);
 }
+}
+} // namespace vtkm::cont::internal

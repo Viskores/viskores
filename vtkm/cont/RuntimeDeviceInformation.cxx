@@ -31,51 +31,30 @@ class DeviceAdapterMemoryManagerInvalid
 public:
   VTKM_CONT virtual ~DeviceAdapterMemoryManagerInvalid() override {}
 
-  /// Allocates a buffer of the specified size in bytes and returns a BufferInfo object
-  /// containing information about it.
-  VTKM_CONT virtual std::shared_ptr<vtkm::cont::internal::BufferInfo> Allocate(
-    vtkm::BufferSizeType) override
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo Allocate(vtkm::BufferSizeType) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  /// Manages the provided array. Returns a `BufferInfo` object that contains the data.
-  /// The deleter in the `shared_ptr` is expected to correctly free the data.
-  VTKM_CONT virtual std::shared_ptr<vtkm::cont::internal::BufferInfo> ManageArray(
-    std::shared_ptr<vtkm::UInt8>,
-    vtkm::BufferSizeType) override
+  VTKM_CONT virtual vtkm::cont::DeviceAdapterId GetDevice() const override
+  {
+    return vtkm::cont::DeviceAdapterTagUndefined{};
+  }
+
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyHostToDevice(
+    const vtkm::cont::internal::BufferInfo&) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  /// Reallocates the provided buffer to a new size. The passed in `BufferInfo` should be
-  /// modified to reflect the changes.
-  VTKM_CONT virtual void Reallocate(std::shared_ptr<vtkm::cont::internal::BufferInfo>,
-                                    vtkm::BufferSizeType) override
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
+    const vtkm::cont::internal::BufferInfo&) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  /// Copies data from the host buffer provided onto the device and returns a buffer info
-  /// object holding the pointer for the device.
-  VTKM_CONT virtual std::shared_ptr<vtkm::cont::internal::BufferInfo> CopyHostToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfoHost>) override
-  {
-    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
-  }
-
-  /// Copies data from the device buffer provided to the host. The passed in `BufferInfo` object
-  /// was created by a previous call to this object.
-  VTKM_CONT virtual std::shared_ptr<vtkm::cont::internal::BufferInfoHost> CopyDeviceToHost(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo>) override
-  {
-    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
-  }
-
-  /// Copies data from one device buffer to another device buffer. The passed in `BufferInfo` object
-  /// was created by a previous call to this object.
-  VTKM_CONT virtual std::shared_ptr<vtkm::cont::internal::BufferInfo> CopyDeviceToDevice(
-    std::shared_ptr<vtkm::cont::internal::BufferInfo>) override
+  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
+    const vtkm::cont::internal::BufferInfo&) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }

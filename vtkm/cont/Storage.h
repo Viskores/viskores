@@ -167,25 +167,4 @@ public:
 }
 } // namespace vtkm::cont
 
-// This is put at the bottom of the header so that the Storage template is
-// declared before any implementations are called.
-
-#if VTKM_STORAGE == VTKM_STORAGE_BASIC
-
-#include <vtkm/cont/StorageBasic.h>
-#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::StorageTagBasic
-
-#elif VTKM_STORAGE == VTKM_STORAGE_ERROR
-
-#include <vtkm/cont/internal/StorageError.h>
-#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::internal::StorageTagError
-
-#elif (VTKM_STORAGE == VTKM_STORAGE_UNDEFINED) || !defined(VTKM_STORAGE)
-
-#ifndef VTKM_DEFAULT_STORAGE_TAG
-#warning If array storage is undefined, VTKM_DEFAULT_STORAGE_TAG must be defined.
-#endif
-
-#endif
-
 #endif //vtk_m_cont_Storage_h

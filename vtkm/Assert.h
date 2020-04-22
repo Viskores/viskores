@@ -19,7 +19,7 @@
 #ifndef VTKM_NO_ASSERT
 #if defined(NDEBUG)
 #define VTKM_NO_ASSERT
-#elif defined(__CUDA_ARCH__) && defined(VTKM_NO_ASSERT_CUDA)
+#elif defined(VTKM_CUDA_DEVICE_PASS) && defined(VTKM_NO_ASSERT_CUDA)
 #define VTKM_NO_ASSERT
 #endif
 #endif // VTKM_NO_ASSERT
