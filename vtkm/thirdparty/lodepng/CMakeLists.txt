@@ -13,8 +13,12 @@ set(headers
 set(sources
   vtkmlodepng/lodepng.cpp
 )
-# vtkm_library(NAME vtkm_lodepng HEADERS ${headers} SOURCES ${sources})
+
+# Mark this lib as STATIC for usage in Windows without requiring dll_export
+# if a SHARED lib is ever required you will need to generate the export
+# headers and add them to the lodepng functions that should be shared
 add_library(vtkm_lodepng STATIC ${headers} ${sources})
+
 if(DEFINED VTKm_CUSTOM_LIBRARY_SUFFIX)
   set(_lib_suffix "${VTKm_CUSTOM_LIBRARY_SUFFIX}")
 else()
@@ -29,14 +33,16 @@ set_target_properties(vtkm_lodepng
   VERSION 1
   SOVERSION 1
 )
-vtkm_generate_export_header(vtkm_lodepng)
 target_include_directories(vtkm_lodepng INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lodepng>
 )
-install(DIRECTORY vtkmlodepng
-  DESTINATION "${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lodepng"
-)
+
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(DIRECTORY vtkmlodepng
+    DESTINATION "${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/lodepng/"
+  )
+endif()
 
 install(TARGETS vtkm_lodepng
   EXPORT ${VTKm_EXPORT_NAME}
