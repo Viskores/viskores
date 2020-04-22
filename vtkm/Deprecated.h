@@ -60,14 +60,12 @@
 // [[deprecated]] is supported, then VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED will get defined.
 #ifndef VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 
-#if __cplusplus >= 201402L
+#if __cplusplus >= 201402L && !defined(__NVCC__)
 
 // C++14 and better supports [[deprecated]]
 // Except in these cases:
 //   - nvcc
-#if !(defined(VTKM_CUDA))
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
-#endif
 
 #elif defined(VTKM_GCC)
 
@@ -78,14 +76,14 @@
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif // Too old GCC
 
-#elif defined(__has_cpp_attribute)
+#elif defined(__has_cpp_attribute) && !defined(__NVCC__)
 
 #if __has_cpp_attribute(deprecated)
 // Compiler not fully C++14 compliant, but it reports to support [[deprecated]]
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif // __has_cpp_attribute(deprecated)
 
-#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900) && !defined(VTKM_CUDA)
+#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900) && !defined(__NVCC__)
 
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 
