@@ -249,18 +249,30 @@ class GetScalar : public vtkm::worklet::WorkletMapField
 private:
   Precision MinScalar;
   Precision invDeltaScalar;
+  bool Normalize;
 
 public:
   VTKM_CONT
   GetScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
     : MinScalar(minScalar)
   {
-    //Make sure the we don't divide by zero on
-    //something like an iso-surface
-    if (maxScalar - MinScalar != 0.f)
-      invDeltaScalar = 1.f / (maxScalar - MinScalar);
+    Normalize = true;
+    if (minScalar > maxScalar)
+    {
+      // support the scalar renderer
+      Normalize = false;
+      MinScalar = 0;
+      invDeltaScalar = 1;
+    }
     else
-      invDeltaScalar = 1.f / minScalar;
+    {
+      //Make sure the we don't divide by zero on
+      //something like an iso-surface
+      if (maxScalar - MinScalar != 0.f)
+        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      else
+        invDeltaScalar = 1.f / minScalar;
+    }
   }
   typedef void ControlSignature(FieldIn, FieldOut, WholeArrayIn, WholeArrayIn);
   typedef void ExecutionSignature(_1, _2, _3, _4);
@@ -276,8 +288,10 @@ public:
     vtkm::Id pointId = indicesPortal.Get(hitIndex);
 
     scalar = Precision(scalars.Get(pointId));
-    //normalize
-    scalar = (scalar - MinScalar) * invDeltaScalar;
+    if (Normalize)
+    {
+      scalar = (scalar - MinScalar) * invDeltaScalar;
+    }
   }
 }; //class GetScalar
 

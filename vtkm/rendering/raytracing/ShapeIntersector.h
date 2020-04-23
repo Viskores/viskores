@@ -54,11 +54,11 @@ public:
   //
   virtual void IntersectionData(Ray<vtkm::Float32>& rays,
                                 const vtkm::cont::Field scalarField,
-                                const vtkm::Range& scalarRange) = 0;
+                                const vtkm::Range& scalarRange = vtkm::Range()) = 0;
 
   virtual void IntersectionData(Ray<vtkm::Float64>& rays,
                                 const vtkm::cont::Field scalarField,
-                                const vtkm::Range& scalarRange) = 0;
+                                const vtkm::Range& scalarRange = vtkm::Range()) = 0;
 
 
   template <typename Precision>

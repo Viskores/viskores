@@ -46,11 +46,11 @@ public:
 
   VTKM_CONT void IntersectionData(Ray<vtkm::Float32>& rays,
                                   const vtkm::cont::Field scalarField,
-                                  const vtkm::Range& scalarRange) override;
+                                  const vtkm::Range& scalarRange = vtkm::Range()) override;
 
   VTKM_CONT void IntersectionData(Ray<vtkm::Float64>& rays,
                                   const vtkm::cont::Field scalarField,
-                                  const vtkm::Range& scalarRange) override;
+                                  const vtkm::Range& scalarRange = vtkm::Range()) override;
 
   template <typename Precision>
   VTKM_CONT void IntersectRaysImp(Ray<Precision>& rays, bool returnCellIndex);

@@ -243,18 +243,30 @@ public:
   private:
     Precision MinScalar;
     Precision invDeltaScalar;
+    bool Normalize;
 
   public:
     VTKM_CONT
     LerpScalar(const vtkm::Float32& minScalar, const vtkm::Float32& maxScalar)
       : MinScalar(minScalar)
     {
-      //Make sure the we don't divide by zero on
-      //something like an iso-surface
-      if (maxScalar - MinScalar != 0.f)
-        invDeltaScalar = 1.f / (maxScalar - MinScalar);
+      Normalize = true;
+      if (minScalar > maxScalar)
+      {
+        // support the scalar renderer
+        Normalize = false;
+        MinScalar = 0;
+        invDeltaScalar = 1;
+      }
       else
-        invDeltaScalar = 0.f;
+      {
+        //Make sure the we don't divide by zero on
+        //something like an iso-surface
+        if (maxScalar - MinScalar != 0.f)
+          invDeltaScalar = 1.f / (maxScalar - MinScalar);
+        else
+          invDeltaScalar = 1.f / minScalar;
+      }
     }
     typedef void ControlSignature(FieldIn,
                                   FieldIn,
@@ -282,7 +294,10 @@ public:
       Precision cScalar = Precision(scalars.Get(indices[3]));
       lerpedScalar = aScalar * n + bScalar * u + cScalar * v;
       //normalize
-      lerpedScalar = (lerpedScalar - MinScalar) * invDeltaScalar;
+      if (Normalize)
+      {
+        lerpedScalar = (lerpedScalar - MinScalar) * invDeltaScalar;
+      }
     }
   }; //class LerpScalar
 
