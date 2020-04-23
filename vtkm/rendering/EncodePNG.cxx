@@ -15,7 +15,7 @@
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
-VTKM_THIRDPARTY_PRE_INCLUDE
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
@@ -29,7 +29,8 @@ vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
 {
   // The default is 8 bit RGBA; does anyone care to have more options?
   // We can certainly add them in a backwards-compatible way if need be.
-  vtkm::UInt32 error = vtkm::png::lodepng::encode(output_png, image, width, height);
+  vtkm::UInt32 error = vtkm::png::lodepng::encode(
+    output_png, image, static_cast<unsigned int>(width), static_cast<unsigned int>(height));
   if (error)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,

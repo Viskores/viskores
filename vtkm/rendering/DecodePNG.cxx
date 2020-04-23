@@ -14,8 +14,8 @@
 #include <vtkm/internal/Configure.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.cpp>
-VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
