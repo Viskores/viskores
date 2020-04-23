@@ -1433,8 +1433,8 @@ public:
 
     if (printTime >= 0)
     {
-      printf("MinHypersweep, MaxHypersweep, BothHypersweep, TotalBD\n");
-      printf("%.8f, %.8f, %.8f, %.8f\n",
+      //printf("MinHypersweep, MaxHypersweep, BothHypersweep, TotalBD\n");
+      printf("%.8f, %.8f, %.8f, %.8f",
              minHypersweepTime,
              maxHypersweepTime,
              bothHypersweepTime,
