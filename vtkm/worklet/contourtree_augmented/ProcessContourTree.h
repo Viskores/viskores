@@ -594,7 +594,7 @@ public:
     invoke(propagateBestUpDownWorklet, bestUpward, bestDownward, whichBranch);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Propagating Branches took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Propagating Branches took.\n", timer.GetElapsedTime());
@@ -626,7 +626,7 @@ public:
 
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Branch Point Doubling " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Branch Point Doubling.\n", timer.GetElapsedTime());
@@ -661,7 +661,7 @@ public:
     invoke(finaliseChainToBranchWorklet, whichBranch, chainToBranch);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Create Chain to Branch " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Create Chain to Branch.\n", timer.GetElapsedTime());
@@ -679,7 +679,7 @@ public:
     vtkm::cont::ArrayCopy(noSuchElementArrayNBranches, branchParent);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Array Coppying " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Array Coppying.\n", timer.GetElapsedTime());
@@ -704,7 +704,7 @@ public:
                           supernodeSorter);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Supernode Sorter " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Supernode Sorter.\n", timer.GetElapsedTime());
@@ -717,7 +717,7 @@ public:
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- VTKM Sorting " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for VTKM Sorting.\n", timer.GetElapsedTime());
@@ -734,7 +734,7 @@ public:
     PermuteArray<vtkm::Id>(contourTree.Supernodes, supernodeSorter, permutedRegularID);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Array Permuting " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Array Permuting.\n", timer.GetElapsedTime());
@@ -756,7 +756,7 @@ public:
     invoke(whichBranchNewIdWorklet, chainToBranch, whichBranch);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Which Branch Initialisation " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Which Branch Initialisation.\n", timer.GetElapsedTime());
@@ -770,7 +770,7 @@ public:
     invoke(branchMinMaxSetWorklet, supernodeSorter, whichBranch, branchMinimum, branchMaximum);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Branch min/max setting " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Branch min/max setting.\n", timer.GetElapsedTime());
@@ -800,7 +800,7 @@ public:
            branchParent);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "----------------//---------------- Branch parents & Saddles setting " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Branch parents & Saddles setting.\n", timer.GetElapsedTime());
@@ -1084,7 +1084,7 @@ public:
   void static ComputeHeightBranchDecompositionNew(const ContourTree& contourTree,
                                                   const cont::ArrayHandle<Float64> fieldValues,
                                                   const IdArrayType& ctSortOrder,
-                                                  const bool printTime,
+                                                  const int printTime,
                                                   const vtkm::Id nIterations,
                                                   IdArrayType& whichBranch,
                                                   IdArrayType& branchMinimum,
@@ -1101,6 +1101,10 @@ public:
 
     vtkm::cont::Timer timer;
     timer.Start();
+
+    double minHypersweepTime = 0.0;
+    double maxHypersweepTime = 0.0;
+    double bothHypersweepTime = 0.0;
 
     // Cache the number of non-root supernodes & superarcs
     vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
@@ -1129,7 +1133,7 @@ public:
 
     timer.Stop();
     vtkm::Float64 ellapsedTime = timer.GetElapsedTime();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Initialising Array too  " << ellapsedTime << " seconds." << std::endl;
       printf("%.6f for Initialising Array.\n", timer.GetElapsedTime());
@@ -1145,7 +1149,7 @@ public:
     auto maxPath = findSuperPathToRoot(contourTree.Superarcs.ReadPortal(), maxSuperNode);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Finding min/max paths to the root took \t\t" << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Finding min/max paths to the root.\n", timer.GetElapsedTime());
@@ -1169,7 +1173,7 @@ public:
     maxParents.WritePortal().Set(maxPath[0], 0);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Rerooting took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Rerooting.\n", timer.GetElapsedTime());
@@ -1217,7 +1221,7 @@ public:
       maxHowManyUsed);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Initialising more stuff.\n", timer.GetElapsedTime());
@@ -1256,11 +1260,15 @@ public:
                                                    minValues);
 
     hypersweepTimer.Stop();
-    if (true == printTime)
+    minHypersweepTime = hypersweepTimer.GetElapsedTime();
+    if (printTime >= 1)
     {
       //std::cout << "---------------- Initialising more stuff took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for the Min Hypersweep.\n", hypersweepTimer.GetElapsedTime());
     }
+
+    hypersweepTimer.Reset();
+    hypersweepTimer.Start();
 
     fixPath(vtkm::Minimum(), minPath, minValues.WritePortal());
 
@@ -1288,10 +1296,14 @@ public:
     fixPath(vtkm::Maximum(), maxPath, maxValues.WritePortal());
 
     timer.Stop();
-    if (true == printTime)
+    hypersweepTimer.Stop();
+    maxHypersweepTime = hypersweepTimer.GetElapsedTime();
+    bothHypersweepTime = timer.GetElapsedTime();
+    if (printTime >= 1)
     {
       //std::cout << "---------------- HS TOTAL ---------------- Total Hypersweep took " << timer.GetElapsedTime() << " seconds." << std::endl;
-      printf("%.6f for HS TOTAL ---------------- Total Hypersweep.\n", timer.GetElapsedTime());
+      printf("%.6f for Max Hypersweep.\n", hypersweepTimer.GetElapsedTime());
+      printf("%.6f for BOTH Hypersweeps.\n", timer.GetElapsedTime());
     }
 
     timer.Reset();
@@ -1312,7 +1324,7 @@ public:
     Invoke(incorporateParentMaximumWorklet, maxParents, contourTree.Supernodes, maxValues);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Incorporating Parent took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Incorporating Parent.\n", timer.GetElapsedTime());
@@ -1334,7 +1346,7 @@ public:
     //
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Initialising arcs took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Initialising arcs.\n", timer.GetElapsedTime());
@@ -1351,7 +1363,7 @@ public:
     Invoke(computeSubtreeHeight, fieldValues, ctSortOrder, contourTree.Supernodes, arcs);
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Computing subtree height took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Computing subtree height.\n", timer.GetElapsedTime());
@@ -1366,7 +1378,7 @@ public:
     vtkm::cont::Algorithm::Sort(arcs, vtkm::SortLess());
 
     timer.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Sorting took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Sorting.\n", timer.GetElapsedTime());
@@ -1384,7 +1396,7 @@ public:
 
     timer.Stop();
     timerTotal.Stop();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       //std::cout << "---------------- Setting bestUp/Down took " << timer.GetElapsedTime() << " seconds." << std::endl;
       printf("%.6f for Setting bestUp/Down.\n", timer.GetElapsedTime());
@@ -1408,11 +1420,25 @@ public:
                                           bestDownward);
 
     timer.Stop();
+    timerTotalAll.Stop();
     ellapsedTime = timer.GetElapsedTime();
-    if (true == printTime)
+    if (printTime >= 2)
     {
       printf("%.6f for Computing branch data.\n", timer.GetElapsedTime());
-      printf("%.6f TOTAL BRANCH Decomposition.\n", timerTotalAll.GetElapsedTime());
+    }
+    if (printTime >= 1)
+    {
+      printf("%.6f TOTAL Branch Decomposition.\n", timerTotalAll.GetElapsedTime());
+    }
+
+    if (printTime >= 0)
+    {
+      printf("MinHypersweep, MaxHypersweep, BothHypersweep, TotalBD\n");
+      printf("%.8f, %.8f, %.8f, %.8f\n",
+             minHypersweepTime,
+             maxHypersweepTime,
+             bothHypersweepTime,
+             timerTotalAll.GetElapsedTime());
     }
 
     //printf("Working!");
