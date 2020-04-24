@@ -32,6 +32,7 @@ set_target_properties(vtkm_lodepng
   RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
   VERSION 1
   SOVERSION 1
+  POSITION_INDEPENDENT_CODE ON
 )
 target_include_directories(vtkm_lodepng INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
