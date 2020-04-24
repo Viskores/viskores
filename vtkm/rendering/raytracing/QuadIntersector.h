@@ -51,11 +51,11 @@ public:
 
   void IntersectionData(Ray<vtkm::Float32>& rays,
                         const vtkm::cont::Field scalarField,
-                        const vtkm::Range& scalarRange) override;
+                        const vtkm::Range& scalarRange = vtkm::Range()) override;
 
   void IntersectionData(Ray<vtkm::Float64>& rays,
                         const vtkm::cont::Field scalarField,
-                        const vtkm::Range& scalarRange) override;
+                        const vtkm::Range& scalarRange = vtkm::Range()) override;
 
   vtkm::Id GetNumberOfShapes() const override;
 }; // class ShapeIntersector
