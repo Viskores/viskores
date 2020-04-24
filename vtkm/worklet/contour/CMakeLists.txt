@@ -16,7 +16,7 @@ set(headers
   FlyingEdgesPass1.h
   FlyingEdgesPass2.h
   FlyingEdgesPass4.h
-  FlyingEdgesPass5.h
+  FlyingEdgesPass4WithNormals.h
   FlyingEdgesTables.h
   MarchingCellTables.h
   MarchingCells.h
