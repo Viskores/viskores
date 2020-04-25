@@ -30,12 +30,7 @@ namespace flying_edges
 
 namespace detail
 {
-inline vtkm::cont::CellSetStructured<3> make_metaDataMesh3D(SumXAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<3> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id3{ pdims[1], pdims[2], 1 });
-  return metaDataMesh;
-}
+
 inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm::Id3& pdims)
 {
   vtkm::cont::CellSetStructured<2> metaDataMesh;
@@ -43,12 +38,6 @@ inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm
   return metaDataMesh;
 }
 
-inline vtkm::cont::CellSetStructured<3> make_metaDataMesh3D(SumYAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<3> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id3{ pdims[0], pdims[2], 1 });
-  return metaDataMesh;
-}
 inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis, const vtkm::Id3& pdims)
 {
   vtkm::cont::CellSetStructured<2> metaDataMesh;
@@ -113,7 +102,6 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases;
   edgeCases.Allocate(coordinateSystem.GetNumberOfValues());
 
-  vtkm::cont::CellSetStructured<3> metaDataMesh3D = detail::make_metaDataMesh3D(AxisToSum{}, pdims);
   vtkm::cont::CellSetStructured<2> metaDataMesh2D = detail::make_metaDataMesh2D(AxisToSum{}, pdims);
 
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataLinearSums; //per point of metaDataMesh
@@ -143,14 +131,26 @@ vtkm::cont::CellSetSingleType<> execute(
     // figure out where intersections along the row begins and ends
     // (i.e., gather information for computational trimming).
     //
-    // We mark everything as below as it is faster than having the worklet to it
     {
       VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass1");
 
-      vtkm::cont::Algorithm::Fill(edgeCases, static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
+      // We have different logic for CUDA compared to Shared memory systems
+      // since this is the first touch of lots of the arrays, and will effect
+      // NUMA perf.
+      //
+      // Additionally CUDA does significantly better when you do an initial fill
+      // and write only non-below values
+      //
       ComputePass1<ValueType, AxisToSum> worklet1(isoval, pdims);
-      invoke(
-        worklet1, metaDataMesh3D, metaDataSums, metaDataMin, metaDataMax, edgeCases, inputField);
+      vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
+                                     launchComputePass1{},
+                                     worklet1,
+                                     inputField,
+                                     edgeCases,
+                                     metaDataMesh2D,
+                                     metaDataSums,
+                                     metaDataMin,
+                                     metaDataMax);
     }
 
     //----------------------------------------------------------------------------

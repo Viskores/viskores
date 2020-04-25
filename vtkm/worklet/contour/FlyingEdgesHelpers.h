@@ -55,14 +55,6 @@ struct SumYAxis
   static constexpr vtkm::Id zindex = 2;
 };
 
-VTKM_EXEC inline vtkm::Id compute_num_pts(SumXAxis, vtkm::Id nx, vtkm::Id vtkmNotUsed(ny))
-{
-  return nx;
-}
-VTKM_EXEC inline vtkm::Id compute_num_pts(SumYAxis, vtkm::Id vtkmNotUsed(nx), vtkm::Id ny)
-{
-  return ny;
-}
 
 VTKM_EXEC inline vtkm::Id3 compute_ijk(SumXAxis, const vtkm::Id3& executionSpaceIJK)
 {
