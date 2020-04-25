@@ -45,10 +45,9 @@ inline VTKM_EXEC T load(const U* u, vtkm::Id v)
   return u->Get(v);
 }
 
-template <typename ThreadIndicesType, typename ExecObjectType>
+template <typename ExecObjectType>
 struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
              vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType,
              ExecObjectType>
 {
   //need to remove pointer type from ThreadIdicesType
@@ -59,14 +58,14 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
   using ValueType = typename ET::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, PortalType arrayPortal) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, PortalType arrayPortal) const
   {
     return load<ValueType>(arrayPortal, indices.GetInputIndex());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, PortalType, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, PortalType, const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }

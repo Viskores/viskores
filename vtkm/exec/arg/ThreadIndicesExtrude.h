@@ -31,7 +31,7 @@ public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
-
+  using Connectivity = vtkm::exec::ConnectivityExtrude<Device>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
@@ -184,6 +184,7 @@ public:
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
+  using Connectivity = ConnectivityType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
