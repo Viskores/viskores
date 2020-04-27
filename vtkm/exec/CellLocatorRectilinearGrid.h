@@ -117,6 +117,7 @@ public:
       if (point[dim] == MaxPoint[dim])
       {
         logicalCell[dim] = this->PointDimensions[dim] - 2;
+        parametric[dim] = static_cast<vtkm::FloatDefault>(1);
         continue;
       }
 
