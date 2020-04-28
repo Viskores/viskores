@@ -242,7 +242,6 @@ VTKM_STATIC_ASSERT(
                   InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
                 vtkm::exec::arg::Fetch<TestFetchTagInput,
                                        vtkm::exec::arg::AspectTagDefault,
-                                       vtkm::exec::arg::ThreadIndicesBasic,
                                        TestExecObject>>::type::value));
 
 VTKM_STATIC_ASSERT(
@@ -250,7 +249,6 @@ VTKM_STATIC_ASSERT(
                   InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
                 vtkm::exec::arg::Fetch<TestFetchTagOutput,
                                        vtkm::exec::arg::AspectTagDefault,
-                                       vtkm::exec::arg::ThreadIndicesBasic,
                                        TestExecObject>>::type::value));
 
 VTKM_STATIC_ASSERT(
@@ -258,7 +256,6 @@ VTKM_STATIC_ASSERT(
                   InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
                 vtkm::exec::arg::Fetch<TestFetchTagOutput,
                                        vtkm::exec::arg::AspectTagDefault,
-                                       vtkm::exec::arg::ThreadIndicesBasic,
                                        TestExecObject>>::type::value));
 
 template <typename DeviceAdapter>
