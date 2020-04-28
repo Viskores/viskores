@@ -50,6 +50,8 @@ set(headers
   ColorLegendAnnotation.h
   ConnectivityProxy.h
   Cylinderizer.h
+  DecodePNG.h # deprecated
+  EncodePNG.h # deprecated
   LineRenderer.h
   MatrixHelpers.h
   Scene.h
