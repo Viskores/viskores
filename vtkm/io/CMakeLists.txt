@@ -26,7 +26,7 @@ vtkm_library( NAME vtkm_io
               HEADERS ${headers}
             )
 
-target_link_libraries(vtkm_io PRIVATE vtkm_lodepng)
+target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
 
 add_subdirectory(internal)
 add_subdirectory(reader)
