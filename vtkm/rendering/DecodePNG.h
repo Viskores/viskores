@@ -28,7 +28,7 @@ vtkm::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
   return vtkm::io::DecodePNG(out_image, image_width, image_height, in_png, in_size);
 }
 }
-} // vtkm::io
+} // vtkm::rendering
 
 
 #endif
