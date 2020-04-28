@@ -7,36 +7,30 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#ifndef vtk_m_io_DecodePNG_h
+#define vtk_m_io_DecodePNG_h
 
-#include <vtkm/rendering/DecodePNG.h>
+#include <vtkm/Types.h>
 
-#include <vtkm/cont/Logging.h>
-#include <vtkm/internal/Configure.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
-VTKM_THIRDPARTY_POST_INCLUDE
+#include <vector>
 
 namespace vtkm
 {
-namespace rendering
+namespace io
 {
 
+/// Decodes a PNG file buffer in memory, into a raw pixel buffer
+/// Output is RGBA 32-bit (8 bit per channel) color format
+/// no matter what color type the original PNG image had. This gives predictable,
+/// usable data from any random input PNG.
+///
+VTKM_ALWAYS_EXPORT
 vtkm::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
                        unsigned long& image_width,
                        unsigned long& image_height,
                        const unsigned char* in_png,
-                       std::size_t in_size)
-{
-  using namespace vtkm::png;
-  constexpr std::size_t bitdepth = 8;
-  vtkm::UInt32 iw = 0;
-  vtkm::UInt32 ih = 0;
+                       std::size_t in_size);
+}
+} // vtkm::io
 
-  auto retcode = lodepng::decode(out_image, iw, ih, in_png, in_size, LCT_RGBA, bitdepth);
-  image_width = iw;
-  image_height = ih;
-  return retcode;
-}
-}
-} // namespace vtkm::rendering
+#endif //vtk_m_io_DecodePNG_h

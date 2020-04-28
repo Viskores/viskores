@@ -10,9 +10,23 @@
 
 set(headers
   ErrorIO.h
+  DecodePNG.h
+  EncodePNG.h
+)
+
+set(sources
+  DecodePNG.cxx
+  EncodePNG.cxx
 )
 
 vtkm_declare_headers(${headers})
+
+vtkm_library( NAME vtkm_io
+              SOURCES ${sources}
+              HEADERS ${headers}
+            )
+
+target_link_libraries(vtkm_io PRIVATE vtkm_lodepng)
 
 add_subdirectory(internal)
 add_subdirectory(reader)

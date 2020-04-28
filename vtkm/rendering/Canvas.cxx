@@ -12,9 +12,9 @@
 
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/io/DecodePNG.h>
+#include <vtkm/io/EncodePNG.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
-#include <vtkm/rendering/DecodePNG.h>
-#include <vtkm/rendering/EncodePNG.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
 #include <vtkm/rendering/WorldAnnotator.h>
@@ -523,7 +523,7 @@ bool Canvas::LoadFont() const
   const std::vector<unsigned char>& rawPNG = Internals->Font.GetRawImageData();
   std::vector<unsigned char> rgba;
   unsigned long textureWidth, textureHeight;
-  auto error = DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
+  auto error = io::DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
   if (error != 0)
   {
     return false;
@@ -598,7 +598,8 @@ void Canvas::SaveAs(const std::string& fileName) const
       }
     }
 
-    SavePNG(fileName, img, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
+    vtkm::io::SavePNG(
+      fileName, img, static_cast<unsigned long>(width), static_cast<unsigned long>(height));
     return;
   }
 
