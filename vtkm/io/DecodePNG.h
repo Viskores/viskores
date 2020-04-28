@@ -11,6 +11,7 @@
 #define vtk_m_io_DecodePNG_h
 
 #include <vtkm/Types.h>
+#include <vtkm/io/vtkm_io_export.h>
 
 #include <vector>
 
@@ -24,7 +25,7 @@ namespace io
 /// no matter what color type the original PNG image had. This gives predictable,
 /// usable data from any random input PNG.
 ///
-VTKM_ALWAYS_EXPORT
+VTKM_IO_EXPORT
 vtkm::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
                        unsigned long& image_width,
                        unsigned long& image_height,

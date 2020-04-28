@@ -11,6 +11,7 @@
 #define vtk_m_io_EncodePNG_h
 
 #include <vtkm/Types.h>
+#include <vtkm/io/vtkm_io_export.h>
 
 #include <vector>
 
@@ -19,14 +20,14 @@ namespace vtkm
 namespace io
 {
 
-VTKM_ALWAYS_EXPORT
+VTKM_IO_EXPORT
 vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
                        unsigned long width,
                        unsigned long height,
                        unsigned char* out_png,
                        std::size_t out_size);
 
-VTKM_ALWAYS_EXPORT
+VTKM_IO_EXPORT
 vtkm::UInt32 SavePNG(std::string const& filename,
                      std::vector<unsigned char> const& image,
                      unsigned long width,
