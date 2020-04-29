@@ -12,6 +12,7 @@ set(headers
   ErrorIO.h
   DecodePNG.h
   EncodePNG.h
+  VTKDataSetWriter.h
 )
 
 set(sources

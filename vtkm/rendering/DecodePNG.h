@@ -23,7 +23,7 @@ vtkm::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
                        unsigned long& image_width,
                        unsigned long& image_height,
                        const unsigned char* in_png,
-                       std::size_t in_size) VTKM_DEPRECATED("Please use vtkm::io::DecodePNG")
+                       std::size_t in_size) VTKM_DEPRECATED(1.6, "Please use vtkm::io::DecodePNG")
 {
   return vtkm::io::DecodePNG(out_image, image_width, image_height, in_png, in_size);
 }
