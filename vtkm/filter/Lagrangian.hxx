@@ -22,7 +22,6 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>

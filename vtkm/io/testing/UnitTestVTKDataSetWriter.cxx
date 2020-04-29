@@ -11,7 +11,7 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -25,7 +25,7 @@ namespace
 void TestVTKWriteTestData(const std::string& methodName, const vtkm::cont::DataSet& data)
 {
   std::cout << "Writing " << methodName << std::endl;
-  vtkm::io::writer::VTKDataSetWriter writer(methodName + ".vtk");
+  vtkm::io::VTKDataSetWriter writer(methodName + ".vtk");
   writer.WriteDataSet(data);
 }
 
@@ -51,7 +51,7 @@ void TestVTKExplicitWrite()
   WRITE_FILE(Make3DExplicitDataSetCowNose);
 
   std::cout << "Force writer to output an explicit grid as points" << std::endl;
-  vtkm::io::writer::VTKDataSetWriter writer("Make3DExplicitDataSet0-no-grid.vtk");
+  vtkm::io::VTKDataSetWriter writer("Make3DExplicitDataSet0-no-grid.vtk");
   writer.WriteDataSet(tds.Make3DExplicitDataSet0(), true);
 }
 
@@ -76,7 +76,7 @@ void TestVTKUniformWrite()
   WRITE_FILE(Make3DRegularDataSet1);
 
   std::cout << "Force writer to output a uniform grid as points" << std::endl;
-  vtkm::io::writer::VTKDataSetWriter writer("Make3DUniformDataSet0-no-grid.vtk");
+  vtkm::io::VTKDataSetWriter writer("Make3DUniformDataSet0-no-grid.vtk");
   writer.WriteDataSet(tds.Make3DUniformDataSet0(), true);
 }
 
@@ -89,7 +89,7 @@ void TestVTKRectilinearWrite()
   WRITE_FILE(Make3DRectilinearDataSet0);
 
   std::cout << "Force writer to output a rectilinear grid as points" << std::endl;
-  vtkm::io::writer::VTKDataSetWriter writer("Make3DRectilinearDataSet0-no-grid.vtk");
+  vtkm::io::VTKDataSetWriter writer("Make3DRectilinearDataSet0-no-grid.vtk");
   writer.WriteDataSet(tds.Make3DRectilinearDataSet0(), true);
 }
 
@@ -126,7 +126,7 @@ void TestVTKCompoundWrite()
   }
 
   dsf.AddPointField(dataSet, "z", points.data(), static_cast<vtkm::Id>(points.size()));
-  vtkm::io::writer::VTKDataSetWriter writer("chirp.vtk");
+  vtkm::io::VTKDataSetWriter writer("chirp.vtk");
   writer.WriteDataSet(dataSet);
   std::remove("chirp.vtk");
 }
