@@ -28,7 +28,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
 #include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 //Adapted from vtkm/cont/testing/MakeTestDataSet.h
 //Modified the content of the MakeExplicitDataSetZoo() function

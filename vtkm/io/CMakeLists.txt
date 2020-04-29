@@ -12,6 +12,7 @@ set(headers
   ErrorIO.h
   DecodePNG.h
   EncodePNG.h
+  VTKDataSetWriter.h
 )
 
 set(sources
@@ -31,3 +32,4 @@ target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
 add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)
+add_subdirectory(testing)

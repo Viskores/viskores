@@ -10,7 +10,7 @@
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/StreamSurface.h>
 
@@ -62,13 +62,6 @@ void TestSameNumPolylines()
                    "Wrong number of points in StreamSurface worklet");
   VTKM_TEST_ASSERT(newCells.GetNumberOfCells() == 12,
                    "Wrong number of cells in StreamSurface worklet");
-  /*
-  vtkm::cont::DataSet ds2;
-  ds2.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", newPoints));
-  ds2.SetCellSet(newCells);
-  vtkm::io::writer::VTKDataSetWriter writer("srf.vtk");
-  writer.WriteDataSet(ds2);
-*/
 }
 
 void TestUnequalNumPolylines(int unequalType)
@@ -129,14 +122,6 @@ void TestUnequalNumPolylines(int unequalType)
                    "Wrong number of points in StreamSurface worklet");
   VTKM_TEST_ASSERT(newCells.GetNumberOfCells() == numRequiredCells,
                    "Wrong number of cells in StreamSurface worklet");
-
-  /*
-  vtkm::cont::DataSet ds2;
-  ds2.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", newPoints));
-  ds2.SetCellSet(newCells);
-  vtkm::io::writer::VTKDataSetWriter writer("srf.vtk");
-  writer.WriteDataSet(ds2);
-*/
 }
 
 void TestStreamSurface()
