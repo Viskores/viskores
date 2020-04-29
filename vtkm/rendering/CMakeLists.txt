@@ -50,8 +50,8 @@ set(headers
   ColorLegendAnnotation.h
   ConnectivityProxy.h
   Cylinderizer.h
-  DecodePNG.h
-  EncodePNG.h
+  DecodePNG.h # deprecated
+  EncodePNG.h # deprecated
   LineRenderer.h
   MatrixHelpers.h
   Scene.h
@@ -85,8 +85,6 @@ set(sources
 
   Camera.cxx
   Color.cxx
-  DecodePNG.cxx
-  EncodePNG.cxx
   raytracing/Logger.cxx
   )
 
@@ -200,8 +198,7 @@ elseif(VTKm_ENABLE_EGL_CONTEXT)
 endif()
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_filter
-                                     PRIVATE vtkm_lodepng)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_filter vtkm_io)
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt)
 endif()
