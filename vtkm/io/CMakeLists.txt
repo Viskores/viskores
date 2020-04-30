@@ -9,9 +9,17 @@
 ##============================================================================
 
 set(headers
+  BOVDataSetReader.h
   ErrorIO.h
   DecodePNG.h
   EncodePNG.h
+  VTKDataSetReader.h
+  VTKDataSetReaderBase.h
+  VTKPolyDataReader.h
+  VTKRectilinearGridReader.h
+  VTKStructuredGridReader.h
+  VTKStructuredPointsReader.h
+  VTKUnstructuredGridReader.h
   VTKDataSetWriter.h
 )
 
