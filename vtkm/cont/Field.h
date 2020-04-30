@@ -101,6 +101,8 @@ public:
   template <typename TypeList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
+    VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
+                           "Cannot get the field range with vtkm::ListUniversal.");
     return this->GetRangeImpl(TypeList());
   }
 

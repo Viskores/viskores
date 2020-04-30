@@ -63,6 +63,9 @@ namespace cont
 template <typename TypeList>
 class VTKM_ALWAYS_EXPORT VariantArrayHandleBase
 {
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
+                         "Cannot use vtkm::ListUniversal with VariantArrayHandle.");
+
 public:
   VTKM_CONT
   VariantArrayHandleBase() = default;

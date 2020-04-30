@@ -184,7 +184,7 @@ public:
   /// A filter is able to state what subset of types it supports
   /// by default. By default we use ListUniversal to represent that the
   /// filter accepts all types specified by the users provided policy
-  using SupportedTypes = vtkm::ListUniversal;
+  using SupportedTypes = VTKM_DEFAULT_TYPE_LIST;
 
   /// \brief Specify which additional field storage to support.
   ///

@@ -32,7 +32,7 @@ namespace filter
 template <typename Derived>
 struct PolicyBase
 {
-  using FieldTypeList = VTKM_DEFAULT_TYPE_LIST;
+  using FieldTypeList = vtkm::ListUniversal;
   using StorageList = VTKM_DEFAULT_STORAGE_LIST;
 
   using StructuredCellSetList = VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED;
@@ -201,10 +201,18 @@ using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerF
 /// passed to the `DoMapField` method of filters.
 ///
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList>
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename std::conditional<
+  std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
+  VTKM_DEFAULT_TYPE_LIST,
+  typename DerivedPolicy::FieldTypeList>::type>
 ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  using TypeList = typename DerivedPolicy::FieldTypeList;
+  // Policies are on their way out, but until they are we want to respect them. In the mean
+  // time, respect the policy if it is defined.
+  using TypeList = typename std::conditional<
+    std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
+    VTKM_DEFAULT_TYPE_LIST,
+    typename DerivedPolicy::FieldTypeList>::type;
   return field.GetData().ResetTypes(TypeList());
 }
 
