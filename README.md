@@ -157,7 +157,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/Range.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -166,7 +166,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
+vtkm::io::VTKDataSetReader reader("path/to/vtk_image_file.vtk");
 vtkm::cont::DataSet inputData = reader.ReadDataSet();
 std::string fieldName = "scalars";
 

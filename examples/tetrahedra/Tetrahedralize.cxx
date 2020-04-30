@@ -11,7 +11,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/filter/Tetrahedralize.h>
 
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
   vtkm::filter::Tetrahedralize tetrahedralizeFilter;
   vtkm::cont::DataSet output = tetrahedralizeFilter.Execute(input);
 
-  vtkm::io::writer::VTKDataSetWriter writer("out_tets.vtk");
+  vtkm::io::VTKDataSetWriter writer("out_tets.vtk");
   writer.WriteDataSet(output);
 
   return 0;

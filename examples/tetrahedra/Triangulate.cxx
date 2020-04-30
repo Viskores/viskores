@@ -11,7 +11,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/filter/Triangulate.h>
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
   vtkm::filter::Triangulate triangulateFilter;
   vtkm::cont::DataSet output = triangulateFilter.Execute(input);
 
-  vtkm::io::writer::VTKDataSetWriter writer("out_tris.vtk");
+  vtkm::io::VTKDataSetWriter writer("out_tris.vtk");
   writer.WriteDataSet(output);
 
   return 0;

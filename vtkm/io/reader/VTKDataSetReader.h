@@ -20,7 +20,7 @@ namespace io
 namespace reader
 {
 
-class VTKM_DEPRECATED(1.6, "Please use vtkm::io::VTKDataSetReader") VTKDataSetReader
+class VTKM_DEPRECATED(1.6, "Please use vtkm::io::VTKDataSetReader.") VTKDataSetReader
   : public io::VTKDataSetReader
 {
 public:
