@@ -126,7 +126,7 @@ build:ubuntu1804_gcc6:
   variables:
     CC: "gcc-6"
     CXX: "g++-6"
-    VTKM_SETTINGS: "openmp+shared"
+    VTKM_SETTINGS: "openmp+shared+examples"
 
 test:ubuntu1804_gcc6:
   tags:
@@ -163,7 +163,7 @@ build:ubuntu1804_clang8:
     CC: "clang-8"
     CXX: "clang++-8"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+shared"
+    VTKM_SETTINGS: "tbb+shared+examples"
 
 test:ubuntu1804_clang8:
   tags:
