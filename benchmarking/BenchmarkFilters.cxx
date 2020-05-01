@@ -44,7 +44,7 @@
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -1005,7 +1005,7 @@ void InitDataSet(int& argc, char** argv)
   if (!filename.empty())
   {
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
-    vtkm::io::reader::VTKDataSetReader reader(filename);
+    vtkm::io::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
   }
   else

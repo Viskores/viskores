@@ -24,8 +24,8 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 
 /**
@@ -206,7 +206,7 @@ int TestMetrics(const char* outFileName,
   vtkm::cont::DataSet outputData;
   try
   {
-    vtkm::io::writer::VTKDataSetWriter writer("testZoo_withPolygons.vtk");
+    vtkm::io::VTKDataSetWriter writer("testZoo_withPolygons.vtk");
     writer.WriteDataSet(data);
 
     outputData = filter.Execute(data);
@@ -220,7 +220,7 @@ int TestMetrics(const char* outFileName,
   }
   try
   {
-    vtkm::io::writer::VTKDataSetWriter writer(outFileName);
+    vtkm::io::VTKDataSetWriter writer(outFileName);
     writer.WriteDataSet(outputData);
     std::cout << "finished writing data\n";
   }
@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
       break;
   }
   vtkm::cont::DataSet input;
-  vtkm::io::reader::VTKDataSetReader reader(argv[1]);
+  vtkm::io::VTKDataSetReader reader(argv[1]);
 
 
   // A cell metric is now computed for every shape type that exists in the

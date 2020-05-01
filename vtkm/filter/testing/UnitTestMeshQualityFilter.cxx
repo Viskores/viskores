@@ -27,7 +27,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MeshQuality.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 //Adapted from vtkm/cont/testing/MakeTestDataSet.h
 //Modified the content of the MakeExplicitDataSetZoo() function

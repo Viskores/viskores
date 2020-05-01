@@ -18,8 +18,8 @@
 
 #include <vtkm/filter/Pathline.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 int main(int argc, char** argv)
 {
@@ -63,10 +63,10 @@ int main(int argc, char** argv)
   stepSize = static_cast<vtkm::Float32>(atof(argv[7]));
   outputName = std::string(argv[8]);
 
-  vtkm::io::reader::VTKDataSetReader reader1(datasetName1);
+  vtkm::io::VTKDataSetReader reader1(datasetName1);
   vtkm::cont::DataSet ds1 = reader1.ReadDataSet();
 
-  vtkm::io::reader::VTKDataSetReader reader2(datasetName2);
+  vtkm::io::VTKDataSetReader reader2(datasetName2);
   vtkm::cont::DataSet ds2 = reader2.ReadDataSet();
 
   // Use the coordinate system as seeds for performing advection
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
   // The way to verify if the code produces correct streamlines
   // is to do a visual test by using VisIt/ParaView to visualize
   // the file written by this method.
-  vtkm::io::writer::VTKDataSetWriter writer(outputName);
+  vtkm::io::VTKDataSetWriter writer(outputName);
   writer.WriteDataSet(output);
   return 0;
 }
