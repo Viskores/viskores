@@ -16,23 +16,6 @@ if(NOT VTKm_ENABLE_RENDERING)
   return()
 endif()
 
-# determine what context(s) for rendering we want to build
-vtkm_option(VTKm_ENABLE_GL_CONTEXT "Enable GL context for vtkm rendering" OFF)
-if(UNIX AND NOT APPLE)
-  vtkm_option(VTKm_ENABLE_OSMESA_CONTEXT "Enable OSMesa context for vtkm rendering" OFF)
-  vtkm_option(VTKm_ENABLE_EGL_CONTEXT "Enable EGL context for vtkm rendering" OFF)
-  mark_as_advanced(VTKm_ENABLE_OSMESA_CONTEXT)
-  mark_as_advanced(VTKm_ENABLE_EGL_CONTEXT)
-endif()
-if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
-  message(FATAL_ERROR "VTK-m GL and OSMesa contexts are mutually exclusive")
-endif()
-if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_EGL_CONTEXT)
-  message(FATAL_ERROR "VTK-m GL and EGL contexts are mutually exclusive")
-endif()
-if(VTKm_ENABLE_EGL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
-  message(FATAL_ERROR "VTK-m EGL and OSMesa contexts are mutually exclusive")
-endif()
 
 set(headers
   Actor.h
@@ -144,37 +127,7 @@ set(device_sources
   raytracing/VolumeRendererStructured.cxx
   )
 
-# Note that EGL and OSMesa Canvas depend on the GL version being built. Only
 # the None backend supports not building the opengl version
-set(opengl_headers
-  CanvasGL.h
-  MapperGL.h
-  TextureGL.h
-  WorldAnnotatorGL.h
-  )
-
-set(opengl_sources
-  CanvasGL.cxx
-  MapperGL.cxx
-  TextureGL.cxx
-  WorldAnnotatorGL.cxx
-  )
-
-set(egl_headers
-  CanvasEGL.h
-)
-
-set(egl_sources
-  CanvasEGL.cxx
-  )
-
-set(osmesa_headers
-  CanvasOSMesa.h
-  )
-
-set(osmesa_sources
-  CanvasOSMesa.cxx
-  )
 
 #-----------------------------------------------------------------------------
 vtkm_library(
@@ -183,19 +136,6 @@ vtkm_library(
   HEADERS ${headers}
   DEVICE_SOURCES ${device_sources}
   )
-
-# Install all headers no matter what backend was selected
-vtkm_declare_headers(${opengl_headers})
-vtkm_declare_headers(${osmesa_headers})
-vtkm_declare_headers(${egl_headers})
-
-if(VTKm_ENABLE_GL_CONTEXT)
-  target_sources(vtkm_rendering PRIVATE ${opengl_sources})
-elseif(VTKm_ENABLE_OSMESA_CONTEXT)
-  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
-elseif(VTKm_ENABLE_EGL_CONTEXT)
-  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
-endif()
 
 #-----------------------------------------------------------------------------
 target_link_libraries(vtkm_rendering PUBLIC vtkm_filter vtkm_io)
