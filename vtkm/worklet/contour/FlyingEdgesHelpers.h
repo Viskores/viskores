@@ -55,6 +55,32 @@ struct SumYAxis
   static constexpr vtkm::Id zindex = 2;
 };
 
+template <typename Device>
+struct select_AxisToSum
+{
+  using type = SumXAxis;
+};
+
+template <>
+struct select_AxisToSum<vtkm::cont::DeviceAdapterTagCuda>
+{
+  using type = SumYAxis;
+};
+
+inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm::Id3& pdims)
+{
+  vtkm::cont::CellSetStructured<2> metaDataMesh;
+  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[1], pdims[2] });
+  return metaDataMesh;
+}
+
+inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis, const vtkm::Id3& pdims)
+{
+  vtkm::cont::CellSetStructured<2> metaDataMesh;
+  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[0], pdims[2] });
+  return metaDataMesh;
+}
+
 
 VTKM_EXEC inline vtkm::Id3 compute_ijk(SumXAxis, const vtkm::Id3& executionSpaceIJK)
 {

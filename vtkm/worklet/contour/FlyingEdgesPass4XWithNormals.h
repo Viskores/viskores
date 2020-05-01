@@ -10,8 +10,8 @@
 //============================================================================
 
 
-#ifndef vtk_m_worklet_contour_flyingedges_pass4_with_norms_h
-#define vtk_m_worklet_contour_flyingedges_pass4_with_norms_h
+#ifndef vtk_m_worklet_contour_flyingedges_pass4x_with_norms_h
+#define vtk_m_worklet_contour_flyingedges_pass4x_with_norms_h
 
 
 #include <vtkm/worklet/contour/FlyingEdgesHelpers.h>
@@ -26,8 +26,8 @@ namespace worklet
 namespace flying_edges
 {
 
-template <typename T, typename AxisToSum>
-struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoints
+template <typename T>
+struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 
   vtkm::Id3 PointDims;
@@ -39,13 +39,13 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
   vtkm::Id CellWriteOffset;
   vtkm::Id PointWriteOffset;
 
-  ComputePass4WithNormals() {}
-  ComputePass4WithNormals(T value,
-                          const vtkm::Id3& pdims,
-                          const vtkm::Vec3f& origin,
-                          const vtkm::Vec3f& spacing,
-                          vtkm::Id multiContourCellOffset,
-                          vtkm::Id multiContourPointOffset)
+  ComputePass4XWithNormals() {}
+  ComputePass4XWithNormals(T value,
+                           const vtkm::Id3& pdims,
+                           const vtkm::Vec3f& origin,
+                           const vtkm::Vec3f& spacing,
+                           vtkm::Id multiContourCellOffset,
+                           vtkm::Id multiContourPointOffset)
     : PointDims(pdims)
     , Origin(origin)
     , Spacing(spacing)
@@ -98,6 +98,8 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
                             const WholeNormalsField& normals,
                             vtkm::Id oidx) const
   {
+    using AxisToSum = SumXAxis;
+
     //This works as cellTriCount was computed with ScanExtended
     //and therefore has one more entry than the number of cells
     vtkm::Id cell_tri_offset = cellTriCount.Get(oidx);
@@ -181,6 +183,8 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
                                  vtkm::UInt8 const* const edgeUses,
                                  vtkm::Id* edgeIds) const
   {
+    using AxisToSum = SumXAxis;
+
     vtkm::Id2 pos(startPos[0] + offset, 0);
     {
       auto s0 = field.Get(pos[0]);
@@ -192,7 +196,7 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
         auto writeIndex = edgeIds[0];
         pos[1] = startPos[0] + offset + incs[AxisToSum::xindex];
         auto s1 = field.Get(pos[1]);
-        auto t = (this->IsoValue - s0) / (s1 - s0);
+        T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
 
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
@@ -211,7 +215,7 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
         auto writeIndex = edgeIds[4];
         pos[1] = startPos[1] + offset;
         auto s1 = field.Get(pos[1]);
-        auto t = (this->IsoValue - s0) / (s1 - s0);
+        T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
 
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
@@ -230,7 +234,7 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
         auto writeIndex = edgeIds[8];
         pos[1] = startPos[2] + offset;
         auto s1 = field.Get(pos[1]);
-        auto t = (this->IsoValue - s0) / (s1 - s0);
+        T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
 
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
@@ -369,6 +373,8 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
                                         const WholePointField& points,
                                         const WholeNormalField& normals) const
   {
+    using AxisToSum = SumXAxis;
+
     // if this edge is not used then get out
     if (!edgeUses[edgeNum])
     {
@@ -388,7 +394,7 @@ struct ComputePass4WithNormals : public vtkm::worklet::WorkletVisitCellsWithPoin
 
     auto s0 = field.Get(iEdge[0]);
     auto s1 = field.Get(iEdge[1]);
-    auto t = (this->IsoValue - s0) / (s1 - s0);
+    T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
     weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
     auto coord = this->InterpolateCoordinate(t, ijk + offsets1, ijk + offsets2);

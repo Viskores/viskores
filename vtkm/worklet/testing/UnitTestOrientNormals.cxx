@@ -33,6 +33,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
@@ -56,14 +57,16 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   wavelet.SetMagnitude({ 5 });
   auto dataSet = wavelet.Execute();
 
-  // Cut a contour
+  vtkm::filter::CleanGrid toGrid;
+
+  // unstructured grid contour
   vtkm::filter::Contour contour;
   contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
   contour.SetGenerateNormals(false);
-  dataSet = contour.Execute(dataSet);
+  dataSet = contour.Execute(toGrid.Execute(dataSet));
 
   vtkm::filter::SurfaceNormals normals;
   normals.SetGeneratePointNormals(pointNormals);

@@ -23,7 +23,6 @@ namespace worklet
 namespace flying_edges
 {
 
-template <typename AxisToSum>
 struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   vtkm::Id3 PointDims;
@@ -40,20 +39,24 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
                                 FieldInPoint axis_maxs,
                                 FieldOutCell cell_tri_count,
                                 WholeArrayIn edgeData);
-  using ExecutionSignature = void(ThreadIndices, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(ThreadIndices, _2, _3, _4, _5, _6, Device);
   using InputDomain = _1;
 
   template <typename ThreadIndices,
             typename WholeSumField,
             typename FieldInPointId,
-            typename WholeEdgeField>
+            typename WholeEdgeField,
+            typename Device>
   VTKM_EXEC void operator()(const ThreadIndices& threadIndices,
                             const WholeSumField& axis_sums,
                             const FieldInPointId& axis_mins,
                             const FieldInPointId& axis_maxs,
                             vtkm::Int32& cell_tri_count,
-                            const WholeEdgeField& edges) const
+                            const WholeEdgeField& edges,
+                            Device) const
   {
+    using AxisToSum = typename select_AxisToSum<Device>::type;
+
     // Pass 2. Traverse all cells in the meta data plane. This allows us to
     // easily grab the four edge cases bounding this voxel-row
 
@@ -134,7 +137,8 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
         sums[AxisToSum::zindex] += edgeUses[8];
 
         // handle boundary
-        this->CountBoundaryEdgeUses(onBoundary, edgeUses, sums, adj_row_sum, adj_col_sum);
+        this->CountBoundaryEdgeUses(
+          AxisToSum{}, onBoundary, edgeUses, sums, adj_row_sum, adj_col_sum);
       }
     }
 
@@ -157,7 +161,9 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
   //
   // Only on these boundaries do we write to the metaData of our neighbor
   // as it is safe as those
-  VTKM_EXEC inline void CountBoundaryEdgeUses(vtkm::Vec<bool, 3> onBoundary,
+  template <typename AxisToSum>
+  VTKM_EXEC inline void CountBoundaryEdgeUses(AxisToSum,
+                                              vtkm::Vec<bool, 3> onBoundary,
                                               vtkm::UInt8 const* const edgeUses,
                                               vtkm::Id3& sums,
                                               vtkm::Id3& adj_row_sum,

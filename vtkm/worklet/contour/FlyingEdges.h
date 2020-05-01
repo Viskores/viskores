@@ -16,7 +16,6 @@
 #include <vtkm/worklet/contour/FlyingEdgesPass1.h>
 #include <vtkm/worklet/contour/FlyingEdgesPass2.h>
 #include <vtkm/worklet/contour/FlyingEdgesPass4.h>
-#include <vtkm/worklet/contour/FlyingEdgesPass4WithNormals.h>
 
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/Invoker.h>
@@ -30,21 +29,6 @@ namespace flying_edges
 
 namespace detail
 {
-
-inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<2> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[1], pdims[2] });
-  return metaDataMesh;
-}
-
-inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<2> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[0], pdims[2] });
-  return metaDataMesh;
-}
-
 template <typename T, typename S>
 vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 {
@@ -64,7 +48,6 @@ vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 }
 }
 
-
 //----------------------------------------------------------------------------
 template <typename ValueType,
           typename StorageTagField,
@@ -81,12 +64,6 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
-  //Tasks:
-  //3. Support switching AxisToSum by running this whole thing in a TryExecute
-  //   Passes 5 can ignore this
-
-  using AxisToSum = SumXAxis;
-
   vtkm::cont::Invoker invoke;
 
   vtkm::Vec3f origin, spacing;
@@ -98,12 +75,10 @@ vtkm::cont::CellSetSingleType<> execute(
   }
   auto pdims = cells.GetPointDimensions();
 
-
   vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases;
   edgeCases.Allocate(coordinateSystem.GetNumberOfValues());
 
-  vtkm::cont::CellSetStructured<2> metaDataMesh2D = detail::make_metaDataMesh2D(AxisToSum{}, pdims);
-
+  vtkm::cont::CellSetStructured<2> metaDataMesh2D;
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataLinearSums; //per point of metaDataMesh
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataMin;        //per point of metaDataMesh
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataMax;        //per point of metaDataMesh
@@ -141,7 +116,7 @@ vtkm::cont::CellSetSingleType<> execute(
       // Additionally CUDA does significantly better when you do an initial fill
       // and write only non-below values
       //
-      ComputePass1<ValueType, AxisToSum> worklet1(isoval, pdims);
+      ComputePass1<ValueType> worklet1(isoval, pdims);
       vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
                                      launchComputePass1{},
                                      worklet1,
@@ -160,7 +135,7 @@ vtkm::cont::CellSetSingleType<> execute(
     // row. Use computational trimming to reduce work.
     {
       VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass2");
-      ComputePass2<AxisToSum> worklet2(pdims);
+      ComputePass2 worklet2(pdims);
       invoke(worklet2,
              metaDataMesh2D,
              metaDataSums,
@@ -182,56 +157,40 @@ vtkm::cont::CellSetSingleType<> execute(
       detail::extend_by(sharedState.CellIdMap, sumTris);
 
 
-      auto newPointSize =
+      vtkm::Id newPointSize =
         vtkm::cont::Algorithm::ScanExclusive(metaDataLinearSums, metaDataLinearSums);
       detail::extend_by(sharedState.InterpolationEdgeIds, newPointSize);
       detail::extend_by(sharedState.InterpolationWeights, newPointSize);
 
       //----------------------------------------------------------------------------
       // PASS 4: Process voxel rows and generate topology, and interpolation state
-      if (sharedState.GenerateNormals)
       {
-        VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges ComputePass4WithNormals");
-        detail::extend_by(points, newPointSize);
-        detail::extend_by(normals, newPointSize);
+        VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass4");
 
-        ComputePass4WithNormals<ValueType, AxisToSum> worklet4(
-          isoval, pdims, origin, spacing, multiContourCellOffset, multiContourPointOffset);
-        invoke(worklet4,
-               metaDataMesh2D,
-               metaDataSums,
-               metaDataMin,
-               metaDataMax,
-               metaDataNumTris,
-               edgeCases,
-               inputField,
-               triangle_topology,
-               sharedState.InterpolationEdgeIds,
-               sharedState.InterpolationWeights,
-               sharedState.CellIdMap,
-               points,
-               normals);
-      }
-      else
-      {
-        VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges ComputePass4");
-        detail::extend_by(points, newPointSize);
+        launchComputePass4 pass4(
+          pdims, origin, spacing, multiContourCellOffset, multiContourPointOffset);
 
-        ComputePass4<ValueType, AxisToSum> worklet4(
-          isoval, pdims, origin, spacing, multiContourCellOffset, multiContourPointOffset);
-        invoke(worklet4,
-               metaDataMesh2D,
-               metaDataSums,
-               metaDataMin,
-               metaDataMax,
-               metaDataNumTris,
-               edgeCases,
-               inputField,
-               triangle_topology,
-               sharedState.InterpolationEdgeIds,
-               sharedState.InterpolationWeights,
-               sharedState.CellIdMap,
-               points);
+        detail::extend_by(points, newPointSize);
+        if (sharedState.GenerateNormals)
+        {
+          detail::extend_by(normals, newPointSize);
+        }
+
+        vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
+                                       pass4,
+                                       newPointSize,
+                                       isoval,
+                                       inputField,
+                                       edgeCases,
+                                       metaDataMesh2D,
+                                       metaDataSums,
+                                       metaDataMin,
+                                       metaDataMax,
+                                       metaDataNumTris,
+                                       sharedState,
+                                       triangle_topology,
+                                       points,
+                                       normals);
       }
     }
   }
