@@ -74,10 +74,13 @@ if(DEFINED ENV{CTEST_MEMORYCHECK_SANITIZER_OPTIONS})
 endif()
 
 #We need to do write this information out to a file in the build directory
+file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}" src_path) #converted so we can run on windows
+file(TO_CMAKE_PATH "${CTEST_BINARY_DIRECTORY}" bin_path) #converted so we can run on windows
+
 set(state
 "
-  set(CTEST_SOURCE_DIRECTORY \"${CTEST_SOURCE_DIRECTORY}\")
-  set(CTEST_BINARY_DIRECTORY \"${CTEST_BINARY_DIRECTORY}\")
+  set(CTEST_SOURCE_DIRECTORY \"${src_path}\")
+  set(CTEST_BINARY_DIRECTORY \"${bin_path}\")
 
   set(CTEST_BUILD_NAME ${CTEST_BUILD_NAME})
   set(CTEST_SITE ${CTEST_SITE})
