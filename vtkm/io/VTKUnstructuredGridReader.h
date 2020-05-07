@@ -7,16 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_io_reader_VTKUnstructuredGridReader_h
-#define vtk_m_io_reader_VTKUnstructuredGridReader_h
+#ifndef vtk_m_io_VTKUnstructuredGridReader_h
+#define vtk_m_io_VTKUnstructuredGridReader_h
 
-#include <vtkm/io/reader/VTKDataSetReaderBase.h>
+#include <vtkm/io/VTKDataSetReaderBase.h>
 
 namespace vtkm
 {
 namespace io
-{
-namespace reader
 {
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
@@ -91,7 +89,6 @@ private:
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
-}
-} // namespace vtkm::io:reader
+} // namespace vtkm::io
 
-#endif // vtk_m_io_reader_VTKUnstructuredGridReader_h
+#endif // vtk_m_io_VTKUnstructuredGridReader_h

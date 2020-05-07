@@ -9,6 +9,8 @@
 ##============================================================================
 
 set(unit_tests
- UnitTestMapperEGL.cxx
+  UnitTestVTKDataSetReader.cxx
+  UnitTestVTKDataSetWriter.cxx
  )
-vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS)

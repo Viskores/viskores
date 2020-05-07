@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <string>
 
@@ -401,7 +401,7 @@ inline void createFile(const char* buffer, std::size_t size, const char* fname)
 inline vtkm::cont::DataSet readVTKDataSet(const char* fname)
 {
   vtkm::cont::DataSet ds;
-  vtkm::io::reader::VTKDataSetReader reader(fname);
+  vtkm::io::VTKDataSetReader reader(fname);
   try
   {
     ds = reader.ReadDataSet();

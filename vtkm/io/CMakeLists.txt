@@ -9,11 +9,35 @@
 ##============================================================================
 
 set(headers
+  BOVDataSetReader.h
   ErrorIO.h
+  DecodePNG.h
+  EncodePNG.h
+  VTKDataSetReader.h
+  VTKDataSetReaderBase.h
+  VTKPolyDataReader.h
+  VTKRectilinearGridReader.h
+  VTKStructuredGridReader.h
+  VTKStructuredPointsReader.h
+  VTKUnstructuredGridReader.h
+  VTKDataSetWriter.h
+)
+
+set(sources
+  DecodePNG.cxx
+  EncodePNG.cxx
 )
 
 vtkm_declare_headers(${headers})
 
+vtkm_library( NAME vtkm_io
+              SOURCES ${sources}
+              HEADERS ${headers}
+            )
+
+target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
+
 add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)
+add_subdirectory(testing)

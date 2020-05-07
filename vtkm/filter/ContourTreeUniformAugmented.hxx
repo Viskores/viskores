@@ -503,7 +503,8 @@ void MergeBlockFunctor(
           currNumIterations,
           block->ComputeRegularStructure,
           meshBoundaryExecObj);
-        vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>* newContourTreeMesh = 0;
+        vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>* newContourTreeMesh =
+          nullptr;
         if (block->ComputeRegularStructure == 1)
         {
           // If we have the fully augmented contour tree
@@ -759,7 +760,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
       currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     //const vtkm::cont::ArrayHandle<T,StorageType> &fieldData = currField.GetData().Cast<vtkm::cont::ArrayHandle<T,StorageType> >();
     vtkm::cont::ArrayHandle<T> fieldData;
-    vtkm::cont::ArrayCopy(currField.GetData().AsVirtual<T>(), fieldData);
+    vtkm::cont::ArrayCopy(currField.GetData().template AsVirtual<T>(), fieldData);
     auto currContourTreeMesh =
       vtkm::filter::detail::MultiBlockContourTreeHelper::ComputeLocalContourTreeMesh<T>(
         this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal()

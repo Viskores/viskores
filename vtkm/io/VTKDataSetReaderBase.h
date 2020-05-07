@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_io_reader_VTKDataSetReaderBase_h
-#define vtk_m_io_reader_VTKDataSetReaderBase_h
+#ifndef vtk_m_io_VTKDataSetReaderBase_h
+#define vtk_m_io_VTKDataSetReaderBase_h
 
 #include <vtkm/io/internal/Endian.h>
 #include <vtkm/io/internal/VTKDataSetCells.h>
@@ -33,8 +33,6 @@
 namespace vtkm
 {
 namespace io
-{
-namespace reader
 {
 
 namespace internal
@@ -1004,10 +1002,9 @@ private:
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
-}
-} // vtkm::io::reader
+} // vtkm::io
 
 VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
 VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
 
-#endif // vtk_m_io_reader_VTKDataSetReaderBase_h
+#endif // vtk_m_io_VTKDataSetReaderBase_h

@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <algorithm> // for std::equal
-#include <vtkm/rendering/EncodePNG.h>
+#include <vtkm/io/EncodePNG.h>
 
 #include <vtkm/cont/Logging.h>
 #include <vtkm/internal/Configure.h>
@@ -19,7 +19,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
-namespace rendering
+namespace io
 {
 
 vtkm::UInt32 EncodePNG(std::vector<unsigned char> const& image,
@@ -68,4 +68,4 @@ vtkm::UInt32 SavePNG(std::string const& filename,
   return error;
 }
 }
-} // namespace vtkm::rendering
+} // namespace vtkm::io

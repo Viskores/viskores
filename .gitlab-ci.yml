@@ -169,3 +169,4 @@ include:
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
+  - local: '/.gitlab/ci/windows10.yml'

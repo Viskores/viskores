@@ -523,6 +523,8 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename Functor, typename... Ts, typename... Args>
 VTKM_EXEC_CONT void ListForEachImpl(Functor&& f, vtkm::List<Ts...>, Args&&... args)
 {
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<vtkm::List<Ts...>, vtkm::ListUniversal>::value),
+                         "Cannot call ListFor on vtkm::ListUniversal.");
   auto init_list = { ListForEachCallThrough(
     std::forward<Functor>(f), Ts{}, std::forward<Args>(args)...)... };
   (void)init_list;

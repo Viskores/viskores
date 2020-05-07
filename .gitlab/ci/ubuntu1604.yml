@@ -52,6 +52,25 @@ build:ubuntu1604_gcc5:
 #   needs:
 #     - build:ubuntu1604_gcc5
 
+# Build on ubuntu1704 with OpenMP + CUDA
+# Runs only on nightlies
+build:ubuntu1604_gcc5_2:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+    - large-memory
+  extends:
+    - .ubuntu1604_cuda
+    - .cmake_build_linux
+    - .only-master
+  variables:
+    CC: "gcc-5"
+    CXX: "g++-5"
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "openmp+cuda+pascal+examples"
+
 # Build on ubuntu1604 with mpi + tbb and test on ubuntu1604
 # Uses gcc 4.8
 # Uses OpenMPI
@@ -105,8 +124,6 @@ build:ubuntu1604_clang5:
     - docker
     - linux
   extends:
-    #Requires the cuda docker image as it uses a sufficiently new
-    #enough CMake version that supports mpi
     - .ubuntu1604
     - .cmake_build_linux
     - .only-default
