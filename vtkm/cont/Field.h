@@ -262,6 +262,15 @@ struct SerializableField
 
   vtkm::cont::Field Field;
 };
+
+// Cannot directly serialize fields with a vtkm::ListUniversal type list since there has to
+// be a finite number of types to serialize. Do the best possible by serializing all basic
+// VTK-m types.
+template <>
+struct SerializableField<vtkm::ListUniversal> : SerializableField<vtkm::TypeListAll>
+{
+  using SerializableField<vtkm::TypeListAll>::SerializableField;
+};
 } // namespace cont
 } // namespace vtkm
 
@@ -298,6 +307,12 @@ public:
     vtkmdiy::load(bb, data);
     field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
   }
+};
+
+template <>
+struct Serialization<vtkm::cont::SerializableField<vtkm::ListUniversal>>
+  : Serialization<vtkm::cont::SerializableField<vtkm::TypeListAll>>
+{
 };
 
 } // diy
