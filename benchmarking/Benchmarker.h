@@ -239,7 +239,9 @@
 /// ```
 #define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                                \
   VTKM_BENCHMARK_TEMPLATES_APPLY(                                                                  \
-    BenchFunc, [](::benchmark::internal::Benchmark* bm) { bm options; }, TypeList)
+    BenchFunc,                                                                                     \
+    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); },       \
+    TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
 ///
