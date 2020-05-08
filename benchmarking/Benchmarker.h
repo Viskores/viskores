@@ -317,7 +317,7 @@ private:
       this->Apply(bm);
 
       // Always use manual time with vtkm::cont::Timer to capture CUDA times accurately.
-      bm->UseManualTime();
+      bm->UseManualTime()->Unit(benchmark::kMillisecond);
     }
   };
 
