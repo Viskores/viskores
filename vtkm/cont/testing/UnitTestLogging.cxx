@@ -20,8 +20,8 @@ namespace
 void DoWork()
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Info);
-  VTKM_LOG_F(vtkm::cont::LogLevel::Info, "Sleeping for half a second...");
-  std::this_thread::sleep_for(std::chrono::milliseconds{ 500 });
+  VTKM_LOG_F(vtkm::cont::LogLevel::Info, "Sleeping for 5 milliseconds...");
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 5 });
 }
 
 void Scopes(int level = 0)

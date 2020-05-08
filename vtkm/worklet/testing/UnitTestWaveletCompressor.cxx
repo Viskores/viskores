@@ -229,11 +229,12 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
-      "WaveletCompressor 3D failed...");
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
+                     "WaveletCompressor 3D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
@@ -296,11 +297,12 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
-      "WaveletCompressor 2D failed...");
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
+                     "WaveletCompressor 2D failed...");
   }
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
@@ -357,11 +359,12 @@ void TestDecomposeReconstruct1D(vtkm::Float64 cratio)
   compressor.EvaluateReconstruction(inputArray, reconstructArray);
 
   timer.Start();
+  auto reconstructPortal = reconstructArray.ReadPortal();
+  auto inputPortal = inputArray.ReadPortal();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(reconstructArray.ReadPortal().Get(i), inputArray.ReadPortal().Get(i)),
-      "WaveletCompressor 1D failed...");
+    VTKM_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
+                     "WaveletCompressor 1D failed...");
   }
   elapsedTime = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime << std::endl;

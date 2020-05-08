@@ -92,9 +92,10 @@ public:
   {
     this->GetRangeImpl(TypeList());
     const vtkm::Id length = this->Range.GetNumberOfValues();
+    auto portal = this->Range.ReadPortal();
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      range[i] = this->Range.ReadPortal().Get(i);
+      range[i] = portal.Get(i);
     }
   }
 
