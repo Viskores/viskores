@@ -14,7 +14,7 @@
 #include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/filter/Contour.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
 
 namespace
@@ -94,7 +94,7 @@ public:
   {
     auto pathname =
       vtkm::cont::testing::Testing::GetTestDataBasePath() + "/unstructured/wedge_cells.vtk";
-    vtkm::io::reader::VTKDataSetReader reader(pathname);
+    vtkm::io::VTKDataSetReader reader(pathname);
 
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
