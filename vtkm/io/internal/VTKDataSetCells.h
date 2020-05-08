@@ -46,11 +46,13 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   std::vector<vtkm::Id> permutationVec;
 
   vtkm::Id connIdx = 0;
+  auto shapesPortal = shapes.ReadPortal();
+  auto indicesPortal = numIndices.ReadPortal();
+  auto connPortal = connectivity.ReadPortal();
   for (vtkm::Id i = 0; i < shapes.GetNumberOfValues(); ++i)
   {
-    vtkm::UInt8 shape = shapes.ReadPortal().Get(i);
-    vtkm::IdComponent numInds = numIndices.ReadPortal().Get(i);
-    auto connPortal = connectivity.ReadPortal();
+    vtkm::UInt8 shape = shapesPortal.Get(i);
+    vtkm::IdComponent numInds = indicesPortal.Get(i);
     switch (shape)
     {
       case vtkm::CELL_SHAPE_VERTEX:

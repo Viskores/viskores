@@ -179,6 +179,8 @@ VTKM_CONT
 vtkm::UInt8 CellSetExplicit<SST, CST, OST>
 ::GetCellShape(vtkm::Id cellid) const
 {
+  // Looping over GetCellShape(cellid) is a performance bug.
+  // Don't know quite what to do about it right now.
   return this->Data->CellPointIds.Shapes.ReadPortal().Get(cellid);
 }
 

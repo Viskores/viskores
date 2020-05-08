@@ -23,7 +23,7 @@ namespace
 using TimerTestDevices =
   vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST, vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
 
-constexpr long long waitTimeMilliseconds = 250;
+constexpr long long waitTimeMilliseconds = 25;
 constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
 
 struct Waiter

@@ -514,12 +514,12 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
 {
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
                    "Number of output particles does not match input.");
+  auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).NumSteps <= maxSteps,
+    VTKM_TEST_ASSERT(portal.Get(i).NumSteps <= maxSteps,
                      "Too many steps taken in particle advection");
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
-                     "Bad status in particle advection");
+    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Bad status in particle advection");
   }
 }
 
@@ -529,13 +529,11 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
 {
   VTKM_TEST_ASSERT(res.PolyLines.GetNumberOfCells() == nSeeds,
                    "Number of output streamlines does not match input.");
-
+  auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).NumSteps <= maxSteps,
-                     "Too many steps taken in streamline");
-    VTKM_TEST_ASSERT(res.Particles.ReadPortal().Get(i).Status.CheckOk(),
-                     "Bad status in streamline");
+    VTKM_TEST_ASSERT(portal.Get(i).NumSteps <= maxSteps, "Too many steps taken in streamline");
+    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Bad status in streamline");
   }
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
                    "Number of output particles does not match input.");
