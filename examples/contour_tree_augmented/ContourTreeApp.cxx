@@ -343,35 +343,24 @@ int main(int argc, char* argv[])
 
   if (rank == 0)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               std::endl
-                 << "    ------------ Settings -----------"
-                 << std::endl
-                 << "    filename="
-                 << filename
-                 << std::endl
-                 << "    device="
-                 << device.GetName()
-                 << std::endl
-                 << "    mc="
-                 << useMarchingCubes
-                 << std::endl
-                 << "    augmentTree="
-                 << computeRegularStructure
-                 << std::endl
-                 << "    branchDecomp="
-                 << computeBranchDecomposition
-                 << std::endl
-                 <<
+    std::stringstream logmessage;
+    logmessage << "    ------------ Settings -----------" << std::endl
+               << "    filename=" << filename << std::endl
+               << "    device=" << device.GetName() << std::endl
+               << "    mc=" << useMarchingCubes << std::endl
+               << "    augmentTree=" << computeRegularStructure << std::endl
+               << "    branchDecomp=" << computeBranchDecomposition << std::endl
+               <<
 #ifdef WITH_MPI
-                 "    nblocks=" << numBlocks << std::endl
-                 <<
+      "    nblocks=" << numBlocks << std::endl
+               <<
 #endif
 #ifdef ENABLE_SET_NUM_THREADS
-                 "    numThreads=" << numThreads << std::endl
-                 <<
+      "    numThreads=" << numThreads << std::endl
+               <<
 #endif
-                 "    computeIsovalues=" << (numLevels > 0));
+      "    computeIsovalues=" << (numLevels > 0);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, std::endl << logmessage.str());
     VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info,
                   numLevels > 0,
                   std::endl
