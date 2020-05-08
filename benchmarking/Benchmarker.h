@@ -181,7 +181,8 @@
 /// ```
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK(BenchFunc) BENCHMARK(BenchFunc)->UseManualTime()
+#define VTKM_BENCHMARK(BenchFunc)                                                                  \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_OPTS(BenchFunc, Args)
 ///
@@ -195,7 +196,8 @@
 /// Note the similarity to the raw Google Benchmark usage of
 /// `BENCHMARK(MyBenchmark)->ArgName("MyParam")->Range(32, 1024*1024);`. See
 /// the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_OPTS(BenchFunc, options) BENCHMARK(BenchFunc)->UseManualTime() options
+#define VTKM_BENCHMARK_OPTS(BenchFunc, options)                                                    \
+  BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond) options
 
 /// \def VTKM_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
 ///
@@ -210,7 +212,7 @@
 ///
 /// See the Google Benchmark documentation for more details on the available options.
 #define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor)                                              \
-  BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()
+  BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()->Unit(benchmark::kMillisecond)
 
 /// \def VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
 ///
@@ -237,7 +239,9 @@
 /// ```
 #define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                                \
   VTKM_BENCHMARK_TEMPLATES_APPLY(                                                                  \
-    BenchFunc, [](::benchmark::internal::Benchmark* bm) { bm options; }, TypeList)
+    BenchFunc,                                                                                     \
+    [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); },       \
+    TypeList)
 
 /// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
 ///
@@ -313,7 +317,7 @@ private:
       this->Apply(bm);
 
       // Always use manual time with vtkm::cont::Timer to capture CUDA times accurately.
-      bm->UseManualTime();
+      bm->UseManualTime()->Unit(benchmark::kMillisecond);
     }
   };
 
