@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestBOVDataSetReader.cxx
   UnitTestVTKDataSetReader.cxx
   UnitTestVTKDataSetWriter.cxx
  )
