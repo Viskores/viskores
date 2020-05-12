@@ -184,15 +184,15 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
   auto portal2 = BasisParticlesValidity.WritePortal();
 
   vtkm::Id count = 0, id = 0;
-  for (int x = 0; x < this->SeedRes[0]; x++)
+  for (int z = 0; z < this->SeedRes[2]; z++)
   {
-    vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
+    vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
     for (int y = 0; y < this->SeedRes[1]; y++)
     {
       vtkm::FloatDefault yi = static_cast<vtkm::FloatDefault>(y * y_spacing);
-      for (int z = 0; z < this->SeedRes[2]; z++)
+      for (int x = 0; x < this->SeedRes[0]; x++)
       {
-        vtkm::FloatDefault zi = static_cast<vtkm::FloatDefault>(z * z_spacing);
+        vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
         portal1.Set(count,
                     vtkm::Particle(Vec3f(static_cast<vtkm::FloatDefault>(bounds.X.Min) + xi,
                                          static_cast<vtkm::FloatDefault>(bounds.Y.Min) + yi,
