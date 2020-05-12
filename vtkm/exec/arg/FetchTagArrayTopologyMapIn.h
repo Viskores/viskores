@@ -213,11 +213,11 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
 
   //Optimized fetch for point arrays when iterating the cells ConnectivityExtrude
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device>
-  VTKM_EXEC auto Load(const vtkm::exec::arg::ThreadIndicesTopologyMap<
-                        vtkm::exec::ConnectivityExtrude<Device>>& indices,
-                      const ExecObjectType& portal)
-    -> vtkm::Vec<typename ExecObjectType::ValueType, 6>
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const ExecObjectType& portal) -> vtkm::Vec<typename ExecObjectType::ValueType, 6>
   {
     // std::cout << "opimized fetch for point values" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();

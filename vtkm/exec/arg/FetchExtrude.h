@@ -30,10 +30,11 @@ template <typename FetchType, typename ExecObjectType>
 struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecObjectType>
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device>
-  VTKM_EXEC auto Load(const vtkm::exec::arg::ThreadIndicesTopologyMap<
-                        vtkm::exec::ConnectivityExtrude<Device>>& indices,
-                      const ExecObjectType&) const -> vtkm::Vec<vtkm::Id, 6>
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const ExecObjectType&) const -> vtkm::Vec<vtkm::Id, 6>
   {
     // std::cout << "opimized fetch for point ids" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();
@@ -50,9 +51,10 @@ struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecOb
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename ConnectivityType>
-  VTKM_EXEC auto Load(const vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>& indices,
-                      const ExecObjectType&) const -> decltype(indices.GetIndicesIncident())
+  template <typename ConnectivityType, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType, ScatterAndMaskMode>& indices,
+    const ExecObjectType&) const -> decltype(indices.GetIndicesIncident())
   {
     return indices.GetIndicesIncident();
   }
@@ -133,10 +135,11 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device>
-  VTKM_EXEC auto Load(const vtkm::exec::arg::ThreadIndicesTopologyMap<
-                        vtkm::exec::ReverseConnectivityExtrude<Device>>& indices,
-                      const vtkm::exec::ArrayPortalExtrude<T>& points)
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const vtkm::exec::ArrayPortalExtrude<T>& points)
     -> decltype(points.Get(indices.GetIndexLogical()))
   {
     // std::cout << "optimized fetch for point coordinates" << std::endl;
