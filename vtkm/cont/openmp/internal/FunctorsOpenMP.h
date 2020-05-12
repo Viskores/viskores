@@ -368,10 +368,13 @@ struct ReduceHelper
     // Use the first (numThreads*2) values for initializing:
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
-    vtkm::Id i = numThreads * 2;
-    const vtkm::Id unrollEnd = ((numVals / 4) * 4) - 4;
+    const vtkm::Id offset = numThreads * 2;
+    const vtkm::Id end = std::max(vtkm::Id(((numVals / 4) * 4) - 4), offset);
+    const vtkm::Id unrollEnd = end - ((end - offset) % 4);
+
+    vtkm::Id i = offset;
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
-    for (i = numThreads * 2; i < unrollEnd; i += 4)
+    for (i = offset; i < unrollEnd; i += 4)
     {
       const auto t1 = f(data[i], data[i + 1]);
       const auto t2 = f(data[i + 2], data[i + 3]);

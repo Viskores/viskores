@@ -230,13 +230,13 @@ int main(int argc, char* argv[])
   if (parser.hasOption("--numThreads"))
   {
     // Print warning about mismatch between the --numThreads and -d/--device opton
-    VTKM_LOG_S_IF(vtkm::cont::LogLevel::Warn,
-                  device != vtkm::cont::DeviceAdapterTagTBB,
+    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Warn,
+                  device != vtkm::cont::DeviceAdapterTagTBB{},
                   "WARNING: Mismatch between --numThreads and -d/--device option."
                   "numThreads option requires the use of TBB as device. "
                   "Ignoring the numThread option.");
     // Set the number of threads to be used for TBB
-    if (device == vtkm::cont::DeviceAdapterTagTBB)
+    if (device == vtkm::cont::DeviceAdapterTagTBB{})
     {
       numThreads = std::stoi(parser.getOption("--numThreads"));
       tbb::task_scheduler_init schedulerInit(numThreads);
@@ -343,35 +343,24 @@ int main(int argc, char* argv[])
 
   if (rank == 0)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               std::endl
-                 << "    ------------ Settings -----------"
-                 << std::endl
-                 << "    filename="
-                 << filename
-                 << std::endl
-                 << "    device="
-                 << device.GetName()
-                 << std::endl
-                 << "    mc="
-                 << useMarchingCubes
-                 << std::endl
-                 << "    augmentTree="
-                 << computeRegularStructure
-                 << std::endl
-                 << "    branchDecomp="
-                 << computeBranchDecomposition
-                 << std::endl
-                 <<
+    std::stringstream logmessage;
+    logmessage << "    ------------ Settings -----------" << std::endl
+               << "    filename=" << filename << std::endl
+               << "    device=" << device.GetName() << std::endl
+               << "    mc=" << useMarchingCubes << std::endl
+               << "    augmentTree=" << computeRegularStructure << std::endl
+               << "    branchDecomp=" << computeBranchDecomposition << std::endl
+               <<
 #ifdef WITH_MPI
-                 "    nblocks=" << numBlocks << std::endl
-                 <<
+      "    nblocks=" << numBlocks << std::endl
+               <<
 #endif
 #ifdef ENABLE_SET_NUM_THREADS
-                 "    numThreads=" << numThreads << std::endl
-                 <<
+      "    numThreads=" << numThreads << std::endl
+               <<
 #endif
-                 "    computeIsovalues=" << (numLevels > 0));
+      "    computeIsovalues=" << (numLevels > 0);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, std::endl << logmessage.str());
     VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info,
                   numLevels > 0,
                   std::endl

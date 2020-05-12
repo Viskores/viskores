@@ -59,7 +59,6 @@ void createVectors(std::size_t numPts,
   {
     //Test some other vector combinations
     std::uniform_real_distribution<vtkm::Float64> randomDist(-10.0, 10.0);
-    randomDist(randGenerator);
 
     vecs1.resize(numPts);
     vecs2.resize(numPts);

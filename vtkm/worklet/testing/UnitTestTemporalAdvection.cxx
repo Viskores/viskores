@@ -21,8 +21,6 @@
 #include <vtkm/worklet/particleadvection/Particles.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
-
 template <typename ScalarType>
 vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
 {

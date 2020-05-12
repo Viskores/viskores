@@ -10,8 +10,6 @@
 ##
 ##=============================================================================
 
-cmake_minimum_required(VERSION 3.8)
-
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
 include("$ENV{CI_PROJECT_DIR}/build/CIState.cmake")
@@ -24,7 +22,10 @@ message(STATUS "CTEST_BUILD_FLAGS: ${CTEST_BUILD_FLAGS}")
 ctest_build(APPEND
   NUMBER_WARNINGS num_warnings
   RETURN_VALUE build_result)
-ctest_submit(PARTS Build)
+
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_submit(PARTS Build)
+endif()
 
 if (build_result)
   message(FATAL_ERROR

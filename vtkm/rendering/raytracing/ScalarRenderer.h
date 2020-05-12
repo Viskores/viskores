@@ -29,7 +29,6 @@ class VTKM_RENDERING_EXPORT ScalarRenderer
 protected:
   std::shared_ptr<ShapeIntersector> Intersector;
   std::vector<vtkm::cont::Field> Fields;
-  std::vector<vtkm::Range> Ranges;
   bool IntersectorValid;
 
   template <typename Precision>

@@ -73,6 +73,19 @@ struct TemplatedTests
     ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(
       array, array + ARRAY_SIZE);
 
+    using PortalType = decltype(portal);
+    using PortalConstType = decltype(const_portal);
+
+    std::cout << "Check that PortalSupports* results are valid:" << std::endl;
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsSets<PortalType>::value,
+                     "Writable portals should support Set operations");
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsGets<PortalType>::value,
+                     "Writable portals should support Get operations");
+    VTKM_TEST_ASSERT(!vtkm::internal::PortalSupportsSets<PortalConstType>::value,
+                     "Read-only portals should not allow Set operations");
+    VTKM_TEST_ASSERT(vtkm::internal::PortalSupportsGets<PortalConstType>::value,
+                     "Read-only portals should support Get operations");
+
     std::cout << "  Check that ArrayPortalToIterators is not doing indirection." << std::endl;
     // If you get a compile error here about mismatched types, it might be
     // that ArrayPortalToIterators is not properly overloaded to return the

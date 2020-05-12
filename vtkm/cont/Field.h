@@ -92,15 +92,18 @@ public:
   {
     this->GetRangeImpl(TypeList());
     const vtkm::Id length = this->Range.GetNumberOfValues();
+    auto portal = this->Range.ReadPortal();
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      range[i] = this->Range.ReadPortal().Get(i);
+      range[i] = portal.Get(i);
     }
   }
 
   template <typename TypeList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
+    VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
+                           "Cannot get the field range with vtkm::ListUniversal.");
     return this->GetRangeImpl(TypeList());
   }
 
@@ -260,6 +263,15 @@ struct SerializableField
 
   vtkm::cont::Field Field;
 };
+
+// Cannot directly serialize fields with a vtkm::ListUniversal type list since there has to
+// be a finite number of types to serialize. Do the best possible by serializing all basic
+// VTK-m types.
+template <>
+struct SerializableField<vtkm::ListUniversal> : SerializableField<vtkm::TypeListAll>
+{
+  using SerializableField<vtkm::TypeListAll>::SerializableField;
+};
 } // namespace cont
 } // namespace vtkm
 
@@ -296,6 +308,12 @@ public:
     vtkmdiy::load(bb, data);
     field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
   }
+};
+
+template <>
+struct Serialization<vtkm::cont::SerializableField<vtkm::ListUniversal>>
+  : Serialization<vtkm::cont::SerializableField<vtkm::TypeListAll>>
+{
 };
 
 } // diy

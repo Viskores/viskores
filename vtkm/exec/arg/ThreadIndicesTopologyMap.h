@@ -88,6 +88,7 @@ class ThreadIndicesTopologyMap : public vtkm::exec::arg::ThreadIndicesBasic
 public:
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
+  using Connectivity = ConnectivityType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
@@ -155,6 +156,8 @@ public:
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
+  using Connectivity =
+    vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
 
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                                      vtkm::Id inIndex,
@@ -317,6 +320,11 @@ public:
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
+  using Connectivity = vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
+    PermutationPortal,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                       vtkm::TopologyElementTagPoint,
+                                       Dimension>>;
 
   VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
                                      vtkm::Id inputIndex,

@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include <vtkm/worklet/ExternalFaces.h>
 
@@ -114,9 +113,6 @@ void TestExternalFaces2()
 
   vtkm::cont::testing::MakeTestDataSet dataSetMaker;
   vtkm::cont::DataSet inDataSet = dataSetMaker.Make3DExplicitDataSet5();
-
-  //  vtkm::io::writer::VTKDataSetWriter writer("vtkm_explicit_data_5.vtk");
-  //  writer.WriteDataSet(inDataSet);
 
   // Expected faces
   const vtkm::IdComponent MAX_POINTS_PER_FACE = 4;

@@ -10,8 +10,6 @@
 ##
 ##=============================================================================
 
-cmake_minimum_required(VERSION 3.8)
-
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
 include("$ENV{CI_PROJECT_DIR}/build/CIState.cmake")
@@ -27,16 +25,22 @@ ctest_start(Experimental TRACK "${CTEST_TRACK}")
 find_package(Git)
 set(CTEST_UPDATE_VERSION_ONLY ON)
 set(CTEST_UPDATE_COMMAND "${GIT_EXECUTABLE}")
-ctest_update()
+
+# Don't do updates when running via reproduce_ci_env.py
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_update()
+endif()
 
 # Configure the project.
 ctest_configure(APPEND
   OPTIONS "${cmake_args}"
   RETURN_VALUE configure_result)
 
-# We can now submit because we've configured. This is a cmb-superbuild-ism.
-ctest_submit(PARTS Update)
-ctest_submit(PARTS Configure)
+# We can now submit because we've configured.
+if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  ctest_submit(PARTS Update)
+  ctest_submit(PARTS Configure)
+endif()
 
 if (configure_result)
   message(FATAL_ERROR

@@ -124,7 +124,6 @@ void ScalarRenderer::AddField(const vtkm::cont::Field& scalarField)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer(AddField): field must be a scalar");
   }
-  Ranges.push_back(ranges.ReadPortal().Get(0));
   Fields.push_back(scalarField);
 }
 
@@ -172,7 +171,7 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays, Precision missScalar)
   for (size_t f = 0; f < numFields; ++f)
   {
     timer.Start();
-    Intersector->IntersectionData(rays, Fields[f], Ranges[f]);
+    Intersector->IntersectionData(rays, Fields[f]);
     time = timer.GetElapsedTime();
     logger->AddLogData("intersection_data", time);
     AddBuffer(rays, missScalar, Fields[f].GetName());

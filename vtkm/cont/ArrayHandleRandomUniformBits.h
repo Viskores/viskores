@@ -95,4 +95,5 @@ namespace cont
 {
 }
 } // namespace vtkm::cont
+/// @endcond
 #endif //vtk_m_cont_ArrayHandlePhiloxURBG_h

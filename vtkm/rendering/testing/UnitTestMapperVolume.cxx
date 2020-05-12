@@ -11,7 +11,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -38,7 +38,7 @@ void RenderTests()
   vtkm::cont::DataSet rectDS, unsDS;
   std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
   std::string rectfname = basePath + "/rectilinear/noise.vtk";
-  vtkm::io::reader::VTKDataSetReader rectReader(rectfname);
+  vtkm::io::VTKDataSetReader rectReader(rectfname);
 
   try
   {
