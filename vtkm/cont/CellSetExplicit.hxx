@@ -9,7 +9,7 @@
 //============================================================================
 #ifndef vtk_m_cont_CellSetExplicit_hxx
 #define vtk_m_cont_CellSetExplicit_hxx
-
+#include <vtkm/Deprecated.h>
 #include <vtkm/cont/CellSetExplicit.h>
 
 #include <vtkm/cont/ArrayCopy.h>
@@ -176,13 +176,20 @@ vtkm::IdComponent CellSetExplicit<SST, CST, OST>
 
 template <typename SST, typename CST, typename OST>
 VTKM_CONT
+auto CellSetExplicit<SST, CST, OST>::ShapesReadPortal() const
+{
+  return this->Data->CellPointIds.Shapes.ReadPortal();
+}
+
+template <typename SST, typename CST, typename OST>
+VTKM_CONT
+VTKM_DEPRECATED(1.6, "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() and loop over the .Get.")
 vtkm::UInt8 CellSetExplicit<SST, CST, OST>
 ::GetCellShape(vtkm::Id cellid) const
 {
-  // Looping over GetCellShape(cellid) is a performance bug.
-  // Don't know quite what to do about it right now.
-  return this->Data->CellPointIds.Shapes.ReadPortal().Get(cellid);
+  return this->ShapesReadPortal().Get(cellid);
 }
+
 
 template <typename SST, typename CST, typename OST>
 template <vtkm::IdComponent NumVecIndices>

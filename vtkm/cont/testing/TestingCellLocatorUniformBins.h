@@ -204,11 +204,14 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
   vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
   dispatcher.Invoke(points, locator, cellIds, pcoords);
 
+  auto cellIdsPortal = cellIds.ReadPortal();
+  auto expCellIdsPortal = expCellIds.ReadPortal();
+  auto pcoordsPortal = pcoords.ReadPortal();
+  auto expPCoordsPortal = expPCoords.ReadPortal();
   for (vtkm::Id i = 0; i < numberOfPoints; ++i)
   {
-    VTKM_TEST_ASSERT(cellIds.ReadPortal().Get(i) == expCellIds.ReadPortal().Get(i),
-                     "Incorrect cell ids");
-    VTKM_TEST_ASSERT(test_equal(pcoords.ReadPortal().Get(i), expPCoords.ReadPortal().Get(i), 1e-3),
+    VTKM_TEST_ASSERT(cellIdsPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
 }
