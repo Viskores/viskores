@@ -378,7 +378,7 @@ function(vtkm_library)
                               EXTENDS_VTKM
                               DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
                               )
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  if(VTKm_HIDE_PRIVATE_SYMBOLS)
     set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
     set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
