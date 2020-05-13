@@ -24,7 +24,6 @@ using TimerTestDevices =
   vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST, vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
 
 constexpr long long waitTimeMilliseconds = 5;
-constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
 
 struct Waiter
 {
@@ -56,7 +55,7 @@ void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
 {
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();
   VTKM_TEST_ASSERT(
-    elapsedTime > (expectedTime - 0.01), "Timer did not capture full wait. ", elapsedTime);
+    elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
 }
 
 void DoTimerCheck(vtkm::cont::Timer& timer)
