@@ -138,7 +138,7 @@ vtkm_library(
   )
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm_cont vtkm_filter vtkm_io)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_filter vtkm_io)
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt)
 endif()
