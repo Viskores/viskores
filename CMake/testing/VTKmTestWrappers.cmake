@@ -134,7 +134,7 @@ function(vtkm_unit_tests)
   endif()
   vtkm_add_target_information(${test_prog} DEVICE_SOURCES ${device_sources})
 
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  if(VTKm_HIDE_PRIVATE_SYMBOLS)
     set_property(TARGET ${test_prog} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
     set_property(TARGET ${test_prog} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
