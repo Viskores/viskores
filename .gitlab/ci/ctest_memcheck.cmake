@@ -48,7 +48,8 @@ ctest_memcheck(
   EXCLUDE "${test_exclusions}"
   DEFECT_COUNT defects)
 
-ctest_submit(PARTS Memcheck)
+ctest_submit(PARTS Memcheck BUILD_ID build_id)
+  message(STATUS "Memcheck submission build_id: ${build_id}")
 
 if (defects)
   message(FATAL_ERROR "Found ${defects} memcheck defects")
