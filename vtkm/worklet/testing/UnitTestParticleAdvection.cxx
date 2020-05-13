@@ -93,9 +93,9 @@ vtkm::FloatDefault vecData[125 * 3] = {
 }
 
 void GenerateRandomParticles(std::vector<vtkm::Particle>& points,
-                             std::size_t N,
-                             vtkm::Bounds& bounds,
-                             std::size_t seed = 314)
+                             const std::size_t N,
+                             const vtkm::Bounds& bounds,
+                             const std::size_t seed = 314)
 {
   std::random_device device;
   std::default_random_engine generator(static_cast<vtkm::UInt32>(seed));
@@ -404,6 +404,7 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
+    std::cout << "Status : " << status << std::endl;
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
 
@@ -517,9 +518,14 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
   auto portal = res.Particles.ReadPortal();
   for (vtkm::Id i = 0; i < nSeeds; i++)
   {
-    VTKM_TEST_ASSERT(portal.Get(i).NumSteps <= maxSteps,
-                     "Too many steps taken in particle advection");
-    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Bad status in particle advection");
+    auto stepsTaken = portal.Get(i).NumSteps;
+    auto status = portal.Get(i).Status;
+    VTKM_TEST_ASSERT(stepsTaken <= maxSteps, "Too many steps taken in particle advection");
+    if (stepsTaken == maxSteps)
+      VTKM_TEST_ASSERT(status.CheckTerminate(), "Particle expected to be terminated");
+    else
+      VTKM_TEST_ASSERT(status.CheckSpatialBounds() || status.CheckTemporalBounds(),
+                       "Particle expected to be outside spatial/temporal bounds");
   }
 }
 
@@ -562,9 +568,7 @@ void TestIntegrators()
 
   //Generate three random points.
   std::vector<vtkm::Particle> points;
-  points.push_back(vtkm::Particle(RandomPoint(bounds), 0));
-  points.push_back(vtkm::Particle(RandomPoint(bounds), 1));
-  points.push_back(vtkm::Particle(RandomPoint(bounds), 2));
+  GenerateRandomParticles(points, 3, bounds);
 
   vtkm::worklet::ParticleAdvection pa;
   vtkm::worklet::ParticleAdvectionResult res;

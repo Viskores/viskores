@@ -214,11 +214,10 @@ protected:
       evalStatus = this->Evaluator.Evaluate(currPos, time + stepRange[0], currVel);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
-
       //Update the position and time.
       outpos = currPos + stepRange[1] * currVel;
       time += stepRange[1];
-      return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
+      return IntegratorStatus(false, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 
     VTKM_EXEC
