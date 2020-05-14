@@ -88,6 +88,8 @@ public:
     ConstructPixelFromImage(imageData, index);
   }
 
+  virtual ~BasePixel() = default;
+
   /// Calculates this difference between two pixels as a single value.
   ///
   virtual ComponentType Diff(const BaseType& pixel) const = 0;
@@ -110,8 +112,6 @@ public:
   /// NUM_CHANNELS to fill in multiple bytes worth of data if necessary.
   ///
   void FillImageAtIndexWithPixel(unsigned char* imageData, const vtkm::Id index);
-
-  virtual ~BasePixel() = default;
 
 protected:
   /// Takes an input imageData pointer and an index to a location in that dataset
@@ -143,10 +143,10 @@ public:
   {
   }
 
+  virtual ~RGBPixel() = default;
+
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
-
-  virtual ~RGBPixel() = default;
 
 protected:
   void print(std::ostream& os) const override
@@ -180,10 +180,10 @@ public:
   {
   }
 
+  virtual ~GreyPixel() = default;
+
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
-
-  virtual ~GreyPixel() = default;
 
 protected:
   void print(std::ostream& os) const override { os << "(" << (int)this->Components[0] << ")"; }
