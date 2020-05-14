@@ -118,7 +118,7 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # rather than exporting all symbols. This flag is added so that consumers
 # which require static builds can force all symbols on, which is something
 # VTK does.
-vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+vtkm_option(VTKm_HIDE_PRIVATE_SYMBOLS "Hide symbols from libraries." ON)
 
 vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" OFF)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
@@ -136,7 +136,7 @@ mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
   VTKm_INSTALL_ONLY_LIBRARIES
-  VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
+  VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   )

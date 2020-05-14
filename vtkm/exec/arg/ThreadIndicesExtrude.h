@@ -21,8 +21,8 @@ namespace arg
 {
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>
+template <typename Device, typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>, ScatterAndMaskMode>
 {
 
   using ConnectivityType = vtkm::exec::ConnectivityExtrude<Device>;
@@ -175,8 +175,8 @@ private:
 };
 
 // Specialization for extrude types.
-template <typename Device>
-class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>
+template <typename Device, typename ScatterAndMaskMode>
+class ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>, ScatterAndMaskMode>
 {
   using ConnectivityType = vtkm::exec::ReverseConnectivityExtrude<Device>;
 

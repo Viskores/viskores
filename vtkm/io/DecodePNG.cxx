@@ -13,7 +13,6 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/internal/Configure.h>
 
-
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/thirdparty/lodepng/vtkmlodepng/lodepng.h>
 VTKM_THIRDPARTY_POST_INCLUDE

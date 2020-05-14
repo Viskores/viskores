@@ -13,6 +13,9 @@ set(headers
   ErrorIO.h
   DecodePNG.h
   EncodePNG.h
+  ImageReader.h
+  ImageWriter.h
+  PixelTypes.h
   VTKDataSetReader.h
   VTKDataSetReaderBase.h
   VTKPolyDataReader.h
@@ -23,17 +26,28 @@ set(headers
   VTKDataSetWriter.h
 )
 
+set(template_sources
+  ImageReader.hxx
+  ImageWriter.hxx
+  PixelTypes.hxx
+)
+
 set(sources
   DecodePNG.cxx
   EncodePNG.cxx
 )
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(
+  ${headers}
+  ${template_sources}
+)
 
-vtkm_library( NAME vtkm_io
-              SOURCES ${sources}
-              HEADERS ${headers}
-            )
+vtkm_library(
+  NAME vtkm_io
+  SOURCES ${sources}
+  HEADERS ${headers}
+  TEMPLATE_SOURCES ${template_sources}
+)
 
 target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
 

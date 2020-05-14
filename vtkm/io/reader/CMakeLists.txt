@@ -13,4 +13,6 @@ set(headers
   VTKDataSetReader.h
 )
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(
+  ${headers}
+)

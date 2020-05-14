@@ -214,8 +214,9 @@ private:
     std::vector<T> buff;
     ReadBuffer(fName, nTuples, buff);
     var.Allocate(nTuples);
+    auto writePortal = var.WritePortal();
     for (vtkm::Id i = 0; i < nTuples; i++)
-      var.WritePortal().Set(i, buff[(size_t)i]);
+      writePortal.Set(i, buff[(size_t)i]);
   }
 
   template <typename T>
@@ -228,12 +229,13 @@ private:
 
     var.Allocate(nTuples);
     vtkm::Vec<T, 3> v;
+    auto writePortal = var.WritePortal();
     for (vtkm::Id i = 0; i < nTuples; i++)
     {
       v[0] = buff[static_cast<size_t>(i * 3 + 0)];
       v[1] = buff[static_cast<size_t>(i * 3 + 1)];
       v[2] = buff[static_cast<size_t>(i * 3 + 2)];
-      var.WritePortal().Set(i, v);
+      writePortal.Set(i, v);
     }
   }
 
@@ -241,7 +243,6 @@ private:
   bool Loaded;
   vtkm::cont::DataSet DataSet;
 };
-}
 }
 } // vtkm::io
 

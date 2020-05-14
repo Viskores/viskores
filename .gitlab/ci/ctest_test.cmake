@@ -35,7 +35,8 @@ ctest_test(APPEND
   )
 
 if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
-  ctest_submit(PARTS Test)
+  ctest_submit(PARTS Test BUILD_ID build_id)
+  message(STATUS "Test submission build_id: ${build_id}")
 endif()
 
 if (test_result)
