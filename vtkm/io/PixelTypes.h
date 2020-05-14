@@ -88,6 +88,8 @@ public:
     ConstructPixelFromImage(imageData, index);
   }
 
+  virtual ~BasePixel() = default;
+
   /// Calculates this difference between two pixels as a single value.
   ///
   virtual ComponentType Diff(const BaseType& pixel) const = 0;
@@ -141,6 +143,8 @@ public:
   {
   }
 
+  virtual ~RGBPixel() = default;
+
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
 
@@ -175,6 +179,8 @@ public:
         static_cast<ComponentType>((tuple[0] + tuple[1] + tuple[2]) * this->MAX_COLOR_VALUE / 3))
   {
   }
+
+  virtual ~GreyPixel() = default;
 
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
