@@ -186,7 +186,9 @@ public:
   VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellid) const override;
   VTKM_CONT void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override;
 
-  VTKM_CONT auto ShapesReadPortal() const;
+  VTKM_CONT typename vtkm::cont::ArrayHandle<vtkm::UInt8, ShapesStorageTag>::ReadPortalType
+  ShapesReadPortal() const;
+
   VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellid) const override;
 
   template <vtkm::IdComponent NumIndices>

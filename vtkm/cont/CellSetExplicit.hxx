@@ -176,7 +176,8 @@ vtkm::IdComponent CellSetExplicit<SST, CST, OST>
 
 template <typename SST, typename CST, typename OST>
 VTKM_CONT
-auto CellSetExplicit<SST, CST, OST>::ShapesReadPortal() const
+typename vtkm::cont::ArrayHandle<vtkm::UInt8, SST>::ReadPortalType 
+CellSetExplicit<SST, CST, OST>::ShapesReadPortal() const
 {
   return this->Data->CellPointIds.Shapes.ReadPortal();
 }
