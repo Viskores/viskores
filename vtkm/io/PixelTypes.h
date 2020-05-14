@@ -111,6 +111,8 @@ public:
   ///
   void FillImageAtIndexWithPixel(unsigned char* imageData, const vtkm::Id index);
 
+  virtual ~BasePixel() = default;
+
 protected:
   /// Takes an input imageData pointer and an index to a location in that dataset
   /// and fills in this->Components correctly using the provided BIT_DEPTH and
@@ -143,6 +145,8 @@ public:
 
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
+
+  virtual ~RGBPixel() = default;
 
 protected:
   void print(std::ostream& os) const override
@@ -178,6 +182,8 @@ public:
 
   ComponentType Diff(const Superclass& pixel) const override;
   vtkm::Vec4f_32 ToVec4f() const override;
+
+  virtual ~GreyPixel() = default;
 
 protected:
   void print(std::ostream& os) const override { os << "(" << (int)this->Components[0] << ")"; }
