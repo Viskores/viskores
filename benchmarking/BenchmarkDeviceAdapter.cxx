@@ -404,7 +404,7 @@ template <typename ValueType>
 void BenchCopy(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -580,7 +580,7 @@ template <typename ValueType>
 void BenchFillArrayHandle(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -610,7 +610,7 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFillArrayHandle,
 void BenchFillBitFieldBool(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numBits = numBytes * CHAR_BIT;
   const bool value = state.range(1) != 0;
 
@@ -640,7 +640,7 @@ template <typename WordType>
 void BenchFillBitFieldMask(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numBits = numBytes * CHAR_BIT;
   const WordType mask = static_cast<WordType>(0x1);
 
@@ -717,7 +717,7 @@ template <typename ValueType>
 void BenchReduce(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -752,10 +752,10 @@ void BenchReduceByKey(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = state.range(1);
+  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
 
   {
@@ -807,7 +807,7 @@ template <typename ValueType>
 void BenchScanExclusive(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -841,7 +841,7 @@ template <typename ValueType>
 void BenchScanExtended(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -875,7 +875,7 @@ template <typename ValueType>
 void BenchScanInclusive(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -909,7 +909,7 @@ template <typename ValueType>
 void BenchSort(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -950,7 +950,7 @@ void BenchSortByKey(benchmark::State& state)
   const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = state.range(1);
+  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
 
   {
@@ -1005,7 +1005,7 @@ template <typename ValueType>
 void BenchStableSortIndices(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
@@ -1042,10 +1042,10 @@ template <typename ValueType>
 void BenchStableSortIndicesUnique(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = state.range(1);
+  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
 
   {
@@ -1105,10 +1105,10 @@ template <typename ValueType>
 void BenchUnique(benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = state.range(0);
+  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
   const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = state.range(1);
+  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
   const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
 
   {
