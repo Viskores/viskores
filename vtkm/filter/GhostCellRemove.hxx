@@ -335,14 +335,14 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
 
   if (this->GetRemoveAllGhost())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveAllGhosts());
   }
   else if (this->GetRemoveByType())
   {
-    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                 field,
                                 fieldMeta.GetAssociation(),
                                 RemoveGhostByType(this->GetRemoveType()));

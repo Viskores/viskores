@@ -24,7 +24,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coordinates = input.GetCoordinateSystem();
 
-  auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetStructured(cells, policy),
+  auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetStructured(cells, policy, *this),
                                    this->VOI,
                                    this->SampleRate,
                                    this->IncludeBoundary,

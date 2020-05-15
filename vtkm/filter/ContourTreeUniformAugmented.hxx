@@ -624,7 +624,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
   vtkm::Id nCols;
   vtkm::Id nSlices = 1;
   const auto& cells = input.GetCellSet();
-  vtkm::filter::ApplyPolicyCellSet(cells, policy)
+  vtkm::filter::ApplyPolicyCellSet(cells, policy, *this)
     .CastAndCall(GetRowsColsSlices(), nRows, nCols, nSlices);
   // TODO blockIndex needs to change if we have multiple blocks per MPI rank and DoExecute is called for multiple blocks
   std::size_t blockIndex = 0;

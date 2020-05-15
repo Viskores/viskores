@@ -103,7 +103,7 @@ void TestStructured()
 
         vtkm::filter::GhostCellClassify addGhost;
 
-        auto output = addGhost.Execute(ds, vtkm::filter::GhostCellClassifyPolicy());
+        auto output = addGhost.Execute(ds);
 
         //Validate the output.
         VTKM_TEST_ASSERT(output.HasCellField("vtkmGhostCells"),

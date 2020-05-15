@@ -108,7 +108,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
   if (this->Neighborhood == 1 || this->Neighborhood == 2)
   {
     this->Invoke(worklet::ImageMedian{ this->Neighborhood },
-                 vtkm::filter::ApplyPolicyCellSetStructured(cells, policy),
+                 vtkm::filter::ApplyPolicyCellSetStructured(cells, policy, *this),
                  field,
                  result);
   }

@@ -219,7 +219,9 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
+        VTKM_DEPRECATED_SUPPRESS_BEGIN
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
+        VTKM_DEPRECATED_SUPPRESS_END
         outPtr->ReplacePartition(0, result);
       });
     this->Queue.waitForAllTasksToComplete();
@@ -238,7 +240,9 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
+        VTKM_DEPRECATED_SUPPRESS_BEGIN
         vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
+        VTKM_DEPRECATED_SUPPRESS_END
         outPtr->ReplacePartition(index, result);
       });
     index++;

@@ -38,11 +38,12 @@ static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 }
 
 
-template <typename DerivedPolicy>
+template <typename DerivedPolicy, typename FilterType>
 class Redistributor
 {
   const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& Decomposer;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
+  const FilterType& Filter;
 
   vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input,
                               const vtkmdiy::ContinuousBounds& bds) const
@@ -53,7 +54,9 @@ class Redistributor
     vtkm::filter::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
     extractor.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(box));
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
     return extractor.Execute(input, this->Policy);
+    VTKM_DEPRECATED_SUPPRESS_END
   }
 
   class ConcatenateFields
@@ -120,9 +123,11 @@ class Redistributor
 
 public:
   Redistributor(const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& decomposer,
-                const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                const FilterType& filter)
     : Decomposer(decomposer)
     , Policy(policy)
+    , Filter(filter)
   {
   }
 
@@ -140,7 +145,9 @@ public:
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
+          VTKM_DEPRECATED_SUPPRESS_BEGIN
           rp.enqueue(target, vtkm::filter::MakeSerializableDataSet(extractedDS, DerivedPolicy{}));
+          VTKM_DEPRECATED_SUPPRESS_END
         }
         // clear our dataset.
         *block = vtkm::cont::DataSet();
@@ -155,7 +162,7 @@ public:
         auto target = rp.in_link().target(cc);
         if (rp.incoming(target.gid).size() > 0)
         {
-          auto sds = vtkm::filter::MakeSerializableDataSet(DerivedPolicy{});
+          auto sds = vtkm::filter::MakeSerializableDataSet(DerivedPolicy{}, this->Filter);
           rp.dequeue(target.gid, sds);
           receives.push_back(sds.DataSet);
           numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
@@ -237,7 +244,8 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::PrepareForEx
     *ds = input.GetPartition(lid);
   });
 
-  internal::Redistributor<DerivedPolicy> redistributor(decomposer, policy);
+  internal::Redistributor<DerivedPolicy, RedistributePoints> redistributor(
+    decomposer, policy, *this);
   vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
   vtkm::cont::PartitionedDataSet result;
