@@ -84,7 +84,8 @@ void process_partition_openMP(RuntimeTaskQueue& queue)
 
     //Step 4. Notify the queue that we finished processing this task
     queue.completedTask();
-    std::cout << "finished a partition on tbb (" << std::this_thread::get_id() << ")" << std::endl;
+    std::cout << "finished a partition on openMP (" << std::this_thread::get_id() << ")"
+              << std::endl;
   }
 }
 
