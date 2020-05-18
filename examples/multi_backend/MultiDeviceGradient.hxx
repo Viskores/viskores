@@ -64,17 +64,17 @@ void process_partition_openMP(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to TBB.
   //This makes sure that any vtkm::filters used by our
-  //task operate only on TBB. The "global" thread tracker
+  //task operate only on openMP. The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
 
   while (queue.hasTasks())
   {
-    //Step 2. Get the task to run on TBB
+    //Step 2. Get the task to run on openMP
     auto task = queue.pop();
 
-    //Step 3. Run the task on TBB. We check the validity
+    //Step 3. Run the task on openMP. We check the validity
     //of the task since we could be given an empty task
     //when the queue is empty and we are shutting down
     if (task != nullptr)
