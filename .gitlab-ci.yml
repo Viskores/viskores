@@ -1,7 +1,6 @@
 
 # Docker Images:
 #
-# - CentOS 7
 #   * .gitlab/ci/docker/centos7/cuda10.2/
 #     - cuda
 #     - gcc 4.8.5
