@@ -35,7 +35,13 @@ set(template_sources
 set(sources
   DecodePNG.cxx
   EncodePNG.cxx
+  VTKDataSetReader.cxx
   VTKDataSetReaderBase.cxx
+  VTKPolyDataReader.cxx
+  VTKRectilinearGridReader.cxx
+  VTKStructuredGridReader.cxx
+  VTKStructuredPointsReader.cxx
+  VTKUnstructuredGridReader.cxx
 )
 
 vtkm_declare_headers(
