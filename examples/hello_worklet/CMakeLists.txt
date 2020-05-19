@@ -14,7 +14,7 @@ project(HelloWorklet CXX)
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(HelloWorklet HelloWorklet.cxx)
-target_link_libraries(HelloWorklet PRIVATE vtkm_filter)
+target_link_libraries(HelloWorklet PRIVATE vtkm_filter vtkm_io)
 
 vtkm_add_target_information(HelloWorklet
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS

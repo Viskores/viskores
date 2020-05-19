@@ -18,12 +18,12 @@ set(headers
   PixelTypes.h
   VTKDataSetReader.h
   VTKDataSetReaderBase.h
+  VTKDataSetWriter.h
   VTKPolyDataReader.h
   VTKRectilinearGridReader.h
   VTKStructuredGridReader.h
   VTKStructuredPointsReader.h
   VTKUnstructuredGridReader.h
-  VTKDataSetWriter.h
 )
 
 set(template_sources
@@ -37,6 +37,7 @@ set(sources
   EncodePNG.cxx
   VTKDataSetReader.cxx
   VTKDataSetReaderBase.cxx
+  VTKDataSetWriter.cxx
   VTKPolyDataReader.cxx
   VTKRectilinearGridReader.cxx
   VTKStructuredGridReader.cxx

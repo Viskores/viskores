@@ -275,7 +275,4 @@ protected:
 }
 } // vtkm::io
 
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
-
 #endif // vtk_m_io_VTKDataSetReaderBase_h
