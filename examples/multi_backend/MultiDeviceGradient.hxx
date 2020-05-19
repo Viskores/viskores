@@ -62,7 +62,7 @@ void process_partition_tbb(RuntimeTaskQueue& queue)
 
 void process_partition_openMP(RuntimeTaskQueue& queue)
 {
-  //Step 1. Set the device adapter to this thread to TBB.
+  //Step 1. Set the device adapter to this thread to openMP.
   //This makes sure that any vtkm::filters used by our
   //task operate only on openMP. The "global" thread tracker
   //is actually thread-local, so we can use that.
