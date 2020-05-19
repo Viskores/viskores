@@ -33,6 +33,7 @@ set(template_sources
 )
 
 set(sources
+  BOVDataSetReader.cxx
   DecodePNG.cxx
   EncodePNG.cxx
   VTKDataSetReader.cxx

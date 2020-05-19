@@ -11,6 +11,7 @@
 #include <string>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/BOVDataSetReader.h>
+#include <vtkm/io/ErrorIO.h>
 
 namespace
 {
