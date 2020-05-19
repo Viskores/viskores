@@ -11,6 +11,7 @@
 #define vtk_m_io_VTKPolyDataReader_h
 
 #include <vtkm/io/VTKDataSetReaderBase.h>
+#include <vtkm/io/internal/VTKDataSetCells.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
 

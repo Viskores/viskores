@@ -69,7 +69,7 @@ set(unit_tests
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_filter vtkm_source
+  LIBRARIES vtkm_filter vtkm_source vtkm_io
   ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )

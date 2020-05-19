@@ -35,6 +35,7 @@ set(template_sources
 set(sources
   DecodePNG.cxx
   EncodePNG.cxx
+  VTKDataSetReaderBase.cxx
 )
 
 vtkm_declare_headers(

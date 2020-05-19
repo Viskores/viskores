@@ -26,7 +26,7 @@ project(MeshQuality CXX)
 find_package(VTKm REQUIRED QUIET)
 
 add_executable(MeshQuality MeshQuality.cxx)
-target_link_libraries(MeshQuality PRIVATE vtkm_filter)
+target_link_libraries(MeshQuality PRIVATE vtkm_filter vtkm_io)
 
 if(TARGET vtkm::tbb)
   target_compile_definitions(MeshQuality PRIVATE BUILDING_TBB_VERSION)
