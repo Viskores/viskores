@@ -54,7 +54,6 @@ void TestFilledImage(vtkm::cont::DataSet& dataSet,
       row << pixelVec << ",";
     }
     row << "]";
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Row[" << y << "]" << row.str());
   }
 }
 
