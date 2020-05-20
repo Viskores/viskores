@@ -1,0 +1,407 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
+
+#include <vtkm/io/VTKDataSetWriter.h>
+
+#include <vtkm/CellShape.h>
+
+#include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/Field.h>
+
+#include <vtkm/io/ErrorIO.h>
+
+#include <vtkm/io/internal/VTKDataSetTypes.h>
+
+#include <algorithm>
+#include <cctype>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+namespace
+{
+
+struct OutputPointsFunctor
+{
+private:
+  std::ostream& out;
+
+  template <typename PortalType>
+  VTKM_CONT void Output(const PortalType& portal) const
+  {
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+    {
+      const int VTKDims = 3; // VTK files always require 3 dims for points
+
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
+
+      const ValueType& value = portal.Get(index);
+
+      vtkm::IdComponent numComponents = VecType::GetNumberOfComponents(value);
+      for (vtkm::IdComponent c = 0; c < numComponents && c < VTKDims; c++)
+      {
+        out << (c == 0 ? "" : " ") << VecType::GetComponent(value, c);
+      }
+      for (vtkm::IdComponent c = numComponents; c < VTKDims; c++)
+      {
+        out << " 0";
+      }
+      out << '\n';
+    }
+  }
+
+public:
+  VTKM_CONT
+  OutputPointsFunctor(std::ostream& o)
+    : out(o)
+  {
+  }
+
+  template <typename T, typename Storage>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
+  {
+    this->Output(array.ReadPortal());
+  }
+};
+
+struct OutputFieldFunctor
+{
+private:
+  std::ostream& out;
+
+  template <typename PortalType>
+  VTKM_CONT void Output(const PortalType& portal) const
+  {
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+    {
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
+
+      const ValueType& value = portal.Get(index);
+
+      vtkm::IdComponent numComponents = VecType::GetNumberOfComponents(value);
+      for (vtkm::IdComponent c = 0; c < numComponents; c++)
+      {
+        out << (c == 0 ? "" : " ") << VecType::GetComponent(value, c);
+      }
+      out << '\n';
+    }
+  }
+
+public:
+  VTKM_CONT
+  OutputFieldFunctor(std::ostream& o)
+    : out(o)
+  {
+  }
+
+  template <typename T, typename Storage>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& array) const
+  {
+    this->Output(array.ReadPortal());
+  }
+};
+
+class GetDataTypeName
+{
+public:
+  GetDataTypeName(std::string& name)
+    : Name(&name)
+  {
+  }
+
+  template <typename ArrayHandleType>
+  void operator()(const ArrayHandleType&) const
+  {
+    using DataType = typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType;
+    *this->Name = vtkm::io::internal::DataTypeName<DataType>::Name();
+  }
+
+private:
+  std::string* Name;
+};
+
+void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+{
+  ///\todo: support other coordinate systems
+  int cindex = 0;
+  auto cdata = dataSet.GetCoordinateSystem(cindex).GetData();
+
+  vtkm::Id npoints = cdata.GetNumberOfValues();
+  out << "POINTS " << npoints << " " << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name()
+      << " " << '\n';
+
+  OutputPointsFunctor{ out }(cdata);
+}
+
+template <class CellSetType>
+void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
+{
+  vtkm::Id nCells = cellSet.GetNumberOfCells();
+
+  vtkm::Id conn_length = 0;
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    conn_length += 1 + cellSet.GetNumberOfPointsInCell(i);
+  }
+
+  out << "CELLS " << nCells << " " << conn_length << '\n';
+
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Id> ids;
+    vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
+    cellSet.GetIndices(i, ids);
+    out << nids;
+    auto IdPortal = ids.ReadPortal();
+    for (int j = 0; j < nids; ++j)
+      out << " " << IdPortal.Get(j);
+    out << '\n';
+  }
+
+  out << "CELL_TYPES " << nCells << '\n';
+  for (vtkm::Id i = 0; i < nCells; ++i)
+  {
+    vtkm::Id shape = cellSet.GetCellShape(i);
+    out << shape << '\n';
+  }
+}
+
+void WriteVertexCells(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+{
+  vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
+
+  out << "CELLS " << nCells << " " << nCells * 2 << '\n';
+  for (int i = 0; i < nCells; i++)
+  {
+    out << "1 " << i << '\n';
+  }
+  out << "CELL_TYPES " << nCells << '\n';
+  for (int i = 0; i < nCells; i++)
+  {
+    out << vtkm::CELL_SHAPE_VERTEX << '\n';
+  }
+}
+
+void WritePointFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+{
+  bool wrote_header = false;
+  for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
+  {
+    const vtkm::cont::Field field = dataSet.GetField(f);
+
+    if (field.GetAssociation() != vtkm::cont::Field::Association::POINTS)
+    {
+      continue;
+    }
+
+    vtkm::Id npoints = field.GetNumberOfValues();
+    int ncomps = field.GetData().GetNumberOfComponents();
+    if (ncomps > 4)
+    {
+      continue;
+    }
+
+    if (!wrote_header)
+    {
+      out << "POINT_DATA " << npoints << '\n';
+      wrote_header = true;
+    }
+
+    std::string typeName;
+    vtkm::cont::CastAndCall(field.GetData().ResetTypes(vtkm::TypeListAll{}),
+                            GetDataTypeName(typeName));
+    std::string name = field.GetName();
+    for (auto& c : name)
+    {
+      if (std::isspace(c))
+      {
+        c = '_';
+      }
+    }
+    out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
+    out << "LOOKUP_TABLE default" << '\n';
+
+    vtkm::cont::CastAndCall(field.GetData().ResetTypes(vtkm::TypeListAll{}),
+                            OutputFieldFunctor(out));
+  }
+}
+
+void WriteCellFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+{
+  bool wrote_header = false;
+  for (vtkm::Id f = 0; f < dataSet.GetNumberOfFields(); f++)
+  {
+    const vtkm::cont::Field field = dataSet.GetField(f);
+    if (!field.IsFieldCell())
+    {
+      continue;
+    }
+
+
+    vtkm::Id ncells = field.GetNumberOfValues();
+    int ncomps = field.GetData().GetNumberOfComponents();
+    if (ncomps > 4)
+      continue;
+
+    if (!wrote_header)
+    {
+      out << "CELL_DATA " << ncells << '\n';
+      wrote_header = true;
+    }
+
+    std::string typeName;
+    vtkm::cont::CastAndCall(field.GetData().ResetTypes(vtkm::TypeListAll{}),
+                            GetDataTypeName(typeName));
+
+    std::string name = field.GetName();
+    for (auto& c : name)
+    {
+      if (std::isspace(c))
+      {
+        c = '_';
+      }
+    }
+
+    out << "SCALARS " << name << " " << typeName << " " << ncomps << '\n';
+    out << "LOOKUP_TABLE default" << '\n';
+
+    vtkm::cont::CastAndCall(field.GetData().ResetTypes(vtkm::TypeListAll{}),
+                            OutputFieldFunctor(out));
+  }
+}
+
+void WriteDataSetAsPoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
+{
+  out << "DATASET UNSTRUCTURED_GRID" << '\n';
+  WritePoints(out, dataSet);
+  WriteVertexCells(out, dataSet);
+}
+
+template <class CellSetType>
+void WriteDataSetAsUnstructured(std::ostream& out,
+                                const vtkm::cont::DataSet& dataSet,
+                                const CellSetType& cellSet)
+{
+  out << "DATASET UNSTRUCTURED_GRID" << '\n';
+  WritePoints(out, dataSet);
+  WriteExplicitCells(out, cellSet);
+}
+
+template <vtkm::IdComponent DIM>
+void WriteDataSetAsStructured(std::ostream& out,
+                              const vtkm::cont::DataSet& dataSet,
+                              const vtkm::cont::CellSetStructured<DIM>& cellSet)
+{
+  ///\todo: support uniform/rectilinear
+  out << "DATASET STRUCTURED_GRID" << '\n';
+
+  auto pointDimensions = cellSet.GetPointDimensions();
+  using VTraits = vtkm::VecTraits<decltype(pointDimensions)>;
+
+  out << "DIMENSIONS ";
+  out << VTraits::GetComponent(pointDimensions, 0) << " ";
+  out << (DIM > 1 ? VTraits::GetComponent(pointDimensions, 1) : 1) << " ";
+  out << (DIM > 2 ? VTraits::GetComponent(pointDimensions, 2) : 1) << " ";
+
+  WritePoints(out, dataSet);
+}
+
+void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, bool just_points = false)
+{
+  // The Paraview parser cannot handle scientific notation:
+  out << std::fixed;
+  out << "# vtk DataFile Version 3.0" << '\n';
+  out << "vtk output" << '\n';
+  out << "ASCII" << '\n';
+
+  if (just_points)
+  {
+    WriteDataSetAsPoints(out, dataSet);
+    WritePointFields(out, dataSet);
+  }
+  else
+  {
+    vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
+    if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
+    {
+      WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+    }
+    else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
+    {
+      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>());
+    }
+    else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
+    {
+      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>());
+    }
+    else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
+    {
+      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>());
+    }
+    else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
+    {
+      // these function just like explicit cell sets
+      WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>());
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
+    }
+
+    WritePointFields(out, dataSet);
+    WriteCellFields(out, dataSet);
+  }
+}
+
+} // anonymous namespace
+
+namespace vtkm
+{
+namespace io
+{
+
+VTKDataSetWriter::VTKDataSetWriter(const char* fileName)
+  : FileName(fileName)
+{
+}
+
+VTKDataSetWriter::VTKDataSetWriter(const std::string& fileName)
+  : FileName(fileName)
+{
+}
+
+void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet, bool just_points) const
+{
+  if (dataSet.GetNumberOfCoordinateSystems() < 1)
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "DataSet has no coordinate system, which is not supported by VTK file format.");
+  }
+  try
+  {
+    std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc);
+    Write(fileStream, dataSet, just_points);
+    fileStream.close();
+  }
+  catch (std::ofstream::failure& error)
+  {
+    throw vtkm::io::ErrorIO(error.what());
+  }
+}
+}
+} // namespace vtkm::io

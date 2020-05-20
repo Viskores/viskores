@@ -13,7 +13,7 @@ project(RedistributePoints CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h)
-target_link_libraries(RedistributePoints PRIVATE vtkm_filter)
+target_link_libraries(RedistributePoints PRIVATE vtkm_filter vtkm_io)
 vtkm_add_target_information(RedistributePoints
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES RedistributePoints.cxx)
