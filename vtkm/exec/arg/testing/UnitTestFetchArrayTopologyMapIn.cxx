@@ -87,7 +87,9 @@ struct FetchArrayTopologyMapInTests
   void TryInvocation(const Invocation& invocation) const
   {
     using ConnectivityType = typename Invocation::InputDomainType;
-    using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
+    using ThreadIndicesType =
+      vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
+                                                vtkm::exec::arg::CustomScatterOrMaskTag>;
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                                              vtkm::exec::arg::AspectTagDefault,
@@ -166,7 +168,9 @@ template <vtkm::IdComponent NumDimensions, vtkm::IdComponent ParamIndex, typenam
 void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 {
   using ConnectivityType = typename Invocation::InputDomainType;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
+  using ThreadIndicesType =
+    vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
+                                              vtkm::exec::arg::CustomScatterOrMaskTag>;
 
   vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                          vtkm::exec::arg::AspectTagDefault,

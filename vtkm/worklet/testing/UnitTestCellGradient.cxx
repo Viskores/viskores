@@ -191,16 +191,18 @@ void TestCellGradientUniform3DWithVectorField2()
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.175, 60.175, 60.175 } }
   };
 
+  auto vorticityPortal = extraOutput.Vorticity.ReadPortal();
+  auto divergencePortal = extraOutput.Divergence.ReadPortal();
   for (int i = 0; i < 4; ++i)
   {
     vtkm::Vec<vtkm::Vec3f_64, 3> eg = expected_gradients[i];
 
-    vtkm::Float64 d = extraOutput.Divergence.ReadPortal().Get(i);
+    vtkm::Float64 d = divergencePortal.Get(i);
     VTKM_TEST_ASSERT(test_equal((eg[0][0] + eg[1][1] + eg[2][2]), d),
                      "Wrong result for Divergence on 3D uniform data");
 
     vtkm::Vec3f_64 ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
-    vtkm::Vec3f_64 v = extraOutput.Vorticity.ReadPortal().Get(i);
+    vtkm::Vec3f_64 v = vorticityPortal.Get(i);
     VTKM_TEST_ASSERT(test_equal(ev, v), "Wrong result for Vorticity on 3D uniform data");
   }
 }
@@ -220,9 +222,10 @@ void TestCellGradientExplicit()
   result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
 
   vtkm::Vec3f_32 expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
+  auto resultPortal = result.ReadPortal();
   for (int i = 0; i < 2; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultPortal.Get(i), expected[i]),
                      "Wrong result for CellGradient worklet on 3D explicit data");
   }
 }

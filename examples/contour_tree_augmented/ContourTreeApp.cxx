@@ -130,7 +130,7 @@ public:
     }
     else
     {
-      return (it - this->mCLOptions.begin());
+      return static_cast<vtkm::Id>(it - this->mCLOptions.begin());
     }
   }
 

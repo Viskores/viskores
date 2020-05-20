@@ -97,6 +97,7 @@ void RunTests()
 int UnitTestLogging(int, char* [])
 {
   // Test that parameterless init works:
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Log before intialize");
   vtkm::cont::InitLogging();
 
   RunTests();
