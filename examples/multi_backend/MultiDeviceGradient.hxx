@@ -189,7 +189,7 @@ VTKM_CONT MultiDeviceGradient::~MultiDeviceGradient()
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& pds,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //Step 1. Say that we have no more to submit for this PartitionedDataSet
   //This is needed to happen for each execute as we want to support
@@ -219,9 +219,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
-        VTKM_DEPRECATED_SUPPRESS_BEGIN
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
-        VTKM_DEPRECATED_SUPPRESS_END
+        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(0, result);
       });
     this->Queue.waitForAllTasksToComplete();
@@ -240,9 +238,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
-        VTKM_DEPRECATED_SUPPRESS_BEGIN
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
-        VTKM_DEPRECATED_SUPPRESS_END
+        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(index, result);
       });
     index++;

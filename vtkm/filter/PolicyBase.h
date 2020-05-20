@@ -396,6 +396,14 @@ VTKM_CONT
   return {};
 }
 
+template <typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST, typename DerivedFilter::SupportedCellSets>
+  MakeSerializableDataSet(const vtkm::filter::Filter<DerivedFilter>&)
+{
+  return {};
+}
+
 template <typename DerivedPolicy>
 VTKM_DEPRECATED(1.6, "MakeSerializableDataSet now takes the filter as an argument.")
 VTKM_CONT vtkm::cont::SerializableDataSet<
@@ -423,6 +431,16 @@ VTKM_CONT
                                                           typename DerivedPolicy::AllCellSetList>>{
     dataset
   };
+}
+
+template <typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST, typename DerivedFilter::SupportedCellSets>
+  MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
+                          const vtkm::filter::Filter<DerivedFilter>&)
+{
+  return vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST,
+                                         typename DerivedFilter::SupportedCellSets>{ dataset };
 }
 }
 } // vtkm::filter
