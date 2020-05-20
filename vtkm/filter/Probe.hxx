@@ -28,14 +28,14 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy),
+  this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(input.GetCellSet(), policy, *this),
                     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
                     this->Geometry.GetCoordinateSystem().GetData());
 
   auto output = this->Geometry;
   auto hpf = this->Worklet.GetHiddenPointsField();
   auto hcf = this->Worklet.GetHiddenCellsField(
-    vtkm::filter::ApplyPolicyCellSet(output.GetCellSet(), policy));
+    vtkm::filter::ApplyPolicyCellSet(output.GetCellSet(), policy, *this));
 
   output.AddField(vtkm::cont::make_FieldPoint("HIDDEN", hpf));
   output.AddField(vtkm::cont::make_FieldCell("HIDDEN", hcf));

@@ -70,7 +70,7 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   DeduceCellSet triangulate(this->Worklet, outCellSet);
 
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy), triangulate);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), triangulate);
 
   // create the output dataset
   vtkm::cont::DataSet output;

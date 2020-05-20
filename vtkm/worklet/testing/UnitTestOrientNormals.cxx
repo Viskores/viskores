@@ -48,14 +48,6 @@
 namespace
 {
 
-struct TestPolicy : public vtkm::filter::PolicyBase<TestPolicy>
-{
-  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
-};
-
 VTKM_CONT
 vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 {
@@ -79,7 +71,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   normals.SetPointNormalsName("normals");
   normals.SetCellNormalsName("normals");
   normals.SetAutoOrientNormals(false);
-  dataSet = normals.Execute(dataSet, TestPolicy{});
+  dataSet = normals.Execute(dataSet);
 
   return dataSet;
 }

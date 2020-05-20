@@ -184,7 +184,7 @@ CellSetExplicit<SST, CST, OST>::ShapesReadPortal() const
 
 template <typename SST, typename CST, typename OST>
 VTKM_CONT
-VTKM_DEPRECATED(1.6, "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() and loop over the .Get.")
+VTKM_DEPRECATED(1.6, "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() and loop over the Get.")
 vtkm::UInt8 CellSetExplicit<SST, CST, OST>
 ::GetCellShape(vtkm::Id cellid) const
 {

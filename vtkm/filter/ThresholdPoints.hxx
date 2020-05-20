@@ -146,14 +146,14 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   {
     case THRESHOLD_BELOW:
     {
-      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                field,
                                ValuesBelow(this->GetLowerThreshold()));
       break;
     }
     case THRESHOLD_ABOVE:
     {
-      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                field,
                                ValuesAbove(this->GetUpperThreshold()));
       break;
@@ -161,7 +161,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
     case THRESHOLD_BETWEEN:
     default:
     {
-      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+      outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                field,
                                ValuesBetween(this->GetLowerThreshold(), this->GetUpperThreshold()));
       break;
@@ -178,7 +178,7 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(true);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {

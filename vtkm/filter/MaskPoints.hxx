@@ -37,7 +37,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::MaskPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy), this->Stride);
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), this->Stride);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -49,7 +49,7 @@ inline VTKM_CONT vtkm::cont::DataSet MaskPoints::DoExecute(
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {

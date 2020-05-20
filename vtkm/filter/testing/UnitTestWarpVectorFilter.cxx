@@ -51,15 +51,6 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   return dataSet;
 }
 
-class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
-{
-public:
-  using vecType = vtkm::Vec3f;
-  using TypeListWarpVectorTags = vtkm::List<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                                            vtkm::cont::ArrayHandle<vecType>::StorageTag>;
-  using FieldStorageList = TypeListWarpVectorTags;
-};
-
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
 {
   VTKM_TEST_ASSERT(result.HasPointField("warpvector"), "Output filed WarpVector is missing");
@@ -100,7 +91,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 
@@ -109,7 +100,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetActiveField("vec1");
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 }

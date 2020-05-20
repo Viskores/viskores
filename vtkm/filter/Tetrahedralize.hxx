@@ -46,8 +46,10 @@ inline VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::cont::CastAndCall(
-    vtkm::filter::ApplyPolicyCellSet(cells, policy), DeduceCellSet{}, this->Worklet, outCellSet);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
+                          DeduceCellSet{},
+                          this->Worklet,
+                          outCellSet);
 
   // create the output dataset
   vtkm::cont::DataSet output;

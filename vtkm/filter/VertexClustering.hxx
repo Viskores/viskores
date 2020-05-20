@@ -33,11 +33,11 @@ inline VTKM_CONT vtkm::cont::DataSet VertexClustering::DoExecute(
   //need to compute bounds first
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
-  vtkm::cont::DataSet outDataSet =
-    this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy),
-                      input.GetCoordinateSystem(),
-                      bounds,
-                      this->GetNumberOfDivisions());
+  vtkm::cont::DataSet outDataSet = this->Worklet.Run(
+    vtkm::filter::ApplyPolicyCellSetUnstructured(input.GetCellSet(), policy, *this),
+    input.GetCoordinateSystem(),
+    bounds,
+    this->GetNumberOfDivisions());
 
   return outDataSet;
 }

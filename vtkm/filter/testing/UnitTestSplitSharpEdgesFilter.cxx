@@ -219,14 +219,6 @@ void TestWithExplicitData()
   TestSplitSharpEdgesFilterNoSplit(simpleCubeWithSN, splitSharpEdgesFilter);
 }
 
-struct SplitSharpTestPolicy : public vtkm::filter::PolicyBase<SplitSharpTestPolicy>
-{
-  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec3f>;
-};
-
 
 void TestWithStructuredData()
 {
@@ -254,7 +246,7 @@ void TestWithStructuredData()
   std::cout << dataSet.GetNumberOfPoints() << std::endl;
   vtkm::filter::SplitSharpEdges split;
   split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
-  dataSet = split.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = split.Execute(dataSet);
 }
 
 

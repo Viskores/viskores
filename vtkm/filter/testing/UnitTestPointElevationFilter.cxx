@@ -99,8 +99,7 @@ void TestPointElevationWithPolicy()
   filter.SetRange(0.0, 2.0);
   filter.SetUseCoordinateSystemAsField(true);
 
-  vtkm::filter::PolicyDefault p;
-  auto result = filter.Execute(inputData, p);
+  auto result = filter.Execute(inputData);
 
   //verify the result
   VTKM_TEST_ASSERT(result.HasPointField("elevation"), "Output field has wrong association");

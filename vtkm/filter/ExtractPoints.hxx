@@ -41,7 +41,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ExtractPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                            coords.GetData(),
                            this->Function,
                            this->ExtractInside);
@@ -56,7 +56,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {
