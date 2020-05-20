@@ -152,12 +152,12 @@ protected:
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
       {
         outpos = inpos;
-        return IntegratorStatus(false, true, false);
+        return IntegratorStatus(true, true, false);
       }
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
       {
         outpos = inpos;
-        return IntegratorStatus(false, false, true);
+        return IntegratorStatus(true, false, true);
       }
 
       //Stepping by this->StepLength goes beyond the bounds of the dataset.
@@ -217,7 +217,7 @@ protected:
       //Update the position and time.
       outpos = currPos + stepRange[1] * currVel;
       time += stepRange[1];
-      return IntegratorStatus(false, true, !this->Evaluator.IsWithinTemporalBoundary(time));
+      return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 
     VTKM_EXEC
