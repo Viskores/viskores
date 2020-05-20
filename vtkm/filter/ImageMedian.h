@@ -34,7 +34,7 @@ class ImageMedian : public vtkm::filter::FilterField<ImageMedian>
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
 
-  VTKM_CONT ImageMedian();
+  VTKM_CONT ImageMedian() { this->SetOutputFieldName("median"); }
 
   VTKM_CONT void Perform3x3() { this->Neighborhood = 1; };
   VTKM_CONT void Perform5x5() { this->Neighborhood = 2; };
