@@ -19,6 +19,7 @@
 
 #include <vtkm/RangeId3.h>
 #include <vtkm/filter/ExtractStructured.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/CellDeepCopy.h>
 
 namespace
@@ -360,23 +361,24 @@ inline VTKM_CONT vtkm::cont::DataSet GhostCellRemove::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool GhostCellRemove::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+VTKM_CONT bool GhostCellRemove::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                   const vtkm::cont::Field& field,
+                                                   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
     //we copy the input handle to the result dataset, reusing the metadata
-    result.AddField(fieldMeta.AsField(input));
+    result.AddField(field);
     return true;
   }
-  else if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell())
   {
-    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(out));
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
     return true;
   }
   else

@@ -239,6 +239,11 @@ public:
     return outArray;
   }
 
+  const vtkm::worklet::ScatterCounting& GetPointScatter() const
+  {
+    return *this->PointScatter.get();
+  }
+
 private:
   vtkm::cont::ArrayHandle<vtkm::IdComponent> MaskArray;
 

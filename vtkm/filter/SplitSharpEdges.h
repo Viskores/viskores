@@ -54,11 +54,10 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::FloatDefault FeatureAngle;
@@ -67,6 +66,8 @@ private:
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_SplitSharpEdges_hxx
 #include <vtkm/filter/SplitSharpEdges.hxx>
+#endif
 
 #endif // vtk_m_filter_SplitSharpEdges_h

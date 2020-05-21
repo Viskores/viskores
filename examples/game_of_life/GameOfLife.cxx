@@ -133,11 +133,10 @@ public:
     return output;
   }
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet&,
-                            const vtkm::cont::ArrayHandle<T, StorageType>&,
-                            const vtkm::filter::FieldMetadata&,
-                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                    const vtkm::cont::Field&,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
   {
     return false;
   }

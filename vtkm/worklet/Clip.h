@@ -901,6 +901,11 @@ public:
     return result;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellMapOutputToInput() const
+  {
+    return this->CellMapOutputToInput;
+  }
+
 private:
   internal::ClipTables ClipTablesInstance;
   vtkm::cont::ArrayHandle<EdgeInterpolation> EdgePointsInterpolation;

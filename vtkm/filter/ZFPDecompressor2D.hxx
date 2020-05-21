@@ -58,16 +58,6 @@ inline VTKM_CONT vtkm::cont::DataSet ZFPDecompressor2D::DoExecute(
   dataset.AddField(vtkm::cont::make_FieldPoint("decompressed", decompress));
   return dataset;
 }
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ZFPDecompressor2D::DoMapField(vtkm::cont::DataSet&,
-                                                    const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                                    const vtkm::filter::FieldMetadata&,
-                                                    const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  return false;
-}
 }
 } // namespace vtkm::filter
 #endif

@@ -10,6 +10,8 @@
 #ifndef vtk_m_filter_Mask_hxx
 #define vtk_m_filter_Mask_hxx
 
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace
 {
 
@@ -66,29 +68,24 @@ inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(const vtkm::cont::DataSet& 
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
-                                       const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                       const vtkm::filter::FieldMetadata& fieldMeta,
-                                       vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Mask::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                               const vtkm::cont::Field& field,
+                                               vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  vtkm::cont::Field output;
-
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint() || field.IsFieldGlobal())
   {
-    output = fieldMeta.AsField(input); // pass through
+    result.AddField(field); // pass through
+    return true;
   }
-  else if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell())
   {
-    output = fieldMeta.AsField(this->Worklet.ProcessCellField(input));
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetValidCellIds(), result);
   }
   else
   {
     return false;
   }
-
-  result.AddField(output);
-  return true;
 }
 }
 }

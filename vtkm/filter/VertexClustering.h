@@ -64,12 +64,11 @@ public:
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  //this call is only valid after calling DoExecute
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
   vtkm::worklet::VertexClustering Worklet;
@@ -78,6 +77,8 @@ private:
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_VertexClustering_hxx
 #include <vtkm/filter/VertexClustering.hxx>
+#endif
 
 #endif // vtk_m_filter_VertexClustering_h

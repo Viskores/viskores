@@ -122,10 +122,6 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
 
 struct VertexClustering
 {
-  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<
-    vtkm::cont::ArrayHandleView<vtkm::cont::ArrayHandle<vtkm::Id>>,
-    vtkm::cont::ArrayHandle<vtkm::Id>>;
-
   struct GridInfo
   {
     vtkm::Id3 dim;
@@ -383,8 +379,7 @@ public:
 
       // For mapping properties, this map will select an arbitrary point from
       // the cluster:
-      this->PointIdMap =
-        vtkm::cont::make_ArrayHandlePermutation(keysView, keys.GetSortedValuesMap());
+      this->PointIdMap = internal::ConcretePermutationArray(keysView, keys.GetSortedValuesMap());
 
       // Compute representative points from each cluster (may not match the
       // PointIdMap indexing)
@@ -548,8 +543,11 @@ public:
     return internal::ConcretePermutationArray(this->CellIdMap, input);
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetPointIdMap() const { return this->PointIdMap; }
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->CellIdMap; }
+
 private:
-  PointIdMapType PointIdMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> PointIdMap;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 }; // struct VertexClustering
 }

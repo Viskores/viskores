@@ -66,15 +66,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT ExtractGeometry::ExtractGeometry()
-  : vtkm::filter::FilterDataSet<ExtractGeometry>()
-  , ExtractInside(true)
-  , ExtractBoundaryCells(false)
-  , ExtractOnlyBoundaryCells(false)
-{
-}
-
-//-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -100,34 +91,6 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.SetCellSet(outCells);
   return output;
-}
-
-//-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ExtractGeometry::DoMapField(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  vtkm::cont::VariantArrayHandle output;
-
-  if (fieldMeta.IsPointField())
-  {
-    output = input; // pass through, points aren't changed.
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    output = this->Worklet.ProcessCellField(input);
-  }
-  else
-  {
-    return false;
-  }
-
-  // use the same meta data as the input so we get the same field name, etc.
-  result.AddField(fieldMeta.AsField(output));
-  return true;
 }
 }
 }

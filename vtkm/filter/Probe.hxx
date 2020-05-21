@@ -10,6 +10,10 @@
 #ifndef vtk_m_filter_Probe_hxx
 #define vtk_m_filter_Probe_hxx
 
+#include <vtkm/filter/Probe.h>
+
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace vtkm
 {
 namespace filter
@@ -43,27 +47,44 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   return output;
 }
 
+template <typename DerivedPolicy>
+VTKM_CONT inline bool Probe::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                const vtkm::cont::Field& field,
+                                                vtkm::filter::PolicyBase<DerivedPolicy> policy)
+{
+  if (field.IsFieldPoint())
+  {
+    // If the field is a point field, then we need to do a custom interpolation of the points.
+    // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+    // call our DoMapField.
+    return this->FilterDataSet<Probe>::MapFieldOntoOutput(result, field, policy);
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIds(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 template <typename T, typename StorageType, typename DerivedPolicy>
 VTKM_CONT inline bool Probe::DoMapField(vtkm::cont::DataSet& result,
                                         const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                         const vtkm::filter::FieldMetadata& fieldMeta,
                                         vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  if (fieldMeta.IsPointField())
-  {
-    auto fieldArray =
-      this->Worklet.ProcessPointField(input, typename DerivedPolicy::AllCellSetList());
-    result.AddField(fieldMeta.AsField(fieldArray));
-    return true;
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    auto fieldArray = this->Worklet.ProcessCellField(input);
-    result.AddField(fieldMeta.AsField(fieldArray));
-    return true;
-  }
-
-  return false;
+  VTKM_ASSERT(fieldMeta.IsPointField());
+  auto fieldArray =
+    this->Worklet.ProcessPointField(input, typename DerivedPolicy::AllCellSetList());
+  result.AddField(fieldMeta.AsField(fieldArray));
+  return true;
 }
 }
 } // vtkm::filter

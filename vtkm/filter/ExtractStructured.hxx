@@ -10,6 +10,7 @@
 
 #ifndef vtk_m_filter_ExtractStructured_hxx
 #define vtk_m_filter_ExtractStructured_hxx
+#include <vtkm/filter/ExtractStructured.h>
 
 namespace vtkm
 {
@@ -36,6 +37,14 @@ inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   vtkm::cont::DataSet output;
   output.SetCellSet(vtkm::cont::DynamicCellSet(cellset));
   output.AddCoordinateSystem(outputCoordinates);
+
+  // Create map arrays for mapping fields. Could potentially save some time to first check to see
+  // if these arrays would be used.
+  this->CellFieldMap =
+    this->Worklet.ProcessCellField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfCells()));
+  this->PointFieldMap =
+    this->Worklet.ProcessPointField(vtkm::cont::ArrayHandleIndex(input.GetNumberOfPoints()));
+
   return output;
 }
 }

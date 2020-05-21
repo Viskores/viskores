@@ -187,29 +187,35 @@ inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ThresholdPoints::DoMapField(
+template <typename DerivedPolicy>
+inline VTKM_CONT bool ThresholdPoints::MapFieldOntoOutput(
   vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::cont::Field& field,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // point data is copied as is because it was not collapsed
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
     if (this->CompactPoints)
     {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
+      return this->Compactor.MapFieldOntoOutput(result, field, policy);
     }
     else
     {
-      result.AddField(fieldMeta.AsField(input));
+      result.AddField(field);
       return true;
     }
   }
-
-  // cell data does not apply
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
 }
 }

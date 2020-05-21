@@ -326,13 +326,20 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
 }
 
 //---------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Lagrangian::DoMapField(vtkm::cont::DataSet&,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                             const vtkm::filter::FieldMetadata&,
-                                             const vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Lagrangian::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                     const vtkm::cont::Field& field,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  return false;
+  if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 }
 } // namespace vtkm::filter

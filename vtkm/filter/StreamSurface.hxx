@@ -11,6 +11,8 @@
 #ifndef vtk_m_filter_StreamSurface_hxx
 #define vtk_m_filter_StreamSurface_hxx
 
+#include <vtkm/filter/StreamSurface.h>
+
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -79,11 +81,10 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool StreamSurface::DoMapField(vtkm::cont::DataSet&,
-                                                const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                                const vtkm::filter::FieldMetadata&,
-                                                vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool StreamSurface::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                        const vtkm::cont::Field&,
+                                                        vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }
