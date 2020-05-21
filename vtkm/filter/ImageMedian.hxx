@@ -86,11 +86,6 @@ struct ImageMedian : public vtkm::worklet::WorkletPointNeighborhood
 namespace filter
 {
 
-VTKM_CONT ImageMedian::ImageMedian()
-{
-  this->SetOutputFieldName("median");
-}
-
 template <typename T, typename StorageType, typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet ImageMedian::DoExecute(
   const vtkm::cont::DataSet& input,
