@@ -404,10 +404,8 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
-    std::cout << "Status : " << status << std::endl;
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
-
     //Result should be push just outside of the bounds.
     vtkm::Vec3f result = resultsPortal.Get(index);
     VTKM_TEST_ASSERT(!bounds.Contains(result),
@@ -573,7 +571,6 @@ void TestIntegrators()
   vtkm::worklet::ParticleAdvection pa;
   vtkm::worklet::ParticleAdvectionResult res;
   {
-    std::cout << "RK4" << std::endl;
     auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
     IntegratorType rk4(eval, stepSize);
@@ -581,7 +578,6 @@ void TestIntegrators()
     ValidateParticleAdvectionResult(res, nSeeds, maxSteps);
   }
   {
-    std::cout << "Euler" << std::endl;
     auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::EulerIntegrator<GridEvalType>;
     IntegratorType euler(eval, stepSize);

@@ -152,12 +152,12 @@ protected:
       if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
       {
         outpos = inpos;
-        return IntegratorStatus(true, true, false);
+        return IntegratorStatus(false, true, false);
       }
       if (!this->Evaluator.IsWithinTemporalBoundary(time))
       {
         outpos = inpos;
-        return IntegratorStatus(true, false, true);
+        return IntegratorStatus(false, false, true);
       }
 
       //Stepping by this->StepLength goes beyond the bounds of the dataset.
