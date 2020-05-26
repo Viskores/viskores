@@ -688,7 +688,7 @@ public:
   VTKM_EXEC_CONT explicit VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
   {
     //DO NOT CHANGE THIS AND THE ABOVE PRAGMA'S UNLESS YOU FULLY UNDERSTAND THE
-    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/issues/221
+    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/-/issues/221
     for (vtkm::IdComponent i = 0; i < Size; ++i)
     {
       this->Components[i] = src[i];
