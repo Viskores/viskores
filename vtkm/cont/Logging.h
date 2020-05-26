@@ -203,7 +203,7 @@
 /// \note This macro is to be used for quickly setting log levels.  For a
 /// more maintainable solution it is recommended to create a custom enum class
 /// and then cast appropriately, as described here:
-/// https://gitlab.kitware.com/vtk/vtk-m/issues/358#note_550157
+/// https://gitlab.kitware.com/vtk/vtk-m/-/issues/358#note_550157
 
 #if defined(VTKM_ENABLE_LOGGING)
 
