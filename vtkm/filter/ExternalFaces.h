@@ -15,6 +15,7 @@
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/FilterDataSet.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
 namespace vtkm
@@ -59,35 +60,15 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  //Map a new field onto the resulting dataset after running the filter
-  //this call is only valid
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy> policy)
-  {
-    if (fieldMeta.IsPointField())
-    {
-      if (this->CompactPoints)
-      {
-        return this->Compactor.DoMapField(result, input, fieldMeta, policy);
-      }
-      else
-      {
-        result.AddField(fieldMeta.AsField(input));
-        return true;
-      }
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      vtkm::cont::ArrayHandle<T> fieldArray;
-      fieldArray = this->Worklet.ProcessCellField(input);
-      result.AddField(fieldMeta.AsField(fieldArray));
-      return true;
-    }
+  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                       const vtkm::cont::Field& field);
 
-    return false;
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
+  {
+    return this->MapFieldOntoOutput(result, field);
   }
 
 private:

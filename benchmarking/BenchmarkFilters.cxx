@@ -106,27 +106,6 @@ bool InputIsStructured()
     InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
 }
 
-// Limit the filter executions to only consider the following types, otherwise
-// compile times and binary sizes are nuts.
-using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
-using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-
-using UnstructuredCellList =
-  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
-
-using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
-
-class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
-{
-public:
-  using FieldTypeList = FieldTypes;
-
-  using StructuredCellSetList = StructuredCellList;
-  using UnstructuredCellSetList = UnstructuredCellList;
-  using AllCellSetList = AllCellList;
-};
-
 enum GradOpts : int
 {
   Gradient = 1,
@@ -174,13 +153,12 @@ void BenchGradient(::benchmark::State& state, int options)
     filter.SetColumnMajorOrdering();
   }
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -224,13 +202,12 @@ void BenchThreshold(::benchmark::State& state)
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -261,13 +238,12 @@ void BenchThresholdPoints(::benchmark::State& state)
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -283,13 +259,12 @@ void BenchCellAverage(::benchmark::State& state)
   vtkm::filter::CellAverage filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -305,13 +280,12 @@ void BenchPointAverage(::benchmark::State& state)
   vtkm::filter::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -329,13 +303,12 @@ void BenchWarpScalar(::benchmark::State& state)
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -352,13 +325,12 @@ void BenchWarpVector(::benchmark::State& state)
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -399,13 +371,12 @@ void BenchContour(::benchmark::State& state)
   filter.SetComputeFastNormalsForStructured(fastNormals);
   filter.SetComputeFastNormalsForUnstructured(fastNormals);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -438,13 +409,12 @@ void BenchExternalFaces(::benchmark::State& state)
   vtkm::filter::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -466,13 +436,12 @@ void BenchTetrahedralize(::benchmark::State& state)
 
   vtkm::filter::Tetrahedralize filter;
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -496,13 +465,12 @@ void BenchVertexClustering(::benchmark::State& state)
   vtkm::filter::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 

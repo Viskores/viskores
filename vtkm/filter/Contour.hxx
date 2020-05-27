@@ -98,7 +98,7 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   if (this->GenerateNormals && generateHighQualityNormals)
   {
     outputCells = this->Worklet.Run(ivalues,
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices,
@@ -106,8 +106,11 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
   else
   {
-    outputCells = this->Worklet.Run(
-      ivalues, vtkm::filter::ApplyPolicyCellSet(cells, policy), coords.GetData(), field, vertices);
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
+                                    coords.GetData(),
+                                    field,
+                                    vertices);
   }
 
   if (this->GenerateNormals)

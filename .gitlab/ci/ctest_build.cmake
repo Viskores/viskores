@@ -24,7 +24,14 @@ ctest_build(APPEND
   RETURN_VALUE build_result)
 
 if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
-  ctest_submit(PARTS Build)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+    ctest_submit(PARTS Build BUILD_ID build_id)
+    message(STATUS "Build submission build_id: ${build_id}")
+  else()
+    ctest_submit(PARTS Build)
+  endif()
+
+
 endif()
 
 if (build_result)

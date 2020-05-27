@@ -10,6 +10,8 @@
 
 set(headers
   VTKDataSetWriter.h
-  )
+)
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(
+  ${headers}
+)

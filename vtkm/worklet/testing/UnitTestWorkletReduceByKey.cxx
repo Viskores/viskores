@@ -128,6 +128,9 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayCopy(keyArray, sortedKeys);
 
   vtkm::worklet::Keys<KeyType> keys(sortedKeys);
+  vtkm::cont::printSummary_ArrayHandle(keys.GetUniqueKeys(), std::cout);
+  vtkm::cont::printSummary_ArrayHandle(keys.GetOffsets(), std::cout);
+  vtkm::cont::printSummary_ArrayHandle(keys.GetCounts(), std::cout);
 
   vtkm::cont::ArrayHandle<KeyType> valuesToModify;
   valuesToModify.Allocate(ARRAY_SIZE);

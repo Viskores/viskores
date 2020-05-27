@@ -50,7 +50,10 @@ struct PointGradient : public vtkm::worklet::WorkletVisitPointsWithCells
                             const WholeFieldIn& inputField,
                             GradientOutType& outputGradient) const
   {
-    using CellThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
+    // Use optimized ThreadIndicesTopologyMap
+    using CellThreadIndices =
+      vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType,
+                                                vtkm::exec::arg::DefaultScatterAndMaskTag>;
 
     using ValueType = typename WholeFieldIn::ValueType;
     using CellShapeTag = typename CellSetInType::CellShapeTag;

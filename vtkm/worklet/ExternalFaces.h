@@ -953,6 +953,8 @@ public:
     }
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->CellIdMap; }
+
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
   bool PassPolyData;

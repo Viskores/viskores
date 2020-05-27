@@ -14,6 +14,8 @@
 #include <vtkm/filter/vtkm_filter_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+
 #include <vtkm/worklet/Clip.h>
 
 namespace vtkm
@@ -46,6 +48,35 @@ public:
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  {
+    if (field.IsFieldPoint())
+    {
+      // If the field is a point field, then we need to do a custom interpolation of the points.
+      // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+      // call our DoMapField.
+      return this->FilterDataSetWithField<ClipWithField>::MapFieldOntoOutput(result, field, policy);
+    }
+    else if (field.IsFieldCell())
+    {
+      // Use the precompiled field permutation function.
+      vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellMapOutputToInput();
+      return vtkm::filter::MapFieldPermutation(field, permutation, result);
+    }
+    else if (field.IsFieldGlobal())
+    {
+      result.AddField(field);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -54,20 +85,11 @@ public:
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    vtkm::cont::ArrayHandle<T> output;
+    // All other conditions should be handled by MapFieldOntoOutput directly.
+    VTKM_ASSERT(fieldMeta.IsPointField());
 
-    if (fieldMeta.IsPointField())
-    {
-      output = this->Worklet.ProcessPointField(input);
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      output = this->Worklet.ProcessCellField(input);
-    }
-    else
-    {
-      return false;
-    }
+    vtkm::cont::ArrayHandle<T> output;
+    output = this->Worklet.ProcessPointField(input);
 
     //use the same meta data as the input so we get the same field name, etc.
     result.AddField(fieldMeta.AsField(output));

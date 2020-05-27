@@ -82,12 +82,20 @@ const std::vector<vtkm::Float32>& GetExpectedPointData()
 const std::vector<vtkm::Float32>& GetExpectedCellData()
 {
   static std::vector<vtkm::Float32> expected = {
-    0.0f, 0.7f, 0.7f, 0.7f, 1.4f, 1.4f, 1.4f, 0.0f, 0.0f, 2.1f, 2.8f, 2.8f, 2.8f, 3.5f,
-    3.5f, 3.5f, 0.0f, 0.0f, 2.1f, 2.8f, 2.8f, 2.8f, 3.5f, 3.5f, 3.5f, 0.0f, 0.0f, 2.1f,
-    2.8f, 2.8f, 2.8f, 3.5f, 3.5f, 3.5f, 0.0f, 0.0f, 4.2f, 4.9f, 4.9f, 4.9f, 5.6f, 5.6f,
-    5.6f, 0.0f, 0.0f, 4.2f, 4.9f, 4.9f, 4.9f, 5.6f, 5.6f, 5.6f, 0.0f, 0.0f, 4.2f, 4.9f,
-    4.9f, 4.9f, 5.6f, 5.6f, 5.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
+    0.0f,          0.7f,          0.7f,          0.7f,          1.4f,          1.4f,
+    1.4f,          vtkm::Nan32(), vtkm::Nan32(), 2.1f,          2.8f,          2.8f,
+    2.8f,          3.5f,          3.5f,          3.5f,          vtkm::Nan32(), vtkm::Nan32(),
+    2.1f,          2.8f,          2.8f,          2.8f,          3.5f,          3.5f,
+    3.5f,          vtkm::Nan32(), vtkm::Nan32(), 2.1f,          2.8f,          2.8f,
+    2.8f,          3.5f,          3.5f,          3.5f,          vtkm::Nan32(), vtkm::Nan32(),
+    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
+    5.6f,          vtkm::Nan32(), vtkm::Nan32(), 4.2f,          4.9f,          4.9f,
+    4.9f,          5.6f,          5.6f,          5.6f,          vtkm::Nan32(), vtkm::Nan32(),
+    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
+    5.6f,          vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32()
   };
   return expected;
 }

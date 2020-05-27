@@ -85,6 +85,9 @@ public:
   bool GetMergeDuplicatePoints() const { return this->SharedState.MergeDuplicatePoints; }
 
   //----------------------------------------------------------------------------
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->SharedState.CellIdMap; }
+
+  //----------------------------------------------------------------------------
   template <typename ValueType,
             typename CellSetType,
             typename CoordinateSystem,

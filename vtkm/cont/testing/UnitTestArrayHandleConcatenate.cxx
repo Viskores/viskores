@@ -36,9 +36,10 @@ void TestArrayHandleConcatenate()
     array5 = vtkm::cont::make_ArrayHandleConcatenate(array3, array4);
   }
 
+  auto array5Portal = array5.ReadPortal();
   for (vtkm::Id index = 0; index < array5.GetNumberOfValues(); index++)
   {
-    std::cout << array5.ReadPortal().Get(index) << std::endl;
+    std::cout << array5Portal.Get(index) << std::endl;
   }
 }
 
@@ -59,8 +60,9 @@ void TestConcatenateEmptyArray()
   ArrayConcat arrConc(arr2, arr1);
   ArrayConcat2 arrConc2(arrConc, arr3);
 
+  auto arrConc2Portal = arrConc2.ReadPortal();
   for (vtkm::Id i = 0; i < arrConc2.GetNumberOfValues(); i++)
-    std::cout << arrConc2.ReadPortal().Get(i) << std::endl;
+    std::cout << arrConc2Portal.Get(i) << std::endl;
 }
 
 } // namespace UnitTestArrayHandleIndexNamespace

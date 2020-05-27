@@ -19,7 +19,8 @@ ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
 ctest_start(APPEND)
 
 set(test_exclusions
-  # placeholder for tests to exclude
+  # placeholder for tests to exclude provided by the env
+  $ENV{CTEST_EXCLUSIONS}
 )
 
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")
@@ -33,39 +34,13 @@ ctest_test(APPEND
   EXCLUDE "${test_exclusions}"
   REPEAT "UNTIL_PASS:3"
   )
+  message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
 
 if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
-  ctest_submit(PARTS Test)
+  ctest_submit(PARTS Test BUILD_ID build_id)
+  message(STATUS "Test submission build_id: ${build_id}")
 endif()
 
 if (test_result)
-  #Current ctest return value only tracks if tests failed on the initial run.
-  #So when we use repeat unit pass, and all tests now succede ctest will still
-  #report a failure, making our gitlab-ci pipeline look red when it isn't
-  #
-  #To work around this issue we check if `Testing/Temporary/LastTestsFailed_*.log`
-  #has a listing of tests that failed.
-  set(testing_log_dir "$ENV{CI_PROJECT_DIR}/build/Testing/Temporary")
-  file(GLOB tests_that_failed_log "${testing_log_dir}/LastTestsFailed_*.log")
- if(tests_that_failed_log)
-
-    #Make sure the file has tests listed
-    set(has_failing_tests true)
-    file(STRINGS "${tests_that_failed_log}" failed_tests)
-    list(LENGTH failed_tests length)
-    if(length LESS_EQUAL 1)
-      # each line looks like NUM:TEST_NAME
-      string(FIND "${failed_tests}" ":" location)
-      if(location EQUAL -1)
-        #no ":" so no tests actually failed after all the re-runs
-        set(has_failing_tests false)
-      endif()
-    endif()
-
-    if(has_failing_tests)
-      message(STATUS "Failing test from LastTestsFailed.log: \n ${failed_tests}")
-      message(FATAL_ERROR "Failed to test")
-    endif()
-  endif()
-
+  message(FATAL_ERROR "Failed to test")
 endif ()

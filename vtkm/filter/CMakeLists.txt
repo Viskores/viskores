@@ -45,6 +45,8 @@ set(headers
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
+  MapFieldMergeAverage.h
+  MapFieldPermutation.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
@@ -150,10 +152,13 @@ set(sources_device
   ContourInteger.cxx
   ContourScalar.cxx
   ExternalFaces.cxx
+  ExtractGeometry.cxx
   ExtractStructured.cxx
   GradientScalar.cxx
   GradientUniformPoints.cxx
   GradientVector.cxx
+  MapFieldMergeAverage.cxx
+  MapFieldPermutation.cxx
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx

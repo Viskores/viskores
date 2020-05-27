@@ -51,9 +51,21 @@ struct FieldNeighborhood
   }
 
   VTKM_EXEC
+  ValueType GetUnchecked(vtkm::IdComponent i, vtkm::IdComponent j, vtkm::IdComponent k) const
+  {
+    return Portal.Get(this->Boundary->NeighborIndexToFlatIndex(i, j, k));
+  }
+
+  VTKM_EXEC
   ValueType Get(const vtkm::Id3& ijk) const
   {
     return Portal.Get(this->Boundary->NeighborIndexToFlatIndexClamp(ijk));
+  }
+
+  VTKM_EXEC
+  ValueType GetUnchecked(const vtkm::Id3& ijk) const
+  {
+    return Portal.Get(this->Boundary->NeighborIndexToFlatIndex(ijk));
   }
 
   vtkm::exec::BoundaryState const* const Boundary;
@@ -83,9 +95,21 @@ struct FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>
   }
 
   VTKM_EXEC
+  ValueType GetUnchecked(vtkm::IdComponent i, vtkm::IdComponent j, vtkm::IdComponent k) const
+  {
+    return Portal.Get(this->Boundary->NeighborIndexToFullIndex(i, j, k));
+  }
+
+  VTKM_EXEC
   ValueType Get(const vtkm::IdComponent3& ijk) const
   {
     return Portal.Get(this->Boundary->NeighborIndexToFullIndexClamp(ijk));
+  }
+
+  VTKM_EXEC
+  ValueType GetUnchecked(const vtkm::IdComponent3& ijk) const
+  {
+    return Portal.Get(this->Boundary->NeighborIndexToFullIndex(ijk));
   }
 
   vtkm::exec::BoundaryState const* const Boundary;
