@@ -64,7 +64,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
@@ -528,8 +527,7 @@ int main(int argc, char* argv[])
       vdims[2] = static_cast<vtkm::Id>(dims[2]);
       inDataSet = dsb.Create(vdims);
     }
-    vtkm::cont::DataSetFieldAdd dsf;
-    dsf.AddPointField(inDataSet, "values", values);
+    inDataSet.AddPointField("values", values);
   }
 #else  // Create a multi-block dataset for multi-block DIY-paralle processing
   vtkm::cont::PartitionedDataSet inDataSet; // Partitioned variant of the input dataset
@@ -626,8 +624,7 @@ int main(int argc, char* argv[])
       std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
                                            (values.begin() + blockEnd));
 
-      vtkm::cont::DataSetFieldAdd dsf;
-      dsf.AddPointField(ds, "values", subValues);
+      ds.AddPointField("values", subValues);
       inDataSet.AppendPartition(ds);
     }
   }
