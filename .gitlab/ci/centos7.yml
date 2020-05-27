@@ -46,6 +46,8 @@ test:rhel8_test_centos7:
     - .rhel8
     - .cmake_test_linux
     - .only-default
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
     - build:centos7_gcc48
   needs:
