@@ -12,7 +12,6 @@
 #define vtk_m_filter_LagrangianStructures_h
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 

@@ -13,7 +13,6 @@
 
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -43,7 +42,7 @@ vtkm::cont::DataSet MakeWarpScalarTestDataSet()
 
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "scalefactor", scaleFactor);
+  dataSet.AddPointField("scalefactor", scaleFactor);
   return dataSet;
 }
 }

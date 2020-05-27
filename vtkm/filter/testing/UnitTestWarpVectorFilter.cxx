@@ -41,12 +41,12 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", vec1);
+  dataSet.AddPointField("vec1", vec1);
 
   vecType vector = vtkm::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(2.0));
   vtkm::cont::ArrayHandleConstant<vecType> vectorAH =
     vtkm::cont::make_ArrayHandleConstant(vector, dim * dim);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", vectorAH);
+  dataSet.AddPointField("vec2", vectorAH);
 
   return dataSet;
 }

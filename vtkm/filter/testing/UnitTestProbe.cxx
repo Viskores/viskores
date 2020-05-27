@@ -11,7 +11,6 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/CellDeepCopy.h>
@@ -33,8 +32,8 @@ vtkm::cont::DataSet MakeInputDataSet()
 
   auto input = vtkm::cont::DataSetBuilderUniform::Create(
     vtkm::Id2(4, 4), vtkm::make_Vec(0.0f, 0.0f), vtkm::make_Vec(1.0f, 1.0f));
-  vtkm::cont::DataSetFieldAdd::AddPointField(input, "pointdata", pvec);
-  vtkm::cont::DataSetFieldAdd::AddCellField(input, "celldata", cvec);
+  input.AddPointField("pointdata", pvec);
+  input.AddCellField("celldata", cvec);
   return input;
 }
 

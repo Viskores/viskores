@@ -29,8 +29,7 @@ void TestFieldToColors()
   table.SetBelowRangeColor(vtkm::Vec<float, 3>{ 0.0f, 0.0f, 1.0f }); //green
 
   vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(ds, "faux", data, nvals);
+  ds.AddPointField("faux", data, nvals);
 
   vtkm::filter::FieldToColors ftc(table);
   ftc.SetOutputToRGBA();
