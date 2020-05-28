@@ -476,11 +476,11 @@ int main(int argc, char* argv[])
     dims[1] = nCols;
     dims[2] = nSlices;
     auto tempField = inDataSet.GetField("values").GetData();
-    values.resize(tempField.GetNumberOfValues());
+    values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
     auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
     for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
     {
-      values[i] = static_cast<ValueType>(tempFieldHandle.Get(i));
+      values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
     }
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                "BOV reader not yet support in MPI mode by this example");
