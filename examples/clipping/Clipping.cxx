@@ -11,7 +11,7 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/filter/ClipWithField.h>
 
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
   clipFilter.SetClipValue(20.0);
   vtkm::cont::DataSet output = clipFilter.Execute(input);
 
-  vtkm::io::writer::VTKDataSetWriter writer("out_data.vtk");
+  vtkm::io::VTKDataSetWriter writer("out_data.vtk");
   writer.WriteDataSet(output);
 
   return 0;

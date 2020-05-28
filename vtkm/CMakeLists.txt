@@ -113,3 +113,6 @@ add_subdirectory(io)
 
 #add the source folder
 add_subdirectory(source)
+
+#add Pseudo Random Number Generator folder
+add_subdirectory(random)

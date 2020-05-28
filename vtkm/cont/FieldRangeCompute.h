@@ -75,6 +75,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(
   TypeList)
 {
   VTKM_IS_LIST(TypeList);
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
+                         "Cannot use vtkm::ListUniversal with FieldRangeCompute.");
   return vtkm::cont::detail::FieldRangeComputeImpl(pds, name, assoc, TypeList());
 }
 

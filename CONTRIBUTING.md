@@ -32,19 +32,19 @@ Before you begin, perform initial setup:
     This will prompt for your GitLab user name and configure a remote
     called `gitlab` to refer to it.
 
-5. (Optional but highly recommended.) 
+5. (Optional but highly recommended.)
     [Register with the VTK-m dashboard] on Kitware's CDash instance to
     better know how your code performs in regression tests. After
     registering and signing in, click on "All Dashboards" link in the upper
     left corner, scroll down and click "Subscribe to this project" on the
     right of VTK-m.
 
-6.  (Optional but highly recommended.) 
+6.  (Optional but highly recommended.)
     [Sign up for the VTK-m mailing list] to communicate with other
     developers and users.
 
 [GitLab Access]: https://gitlab.kitware.com/users/sign_in
-[Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/forks/new
+[Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/-/forks/new
 [Register with the VTK-m dashboard]: https://open.cdash.org/register.php
 [Sign up for the VTK-m mailing list]: http://vtk.org/mailman/listinfo/vtkm
 
@@ -108,6 +108,9 @@ idea of the feature or fix to be developed given just the branch name.
         This is required as VTK-m uses Git-LFS to efficiently support data
         files.
 
+4.  If you are adding a new feature or making sigificant changes to API,
+    make sure to add a entry to `docs/changelog`. This allows release
+    notes to properly capture all relevant changes.
 
 ### Guidelines for Commit Messages ###
 
@@ -175,7 +178,7 @@ upper right.
 When you [pushed your topic branch](#share-a-topic), it will provide you
 with a url of the form
 
-    https://gitlab.kitware.com/<username>/vtk-m/merge_requests/new
+    https://gitlab.kitware.com/<username>/vtk-m/-/merge_requests/new
 
 You can copy/paste that into your web browser to create a new merge
 request. Alternately, you can visit your fork in GitLab, browse to the
@@ -203,7 +206,7 @@ will be filled out for you.
 
 5.  In the "**Description**" field provide a high-level description of the
     change the topic makes and any relevant information about how to try
-    it. 
+    it.
     *   Use `@username` syntax to draw attention of specific developers.
         This syntax may be used anywhere outside literal text and code
         blocks.  Or, wait until the [next step](#review-a-merge-request)
@@ -225,6 +228,10 @@ will be filled out for you.
 
 6.  The "**Assign to**", "**Milestone**", and "**Labels**" fields may be
     left blank.
+
+7.  Enable the "**Allow commits from members who can merge to the target branch.**" option,
+    so that reviewers can modify the merge request. This allows reviewers to change
+    minor style issues without overwhelming the author with change requests.
 
 7.  Use the "**Submit merge request**" button to create the merge request
     and visit its page.
@@ -318,32 +325,49 @@ succeeds.
 
 ### Testing ###
 
-VTK-m has a [buildbot](http://buildbot.net) instance watching for merge
-requests to test. Each time a merge request is updated the buildbot user
-(@buildbot) will automatically trigger a new build on all VTK-m buildbot
-workers. The buildbot user (@buildbot) will respond with a comment linking
-to the CDash results when it schedules builds.
+Each time a merge request is created or updated automated testing
+is automatically triggered, and shows up under the pipeline tab.
 
-The buildbot user (@buildbot) will also respond to any comment with the
-form:
+Developers can track the status of the pipeline for a merge
+request by using the Pipeline tab on a merge request or by
+clicking on stage icons as shown below:
+
+![alt text](docs/build_stage.png "Pipeline")
+
+When trying to diagnose why a build or tests stage has failed it
+generally is easier to look at the pruned information reported
+on [VTK-m's CDash Dashboard](https://open.cdash.org/index.php?project=VTKM).
+To make it easier to see only the results for a given merge request
+you can click the `cdash` link under the external stage ( rightmost pipeline stage icon )
+
+![alt text](docs/external_stage.png "CDash Link")
+
+In addition to the gitlab pipelines the buildbot user (@buildbot) will respond
+with a comment linking to the CDash results when it schedules builds.
+
+The builds for VTK-m that show up as part of the `external` stage of the
+gitlab pipeline are driven via buildbot, and have a different workflow.
+When you need to do things such as retry a build, you must issue commands
+via comments of the following form. The buildbot user (@buildbot) will
+respond signify that the command has been executed
 
     Do: test
 
 The `Do: test` command accepts the following arguments:
 
-  * `--oneshot` 
+  * `--oneshot`
         only build the *current* hash of the branch; updates will not be
         built using this command
-  * `--stop` 
+  * `--stop`
         clear the list of commands for the merge request
-  * `--superbuild` 
+  * `--superbuild`
         build the superbuilds related to the project
-  * `--clear` 
+  * `--clear`
         clear previous commands before adding this command
-  * `--regex-include <arg>` or `-i <arg>` 
+  * `--regex-include <arg>` or `-i <arg>`
         only build on builders matching `<arg>` (a Python regular
         expression)
-  * `--regex-exclude <arg>` or `-e <arg>` 
+  * `--regex-exclude <arg>` or `-e <arg>`
         excludes builds on builders matching `<arg>` (a Python regular
         expression)
 
@@ -451,7 +475,7 @@ will stop running so that you can make changes. Make the changes you need,
 use `git add` to stage those changes, and then use
 
     $ git rebase --continue
-	
+
 to have git continue the rebase process. You can always run `git status` to
 get help about what to do next.
 

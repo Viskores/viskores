@@ -412,19 +412,17 @@ public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling1D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id,
-                                                          vtkm::Id globalIndexOffset = 0)
+                                                          vtkm::Id)
   {
-    return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation);
   }
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling3D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id3,
-                                                          vtkm::Id globalIndexOffset = 0)
+                                                          vtkm::Id3)
   {
-    return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
+    return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation);
   }
 };
 }

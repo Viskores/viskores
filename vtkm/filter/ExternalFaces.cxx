@@ -56,11 +56,40 @@ vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& inp
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {
     return output;
+  }
+}
+
+bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field)
+{
+  if (field.IsFieldPoint())
+  {
+    if (this->CompactPoints)
+    {
+      return this->Compactor.MapFieldOntoOutput(result, field);
+    }
+    else
+    {
+      result.AddField(field);
+      return true;
+    }
+  }
+  else if (field.IsFieldCell())
+  {
+    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIdMap(), result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }
 

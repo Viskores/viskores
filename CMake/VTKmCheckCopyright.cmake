@@ -15,7 +15,6 @@
 ## cmake -DVTKm_SOURCE_DIR=<VTKm_SOURCE_DIR> -P <VTKm_SOURCE_DIR>/CMake/VTKMCheckCopyright.cmake
 ##
 
-cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
 set(FILES_TO_CHECK
   *.txt
   *.cmake

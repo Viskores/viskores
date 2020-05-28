@@ -24,10 +24,6 @@ namespace worklet
 namespace gradient
 {
 
-template <typename T>
-using CellGradientInType = vtkm::List<T>;
-
-template <typename T>
 struct CellGradient : vtkm::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn,

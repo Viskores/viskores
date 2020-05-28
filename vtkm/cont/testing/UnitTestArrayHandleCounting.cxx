@@ -102,14 +102,17 @@ struct TemplatedTests
                      "Counting array using raw array handle + tag has wrong size.");
 
     ValueType properValue = startingValue;
+    auto arrayConstPortal = arrayConst.ReadPortal();
+    auto arrayMakePortal = arrayMake.ReadPortal();
+    auto arrayHandlePortal = arrayHandle.ReadPortal();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      VTKM_TEST_ASSERT(arrayConst.ReadPortal().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayConstPortal.Get(index) == properValue,
                        "Counting array using constructor has unexpected value.");
-      VTKM_TEST_ASSERT(arrayMake.ReadPortal().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayMakePortal.Get(index) == properValue,
                        "Counting array using make has unexpected value.");
 
-      VTKM_TEST_ASSERT(arrayHandle.ReadPortal().Get(index) == properValue,
+      VTKM_TEST_ASSERT(arrayHandlePortal.Get(index) == properValue,
                        "Counting array using raw array handle + tag has unexpected value.");
       properValue = properValue + step;
     }
@@ -127,6 +130,7 @@ void TestArrayHandleCounting()
   TemplatedTests<StringInt>()(StringInt(0), StringInt(1));
   TemplatedTests<StringInt>()(StringInt(10), StringInt(2));
 }
+
 
 } // namespace UnitTestArrayHandleCountingNamespace
 

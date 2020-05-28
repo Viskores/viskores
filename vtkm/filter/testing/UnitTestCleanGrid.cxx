@@ -72,6 +72,12 @@ void TestPointMerging()
   vtkm::cont::testing::MakeTestDataSet makeDataSet;
   vtkm::cont::DataSet baseData = makeDataSet.Make3DUniformDataSet3(vtkm::Id3(4, 4, 4));
 
+  //Convert the baseData implicit points to explicit points, since the contour
+  //filter for uniform data always does point merging
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> newcoords;
+  vtkm::cont::Algorithm::Copy(baseData.GetCoordinateSystem().GetData(), newcoords);
+  baseData.GetCoordinateSystem().SetData(newcoords);
+
   vtkm::filter::Contour marchingCubes;
   marchingCubes.SetIsoValue(0.05);
   marchingCubes.SetMergeDuplicatePoints(false);

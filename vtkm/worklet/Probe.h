@@ -257,6 +257,8 @@ public:
     return result;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIds() const { return this->CellIds; }
+
   //============================================================================
   struct HiddenPointsWorklet : public WorkletMapField
   {

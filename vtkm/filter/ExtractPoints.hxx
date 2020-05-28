@@ -41,7 +41,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   vtkm::cont::CellSetSingleType<> outCellSet;
   vtkm::worklet::ExtractPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy),
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                            coords.GetData(),
                            this->Function,
                            this->ExtractInside);
@@ -56,7 +56,7 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
   {
     this->Compactor.SetCompactPointFields(true);
     this->Compactor.SetMergePoints(false);
-    return this->Compactor.Execute(output, PolicyDefault{});
+    return this->Compactor.Execute(output);
   }
   else
   {
@@ -65,29 +65,35 @@ inline vtkm::cont::DataSet ExtractPoints::DoExecute(const vtkm::cont::DataSet& i
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool ExtractPoints::DoMapField(
+template <typename DerivedPolicy>
+inline VTKM_CONT bool ExtractPoints::MapFieldOntoOutput(
   vtkm::cont::DataSet& result,
-  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::cont::Field& field,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // point data is copied as is because it was not collapsed
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
     if (this->CompactPoints)
     {
-      return this->Compactor.DoMapField(result, input, fieldMeta, policy);
+      return this->Compactor.MapFieldOntoOutput(result, field, policy);
     }
     else
     {
-      result.AddField(fieldMeta.AsField(input));
+      result.AddField(field);
       return true;
     }
   }
-
-  // cell data does not apply
-  return false;
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
+    return true;
+  }
+  else
+  {
+    // cell data does not apply
+    return false;
+  }
 }
 }
 }

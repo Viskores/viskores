@@ -17,9 +17,6 @@
 
 #include <vtkm/filter/GhostCellRemove.h>
 
-#include <vtkm/io/writer/VTKDataSetWriter.h>
-
-
 namespace
 {
 

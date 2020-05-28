@@ -145,7 +145,7 @@ struct InvocationToFetch
       typename Invocation::DeviceAdapterTag,
       typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type>::type;
 
-  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType>;
+  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ExecObjectType>;
 
   VTKM_EXEC static ExecObjectType GetParameterImpl(const Invocation&, std::true_type)
   {
@@ -201,7 +201,7 @@ $for(param_index in range(1, num_params+1))\
   using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
   using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
-  typename FetchType$(param_index)::ValueType $pname(param_index) =
+  auto $pname(param_index) =
     fetch$(param_index).Load(threadIndices, FetchInfo$(param_index)::GetParameter(invocation));
 $endfor\
 
@@ -217,7 +217,7 @@ $endfor\
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  auto $pname(0) = typename ReturnFetchType::ValueType(worklet($arg_list(num_params)));
+  auto $pname(0) = worklet($arg_list(num_params));
 
 $for(param_index in range(1, num_params+1))\
   fetch$(param_index).Store(threadIndices, FetchInfo$(param_index)::GetParameter(invocation), $pname(param_index));
@@ -262,7 +262,7 @@ $for(param_index in range(1, num_params+1))\
   using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
   using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
-  typename FetchType$(param_index)::ValueType $pname(param_index) =
+  auto $pname(param_index) =
     fetch$(param_index).Load(threadIndices, FetchInfo$(param_index)::GetParameter(invocation));
 $endfor\
 

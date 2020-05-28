@@ -25,14 +25,8 @@ struct TypeCheckTagKeys
 {
 };
 
-// A more specific specialization that actually checks for Keys types is
-// implemented in vtkm/worklet/Keys.h. That class is not accessible from here
-// due to VTK-m package dependencies.
-template <typename Type>
-struct TypeCheck<TypeCheckTagKeys, Type>
-{
-  static constexpr bool value = false;
-};
+// The specialization that actually checks for Keys types is implemented in vtkm/worklet/Keys.h.
+// That class is not accessible from here due to VTK-m package dependencies.
 }
 }
 } // namespace vtkm::cont::arg

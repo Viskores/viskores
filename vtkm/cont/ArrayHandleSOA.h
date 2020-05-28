@@ -677,6 +677,7 @@ struct Serialization<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagSO
 };
 
 } // namespace mangled_diy_namespace
+// @endcond SERIALIZATION
 
 //=============================================================================
 // Precompiled instances

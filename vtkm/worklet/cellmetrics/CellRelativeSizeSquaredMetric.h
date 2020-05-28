@@ -61,7 +61,7 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
                                                 const PointCoordVecType& pts,
                                                 const OutType& avgArea,
                                                 CellShapeType shape,
-                                                const vtkm::exec::FunctorBase&)
+                                                vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -77,15 +77,15 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
                                                 const PointCoordVecType& pts,
                                                 const OutType& avgArea,
                                                 vtkm::CellShapeTagTriangle tag,
-                                                const vtkm::exec::FunctorBase& worklet)
+                                                vtkm::ErrorCode& ec)
 {
-  UNUSED(worklet);
+  UNUSED(ec);
   if (numPts != 3)
   {
-    worklet.RaiseError("Edge ratio metric(triangle) requires 3 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(-1.);
   }
-  OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
+  OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
   OutType R = A / avgArea;
   if (R == OutType(0.))
     return OutType(0.);
@@ -98,15 +98,15 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
                                                 const PointCoordVecType& pts,
                                                 const OutType& avgArea,
                                                 vtkm::CellShapeTagQuad tag,
-                                                const vtkm::exec::FunctorBase& worklet)
+                                                vtkm::ErrorCode& ec)
 {
-  UNUSED(worklet);
+  UNUSED(ec);
   if (numPts != 4)
   {
-    worklet.RaiseError("Edge ratio metric(quadrilateral) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(-1.);
   }
-  OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
+  OutType A = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
   OutType R = A / avgArea;
   if (R == OutType(0.))
     return OutType(0.);
@@ -121,15 +121,15 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
                                                 const PointCoordVecType& pts,
                                                 const OutType& avgVolume,
                                                 vtkm::CellShapeTagTetra tag,
-                                                const vtkm::exec::FunctorBase& worklet)
+                                                vtkm::ErrorCode& ec)
 {
-  UNUSED(worklet);
+  UNUSED(ec);
   if (numPts != 4)
   {
-    worklet.RaiseError("Edge ratio metric(tetrahedral) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(-1.);
   }
-  OutType V = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, worklet);
+  OutType V = vtkm::exec::CellMeasure<OutType>(numPts, pts, tag, ec);
   OutType R = V / avgVolume;
   if (R == OutType(0.))
     return OutType(0.);
@@ -142,13 +142,13 @@ VTKM_EXEC OutType CellRelativeSizeSquaredMetric(const vtkm::IdComponent& numPts,
                                                 const PointCoordVecType& pts,
                                                 const OutType& avgVolume,
                                                 vtkm::CellShapeTagHexahedron tag,
-                                                const vtkm::exec::FunctorBase& worklet)
+                                                vtkm::ErrorCode& ec)
 {
   UNUSED(tag);
-  UNUSED(worklet);
+  UNUSED(ec);
   if (numPts != 8)
   {
-    worklet.RaiseError("Edge ratio metric(hexahedral) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(-1.);
   }
   OutType X1x = (pts[1][0] - pts[0][0]) + (pts[2][0] - pts[3][0]) + (pts[5][0] - pts[4][0]) +

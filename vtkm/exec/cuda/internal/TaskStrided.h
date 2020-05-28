@@ -54,11 +54,10 @@ template <typename WType, typename IType>
 class TaskStrided1D : public TaskStrided
 {
 public:
-  TaskStrided1D(const WType& worklet, const IType& invocation, vtkm::Id globalIndexOffset = 0)
+  TaskStrided1D(const WType& worklet, const IType& invocation)
     : TaskStrided()
     , Worklet(worklet)
     , Invocation(invocation)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     this->SetErrorBufferFunction = &TaskStridedSetErrorBuffer<WType>;
     //Bind the Worklet to void*
@@ -78,8 +77,7 @@ public:
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
                                        this->Invocation.ThreadToOutputMap,
-                                       this->Invocation.GetInputDomain(),
-                                       this->GlobalIndexOffset));
+                                       this->Invocation.GetInputDomain()));
     }
   }
 
@@ -90,7 +88,6 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const IType Invocation;
-  const vtkm::Id GlobalIndexOffset;
 };
 
 template <typename WType>
@@ -123,11 +120,10 @@ template <typename WType, typename IType>
 class TaskStrided3D : public TaskStrided
 {
 public:
-  TaskStrided3D(const WType& worklet, const IType& invocation, vtkm::Id globalIndexOffset = 0)
+  TaskStrided3D(const WType& worklet, const IType& invocation)
     : TaskStrided()
     , Worklet(worklet)
     , Invocation(invocation)
-    , GlobalIndexOffset(globalIndexOffset)
   {
     this->SetErrorBufferFunction = &TaskStridedSetErrorBuffer<WType>;
     //Bind the Worklet to void*
@@ -156,8 +152,7 @@ public:
                                        this->Invocation.OutputToInputMap,
                                        this->Invocation.VisitArray,
                                        this->Invocation.ThreadToOutputMap,
-                                       this->Invocation.GetInputDomain(),
-                                       this->GlobalIndexOffset));
+                                       this->Invocation.GetInputDomain()));
     }
   }
 
@@ -168,7 +163,6 @@ private:
   // hold by reference to reduce the number of copies, it is not possible
   // currently.
   const IType Invocation;
-  const vtkm::Id GlobalIndexOffset;
 };
 
 template <typename WType>

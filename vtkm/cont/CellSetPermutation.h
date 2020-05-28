@@ -349,17 +349,25 @@ public:
   VTKM_CONT
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellIndex) const override
   {
+    // Looping over GetNumberOfPointsInCell is a performance bug.
     return this->FullCellSet.GetNumberOfPointsInCell(
       this->ValidCellIds.ReadPortal().Get(cellIndex));
   }
 
+  VTKM_DEPRECATED(1.6,
+                  "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() "
+                  "and loop over the Get.")
   vtkm::UInt8 GetCellShape(vtkm::Id id) const override
   {
+    // Looping over GetCellShape is a performance bug.
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
     return this->FullCellSet.GetCellShape(this->ValidCellIds.ReadPortal().Get(id));
+    VTKM_DEPRECATED_SUPPRESS_END
   }
 
   void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override
   {
+    // Looping over GetCellPointsIdx is a performance bug.
     return this->FullCellSet.GetCellPointIds(this->ValidCellIds.ReadPortal().Get(id), ptids);
   }
 

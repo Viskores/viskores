@@ -13,6 +13,7 @@
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetList.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Logging.h>
 

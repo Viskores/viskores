@@ -54,21 +54,21 @@ namespace arg
 template <typename T>
 struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic3D,
              TestPortal<T>>
 {
   using ValueType = T;
   using PortalType = const TestPortal<T>&;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesBasic3D;
 
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, PortalType field) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, PortalType field) const
   {
     return field.Get(indices.GetInputIndex3D());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, PortalType, ValueType) const {}
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, PortalType, ValueType) const
+  {
+  }
 };
 }
 }
@@ -86,7 +86,6 @@ struct FetchArrayDirectIn3DTests
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesBasic3D,
                                              TestPortal<T>>;
 
     FetchType fetch;
@@ -102,7 +101,7 @@ struct FetchArrayDirectIn3DTests
         for (vtkm::Id i = 0; i < ARRAY_SIZE[0]; i++, index1d++)
         {
           index3d[0] = i;
-          vtkm::exec::arg::ThreadIndicesBasic3D indices(index3d, index1d, index1d, 0, index1d, 0);
+          vtkm::exec::arg::ThreadIndicesBasic3D indices(index3d, index1d, index1d, 0, index1d);
           T value = fetch.Load(indices, execObject);
           VTKM_TEST_ASSERT(test_equal(value, TestValue(index1d, T())),
                            "Got invalid value from Load.");

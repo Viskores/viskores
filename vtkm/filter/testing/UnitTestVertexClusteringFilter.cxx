@@ -73,9 +73,10 @@ void TestVertexClustering()
   auto pointArray = output.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
+  auto pointArrayPortal = pointArray.ReadPortal();
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
   {
-    const PointType& p1 = pointArray.ReadPortal().Get(i);
+    const PointType& p1 = pointArrayPortal.Get(i);
     PointType p2 = vtkm::make_Vec(output_point[i][0], output_point[i][1], output_point[i][2]);
     VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
   }

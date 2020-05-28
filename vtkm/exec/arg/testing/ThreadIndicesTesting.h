@@ -53,7 +53,7 @@ public:
   vtkm::IdComponent GetVisitIndex() const { return this->VisitIndex; }
 
   VTKM_EXEC_CONT
-  vtkm::Id GetGlobalIndex() const { return this->OutputIndex; }
+  vtkm::Id GetThreadIndex() const { return this->OutputIndex; }
 
 private:
   vtkm::Id InputIndex;

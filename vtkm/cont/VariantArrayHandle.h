@@ -19,6 +19,7 @@
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CastAndCall.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/StorageList.h>
@@ -62,6 +63,9 @@ namespace cont
 template <typename TypeList>
 class VTKM_ALWAYS_EXPORT VariantArrayHandleBase
 {
+  VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
+                         "Cannot use vtkm::ListUniversal with VariantArrayHandle.");
+
 public:
   VTKM_CONT
   VariantArrayHandleBase() = default;

@@ -70,9 +70,7 @@ VTK-m Requires:
       + MSVC 2015+
       + Intel 17.0.4+
   + [CMake](http://www.cmake.org/download/)
-      + CMake 3.8+
-      + CMake 3.11+ (for Visual Studio generator)
-      + CMake 3.12+ (for OpenMP support)
+      + CMake 3.12+
       + CMake 3.13+ (for CUDA support)
 
 Optional dependencies are:
@@ -105,18 +103,18 @@ Optional dependencies are:
 
 VTK-m has been tested on the following configurations:c
   + On Linux
-      + GCC 4.8.5, 5.4.0, 6.4.0, 7.3.0, Clang 5.0, 6.0, 7.0, Intel 17.0.4, Intel 19.0.0
-      + CMake 3.13.3, 3.14.1
-      + CUDA 9.2.148, 10.0.130, 10.1.105
+      + GCC 4.8.5, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
+      + CMake 3.12, 3.13, 3.16, 3.17
+      + CUDA 9.2.148, 10.0.130, 10.1.105, 10.2.89
       + TBB 4.4 U2, 2017 U7
   + On Windows
       + Visual Studio 2015, 2017
-      + CMake 3.8.2, 3.11.1, 3.12.4
+      + CMake 3.12, 3.17
       + CUDA 10.1
       + TBB 2017 U3, 2018 U2
   + On MacOS
       + AppleClang 9.1
-      + CMake 3.12.3
+      + CMake 3.12
       + TBB 2018
 
 
@@ -159,7 +157,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/Range.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -168,7 +166,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
+vtkm::io::VTKDataSetReader reader("path/to/vtk_image_file.vtk");
 vtkm::cont::DataSet inputData = reader.ReadDataSet();
 std::string fieldName = "scalars";
 
@@ -204,7 +202,7 @@ scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
 vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
 view.Initialize();
 view.Paint();
-view.SaveAs("demo_output.pnm");
+view.SaveAs("demo_output.png");
 ```
 
 A minimal CMakeLists.txt such as the following one can be used to build this
@@ -232,7 +230,7 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m Doxygen]:            http://m.vtk.org/documentation/
 [VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
 [VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/issues
+[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/-/issues
 [VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx
 [VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm

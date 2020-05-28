@@ -196,26 +196,26 @@ void TestContourUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
-  vtkm::worklet::Contour isosurfaceFilter;
-  isosurfaceFilter.SetMergeDuplicatePoints(false);
+  vtkm::worklet::Contour contour;
+  contour.SetMergeDuplicatePoints(false);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f, 0.5f };
+  const vtkm::Id numContours = static_cast<vtkm::Id>(contourValue.size());
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
-                                     cellSet,
-                                     dataSet.GetCoordinateSystem(),
-                                     pointFieldArray,
-                                     verticesArray,
-                                     normalsArray);
+  auto result = contour.Run(contourValue,
+                            cellSet,
+                            dataSet.GetCoordinateSystem(),
+                            pointFieldArray,
+                            verticesArray,
+                            normalsArray);
 
-  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray);
+  scalarsArray = contour.ProcessPointField(pointFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray);
+  cellFieldArrayOut = contour.ProcessCellField(cellFieldArray);
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
@@ -232,9 +232,37 @@ void TestContourUniformGrid()
 
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
 
-  VTKM_TEST_ASSERT(result.GetNumberOfCells() == 160);
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == (160 * numContours));
 
-  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == 480);
+  VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == (72 * numContours));
+
+  // Verify that multiple contours of the same iso value are identical
+  {
+    auto normal_portal = normalsArray.ReadPortal();
+    for (vtkm::Id i = 0; i < 72; ++i)
+    {
+      for (vtkm::Id j = 1; j < numContours; ++j)
+      {
+        vtkm::Id jIndex = i + (72 * j);
+        VTKM_TEST_ASSERT(test_equal(normal_portal.Get(i), normal_portal.Get(jIndex)),
+                         "multi contour failed");
+      }
+    }
+
+    auto outCellPortal =
+      result.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint())
+        .ReadPortal();
+    for (vtkm::Id i = 0; i < 480; ++i)
+    { //(3*160) as we are iterating triangle soup so the length is numOfCells*3
+      for (vtkm::Id j = 1; j < numContours; ++j)
+      {
+        vtkm::Id jIndex = i + (480 * j);
+        vtkm::Id expectedValue = (72 * j) + outCellPortal.Get(i);
+        VTKM_TEST_ASSERT(test_equal(outCellPortal.Get(jIndex), expectedValue),
+                         "multi contour failed");
+      }
+    }
+  }
 }
 
 void TestContourExplicit()
@@ -248,7 +276,7 @@ void TestContourExplicit()
   DataSetGenerator dataSetGenerator;
 
   vtkm::IdComponent Dimension = 10;
-  vtkm::Float32 contourValue = vtkm::Float32(.45);
+  std::vector<vtkm::Float32> contourValue{ 0.45f };
 
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
@@ -265,7 +293,7 @@ void TestContourExplicit()
   Contour.SetMergeDuplicatePoints(false);
 
   auto result = Contour.Run(
-    &contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
+    contourValue, cellSet, dataSet.GetCoordinateSystem(), contourArray, vertices, normals);
 
   DataHandle scalars;
 
@@ -322,7 +350,7 @@ void TestContourClipped()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
   clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
-  vtkm::Float32 contourValue = 0.5f;
+  std::vector<vtkm::Float32> contourValue{ 0.5f };
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
@@ -330,8 +358,7 @@ void TestContourClipped()
   vtkm::worklet::Contour isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
-  auto result = isosurfaceFilter.Run(&contourValue,
-                                     1,
+  auto result = isosurfaceFilter.Run(contourValue,
                                      cellSet,
                                      clipped.GetCoordinateSystem(),
                                      pointFieldArray,

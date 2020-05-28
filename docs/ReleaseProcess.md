@@ -179,7 +179,7 @@ contributed to VTK-m since our last release. The 1.5.0 release contains
 over 100000 merge requests, and 100000 entries to the changelog .
 
 Below are all the entries in the changelog, with more details at (
-https://gitlab.kitware.com/vtk/vtk-m/tags/vX.Y.0 ) or in the vtkm
+https://gitlab.kitware.com/vtk/vtk-m/-/tags/vX.Y.0 ) or in the vtkm
 repository at `docs/X.Y/release-notes.md`
 
 1. Core

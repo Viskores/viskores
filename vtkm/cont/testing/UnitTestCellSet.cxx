@@ -117,13 +117,13 @@ void TestAgainstBaseLine(const vtkm::cont::CellSet& cellset,
     : PermutationArray.GetNumberOfValues();
   VTKM_TEST_ASSERT(numCells == expectedNumCell, "Wrong number of cells");
 
+  auto permutationPortal = PermutationArray.ReadPortal();
   for (vtkm::Id i = 0; i < numCells; ++i)
   {
     VTKM_TEST_ASSERT(cellset.GetCellShape(i) == vtkm::CELL_SHAPE_HEXAHEDRON, "Wrong shape");
     VTKM_TEST_ASSERT(cellset.GetNumberOfPointsInCell(i) == 8, "Wrong number of points-of-cell");
 
-    vtkm::Id baseLineCellId =
-      (flag == IsPermutationCellSet::YES) ? PermutationArray.ReadPortal().Get(i) : i;
+    vtkm::Id baseLineCellId = (flag == IsPermutationCellSet::YES) ? permutationPortal.Get(i) : i;
     auto baseLinePointIds = baseLineStructure.GetPointsOfCell(baseLineCellId);
 
     vtkm::Id pointIds[8];

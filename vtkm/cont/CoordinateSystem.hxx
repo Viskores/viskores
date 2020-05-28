@@ -57,13 +57,6 @@ VTKM_CONT CoordinateSystem::CoordinateSystem(
 }
 
 template <typename T, typename Storage>
-VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
-                                             const vtkm::cont::ArrayHandle<T, Storage>& data)
-  : Superclass(name, Association::POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
-{
-}
-
-template <typename T, typename Storage>
 VTKM_CONT void CoordinateSystem::SetData(const vtkm::cont::ArrayHandle<T, Storage>& newdata)
 {
   this->SetData(vtkm::cont::ArrayHandleVirtualCoordinates(newdata));

@@ -15,7 +15,6 @@
 #include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/BitField.h>
@@ -570,49 +569,6 @@ public:
   }
 
   //--------------------------------------------------------------------------
-  // Streaming Reduce
-  template <typename T, typename U, class CIn>
-  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     U initialValue)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
-  }
-
-  template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     U initialValue,
-                                     BinaryFunctor binary_functor)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    vtkm::Id fullSize = input.GetNumberOfValues();
-    vtkm::Id blockSize = fullSize / numBlocks;
-    if (fullSize % numBlocks != 0)
-      blockSize += 1;
-
-    U lastResult = vtkm::TypeTraits<U>::ZeroInitialization();
-    for (vtkm::Id block = 0; block < numBlocks; block++)
-    {
-      vtkm::Id numberOfInstances = blockSize;
-      if (block == numBlocks - 1)
-        numberOfInstances = fullSize - blockSize * block;
-
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>> streamIn(
-        input, block, blockSize, numberOfInstances);
-
-      if (block == 0)
-        lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
-      else
-        lastResult = DerivedAlgorithm::Reduce(streamIn, lastResult, binary_functor);
-    }
-    return lastResult;
-  }
-
-  //--------------------------------------------------------------------------
   // Reduce By Key
   template <typename T,
             typename U,
@@ -663,7 +619,7 @@ public:
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
-      vtkm::cont::ArrayHandle<U, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<U> reducedValues;
 
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);
@@ -858,63 +814,6 @@ public:
   }
 
   //--------------------------------------------------------------------------
-  // Streaming exclusive scan
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    return DerivedAlgorithm::StreamingScanExclusive(
-      numBlocks, input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
-  }
-
-  template <typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output,
-                                            BinaryFunctor binary_functor,
-                                            const T& initialValue)
-  {
-    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
-
-    vtkm::Id fullSize = input.GetNumberOfValues();
-    vtkm::Id blockSize = fullSize / numBlocks;
-    if (fullSize % numBlocks != 0)
-      blockSize += 1;
-
-    T lastResult = vtkm::TypeTraits<T>::ZeroInitialization();
-    for (vtkm::Id block = 0; block < numBlocks; block++)
-    {
-      vtkm::Id numberOfInstances = blockSize;
-      if (block == numBlocks - 1)
-        numberOfInstances = fullSize - blockSize * block;
-
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>> streamIn(
-        input, block, blockSize, numberOfInstances);
-
-      vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, COut>> streamOut(
-        output, block, blockSize, numberOfInstances);
-
-      if (block == 0)
-      {
-        streamOut.AllocateFullArray(fullSize);
-        lastResult =
-          DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, initialValue);
-      }
-      else
-      {
-        lastResult =
-          DerivedAlgorithm::ScanExclusive(streamIn, streamOut, binary_functor, lastResult);
-      }
-
-      streamOut.SyncControlArray();
-    }
-    return lastResult;
-  }
-
-  //--------------------------------------------------------------------------
   // Scan Inclusive
   template <typename T, class CIn, class COut>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
@@ -1013,7 +912,7 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      vtkm::cont::ArrayHandle<ValueT, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<ValueT> reducedValues;
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);

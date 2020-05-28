@@ -21,6 +21,7 @@ enum class ErrorCode
   Success,
   InvalidShapeId,
   InvalidNumberOfPoints,
+  InvalidCellMetric,
   WrongShapeIdForTagType,
   InvalidPointId,
   InvalidEdgeId,
@@ -46,6 +47,8 @@ inline const char* ErrorString(vtkm::ErrorCode code) noexcept
       return "Invalid shape id";
     case vtkm::ErrorCode::InvalidNumberOfPoints:
       return "Invalid number of points";
+    case vtkm::ErrorCode::InvalidCellMetric:
+      return "Invalid cell metric";
     case vtkm::ErrorCode::WrongShapeIdForTagType:
       return "Wrong shape id for tag type";
     case vtkm::ErrorCode::InvalidPointId:

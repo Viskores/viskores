@@ -44,24 +44,20 @@ struct ValueCount : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template <typename FetchTag, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagValueCount,
-             vtkm::exec::arg::ThreadIndicesReduceByKey,
-             ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagValueCount, ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesReduceByKey;
 
   using ValueType = vtkm::IdComponent;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetNumberOfValues();
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }

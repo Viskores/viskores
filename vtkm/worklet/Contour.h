@@ -13,9 +13,11 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 
 #include <vtkm/worklet/contour/CommonState.h>
 #include <vtkm/worklet/contour/FieldPropagation.h>
+#include <vtkm/worklet/contour/FlyingEdges.h>
 #include <vtkm/worklet/contour/MarchingCells.h>
 
 
@@ -23,6 +25,41 @@ namespace vtkm
 {
 namespace worklet
 {
+
+
+namespace contour
+{
+struct DeduceCoordType
+{
+  template <typename CoordinateType, typename CellSetType, typename... Args>
+  void operator()(const CoordinateType& coords,
+                  const CellSetType& cells,
+                  vtkm::cont::CellSetSingleType<>& result,
+                  Args&&... args) const
+  {
+    result = marching_cells::execute(cells, coords, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& coords,
+                  const vtkm::cont::CellSetStructured<3>& cells,
+                  vtkm::cont::CellSetSingleType<>& result,
+                  Args&&... args) const
+  {
+    result = flying_edges::execute(cells, coords, std::forward<Args>(args)...);
+  }
+};
+
+struct DeduceCellType
+{
+  template <typename CellSetType, typename CoordinateType, typename... Args>
+  void operator()(const CellSetType& cells, CoordinateType&& coordinateSystem, Args&&... args) const
+  {
+    vtkm::cont::CastAndCall(
+      coordinateSystem, contour::DeduceCoordType{}, cells, std::forward<Args>(args)...);
+  }
+};
+}
 
 /// \brief Compute the isosurface of a given 3D data set, supports all
 /// linear cell types
@@ -48,6 +85,9 @@ public:
   bool GetMergeDuplicatePoints() const { return this->SharedState.MergeDuplicatePoints; }
 
   //----------------------------------------------------------------------------
+  vtkm::cont::ArrayHandle<vtkm::Id> GetCellIdMap() const { return this->SharedState.CellIdMap; }
+
+  //----------------------------------------------------------------------------
   template <typename ValueType,
             typename CellSetType,
             typename CoordinateSystem,
@@ -55,8 +95,7 @@ public:
             typename CoordinateType,
             typename StorageTagVertices>
   vtkm::cont::CellSetSingleType<> Run(
-    const ValueType* const isovalues,
-    const vtkm::Id numIsoValues,
+    const std::vector<ValueType>& isovalues,
     const CellSetType& cells,
     const CoordinateSystem& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
@@ -67,15 +106,14 @@ public:
 
     vtkm::cont::CellSetSingleType<> outputCells;
     vtkm::cont::CastAndCall(cells,
-                            DeduceCellType{},
-                            this,
+                            contour::DeduceCellType{},
+                            coordinateSystem,
                             outputCells,
                             isovalues,
-                            numIsoValues,
-                            coordinateSystem,
                             input,
                             vertices,
-                            normals);
+                            normals,
+                            this->SharedState);
     return outputCells;
   }
 
@@ -88,8 +126,7 @@ public:
             typename StorageTagVertices,
             typename StorageTagNormals>
   vtkm::cont::CellSetSingleType<> Run(
-    const ValueType* const isovalues,
-    const vtkm::Id numIsoValues,
+    const std::vector<ValueType>& isovalues,
     const CellSetType& cells,
     const CoordinateSystem& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
@@ -100,15 +137,14 @@ public:
 
     vtkm::cont::CellSetSingleType<> outputCells;
     vtkm::cont::CastAndCall(cells,
-                            DeduceCellType{},
-                            this,
+                            contour::DeduceCellType{},
+                            coordinateSystem,
                             outputCells,
                             isovalues,
-                            numIsoValues,
-                            coordinateSystem,
                             input,
                             vertices,
-                            normals);
+                            normals,
+                            this->SharedState);
     return outputCells;
   }
 
@@ -149,45 +185,6 @@ public:
   void ReleaseCellMapArrays() { this->SharedState.CellIdMap.ReleaseResources(); }
 
 private:
-  struct DeduceCellType
-  {
-    template <typename CellSetType, typename ContourAlg, typename... Args>
-    void operator()(const CellSetType& cells,
-                    ContourAlg* contour,
-                    vtkm::cont::CellSetSingleType<>& result,
-                    Args&&... args) const
-    {
-      result = contour->DoRun(cells, std::forward<Args>(args)...);
-    }
-  };
-
-  //----------------------------------------------------------------------------
-  template <typename ValueType,
-            typename CellSetType,
-            typename CoordinateSystem,
-            typename StorageTagField,
-            typename StorageTagVertices,
-            typename StorageTagNormals,
-            typename CoordinateType>
-  vtkm::cont::CellSetSingleType<> DoRun(
-    const CellSetType& cells,
-    const ValueType* isovalues,
-    const vtkm::Id numIsoValues,
-    const CoordinateSystem& coordinateSystem,
-    const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
-    vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices> vertices,
-    vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagNormals> normals)
-  {
-    return worklet::marching_cells::execute(isovalues,
-                                            numIsoValues,
-                                            cells,
-                                            coordinateSystem,
-                                            inputField,
-                                            vertices,
-                                            normals,
-                                            this->SharedState);
-  }
-
   vtkm::worklet::contour::CommonState SharedState;
 };
 }

@@ -10,16 +10,20 @@
 #ifndef vtk_m_filter_Triangulate_hxx
 #define vtk_m_filter_Triangulate_hxx
 
+#include <vtkm/filter/Triangulate.h>
+
+#include <vtkm/filter/MapFieldPermutation.h>
+
 namespace
 {
 
 class DeduceCellSet
 {
-  mutable vtkm::worklet::Triangulate Worklet;
+  vtkm::worklet::Triangulate& Worklet;
   vtkm::cont::CellSetSingleType<>& OutCellSet;
 
 public:
-  DeduceCellSet(vtkm::worklet::Triangulate worklet, vtkm::cont::CellSetSingleType<>& outCellSet)
+  DeduceCellSet(vtkm::worklet::Triangulate& worklet, vtkm::cont::CellSetSingleType<>& outCellSet)
     : Worklet(worklet)
     , OutCellSet(outCellSet)
   {
@@ -70,7 +74,7 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet;
   DeduceCellSet triangulate(this->Worklet, outCellSet);
 
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy), triangulate);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), triangulate);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -81,29 +85,33 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Triangulate::DoMapField(vtkm::cont::DataSet& result,
-                                              const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                                              const vtkm::filter::FieldMetadata& fieldMeta,
-                                              vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Triangulate::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                      const vtkm::cont::Field& field,
+                                                      vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  // point data is copied as is because it was not collapsed
-  if (fieldMeta.IsPointField())
+  if (field.IsFieldPoint())
   {
-    result.AddField(fieldMeta.AsField(input));
+    // point data is copied as is because it was not collapsed
+    result.AddField(field);
     return true;
   }
-
-  // cell data must be scattered to the cells created per input cell
-  if (fieldMeta.IsCellField())
+  else if (field.IsFieldCell())
   {
-    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
-
-    result.AddField(fieldMeta.AsField(output));
+    // cell data must be scattered to the cells created per input cell
+    vtkm::cont::ArrayHandle<vtkm::Id> permutation =
+      this->Worklet.GetOutCellScatter().GetOutputToInputMap();
+    return vtkm::filter::MapFieldPermutation(field, permutation, result);
+  }
+  else if (field.IsFieldGlobal())
+  {
+    result.AddField(field);
     return true;
   }
-
-  return false;
+  else
+  {
+    return false;
+  }
 }
 }
 }

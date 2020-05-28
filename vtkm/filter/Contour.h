@@ -14,6 +14,8 @@
 #include <vtkm/filter/vtkm_filter_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
+#include <vtkm/filter/MapFieldPermutation.h>
+
 #include <vtkm/worklet/Contour.h>
 
 namespace vtkm
@@ -111,6 +113,35 @@ public:
                                 const vtkm::filter::FieldMetadata& fieldMeta,
                                 vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  {
+    if (field.IsFieldPoint())
+    {
+      // If the field is a point field, then we need to do a custom interpolation of the points.
+      // In this case, we need to call the superclass's MapFieldOntoOutput, which will in turn
+      // call our DoMapField.
+      return this->FilterDataSetWithField<Contour>::MapFieldOntoOutput(result, field, policy);
+    }
+    else if (field.IsFieldCell())
+    {
+      // Use the precompiled field permutation function.
+      vtkm::cont::ArrayHandle<vtkm::Id> permutation = this->Worklet.GetCellIdMap();
+      return vtkm::filter::MapFieldPermutation(field, permutation, result);
+    }
+    else if (field.IsFieldGlobal())
+    {
+      result.AddField(field);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -119,20 +150,12 @@ public:
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             vtkm::filter::PolicyBase<DerivedPolicy>)
   {
+    // All other conditions should be handled by MapFieldOntoOutput directly.
+    VTKM_ASSERT(fieldMeta.IsPointField());
+
     vtkm::cont::ArrayHandle<T> fieldArray;
 
-    if (fieldMeta.IsPointField())
-    {
-      fieldArray = this->Worklet.ProcessPointField(input);
-    }
-    else if (fieldMeta.IsCellField())
-    {
-      fieldArray = this->Worklet.ProcessCellField(input);
-    }
-    else
-    {
-      return false;
-    }
+    fieldArray = this->Worklet.ProcessPointField(input);
 
     //use the same meta data as the input so we get the same field name, etc.
     result.AddField(fieldMeta.AsField(fieldArray));
@@ -150,8 +173,56 @@ private:
   vtkm::worklet::Contour Worklet;
 };
 
-#ifndef vtkm_filter_Contour_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(Contour);
+#ifndef vtkm_filter_ContourExecute_cxx
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Int8>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
 #endif
 }
 } // namespace vtkm::filter

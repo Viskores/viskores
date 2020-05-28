@@ -14,6 +14,7 @@
 #include <vtkm/filter/vtkm_filter_export.h>
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/PointAverage.h>
 
@@ -35,6 +36,11 @@ public:
                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                           const vtkm::filter::FieldMetadata& fieldMeta,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
+
+  // PointAverage is a simple filter that is used to test custom filter types.
+  using AdditionalFieldStorage = vtkm::List<vtkm::cont::internal::StorageTagExtrude>;
+  using SupportedCellSets =
+    vtkm::ListAppend<vtkm::List<vtkm::cont::CellSetExtrude>, VTKM_DEFAULT_CELL_SET_LIST>;
 
 private:
   vtkm::worklet::PointAverage Worklet;

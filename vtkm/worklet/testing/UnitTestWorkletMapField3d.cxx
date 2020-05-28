@@ -59,21 +59,21 @@ namespace arg
 template <typename PType>
 struct Fetch<vtkm::exec::arg::FetchTagExecObject,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic3D,
              mapfield3d::ExecutionObject<PType>>
 {
   using ValueType = typename PType::ValueType;
   using PortalType = mapfield3d::ExecutionObject<PType>;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesBasic3D;
 
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const PortalType& field) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, const PortalType& field) const
   {
     return field.Portal.Get(indices.GetInputIndex());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const PortalType&, const ValueType&) const {}
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const PortalType&, const ValueType&) const
+  {
+  }
 };
 }
 }

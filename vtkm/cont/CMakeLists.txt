@@ -32,8 +32,8 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleRandomUniformBits.h
   ArrayHandleSOA.h
-  ArrayHandleStreaming.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
@@ -187,6 +187,39 @@ set(sources
   RuntimeDeviceInformation.cxx
   StorageVirtual.cxx
   Timer.cxx
+  )
+
+#-----------------------------------------------------------------------------
+# Set up default types, which can be custom configured by other build systems.
+vtkm_get_kit_name(kit_name kit_dir)
+
+# Some custom types included with VTK-m
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK "Compile VTK-m algorithms for use with types from VTK." OFF)
+if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
+  set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
+endif()
+
+mark_as_advanced(VTKm_USE_DEFAULT_TYPES_FOR_VTK)
+
+if (VTKm_DEFAULT_TYPES_HEADER)
+  set(VTK_M_HAS_DEFAULT_TYPES_HEADER TRUE)
+  get_filename_component(VTKm_DEFAULT_TYPES_HEADER_FILENAME ${VTKm_DEFAULT_TYPES_HEADER} NAME_WE)
+  set(VTKm_DEFAULT_TYPES_HEADER_FILENAME "${VTKm_DEFAULT_TYPES_HEADER_FILENAME}.h")
+  configure_file(${VTKm_DEFAULT_TYPES_HEADER}
+    ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/internal/${VTKm_DEFAULT_TYPES_HEADER_FILENAME}
+    @ONLY
+    )
+  vtkm_install_headers(vtkm/cont/internal
+    ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/internal/${VTKm_DEFAULT_TYPES_HEADER_FILENAME}
+    )
+endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DefaultTypes.h.in
+  ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/DefaultTypes.h
+  @ONLY
+  )
+vtkm_install_headers(vtkm/cont
+  ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/DefaultTypes.h
   )
 
 #-----------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/cont/CellSet.h>
+#include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm
 {

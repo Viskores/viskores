@@ -109,7 +109,6 @@ void ScanTest()
   vtkm::Id out;
   out = vtkm::cont::Algorithm::ScanInclusive(input, output);
   out = vtkm::cont::Algorithm::ScanInclusive(input, output, vtkm::Maximum());
-  out = vtkm::cont::Algorithm::StreamingScanExclusive(1, input, output);
   vtkm::cont::Algorithm::ScanInclusiveByKey(keys, input, output, vtkm::Maximum());
   vtkm::cont::Algorithm::ScanInclusiveByKey(keys, input, output);
   out = vtkm::cont::Algorithm::ScanExclusive(input, output, vtkm::Maximum(), vtkm::Id(0));

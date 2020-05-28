@@ -45,7 +45,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
   vtkm::cont::ArrayHandle<T> outArray;
 
   this->Invoke(vtkm::worklet::CellMeasure<IntegrationType>{},
-               vtkm::filter::ApplyPolicyCellSet(cellset, policy),
+               vtkm::filter::ApplyPolicyCellSet(cellset, policy, *this),
                points,
                outArray);
 

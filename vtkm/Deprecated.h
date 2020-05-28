@@ -60,17 +60,16 @@
 // [[deprecated]] is supported, then VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED will get defined.
 #ifndef VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 
-#if __cplusplus >= 201402L
+#if defined(__NVCC__)
+// Currently nvcc has zero support deprecated attributes
+#elif __cplusplus >= 201402L
 
 // C++14 and better supports [[deprecated]]
 // Except in these cases:
-//   - nvcc on visual studio
-#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
+//   - nvcc
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
-#endif
 
 #elif defined(VTKM_GCC)
-
 // GCC has supported [[deprecated]] since version 5.0, but using it on enum was not
 // supported until 6.0. So we have to make a special case to only use it for high
 // enough revisions.
@@ -85,7 +84,7 @@
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 #endif // __has_cpp_attribute(deprecated)
 
-#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900) && !defined(VTKM_CUDA)
+#elif defined(VTKM_MSVC) && (_MSC_VER >= 1900)
 
 #define VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED
 

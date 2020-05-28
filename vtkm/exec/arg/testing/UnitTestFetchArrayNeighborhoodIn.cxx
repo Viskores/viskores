@@ -96,7 +96,6 @@ struct FetchArrayNeighborhoodInTests
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayNeighborhoodIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
                                              TestPortal<T>>;
 
     FetchType fetch;

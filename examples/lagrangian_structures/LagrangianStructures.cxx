@@ -20,8 +20,8 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Initialize.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/filter/LagrangianStructures.h>
 
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
   std::cout << "Reading input dataset" << std::endl;
   vtkm::cont::DataSet input;
-  vtkm::io::reader::VTKDataSetReader reader(datasetName);
+  vtkm::io::VTKDataSetReader reader(datasetName);
   input = reader.ReadDataSet();
   std::cout << "Read input dataset" << std::endl;
 
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
   lcsFilter.SetActiveField(variableName);
 
   vtkm::cont::DataSet output = lcsFilter.Execute(input);
-  vtkm::io::writer::VTKDataSetWriter writer("out.vtk");
+  vtkm::io::VTKDataSetWriter writer("out.vtk");
   writer.WriteDataSet(output);
   std::cout << "Written output dataset" << std::endl;
 

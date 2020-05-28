@@ -64,7 +64,7 @@ void BenchRayTracing(::benchmark::State& state)
 
   vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
   vtkm::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(camera, canvas);
+  rayCamera.SetParameters(camera, vtkm::Int32(canvas.GetWidth()), vtkm::Int32(canvas.GetHeight()));
   vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
 
@@ -116,13 +116,24 @@ VTKM_BENCHMARK(BenchRayTracing);
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice | vtkm::cont::InitializeOptions::AddHelp;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, argv);
+  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
 }

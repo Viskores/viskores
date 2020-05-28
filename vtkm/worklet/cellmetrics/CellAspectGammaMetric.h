@@ -53,7 +53,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellAspectGammaMetric(const vtkm::IdComponent& numPts,
                                         const PointCoordVecType& pts,
                                         CellShapeType shape,
-                                        const vtkm::exec::FunctorBase&)
+                                        vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -67,11 +67,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellAspectGammaMetric(const vtkm::IdComponent& numPts,
                                         const PointCoordVecType& pts,
                                         vtkm::CellShapeTagTetra,
-                                        const vtkm::exec::FunctorBase& worklet)
+                                        vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Aspect gamma metric (tetrahedron) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

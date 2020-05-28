@@ -48,7 +48,6 @@ void createVectors(std::vector<vtkm::Vec<T, 3>>& vecs1, std::vector<vtkm::Vec<T,
 
   //Test some other vector combinations
   std::uniform_real_distribution<vtkm::Float64> randomDist(-10.0, 10.0);
-  randomDist(randGenerator);
 
   for (int i = 0; i < 100; i++)
   {

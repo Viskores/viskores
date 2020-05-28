@@ -28,13 +28,6 @@ freely, subject to the following restrictions:
 
 #include <string.h> /*for size_t*/
 
-namespace vtkm
-{
-namespace png
-{
-
-extern const char* LODEPNG_VERSION_STRING;
-
 /*
 The following #defines are used to create code sections. They can be disabled
 to disable code sections, which can give faster compile time and smaller binary.
@@ -98,6 +91,13 @@ source files with custom allocators.*/
 #include <vector>
 #include <string>
 #endif /*LODEPNG_COMPILE_CPP*/
+
+namespace vtkm
+{
+namespace png
+{
+
+extern const char* LODEPNG_VERSION_STRING;
 
 #ifdef LODEPNG_COMPILE_PNG
 /*The PNG color types (also used for raw).*/

@@ -44,7 +44,7 @@
 #include <vtkm/filter/WarpScalar.h>
 #include <vtkm/filter/WarpVector.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/source/Wavelet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -106,27 +106,6 @@ bool InputIsStructured()
     InputDataSet.GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
 }
 
-// Limit the filter executions to only consider the following types, otherwise
-// compile times and binary sizes are nuts.
-using FieldTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;
-
-using StructuredCellList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-
-using UnstructuredCellList =
-  vtkm::List<vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>;
-
-using AllCellList = vtkm::ListAppend<StructuredCellList, UnstructuredCellList>;
-
-class BenchmarkFilterPolicy : public vtkm::filter::PolicyBase<BenchmarkFilterPolicy>
-{
-public:
-  using FieldTypeList = FieldTypes;
-
-  using StructuredCellSetList = StructuredCellList;
-  using UnstructuredCellSetList = UnstructuredCellList;
-  using AllCellSetList = AllCellList;
-};
-
 enum GradOpts : int
 {
   Gradient = 1,
@@ -174,13 +153,12 @@ void BenchGradient(::benchmark::State& state, int options)
     filter.SetColumnMajorOrdering();
   }
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -224,13 +202,12 @@ void BenchThreshold(::benchmark::State& state)
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -261,13 +238,12 @@ void BenchThresholdPoints(::benchmark::State& state)
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -283,13 +259,12 @@ void BenchCellAverage(::benchmark::State& state)
   vtkm::filter::CellAverage filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -305,13 +280,12 @@ void BenchPointAverage(::benchmark::State& state)
   vtkm::filter::PointAverage filter;
   filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::CELL_SET);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -329,13 +303,12 @@ void BenchWarpScalar(::benchmark::State& state)
   filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
   filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -352,13 +325,12 @@ void BenchWarpVector(::benchmark::State& state)
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::POINTS);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -399,13 +371,12 @@ void BenchContour(::benchmark::State& state)
   filter.SetComputeFastNormalsForStructured(fastNormals);
   filter.SetComputeFastNormalsForUnstructured(fastNormals);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -438,13 +409,12 @@ void BenchExternalFaces(::benchmark::State& state)
   vtkm::filter::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -466,13 +436,12 @@ void BenchTetrahedralize(::benchmark::State& state)
 
   vtkm::filter::Tetrahedralize filter;
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -496,13 +465,12 @@ void BenchVertexClustering(::benchmark::State& state)
   vtkm::filter::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
-  BenchmarkFilterPolicy policy;
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet, policy);
+    auto result = filter.Execute(InputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -1005,7 +973,7 @@ void InitDataSet(int& argc, char** argv)
   if (!filename.empty())
   {
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
-    vtkm::io::reader::VTKDataSetReader reader(filename);
+    vtkm::io::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
   }
   else
@@ -1040,12 +1008,23 @@ void InitDataSet(int& argc, char** argv)
 int main(int argc, char* argv[])
 {
   auto opts = vtkm::cont::InitializeOptions::RequireDevice;
-  Config = vtkm::cont::Initialize(argc, argv, opts);
 
-  // Setup device:
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+  std::vector<char*> args(argv, argv + argc);
+  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
 
-  InitDataSet(argc, argv);
+  // Parse VTK-m options:
+  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+
+  // This occurs when it is help
+  if (opts == vtkm::cont::InitializeOptions::None)
+  {
+    std::cout << Config.Usage << std::endl;
+  }
+  else
+  {
+    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    InitDataSet(argc, args.data());
+  }
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;
@@ -1054,5 +1033,5 @@ int main(int argc, char* argv[])
   }();
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, dataSetSummary);
+  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
 }

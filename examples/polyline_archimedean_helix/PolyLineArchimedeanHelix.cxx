@@ -11,7 +11,7 @@
 #include <complex>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/Tube.h>
 
 #include <vtkm/cont/ColorTable.h>
@@ -124,7 +124,11 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
   view.Initialize();
   view.Paint();
+  // We can save the file as a .NetBPM:
   std::string output_filename = "tube_output_" + std::to_string(numSides) + "_sides.pnm";
+  view.SaveAs(output_filename);
+  // Or as a .png:
+  output_filename = "tube_output_" + std::to_string(numSides) + "_sides.png";
   view.SaveAs(output_filename);
 }
 

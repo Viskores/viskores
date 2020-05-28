@@ -97,9 +97,8 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
     : !this->ComputeFastNormalsForUnstructured;
   if (this->GenerateNormals && generateHighQualityNormals)
   {
-    outputCells = this->Worklet.Run(&ivalues[0],
-                                    static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices,
@@ -107,9 +106,8 @@ inline VTKM_CONT vtkm::cont::DataSet Contour::DoExecute(
   }
   else
   {
-    outputCells = this->Worklet.Run(&ivalues[0],
-                                    static_cast<vtkm::Id>(ivalues.size()),
-                                    vtkm::filter::ApplyPolicyCellSet(cells, policy),
+    outputCells = this->Worklet.Run(ivalues,
+                                    vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                                     coords.GetData(),
                                     field,
                                     vertices);

@@ -16,6 +16,7 @@
 #include <vtkm/cont/CellSetList.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
@@ -31,20 +32,11 @@ namespace filter
 template <typename Derived>
 struct PolicyBase
 {
-  using FieldTypeList = VTKM_DEFAULT_TYPE_LIST;
-  using StorageList = vtkm::ListAppend<
-    VTKM_DEFAULT_STORAGE_LIST,
-    vtkm::List<
-      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag,
-      vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                              vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>>;
+  using FieldTypeList = vtkm::ListUniversal;
+  using StorageList = VTKM_DEFAULT_STORAGE_LIST;
 
-  using StructuredCellSetList = vtkm::cont::CellSetListStructured;
-  using UnstructuredCellSetList = vtkm::cont::CellSetListUnstructured;
+  using StructuredCellSetList = VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED;
+  using UnstructuredCellSetList = VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED;
   using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST;
 };
 
@@ -209,10 +201,18 @@ using ArrayHandleMultiplexerForStorageList = vtkm::cont::ArrayHandleMultiplexerF
 /// passed to the `DoMapField` method of filters.
 ///
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename DerivedPolicy::FieldTypeList>
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<typename std::conditional<
+  std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
+  VTKM_DEFAULT_TYPE_LIST,
+  typename DerivedPolicy::FieldTypeList>::type>
 ApplyPolicyFieldNotActive(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<DerivedPolicy>)
 {
-  using TypeList = typename DerivedPolicy::FieldTypeList;
+  // Policies are on their way out, but until they are we want to respect them. In the mean
+  // time, respect the policy if it is defined.
+  using TypeList = typename std::conditional<
+    std::is_same<typename DerivedPolicy::FieldTypeList, vtkm::ListUniversal>::value,
+    VTKM_DEFAULT_TYPE_LIST,
+    typename DerivedPolicy::FieldTypeList>::type;
   return field.GetData().ResetTypes(TypeList());
 }
 
@@ -277,7 +277,20 @@ ApplyPolicyFieldActive(const vtkm::cont::Field& field,
 ///
 /// Adjusts the types of `CellSet`s to support those types specified in a policy.
 ///
+template <typename DerivedPolicy, typename DerivedFilter>
+VTKM_CONT vtkm::cont::DynamicCellSetBase<vtkm::ListAppend<typename DerivedFilter::SupportedCellSets,
+                                                          typename DerivedPolicy::AllCellSetList>>
+ApplyPolicyCellSet(const vtkm::cont::DynamicCellSet& cellset,
+                   vtkm::filter::PolicyBase<DerivedPolicy>,
+                   const vtkm::filter::Filter<DerivedFilter>&)
+{
+  using CellSetList = vtkm::ListAppend<typename DerivedFilter::SupportedCellSets,
+                                       typename DerivedPolicy::AllCellSetList>;
+  return cellset.ResetCellSetList(CellSetList());
+}
+
 template <typename DerivedPolicy>
+VTKM_DEPRECATED(1.6, "ApplyPolicyCellSet now takes the filter as an argument.")
 VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList> ApplyPolicyCellSet(
   const vtkm::cont::DynamicCellSet& cellset,
   vtkm::filter::PolicyBase<DerivedPolicy>)
@@ -292,10 +305,25 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList>
 /// Adjusts the types of `CellSet`s to support those structured cell set types
 /// specified in a policy.
 ///
-template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::StructuredCellSetList>
+template <typename DerivedPolicy, typename DerivedFilter>
+VTKM_CONT vtkm::cont::DynamicCellSetBase<
+  vtkm::ListAppend<typename DerivedFilter::SupportedStructuredCellSets,
+                   typename DerivedPolicy::StructuredCellSetList>>
 ApplyPolicyCellSetStructured(const vtkm::cont::DynamicCellSet& cellset,
-                             vtkm::filter::PolicyBase<DerivedPolicy>)
+                             vtkm::filter::PolicyBase<DerivedPolicy>,
+                             const vtkm::filter::Filter<DerivedFilter>&)
+{
+  using CellSetList = vtkm::ListAppend<typename DerivedFilter::SupportedStructuredCellSets,
+                                       typename DerivedPolicy::StructuredCellSetList>;
+  return cellset.ResetCellSetList(CellSetList());
+}
+
+template <typename DerivedPolicy>
+VTKM_DEPRECATED(1.6, "ApplyPolicyCellSetStructured now takes the filter as an argument.")
+VTKM_CONT vtkm::cont::
+  DynamicCellSetBase<typename DerivedPolicy::StructuredCellSetList> ApplyPolicyCellSetStructured(
+    const vtkm::cont::DynamicCellSet& cellset,
+    vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   using CellSetList = typename DerivedPolicy::StructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
@@ -307,10 +335,26 @@ ApplyPolicyCellSetStructured(const vtkm::cont::DynamicCellSet& cellset,
 /// Adjusts the types of `CellSet`s to support those unstructured cell set types
 /// specified in a policy.
 ///
-template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::UnstructuredCellSetList>
+template <typename DerivedPolicy, typename DerivedFilter>
+VTKM_CONT vtkm::cont::DynamicCellSetBase<
+  vtkm::ListAppend<typename DerivedFilter::SupportedUnstructuredCellSets,
+                   typename DerivedPolicy::UnstructuredCellSetList>>
 ApplyPolicyCellSetUnstructured(const vtkm::cont::DynamicCellSet& cellset,
-                               vtkm::filter::PolicyBase<DerivedPolicy>)
+                               vtkm::filter::PolicyBase<DerivedPolicy>,
+                               const vtkm::filter::Filter<DerivedFilter>&)
+{
+  using CellSetList = vtkm::ListAppend<typename DerivedFilter::SupportedUnstructuredCellSets,
+                                       typename DerivedPolicy::UnstructuredCellSetList>;
+  return cellset.ResetCellSetList(CellSetList());
+}
+
+template <typename DerivedPolicy>
+VTKM_DEPRECATED(1.6, "ApplyPolicyCellSetUnstructured now takes the filter as an argument.")
+VTKM_CONT vtkm::cont::DynamicCellSetBase<
+  typename DerivedPolicy::
+    UnstructuredCellSetList> ApplyPolicyCellSetUnstructured(const vtkm::cont::DynamicCellSet&
+                                                              cellset,
+                                                            vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   using CellSetList = typename DerivedPolicy::UnstructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
@@ -332,20 +376,71 @@ MakeSerializableField(const vtkm::cont::Field& field, vtkm::filter::PolicyBase<D
 }
 
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
-                                          typename DerivedPolicy::AllCellSetList>
-  MakeSerializableDataSet(vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_DEPRECATED(1.6, "MakeSerializableDataSet now takes the filter as an argument.")
+VTKM_CONT vtkm::cont::SerializableDataSet<
+  typename DerivedPolicy::FieldTypeList,
+  typename DerivedPolicy::AllCellSetList> MakeSerializableDataSet(vtkm::filter::
+                                                                    PolicyBase<DerivedPolicy>)
+{
+  return {};
+}
+
+template <typename DerivedPolicy, typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                  vtkm::ListAppend<typename DerivedFilter::SupportedCellSets,
+                                                   typename DerivedPolicy::AllCellSetList>>
+  MakeSerializableDataSet(vtkm::filter::PolicyBase<DerivedPolicy>,
+                          const vtkm::filter::Filter<DerivedFilter>&)
+{
+  return {};
+}
+
+template <typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST, typename DerivedFilter::SupportedCellSets>
+  MakeSerializableDataSet(const vtkm::filter::Filter<DerivedFilter>&)
 {
   return {};
 }
 
 template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
-                                          typename DerivedPolicy::AllCellSetList>
-MakeSerializableDataSet(const vtkm::cont::DataSet& dataset, vtkm::filter::PolicyBase<DerivedPolicy>)
+VTKM_DEPRECATED(1.6, "MakeSerializableDataSet now takes the filter as an argument.")
+VTKM_CONT vtkm::cont::SerializableDataSet<
+  typename DerivedPolicy::FieldTypeList,
+  typename DerivedPolicy::AllCellSetList> MakeSerializableDataSet(const vtkm::cont::DataSet&
+                                                                    dataset,
+                                                                  vtkm::filter::PolicyBase<
+                                                                    DerivedPolicy>)
 {
   return vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
                                          typename DerivedPolicy::AllCellSetList>{ dataset };
+}
+
+template <typename DerivedPolicy, typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                  vtkm::ListAppend<typename DerivedFilter::SupportedCellSets,
+                                                   typename DerivedPolicy::AllCellSetList>>
+  MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
+                          vtkm::filter::PolicyBase<DerivedPolicy>,
+                          const vtkm::filter::Filter<DerivedFilter>&)
+{
+  return vtkm::cont::SerializableDataSet<typename DerivedPolicy::FieldTypeList,
+                                         vtkm::ListAppend<typename DerivedFilter::SupportedCellSets,
+                                                          typename DerivedPolicy::AllCellSetList>>{
+    dataset
+  };
+}
+
+template <typename DerivedFilter>
+VTKM_CONT
+  vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST, typename DerivedFilter::SupportedCellSets>
+  MakeSerializableDataSet(const vtkm::cont::DataSet& dataset,
+                          const vtkm::filter::Filter<DerivedFilter>&)
+{
+  return vtkm::cont::SerializableDataSet<VTKM_DEFAULT_TYPE_LIST,
+                                         typename DerivedFilter::SupportedCellSets>{ dataset };
 }
 }
 } // vtkm::filter

@@ -33,15 +33,14 @@ class ThreadIndicesReduceByKey : public vtkm::exec::arg::ThreadIndicesBasic
   using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
 
 public:
-  template <typename P1, typename P2, typename P3>
+  template <typename P1, typename P2>
   VTKM_EXEC ThreadIndicesReduceByKey(
     vtkm::Id threadIndex,
     vtkm::Id inIndex,
     vtkm::IdComponent visitIndex,
     vtkm::Id outIndex,
-    const vtkm::exec::internal::ReduceByKeyLookup<P1, P2, P3>& keyLookup,
-    vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, inIndex, visitIndex, outIndex, globalThreadIndexOffset)
+    const vtkm::exec::internal::ReduceByKeyLookupBase<P1, P2>& keyLookup)
+    : Superclass(threadIndex, inIndex, visitIndex, outIndex)
     , ValueOffset(keyLookup.Offsets.Get(inIndex))
     , NumberOfValues(keyLookup.Counts.Get(inIndex))
   {
