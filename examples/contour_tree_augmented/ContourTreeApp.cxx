@@ -549,8 +549,7 @@ int main(int argc, char* argv[])
       vdims[2] = static_cast<vtkm::Id>(dims[2]);
       inDataSet = dsb.Create(vdims);
     }
-    vtkm::cont::DataSetFieldAdd dsf;
-    dsf.AddPointField(inDataSet, "values", values);
+    inDataSet.AddPointField("values", values);
 #endif
   } // END ASCII Read
 
@@ -680,8 +679,7 @@ int main(int argc, char* argv[])
       std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
                                            (values.begin() + blockEnd));
 
-      vtkm::cont::DataSetFieldAdd dsf;
-      dsf.AddPointField(ds, "values", subValues);
+      ds.AddPointField("values", subValues);
       useDataSet.AppendPartition(ds);
     }
   }
