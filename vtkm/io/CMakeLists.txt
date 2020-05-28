@@ -10,12 +10,14 @@
 
 set(headers
   BOVDataSetReader.h
-  ErrorIO.h
   DecodePNG.h
   EncodePNG.h
+  ErrorIO.h
+  FileUtils.h
   ImageReaderBase.h
   ImageReaderPNG.h
   ImageReaderPNM.h
+  ImageUtils.h
   ImageWriterBase.h
   ImageWriterPNG.h
   ImageWriterPNM.h
@@ -35,6 +37,7 @@ set(template_sources
 )
 
 set(sources
+  FileUtils.cxx
   DecodePNG.cxx
   EncodePNG.cxx
 )
@@ -48,6 +51,7 @@ set(device_sources
   ImageReaderBase.cxx
   ImageReaderPNG.cxx
   ImageReaderPNM.cxx
+  ImageUtils.cxx
   ImageWriterBase.cxx
   ImageWriterPNG.cxx
   ImageWriterPNM.cxx

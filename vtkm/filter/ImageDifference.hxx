@@ -46,6 +46,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   const vtkm::filter::FieldMetadata& fieldMetadata,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
+  this->ImageDiffWithinThreshold = true;
   if (!fieldMetadata.IsPointField())
   {
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");

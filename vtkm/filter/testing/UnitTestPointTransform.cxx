@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/PointTransform.h>
+#include <vtkm/filter/testing/MakeTestDataSet.h>
 
 #include <random>
 #include <string>
@@ -18,47 +19,6 @@
 namespace
 {
 std::mt19937 randGenerator;
-
-vtkm::cont::DataSet MakePointTransformTestDataSet()
-{
-  vtkm::cont::DataSet dataSet;
-
-  std::vector<vtkm::Vec3f> coordinates;
-  const vtkm::Id dim = 5;
-  for (vtkm::Id j = 0; j < dim; ++j)
-  {
-    vtkm::FloatDefault z =
-      static_cast<vtkm::FloatDefault>(j) / static_cast<vtkm::FloatDefault>(dim - 1);
-    for (vtkm::Id i = 0; i < dim; ++i)
-    {
-      vtkm::FloatDefault x =
-        static_cast<vtkm::FloatDefault>(i) / static_cast<vtkm::FloatDefault>(dim - 1);
-      vtkm::FloatDefault y = (x * x + z * z) / 2.0f;
-      coordinates.push_back(vtkm::make_Vec(x, y, z));
-    }
-  }
-
-  vtkm::Id numCells = (dim - 1) * (dim - 1);
-  dataSet.AddCoordinateSystem(
-    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
-
-  vtkm::cont::CellSetExplicit<> cellSet;
-  cellSet.PrepareToAddCells(numCells, numCells * 4);
-  for (vtkm::Id j = 0; j < dim - 1; ++j)
-  {
-    for (vtkm::Id i = 0; i < dim - 1; ++i)
-    {
-      cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,
-                      4,
-                      vtkm::make_Vec<vtkm::Id>(
-                        j * dim + i, j * dim + i + 1, (j + 1) * dim + i + 1, (j + 1) * dim + i));
-    }
-  }
-  cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
-
-  dataSet.SetCellSet(cellSet);
-  return dataSet;
-}
 
 void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
                             const std::string fieldName,
@@ -138,7 +98,8 @@ void TestPointTransform()
 {
   std::cout << "Testing PointTransform Worklet" << std::endl;
 
-  vtkm::cont::DataSet ds = MakePointTransformTestDataSet();
+  vtkm::filter::testing::MakeTestDataSet makeTestData;
+  vtkm::cont::DataSet ds = makeTestData.MakePointTransformTestDataSet();
   int N = 41;
 
   //Test translation

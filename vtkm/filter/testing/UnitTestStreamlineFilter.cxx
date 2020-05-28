@@ -13,6 +13,7 @@
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/testing/MakeTestDataSet.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
@@ -49,7 +50,6 @@ void TestStreamline()
   {
     auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
     ds.AddPointField(fieldName, vecField);
-
     vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
       vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
                                      vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),

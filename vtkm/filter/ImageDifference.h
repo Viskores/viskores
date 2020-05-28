@@ -41,18 +41,15 @@ public:
   VTKM_CONT vtkm::FloatDefault GetThreshold() const { return this->Threshold; }
   VTKM_CONT void SetThreshold(const vtkm::FloatDefault& threshold) { this->Threshold = threshold; }
 
-  VTKM_CONT const bool& GetAveragePixels() const { return this->AveragePixels; }
+  VTKM_CONT bool GetAveragePixels() const { return this->AveragePixels; }
   VTKM_CONT void SetAveragePixels(const bool& averagePixels)
   {
     this->AveragePixels = averagePixels;
   }
 
-  VTKM_CONT const bool& GetImageDiffWithinThreshold() const
-  {
-    return this->ImageDiffWithinThreshold;
-  }
+  VTKM_CONT bool GetImageDiffWithinThreshold() const { return this->ImageDiffWithinThreshold; }
   VTKM_CONT void SetThresholdFieldName(const std::string& name) { this->ThresholdFieldName = name; }
-  VTKM_CONT const std::string& GetThresholdFieldName() const { return this->ThresholdFieldName; }
+  VTKM_CONT std::string GetThresholdFieldName() const { return this->ThresholdFieldName; }
 
   /// Choose the primary field to operate on.  For Image difference A - B, A is the
   /// primary field.
@@ -64,7 +61,7 @@ public:
     this->SetActiveField(name, association);
   }
 
-  VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
+  VTKM_CONT std::string GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
   VTKM_CONT vtkm::cont::Field::Association GetPrimaryFieldAssociation() const
   {
     return this->GetActiveFieldAssociation();
@@ -81,7 +78,7 @@ public:
     this->SecondaryFieldAssociation = association;
   }
 
-  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->SecondaryFieldName; }
+  VTKM_CONT std::string GetSecondaryFieldName() const { return this->SecondaryFieldName; }
   VTKM_CONT vtkm::cont::Field::Association GetSecondaryFieldAssociation() const
   {
     return this->SecondaryFieldAssociation;
