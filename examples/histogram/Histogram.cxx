@@ -18,7 +18,6 @@
 #include "HistogramMPI.h"
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Initialize.h>
 
@@ -82,7 +81,7 @@ int main(int argc, char* argv[])
 
   vtkm::cont::PartitionedDataSet pds;
   vtkm::cont::DataSet ds;
-  vtkm::cont::DataSetFieldAdd::AddPointField(ds, "pointvar", CreateArray(-1024, 1024, numVals));
+  ds.AddPointField("pointvar", CreateArray(-1024, 1024, numVals));
   pds.AppendPartition(ds);
 
   example::HistogramMPI histogram;

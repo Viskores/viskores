@@ -14,7 +14,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -89,8 +88,7 @@ private:
     const int nVerts = 5;
     vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-    vtkm::cont::DataSetFieldAdd fieldAdder;
-    fieldAdder.AddPointField(ds, "pointvar", vars, nVerts);
+    ds.AddPointField("pointvar", vars, nVerts);
 
     return ds;
   }

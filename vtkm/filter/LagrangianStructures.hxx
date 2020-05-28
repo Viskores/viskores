@@ -147,10 +147,9 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
   }
 
   vtkm::cont::DataSet output;
-  vtkm::cont::DataSetFieldAdd fieldAdder;
   output.AddCoordinateSystem(lcsInput.GetCoordinateSystem());
   output.SetCellSet(lcsInput.GetCellSet());
-  fieldAdder.AddPointField(output, this->GetOutputFieldName(), outputField);
+  output.AddPointField(this->GetOutputFieldName(), outputField);
   return output;
 }
 

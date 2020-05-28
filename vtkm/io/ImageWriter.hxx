@@ -12,7 +12,6 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/io/ImageWriter.h>
 #include <vtkm/io/PixelTypes.h>
 

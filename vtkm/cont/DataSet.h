@@ -133,6 +133,62 @@ public:
   //@}
 
   VTKM_CONT
+  void AddPointField(const std::string& fieldName, const vtkm::cont::VariantArrayHandle& field)
+  {
+    this->AddField(make_FieldPoint(fieldName, field));
+  }
+
+  template <typename T, typename Storage>
+  VTKM_CONT void AddPointField(const std::string& fieldName,
+                               const vtkm::cont::ArrayHandle<T, Storage>& field)
+  {
+    this->AddField(make_FieldPoint(fieldName, field));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddPointField(const std::string& fieldName, const std::vector<T>& field)
+  {
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, vtkm::CopyFlag::On));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddPointField(const std::string& fieldName, const T* field, const vtkm::Id& n)
+  {
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::POINTS, field, n, vtkm::CopyFlag::On));
+  }
+
+  //Cell centered field
+  VTKM_CONT
+  void AddCellField(const std::string& fieldName, const vtkm::cont::VariantArrayHandle& field)
+  {
+    this->AddField(make_FieldCell(fieldName, field));
+  }
+
+  template <typename T, typename Storage>
+  VTKM_CONT void AddCellField(const std::string& fieldName,
+                              const vtkm::cont::ArrayHandle<T, Storage>& field)
+  {
+    this->AddField(make_FieldCell(fieldName, field));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddCellField(const std::string& fieldName, const std::vector<T>& field)
+  {
+    this->AddField(
+      make_Field(fieldName, vtkm::cont::Field::Association::CELL_SET, field, vtkm::CopyFlag::On));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddCellField(const std::string& fieldName, const T* field, const vtkm::Id& n)
+  {
+    this->AddField(make_Field(
+      fieldName, vtkm::cont::Field::Association::CELL_SET, field, n, vtkm::CopyFlag::On));
+  }
+
+
+  VTKM_CONT
   void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
   {
     this->CoordSystems.push_back(cs);

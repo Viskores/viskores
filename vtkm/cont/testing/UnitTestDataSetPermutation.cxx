@@ -76,7 +76,7 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
   const int nVerts = 5;
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(ds, "pointvar", vars, nVerts);
+  ds.AddPointField("pointvar", vars, nVerts);
 
   return ds;
 }

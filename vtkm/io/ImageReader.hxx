@@ -12,7 +12,6 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/io/ImageReader.h>
 #include <vtkm/io/PixelTypes.h>
 #include <vtkm/rendering/Canvas.h>
@@ -50,8 +49,7 @@ vtkm::cont::DataSet BaseImageReader::CreateImageDataSet(
     }
   }
   auto dataSet = this->InitializeImageDataSet(width, height);
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, this->PointFieldName, fieldData);
+  dataSet.AddPointField(this->PointFieldName, fieldData);
   return dataSet;
 }
 
@@ -102,8 +100,7 @@ vtkm::cont::DataSet PNGReader::ReadFromFile(const std::string& fileName)
   }
 
   auto dataSet = this->InitializeImageDataSet(width, height);
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, this->PointFieldName, fieldData);
+  dataSet.AddPointField(this->PointFieldName, fieldData);
 
   free(imageData);
   return dataSet;
@@ -164,8 +161,7 @@ vtkm::cont::DataSet PNMReader::DecodeFile(std::ifstream& inStream,
   }
 
   auto dataSet = this->InitializeImageDataSet(width, height);
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, this->PointFieldName, fieldData);
+  dataSet.AddPointField(this->PointFieldName, fieldData);
   return dataSet;
 }
 // End PNMReader Class Template Implementations

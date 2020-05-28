@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -153,8 +152,7 @@ void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
 
   // let's create a dummy dataset with a bunch of fields.
   vtkm::cont::DataSet dataset;
-  vtkm::cont::DataSetFieldAdd::AddPointField(
-    dataset,
+  dataset.AddPointField(
     "pointvar",
     CreateArray(lmin, lmax, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
 
@@ -174,8 +172,7 @@ void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
   {
     // let's create a dummy dataset with a bunch of fields.
     vtkm::cont::DataSet dataset;
-    vtkm::cont::DataSetFieldAdd::AddPointField(
-      dataset,
+    dataset.AddPointField(
       "pointvar",
       CreateArray(min, max, ARRAY_SIZE, typename vtkm::TypeTraits<ValueType>::DimensionalityTag()));
     mb.AppendPartition(dataset);

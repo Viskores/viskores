@@ -11,7 +11,6 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CleanGrid.h>
 
@@ -28,7 +27,6 @@ vtkm::cont::DataSet MakeNormalsTestDataSet()
   vtkm::Id3 dimensions(3, 4, 4);
   vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
 
-  vtkm::cont::DataSetFieldAdd dsf;
   const int nVerts = 48;
   vtkm::Float32 vars[nVerts] = { 60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
                                  98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f,
@@ -40,7 +38,7 @@ vtkm::cont::DataSet MakeNormalsTestDataSet()
                                  98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f };
 
   //Set point and cell scalar
-  dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
+  dataSet.AddPointField("pointvar", vars, nVerts);
 
   return dataSet;
 }

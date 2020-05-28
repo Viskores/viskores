@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/StreamSurface.h>
 
@@ -25,10 +24,8 @@ vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims, const vtkm::Vec3f& vec)
     vectorField[i] = vec;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSetFieldAdd dataSetField;
-
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
-  dataSetField.AddPointField(ds, "vector", vectorField);
+  ds.AddPointField("vector", vectorField);
 
   return ds;
 }

@@ -11,7 +11,6 @@
 #include <vtkm/io/BOVDataSetReader.h>
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/io/ErrorIO.h>
 
 #include <fstream>
@@ -213,7 +212,6 @@ void BOVDataSetReader::LoadFile()
 
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSetFieldAdd dsf;
   this->DataSet = dataSetBuilder.Create(dim, origin, spacing);
 
   vtkm::Id numTuples = dim[0] * dim[1] * dim[2];
@@ -223,13 +221,13 @@ void BOVDataSetReader::LoadFile()
     {
       vtkm::cont::ArrayHandle<vtkm::Float32> var;
       ReadScalar(fullPathDataFile, numTuples, var);
-      dsf.AddPointField(this->DataSet, variableName, var);
+      this->DataSet.AddPointField(variableName, var);
     }
     else if (dataFormat == DataFormat::DoubleData)
     {
       vtkm::cont::ArrayHandle<vtkm::Float64> var;
       ReadScalar(fullPathDataFile, numTuples, var);
-      dsf.AddPointField(this->DataSet, variableName, var);
+      this->DataSet.AddPointField(variableName, var);
     }
   }
   else if (numComponents == 3)
@@ -238,13 +236,13 @@ void BOVDataSetReader::LoadFile()
     {
       vtkm::cont::ArrayHandle<vtkm::Vec3f_32> var;
       ReadVector(fullPathDataFile, numTuples, var);
-      dsf.AddPointField(this->DataSet, variableName, var);
+      this->DataSet.AddPointField(variableName, var);
     }
     else if (dataFormat == DataFormat::DoubleData)
     {
       vtkm::cont::ArrayHandle<vtkm::Vec3f_64> var;
       ReadVector(fullPathDataFile, numTuples, var);
-      dsf.AddPointField(this->DataSet, variableName, var);
+      this->DataSet.AddPointField(variableName, var);
     }
   }
 
