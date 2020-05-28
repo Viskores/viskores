@@ -447,14 +447,6 @@ int main(int argc, char* argv[])
   std::vector<vtkm::Id> dims;
   if (filename.compare(filename.length() - 3, 3, "bov") == 0)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "BOV data reader support disabled due to build issues."
-                 << " The code can be renabled in the example here.");
-#ifdef WITH_MPI
-    MPI_Finalize();
-#endif
-    return 255;
-    /*
     std::cout << "Reading BOV file" << std::endl;
     vtkm::io::BOVDataSetReader reader(filename);
     inDataSet = reader.ReadDataSet();
@@ -484,7 +476,6 @@ int main(int argc, char* argv[])
     MPI_Finalize();
     return EXIT_SUCCESS;
 #endif
-    */
   }
   else // Read ASCII data input
   {
