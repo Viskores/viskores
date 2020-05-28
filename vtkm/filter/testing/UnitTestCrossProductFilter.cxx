@@ -132,8 +132,8 @@ void TestCrossProduct()
     field1 = vtkm::cont::make_ArrayHandle(vecs1);
     field2 = vtkm::cont::make_ArrayHandle(vecs2);
 
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", field1);
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
+    dataSet.AddPointField("vec1", field1);
+    dataSet.AddPointField("vec2", field2);
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecA", field1));
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecB", field2));
 

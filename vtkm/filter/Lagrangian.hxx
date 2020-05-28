@@ -19,7 +19,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/ParticleAdvection.h>
@@ -300,9 +299,8 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     std::vector<Float64> xC, yC, zC;
     InitializeCoordinates(input, xC, yC, zC);
     outputData = dataSetBuilder.Create(xC, yC, zC);
-    vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
-    dataSetFieldAdd.AddPointField(outputData, "valid", BasisParticlesValidity);
-    dataSetFieldAdd.AddPointField(outputData, "displacement", BasisParticlesDisplacement);
+    outputData.AddPointField("valid", BasisParticlesValidity);
+    outputData.AddPointField("displacement", BasisParticlesDisplacement);
 
     if (this->resetParticles)
     {

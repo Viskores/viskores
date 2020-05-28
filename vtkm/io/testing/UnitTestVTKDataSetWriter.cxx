@@ -107,7 +107,6 @@ void TestVTKCompoundWrite()
   vtkm::Float64 dt = (t_max - t_min) / vtkm::Float64(dims[1] - 1);
   vtkm::Vec2f_64 spacing(dt, ds);
   vtkm::cont::DataSet dataSet = dsb.Create(dims, origin, spacing);
-  vtkm::cont::DataSetFieldAdd dsf;
   size_t nVerts = static_cast<size_t>(s_samples * s_samples);
   std::vector<vtkm::Vec2f_64> points(nVerts);
 
@@ -125,7 +124,7 @@ void TestVTKCompoundWrite()
     }
   }
 
-  dsf.AddPointField(dataSet, "z", points.data(), static_cast<vtkm::Id>(points.size()));
+  dataSet.AddPointField("z", points.data(), static_cast<vtkm::Id>(points.size()));
   vtkm::io::VTKDataSetWriter writer("chirp.vtk");
   writer.WriteDataSet(dataSet);
   std::remove("chirp.vtk");

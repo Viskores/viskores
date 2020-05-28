@@ -105,9 +105,8 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
   vtkm::FloatDefault vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f };
   vtkm::FloatDefault cellvar[nCells] = { 100.1f, 200.2f, 300.3f, 400.4f, 500.5f, 600.6f };
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
-  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells);
+  dataSet.AddPointField("pointvar", vars, nVerts);
+  dataSet.AddCellField("cellvar", cellvar, nCells);
 
   return dataSet;
 }

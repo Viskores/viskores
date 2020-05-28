@@ -99,7 +99,6 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
   float f = 0.0f;
   if (useSeparatedCoords)
@@ -126,8 +125,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
     dataSet = dsb.Create(
       X, Y, Z, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", P);
-    dsf.AddCellField(dataSet, "cellvar", C);
+    dataSet.AddPointField("pointvar", P);
+    dataSet.AddCellField("cellvar", C);
     return dataSet;
   }
   else
@@ -150,8 +149,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
     dataSet = dsb.Create(
       pts, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
 }
@@ -167,7 +166,6 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
   float f = 0.0f;
@@ -188,8 +186,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(
       X, Y, Z, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
   else
@@ -210,8 +208,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(
       pts, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
-    dsf.AddPointField(dataSet, "pointvar", varP);
-    dsf.AddCellField(dataSet, "cellvar", varC);
+    dataSet.AddPointField("pointvar", varP);
+    dataSet.AddCellField("cellvar", varC);
     return dataSet;
   }
 }
