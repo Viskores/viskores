@@ -29,7 +29,7 @@ public:
   {
   }
   BOVDataSetReader(const std::string& fileName)
-    : BOVDataSetReader(fileName)
+    : io::BOVDataSetReader(fileName)
   {
   }
 };
