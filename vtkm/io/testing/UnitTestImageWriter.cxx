@@ -9,7 +9,8 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/ImageReader.h>
+#include <vtkm/io/ImageReaderPNG.h>
+#include <vtkm/io/ImageReaderPNM.h>
 #include <vtkm/io/ImageWriter.h>
 #include <vtkm/io/PixelTypes.h>
 #include <vtkm/rendering/Canvas.h>
@@ -58,22 +59,21 @@ void TestFilledImage(vtkm::cont::DataSet& dataSet,
 }
 
 template <typename PixelType>
-void TestCreateImageDataSet(BaseImageReader& reader, const vtkm::rendering::Canvas& canvas)
+void TestCreateImageDataSet(const vtkm::rendering::Canvas& canvas)
 {
-  auto dataSet = reader.CreateImageDataSet(canvas);
-  TestFilledImage<PixelType>(dataSet, reader.GetPointFieldName(), canvas);
+  auto dataSet = canvas.GetDataSet("pixel-color");
+  TestFilledImage<PixelType>(dataSet, "pixel-color", canvas);
 }
 
 template <typename PixelType>
-void TestReadAndWritePNG(const vtkm::rendering::Canvas& canvas, std::string image)
+void TestReadAndWritePNG(const vtkm::rendering::Canvas& canvas, std::string filename)
 {
-  auto pngReader = PNGReader();
   auto pngWriter = PNGWriter();
   vtkm::cont::DataSet dataSet;
   bool throws = false;
   try
   {
-    pngWriter.WriteToFile(image, dataSet);
+    pngWriter.WriteToFile(filename, dataSet);
   }
   catch (const vtkm::cont::ErrorBadValue&)
   {
@@ -81,12 +81,21 @@ void TestReadAndWritePNG(const vtkm::rendering::Canvas& canvas, std::string imag
   }
   VTKM_TEST_ASSERT(throws, "Fill Image did not throw with empty data");
 
-  dataSet = pngReader.CreateImageDataSet(canvas);
-  pngWriter.WriteToFile(image, dataSet);
-  dataSet = pngReader.ReadFromFile(image);
-  pngWriter.WriteToFile(image, dataSet);
-  dataSet = pngReader.ReadFromFile(image);
-  TestFilledImage<PixelType>(dataSet, pngReader.GetPointFieldName(), canvas);
+  dataSet = canvas.GetDataSet(pngWriter.GetPointFieldName());
+  pngWriter.WriteToFile(filename, dataSet);
+  {
+    vtkm::io::ImageReaderPNG reader(filename);
+    dataSet = reader.ReadDataSet();
+    // TODO: Fix this
+    vtkm::cont::Field field = dataSet.GetField(reader.GetPointFieldName());
+    dataSet.AddPointField(pngWriter.GetPointFieldName(), field.GetData());
+  }
+  pngWriter.WriteToFile(filename, dataSet);
+  {
+    vtkm::io::ImageReaderPNG reader(filename);
+    dataSet = reader.ReadDataSet();
+    TestFilledImage<PixelType>(dataSet, reader.GetPointFieldName(), canvas);
+  }
 }
 
 template <const vtkm::Id BitDepth>
@@ -94,7 +103,6 @@ void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas)
 {
   using PixelType = RGBPixel<BitDepth>;
   PNMWriter ppmWriter((1 << BitDepth) - 1);
-  PNMReader ppmReader((1 << BitDepth) - 1);
   vtkm::cont::DataSet dataSet;
   bool throws = false;
   try
@@ -107,22 +115,30 @@ void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas)
   }
   VTKM_TEST_ASSERT(throws, "Fill Image did not throw with empty data");
 
-  dataSet = ppmReader.CreateImageDataSet(canvas);
+  dataSet = canvas.GetDataSet(ppmWriter.GetPointFieldName());
   ppmWriter.WriteToFile("ppmTestFile.ppm", dataSet);
-  dataSet = ppmReader.ReadFromFile("ppmTestFile.ppm");
+  {
+    vtkm::io::ImageReaderPNM reader("ppmTestFile.ppm");
+    dataSet = reader.ReadDataSet();
+    // TODO: Fix this
+    vtkm::cont::Field field = dataSet.GetField(reader.GetPointFieldName());
+    dataSet.AddPointField(ppmWriter.GetPointFieldName(), field.GetData());
+  }
   ppmWriter.WriteToFile("ppmTestFile2.ppm", dataSet);
-  dataSet = ppmReader.ReadFromFile("ppmTestFile2.ppm");
-  TestFilledImage<PixelType>(dataSet, ppmReader.GetPointFieldName(), canvas);
+  {
+    vtkm::io::ImageReaderPNM reader("ppmTestFile2.ppm");
+    dataSet = reader.ReadDataSet();
+    TestFilledImage<PixelType>(dataSet, reader.GetPointFieldName(), canvas);
+  }
 }
 
 
 void TestBaseImageMethods(const vtkm::rendering::Canvas& canvas)
 {
-  auto reader = PNGReader();
-  TestCreateImageDataSet<RGBPixel_8>(reader, canvas);
-  TestCreateImageDataSet<RGBPixel_16>(reader, canvas);
-  TestCreateImageDataSet<GreyPixel_8>(reader, canvas);
-  TestCreateImageDataSet<GreyPixel_16>(reader, canvas);
+  TestCreateImageDataSet<RGBPixel_8>(canvas);
+  TestCreateImageDataSet<RGBPixel_16>(canvas);
+  TestCreateImageDataSet<GreyPixel_8>(canvas);
+  TestCreateImageDataSet<GreyPixel_16>(canvas);
 }
 
 void TestPNMImage(const vtkm::rendering::Canvas& canvas)
