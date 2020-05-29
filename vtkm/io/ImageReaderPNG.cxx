@@ -64,38 +64,12 @@ ImageReaderPNG::~ImageReaderPNG() noexcept
 {
 }
 
-const vtkm::cont::DataSet& ImageReaderPNG::ReadDataSet(PixelType pixelType)
-{
-  this->Read(pixelType);
-  return this->GetDataSet();
-}
-
 void ImageReaderPNG::Read()
 {
-  this->Read(PixelType::RGB_16);
-}
-
-void ImageReaderPNG::Read(PixelType pixelType)
-{
-  vtkm::io::ImageReaderBase::ColorArrayType pixelArray;
   vtkm::Id width;
   vtkm::Id height;
-
-  switch (pixelType)
-  {
-    case PixelType::RGB_8:
-      pixelArray = ReadFromPNG<vtkm::io::RGBPixel_8>(this->FileName, width, height);
-      break;
-    case PixelType::RGB_16:
-      pixelArray = ReadFromPNG<vtkm::io::RGBPixel_16>(this->FileName, width, height);
-      break;
-    case PixelType::GREY_8:
-      pixelArray = ReadFromPNG<vtkm::io::GreyPixel_8>(this->FileName, width, height);
-      break;
-    case PixelType::GREY_16:
-      pixelArray = ReadFromPNG<vtkm::io::GreyPixel_16>(this->FileName, width, height);
-      break;
-  }
+  vtkm::io::ImageReaderBase::ColorArrayType pixelArray =
+    ReadFromPNG<vtkm::io::RGBPixel_16>(this->FileName, width, height);
 
   this->InitializeImageDataSet(width, height, pixelArray);
 }

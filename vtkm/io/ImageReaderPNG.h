@@ -37,22 +37,8 @@ public:
   ImageReaderPNG(const ImageReaderPNG&) = delete;
   ImageReaderPNG& operator=(const ImageReaderPNG&) = delete;
 
-  enum class PixelType
-  {
-    RGB_8,
-    RGB_16,
-    GREY_8,
-    GREY_16
-  };
-
-  /// Reads PNG data from the provided file and stores it
-  /// according to the provided `PixelType`.
-  ///
-  VTKM_CONT const vtkm::cont::DataSet& ReadDataSet(PixelType pixelType = PixelType::RGB_16);
-
 protected:
   VTKM_CONT void Read() override;
-  VTKM_CONT void Read(PixelType pixelType);
 };
 }
 } // namespace vtkm::io
