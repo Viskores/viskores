@@ -16,7 +16,9 @@ set(headers
   ImageReaderBase.h
   ImageReaderPNG.h
   ImageReaderPNM.h
-  ImageWriter.h
+  ImageWriterBase.h
+  ImageWriterPNG.h
+  ImageWriterPNM.h
   PixelTypes.h
   VTKDataSetReader.h
   VTKDataSetReaderBase.h
@@ -29,7 +31,6 @@ set(headers
 )
 
 set(template_sources
-  ImageWriter.hxx
   PixelTypes.hxx
 )
 
@@ -47,6 +48,9 @@ set(device_sources
   ImageReaderBase.cxx
   ImageReaderPNG.cxx
   ImageReaderPNM.cxx
+  ImageWriterBase.cxx
+  ImageWriterPNG.cxx
+  ImageWriterPNM.cxx
   VTKDataSetReader.cxx
   VTKDataSetReaderBase.cxx
   VTKDataSetWriter.cxx
