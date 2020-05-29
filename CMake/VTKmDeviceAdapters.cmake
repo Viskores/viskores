@@ -43,14 +43,7 @@ endfunction()
 
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
-
-  # Workaround a bug in older versions of cmake prevents linking with UNKNOWN IMPORTED libraries
-  # refer to CMake issue #17245
-  if (CMAKE_VERSION VERSION_LESS 3.10)
-    add_library(vtkm::tbb SHARED IMPORTED GLOBAL)
-  else()
-    add_library(vtkm::tbb UNKNOWN IMPORTED GLOBAL)
-  endif()
+  add_library(vtkm::tbb UNKNOWN IMPORTED GLOBAL)
 
   set_target_properties(vtkm::tbb PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
