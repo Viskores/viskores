@@ -44,37 +44,37 @@
     GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
 
 .centos7: &centos7
-  image: "kitware/vtkm:ci-centos7_cuda10.2-20200410"
+  image: "kitware/vtkm:ci-centos7_cuda10.2-20200529"
   extends:
     - .docker_image
 
 .centos8: &centos8
-  image: "kitware/vtkm:ci-centos8-20200410"
+  image: "kitware/vtkm:ci-centos8-20200529"
   extends:
     - .docker_image
 
 .rhel8: &rhel8
-  image: "kitware/vtkm:ci-rhel8_cuda10.2-20200410"
+  image: "kitware/vtkm:ci-rhel8_cuda10.2-20200529"
   extends:
     - .docker_image
 
 .ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20200410"
+  image: "kitware/vtkm:ci-ubuntu1604-20200529"
   extends:
     - .docker_image
 
 .ubuntu1604_cuda: &ubuntu1604_cuda
-  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20200410"
+  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20200529"
   extends:
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20200410"
+  image: "kitware/vtkm:ci-ubuntu1804-20200529"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda10.1-20200410"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda10.1-20200529"
   extends:
     - .docker_image
 
