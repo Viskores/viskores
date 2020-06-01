@@ -86,6 +86,9 @@ public:
           //we took a step, so use this status to consider below.
           status = status2;
         }
+        else
+          status =
+            IntegratorStatus(true, status2.CheckSpatialBounds(), status2.CheckTemporalBounds());
       }
 
       integralCurve.StatusUpdate(idx, status, maxSteps);

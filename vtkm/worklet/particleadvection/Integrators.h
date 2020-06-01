@@ -214,7 +214,6 @@ protected:
       evalStatus = this->Evaluator.Evaluate(currPos, time + stepRange[0], currVel);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
-
       //Update the position and time.
       outpos = currPos + stepRange[1] * currVel;
       time += stepRange[1];
@@ -371,13 +370,13 @@ public:
 
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
-                       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
+                       vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
                        typename EulerIntegrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     using FieldEvaluateExecType =
-      decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
+      vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>;
     using Superclass =
       Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
                                      typename EulerIntegrator::template ExecObject<Device>>;
