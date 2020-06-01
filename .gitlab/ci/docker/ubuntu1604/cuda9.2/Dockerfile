@@ -51,3 +51,4 @@ RUN mkdir /opt/cmake-latest/ && \
     ln -s /opt/cmake-latest/bin/ctest /opt/cmake-latest/bin/ctest-latest
 
 ENV PATH "/opt/cmake/bin:/opt/cmake-latest/bin:${PATH}"
+ENV LD_LIBRARY_PATH "/opt/openmpi/lib:${LD_LIBRARY_PATH}"
