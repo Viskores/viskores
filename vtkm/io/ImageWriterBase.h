@@ -69,6 +69,9 @@ public:
   VTKM_CONT void SetPixelDepth(PixelDepth depth) { this->Depth = depth; }
   ///@}
 
+  VTKM_CONT const std::string& GetFileName() const { return this->FileName; }
+  VTKM_CONT void SetFileName(const std::string& filename) { this->FileName = filename; }
+
 protected:
   std::string FileName;
   PixelDepth Depth = PixelDepth::PIXEL_8;

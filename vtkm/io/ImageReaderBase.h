@@ -47,6 +47,9 @@ public:
   VTKM_CONT const std::string& GetPointFieldName() const { return this->PointFieldName; }
   VTKM_CONT void SetPointFieldName(const std::string& name) { this->PointFieldName = name; }
 
+  VTKM_CONT const std::string& GetFileName() const { return this->FileName; }
+  VTKM_CONT void SetFileName(const std::string& filename) { this->FileName = filename; }
+
 protected:
   VTKM_CONT virtual void Read() = 0;
 
