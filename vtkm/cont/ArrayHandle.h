@@ -83,7 +83,6 @@ using IsInValidArrayHandle =
 template <typename ArrayHandle>
 using IsWritableArrayHandle =
   vtkm::internal::PortalSupportsSets<typename std::decay<ArrayHandle>::type::WritePortalType>;
-/// @}
 
 /// Checks to see if the given object is an array handle. This check is
 /// compatible with C++11 type_traits. It a typedef named \c type that is

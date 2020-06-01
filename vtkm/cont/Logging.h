@@ -175,7 +175,7 @@
 /// \def VTKM_LOG_CAST_FAIL(inObj, outType)
 /// \brief Convenience macro for logging a failed cast of dynamic object.
 /// \param inObj The dynamic object.
-/// \param outObj The candidate type (or typelist) that was unsuccessful.
+/// \param outType The candidate type (or typelist) that was unsuccessful.
 
 /// \def VTKM_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)
 /// \brief Convenience macro for logging a TryExecute failure to the Error level.

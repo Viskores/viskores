@@ -197,7 +197,7 @@ struct GetRowsColsSlices
   /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
   /// @param[in] cells  The input vtkm::cont::CellSetStructured
   /// @param[out] nRows  Number of rows (x) in the cell set
-  /// @param[out[ nCols  Number of columns (y) in the cell set
+  /// @param[out] nCols  Number of columns (y) in the cell set
   /// @param[out] nSlices Number of slices (z) in the cell set
   void operator()(const vtkm::cont::CellSetStructured<2>& cells,
                   vtkm::Id& nRows,
