@@ -13,8 +13,12 @@ set(headers
   ErrorIO.h
   DecodePNG.h
   EncodePNG.h
-  ImageReader.h
-  ImageWriter.h
+  ImageReaderBase.h
+  ImageReaderPNG.h
+  ImageReaderPNM.h
+  ImageWriterBase.h
+  ImageWriterPNG.h
+  ImageWriterPNM.h
   PixelTypes.h
   VTKDataSetReader.h
   VTKDataSetReaderBase.h
@@ -27,8 +31,6 @@ set(headers
 )
 
 set(template_sources
-  ImageReader.hxx
-  ImageWriter.hxx
   PixelTypes.hxx
 )
 
@@ -43,6 +45,12 @@ set(sources
 # devices for ArrayHandle, and this requirement will go away.
 set(device_sources
   BOVDataSetReader.cxx
+  ImageReaderBase.cxx
+  ImageReaderPNG.cxx
+  ImageReaderPNM.cxx
+  ImageWriterBase.cxx
+  ImageWriterPNG.cxx
+  ImageWriterPNM.cxx
   VTKDataSetReader.cxx
   VTKDataSetReaderBase.cxx
   VTKDataSetWriter.cxx
