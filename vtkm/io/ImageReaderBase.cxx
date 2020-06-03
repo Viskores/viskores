@@ -11,7 +11,6 @@
 #include <vtkm/io/ImageReaderBase.h>
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/rendering/Canvas.h>
 
 namespace vtkm
 {
