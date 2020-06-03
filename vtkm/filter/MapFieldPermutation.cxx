@@ -16,6 +16,8 @@
 
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/cont/internal/CastInvalidValue.h>
+
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/filter/PolicyDefault.h>
@@ -49,37 +51,6 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
   }
 };
 
-// For simplicity, the invalid value is specified as a single type (vtkm::Float64), and this is
-// often a non-finite value, which is not well represented by integer types. This function does its
-// best to find a reasonable cast for the value.
-template <typename T>
-T CastInvalidValue(vtkm::Float64 invalidValue)
-{
-  using ComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
-
-  if (std::is_same<vtkm::TypeTraitsIntegerTag, typename vtkm::TypeTraits<T>::NumericTag>::value)
-  {
-    // Casting to integer types
-    if (vtkm::IsFinite(invalidValue))
-    {
-      return T(static_cast<ComponentType>(invalidValue));
-    }
-    else if (vtkm::IsInf(invalidValue) && (invalidValue > 0))
-    {
-      return T(std::numeric_limits<ComponentType>::max());
-    }
-    else
-    {
-      return T(std::numeric_limits<ComponentType>::min());
-    }
-  }
-  else
-  {
-    // Not an integer type. Assume can be directly cast
-    return T(static_cast<ComponentType>(invalidValue));
-  }
-}
-
 struct DoMapFieldPermutation
 {
   bool CalledMap = false;
@@ -91,7 +62,7 @@ struct DoMapFieldPermutation
                   vtkm::Float64 invalidValue)
   {
     vtkm::cont::ArrayHandle<T> outputArray;
-    MapPermutationWorklet<T> worklet(CastInvalidValue<T>(invalidValue));
+    MapPermutationWorklet<T> worklet(vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
     vtkm::cont::Invoker invoke;
     invoke(worklet, permutation, inputArray, outputArray);
     output = vtkm::cont::VariantArrayHandle(outputArray);

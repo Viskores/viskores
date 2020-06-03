@@ -67,13 +67,20 @@ vtkm::cont::DataSet ConvertDataSetUniformToExplicit(const vtkm::cont::DataSet& u
 const std::vector<vtkm::Float32>& GetExpectedPointData()
 {
   static std::vector<vtkm::Float32> expected = {
-    1.05f,  1.155f, 1.26f,  1.365f, 1.47f,  1.575f, 1.68f,  0.0f,   0.0f,   1.47f,  1.575f, 1.68f,
-    1.785f, 1.89f,  1.995f, 2.1f,   0.0f,   0.0f,   1.89f,  1.995f, 2.1f,   2.205f, 2.31f,  2.415f,
-    2.52f,  0.0f,   0.0f,   2.31f,  2.415f, 2.52f,  2.625f, 2.73f,  2.835f, 2.94f,  0.0f,   0.0f,
-    2.73f,  2.835f, 2.94f,  3.045f, 3.15f,  3.255f, 3.36f,  0.0f,   0.0f,   3.15f,  3.255f, 3.36f,
-    3.465f, 3.57f,  3.675f, 3.78f,  0.0f,   0.0f,   3.57f,  3.675f, 3.78f,  3.885f, 3.99f,  4.095f,
-    4.2f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,
-    0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f,   0.0f
+    1.05f,         1.155f,        1.26f,         1.365f,        1.47f,         1.575f,
+    1.68f,         vtkm::Nan32(), vtkm::Nan32(), 1.47f,         1.575f,        1.68f,
+    1.785f,        1.89f,         1.995f,        2.1f,          vtkm::Nan32(), vtkm::Nan32(),
+    1.89f,         1.995f,        2.1f,          2.205f,        2.31f,         2.415f,
+    2.52f,         vtkm::Nan32(), vtkm::Nan32(), 2.31f,         2.415f,        2.52f,
+    2.625f,        2.73f,         2.835f,        2.94f,         vtkm::Nan32(), vtkm::Nan32(),
+    2.73f,         2.835f,        2.94f,         3.045f,        3.15f,         3.255f,
+    3.36f,         vtkm::Nan32(), vtkm::Nan32(), 3.15f,         3.255f,        3.36f,
+    3.465f,        3.57f,         3.675f,        3.78f,         vtkm::Nan32(), vtkm::Nan32(),
+    3.57f,         3.675f,        3.78f,         3.885f,        3.99f,         4.095f,
+    4.2f,          vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32(),
+    vtkm::Nan32(), vtkm::Nan32(), vtkm::Nan32()
   };
   return expected;
 }
