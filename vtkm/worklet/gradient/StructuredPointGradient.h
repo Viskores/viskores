@@ -138,29 +138,29 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
 
     if (onBoundary[0])
     {
-      xi = (inputPoints.Get(1, 0, 0) - inputPoints.Get(-1, 0, 0)) * 0.5f;
+      xi = (inputPoints.Get(1, 0, 0) - inputPoints.Get(-1, 0, 0));
     }
     else
     {
-      xi = inputPoints.GetUnchecked(1, 0, 0) - inputPoints.GetUnchecked(-1, 0, 0);
+      xi = (inputPoints.GetUnchecked(1, 0, 0) - inputPoints.GetUnchecked(-1, 0, 0)) * 0.5f;
     }
 
     if (onBoundary[1])
     {
-      eta = (inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0)) * 0.5f;
+      eta = (inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0));
     }
     else
     {
-      eta = inputPoints.GetUnchecked(0, 1, 0) - inputPoints.GetUnchecked(0, -1, 0);
+      eta = (inputPoints.GetUnchecked(0, 1, 0) - inputPoints.GetUnchecked(0, -1, 0)) * 0.5f;
     }
 
     if (onBoundary[2])
     {
-      zeta = (inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1)) * 0.5f;
+      zeta = (inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1));
     }
     else
     {
-      zeta = inputPoints.GetUnchecked(0, 0, 1) - inputPoints.GetUnchecked(0, 0, -1);
+      zeta = (inputPoints.GetUnchecked(0, 0, 1) - inputPoints.GetUnchecked(0, 0, -1)) * 0.5f;
     }
 
     CT aj = xi[0] * eta[1] * zeta[2] + xi[1] * eta[2] * zeta[0] + xi[2] * eta[0] * zeta[1] -
