@@ -26,8 +26,8 @@ struct CanonicalFunctor
   /// random real number in the range of [0, 1).
   // We take 53 bits (number of bits in mantissa in a double) from the 64 bits random source
   // and divide it by (1 << 53).
-  static constexpr vtkm::Float64 DIVISOR = static_cast<vtkm::Float64>(1UL << 53);
-  static constexpr vtkm::UInt64 MASK = (1UL << 53) - 1UL;
+  static constexpr vtkm::Float64 DIVISOR = static_cast<vtkm::Float64>(vtkm::UInt64{ 1 } << 53);
+  static constexpr vtkm::UInt64 MASK = (vtkm::UInt64{ 1 } << 53) - vtkm::UInt64{ 1 };
 
   VTKM_EXEC_CONT
   vtkm::Float64 operator()(vtkm::UInt64 bits) const { return (bits & MASK) / DIVISOR; }
