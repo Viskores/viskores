@@ -109,6 +109,8 @@ struct ComputePass4Y : public vtkm::worklet::WorkletVisitCellsWithPoints
 
     const vtkm::Id3 pdims = this->PointDims;
     const vtkm::Id3 increments = compute_incs3d(pdims);
+    const vtkm::Id startingCellId =
+      compute_start(AxisToSum{}, state.ijk, pdims - vtkm::Id3{ 1, 1, 1 });
     vtkm::Id edgeIds[12];
 
     auto edgeCase = getEdgeCase(edges, state.startPos, (state.axis_inc * state.left));
@@ -122,7 +124,7 @@ struct ComputePass4Y : public vtkm::worklet::WorkletVisitCellsWithPoints
       if (numTris > 0)
       {
         //compute what the current cellId is
-        vtkm::Id cellId = compute_start(AxisToSum{}, ijk, pdims - vtkm::Id3{ 1, 1, 1 });
+        vtkm::Id cellId = compute_cell_Id(AxisToSum{}, startingCellId, state.axis_inc, i);
 
         // Start by generating triangles for this case
         generate_tris(cellId, edgeCase, numTris, edgeIds, cell_tri_offset, conn, inputCellIds);
