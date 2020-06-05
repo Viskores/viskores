@@ -14,6 +14,8 @@
 
 #include <vtkm/filter/MapFieldPermutation.h>
 
+#include <vtkm/cont/internal/CastInvalidValue.h>
+
 namespace vtkm
 {
 namespace filter
@@ -25,6 +27,12 @@ inline void Probe::SetGeometry(const vtkm::cont::DataSet& geometry)
   this->Geometry = vtkm::cont::DataSet();
   this->Geometry.SetCellSet(geometry.GetCellSet());
   this->Geometry.AddCoordinateSystem(geometry.GetCoordinateSystem());
+}
+
+VTKM_CONT
+inline const vtkm::cont::DataSet& Probe::GetGeometry() const
+{
+  return this->Geometry;
 }
 
 template <typename DerivedPolicy>
@@ -61,7 +69,8 @@ VTKM_CONT inline bool Probe::MapFieldOntoOutput(vtkm::cont::DataSet& result,
   }
   else if (field.IsFieldCell())
   {
-    return vtkm::filter::MapFieldPermutation(field, this->Worklet.GetCellIds(), result);
+    return vtkm::filter::MapFieldPermutation(
+      field, this->Worklet.GetCellIds(), result, this->InvalidValue);
   }
   else if (field.IsFieldGlobal())
   {
@@ -82,7 +91,9 @@ VTKM_CONT inline bool Probe::DoMapField(vtkm::cont::DataSet& result,
 {
   VTKM_ASSERT(fieldMeta.IsPointField());
   auto fieldArray =
-    this->Worklet.ProcessPointField(input, typename DerivedPolicy::AllCellSetList());
+    this->Worklet.ProcessPointField(input,
+                                    vtkm::cont::internal::CastInvalidValue<T>(this->InvalidValue),
+                                    typename DerivedPolicy::AllCellSetList());
   result.AddField(fieldMeta.AsField(fieldArray));
   return true;
 }
