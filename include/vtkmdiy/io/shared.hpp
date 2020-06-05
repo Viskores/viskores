@@ -31,8 +31,8 @@ class SharedOutFile: public std::ostringstream
 
                 // write the file serially
                 std::ofstream out(filename_);
-                for (auto& contents : all_contents)
-                    out.write(contents.data(), contents.size());
+                for (auto& cntnts : all_contents)
+                    out.write(cntnts.data(), cntnts.size());
             } else
                 diy::mpi::gather(world_, contents, root_);
         }
