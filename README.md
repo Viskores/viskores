@@ -200,7 +200,6 @@ scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
                                       outputData.GetField(fieldName),
                                       colorTable));
 vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-view.Initialize();
 view.Paint();
 view.SaveAs("demo_output.png");
 ```

@@ -43,6 +43,7 @@ public:
 
   virtual vtkm::rendering::Canvas* NewCopy() const;
 
+  VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
   virtual void Initialize();
 
   virtual void Activate();

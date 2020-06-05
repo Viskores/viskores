@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
   scene.AddActor(actor);
   // Create a view and use it to render the input data using OS Mesa
   vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-  view.Initialize();
   view.Paint();
   view.SaveAs("demo_input.pnm");
 
@@ -96,7 +95,6 @@ int main(int argc, char* argv[])
   scene2.AddActor(actor2);
 
   vtkm::rendering::View3D view2(scene2, mapper, canvas, camera, bg);
-  view2.Initialize();
   view2.Paint();
   view2.SaveAs("demo_output.pnm");
 

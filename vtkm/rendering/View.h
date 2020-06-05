@@ -82,6 +82,7 @@ public:
   VTKM_CONT
   void SetForegroundColor(const vtkm::rendering::Color& color);
 
+  VTKM_DEPRECATED(1.6, "Initialize() does nothing.");
   virtual void Initialize();
 
   virtual void Paint() = 0;
