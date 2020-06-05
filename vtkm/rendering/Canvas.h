@@ -13,6 +13,7 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ColorTable.h>
