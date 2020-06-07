@@ -968,7 +968,7 @@ public:
       color[3] = alpha + color[3];
 
       currentDistance += SampleDistance;
-      if (color[3] >= 1.f || currentDistance > maxDistance)
+      if (color[3] >= 1.f || currentDistance >= maxDistance)
       {
         rayStatus = RAY_TERMINATED;
         break;
