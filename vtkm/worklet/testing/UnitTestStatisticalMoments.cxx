@@ -8,9 +8,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/StatisticalMoments.h>
 
-#include <vtkm/cont //testing/Testing.h>
+#include <random>
 
 void TestPoissonDistribution()
 {
@@ -302,6 +303,33 @@ void TestCatastrophicCancellation()
   VTKM_TEST_ASSERT(test_equal(resultEvil.variance_n(), 22.5));
 }
 
+void TestGeneGolub()
+{
+  // Bad case example proposed by Gene Golub, the variance may come out
+  // as negative due to numerical precision. Thanks to Nick Thompson for
+  // providing this unit test.
+
+  // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
+  std::random_device rd{};
+  auto seed = rd();
+  std::mt19937 gen(seed);
+  std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
+
+  std::vector<vtkm::Float32> v(50000);
+  for (size_t i = 0; i < v.size(); ++i)
+  {
+    v[i] = dis(gen);
+  }
+
+  auto array = vtkm::cont::make_ArrayHandle(v);
+  auto result = vtkm::worklet::StatisticalMoments::Run(array);
+
+  // Variance should be positive
+  VTKM_TEST_ASSERT(result.variance() >= 0);
+  // It should also be stddev of the distribution squared.
+  VTKM_TEST_ASSERT(test_equal(result.variance(), 0.01f * 0.01f));
+}
+
 void TestStatisticalMoments()
 {
   TestPoissonDistribution();
@@ -309,6 +337,7 @@ void TestStatisticalMoments()
   TestChiSquare();
   TestUniform();
   TestCatastrophicCancellation();
+  TestGeneGolub();
 }
 
 int UnitTestStatisticalMoments(int argc, char* argv[])

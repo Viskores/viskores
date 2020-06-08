@@ -47,9 +47,9 @@ struct StatState
     result.max = vtkm::Max(x.max, y.max);
 
     result.sum = x.sum + y.sum;
-    // We calculate mean in each "reduction" from sum and n
-    // this saves one multiplication and hopefully we don't
-    // accumulate more error this way.
+    // We deviate from the literature and calculate mean in each
+    // "reduction" from sum and n this saves one multiplication
+    // and hopefully we don't accumulate more error this way.
     result.mean = result.sum / result.n;
 
     T delta = y.mean - x.mean;
@@ -108,9 +108,18 @@ struct MakeStatState
 class StatisticalMoments
 {
 public:
+  /// \brief Calculate various summary statics for the input ArrayHandle
+  ///
+  /// Reference:
+  ///    [1] Wikipeida, parallel algorithm for calculating variance
+  ///        http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+  ///    [2] Implementation of [1] in the Trust library
+  ///        https://github.com/thrust/thrust/blob/master/examples/summary_statistics.cu
+  ///    [3] Bennett, Janine, et al. "Numerically stable, single-pass, parallel statistics algorithms."
+  ///        2009 IEEE International Conference on Cluster Computing and Workshops. IEEE, 2009.
   template <typename FieldType, typename Storage>
   VTKM_CONT static detail::StatState<FieldType> Run(
-    vtkm::cont::ArrayHandle<FieldType, Storage> field)
+    const vtkm::cont::ArrayHandle<FieldType, Storage>& field)
   {
     using Algorithm = vtkm::cont::Algorithm;
 
