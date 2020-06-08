@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
   auto config = vtkm::cont::Initialize(argc, argv, opts);
 
   vtkmdiy::mpi::environment env(argc, argv);
-  auto comm = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
+  vtkmdiy::mpi::communicator comm;
   vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
 
   if (argc != 3)

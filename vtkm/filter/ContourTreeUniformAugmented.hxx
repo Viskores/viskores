@@ -202,8 +202,7 @@ public:
   {
     if (this->NumberOfDimensions() == 2)
     {
-      // may need to change back when porting ot later verison of VTKM/vtkmdiy
-      vtkmdiy::DiscreteBounds domain; //(2);
+      vtkmdiy::DiscreteBounds domain(2);
       domain.min[0] = domain.min[1] = 0;
       domain.max[0] = static_cast<int>(this->GlobalSize[0]);
       domain.max[1] = static_cast<int>(this->GlobalSize[1]);
@@ -211,8 +210,7 @@ public:
     }
     else
     {
-      // may need to change back when porting to later version of VTMK/vtkmdiy
-      vtkmdiy::DiscreteBounds domain; //(3);
+      vtkmdiy::DiscreteBounds domain(3);
       domain.min[0] = domain.min[1] = domain.min[2] = 0;
       domain.max[0] = static_cast<int>(this->GlobalSize[0]);
       domain.max[1] = static_cast<int>(this->GlobalSize[1]);

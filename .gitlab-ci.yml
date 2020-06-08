@@ -125,6 +125,7 @@ stages:
       # The artifacts of the build.
       - build/bin/
       - build/include/
+      - build/vtkm/thirdparty/diy/vtkmdiy/
       - build/lib/
 
       # CTest and CMake install files.
