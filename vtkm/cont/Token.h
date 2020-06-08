@@ -35,7 +35,7 @@ namespace cont
 class VTKM_CONT_EXPORT Token final
 {
   class InternalStruct;
-  std::unique_ptr<InternalStruct> Internals;
+  mutable std::unique_ptr<InternalStruct> Internals;
 
   struct HeldReference;
 
@@ -129,6 +129,38 @@ public:
   ///
   VTKM_CONT bool IsAttached(vtkm::cont::Token::ReferenceCount* referenceCountPointer) const;
 
+  class Reference
+  {
+    friend Token;
+    const void* InternalsPointer;
+    VTKM_CONT Reference(const void* internalsPointer)
+      : InternalsPointer(internalsPointer)
+    {
+    }
+
+  public:
+    VTKM_CONT bool operator==(const Reference& rhs) const
+    {
+      return this->InternalsPointer == rhs.InternalsPointer;
+    }
+    VTKM_CONT bool operator!=(const Reference& rhs) const
+    {
+      return this->InternalsPointer != rhs.InternalsPointer;
+    }
+  };
+
+  /// \brief Returns a reference object to this `Token`.
+  ///
+  /// `Token` objects cannot be copied and generally are not shared. However, there are cases
+  /// where you need to save a reference to a `Token` belonging to someone else so that it can
+  /// later be compared. Saving a pointer to a `Token` is not always safe because `Token`s can
+  /// be moved. To get around this problem, you can save a `Reference` to the `Token`. You
+  /// cannot use the `Reference` to manipulate the `Token` in any way (because you do not
+  /// own it). Rather, a `Reference` can just be used to compare to a `Token` object (or another
+  /// `Reference`).
+  ///
+  VTKM_CONT Reference GetReference() const;
+
 private:
   VTKM_CONT void Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectReference,
                         vtkm::cont::Token::ReferenceCount* referenceCountPointer,
@@ -138,6 +170,28 @@ private:
   VTKM_CONT bool IsAttached(std::unique_lock<std::mutex>& lock,
                             vtkm::cont::Token::ReferenceCount* referenceCountPointer) const;
 };
+
+VTKM_CONT inline bool operator==(const vtkm::cont::Token& token,
+                                 const vtkm::cont::Token::Reference& ref)
+{
+  return token.GetReference() == ref;
+}
+VTKM_CONT inline bool operator!=(const vtkm::cont::Token& token,
+                                 const vtkm::cont::Token::Reference& ref)
+{
+  return token.GetReference() != ref;
+}
+
+VTKM_CONT inline bool operator==(const vtkm::cont::Token::Reference& ref,
+                                 const vtkm::cont::Token& token)
+{
+  return ref == token.GetReference();
+}
+VTKM_CONT inline bool operator!=(const vtkm::cont::Token::Reference& ref,
+                                 const vtkm::cont::Token& token)
+{
+  return ref != token.GetReference();
+}
 }
 } // namespace vtkm::cont
 

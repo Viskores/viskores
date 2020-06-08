@@ -18,7 +18,9 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <array>
+#include <chrono>
 #include <future>
+#include <thread>
 
 namespace
 {
@@ -35,7 +37,7 @@ bool IncrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -55,13 +57,49 @@ bool IncrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 }
 
 template <typename Storage>
+bool IncrementArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> array,
+                           vtkm::cont::Token&& token_,
+                           std::size_t threadNum)
+{
+  // Make sure the Token is moved to the proper scope.
+  vtkm::cont::Token token = std::move(token_);
+
+  // Sleep for a bit to make sure that threads at the end wait for threads before that
+  // are sleeping.
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(10 * static_cast<long long>(NUM_THREADS - threadNum)));
+
+  auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
+  if (portal.GetNumberOfValues() != ARRAY_SIZE)
+  {
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
+    return false;
+  }
+
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+  {
+    ValueType value = portal.Get(index);
+    ValueType base = TestValue(index, ValueType{});
+    if (!test_equal(value, base + static_cast<ValueType>(threadNum)))
+    {
+      std::cout << "!!!!! Unexpected value in array: " << value << std::endl;
+      std::cout << "!!!!! ArrayHandle access likely out of order." << std::endl;
+      return false;
+    }
+    portal.Set(index, value + 1);
+  }
+
+  return true;
+}
+
+template <typename Storage>
 bool CheckArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   vtkm::cont::Token token;
   auto portal = array.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -86,7 +124,7 @@ bool DecrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   auto portal = array.PrepareForInPlace(vtkm::cont::DeviceAdapterTagSerial{}, token);
   if (portal.GetNumberOfValues() != ARRAY_SIZE)
   {
-    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues();
+    std::cout << "!!!!! Wrong array size: " << portal.GetNumberOfValues() << std::endl;
     return false;
   }
 
@@ -181,6 +219,31 @@ void ThreadsDecrementArray(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 }
 
 template <typename Storage>
+void ThreadsIncrementToArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> array)
+{
+  VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE);
+  SetPortal(array.WritePortal());
+
+  std::cout << "  Starting ordered write threads" << std::endl;
+  std::array<decltype(std::async(std::launch::async, IncrementArray<Storage>, array)), NUM_THREADS>
+    futures;
+  for (std::size_t index = 0; index < NUM_THREADS; ++index)
+  {
+    vtkm::cont::Token token;
+    array.Enqueue(token);
+    futures[index] = std::async(
+      std::launch::async, IncrementArrayOrdered<Storage>, array, std::move(token), index);
+  }
+
+  std::cout << "  Wait for threads to complete" << std::endl;
+  for (std::size_t index = 0; index < NUM_THREADS; ++index)
+  {
+    bool futureResult = futures[index].get();
+    VTKM_TEST_ASSERT(futureResult, "Failure in IncrementArray");
+  }
+}
+
+template <typename Storage>
 void InvalidateControlPortal(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   std::cout << "  Starting invalidate control portal" << std::endl;
@@ -219,6 +282,7 @@ void DoThreadSafetyTest(vtkm::cont::ArrayHandle<ValueType, Storage> array)
   ThreadsIncrementToArray(array);
   ThreadsCheckArray(array);
   ThreadsDecrementArray(array);
+  ThreadsIncrementToArrayOrdered(array);
   InvalidateControlPortal(array);
 }
 

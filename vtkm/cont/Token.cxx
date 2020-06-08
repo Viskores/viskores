@@ -85,6 +85,16 @@ void vtkm::cont::Token::DetachFromAll()
   heldReferences->clear();
 }
 
+vtkm::cont::Token::Reference vtkm::cont::Token::GetReference() const
+{
+  if (!this->Internals)
+  {
+    this->Internals.reset(new InternalStruct);
+  }
+
+  return this->Internals.get();
+}
+
 void vtkm::cont::Token::Attach(std::unique_ptr<vtkm::cont::Token::ObjectReference>&& objectRef,
                                vtkm::cont::Token::ReferenceCount* referenceCountPointer,
                                std::unique_lock<std::mutex>& lock,

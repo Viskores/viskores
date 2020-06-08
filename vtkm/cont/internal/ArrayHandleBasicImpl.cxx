@@ -95,10 +95,13 @@ vtkm::Id ArrayHandleImpl::GetNumberOfValues(const LockType& lock, vtkm::UInt64 s
   }
 }
 
-void ArrayHandleImpl::Allocate(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT)
+void ArrayHandleImpl::Allocate(LockType& lock,
+                               vtkm::cont::Token& token,
+                               vtkm::Id numberOfValues,
+                               vtkm::UInt64 sizeOfT)
 {
-  this->WaitToWrite(lock, vtkm::cont::Token{});
-  this->ReleaseResourcesExecutionInternal(lock);
+  this->WaitToWrite(lock, token);
+  this->ReleaseResourcesExecutionInternal(lock, token);
   this->Internals->GetControlArray(lock)->AllocateValues(numberOfValues, sizeOfT);
   // Set to false and then to true to ensure anything pointing to an array before the allocate
   // is invalidated.
@@ -106,7 +109,10 @@ void ArrayHandleImpl::Allocate(LockType& lock, vtkm::Id numberOfValues, vtkm::UI
   this->Internals->SetControlArrayValid(lock, true);
 }
 
-void ArrayHandleImpl::Shrink(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT)
+void ArrayHandleImpl::Shrink(LockType& lock,
+                             vtkm::cont::Token& token,
+                             vtkm::Id numberOfValues,
+                             vtkm::UInt64 sizeOfT)
 {
   VTKM_ASSERT(numberOfValues >= 0);
 
@@ -116,7 +122,7 @@ void ArrayHandleImpl::Shrink(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt
 
     if (numberOfValues < originalNumberOfValues)
     {
-      this->WaitToWrite(lock, vtkm::cont::Token{});
+      this->WaitToWrite(lock, token);
       if (this->Internals->IsControlArrayValid(lock))
       {
         this->Internals->GetControlArray(lock)->Shrink(numberOfValues);
@@ -144,14 +150,14 @@ void ArrayHandleImpl::Shrink(LockType& lock, vtkm::Id numberOfValues, vtkm::UInt
     // If we are shrinking to 0, there is nothing to save and we might as well
     // free up memory. Plus, some storage classes expect that data will be
     // deallocated when the size goes to zero.
-    this->Allocate(lock, 0, sizeOfT);
+    this->Allocate(lock, token, 0, sizeOfT);
   }
 }
 
-void ArrayHandleImpl::ReleaseResources(LockType& lock)
+void ArrayHandleImpl::ReleaseResources(LockType& lock, vtkm::cont::Token& token)
 {
-  this->WaitToWrite(lock, vtkm::cont::Token{});
-  this->ReleaseResourcesExecutionInternal(lock);
+  this->WaitToWrite(lock, token);
+  this->ReleaseResourcesExecutionInternal(lock, token);
 
   if (this->Internals->IsControlArrayValid(lock))
   {
@@ -192,11 +198,6 @@ void ArrayHandleImpl::PrepareForInput(LockType& lock,
     this->Internals->GetControlArray(lock)->GetBasePointer(),
     this->Internals->GetExecutionArray(lock),
     numBytes);
-
-  token.Attach(this->Internals,
-               this->Internals->GetReadCount(lock),
-               lock,
-               &this->Internals->ConditionVariable);
 }
 
 void ArrayHandleImpl::PrepareForOutput(LockType& lock,
@@ -221,11 +222,6 @@ void ArrayHandleImpl::PrepareForOutput(LockType& lock,
     numBytes);
 
   this->Internals->SetExecutionArrayValid(lock, true);
-
-  token.Attach(this->Internals,
-               this->Internals->GetWriteCount(lock),
-               lock,
-               &this->Internals->ConditionVariable);
 }
 
 void ArrayHandleImpl::PrepareForInPlace(LockType& lock,
@@ -265,14 +261,10 @@ void ArrayHandleImpl::PrepareForInPlace(LockType& lock,
 
   // Invalidate the control array, since we expect the values to be modified:
   this->Internals->SetControlArrayValid(lock, false);
-
-  token.Attach(this->Internals,
-               this->Internals->GetWriteCount(lock),
-               lock,
-               &this->Internals->ConditionVariable);
 }
 
 bool ArrayHandleImpl::PrepareForDevice(LockType& lock,
+                                       vtkm::cont::Token& token,
                                        DeviceAdapterId devId,
                                        vtkm::UInt64 sizeOfT) const
 {
@@ -292,8 +284,8 @@ bool ArrayHandleImpl::PrepareForDevice(LockType& lock,
       // could change the ExecutionInterface, which would cause problems. In the future we should
       // support multiple devices, in which case we would not have to delete one execution array
       // to load another.
-      this->WaitToWrite(lock, vtkm::cont::Token{}); // Make sure no one is reading device array
-      this->SyncControlArray(lock, sizeOfT);
+      this->WaitToWrite(lock, token); // Make sure no one is reading device array
+      this->SyncControlArray(lock, token, sizeOfT);
       TypelessExecutionArray execArray = this->Internals->MakeTypelessExecutionArray(lock);
       this->Internals->GetExecutionInterface(lock)->Free(execArray);
       this->Internals->SetExecutionArrayValid(lock, false);
@@ -313,7 +305,9 @@ DeviceAdapterId ArrayHandleImpl::GetDeviceAdapterId(const LockType& lock) const
 }
 
 
-void ArrayHandleImpl::SyncControlArray(LockType& lock, vtkm::UInt64 sizeOfT) const
+void ArrayHandleImpl::SyncControlArray(LockType& lock,
+                                       vtkm::cont::Token& token,
+                                       vtkm::UInt64 sizeOfT) const
 {
   if (!this->Internals->IsControlArrayValid(lock))
   {
@@ -325,7 +319,7 @@ void ArrayHandleImpl::SyncControlArray(LockType& lock, vtkm::UInt64 sizeOfT) con
       // However, if we are here, that `Token` should not already be attached to this array.
       // If it were, then there should be no reason to move data arround (unless the `Token`
       // was used when preparing for multiple devices, which it should not be used like that).
-      this->WaitToRead(lock, vtkm::cont::Token{});
+      this->WaitToRead(lock, token);
       const vtkm::UInt64 numBytes =
         static_cast<vtkm::UInt64>(static_cast<char*>(this->Internals->GetExecutionArrayEnd(lock)) -
                                   static_cast<char*>(this->Internals->GetExecutionArray(lock)));
@@ -349,11 +343,11 @@ void ArrayHandleImpl::SyncControlArray(LockType& lock, vtkm::UInt64 sizeOfT) con
   }
 }
 
-void ArrayHandleImpl::ReleaseResourcesExecutionInternal(LockType& lock)
+void ArrayHandleImpl::ReleaseResourcesExecutionInternal(LockType& lock, vtkm::cont::Token& token)
 {
   if (this->Internals->IsExecutionArrayValid(lock))
   {
-    this->WaitToWrite(lock, vtkm::cont::Token{});
+    this->WaitToWrite(lock, token);
     // Note that it is possible that while waiting someone else deleted the execution array.
     // That is why we check again.
   }
@@ -367,37 +361,110 @@ void ArrayHandleImpl::ReleaseResourcesExecutionInternal(LockType& lock)
 
 bool ArrayHandleImpl::CanRead(const LockType& lock, const vtkm::cont::Token& token) const
 {
-  return ((*this->Internals->GetWriteCount(lock) < 1) ||
-          (token.IsAttached(this->Internals->GetWriteCount(lock))));
+  // If the token is already attached to this array, then we allow reading.
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    return true;
+  }
+
+  // If there is anyone else waiting at the top of the queue, we cannot access this array.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && (queue.front() != token))
+  {
+    return false;
+  }
+
+  // No one else is waiting, so we can read the array as long as no one else is writing.
+  return (*this->Internals->GetWriteCount(lock) < 1);
 }
 
 bool ArrayHandleImpl::CanWrite(const LockType& lock, const vtkm::cont::Token& token) const
 {
-  return (((*this->Internals->GetWriteCount(lock) < 1) ||
-           (token.IsAttached(this->Internals->GetWriteCount(lock)))) &&
-          ((*this->Internals->GetReadCount(lock) < 1) ||
-           ((*this->Internals->GetReadCount(lock) == 1) &&
-            token.IsAttached(this->Internals->GetReadCount(lock)))));
+  // If the token is already attached to this array, then we allow writing.
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    return true;
+  }
+
+  // If there is anyone else waiting at the top of the queue, we cannot access this array.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && (queue.front() != token))
+  {
+    return false;
+  }
+
+  // No one else is waiting, so we can write the array as long as no one else is reading or writing.
+  return ((*this->Internals->GetWriteCount(lock) < 1) &&
+          (*this->Internals->GetReadCount(lock) < 1));
 }
 
-void ArrayHandleImpl::WaitToRead(LockType& lock, const vtkm::cont::Token& token) const
+void ArrayHandleImpl::WaitToRead(LockType& lock, vtkm::cont::Token& token) const
 {
+  this->Enqueue(lock, token);
+
   // Note that if you deadlocked here, that means that you are trying to do a read operation on an
-  // array where an object is writing to it. This could happen on the same thread. For example, if
-  // you call `WritePortal()` then no other operation that can result in reading or writing
-  // data in the array can happen while the resulting portal is still in scope.
+  // array where an object is writing to it.
   this->Internals->ConditionVariable.wait(
     lock, [&lock, &token, this] { return this->CanRead(lock, token); });
+
+  token.Attach(this->Internals,
+               this->Internals->GetReadCount(lock),
+               lock,
+               &this->Internals->ConditionVariable);
+
+  // We successfully attached the token. Pop it off the queue.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && queue.front() == token)
+  {
+    queue.pop_front();
+
+    // It might be the case that the next Token in the queue is also waiting. Wake up threads
+    // waiting on the condition variable so that they may also access this array.
+    this->Internals->ConditionVariable.notify_all();
+  }
 }
 
-void ArrayHandleImpl::WaitToWrite(LockType& lock, const vtkm::cont::Token& token) const
+void ArrayHandleImpl::WaitToWrite(LockType& lock, vtkm::cont::Token& token) const
 {
+  this->Enqueue(lock, token);
+
   // Note that if you deadlocked here, that means that you are trying to do a write operation on an
-  // array where an object is reading or writing to it. This could happen on the same thread. For
-  // example, if you call `WritePortal()` then no other operation that can result in reading
-  // or writing data in the array can happen while the resulting portal is still in scope.
+  // array where an object is reading or writing to it.
   this->Internals->ConditionVariable.wait(
     lock, [&lock, &token, this] { return this->CanWrite(lock, token); });
+
+  token.Attach(this->Internals,
+               this->Internals->GetWriteCount(lock),
+               lock,
+               &this->Internals->ConditionVariable);
+
+  // We successfully attached the token. Pop it off the queue.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && queue.front() == token)
+  {
+    queue.pop_front();
+  }
+}
+
+void ArrayHandleImpl::Enqueue(const LockType& lock, const vtkm::cont::Token& token) const
+{
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    // Do not need to enqueue if we are already attached.
+    return;
+  }
+
+  auto& queue = this->Internals->GetQueue(lock);
+  if (std::find(queue.begin(), queue.end(), token.GetReference()) != queue.end())
+  {
+    // This token is already in the queue.
+    return;
+  }
+
+  this->Internals->GetQueue(lock).push_back(token.GetReference());
 }
 
 } // end namespace internal

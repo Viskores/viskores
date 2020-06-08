@@ -96,72 +96,93 @@ VTKM_CONT bool ArrayHandle<T, StorageTagBasic>::operator!=(const ArrayHandle<VT,
 template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::StorageType& ArrayHandle<T, StorageTagBasic>::GetStorage()
 {
-  LockType lock = this->GetLock();
-  this->SyncControlArray(lock);
-  this->Internals->CheckControlArrayValid(lock);
-  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
-  //is not valid
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->SyncControlArray(lock, token);
+    this->Internals->CheckControlArrayValid(lock);
+    //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+    //is not valid
 
-  return *(static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock)));
+    return *(static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock)));
+  }
 }
 
 template <typename T>
 const typename ArrayHandle<T, StorageTagBasic>::StorageType&
 ArrayHandle<T, StorageTagBasic>::GetStorage() const
 {
-  LockType lock = this->GetLock();
-  this->SyncControlArray(lock);
-  this->Internals->CheckControlArrayValid(lock);
-  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
-  //is not valid
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->SyncControlArray(lock, token);
+    this->Internals->CheckControlArrayValid(lock);
+    //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+    //is not valid
 
-  return *(static_cast<const StorageType*>(this->Internals->Internals->GetControlArray(lock)));
+    return *(static_cast<const StorageType*>(this->Internals->Internals->GetControlArray(lock)));
+  }
 }
 
 template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalType
 ArrayHandle<T, StorageTagBasic>::GetPortalControl()
 {
-  LockType lock = this->GetLock();
-  this->SyncControlArray(lock);
-  this->Internals->CheckControlArrayValid(lock);
-  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
-  //is not valid
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->SyncControlArray(lock, token);
+    this->Internals->CheckControlArrayValid(lock);
+    //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+    //is not valid
 
-  // If the user writes into the iterator we return, then the execution
-  // array will become invalid. Play it safe and release the execution
-  // resources. (Use the const version to preserve the execution array.)
-  this->ReleaseResourcesExecutionInternal(lock);
-  StorageType* privStorage =
-    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
-  return privStorage->GetPortal();
+    // If the user writes into the iterator we return, then the execution
+    // array will become invalid. Play it safe and release the execution
+    // resources. (Use the const version to preserve the execution array.)
+    this->ReleaseResourcesExecutionInternal(lock, token);
+    StorageType* privStorage =
+      static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+    return privStorage->GetPortal();
+  }
 }
 
 template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::StorageType::PortalConstType
 ArrayHandle<T, StorageTagBasic>::GetPortalConstControl() const
 {
-  LockType lock = this->GetLock();
-  this->SyncControlArray(lock);
-  this->Internals->CheckControlArrayValid(lock);
-  //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
-  //is not valid
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->SyncControlArray(lock, token);
+    this->Internals->CheckControlArrayValid(lock);
+    //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
+    //is not valid
 
-  StorageType* privStorage =
-    static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
-  return privStorage->GetPortalConst();
+    StorageType* privStorage =
+      static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
+    return privStorage->GetPortalConst();
+  }
 }
 
 template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::ReadPortalType
-ArrayHandle<T, StorageTagBasic>::ReadPortal() const
+ArrayHandle<T, StorageTagBasic>::ReadPortal(vtkm::cont::Token& token) const
 {
   LockType lock = this->GetLock();
-  {
-    vtkm::cont::Token token;
-    this->Internals->WaitToRead(lock, token);
-  }
-  this->SyncControlArray(lock);
+  this->Internals->WaitToRead(lock, token);
+  this->SyncControlArray(lock, token);
   this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
@@ -173,15 +194,20 @@ ArrayHandle<T, StorageTagBasic>::ReadPortal() const
 }
 
 template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::ReadPortalType
+ArrayHandle<T, StorageTagBasic>::ReadPortal() const
+{
+  vtkm::cont::Token token;
+  return this->ReadPortal(token);
+}
+
+template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::WritePortalType
-ArrayHandle<T, StorageTagBasic>::WritePortal() const
+ArrayHandle<T, StorageTagBasic>::WritePortal(vtkm::cont::Token& token) const
 {
   LockType lock = this->GetLock();
-  {
-    vtkm::cont::Token token;
-    this->Internals->WaitToWrite(lock, token);
-  }
-  this->SyncControlArray(lock);
+  this->Internals->WaitToWrite(lock, token);
+  this->SyncControlArray(lock, token);
   this->Internals->CheckControlArrayValid(lock);
   //CheckControlArrayValid will throw an exception if this->Internals->ControlArrayValid
   //is not valid
@@ -189,11 +215,19 @@ ArrayHandle<T, StorageTagBasic>::WritePortal() const
   // If the user writes into the iterator we return, then the execution
   // array will become invalid. Play it safe and release the execution
   // resources. (Use the const version to preserve the execution array.)
-  this->ReleaseResourcesExecutionInternal(lock);
+  this->ReleaseResourcesExecutionInternal(lock, token);
   StorageType* privStorage =
     static_cast<StorageType*>(this->Internals->Internals->GetControlArray(lock));
   return ArrayHandle<T, StorageTagBasic>::WritePortalType(
     this->Internals->Internals->GetControlArrayValidPointer(lock), privStorage->GetPortal());
+}
+
+template <typename T>
+typename ArrayHandle<T, StorageTagBasic>::WritePortalType
+ArrayHandle<T, StorageTagBasic>::WritePortal() const
+{
+  vtkm::cont::Token token;
+  return this->WritePortal(token);
 }
 
 template <typename T>
@@ -206,32 +240,56 @@ vtkm::Id ArrayHandle<T, StorageTagBasic>::GetNumberOfValues() const
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
-  LockType lock = this->GetLock();
-  this->Internals->Allocate(lock, numberOfValues, sizeof(T));
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->Internals->Allocate(lock, token, numberOfValues, sizeof(T));
+  }
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
 {
-  LockType lock = this->GetLock();
-  this->Internals->Shrink(lock, numberOfValues, sizeof(T));
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->Internals->Shrink(lock, token, numberOfValues, sizeof(T));
+  }
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecution()
 {
-  LockType lock = this->GetLock();
-  // Save any data in the execution environment by making sure it is synced
-  // with the control environment.
-  this->SyncControlArray(lock);
-  this->Internals->ReleaseResourcesExecutionInternal(lock);
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    // Save any data in the execution environment by making sure it is synced
+    // with the control environment.
+    this->SyncControlArray(lock, token);
+    this->Internals->ReleaseResourcesExecutionInternal(lock, token);
+  }
 }
 
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::ReleaseResources()
 {
-  LockType lock = this->GetLock();
-  this->Internals->ReleaseResources(lock);
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->Internals->ReleaseResources(lock, token);
+  }
 }
 
 template <typename T>
@@ -242,7 +300,7 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device,
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
   LockType lock = this->GetLock();
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
 
   this->Internals->PrepareForInput(lock, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortalConst(
@@ -259,7 +317,7 @@ ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals,
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
   LockType lock = this->GetLock();
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
 
   this->Internals->PrepareForOutput(lock, numVals, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortal(
@@ -275,7 +333,7 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device,
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
   LockType lock = this->GetLock();
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
 
   this->Internals->PrepareForInPlace(lock, sizeof(T), token);
   return PortalFactory<DeviceAdapterTag>::CreatePortal(
@@ -286,9 +344,10 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device,
 template <typename T>
 template <typename DeviceAdapterTag>
 void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(LockType& lock,
+                                                       vtkm::cont::Token& token,
                                                        DeviceAdapterTag device) const
 {
-  bool needToRealloc = this->Internals->PrepareForDevice(lock, device, sizeof(T));
+  bool needToRealloc = this->Internals->PrepareForDevice(lock, token, device, sizeof(T));
   if (needToRealloc)
   {
     this->Internals->Internals->SetExecutionInterface(
@@ -308,20 +367,36 @@ DeviceAdapterId ArrayHandle<T, StorageTagBasic>::GetDeviceAdapterId() const
 template <typename T>
 void ArrayHandle<T, StorageTagBasic>::SyncControlArray() const
 {
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
+    this->SyncControlArray(lock, token);
+  }
+}
+
+template <typename T>
+void ArrayHandle<T, StorageTagBasic>::SyncControlArray(LockType& lock,
+                                                       vtkm::cont::Token& token) const
+{
+  this->Internals->SyncControlArray(lock, token, sizeof(T));
+}
+
+template <typename T>
+void ArrayHandle<T, StorageTagBasic>::Enqueue(const vtkm::cont::Token& token) const
+{
   LockType lock = this->GetLock();
-  this->Internals->SyncControlArray(lock, sizeof(T));
+  this->Internals->Enqueue(lock, token);
 }
 
 template <typename T>
-void ArrayHandle<T, StorageTagBasic>::SyncControlArray(LockType& lock) const
+void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal(
+  LockType& lock,
+  vtkm::cont::Token& token) const
 {
-  this->Internals->SyncControlArray(lock, sizeof(T));
-}
-
-template <typename T>
-void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal(LockType& lock) const
-{
-  this->Internals->ReleaseResourcesExecutionInternal(lock);
+  this->Internals->ReleaseResourcesExecutionInternal(lock, token);
 }
 }
 } // end namespace vtkm::cont
