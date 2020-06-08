@@ -905,8 +905,9 @@ public:
                                 FieldInOut,
                                 FieldInOut,
                                 WholeArrayIn,
-                                WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+                                WholeArrayInOut,
+                                FieldIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9);
 
   template <typename ScalarPortalType, typename ColorMapType, typename FrameBufferType>
   VTKM_EXEC inline void operator()(const vtkm::Id& currentCell,
@@ -917,7 +918,8 @@ public:
                                    vtkm::UInt8& rayStatus,
                                    const ColorMapType& colorMap,
                                    FrameBufferType& frameBuffer,
-                                   const vtkm::Id& pixelIndex) const
+                                   const vtkm::Id& pixelIndex,
+                                   const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -965,12 +967,12 @@ public:
       color[2] = color[2] + sampleColor[2] * alpha;
       color[3] = alpha + color[3];
 
-      if (color[3] > 1.)
+      currentDistance += SampleDistance;
+      if (color[3] >= 1.f || currentDistance >= maxDistance)
       {
         rayStatus = RAY_TERMINATED;
         break;
       }
-      currentDistance += SampleDistance;
     }
 
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
@@ -1015,8 +1017,10 @@ public:
                                 FieldIn,
                                 ExecObject meshConnectivity,
                                 WholeArrayIn,
-                                WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9, _10, _11, _12);
+                                WholeArrayInOut,
+                                FieldIn);
+  using ExecutionSignature =
+    void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9, _10, _11, _12, _13);
 
   template <typename PointPortalType,
             typename ScalarPortalType,
@@ -1034,7 +1038,8 @@ public:
                                    const vtkm::Vec<FloatType, 3>& origin,
                                    MeshWrapper& meshConn,
                                    const ColorMapType& colorMap,
-                                   FrameBufferType& frameBuffer) const
+                                   FrameBufferType& frameBuffer,
+                                   const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -1118,12 +1123,12 @@ public:
       color[2] = color[2] + sampleColor[2] * sampleColor[3];
       color[3] = sampleColor[3] + color[3];
 
-      if (color[3] >= 1.0)
+      currentDistance += SampleDistance;
+      if (color[3] >= 1.0 || currentDistance >= maxDistance)
       {
         rayStatus = RAY_TERMINATED;
         break;
       }
-      currentDistance += SampleDistance;
     }
 
     BOUNDS_CHECK(frameBuffer, pixelIndex * 4 + 0);
@@ -1216,7 +1221,8 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
                       rays.Origin,
                       MeshContainer,
                       this->ColorMap,
-                      rays.Buffers.at(0).Buffer);
+                      rays.Buffers.at(0).Buffer,
+                      rays.MaxDistance);
   }
   else
   {
@@ -1232,7 +1238,8 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
                       tracker.CurrentDistance,
                       rays.Status,
                       this->ColorMap,
-                      rays.Buffers.at(0).Buffer);
+                      rays.Buffers.at(0).Buffer,
+                      rays.MaxDistance);
   }
 
   this->SampleTime += timer.GetElapsedTime();
