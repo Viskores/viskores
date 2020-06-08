@@ -182,6 +182,7 @@ VTKM_EXEC inline vtkm::UInt8 getEdgeCase(const WholeEdgeField& edges,
   return static_cast<vtkm::UInt8>(e0 | (e1 << 2) | (e2 << 4) | (e3 << 6));
 }
 
+
 //----------------------------------------------------------------------------
 template <typename WholeEdgeField>
 VTKM_EXEC inline void adjustTrimBounds(vtkm::Id rightMax,
@@ -191,7 +192,6 @@ VTKM_EXEC inline void adjustTrimBounds(vtkm::Id rightMax,
                                        vtkm::Id& left,
                                        vtkm::Id& right)
 {
-
   vtkm::UInt8 e0 = edges.Get(startPos[0] + (left * inc));
   vtkm::UInt8 e1 = edges.Get(startPos[1] + (left * inc));
   vtkm::UInt8 e2 = edges.Get(startPos[2] + (left * inc));

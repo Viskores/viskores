@@ -105,8 +105,8 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
     }
     cell_tri_offset += this->CellWriteOffset;
 
-    const Pass4TrimState state(
-      AxisToSum{}, this->PointDims, threadIndices, axis_mins, axis_maxs, edges);
+    Pass4TrimState state(
+      AxisToSum{}, this->PointDims, threadIndices, axis_sums, axis_mins, axis_maxs, edges);
     if (!state.valid)
     {
       return;
@@ -114,37 +114,27 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
 
     const vtkm::Id3 pdims = this->PointDims;
     const vtkm::Id3 increments = compute_incs3d(pdims);
-    const vtkm::Id startingCellId =
-      compute_start(AxisToSum{}, state.ijk, pdims - vtkm::Id3{ 1, 1, 1 });
     vtkm::Id edgeIds[12];
 
     auto edgeCase = getEdgeCase(edges, state.startPos, (state.axis_inc * state.left));
     init_voxelIds(AxisToSum{}, this->PointWriteOffset, edgeCase, axis_sums, edgeIds);
     for (vtkm::Id i = state.left; i < state.right; ++i) // run along the trimmed voxels
     {
-      auto ijk = state.ijk;
-      ijk[AxisToSum::xindex] = i;
       edgeCase = getEdgeCase(edges, state.startPos, (state.axis_inc * i));
       vtkm::UInt8 numTris = data::GetNumberOfPrimitives(edgeCase);
       if (numTris > 0)
       {
-        //compute what the current cellId is
-        vtkm::Id cellId = compute_cell_Id(AxisToSum{}, startingCellId, state.axis_inc, i);
-
         // Start by generating triangles for this case
-        generate_tris(cellId, edgeCase, numTris, edgeIds, cell_tri_offset, conn, inputCellIds);
+        generate_tris(
+          state.cellId, edgeCase, numTris, edgeIds, cell_tri_offset, conn, inputCellIds);
 
         // Now generate edgeIds and weights along voxel axes if needed. Remember to take
         // boundary into account.
-        vtkm::UInt8 loc = static_cast<vtkm::UInt8>(
-          state.yzLoc | (i < 1 ? FlyingEdges3D::MinBoundary
-                               : (i >= (pdims[AxisToSum::xindex] - 2) ? FlyingEdges3D::MaxBoundary
-                                                                      : FlyingEdges3D::Interior)));
         auto* edgeUses = data::GetEdgeUses(edgeCase);
-        if (loc != FlyingEdges3D::Interior || case_includes_axes(edgeUses))
+        if (!fully_interior(state.boundaryStatus) || case_includes_axes(edgeUses))
         {
-          this->Generate(loc,
-                         ijk,
+          this->Generate(state.boundaryStatus,
+                         state.ijk,
                          field,
                          interpolatedEdgeIds,
                          weights,
@@ -157,6 +147,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
         }
         advance_voxelIds(edgeUses, edgeIds);
       }
+      state.increment(AxisToSum{}, pdims);
     }
   }
 
@@ -165,7 +156,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
             typename WholeIEdgeField,
             typename WholeWeightField,
             typename WholePointField>
-  VTKM_EXEC inline void Generate(vtkm::UInt8 loc,
+  VTKM_EXEC inline void Generate(const vtkm::Vec<vtkm::UInt8, 3>& boundaryStatus,
                                  const vtkm::Id3& ijk,
                                  const WholeDataField& field,
                                  const WholeIEdgeField& interpolatedEdgeIds,
@@ -224,105 +215,45 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
         points.Set(writeIndex, coord);
       }
     }
+
     // On the boundary cells special work has to be done to cover the partial
     // cell axes. These are boundary situations where the voxel axes is not
     // fully formed. These situations occur on the +x,+y,+z volume
-    // boundaries. (The other cases fall through the default: case which is
-    // expected.)
+    // boundaries. The other cases such as interior, or -x,-y,-z boundaries fall through
+    // which is expected
     //
-    // Note that loc is one of 27 regions in the volume, with (0,1,2)
-    // indicating (interior, min, max) along coordinate axes.
-    switch (loc)
+    // clang-format off
+    const bool onX = boundaryStatus[AxisToSum::xindex] & FlyingEdges3D::MaxBoundary;
+    const bool onY = boundaryStatus[AxisToSum::yindex] & FlyingEdges3D::MaxBoundary;
+    const bool onZ = boundaryStatus[AxisToSum::zindex] & FlyingEdges3D::MaxBoundary;
+    if (onX) //+x boundary
     {
-      case 2:
-      case 6:
-      case 18:
-      case 22: //+x
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 8:
-      case 9:
-      case 24:
-      case 25: //+y
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 32:
-      case 33:
-      case 36:
-      case 37: //+z
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 10:
-      case 26: //+x +y
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 34:
-      case 38: //+x +z
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 40:
-      case 41: //+y +z
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      case 42: //+x +y +z happens no more than once per volume
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        this->InterpolateEdge(
-          ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-        break;
-      default: // interior, or -x,-y,-z boundaries
-        return;
+      this->InterpolateEdge(ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      if (onY) //+x +y
+      {
+        this->InterpolateEdge(ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      }
+      if (onZ) //+x +z
+      {
+        this->InterpolateEdge(ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      }
     }
+    if (onY) //+y boundary
+    {
+      this->InterpolateEdge(ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      if (onZ) //+y +z boundary
+      {
+        this->InterpolateEdge(ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      }
+    }
+    if (onZ) //+z boundary
+    {
+      this->InterpolateEdge(ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+    }
+    // clang-format on
   }
 
   // Indicate whether voxel axes need processing for this case.
