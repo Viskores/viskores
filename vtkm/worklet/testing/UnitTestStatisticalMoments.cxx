@@ -326,8 +326,30 @@ void TestGeneGolub()
 
   // Variance should be positive
   VTKM_TEST_ASSERT(result.variance() >= 0);
-  // It should also be stddev of the distribution squared.
-  VTKM_TEST_ASSERT(test_equal(result.variance(), 0.01f * 0.01f));
+}
+
+void TestVarianceIdentity()
+{
+  // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
+  std::random_device rd{};
+  auto seed = rd();
+  std::mt19937 gen(seed);
+  std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
+
+  std::vector<vtkm::Float32> v(50000);
+  std::vector<vtkm::Float32> kv(v.size());
+  for (size_t i = 0; i < v.size(); ++i)
+  {
+    v[i] = dis(gen);
+    kv[i] = 4.0f * v[i];
+  }
+
+  auto array_v = vtkm::cont::make_ArrayHandle(v);
+  auto array_kv = vtkm::cont::make_ArrayHandle(kv);
+  auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).variance();
+  auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).variance();
+
+  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v));
 }
 
 void TestStatisticalMoments()
@@ -338,6 +360,7 @@ void TestStatisticalMoments()
   TestUniform();
   TestCatastrophicCancellation();
   TestGeneGolub();
+  TestVarianceIdentity();
 }
 
 int UnitTestStatisticalMoments(int argc, char* argv[])
