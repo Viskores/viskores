@@ -28,6 +28,20 @@ VTKM_EXEC inline vtkm::Id3 compute_incs3d(const vtkm::Id3& dims)
   return vtkm::Id3{ 1, dims[0], (dims[0] * dims[1]) };
 }
 
+VTKM_EXEC inline constexpr vtkm::Id compute_cell_Id(SumXAxis,
+                                                    vtkm::Id startingCellId,
+                                                    vtkm::Id,
+                                                    vtkm::Id i)
+{
+  return startingCellId + i;
+}
+VTKM_EXEC inline constexpr vtkm::Id compute_cell_Id(SumYAxis,
+                                                    vtkm::Id startingCellId,
+                                                    vtkm::Id y_point_axis_inc,
+                                                    vtkm::Id j)
+{
+  return startingCellId + ((y_point_axis_inc - 1) * j);
+}
 
 VTKM_EXEC inline bool case_includes_axes(vtkm::UInt8 const* const edgeUses)
 {

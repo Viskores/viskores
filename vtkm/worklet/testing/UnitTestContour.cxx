@@ -231,10 +231,36 @@ void TestContourUniformGrid()
   std::cout << std::endl;
 
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues());
-
   VTKM_TEST_ASSERT(result.GetNumberOfCells() == (160 * numContours));
 
   VTKM_TEST_ASSERT(verticesArray.GetNumberOfValues() == (72 * numContours));
+
+
+  // The flying edge and marching cube algorithms differ in how the generate
+  // multi-contour results. Marching Cubes interlaces output from all contours
+  // together, while flying edges outputs all of contour 1 before any of contour 2.
+  //
+  // To make it possible to consistently compare the result we sort the cell-ids
+  //
+  vtkm::cont::Algorithm::Sort(cellFieldArrayOut);
+  {
+    std::vector<vtkm::Id> correctcellIdStart = { 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4,
+                                                 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6 };
+    std::vector<vtkm::Id> correctcellIdEnd = { 57, 57, 57, 57, 58, 58, 58, 58, 58, 58, 59, 59, 59,
+                                               59, 60, 60, 61, 61, 61, 61, 62, 62, 62, 62, 63, 63 };
+
+    auto id_portal = cellFieldArrayOut.ReadPortal();
+    for (std::size_t i = 0; i < correctcellIdStart.size(); ++i)
+    {
+      VTKM_TEST_ASSERT(id_portal.Get(vtkm::Id(i)) == correctcellIdStart[i]);
+    }
+
+    vtkm::Id index = cellFieldArrayOut.GetNumberOfValues() - vtkm::Id(correctcellIdEnd.size());
+    for (std::size_t i = 0; i < correctcellIdEnd.size(); ++i, ++index)
+    {
+      VTKM_TEST_ASSERT(id_portal.Get(index) == correctcellIdEnd[i]);
+    }
+  }
 
   // Verify that multiple contours of the same iso value are identical
   {

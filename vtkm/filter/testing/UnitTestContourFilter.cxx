@@ -48,14 +48,37 @@ public:
     }
 
     // let's execute with mapping fields.
-    mc.SetFieldsToPass("nodevar");
+    mc.SetFieldsToPass({ "nodevar", "cellvar" });
     result = mc.Execute(dataSet);
     {
       const bool isMapped = result.HasField("nodevar");
       VTKM_TEST_ASSERT(isMapped, "mapping should pass");
 
-      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 2,
+      VTKM_TEST_ASSERT(result.GetNumberOfFields() == 3,
                        "Wrong number of fields in the output dataset");
+
+      //verify the cellvar result
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
+      result.GetField("cellvar").GetData().CopyTo(cellFieldArrayOut);
+
+      vtkm::cont::Algorithm::Sort(cellFieldArrayOut);
+      {
+        std::vector<vtkm::Id> correctcellIdStart = { 0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 5, 6, 6, 6 };
+        std::vector<vtkm::Id> correctcellIdEnd = { 57, 57, 58, 58, 58, 59, 59,
+                                                   60, 61, 61, 62, 62, 63 };
+
+        auto id_portal = cellFieldArrayOut.ReadPortal();
+        for (std::size_t i = 0; i < correctcellIdStart.size(); ++i)
+        {
+          VTKM_TEST_ASSERT(id_portal.Get(vtkm::Id(i)) == correctcellIdStart[i]);
+        }
+
+        vtkm::Id index = cellFieldArrayOut.GetNumberOfValues() - vtkm::Id(correctcellIdEnd.size());
+        for (std::size_t i = 0; i < correctcellIdEnd.size(); ++i, ++index)
+        {
+          VTKM_TEST_ASSERT(id_portal.Get(index) == correctcellIdEnd[i]);
+        }
+      }
 
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
       vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
