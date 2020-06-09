@@ -204,7 +204,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   VTKM_CONT void WaitToRead(LockType& lock, vtkm::cont::Token& token) const;
   /// Will block the current thread until a write can be performed.
   /// The token will get attached to this write count.
-  VTKM_CONT void WaitToWrite(LockType& lock, vtkm::cont::Token& token) const;
+  VTKM_CONT void WaitToWrite(LockType& lock, vtkm::cont::Token& token, bool fakeRead = false) const;
 
   VTKM_CONT void Enqueue(const LockType& lock, const vtkm::cont::Token& token) const;
 

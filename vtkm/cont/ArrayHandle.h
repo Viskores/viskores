@@ -671,7 +671,7 @@ private:
 
   //// Will block the current thread until a write can be performed.
   ///
-  VTKM_CONT void WaitToWrite(LockType& lock, vtkm::cont::Token& token) const;
+  VTKM_CONT void WaitToWrite(LockType& lock, vtkm::cont::Token& token, bool fakeRead = false) const;
 
   /// Gets this array handle ready to interact with the given device. If the
   /// array handle has already interacted with this device, then this method

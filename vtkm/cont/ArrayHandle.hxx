@@ -417,7 +417,10 @@ void ArrayHandle<T, S>::PrepareForDevice(LockType& lock,
       // could change the ExecutionInterface, which would cause problems. In the future we should
       // support multiple devices, in which case we would not have to delete one execution array
       // to load another.
-      this->WaitToWrite(lock, token); // Make sure no one is reading device array
+      // BUG: The current implementation does not allow the ArrayHandle to be on two devices
+      // at the same time. Thus, it is not possible for two simultaneously read from the same
+      // ArrayHandle on two different devices. This might cause unexpected deadlocks.
+      this->WaitToWrite(lock, token, true); // Make sure no one is reading device array
       this->SyncControlArray(lock, token);
       // Need to change some state that does not change the logical state from
       // an external point of view.
@@ -527,7 +530,7 @@ void ArrayHandle<T, S>::WaitToRead(LockType& lock, vtkm::cont::Token& token) con
 }
 
 template <typename T, typename S>
-void ArrayHandle<T, S>::WaitToWrite(LockType& lock, vtkm::cont::Token& token) const
+void ArrayHandle<T, S>::WaitToWrite(LockType& lock, vtkm::cont::Token& token, bool fakeRead) const
 {
   this->Enqueue(lock, token);
 
@@ -536,10 +539,29 @@ void ArrayHandle<T, S>::WaitToWrite(LockType& lock, vtkm::cont::Token& token) co
   this->Internals->ConditionVariable.wait(
     lock, [&lock, &token, this] { return this->CanWrite(lock, token); });
 
-  token.Attach(this->Internals,
-               this->Internals->GetWriteCount(lock),
-               lock,
-               &this->Internals->ConditionVariable);
+  if (!fakeRead)
+  {
+    token.Attach(this->Internals,
+                 this->Internals->GetWriteCount(lock),
+                 lock,
+                 &this->Internals->ConditionVariable);
+  }
+  else
+  {
+    // A current feature limitation of ArrayHandle is that it can only exist on one device at
+    // a time. Thus, if a read request comes in for a different device, the prepare has to
+    // get satisfy a write lock to boot the array off the existing device. However, we don't
+    // want to attach the Token as a write lock because the resulting state is for reading only
+    // and others might also want to read. So, we have to pretend that this is a read lock even
+    // though we have to make a change to the array.
+    //
+    // The main point is, this condition is a hack that should go away once ArrayHandle supports
+    // multiple devices at once.
+    token.Attach(this->Internals,
+                 this->Internals->GetReadCount(lock),
+                 lock,
+                 &this->Internals->ConditionVariable);
+  }
 
   // We successfully attached the token. Pop it off the queue.
   auto& queue = this->Internals->GetQueue(lock);
