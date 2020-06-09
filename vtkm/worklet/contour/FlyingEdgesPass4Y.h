@@ -102,7 +102,7 @@ struct ComputePass4Y : public vtkm::worklet::WorkletVisitCellsWithPoints
 
     Pass4TrimState state(
       AxisToSum{}, this->PointDims, threadIndices, axis_sums, axis_mins, axis_maxs, edges);
-    if (!state.valid)
+    if (!state.hasWork)
     {
       return;
     }

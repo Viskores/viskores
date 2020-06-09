@@ -59,21 +59,21 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
 
     // Pass 2. Traverse all cells in the meta data plane. This allows us to
     // easily grab the four edge cases bounding this voxel-row
-
-    // find adjusted trim values.
-    vtkm::Id left = vtkm::Min(axis_mins[0], axis_mins[1]);
-    left = vtkm::Min(left, axis_mins[2]);
-    left = vtkm::Min(left, axis_mins[3]);
-
-    vtkm::Id right = vtkm::Max(axis_maxs[0], axis_maxs[1]);
-    right = vtkm::Max(right, axis_maxs[2]);
-    right = vtkm::Max(right, axis_maxs[3]);
-
     const vtkm::Id3 ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
     const vtkm::Id3 pdims = this->PointDims;
 
     const vtkm::Id4 startPos = compute_neighbor_starts(AxisToSum{}, ijk, pdims);
     const vtkm::Id axis_inc = compute_inc(AxisToSum{}, pdims);
+
+    // Compute the subset (start and end) of the row that we need
+    // to iterate to generate triangles for the iso-surface
+    vtkm::Id left, right;
+    bool hasWork = computeTrimBounds(
+      pdims[AxisToSum::xindex] - 1, edges, axis_mins, axis_maxs, startPos, axis_inc, left, right);
+    if (!hasWork)
+    {
+      return;
+    }
 
     vtkm::Vec<bool, 3> onBoundary(false, false, false); //updated in for-loop
     onBoundary[AxisToSum::yindex] = (ijk[AxisToSum::yindex] >= (pdims[AxisToSum::yindex] - 2));
@@ -91,30 +91,6 @@ struct ComputePass2 : public vtkm::worklet::WorkletVisitCellsWithPoints
     {
       adj_col_sum = axis_sums.Get(threadIndices.GetIndicesIncident()[3]);
     }
-
-    if (left == pdims[AxisToSum::xindex] && right == 0)
-    {
-      //verify that we have nothing to generate and early terminate.
-      bool mins_same = (axis_mins[0] == axis_mins[1] && axis_mins[0] == axis_mins[2] &&
-                        axis_mins[0] == axis_mins[3]);
-      bool maxs_same = (axis_maxs[0] == axis_maxs[1] && axis_maxs[0] == axis_maxs[2] &&
-                        axis_maxs[0] == axis_maxs[3]);
-      if (mins_same && maxs_same)
-      {
-        return;
-      }
-      else
-      {
-        left = 0;
-        right = pdims[AxisToSum::xindex] - 1;
-      }
-    }
-
-    // The trim edges may need adjustment if the contour travels between rows
-    // of edges (without intersecting these edges). This means checking
-    // whether the trim faces at (left,rightR) made up of the  edges intersect
-    // the contour. Basically just an intersection operation.
-    adjustTrimBounds(pdims[AxisToSum::xindex] - 1, edges, startPos, axis_inc, left, right);
 
     for (vtkm::Id i = left; i < right; ++i) // run along the trimmed voxels
     {

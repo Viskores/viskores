@@ -125,7 +125,7 @@ struct Pass4TrimState
   vtkm::Id cellId;
   vtkm::Id axis_inc;
   vtkm::Vec<vtkm::UInt8, 3> boundaryStatus;
-  bool valid = true;
+  bool hasWork = true;
 
   template <typename AxisToSum,
             typename ThreadIndices,
@@ -140,47 +140,18 @@ struct Pass4TrimState
                            const FieldInPointId& axis_maxs,
                            const WholeEdgeField& edges)
   {
-    // find adjusted trim values.
-    left = vtkm::Min(axis_mins[0], axis_mins[1]);
-    left = vtkm::Min(left, axis_mins[2]);
-    left = vtkm::Min(left, axis_mins[3]);
-
-    right = vtkm::Max(axis_maxs[0], axis_maxs[1]);
-    right = vtkm::Max(right, axis_maxs[2]);
-    right = vtkm::Max(right, axis_maxs[3]);
-
     ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
 
     startPos = compute_neighbor_starts(AxisToSum{}, ijk, pdims);
     axis_inc = compute_inc(AxisToSum{}, pdims);
 
-    if (left == pdims[AxisToSum::xindex] && right == 0)
+    // Compute the subset (start and end) of the row that we need
+    // to iterate to generate triangles for the iso-surface
+    hasWork = computeTrimBounds(
+      pdims[AxisToSum::xindex] - 1, edges, axis_mins, axis_maxs, startPos, axis_inc, left, right);
+    hasWork = hasWork && left != right;
+    if (!hasWork)
     {
-      //verify that we have nothing to generate and early terminate.
-      bool mins_same = (axis_mins[0] == axis_mins[1] && axis_mins[0] == axis_mins[2] &&
-                        axis_mins[0] == axis_mins[3]);
-      bool maxs_same = (axis_maxs[0] == axis_maxs[1] && axis_maxs[0] == axis_maxs[2] &&
-                        axis_maxs[0] == axis_maxs[3]);
-      if (mins_same && maxs_same)
-      {
-        valid = false;
-        return;
-      }
-      else
-      {
-        left = 0;
-        right = pdims[AxisToSum::xindex] - 1;
-      }
-    }
-
-    // The trim edges may need adjustment if the contour travels between rows
-    // of edges (without intersecting these edges). This means checking
-    // whether the trim faces at (left,right) made up of the edges intersect
-    // the contour.
-    adjustTrimBounds(pdims[AxisToSum::xindex] - 1, edges, startPos, axis_inc, left, right);
-    if (left == right)
-    {
-      valid = false;
       return;
     }
 

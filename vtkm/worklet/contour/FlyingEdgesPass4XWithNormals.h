@@ -112,7 +112,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
 
     Pass4TrimState state(
       AxisToSum{}, this->PointDims, threadIndices, axis_sums, axis_mins, axis_maxs, edges);
-    if (!state.valid)
+    if (!state.hasWork)
     {
       return;
     }

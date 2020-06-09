@@ -10,10 +10,12 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CleanGrid.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
+
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/source/Tangle.h>
 
@@ -113,6 +115,29 @@ public:
     }
   }
 
+  void Test3DUniformDataSet0() const
+  {
+    vtkm::cont::testing::MakeTestDataSet maker;
+    vtkm::cont::DataSet inputData = maker.Make3DUniformDataSet0();
+    std::string fieldName = "pointvar";
+    // Defend the test against changes to Make3DUniformDataSet0():
+    VTKM_TEST_ASSERT(inputData.HasField(fieldName));
+    vtkm::cont::Field pointField = inputData.GetField(fieldName);
+    vtkm::Range range;
+    pointField.GetRange(&range);
+    vtkm::FloatDefault isovalue = 100.0;
+    // Range = [10.1, 180.5]
+    VTKM_TEST_ASSERT(range.Contains(isovalue));
+    vtkm::filter::Contour filter;
+    filter.SetGenerateNormals(false);
+    filter.SetMergeDuplicatePoints(true);
+    filter.SetIsoValue(isovalue);
+    filter.SetActiveField(fieldName);
+    vtkm::cont::DataSet outputData = filter.Execute(inputData);
+    VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 8);
+    VTKM_TEST_ASSERT(outputData.GetNumberOfPoints() == 9);
+  }
+
   void TestContourWedges() const
   {
     auto pathname =
@@ -140,6 +165,7 @@ public:
 
   void operator()() const
   {
+    this->Test3DUniformDataSet0();
     this->TestContourUniformGrid();
     this->TestContourWedges();
   }
