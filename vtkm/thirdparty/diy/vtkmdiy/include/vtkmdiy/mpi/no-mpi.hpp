@@ -22,18 +22,17 @@ static const int MPI_THREAD_MULTIPLE    = 3;
 /* define datatypes */
 using MPI_Datatype = size_t;
 
-#define VTKM_DIY_NO_MPI_DATATYPE(cpp_type, mpi_type) \
+#define VTKMDIY_NO_MPI_DATATYPE(cpp_type, mpi_type) \
   static const MPI_Datatype mpi_type = sizeof(cpp_type);
-VTKM_DIY_NO_MPI_DATATYPE(char,                  MPI_BYTE);
-VTKM_DIY_NO_MPI_DATATYPE(int,                   MPI_INT);
-VTKM_DIY_NO_MPI_DATATYPE(unsigned,              MPI_UNSIGNED);
-VTKM_DIY_NO_MPI_DATATYPE(long,                  MPI_LONG);
-VTKM_DIY_NO_MPI_DATATYPE(unsigned long,         MPI_UNSIGNED_LONG);
-VTKM_DIY_NO_MPI_DATATYPE(long long,             MPI_LONG_LONG_INT);
-VTKM_DIY_NO_MPI_DATATYPE(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
-VTKM_DIY_NO_MPI_DATATYPE(float,                 MPI_FLOAT);
-VTKM_DIY_NO_MPI_DATATYPE(double,                MPI_DOUBLE);
-#endif
+VTKMDIY_NO_MPI_DATATYPE(char,                  MPI_BYTE);
+VTKMDIY_NO_MPI_DATATYPE(int,                   MPI_INT);
+VTKMDIY_NO_MPI_DATATYPE(unsigned,              MPI_UNSIGNED);
+VTKMDIY_NO_MPI_DATATYPE(long,                  MPI_LONG);
+VTKMDIY_NO_MPI_DATATYPE(unsigned long,         MPI_UNSIGNED_LONG);
+VTKMDIY_NO_MPI_DATATYPE(long long,             MPI_LONG_LONG_INT);
+VTKMDIY_NO_MPI_DATATYPE(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
+VTKMDIY_NO_MPI_DATATYPE(float,                 MPI_FLOAT);
+VTKMDIY_NO_MPI_DATATYPE(double,                MPI_DOUBLE);
 
 /* status type */
 struct MPI_Status
@@ -48,10 +47,8 @@ struct MPI_Status
 /* define MPI_Request */
 using MPI_Request = int;
 
-#ifndef DIY_UNSUPPORTED_MPI_CALL
-#define DIY_UNSUPPORTED_MPI_CALL(name) \
-  throw std::runtime_error("`" #name "` not supported when VTKM_DIY_NO_MPI is defined.");
-#endif
+#define VTKMDIY_UNSUPPORTED_MPI_CALL(name) \
+  throw std::runtime_error("`" #name "` not supported when VTKMDIY_HAS_MPI is false.");
 
 /* define operations */
 using MPI_Op = int;
@@ -63,7 +60,7 @@ static const MPI_Op MPI_LAND = 0;
 static const MPI_Op MPI_LOR = 0;
 
 /* mpi i/o stuff */
-using MPI_Offset = size_t;
+using MPI_Offset = long long;
 using MPI_File = int;
 static const MPI_File MPI_FILE_NULL = 0;
 
@@ -78,7 +75,7 @@ static const int MPI_MODE_APPEND          = 128;
 static const int MPI_MODE_SEQUENTIAL      = 256;
 
 /* define window type */
-using MPI_Win = int;
+using MPI_Win = void*;
 
 /* window fence assertions */
 static const int MPI_MODE_NOSTORE       = 1;
@@ -90,3 +87,5 @@ static const int MPI_MODE_NOCHECK       = 16;
 /* window lock types */
 static const int MPI_LOCK_SHARED        = 1;
 static const int MPI_LOCK_EXCLUSIVE     = 2;
+
+#endif // VTKMDIY_MPI_NO_MPI_HPP

@@ -25,7 +25,10 @@ struct diy::Master::ProcessBlock
       if ((size_t)cur >= blocks.size())
           return;
 
-      int i = blocks[cur];
+      int i   = blocks[cur];
+      int gid = master.gid(i);
+      stats::Annotation::Guard g( stats::Annotation("diy.block").set(gid) );
+
       if (master.block(i))
       {
           if (local.size() == (size_t)local_limit)
@@ -33,7 +36,7 @@ struct diy::Master::ProcessBlock
           local.push_back(i);
       }
 
-      master.log->debug("Processing block: {}", master.gid(i));
+      master.log->debug("Processing block: {}", gid);
 
       bool skip = all_skip(i);
 
@@ -58,8 +61,7 @@ struct diy::Master::ProcessBlock
           cmd->execute(skip ? 0 : master.block(i), master.proxy(i));
 
           // no longer need them, so get rid of them
-          current_incoming[master.gid(i)].queues.clear();
-          current_incoming[master.gid(i)].records.clear();
+          current_incoming[gid].clear();
       }
 
       if (skip && master.block(i) == 0)
@@ -93,7 +95,7 @@ execute()
 {
   log->debug("Entered execute()");
   auto scoped = prof.scoped("execute");
-  DIY_UNUSED(scoped);
+  VTKMDIY_UNUSED(scoped);
   //show_incoming_records();
 
   // touch the outgoing and incoming queues as well as collectives to make sure they exist

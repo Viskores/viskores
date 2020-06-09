@@ -27,7 +27,7 @@ namespace internal
 
 static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 {
-  vtkmdiy::ContinuousBounds result;
+  vtkmdiy::ContinuousBounds result(3);
   result.min[0] = static_cast<float>(bds.X.Min);
   result.min[1] = static_cast<float>(bds.Y.Min);
   result.min[2] = static_cast<float>(bds.Z.Min);
@@ -136,7 +136,7 @@ public:
         {
           auto target = rp.out_link().target(cc);
           // let's get the bounding box for the target block.
-          vtkmdiy::ContinuousBounds bds;
+          vtkmdiy::ContinuousBounds bds(3);
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);

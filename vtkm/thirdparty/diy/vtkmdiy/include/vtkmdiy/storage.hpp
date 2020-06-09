@@ -26,14 +26,14 @@ namespace diy
       virtual inline void save_binary(const char* x, size_t count) override   { fwrite(x, 1, count, file); head += count; }
       virtual inline void append_binary(const char* x, size_t count) override
       {
-          size_t temp_pos = ftell(file);
+          auto temp_pos = ftell(file);
           fseek(file, static_cast<long>(tail), SEEK_END);
           fwrite(x, 1, count, file);
           tail += count;
           fseek(file, temp_pos, SEEK_SET);
       }
-      virtual inline void load_binary(char* x, size_t count) override         { auto n = fread(x, 1, count, file); (void) n;}
-      virtual inline void load_binary_back(char* x, size_t count) override    { fseek(file, static_cast<long>(tail), SEEK_END); auto n = fread(x, 1, count, file); tail += count; fseek(file, static_cast<long>(head), SEEK_SET); (void) n;}
+      virtual inline void load_binary(char* x, size_t count) override         { auto n = fread(x, 1, count, file); VTKMDIY_UNUSED(n);}
+      virtual inline void load_binary_back(char* x, size_t count) override    { fseek(file, static_cast<long>(tail), SEEK_END); auto n = fread(x, 1, count, file); tail += count; fseek(file, static_cast<long>(head), SEEK_SET); VTKMDIY_UNUSED(n);}
 
       size_t              size() const                                { return head; }
 
@@ -135,7 +135,8 @@ namespace diy
         _read(fh, &bb.buffer[0], static_cast<unsigned int>(fr.size));
 #else
         int fh = open(fr.name.c_str(), O_RDONLY | O_SYNC, 0600);
-        auto n = read(fh, &bb.buffer[0], fr.size); (void) n;
+        auto n = read(fh, &bb.buffer[0], fr.size);
+        VTKMDIY_UNUSED(n);
 #endif
         io::utils::close(fh);
         remove_file(fr);

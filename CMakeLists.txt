@@ -279,6 +279,7 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/VTKmCPUVectorization.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmDIYUtils.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
       ${VTKm_SOURCE_DIR}/CMake/VTKmMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake

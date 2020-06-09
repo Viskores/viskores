@@ -1,16 +1,31 @@
 #ifndef VTKMDIY_MPI_DATATYPES_HPP
 #define VTKMDIY_MPI_DATATYPES_HPP
 
+#include "config.hpp"
+
 #include <vector>
+#include <array>
 
 namespace diy
 {
 namespace mpi
 {
+
+struct datatype
+{
+  datatype() = default;
+  datatype(const DIY_MPI_Datatype& dt) : handle(dt) {}
+
+#ifndef VTKMDIY_MPI_AS_LIB // only available in header-only mode
+  datatype(const MPI_Datatype& dt) : handle(dt) {}
+  operator MPI_Datatype() { return handle; }
+#endif
+
+  DIY_MPI_Datatype handle;
+};
+
 namespace detail
 {
-  template<class T> MPI_Datatype  get_mpi_datatype();
-
   struct true_type  {};
   struct false_type {};
 
@@ -18,28 +33,34 @@ namespace detail
   template<class T>
   struct is_mpi_datatype        { typedef false_type    type; };
 
-#define VTKMDIY_MPI_DATATYPE_MAP(cpp_type, mpi_type) \
-  template<>  inline MPI_Datatype  get_mpi_datatype<cpp_type>() { return mpi_type; }  \
-  template<>  struct is_mpi_datatype<cpp_type>                  { typedef true_type type; };    \
-  template<>  struct is_mpi_datatype< std::vector<cpp_type> >   { typedef true_type type; };
+  template<class T> datatype  get_mpi_datatype();
 
-  VTKMDIY_MPI_DATATYPE_MAP(char,                  MPI_BYTE);
-  VTKMDIY_MPI_DATATYPE_MAP(unsigned char,         MPI_BYTE);
-  VTKMDIY_MPI_DATATYPE_MAP(bool,                  MPI_BYTE);
-  VTKMDIY_MPI_DATATYPE_MAP(int,                   MPI_INT);
-  VTKMDIY_MPI_DATATYPE_MAP(unsigned,              MPI_UNSIGNED);
-  VTKMDIY_MPI_DATATYPE_MAP(long,                  MPI_LONG);
-  VTKMDIY_MPI_DATATYPE_MAP(unsigned long,         MPI_UNSIGNED_LONG);
-  VTKMDIY_MPI_DATATYPE_MAP(long long,             MPI_LONG_LONG_INT);
-  VTKMDIY_MPI_DATATYPE_MAP(unsigned long long,    MPI_UNSIGNED_LONG_LONG);
-  VTKMDIY_MPI_DATATYPE_MAP(float,                 MPI_FLOAT);
-  VTKMDIY_MPI_DATATYPE_MAP(double,                MPI_DOUBLE);
+  #define VTKMDIY_MPI_DATATYPE_DEFAULT(cpp_type)                                                      \
+  template<> VTKMDIY_MPI_EXPORT_FUNCTION datatype get_mpi_datatype<cpp_type>();                       \
+  template<>  struct is_mpi_datatype< cpp_type >                { typedef true_type type; };      \
+  template<>  struct is_mpi_datatype< std::vector<cpp_type> >   { typedef true_type type; };      \
+  template<size_t N>                                                                              \
+              struct is_mpi_datatype< std::array<cpp_type, N> > { typedef true_type type; };
 
-  /* mpi_datatype: helper routines, specialized for std::vector<...> */
+  VTKMDIY_MPI_DATATYPE_DEFAULT(char)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(unsigned char)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(bool)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(int)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(unsigned)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(long)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(unsigned long)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(long long)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(unsigned long long)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(float)
+  VTKMDIY_MPI_DATATYPE_DEFAULT(double)
+
+  #undef VTKMDIY_MPI_DATATYPE_DEFAULT
+
+  /* mpi_datatype: helper routines, specialized for std::vector<...>, std::array<...> */
   template<class T>
   struct mpi_datatype
   {
-    static MPI_Datatype         datatype()              { return get_mpi_datatype<T>(); }
+    static diy::mpi::datatype   datatype()              { return get_mpi_datatype<T>(); }
     static const void*          address(const T& x)     { return &x; }
     static void*                address(T& x)           { return &x; }
     static int                  count(const T&)         { return 1; }
@@ -50,44 +71,53 @@ namespace detail
   {
     typedef     std::vector<U>      VecU;
 
-    static MPI_Datatype         datatype()              { return mpi_datatype<U>::datatype(); }
+    static diy::mpi::datatype   datatype()              { return mpi_datatype<U>::datatype(); }
     static const void*          address(const VecU& x)  { return x.data(); }
     static void*                address(VecU& x)        { return x.data(); }
     static int                  count(const VecU& x)    { return x.empty() ? 0 : (static_cast<int>(x.size()) * mpi_datatype<U>::count(x[0])); }
   };
+
+  template<class U, size_t D>
+  struct mpi_datatype< std::array<U,D> >
+  {
+    typedef     std::array<U,D> ArrayU;
+
+    static diy::mpi::datatype   datatype()                  { return mpi_datatype<U>::datatype(); }
+    static const void*          address(const ArrayU& x)    { return x.data(); }
+    static void*                address(ArrayU& x)          { return x.data(); }
+    static int                  count(const ArrayU& x)      { return x.empty() ? 0 : (static_cast<int>(x.size()) * mpi_datatype<U>::count(x[0])); }
+  };
 } // detail
 
 template<class U>
-static MPI_Datatype datatype(const U&)
+static datatype datatype_of(const U&)
 {
-    using Datatype = detail::mpi_datatype<U>;
-    return Datatype::datatype();
+    return detail::mpi_datatype<U>::datatype();
 }
 
 template<class U>
 static void* address(const U& x)
 {
-    using Datatype = detail::mpi_datatype<U>;
-    return const_cast<void*>(Datatype::address(x));
+    return const_cast<void*>(detail::mpi_datatype<U>::address(x));
 }
 
 template<class U>
 static void* address(U& x)
 {
-    using Datatype = detail::mpi_datatype<U>;
-    return Datatype::address(x);
+    return detail::mpi_datatype<U>::address(x);
 }
 
 template<class U>
 static int count(const U& x)
 {
-    using Datatype = detail::mpi_datatype<U>;
-    return Datatype::count(x);
+    return detail::mpi_datatype<U>::count(x);
 }
-
-
 
 } // mpi
 } // diy
 
+#ifndef VTKMDIY_MPI_AS_LIB
+#include "datatypes.cpp"
 #endif
+
+#endif // VTKMDIY_MPI_DATATYPES_HPP
