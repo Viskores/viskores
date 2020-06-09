@@ -1384,6 +1384,21 @@ public:
       printf("%.6f for Sorting.\n", timer.GetElapsedTime());
     }
 
+    //const vtkm::Id E = 7439156;
+    ////const vtkm::Id D = 6498111;
+
+    //for (int i = 0 ; i < arcs.GetNumberOfValues() ; i++)
+    //{
+    //const auto arc = arcs.ReadPortal().Get(i);
+
+    //if (arc.i == E || arc.j == E)
+    //{
+    //printf("\n[%lld, %lld], upEdge = %d, subtreeMin = %lld, subtreeMax = %lld, subtreeHeight = %f\n", arc.i, arc.j, arc.upEdge, arc.subtreeMin, arc.subtreeMax, arc.subtreeHeight);
+    //}
+    //}
+
+    //printf("WTF");
+
 
     //
     // Set bestUp and bestDown. Parallelisable
