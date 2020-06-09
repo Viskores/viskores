@@ -11,6 +11,7 @@
 #define vtk_m_worklet_StatisticalMoments_h
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
@@ -134,7 +135,7 @@ public:
   }
 
   template <typename KeyType, typename ValueType, typename KeyInStorage, typename ValuyeInStorage>
-  // TODO: return type?
+  // TODO: is auto return type allowed by the coding standard?
   VTKM_CONT static auto Run(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage>& keys,
                             const vtkm::cont::ArrayHandle<ValueType, ValuyeInStorage>& values)
   {
@@ -154,7 +155,7 @@ public:
     vtkm::cont::ArrayHandle<KeyType> keys_out;
 
     vtkm::cont::ArrayHandle<detail::StatState<ValueType>> results;
-    Algorithm::ReduceByKey(keys, states, keys_out, results, vtkm::Add{});
+    Algorithm::ReduceByKey(keys_copy, states, keys_out, results, vtkm::Add{});
 
     // FIXME: we didn't break any ArrayHandle lifetime limitation, right?
     return vtkm::cont::make_ArrayHandleZip(keys_out, results);

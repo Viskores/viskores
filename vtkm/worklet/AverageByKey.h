@@ -10,19 +10,12 @@
 #ifndef vtk_m_worklet_AverageByKey_h
 #define vtk_m_worklet_AverageByKey_h
 
-#include <vtkm/BinaryPredicates.h>
 #include <vtkm/VecTraits.h>
-
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleZip.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/StatisticalMoments.h>
 
 namespace vtkm
 {
@@ -98,22 +91,22 @@ struct AverageByKey
     return outAverages;
   }
 
-
-  struct DivideWorklet : public vtkm::worklet::WorkletMapField
+  struct ExtractKey
   {
-    using ControlSignature = void(FieldIn, FieldIn, FieldOut);
-    using ExecutionSignature = void(_1, _2, _3);
-
-    template <class ValueType>
-    VTKM_EXEC void operator()(const ValueType& v, const vtkm::Id& count, ValueType& vout) const
+    template <typename First, typename Second>
+    VTKM_EXEC First operator()(const vtkm::Pair<First, Second>& pair) const
     {
-      using ComponentType = typename VecTraits<ValueType>::ComponentType;
-      vout = v * ComponentType(1. / static_cast<double>(count));
+      return pair.first;
     }
+  };
 
-    template <class T1, class T2>
-    VTKM_EXEC void operator()(const T1&, const vtkm::Id&, T2&) const
+  struct ExtractMean
+  {
+    // TODO: is auto return type allowed by the coding standard?
+    template <typename First, typename Second>
+    VTKM_EXEC auto operator()(const vtkm::Pair<First, Second>& pair) const
     {
+      return pair.second.mean;
     }
   };
 
@@ -139,40 +132,14 @@ struct AverageByKey
                             vtkm::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
                             vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
   {
-    using Algorithm = vtkm::cont::Algorithm;
-    using ValueInArray = vtkm::cont::ArrayHandle<ValueType, ValueInStorage>;
-    using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
-    using ValueArray = vtkm::cont::ArrayHandle<ValueType>;
+    auto results = vtkm::worklet::StatisticalMoments::Run(keyArray, valueArray);
 
-    // sort the indexed array
-    vtkm::cont::ArrayHandleIndex indexArray(keyArray.GetNumberOfValues());
-    IdArray indexArraySorted;
-    vtkm::cont::ArrayHandle<KeyType> keyArraySorted;
+    // Copy/TransformCopy from results to outputKeyArray and outputValueArray
+    auto results_key = vtkm::cont::make_ArrayHandleTransform(results, ExtractKey{});
+    auto results_mean = vtkm::cont::make_ArrayHandleTransform(results, ExtractMean{});
 
-    Algorithm::Copy(keyArray, keyArraySorted); // keep the input key array unchanged
-    Algorithm::Copy(indexArray, indexArraySorted);
-    Algorithm::SortByKey(keyArraySorted, indexArraySorted, vtkm::SortLess());
-
-    // generate permultation array based on the indexes
-    using PermutatedValueArray = vtkm::cont::ArrayHandlePermutation<IdArray, ValueInArray>;
-    PermutatedValueArray valueArraySorted =
-      vtkm::cont::make_ArrayHandlePermutation(indexArraySorted, valueArray);
-
-    // reduce both sumArray and countArray by key
-    using ConstIdArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>;
-    ConstIdArray constOneArray(1, valueArray.GetNumberOfValues());
-    IdArray countArray;
-    ValueArray sumArray;
-    vtkm::cont::ArrayHandleZip<PermutatedValueArray, ConstIdArray> inputZipHandle(valueArraySorted,
-                                                                                  constOneArray);
-    vtkm::cont::ArrayHandleZip<ValueArray, IdArray> outputZipHandle(sumArray, countArray);
-
-    Algorithm::ReduceByKey(
-      keyArraySorted, inputZipHandle, outputKeyArray, outputZipHandle, vtkm::Add());
-
-    // get average
-    DispatcherMapField<DivideWorklet> dispatcher;
-    dispatcher.Invoke(sumArray, countArray, outputValueArray);
+    vtkm::cont::ArrayCopy(results_key, outputKeyArray);
+    vtkm::cont::ArrayCopy(results_mean, outputValueArray);
   }
 };
 }
