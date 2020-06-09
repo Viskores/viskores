@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
+#include <vtkm/cont/ArrayHandleZip.h>
 
 namespace vtkm
 {
@@ -60,20 +61,24 @@ struct StatState
     T n2 = result.n * result.n;
     result.M3 = x.M3 + y.M3;
     result.M3 += delta3 * x.n * y.n * (x.n - y.n) / n2;
-    result.M3 += T{ 3.0 } * delta * (x.n * y.M2 - y.n * x.M2) / result.n;
+    result.M3 += T(3.0) * delta * (x.n * y.M2 - y.n * x.M2) / result.n;
 
     T delta4 = delta * delta3;
     T n3 = result.n * n2;
     result.M4 = x.M4 + y.M4;
     result.M4 += delta4 * x.n * y.n * (x.n * x.n - x.n * y.n + y.n * y.n) / n3;
-    result.M4 += T{ 6.0 } * delta2 * (x.n * x.n * y.M2 + y.n * y.n * x.M2) / n2;
-    result.M4 += T{ 4.0 } * delta * (x.n * y.M3 - y.n * x.M3) / result.n;
+    result.M4 += T(6.0) * delta2 * (x.n * x.n * y.M2 + y.n * y.n * x.M2) / n2;
+    result.M4 += T(4.0) * delta * (x.n * y.M3 - y.n * x.M3) / result.n;
 
     return result;
   }
 
   VTKM_CONT
-  T variance() const { return this->M2 / (this->n - 1); }
+  T variance() const
+  {
+    VTKM_ASSERT(n != 1);
+    return this->M2 / (this->n - 1);
+  }
 
   VTKM_CONT
   T variance_n() const { return this->M2 / this->n; }
@@ -123,12 +128,36 @@ public:
   {
     using Algorithm = vtkm::cont::Algorithm;
 
-    // TODO: the original FieldStatistics sorts the field first and do the reduction,
-    // this supposedly reduce the amount of numerical error. Find out if it is universally
-    // true.
     // Essentially a TransformReduce. Do we have that convenience in VTKm?
     auto states = vtkm::cont::make_ArrayHandleTransform(field, detail::MakeStatState{});
     return Algorithm::Reduce(states, detail::StatState<FieldType>{});
+  }
+
+  template <typename KeyType, typename ValueType, typename KeyInStorage, typename ValuyeInStorage>
+  // TODO: return type?
+  VTKM_CONT static auto Run(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage>& keys,
+                            const vtkm::cont::ArrayHandle<ValueType, ValuyeInStorage>& values)
+  {
+    using Algorithm = vtkm::cont::Algorithm;
+
+    // Make a copy of the input arrays so we don't modify them
+    vtkm::cont::ArrayHandle<KeyType> keys_copy;
+    vtkm::cont::ArrayCopy(keys, keys_copy);
+
+    vtkm::cont::ArrayHandle<ValueType> values_copy;
+    vtkm::cont::ArrayCopy(values, values_copy);
+
+    // Gather values of the same key by sorting them according to keys
+    Algorithm::SortByKey(keys_copy, values_copy);
+
+    auto states = vtkm::cont::make_ArrayHandleTransform(values_copy, detail::MakeStatState{});
+    vtkm::cont::ArrayHandle<KeyType> keys_out;
+
+    vtkm::cont::ArrayHandle<detail::StatState<ValueType>> results;
+    Algorithm::ReduceByKey(keys, states, keys_out, results, vtkm::Add{});
+
+    // FIXME: we didn't break any ArrayHandle lifetime limitation, right?
+    return vtkm::cont::make_ArrayHandleZip(keys_out, results);
   }
 }; // StatisticalMoments
 

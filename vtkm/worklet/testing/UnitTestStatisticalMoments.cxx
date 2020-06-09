@@ -13,6 +13,17 @@
 
 #include <random>
 
+void TestSingle()
+{
+  std::vector<vtkm::Float32> single(1, 42);
+  auto single_array = vtkm::cont::make_ArrayHandle(single);
+  auto result = vtkm::worklet::StatisticalMoments::Run(single_array);
+
+  VTKM_TEST_ASSERT(result.n == 1);
+  VTKM_TEST_ASSERT(result.mean == 42);
+  VTKM_TEST_ASSERT(result.variance_n() == 0);
+}
+
 void TestPoissonDistribution()
 {
   // Poisson distribution [0:49] mean = 10
@@ -316,9 +327,9 @@ void TestGeneGolub()
   std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
 
   std::vector<vtkm::Float32> v(50000);
-  for (size_t i = 0; i < v.size(); ++i)
+  for (float& i : v)
   {
-    v[i] = dis(gen);
+    i = dis(gen);
   }
 
   auto array = vtkm::cont::make_ArrayHandle(v);
@@ -328,7 +339,41 @@ void TestGeneGolub()
   VTKM_TEST_ASSERT(result.variance() >= 0);
 }
 
-void TestVarianceIdentity()
+void TestMeanProperties()
+{
+  // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
+  std::random_device rd{};
+  auto seed = rd();
+  std::mt19937 gen(seed);
+  std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
+
+  std::vector<vtkm::Float32> x(50000);
+  std::generate(x.begin(), x.end(), [&gen, &dis]() { return dis(gen); });
+
+  // 1. Linearity, Mean(a * x + b) = a * Mean(x) + b
+  std::vector<vtkm::Float32> axpb(x.size());
+  std::transform(
+    x.begin(), x.end(), axpb.begin(), [](vtkm::Float32 value) { return 4.0f * value + 1000.f; });
+
+  auto x_array = vtkm::cont::make_ArrayHandle(x);
+  auto axpb_array = vtkm::cont::make_ArrayHandle(axpb);
+
+  auto mean_x = vtkm::worklet::StatisticalMoments::Run(x_array).mean;
+  auto mean_axpb = vtkm::worklet::StatisticalMoments::Run(axpb_array).mean;
+
+  VTKM_TEST_ASSERT(test_equal(4.0f * mean_x + 1000.f, mean_axpb, 0.01f));
+
+  // 2. Random shuffle
+  std::vector<vtkm::Float32> px = x;
+  std::shuffle(px.begin(), px.end(), gen);
+
+  auto px_array = vtkm::cont::make_ArrayHandle(px);
+  auto mean_px = vtkm::worklet::StatisticalMoments::Run(px_array).mean;
+
+  VTKM_TEST_ASSERT(test_equal(mean_x, mean_px, 0.01f));
+}
+
+void TestVarianceProperty()
 {
   // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
   std::random_device rd{};
@@ -337,30 +382,65 @@ void TestVarianceIdentity()
   std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
 
   std::vector<vtkm::Float32> v(50000);
+  std::generate(v.begin(), v.end(), [&gen, &dis]() { return dis(gen); });
+
+  // 1. Linearity, Var(a * x + b) = a^2 * Var(x)
   std::vector<vtkm::Float32> kv(v.size());
-  for (size_t i = 0; i < v.size(); ++i)
-  {
-    v[i] = dis(gen);
-    kv[i] = 4.0f * v[i];
-  }
+  std::transform(
+    v.begin(), v.end(), kv.begin(), [](vtkm::Float32 value) { return 4.0f * value + 5.0f; });
 
   auto array_v = vtkm::cont::make_ArrayHandle(v);
   auto array_kv = vtkm::cont::make_ArrayHandle(kv);
   auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).variance();
   auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v));
+  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f * 0.01f));
+
+  // Random shuffle
+  std::vector<vtkm::Float32> px = v;
+  std::shuffle(px.begin(), px.end(), gen);
+
+  auto px_array = vtkm::cont::make_ArrayHandle(px);
+  auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).variance();
+
+  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f * 0.01f));
+}
+
+void TestMomentsByKey()
+{
+  std::vector<vtkm::UInt32> keys{ 0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 };
+
+  auto values_array = vtkm::cont::make_ArrayHandleConstant(1.0f, keys.size());
+  auto keys_array = vtkm::cont::make_ArrayHandle(keys);
+
+  auto results = vtkm::worklet::StatisticalMoments::Run(keys_array, values_array);
+  VTKM_TEST_ASSERT(results.GetNumberOfValues() == 5);
+
+  std::vector<vtkm::UInt32> expected_ns{ 1, 1, 2, 3, 4 };
+  std::vector<vtkm::Float32> expected_sums{ 1, 1, 2, 3, 4 };
+  std::vector<vtkm::Float32> expected_means{ 1, 1, 1, 1, 1 };
+
+  for (vtkm::Id i = 0; i < results.GetNumberOfValues(); ++i)
+  {
+    auto result = results.ReadPortal().Get(i);
+    VTKM_TEST_ASSERT(result.first == i);
+    VTKM_TEST_ASSERT(result.second.n == expected_ns[i]);
+    VTKM_TEST_ASSERT(result.second.variance_n() == 0);
+  }
 }
 
 void TestStatisticalMoments()
 {
+  TestSingle();
   TestPoissonDistribution();
   TestNormalDistribution();
   TestChiSquare();
   TestUniform();
   TestCatastrophicCancellation();
   TestGeneGolub();
-  TestVarianceIdentity();
+  TestMeanProperties();
+  TestVarianceProperty();
+  TestMomentsByKey();
 }
 
 int UnitTestStatisticalMoments(int argc, char* argv[])
