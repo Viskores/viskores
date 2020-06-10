@@ -114,7 +114,7 @@ struct MakeStatState
 class StatisticalMoments
 {
 public:
-  /// \brief Calculate various summary statics for the input ArrayHandle
+  /// \brief Calculate various summary statistics for the input ArrayHandle
   ///
   /// Reference:
   ///    [1] Wikipeida, parallel algorithm for calculating variance
@@ -134,10 +134,11 @@ public:
     return Algorithm::Reduce(states, detail::StatState<FieldType>{});
   }
 
-  template <typename KeyType, typename ValueType, typename KeyInStorage, typename ValuyeInStorage>
-  // TODO: is auto return type allowed by the coding standard?
+  template <typename KeyType, typename ValueType, typename KeyInStorage, typename ValueInStorage>
   VTKM_CONT static auto Run(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage>& keys,
-                            const vtkm::cont::ArrayHandle<ValueType, ValuyeInStorage>& values)
+                            const vtkm::cont::ArrayHandle<ValueType, ValueInStorage>& values)
+    -> vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<KeyType>,
+                                  vtkm::cont::ArrayHandle<detail::StatState<ValueType>>>
   {
     using Algorithm = vtkm::cont::Algorithm;
 

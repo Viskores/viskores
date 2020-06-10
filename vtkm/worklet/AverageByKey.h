@@ -102,9 +102,9 @@ struct AverageByKey
 
   struct ExtractMean
   {
-    // TODO: is auto return type allowed by the coding standard?
-    template <typename First, typename Second>
-    VTKM_EXEC auto operator()(const vtkm::Pair<First, Second>& pair) const
+    template <typename KeyType, typename ValueType>
+    VTKM_EXEC ValueType
+    operator()(const vtkm::Pair<KeyType, vtkm::worklet::detail::StatState<ValueType>>& pair) const
     {
       return pair.second.mean;
     }
