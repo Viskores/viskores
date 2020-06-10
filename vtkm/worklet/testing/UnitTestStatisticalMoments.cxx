@@ -375,35 +375,37 @@ void TestMeanProperties()
 
 void TestVarianceProperty()
 {
+  // NOTE: We do need Float64 to overcome numerical precision problem and have
+  // consistent test results.
   // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
   std::random_device rd{};
   auto seed = rd();
   std::mt19937 gen(seed);
-  std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
+  std::normal_distribution<vtkm::Float64> dis(500.0, 0.01);
 
-  std::vector<vtkm::Float32> v(50000);
+  std::vector<vtkm::Float64> v(50000);
   std::generate(v.begin(), v.end(), [&gen, &dis]() { return dis(gen); });
 
   // 1. Linearity, Var(a * x + b) = a^2 * Var(x)
-  std::vector<vtkm::Float32> kv(v.size());
+  std::vector<vtkm::Float64> kv(v.size());
   std::transform(
-    v.begin(), v.end(), kv.begin(), [](vtkm::Float32 value) { return 4.0f * value + 5.0f; });
+    v.begin(), v.end(), kv.begin(), [](vtkm::Float64 value) { return 4.0 * value + 5.0; });
 
   auto array_v = vtkm::cont::make_ArrayHandle(v);
   auto array_kv = vtkm::cont::make_ArrayHandle(kv);
   auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).variance();
   auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f));
+  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0 * 4.0 * var_v, 0.01));
 
   // Random shuffle
-  std::vector<vtkm::Float32> px = v;
+  std::vector<vtkm::Float64> px = v;
   std::shuffle(px.begin(), px.end(), gen);
 
   auto px_array = vtkm::cont::make_ArrayHandle(px);
   auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f));
+  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01));
 }
 
 void TestMomentsByKey()

@@ -122,7 +122,7 @@ public:
   ///    [2] Implementation of [1] in the Trust library
   ///        https://github.com/thrust/thrust/blob/master/examples/summary_statistics.cu
   ///    [3] Bennett, Janine, et al. "Numerically stable, single-pass, parallel statistics algorithms."
-  ///        2009 IEEE International Conference on Cluster Computing and Workshops. IEEE, 2009.
+  ///        2009 IEEE International Conference on Cluster Compting and Workshops. IEEE, 2009.
   template <typename FieldType, typename Storage>
   VTKM_CONT static detail::StatState<FieldType> Run(
     const vtkm::cont::ArrayHandle<FieldType, Storage>& field)
