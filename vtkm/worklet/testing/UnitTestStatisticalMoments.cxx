@@ -394,7 +394,7 @@ void TestVarianceProperty()
   auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).variance();
   auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f * 0.01f));
+  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f));
 
   // Random shuffle
   std::vector<vtkm::Float32> px = v;
@@ -403,7 +403,7 @@ void TestVarianceProperty()
   auto px_array = vtkm::cont::make_ArrayHandle(px);
   auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f * 0.01f));
+  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f));
 }
 
 void TestMomentsByKey()
