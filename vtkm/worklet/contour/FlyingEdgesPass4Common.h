@@ -28,19 +28,15 @@ VTKM_EXEC inline vtkm::Id3 compute_incs3d(const vtkm::Id3& dims)
   return vtkm::Id3{ 1, dims[0], (dims[0] * dims[1]) };
 }
 
-VTKM_EXEC inline constexpr vtkm::Id compute_cell_Id(SumXAxis,
-                                                    vtkm::Id startingCellId,
-                                                    vtkm::Id,
-                                                    vtkm::Id i)
+VTKM_EXEC inline constexpr vtkm::Id increment_cellId(SumXAxis, vtkm::Id cellId, vtkm::Id)
 {
-  return startingCellId + i;
+  return cellId + 1;
 }
-VTKM_EXEC inline constexpr vtkm::Id compute_cell_Id(SumYAxis,
-                                                    vtkm::Id startingCellId,
-                                                    vtkm::Id y_point_axis_inc,
-                                                    vtkm::Id j)
+VTKM_EXEC inline constexpr vtkm::Id increment_cellId(SumYAxis,
+                                                     vtkm::Id cellId,
+                                                     vtkm::Id y_point_axis_inc)
 {
-  return startingCellId + ((y_point_axis_inc - 1) * j);
+  return cellId + (y_point_axis_inc - 1);
 }
 
 VTKM_EXEC inline bool case_includes_axes(vtkm::UInt8 const* const edgeUses)
@@ -126,78 +122,105 @@ struct Pass4TrimState
   vtkm::Id left, right;
   vtkm::Id3 ijk;
   vtkm::Id4 startPos;
+  vtkm::Id cellId;
   vtkm::Id axis_inc;
-  vtkm::UInt8 yzLoc;
-  bool valid = true;
+  vtkm::Vec<vtkm::UInt8, 3> boundaryStatus;
+  bool hasWork = true;
 
   template <typename AxisToSum,
             typename ThreadIndices,
+            typename WholeSumField,
             typename FieldInPointId,
             typename WholeEdgeField>
   VTKM_EXEC Pass4TrimState(AxisToSum,
                            const vtkm::Id3& pdims,
                            const ThreadIndices& threadIndices,
+                           const WholeSumField& vtkmNotUsed(axis_sums),
                            const FieldInPointId& axis_mins,
                            const FieldInPointId& axis_maxs,
                            const WholeEdgeField& edges)
   {
-    // find adjusted trim values.
-    left = vtkm::Min(axis_mins[0], axis_mins[1]);
-    left = vtkm::Min(left, axis_mins[2]);
-    left = vtkm::Min(left, axis_mins[3]);
-
-    right = vtkm::Max(axis_maxs[0], axis_maxs[1]);
-    right = vtkm::Max(right, axis_maxs[2]);
-    right = vtkm::Max(right, axis_maxs[3]);
-
     ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
 
     startPos = compute_neighbor_starts(AxisToSum{}, ijk, pdims);
     axis_inc = compute_inc(AxisToSum{}, pdims);
 
-    if (left == pdims[AxisToSum::xindex] && right == 0)
+    // Compute the subset (start and end) of the row that we need
+    // to iterate to generate triangles for the iso-surface
+    hasWork = computeTrimBounds(
+      pdims[AxisToSum::xindex] - 1, edges, axis_mins, axis_maxs, startPos, axis_inc, left, right);
+    hasWork = hasWork && left != right;
+    if (!hasWork)
     {
-      //verify that we have nothing to generate and early terminate.
-      bool mins_same = (axis_mins[0] == axis_mins[1] && axis_mins[0] == axis_mins[2] &&
-                        axis_mins[0] == axis_mins[3]);
-      bool maxs_same = (axis_maxs[0] == axis_maxs[1] && axis_maxs[0] == axis_maxs[2] &&
-                        axis_maxs[0] == axis_maxs[3]);
-      if (mins_same && maxs_same)
-      {
-        valid = false;
-        return;
-      }
-      else
-      {
-        left = 0;
-        right = pdims[AxisToSum::xindex] - 1;
-      }
-    }
-
-    // The trim edges may need adjustment if the contour travels between rows
-    // of edges (without intersecting these edges). This means checking
-    // whether the trim faces at (left,right) made up of the edges intersect
-    // the contour.
-    adjustTrimBounds(pdims[AxisToSum::xindex] - 1, edges, startPos, axis_inc, left, right);
-    if (left == right)
-    {
-      valid = false;
       return;
     }
 
-    const vtkm::UInt8 yLoc =
-      (ijk[AxisToSum::yindex] < 1
-         ? FlyingEdges3D::MinBoundary
-         : (ijk[AxisToSum::yindex] >= (pdims[AxisToSum::yindex] - 2) ? FlyingEdges3D::MaxBoundary
-                                                                     : FlyingEdges3D::Interior));
-    const vtkm::UInt8 zLoc =
-      (ijk[AxisToSum::zindex] < 1
-         ? FlyingEdges3D::MinBoundary
-         : (ijk[AxisToSum::zindex] >= (pdims[AxisToSum::zindex] - 2) ? FlyingEdges3D::MaxBoundary
-                                                                     : FlyingEdges3D::Interior));
-    yzLoc = static_cast<vtkm::UInt8>((yLoc << 2) | (zLoc << 4));
+
+    cellId = compute_start(AxisToSum{}, ijk, pdims - vtkm::Id3{ 1, 1, 1 });
+
+    //update our ijk
+    ijk[AxisToSum::xindex] = left;
+
+    boundaryStatus[0] = FlyingEdges3D::Interior;
+    boundaryStatus[1] = FlyingEdges3D::Interior;
+    boundaryStatus[2] = FlyingEdges3D::Interior;
+
+    if (ijk[AxisToSum::xindex] < 1)
+    {
+      boundaryStatus[AxisToSum::xindex] += FlyingEdges3D::MinBoundary;
+    }
+    if (ijk[AxisToSum::xindex] >= (pdims[AxisToSum::xindex] - 2))
+    {
+      boundaryStatus[AxisToSum::yindex] += FlyingEdges3D::MaxBoundary;
+    }
+    if (ijk[AxisToSum::yindex] < 1)
+    {
+      boundaryStatus[AxisToSum::yindex] += FlyingEdges3D::MinBoundary;
+    }
+    if (ijk[AxisToSum::yindex] >= (pdims[AxisToSum::yindex] - 2))
+    {
+      boundaryStatus[AxisToSum::yindex] += FlyingEdges3D::MaxBoundary;
+    }
+    if (ijk[AxisToSum::zindex] < 1)
+    {
+      boundaryStatus[AxisToSum::zindex] += FlyingEdges3D::MinBoundary;
+    }
+    if (ijk[AxisToSum::zindex] >= (pdims[AxisToSum::yindex] - 2))
+    {
+      boundaryStatus[AxisToSum::zindex] += FlyingEdges3D::MaxBoundary;
+    }
+  }
+
+  template <typename AxisToSum>
+  VTKM_EXEC inline void increment(AxisToSum, const vtkm::Id3& pdims)
+  {
+    //compute what the current cellId is
+    cellId = increment_cellId(AxisToSum{}, cellId, axis_inc);
+
+    //compute what the current ijk is
+    ijk[AxisToSum::xindex]++;
+
+    // compute what the current boundary state is
+    // can never be on the MinBoundary after we increment
+    if (ijk[AxisToSum::xindex] >= (pdims[AxisToSum::xindex] - 2))
+    {
+      boundaryStatus[AxisToSum::xindex] = FlyingEdges3D::MaxBoundary;
+    }
+    else
+    {
+      boundaryStatus[AxisToSum::xindex] = FlyingEdges3D::Interior;
+    }
   }
 };
+
+// Helper function to state if a boundary object refers to a location that
+// is fully inside ( not on a boundary )
+//----------------------------------------------------------------------------
+VTKM_EXEC inline bool fully_interior(const vtkm::Vec<vtkm::UInt8, 3>& boundaryStatus)
+{
+  return boundaryStatus[0] == FlyingEdges3D::Interior &&
+    boundaryStatus[1] == FlyingEdges3D::Interior && boundaryStatus[2] == FlyingEdges3D::Interior;
+}
 }
 }
 }

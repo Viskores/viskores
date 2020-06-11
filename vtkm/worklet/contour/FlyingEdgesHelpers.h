@@ -182,33 +182,78 @@ VTKM_EXEC inline vtkm::UInt8 getEdgeCase(const WholeEdgeField& edges,
   return static_cast<vtkm::UInt8>(e0 | (e1 << 2) | (e2 << 4) | (e3 << 6));
 }
 
+
 //----------------------------------------------------------------------------
-template <typename WholeEdgeField>
-VTKM_EXEC inline void adjustTrimBounds(vtkm::Id rightMax,
-                                       const WholeEdgeField& edges,
-                                       const vtkm::Id4& startPos,
-                                       vtkm::Id inc,
-                                       vtkm::Id& left,
-                                       vtkm::Id& right)
+
+template <typename WholeEdgeField, typename FieldInPointId>
+VTKM_EXEC inline bool computeTrimBounds(vtkm::Id rightMax,
+                                        const WholeEdgeField& edges,
+                                        const FieldInPointId& axis_mins,
+                                        const FieldInPointId& axis_maxs,
+                                        const vtkm::Id4& startPos,
+                                        vtkm::Id inc,
+                                        vtkm::Id& left,
+                                        vtkm::Id& right)
 {
+  // find adjusted trim values.
+  left = vtkm::Min(axis_mins[0], axis_mins[1]);
+  left = vtkm::Min(left, axis_mins[2]);
+  left = vtkm::Min(left, axis_mins[3]);
 
-  vtkm::UInt8 e0 = edges.Get(startPos[0] + (left * inc));
-  vtkm::UInt8 e1 = edges.Get(startPos[1] + (left * inc));
-  vtkm::UInt8 e2 = edges.Get(startPos[2] + (left * inc));
-  vtkm::UInt8 e3 = edges.Get(startPos[3] + (left * inc));
-  if ((e0 & 0x1) != (e1 & 0x1) || (e1 & 0x1) != (e2 & 0x1) || (e2 & 0x1) != (e3 & 0x1))
+  right = vtkm::Max(axis_maxs[0], axis_maxs[1]);
+  right = vtkm::Max(right, axis_maxs[2]);
+  right = vtkm::Max(right, axis_maxs[3]);
+
+  // The trim edges may need adjustment if the contour travels between rows
+  // of edges (without intersecting these edges). This means checking
+  // whether the trim faces at (left,right) made up of the edges intersect
+  // the contour.
+  if (left > rightMax && right == 0)
   {
+    //verify that we have nothing to generate and early terminate.
+    bool mins_same = (axis_mins[0] == axis_mins[1] && axis_mins[0] == axis_mins[2] &&
+                      axis_mins[0] == axis_mins[3]);
+    bool maxs_same = (axis_maxs[0] == axis_maxs[1] && axis_maxs[0] == axis_maxs[2] &&
+                      axis_maxs[0] == axis_maxs[3]);
+
     left = 0;
+    right = rightMax;
+    if (mins_same && maxs_same)
+    {
+      vtkm::UInt8 e0 = edges.Get(startPos[0]);
+      vtkm::UInt8 e1 = edges.Get(startPos[1]);
+      vtkm::UInt8 e2 = edges.Get(startPos[2]);
+      vtkm::UInt8 e3 = edges.Get(startPos[3]);
+      if (e0 == e1 && e1 == e2 && e2 == e3)
+      {
+        //We have nothing to process in this row
+        return false;
+      }
+    }
+  }
+  else
+  {
+
+    vtkm::UInt8 e0 = edges.Get(startPos[0] + (left * inc));
+    vtkm::UInt8 e1 = edges.Get(startPos[1] + (left * inc));
+    vtkm::UInt8 e2 = edges.Get(startPos[2] + (left * inc));
+    vtkm::UInt8 e3 = edges.Get(startPos[3] + (left * inc));
+    if ((e0 & 0x1) != (e1 & 0x1) || (e1 & 0x1) != (e2 & 0x1) || (e2 & 0x1) != (e3 & 0x1))
+    {
+      left = 0;
+    }
+
+    e0 = edges.Get(startPos[0] + (right * inc));
+    e1 = edges.Get(startPos[1] + (right * inc));
+    e2 = edges.Get(startPos[2] + (right * inc));
+    e3 = edges.Get(startPos[3] + (right * inc));
+    if ((e0 & 0x2) != (e1 & 0x2) || (e1 & 0x2) != (e2 & 0x2) || (e2 & 0x2) != (e3 & 0x2))
+    {
+      right = rightMax;
+    }
   }
 
-  e0 = edges.Get(startPos[0] + (right * inc));
-  e1 = edges.Get(startPos[1] + (right * inc));
-  e2 = edges.Get(startPos[2] + (right * inc));
-  e3 = edges.Get(startPos[3] + (right * inc));
-  if ((e0 & 0x2) != (e1 & 0x2) || (e1 & 0x2) != (e2 & 0x2) || (e2 & 0x2) != (e3 & 0x2))
-  {
-    right = rightMax;
-  }
+  return true;
 }
 }
 }
