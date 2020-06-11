@@ -395,7 +395,7 @@ struct IsUndefinedStorage
 {
 };
 template <typename T, typename U>
-struct IsUndefinedStorage<vtkm::List<T, U>> : vtkm::cont::internal::IsInValidArrayHandle<T, U>
+struct IsUndefinedStorage<vtkm::List<T, U>> : vtkm::cont::internal::IsInvalidArrayHandle<T, U>
 {
 };
 

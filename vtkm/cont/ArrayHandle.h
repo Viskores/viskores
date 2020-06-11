@@ -72,7 +72,7 @@ using IsValidArrayHandle =
 /// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
-using IsInValidArrayHandle =
+using IsInvalidArrayHandle =
   std::integral_constant<bool, !IsValidArrayHandle<T, StorageTag>::value>;
 
 /// Checks to see if the ArrayHandle allows writing, as some ArrayHandles
