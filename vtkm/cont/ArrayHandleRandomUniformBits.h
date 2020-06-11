@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_ArrayHandlePhiloxURBG_h
-#define vtk_m_cont_ArrayHandlePhiloxURBG_h
+#ifndef vtk_m_cont_ArrayHandleRandomUniformBits_h
+#define vtk_m_cont_ArrayHandleRandomUniformBits_h
 
 #include <random>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -96,4 +96,4 @@ namespace cont
 }
 } // namespace vtkm::cont
 /// @endcond
-#endif //vtk_m_cont_ArrayHandlePhiloxURBG_h
+#endif //vtk_m_cont_ArrayHandleRandomUniformBits_h
