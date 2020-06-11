@@ -139,11 +139,11 @@ public:
     }
 
   public:
-    VTKM_CONT bool operator==(const Reference& rhs) const
+    VTKM_CONT bool operator==(Reference rhs) const
     {
       return this->InternalsPointer == rhs.InternalsPointer;
     }
-    VTKM_CONT bool operator!=(const Reference& rhs) const
+    VTKM_CONT bool operator!=(Reference rhs) const
     {
       return this->InternalsPointer != rhs.InternalsPointer;
     }
@@ -171,24 +171,20 @@ private:
                             vtkm::cont::Token::ReferenceCount* referenceCountPointer) const;
 };
 
-VTKM_CONT inline bool operator==(const vtkm::cont::Token& token,
-                                 const vtkm::cont::Token::Reference& ref)
+VTKM_CONT inline bool operator==(const vtkm::cont::Token& token, vtkm::cont::Token::Reference ref)
 {
   return token.GetReference() == ref;
 }
-VTKM_CONT inline bool operator!=(const vtkm::cont::Token& token,
-                                 const vtkm::cont::Token::Reference& ref)
+VTKM_CONT inline bool operator!=(const vtkm::cont::Token& token, vtkm::cont::Token::Reference ref)
 {
   return token.GetReference() != ref;
 }
 
-VTKM_CONT inline bool operator==(const vtkm::cont::Token::Reference& ref,
-                                 const vtkm::cont::Token& token)
+VTKM_CONT inline bool operator==(vtkm::cont::Token::Reference ref, const vtkm::cont::Token& token)
 {
   return ref == token.GetReference();
 }
-VTKM_CONT inline bool operator!=(const vtkm::cont::Token::Reference& ref,
-                                 const vtkm::cont::Token& token)
+VTKM_CONT inline bool operator!=(vtkm::cont::Token::Reference ref, const vtkm::cont::Token& token)
 {
   return ref != token.GetReference();
 }
