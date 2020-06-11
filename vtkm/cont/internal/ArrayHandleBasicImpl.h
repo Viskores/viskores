@@ -228,7 +228,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
     mutable vtkm::cont::Token::ReferenceCount ReadCount = 0;
     mutable vtkm::cont::Token::ReferenceCount WriteCount = 0;
 
-    mutable std::list<vtkm::cont::Token::Reference> Queue;
+    mutable std::deque<vtkm::cont::Token::Reference> Queue;
 
     VTKM_CONT void CheckLock(const LockType& lock) const
     {
@@ -346,7 +346,7 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
       this->CheckLock(lock);
       return &this->WriteCount;
     }
-    VTKM_CONT std::list<vtkm::cont::Token::Reference>& GetQueue(const LockType& lock) const
+    VTKM_CONT std::deque<vtkm::cont::Token::Reference>& GetQueue(const LockType& lock) const
     {
       this->CheckLock(lock);
       return this->Queue;
