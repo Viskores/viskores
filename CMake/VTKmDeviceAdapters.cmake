@@ -127,10 +127,7 @@ if(VTKm_ENABLE_CUDA)
       requires_static_builds TRUE
     )
 
-
-    set_target_properties(vtkm_cuda PROPERTIES
-      INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-    )
+    target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
     if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
       CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
@@ -247,13 +244,24 @@ if(VTKm_ENABLE_CUDA)
     endif()
 
     string(REPLACE ";" " " arch_flags "${arch_flags}")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+      #We propagate cuda flags via target* options so that they
+      #export cleanly
+      set(CMAKE_CUDA_ARCHITECTURES OFF)
+      target_compile_options(vtkm_cuda INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${arch_flags}>)
+      target_link_options(vtkm_cuda INTERFACE $<DEVICE_LINK:${arch_flags}>)
+    else()
+      # Before 3.18 we had to use CMAKE_CUDA_FLAGS as we had no way
+      # to propagate flags to the device link step
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+    endif()
 
     # This needs to be lower-case for the property to be properly exported
     # CMake 3.15 we can add `cuda_architecture_flags` to the EXPORT_PROPERTIES
     # target property to have this automatically exported for us
-    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
     set(VTKm_CUDA_Architecture_Flags "${arch_flags}")
+    set_target_properties(vtkm_cuda PROPERTIES cuda_architecture_flags "${arch_flags}")
+    unset(arch_flags)
   endif()
 endif()
 
