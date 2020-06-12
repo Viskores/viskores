@@ -216,15 +216,16 @@ struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type>
 
   VTKM_EXEC_CONT VariantConstructorImpl& operator=(VariantConstructorImpl&& rhs) noexcept
   {
-// Get rid of spurious GCC-10 warning: See issue #524.
+    this->Reset();
+// Get rid of spurious GCC-10 warning:
+// Storage might be uninitialized, but that is OK as long as Index == -1.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-    this->Reset();
     this->Storage = std::move(rhs.Storage);
+#pragma GCC diagnostic pop
     this->Index = std::move(rhs.Index);
     rhs.Index = -1;
     return *this;
-#pragma GCC diagnostic pop
   }
 };
 
