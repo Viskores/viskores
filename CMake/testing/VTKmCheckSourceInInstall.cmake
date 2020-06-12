@@ -111,6 +111,7 @@ function(do_verify root_dir prefix)
 
   set(file_exceptions
     cont/ColorTablePrivate.hxx
+    thirdparty/diy/vtkmdiy/cmake/mpi_types.h
     )
 
   #by default every header in a testing directory doesn't need to be installed

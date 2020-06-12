@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
   auto comm = MPI_COMM_WORLD;
 
   // Tell VTK-m which communicator it should use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(comm));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator());
 
   // get the rank and size
   int rank, size;

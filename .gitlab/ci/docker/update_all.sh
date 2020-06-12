@@ -34,6 +34,10 @@ cd ubuntu1804/cuda10.1
 sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda10.1-$date .
 cd ../..
 
+cd ubuntu2004/doxygen/
+sudo docker build -t kitware/vtkm:ci-doxygen-$date .
+cd ../..
+
 # sudo docker login --username=<docker_hub_name>
 sudo docker push kitware/vtkm
 sudo docker system prune

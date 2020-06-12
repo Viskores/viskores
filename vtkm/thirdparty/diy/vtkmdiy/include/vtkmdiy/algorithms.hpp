@@ -86,7 +86,7 @@ namespace diy
 
         typedef     diy::RegularContinuousLink      RCLink;
 
-        for (size_t i = 0; i < master.size(); ++i)
+        for (int i = 0; i < static_cast<int>(master.size()); ++i)
         {
             RCLink* link   = static_cast<RCLink*>(master.link(i));
             *link = RCLink(dim, domain, domain);
@@ -96,7 +96,7 @@ namespace diy
                 diy::BlockID self = { master.gid(i), master.communicator().rank() };
                 for (int j = 0; j < dim; ++j)
                 {
-                    diy::Direction dir, wrap_dir;
+                    diy::Direction dir(dim,0), wrap_dir(dim,0);
 
                     // left
                     dir[j] = -1; wrap_dir[j] = -1;
@@ -122,7 +122,7 @@ namespace diy
 
         // update master.expected to match the links
         int expected = 0;
-        for (size_t i = 0; i < master.size(); ++i)
+        for (int i = 0; i < static_cast<int>(master.size()); ++i)
             expected += master.link(i)->size_unique();
         master.set_expected(expected);
     }
@@ -146,7 +146,7 @@ namespace diy
 
         typedef     diy::RegularContinuousLink      RCLink;
 
-        for (size_t i = 0; i < master.size(); ++i)
+        for (int i = 0; i < static_cast<int>(master.size()); ++i)
         {
             RCLink* link   = static_cast<RCLink*>(master.link(i));
             *link = RCLink(dim, domain, domain);
@@ -156,7 +156,7 @@ namespace diy
                 diy::BlockID self = { master.gid(i), master.communicator().rank() };
                 for (int j = 0; j < dim; ++j)
                 {
-                    diy::Direction dir, wrap_dir;
+                    diy::Direction dir(dim,0), wrap_dir(dim,0);
 
                     // left
                     dir[j] = -1; wrap_dir[j] = -1;
@@ -182,7 +182,7 @@ namespace diy
 
         // update master.expected to match the links
         int expected = 0;
-        for (size_t i = 0; i < master.size(); ++i)
+        for (int i = 0; i < static_cast<int>(master.size()); ++i)
             expected += master.link(i)->size_unique();
         master.set_expected(expected);
     }
