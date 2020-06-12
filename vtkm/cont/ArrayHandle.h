@@ -29,6 +29,7 @@
 #include <vtkm/internal/ArrayPortalHelpers.h>
 
 #include <algorithm>
+#include <deque>
 #include <iterator>
 #include <memory>
 #include <mutex>
@@ -400,39 +401,33 @@ public:
   typename StorageType::PortalConstType GetPortalConstControl() const;
   /// \endcond
 
+  /// \@{
   /// \brief Get an array portal that can be used in the control environment.
   ///
   /// The returned array can be used in the control environment to read values from the array. (It
   /// is not possible to write to the returned portal. That is `Get` will work on the portal, but
   /// `Set` will not.)
   ///
-  /// **Note:** The returned portal will prevent any writes or modifications to the array. To
-  /// ensure that the data pointed to by the portal is valid, this `ArrayHandle` will be locked to
-  /// any modifications while the portal remains in scope. (You can call `Detach` on the returned
-  /// portal to unlock the array. However, this will invalidate the portal.)
-  ///
   /// **Note:** The returned portal cannot be used in the execution environment. This is because
   /// the portal will not work on some devices like GPUs. To get a portal that will work in the
   /// execution environment, use `PrepareForInput`.
   ///
   VTKM_CONT ReadPortalType ReadPortal() const;
+  /// \@}
 
+  /// \@{
   /// \brief Get an array portal that can be used in the control environment.
   ///
   /// The returned array can be used in the control environment to reand and write values to the
   /// array.
   ///
-  /// **Note:** The returned portal will prevent any reads, writes, or modifications to the array.
-  /// To ensure that the data pointed to by the portal is valid, this `ArrayHandle` will be locked
-  /// to any modifications while the portal remains in scope. Also, to make sure that no reads get
-  /// out of sync, reads other than the returned portal are also blocked. (You can call `Detach` on
-  /// the returned portal to unlock the array. However, this will invalidate the portal.)
   ///
   /// **Note:** The returned portal cannot be used in the execution environment. This is because
   /// the portal will not work on some devices like GPUs. To get a portal that will work in the
   /// execution environment, use `PrepareForInput`.
   ///
   VTKM_CONT WritePortalType WritePortal() const;
+  /// \@}
 
   /// Returns the number of entries in the array.
   ///
@@ -454,14 +449,20 @@ public:
   VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
-    LockType lock = this->GetLock();
-    this->WaitToWrite(lock, vtkm::cont::Token{});
-    this->ReleaseResourcesExecutionInternal(lock);
-    this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
-    // Set to false and then to true to ensure anything pointing to an array before the allocate
-    // is invalidated.
-    this->Internals->SetControlArrayValid(lock, false);
-    this->Internals->SetControlArrayValid(lock, true);
+    // A Token should not be declared within the scope of a lock. when the token goes out of scope
+    // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+    // the lock.
+    vtkm::cont::Token token;
+    {
+      LockType lock = this->GetLock();
+      this->WaitToWrite(lock, token);
+      this->ReleaseResourcesExecutionInternal(lock, token);
+      this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
+      // Set to false and then to true to ensure anything pointing to an array before the allocate
+      // is invalidated.
+      this->Internals->SetControlArrayValid(lock, false);
+      this->Internals->SetControlArrayValid(lock, true);
+    }
   }
 
   /// \brief Reduces the size of the array without changing its values.
@@ -479,28 +480,40 @@ public:
   ///
   VTKM_CONT void ReleaseResourcesExecution()
   {
-    LockType lock = this->GetLock();
-    this->WaitToWrite(lock, vtkm::cont::Token{});
+    // A Token should not be declared within the scope of a lock. when the token goes out of scope
+    // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+    // the lock.
+    vtkm::cont::Token token;
+    {
+      LockType lock = this->GetLock();
+      this->WaitToWrite(lock, token);
 
-    // Save any data in the execution environment by making sure it is synced
-    // with the control environment.
-    this->SyncControlArray(lock);
+      // Save any data in the execution environment by making sure it is synced
+      // with the control environment.
+      this->SyncControlArray(lock, token);
 
-    this->ReleaseResourcesExecutionInternal(lock);
+      this->ReleaseResourcesExecutionInternal(lock, token);
+    }
   }
 
   /// Releases all resources in both the control and execution environments.
   ///
   VTKM_CONT void ReleaseResources()
   {
-    LockType lock = this->GetLock();
-
-    this->ReleaseResourcesExecutionInternal(lock);
-
-    if (this->Internals->IsControlArrayValid(lock))
+    // A Token should not be declared within the scope of a lock. when the token goes out of scope
+    // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+    // the lock.
+    vtkm::cont::Token token;
     {
-      this->Internals->GetControlArray(lock)->ReleaseResources();
-      this->Internals->SetControlArrayValid(lock, false);
+      LockType lock = this->GetLock();
+
+      this->ReleaseResourcesExecutionInternal(lock, token);
+
+      if (this->Internals->IsControlArrayValid(lock))
+      {
+        this->Internals->GetControlArray(lock)->ReleaseResources();
+        this->Internals->SetControlArrayValid(lock, false);
+      }
     }
   }
 
@@ -604,9 +617,38 @@ public:
   ///
   VTKM_CONT void SyncControlArray() const
   {
-    LockType lock = this->GetLock();
-    this->SyncControlArray(lock);
+    // A Token should not be declared within the scope of a lock. when the token goes out of scope
+    // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+    // the lock.
+    vtkm::cont::Token token;
+    {
+      LockType lock = this->GetLock();
+      this->SyncControlArray(lock, token);
+    }
   }
+
+  /// \brief Enqueue a token for access to this ArrayHandle.
+  ///
+  /// This method places the given `Token` into the queue of `Token`s waiting for
+  /// access to this `ArrayHandle` and then returns immediately. When this token
+  /// is later used to get data from this `ArrayHandle` (for example, in a call to
+  /// `PrepareForInput`), it will use this place in the queue while waiting for
+  /// access.
+  ///
+  /// This method is to be used to ensure that a set of accesses to an `ArrayHandle`
+  /// that happen on multiple threads occur in a specified order. For example, if
+  /// you spawn of a job to modify data in an `ArrayHandle` and then spawn off a job
+  /// that reads that same data, you need to make sure that the first job gets
+  /// access to the `ArrayHandle` before the second. If they both just attempt to call
+  /// their respective `Prepare` methods, there is no guarantee which order they
+  /// will occur. Having the spawning thread first call this method will ensure the order.
+  ///
+  /// \warning After calling this method it is required to subsequently
+  /// call a method like one of the `Prepare` methods that attaches the token
+  /// to this `ArrayHandle`. Otherwise, the enqueued token will block any subsequent
+  /// access to the `ArrayHandle`, even if the `Token` is destroyed.
+  ///
+  VTKM_CONT void Enqueue(const vtkm::cont::Token& token) const;
 
 private:
   /// Acquires a lock on the internals of this `ArrayHandle`. The calling
@@ -617,47 +659,19 @@ private:
 
   /// Returns true if read operations can currently be performed.
   ///
-  VTKM_CONT bool CanRead(const LockType& lock, const vtkm::cont::Token& token) const
-  {
-    return ((*this->Internals->GetWriteCount(lock) < 1) ||
-            (token.IsAttached(this->Internals->GetWriteCount(lock))));
-  }
+  VTKM_CONT bool CanRead(const LockType& lock, const vtkm::cont::Token& token) const;
 
   //// Returns true if write operations can currently be performed.
   ///
-  VTKM_CONT bool CanWrite(const LockType& lock, const vtkm::cont::Token& token) const
-  {
-    return (((*this->Internals->GetWriteCount(lock) < 1) ||
-             (token.IsAttached(this->Internals->GetWriteCount(lock)))) &&
-            ((*this->Internals->GetReadCount(lock) < 1) ||
-             ((*this->Internals->GetReadCount(lock) == 1) &&
-              token.IsAttached(this->Internals->GetReadCount(lock)))));
-  }
+  VTKM_CONT bool CanWrite(const LockType& lock, const vtkm::cont::Token& token) const;
 
   //// Will block the current thread until a read can be performed.
   ///
-  VTKM_CONT void WaitToRead(LockType& lock, const vtkm::cont::Token& token) const
-  {
-    // Note that if you deadlocked here, that means that you are trying to do a read operation on
-    // an array where an object is writing to it. This could happen on the same thread. For
-    // example, if you call `GetPortalControl()` then no other operation that can result in reading
-    // or writing data in the array can happen while the resulting portal is still in scope.
-    this->Internals->ConditionVariable.wait(
-      lock, [&lock, &token, this] { return this->CanRead(lock, token); });
-  }
+  VTKM_CONT void WaitToRead(LockType& lock, vtkm::cont::Token& token) const;
 
   //// Will block the current thread until a write can be performed.
   ///
-  VTKM_CONT void WaitToWrite(LockType& lock, const vtkm::cont::Token& token) const
-  {
-    // Note that if you deadlocked here, that means that you are trying to do a write operation on
-    // an array where an object is reading or writing to it. This could happen on the same thread.
-    // For example, if you call `GetPortalControl()` then no other operation that can result in
-    // reading or writing data in the array can happen while the resulting portal is still in
-    // scope.
-    this->Internals->ConditionVariable.wait(
-      lock, [&lock, &token, this] { return this->CanWrite(lock, token); });
-  }
+  VTKM_CONT void WaitToWrite(LockType& lock, vtkm::cont::Token& token, bool fakeRead = false) const;
 
   /// Gets this array handle ready to interact with the given device. If the
   /// array handle has already interacted with this device, then this method
@@ -665,7 +679,7 @@ private:
   /// method is declared const because logically the data does not.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT void PrepareForDevice(LockType& lock, DeviceAdapterTag) const;
+  VTKM_CONT void PrepareForDevice(LockType& lock, vtkm::cont::Token& token, DeviceAdapterTag) const;
 
   /// Synchronizes the control array with the execution array. If either the
   /// user array or control array is already valid, this method does nothing
@@ -673,16 +687,16 @@ private:
   /// Although the internal state of this class can change, the method is
   /// declared const because logically the data does not.
   ///
-  VTKM_CONT void SyncControlArray(LockType& lock) const;
+  VTKM_CONT void SyncControlArray(LockType& lock, vtkm::cont::Token& token) const;
 
   vtkm::Id GetNumberOfValues(LockType& lock) const;
 
   VTKM_CONT
-  void ReleaseResourcesExecutionInternal(LockType& lock) const
+  void ReleaseResourcesExecutionInternal(LockType& lock, vtkm::cont::Token& token) const
   {
     if (this->Internals->IsExecutionArrayValid(lock))
     {
-      this->WaitToWrite(lock, vtkm::cont::Token{});
+      this->WaitToWrite(lock, token);
       // Note that it is possible that while waiting someone else deleted the execution array.
       // That is why we check again.
     }
@@ -692,6 +706,8 @@ private:
       this->Internals->SetExecutionArrayValid(lock, false);
     }
   }
+
+  VTKM_CONT void Enqueue(const LockType& lock, const vtkm::cont::Token& token) const;
 
   class VTKM_ALWAYS_EXPORT InternalStruct
   {
@@ -703,6 +719,8 @@ private:
 
     mutable vtkm::cont::Token::ReferenceCount ReadCount = 0;
     mutable vtkm::cont::Token::ReferenceCount WriteCount = 0;
+
+    mutable std::deque<vtkm::cont::Token::Reference> Queue;
 
     VTKM_CONT void CheckLock(const LockType& lock) const
     {
@@ -811,6 +829,11 @@ private:
     {
       this->CheckLock(lock);
       return &this->WriteCount;
+    }
+    VTKM_CONT std::deque<vtkm::cont::Token::Reference>& GetQueue(const LockType& lock) const
+    {
+      this->CheckLock(lock);
+      return this->Queue;
     }
   };
 
