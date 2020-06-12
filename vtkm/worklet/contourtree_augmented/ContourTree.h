@@ -148,11 +148,14 @@ public:
   // because not all Hyperarcs lead to hypernodes
   IdArrayType Hyperarcs;
 
+  // counter for the number of iterations it took to construct the tree
+  // this is also used for hypersweep computations
+  vtkm::Id NumIterations;
 
-  // THIS ONE HAS BEEN DELETED BECAUSE IT'S THE SAME AS THE HYPERNODE ID
-  // ALTHOUGH THIS IS NOT NECESSARY, IT'S THE RESULT OF THE CONSTRUCTION
-  // vector to find the first child superarc
-  // IdArrayType FirstSuperchild;
+  // vectors tracking the segments used in each iteration of the hypersweep
+  IdArrayType FirstSupernodePerIteration;
+  IdArrayType FirstHypernodePerIteration;
+
 
   // ROUTINES
 
@@ -216,6 +219,11 @@ inline void ContourTree::PrintContent() const
   PrintHeader(Augmentnodes.GetNumberOfValues());
   PrintIndices("Augmentnodes", Augmentnodes);
   PrintIndices("Augmentarcs", this->Augmentarcs);
+  std::cout << std::endl;
+  std::cout << "NumIterations: " << this->NumIterations << std::endl;
+  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues());
+  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration);
+  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration);
 }
 
 void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const

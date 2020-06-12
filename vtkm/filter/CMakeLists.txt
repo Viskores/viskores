@@ -19,6 +19,7 @@ set(headers
   Contour.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
+  ContourTreeUniformDistributed.h
   CoordinateSystemTransform.h
   CreateResult.h
   CrossProduct.h
@@ -92,6 +93,7 @@ set(header_template_sources
   Contour.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
+  ContourTreeUniformDistributed.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx

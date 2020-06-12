@@ -57,8 +57,9 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal2D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/ComputeMeshBoundary2D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary2D.h>
 
 #include <vtkm/cont/ExecutionObjectBase.h>
 
@@ -87,6 +88,12 @@ public:
   Mesh_DEM_Triangulation_2D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows);
 
   MeshBoundary2DExec GetMeshBoundaryExecutionObject() const;
+
+  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,    // output
+                           IdArrayType& boundarySortIndexArray, // output
+                           MeshBoundary2DExec* meshBoundaryExecObj =
+                             NULL // optional input, included for consistency with ContourTreeMesh
+                           ) const;
 
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -135,6 +142,29 @@ Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionO
 {
   return MeshBoundary2DExec(this->NumColumns, this->NumRows, this->SortOrder);
 }
+
+
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::GetBoundaryVertices(
+  IdArrayType& boundaryVertexArray,    // output
+  IdArrayType& boundarySortIndexArray, // output
+  MeshBoundary2DExec*
+    meshBoundaryExecObj // optional input, included for consistency with ContourTreeMesh
+  ) const
+{
+  vtkm::Id numBoundary = 2 * this->NumRows + 2 * this->NumColumns - 4;
+  auto boundaryId = vtkm::cont::ArrayHandleIndex(numBoundary);
+  ComputeMeshBoundary2D computeMeshBoundary2dWorklet;
+  this->Invoke(computeMeshBoundary2dWorklet,
+               boundaryId,        // input
+               this->SortIndices, // input
+               (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
+                                             : *meshBoundaryExecObj, // input
+               boundaryVertexArray,                                  // output
+               boundarySortIndexArray                                // output
+               );
+}
+
 
 } // namespace contourtree_augmented
 } // worklet

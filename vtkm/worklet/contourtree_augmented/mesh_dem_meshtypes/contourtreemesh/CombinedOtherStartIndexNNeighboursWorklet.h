@@ -105,7 +105,6 @@ public:
                                     nneighboursVal);
 
     // Implements in reference code
-    // #pragma omp parallel for
     // The following is save since each global index is only written by one entry
     // for (indexVector::size_type vtx = 0; vtx < nNeighbours.size(); ++vtx)
     // {

@@ -82,7 +82,6 @@
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/IdRelabler.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem/SimulatedSimplicityComperator.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem/SortIndices.h>
 

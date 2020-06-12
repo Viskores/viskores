@@ -125,8 +125,6 @@ public:
     }
 
     /* Reference code implemented by this worklet
-
-       #pragma omp parallel for
        for (indexVector::size_type vtx = 0; vtx < combinedFirstNeighbour.size(); ++vtx)
        {
          if (combinedOtherStartIndex[vtx]) // Needs merge

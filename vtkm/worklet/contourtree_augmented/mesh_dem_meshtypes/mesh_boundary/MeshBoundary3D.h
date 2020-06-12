@@ -56,13 +56,12 @@
 // class and an ExectionObject class with the PrepareForInput function that
 // VTKm expects to generate the object for the execution environment.
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_h
-#define vtk_m_worklet_contourtree_augmented_mesh_boundary_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_3d_h
+#define vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_3d_h
 
 #include <cstdlib>
 
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure2D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure3D.h>
 
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -73,73 +72,6 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-
-
-template <typename DeviceTag>
-class MeshBoundary2D
-{
-public:
-  // Sort indicies types
-  using SortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
-
-  VTKM_EXEC_CONT
-  MeshBoundary2D()
-    : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(0, 0))
-  {
-  }
-
-  VTKM_CONT
-  MeshBoundary2D(vtkm::Id nrows,
-                 vtkm::Id ncols,
-                 const IdArrayType& sortOrder,
-                 vtkm::cont::Token& token)
-    : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
-  {
-    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceTag(), token);
-  }
-
-  VTKM_EXEC_CONT
-  bool liesOnBoundary(const vtkm::Id index) const
-  {
-    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
-    const vtkm::Id row = this->MeshStructure.VertexRow(meshSortOrderValue);
-    const vtkm::Id col = this->MeshStructure.VertexColumn(meshSortOrderValue);
-
-    return (row == 0) || (col == 0) || (row == this->MeshStructure.NumRows - 1) ||
-      (col == this->MeshStructure.NumColumns - 1);
-  }
-
-private:
-  // 2D Mesh size parameters
-  mesh_dem::MeshStructure2D<DeviceTag> MeshStructure;
-  SortOrderPortalType SortOrderPortal;
-};
-
-class MeshBoundary2DExec : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  MeshBoundary2DExec(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& inSortOrder)
-    : NumRows(nrows)
-    , NumColumns(ncols)
-    , SortOrder(inSortOrder)
-  {
-  }
-
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
-  {
-    return MeshBoundary2D<DeviceTag>(this->NumRows, this->NumColumns, this->SortOrder, token);
-  }
-
-private:
-  // 2D Mesh size parameters
-  vtkm::Id NumRows;
-  vtkm::Id NumColumns;
-  const IdArrayType& SortOrder;
-};
-
 
 template <typename DeviceTag>
 class MeshBoundary3D : public vtkm::cont::ExecutionObjectBase
@@ -212,95 +144,6 @@ protected:
   vtkm::Id NumColumns;
   vtkm::Id NumSlices;
   const IdArrayType& SortOrder;
-};
-
-
-template <typename DeviceTag>
-class MeshBoundaryContourTreeMesh
-{
-public:
-  using IndicesPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
-
-  VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMesh() {}
-
-  VTKM_CONT
-  MeshBoundaryContourTreeMesh(const IdArrayType& globalMeshIndex,
-                              vtkm::Id totalNRows,
-                              vtkm::Id totalNCols,
-                              vtkm::Id3 minIdx,
-                              vtkm::Id3 maxIdx,
-                              vtkm::cont::Token& token)
-    : TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
-  {
-    assert(this->TotalNRows > 0 && this->TotalNCols > 0);
-    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag(), token);
-  }
-
-  VTKM_EXEC_CONT
-  bool liesOnBoundary(const vtkm::Id index) const
-  {
-    vtkm::Id idx = this->GlobalMeshIndexPortal.Get(index);
-    vtkm::Id3 rcs;
-    rcs[0] = vtkm::Id((idx % (this->TotalNRows * this->TotalNCols)) / this->TotalNCols);
-    rcs[1] = vtkm::Id(idx % this->TotalNCols);
-    rcs[2] = vtkm::Id(idx / (this->TotalNRows * this->TotalNCols));
-    for (int d = 0; d < 3; ++d)
-    {
-      if (this->MinIdx[d] != this->MaxIdx[d] &&
-          (rcs[d] == this->MinIdx[d] || rcs[d] == this->MaxIdx[d]))
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-private:
-  // mesh block parameters
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
-  IndicesPortalType GlobalMeshIndexPortal;
-};
-
-
-class MeshBoundaryContourTreeMeshExec : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMeshExec(const IdArrayType& globalMeshIndex,
-                                  vtkm::Id totalNRows,
-                                  vtkm::Id totalNCols,
-                                  vtkm::Id3 minIdx,
-                                  vtkm::Id3 maxIdx)
-    : GlobalMeshIndex(globalMeshIndex)
-    , TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
-  {
-  }
-
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag,
-                                                             vtkm::cont::Token& token) const
-  {
-    return MeshBoundaryContourTreeMesh<DeviceTag>(
-      this->GlobalMeshIndex, this->TotalNRows, this->TotalNCols, this->MinIdx, this->MaxIdx, token);
-  }
-
-private:
-  const IdArrayType& GlobalMeshIndex;
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
 };
 
 

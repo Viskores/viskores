@@ -16,11 +16,11 @@ set(headers
   MeshStructureFreudenthal3D.h
   MeshStructureMarchingCubes.h
   MeshStructureContourTreeMesh.h
-  MeshBoundary.h
   )
 
 #----------------------------------------------------------------------------
 add_subdirectory(contourtreemesh)
+add_subdirectory(mesh_boundary)
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
