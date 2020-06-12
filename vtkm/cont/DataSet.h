@@ -258,6 +258,13 @@ public:
   VTKM_CONT
   void PrintSummary(std::ostream& out) const;
 
+  VTKM_CONT
+  friend std::ostream& operator<<(std::ostream& out, const vtkm::cont::DataSet& ds)
+  {
+    ds.PrintSummary(out);
+    return out;
+  }
+
 private:
   struct FieldCompare
   {
