@@ -21,7 +21,7 @@ void TestSingle()
 
   VTKM_TEST_ASSERT(result.n == 1);
   VTKM_TEST_ASSERT(result.mean == 42);
-  VTKM_TEST_ASSERT(result.variance_n() == 0);
+  VTKM_TEST_ASSERT(result.population_variance() == 0);
 }
 
 void TestPoissonDistribution()
@@ -84,8 +84,8 @@ void TestPoissonDistribution()
 
   // Multiplication/Division involved, could be inexact.
   VTKM_TEST_ASSERT(test_equal(result.mean, result.sum / result.n));
-  VTKM_TEST_ASSERT(test_equal(result.variance(), 9.854831));
-  VTKM_TEST_ASSERT(test_equal(result.variance_n(), 9.84497));
+  VTKM_TEST_ASSERT(test_equal(result.sample_variance(), 9.854831));
+  VTKM_TEST_ASSERT(test_equal(result.population_variance(), 9.84497));
 
   VTKM_TEST_ASSERT(test_equal(result.skewness(), 0.448261));
   VTKM_TEST_ASSERT(test_equal(result.kurtosis(), 3.37872));
@@ -149,8 +149,8 @@ void TestNormalDistribution()
 
   // Multiplication/Division involved, could be inexact.
   VTKM_TEST_ASSERT(test_equal(result.mean, result.sum / result.n));
-  VTKM_TEST_ASSERT(test_equal(result.variance(), 24.37548));
-  VTKM_TEST_ASSERT(test_equal(result.variance_n(), 24.3511));
+  VTKM_TEST_ASSERT(test_equal(result.sample_variance(), 24.37548));
+  VTKM_TEST_ASSERT(test_equal(result.population_variance(), 24.3511));
 
   VTKM_TEST_ASSERT(test_equal(result.skewness(), -0.03875));
   VTKM_TEST_ASSERT(test_equal(result.kurtosis(), 2.96898));
@@ -214,8 +214,8 @@ void TestChiSquare()
 
   // Multiplication/Division involved, could be inexact.
   VTKM_TEST_ASSERT(test_equal(result.mean, result.sum / result.n));
-  VTKM_TEST_ASSERT(test_equal(result.variance(), 9.802962));
-  VTKM_TEST_ASSERT(test_equal(result.variance_n(), 9.79318));
+  VTKM_TEST_ASSERT(test_equal(result.sample_variance(), 9.802962));
+  VTKM_TEST_ASSERT(test_equal(result.population_variance(), 9.79318));
 
   VTKM_TEST_ASSERT(test_equal(result.skewness(), 1.23415));
   VTKM_TEST_ASSERT(test_equal(result.kurtosis(), 5.08937));
@@ -279,8 +279,8 @@ void TestUniform()
 
   // Multiplication/Division involved, could be inexact.
   VTKM_TEST_ASSERT(test_equal(result.mean, result.sum / result.n));
-  VTKM_TEST_ASSERT(test_equal(result.variance(), 196.7818));
-  VTKM_TEST_ASSERT(test_equal(result.variance_n(), 196.585));
+  VTKM_TEST_ASSERT(test_equal(result.sample_variance(), 196.7818));
+  VTKM_TEST_ASSERT(test_equal(result.population_variance(), 196.585));
 
   VTKM_TEST_ASSERT(test_equal(result.skewness(), -0.0188558));
   VTKM_TEST_ASSERT(test_equal(result.kurtosis(), 1.88085));
@@ -297,8 +297,8 @@ void TestCatastrophicCancellation()
   VTKM_TEST_ASSERT(resultOK.sum == 4.0e8 + 40);
   VTKM_TEST_ASSERT(resultOK.min == 1.0e8 + 4);
   VTKM_TEST_ASSERT(resultOK.max == 1.0e8 + 16);
-  VTKM_TEST_ASSERT(test_equal(resultOK.variance(), 30));
-  VTKM_TEST_ASSERT(test_equal(resultOK.variance_n(), 22.5));
+  VTKM_TEST_ASSERT(test_equal(resultOK.sample_variance(), 30));
+  VTKM_TEST_ASSERT(test_equal(resultOK.population_variance(), 22.5));
 
   // Bad examples of the effect of catastrophic cancellation from Wikipedia.
   // A naive algorithm will fail in calculating the correct variance
@@ -310,8 +310,8 @@ void TestCatastrophicCancellation()
   VTKM_TEST_ASSERT(resultEvil.sum == 4.0e9 + 40);
   VTKM_TEST_ASSERT(resultEvil.min == 1.0e9 + 4);
   VTKM_TEST_ASSERT(resultEvil.max == 1.0e9 + 16);
-  VTKM_TEST_ASSERT(test_equal(resultEvil.variance(), 30));
-  VTKM_TEST_ASSERT(test_equal(resultEvil.variance_n(), 22.5));
+  VTKM_TEST_ASSERT(test_equal(resultEvil.sample_variance(), 30));
+  VTKM_TEST_ASSERT(test_equal(resultEvil.population_variance(), 22.5));
 }
 
 void TestGeneGolub()
@@ -336,7 +336,7 @@ void TestGeneGolub()
   auto result = vtkm::worklet::StatisticalMoments::Run(array);
 
   // Variance should be positive
-  VTKM_TEST_ASSERT(result.variance() >= 0);
+  VTKM_TEST_ASSERT(result.sample_variance() >= 0);
 }
 
 void TestMeanProperties()
@@ -380,32 +380,34 @@ void TestVarianceProperty()
   // Draw random numbers from the Normal distribution, with mean = 500, stddev = 0.01
   std::random_device rd{};
   auto seed = rd();
-  std::mt19937 gen(seed);
-  std::normal_distribution<vtkm::Float64> dis(500.0, 0.01);
+  std::mt19937 gen(0xceed);
+  std::normal_distribution<vtkm::Float32> dis(500.0f, 0.01f);
 
-  std::vector<vtkm::Float64> v(50000);
+  std::vector<vtkm::Float32> v(50000);
   std::generate(v.begin(), v.end(), [&gen, &dis]() { return dis(gen); });
 
   // 1. Linearity, Var(a * x + b) = a^2 * Var(x)
-  std::vector<vtkm::Float64> kv(v.size());
+  std::vector<vtkm::Float32> kv(v.size());
   std::transform(
-    v.begin(), v.end(), kv.begin(), [](vtkm::Float64 value) { return 4.0 * value + 5.0; });
+    v.begin(), v.end(), kv.begin(), [](vtkm::Float32 value) { return 4.0f * value + 5.0f; });
 
   auto array_v = vtkm::cont::make_ArrayHandle(v);
   auto array_kv = vtkm::cont::make_ArrayHandle(kv);
-  auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).variance();
-  auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).variance();
+  auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).sample_variance();
+  auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).sample_variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0 * 4.0 * var_v, 0.01));
+  std::cout << "var_v: " << var_v << ", expected var_kv: " << 16 * var_v << ", actual: " << var_kv
+            << std::endl;
+  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f));
 
   // Random shuffle
-  std::vector<vtkm::Float64> px = v;
+  std::vector<vtkm::Float32> px = v;
   std::shuffle(px.begin(), px.end(), gen);
 
   auto px_array = vtkm::cont::make_ArrayHandle(px);
-  auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).variance();
+  auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).sample_variance();
 
-  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01));
+  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f));
 }
 
 void TestMomentsByKey()
@@ -422,12 +424,13 @@ void TestMomentsByKey()
   std::vector<vtkm::Float32> expected_sums{ 1, 1, 2, 3, 4 };
   std::vector<vtkm::Float32> expected_means{ 1, 1, 1, 1, 1 };
 
+  auto resultsPortal = results.ReadPortal();
   for (vtkm::Id i = 0; i < results.GetNumberOfValues(); ++i)
   {
-    auto result = results.ReadPortal().Get(i);
+    auto result = resultsPortal.Get(i);
     VTKM_TEST_ASSERT(result.first == i);
     VTKM_TEST_ASSERT(result.second.n == expected_ns[i]);
-    VTKM_TEST_ASSERT(result.second.variance_n() == 0);
+    VTKM_TEST_ASSERT(result.second.population_variance() == 0);
   }
 }
 

@@ -49,12 +49,21 @@ struct StatState
     result.max = vtkm::Max(x.max, y.max);
 
     result.sum = x.sum + y.sum;
+
     // We deviate from the literature and calculate mean in each
-    // "reduction" from sum and n this saves one multiplication
+    // "reduction" from sum and n. This saves one multiplication
     // and hopefully we don't accumulate more error this way.
-    result.mean = result.sum / result.n;
+    // NO, DON'T DO IT SMART ASS!!! This actually accumulates
+    // more error and causes problem when calculating M2 (and
+    // thus variance).
+    // TODO: think this through on why it is the case.
+    /// BAD.BAD.BAD.
+    /// result.mean = result.sum / result.n;
+    /// BAD.BAD.BAD.
 
     T delta = y.mean - x.mean;
+    result.mean = x.mean + delta * y.n / result.n;
+
     T delta2 = delta * delta;
     result.M2 = x.M2 + y.M2 + delta2 * x.n * y.n / result.n;
 
@@ -64,7 +73,7 @@ struct StatState
     result.M3 += delta3 * x.n * y.n * (x.n - y.n) / n2;
     result.M3 += T(3.0) * delta * (x.n * y.M2 - y.n * x.M2) / result.n;
 
-    T delta4 = delta * delta3;
+    T delta4 = delta2 * delta2;
     T n3 = result.n * n2;
     result.M4 = x.M4 + y.M4;
     result.M4 += delta4 * x.n * y.n * (x.n * x.n - x.n * y.n + y.n * y.n) / n3;
@@ -75,14 +84,14 @@ struct StatState
   }
 
   VTKM_CONT
-  T variance() const
+  T sample_variance() const
   {
     VTKM_ASSERT(n != 1);
     return this->M2 / (this->n - 1);
   }
 
   VTKM_CONT
-  T variance_n() const { return this->M2 / this->n; }
+  T population_variance() const { return this->M2 / this->n; }
 
   VTKM_CONT
   T skewness() const { return vtkm::Sqrt(this->n) * this->M3 / vtkm::Pow(this->M2, T{ 1.5 }); }
