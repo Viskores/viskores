@@ -459,7 +459,7 @@ int main(int argc, char* argv[])
     // TODO All we should need to do to implement BOV support is to copy the values
     // in the values vector and copy the dimensions in the dims vector
     vtkm::Id nRows, nCols, nSlices;
-    vtkm::filter::GetRowsColsSlices temp;
+    vtkm::worklet::contourtree_augmented::GetRowsColsSlices temp;
     temp(inDataSet.GetCellSet(), nRows, nCols, nSlices);
     dims[0] = nRows;
     dims[1] = nCols;

@@ -61,9 +61,10 @@
 
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureFreudenthal3D.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_3D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/ComputeMeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary3D.h>
 
 namespace vtkm
 {
@@ -92,6 +93,12 @@ public:
   Mesh_DEM_Triangulation_3D_Freudenthal(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices);
 
   MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
+
+  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,    // output
+                           IdArrayType& boundarySortIndexArray, // output
+                           MeshBoundary3DExec* meshBoundaryExecObj =
+                             NULL // optional input, included for consistency with ContourTreeMesh
+                           ) const;
 
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -150,6 +157,28 @@ MeshBoundary3DExec
 Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetMeshBoundaryExecutionObject() const
 {
   return MeshBoundary3DExec(this->NumColumns, this->NumRows, this->NumSlices, this->SortOrder);
+}
+
+template <typename T, typename StorageType>
+void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetBoundaryVertices(
+  IdArrayType& boundaryVertexArray,       // output
+  IdArrayType& boundarySortIndexArray,    // output
+  MeshBoundary3DExec* meshBoundaryExecObj // input
+  ) const
+{
+  vtkm::Id numBoundary = 2 * this->NumRows * this->NumColumns // xy faces
+    + 2 * this->NumRows * (this->NumSlices - 2)               // yz faces - excluding vertices on xy
+    + 2 * (this->NumColumns - 2) * (this->NumSlices - 2);     // xz face interiors
+  auto boundaryId = vtkm::cont::ArrayHandleIndex(numBoundary);
+  ComputeMeshBoundary3D computeMeshBoundary3dWorklet;
+  this->Invoke(computeMeshBoundary3dWorklet,
+               boundaryId,        // input
+               this->SortIndices, // input
+               (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
+                                             : *meshBoundaryExecObj, // input
+               boundaryVertexArray,                                  // output
+               boundarySortIndexArray                                // output
+               );
 }
 
 } // namespace contourtree_augmented

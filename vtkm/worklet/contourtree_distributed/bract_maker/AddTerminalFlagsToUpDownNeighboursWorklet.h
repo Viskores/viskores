@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -60,74 +50,71 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
-#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabler_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_add_terminal_flags_to_up_down_neighbours_worklet_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_add_terminal_flags_to_up_down_neighbours_worklet_h
 
-#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_augmented
+namespace contourtree_distributed
 {
-namespace mesh_dem
+namespace bract_maker
 {
 
-
-class IdRelabler
+/// Step 1 of IdentifyRegularisedSupernodes
+class AddTerminalFlagsToUpDownNeighboursWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
+  using ControlSignature = void(FieldIn newVertexId,        // input
+                                WholeArrayOut upNeighbour,  // output
+                                WholeArrayOut downNeighbour // output
+                                );
+  using ExecutionSignature = void(InputIndex, _1, _2, _3);
+  using InputDomain = _1;
+
+  // Default Constructor
   VTKM_EXEC_CONT
-  IdRelabler()
-    : InputStartRow(0)
-    , InputStartCol(0)
-    , InputStartSlice(0)
-    , InputNumRows(1)
-    , InputNumCols(1)
-    , OutputNumRows(1)
-    , OutputNumCol(1)
+  AddTerminalFlagsToUpDownNeighboursWorklet() {}
+
+  template <typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& returnIndex,
+                            const vtkm::Id& newVertexIdValue,
+                            const OutFieldPortalType& upNeighbourPortal,
+                            const OutFieldPortalType& downNeighbourPortal)
   {
+    // per vertex
+    // necessary vertices
+    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(newVertexIdValue))
+    { // necessary vertex
+      // set both up & down neighbours to self with terminal element set
+      upNeighbourPortal.Set(returnIndex,
+                            returnIndex | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT);
+      downNeighbourPortal.Set(returnIndex,
+                              returnIndex | vtkm::worklet::contourtree_augmented::TERMINAL_ELEMENT);
+    } // necessary vertex
+
+    // In serial this worklet implements the following operation
+    /*
+    for (indexType returnIndex = 0; returnIndex < bractVertexSuperset.size(); returnIndex++)
+      { // per vertex
+      // necessary vertices
+      if (!noSuchElement(newVertexID[returnIndex]))
+        { // necessary vertex
+        // set both up & down neighbours to self with terminal element set
+        upNeighbour[returnIndex] = downNeighbour[returnIndex] = returnIndex | TERMINAL_ELEMENT;
+        } // necessary vertex
+      } // per vertex
+    */
   }
-
-  VTKM_EXEC_CONT
-  IdRelabler(vtkm::Id iSR,
-             vtkm::Id iSC,
-             vtkm::Id iSS,
-             vtkm::Id iNR,
-             vtkm::Id iNC,
-             vtkm::Id oNR,
-             vtkm::Id oNC)
-    : InputStartRow(iSR)
-    , InputStartCol(iSC)
-    , InputStartSlice(iSS)
-    , InputNumRows(iNR)
-    , InputNumCols(iNC)
-    , OutputNumRows(oNR)
-    , OutputNumCol(oNC)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id v) const
-  {
-    vtkm::Id r = InputStartRow + ((v % (InputNumRows * InputNumCols)) / InputNumCols);
-    vtkm::Id c = InputStartCol + (v % InputNumCols);
-    vtkm::Id s = InputStartSlice + v / (InputNumRows * InputNumCols);
-
-    return (s * OutputNumRows + r) * OutputNumCol + c;
-  }
-
-private:
-  vtkm::Id InputStartRow, InputStartCol, InputStartSlice;
-  vtkm::Id InputNumRows, InputNumCols;
-  vtkm::Id OutputNumRows, OutputNumCol;
-};
+}; // AddTerminalFlagsToUpDownNeighboursWorklet
 
 
-} // namespace mesh_dem
-} // namespace contourtree_augmented
+} // namespace bract_maker
+} // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
 

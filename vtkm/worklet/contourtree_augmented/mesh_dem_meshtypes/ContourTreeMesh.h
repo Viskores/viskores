@@ -74,7 +74,6 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/ArcComparator.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/CombinedOtherStartIndexNNeighboursWorklet.h>
@@ -89,6 +88,9 @@
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/ReplaceArcNumWithToVertexWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/SubtractAssignWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/UpdateCombinedNeighboursWorklet.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/ComputeMeshBoundaryContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
+
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h> // TODO remove should not be needed
 
@@ -208,6 +210,11 @@ public:
                                                                  vtkm::Id totalNCols,
                                                                  vtkm::Id3 minIdx,
                                                                  vtkm::Id3 maxIdx) const;
+
+  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,                    // output
+                           IdArrayType& boundarySortIndexArray,                 // output
+                           MeshBoundaryContourTreeMeshExec* meshBoundaryExecObj //input
+                           ) const;
 
 private:
   vtkm::cont::Invoker Invoke;
@@ -792,6 +799,31 @@ MeshBoundaryContourTreeMeshExec ContourTreeMesh<FieldType>::GetMeshBoundaryExecu
   return MeshBoundaryContourTreeMeshExec(
     this->GlobalMeshIndex, totalNRows, totalNCols, minIdx, maxIdx);
 }
+
+template <typename FieldType>
+void ContourTreeMesh<FieldType>::GetBoundaryVertices(
+  IdArrayType& boundaryVertexArray,                    // output
+  IdArrayType& boundarySortIndexArray,                 // output
+  MeshBoundaryContourTreeMeshExec* meshBoundaryExecObj //input
+  ) const
+{
+  // start by generating a temporary array of indices
+  auto indexArray = vtkm::cont::ArrayHandleIndex(this->GlobalMeshIndex.GetNumberOfValues());
+  // compute the boolean array indicating which values lie on the boundary
+  vtkm::cont::ArrayHandle<bool> isOnBoundary;
+  ComputeMeshBoundaryContourTreeMesh computeMeshBoundaryContourTreeMeshWorklet;
+  this->Invoke(computeMeshBoundaryContourTreeMeshWorklet,
+               indexArray,           // input
+               *meshBoundaryExecObj, // input
+               isOnBoundary          // outut
+               );
+
+  // we will conditionally copy the boundary vertices' indices, capturing the end iterator to compute the # of boundary vertices
+  vtkm::cont::Algorithm::CopyIf(indexArray, isOnBoundary, boundaryVertexArray);
+  // duplicate these into the index array, since the BRACT uses indices into the underlying mesh anyway
+  vtkm::cont::Algorithm::Copy(boundaryVertexArray, boundarySortIndexArray);
+}
+
 
 } // namespace contourtree_augmented
 } // worklet
