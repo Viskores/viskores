@@ -64,7 +64,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
@@ -459,17 +458,17 @@ int main(int argc, char* argv[])
     // TODO All we should need to do to implement BOV support is to copy the values
     // in the values vector and copy the dimensions in the dims vector
     vtkm::Id nRows, nCols, nSlices;
-    vtkm::worklet::contourtree_augmented::GetRowsColsSlices temp;
+    vtkm::filter::GetRowsColsSlices temp;
     temp(inDataSet.GetCellSet(), nRows, nCols, nSlices);
     dims[0] = nRows;
     dims[1] = nCols;
     dims[2] = nSlices;
     auto tempField = inDataSet.GetField("values").GetData();
-    values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
+    values.resize(tempField.GetNumberOfValues());
     auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
     for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
     {
-      values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
+      values[i] = static_cast<ValueType>(tempFieldHandle.Get(i));
     }
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                "BOV reader not yet support in MPI mode by this example");
