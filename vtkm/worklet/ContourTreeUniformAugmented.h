@@ -76,7 +76,9 @@
 #include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshBoundary.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary2D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 namespace vtkm
 {
@@ -352,14 +354,14 @@ private:
     timer.Start();
 
     // Collect the output data
-    nIterations = treeMaker.NumIterations;
+    nIterations = treeMaker.ContourTreeResult.NumIterations;
     sortOrder = mesh.SortOrder;
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.SortOrder);
     // contourTree.PrintDotSuperStructure();
 
     // Log the collected timing results in one coherent log entry
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, timingsStream.str());
+    VTKM_LOG_S(vtkm::cont::LogLevel::Perf, timingsStream.str());
   }
 };
 

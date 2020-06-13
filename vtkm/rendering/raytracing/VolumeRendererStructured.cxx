@@ -305,6 +305,7 @@ private:
   vtkm::Float32 SampleDistance;
   vtkm::Float32 InverseDeltaScalar;
   LocatorType Locator;
+  vtkm::Float32 MeshEpsilon;
 
 public:
   VTKM_CONT
@@ -313,12 +314,14 @@ public:
           const vtkm::Float32& maxScalar,
           const vtkm::Float32& sampleDistance,
           const LocatorType& locator,
+          const vtkm::Float32& meshEpsilon,
           vtkm::cont::Token& token)
     : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
     , Locator(locator)
+    , MeshEpsilon(meshEpsilon)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
@@ -356,7 +359,7 @@ public:
     //get the initial sample position;
     vtkm::Vec3f_32 sampleLocation;
     // find the distance to the first sample
-    vtkm::Float32 distance = minDistance + 0.0001f;
+    vtkm::Float32 distance = minDistance + MeshEpsilon;
     sampleLocation = rayOrigin + distance * rayDir;
     // since the calculations are slightly different, we could hit an
     // edge case where the first sample location may not be in the data set.
@@ -499,6 +502,7 @@ private:
   vtkm::Float32 SampleDistance;
   vtkm::Float32 InverseDeltaScalar;
   LocatorType Locator;
+  vtkm::Float32 MeshEpsilon;
 
 public:
   VTKM_CONT
@@ -507,12 +511,14 @@ public:
                    const vtkm::Float32& maxScalar,
                    const vtkm::Float32& sampleDistance,
                    const LocatorType& locator,
+                   const vtkm::Float32& meshEpsilon,
                    vtkm::cont::Token& token)
     : ColorMap(colorMap.PrepareForInput(DeviceAdapterTag(), token))
     , MinScalar(minScalar)
     , SampleDistance(sampleDistance)
     , InverseDeltaScalar(minScalar)
     , Locator(locator)
+    , MeshEpsilon(meshEpsilon)
   {
     ColorMapSize = colorMap.GetNumberOfValues() - 1;
     if ((maxScalar - minScalar) != 0.f)
@@ -547,7 +553,7 @@ public:
     //get the initial sample position;
     vtkm::Vec3f_32 sampleLocation;
     // find the distance to the first sample
-    vtkm::Float32 distance = minDistance + 0.0001f;
+    vtkm::Float32 distance = minDistance + MeshEpsilon;
     sampleLocation = rayOrigin + distance * rayDir;
     // since the calculations are slightly different, we could hit an
     // edge case where the first sample location may not be in the data set.
@@ -786,14 +792,18 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   logger->OpenLogEntry("volume_render_structured");
   logger->AddLogData("device", GetDeviceString(Device()));
 
+  vtkm::Vec3f_32 extent;
+  extent[0] = static_cast<vtkm::Float32>(this->SpatialExtent.X.Length());
+  extent[1] = static_cast<vtkm::Float32>(this->SpatialExtent.Y.Length());
+  extent[2] = static_cast<vtkm::Float32>(this->SpatialExtent.Z.Length());
+  vtkm::Float32 mag_extent = vtkm::Magnitude(extent);
+
+  vtkm::Float32 meshEpsilon = mag_extent * 0.0001f;
+
   if (SampleDistance <= 0.f)
   {
-    vtkm::Vec3f_32 extent;
-    extent[0] = static_cast<vtkm::Float32>(this->SpatialExtent.X.Length());
-    extent[1] = static_cast<vtkm::Float32>(this->SpatialExtent.Y.Length());
-    extent[2] = static_cast<vtkm::Float32>(this->SpatialExtent.Z.Length());
     const vtkm::Float32 defaultNumberOfSamples = 200.f;
-    SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
+    SampleDistance = mag_extent / defaultNumberOfSamples;
   }
 
   vtkm::cont::Timer timer{ Device() };
@@ -830,6 +840,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 vtkm::Float32(ScalarRange.Max),
                                                 SampleDistance,
                                                 locator,
+                                                meshEpsilon,
                                                 token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
@@ -847,6 +858,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                          vtkm::Float32(ScalarRange.Max),
                                                          SampleDistance,
                                                          locator,
+                                                         meshEpsilon,
                                                          token))
         .Invoke(rays.Dir,
                 rays.Origin,
@@ -871,6 +883,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                       vtkm::Float32(ScalarRange.Max),
                                                       SampleDistance,
                                                       locator,
+                                                      meshEpsilon,
                                                       token));
       samplerDispatcher.SetDevice(Device());
       samplerDispatcher.Invoke(rays.Dir,
@@ -889,6 +902,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                                vtkm::Float32(ScalarRange.Max),
                                                                SampleDistance,
                                                                locator,
+                                                               meshEpsilon,
                                                                token));
       rectilinearLocatorDispatcher.SetDevice(Device());
       rectilinearLocatorDispatcher.Invoke(

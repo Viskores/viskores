@@ -36,7 +36,7 @@ public:
   }
 
   using ControlSignature =
-    void(FieldIn, WholeArrayInOut, FieldIn, FieldIn, FieldIn, WholeArrayOut, WholeArrayOut);
+    void(FieldIn, WholeArrayInOut, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
   template <typename Precision,
             typename ColorPortalType,

@@ -37,6 +37,12 @@ foreach(option IN LISTS options)
     set(VTKm_ENABLE_SANITIZER "ON" CACHE STRING "")
     list(APPEND sanitizers "leak")
 
+  elseif(rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "ON" CACHE STRING "")
+
+  elseif(no_rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
+
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
 

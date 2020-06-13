@@ -56,6 +56,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSetStructured.h>
 
 namespace vtkm
 {
@@ -73,6 +74,7 @@ constexpr vtkm::Id IS_HYPERNODE = std::numeric_limits<vtkm::Id>::max() / 8 + 1; 
 constexpr vtkm::Id IS_ASCENDING = std::numeric_limits<vtkm::Id>::max() / 16 + 1; //0x08000000 || 0x0800000000000000
 constexpr vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x07FFFFFF || 0x07FFFFFFFFFFFFFF
 constexpr vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
+constexpr vtkm::Id ELEMENT_EXISTS = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000 , same as IS_SUPERNODE
 // clang-format on
 
 using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -147,6 +149,53 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
 } // FlagString()
 
 
+///
+/// Helper struct to collect sizing information from a dataset.
+/// The struct is used in the contour tree filter implementation
+/// to determine the rows, cols, slices parameters from the
+/// datasets so we can call the contour tree worklet properly.
+///
+struct GetRowsColsSlices
+{
+  //@{
+  /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
+  /// @param[in] cells  The input vtkm::cont::CellSetStructured
+  /// @param[out] nRows  Number of rows (x) in the cell set
+  /// @param[out[ nCols  Number of columns (y) in the cell set
+  /// @param[out] nSlices Number of slices (z) in the cell set
+  void operator()(const vtkm::cont::CellSetStructured<2>& cells,
+                  vtkm::Id& nRows,
+                  vtkm::Id& nCols,
+                  vtkm::Id& nSlices) const
+  {
+    vtkm::Id2 pointDimensions = cells.GetPointDimensions();
+    nRows = pointDimensions[0];
+    nCols = pointDimensions[1];
+    nSlices = 1;
+  }
+  void operator()(const vtkm::cont::CellSetStructured<3>& cells,
+                  vtkm::Id& nRows,
+                  vtkm::Id& nCols,
+                  vtkm::Id& nSlices) const
+  {
+    vtkm::Id3 pointDimensions = cells.GetPointDimensions();
+    nRows = pointDimensions[0];
+    nCols = pointDimensions[1];
+    nSlices = pointDimensions[2];
+  }
+  //@}
+
+  ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>
+  template <typename T>
+  void operator()(const T& cells, vtkm::Id& nRows, vtkm::Id& nCols, vtkm::Id& nSlices) const
+  {
+    (void)nRows;
+    (void)nCols;
+    (void)nSlices;
+    (void)cells;
+    throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
+  }
+};
 
 } // namespace contourtree_augmented
 } // worklet

@@ -116,3 +116,7 @@ endif()
 # This includes a host of functions used by VTK-m CMake.
 include(VTKmWrappers)
 include(VTKmRenderingContexts)
+
+# Setup diy magic of chosing the appropriate mpi/no_mpi library to link against
+include(VTKmDIYUtils)
+vtkm_diy_init_target()

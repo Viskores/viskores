@@ -65,6 +65,7 @@ vtkm_add_target_information(ContourTree_Augmented
                             DEVICE_SOURCES ContourTreeApp.cxx)
 
 option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
 if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   target_compile_definitions(ContourTree_Augmented PRIVATE "DEBUG_PRINT")
 endif()
@@ -78,13 +79,14 @@ endif()
 ####################################
 if (VTKm_ENABLE_MPI)
   add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter vtkm_io)
+  target_link_libraries(ContourTree_Augmented_MPI vtkm_filter vtkm_io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Augmented_MPI
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
   target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "WITH_MPI")
 
   option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+  mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
     target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "DEBUG_PRINT")
   endif()

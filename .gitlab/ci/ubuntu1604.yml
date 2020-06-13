@@ -90,7 +90,7 @@ build:ubuntu1604_gcc48:
     CMAKE_BUILD_TYPE: Release
     #custom openmpi install location
     CMAKE_PREFIX_PATH: "/opt/openmpi/"
-    VTKM_SETTINGS: "tbb+mpi+shared"
+    VTKM_SETTINGS: "tbb+mpi+shared+no_rendering"
 
 test:ubuntu1604_gcc48:
   tags:

@@ -57,14 +57,16 @@ int main(int argc, char* argv[])
   vtkm::cont::Initialize(argc, argv, opts);
 
   // setup MPI environment.
-  MPI_Init(&argc, &argv);
+  vtkmdiy::mpi::environment env(argc, argv); // will finalize on destruction
+
+  vtkmdiy::mpi::communicator world; // the default is MPI_COMM_WORLD
 
   // tell VTK-m the communicator to use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(MPI_COMM_WORLD));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(world);
 
   int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(vtkmdiy::mpi::mpi_cast(world.handle()), &rank);
+  MPI_Comm_size(vtkmdiy::mpi::mpi_cast(world.handle()), &size);
 
   if (argc != 2)
   {
@@ -72,7 +74,6 @@ int main(int argc, char* argv[])
     {
       std::cout << "Usage: " << std::endl << "$ " << argv[0] << " <num-bins>" << std::endl;
     }
-    MPI_Finalize();
     return EXIT_FAILURE;
   }
 
@@ -105,11 +106,9 @@ int main(int argc, char* argv[])
     if (count != numVals * size)
     {
       std::cout << "ERROR: bins mismatched!" << std::endl;
-      MPI_Finalize();
       return EXIT_FAILURE;
     }
   }
 
-  MPI_Finalize();
   return EXIT_SUCCESS;
 }
