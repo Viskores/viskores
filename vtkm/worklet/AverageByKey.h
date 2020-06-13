@@ -106,7 +106,7 @@ struct AverageByKey
     VTKM_EXEC ValueType
     operator()(const vtkm::Pair<KeyType, vtkm::worklet::detail::StatState<ValueType>>& pair) const
     {
-      return pair.second.mean;
+      return pair.second.Mean();
     }
   };
 
