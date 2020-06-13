@@ -964,8 +964,9 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 
   vtkm::Id sz = array.GetNumberOfValues();
 
-  out << "valueType=" << typeid(T).name() << " storageType=" << typeid(StorageT).name()
-      << " numValues=" << sz << " bytes=" << (static_cast<size_t>(sz) * sizeof(T)) << " [";
+  out << "valueType=" << vtkm::cont::TypeToString<T>()
+      << " storageType=" << vtkm::cont::TypeToString<StorageT>() << sz << " values occupying "
+      << (static_cast<size_t>(sz) * sizeof(T)) << " bytes [";
 
   PortalType portal = array.ReadPortal();
   if (full || sz <= 7)
