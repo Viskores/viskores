@@ -316,23 +316,11 @@ void Canvas::SetForegroundColor(const vtkm::rendering::Color& color)
   Internals->ForegroundColor = color;
 }
 
-void Canvas::Initialize()
-{
-}
-
-void Canvas::Activate()
-{
-}
-
 void Canvas::Clear()
 {
   internal::ClearBuffers worklet;
   vtkm::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
   dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());
-}
-
-void Canvas::Finish()
-{
 }
 
 void Canvas::BlendBackground()

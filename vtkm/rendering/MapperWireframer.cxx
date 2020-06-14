@@ -341,7 +341,6 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
     canvas.SetBackgroundColor(vtkm::rendering::Color::white);
-    canvas.Activate();
     canvas.Clear();
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);

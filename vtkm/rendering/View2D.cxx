@@ -40,7 +40,6 @@ View2D::~View2D()
 
 void View2D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
   this->SetupForWorldSpace();
@@ -49,7 +48,6 @@ void View2D::Paint()
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
   this->RenderAnnotations();
-  this->GetCanvas().Finish();
 }
 
 void View2D::RenderScreenAnnotations()

@@ -42,7 +42,6 @@ View1D::~View1D()
 
 void View1D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
   this->SetupForWorldSpace();
@@ -52,7 +51,6 @@ void View1D::Paint()
   this->RenderScreenAnnotations();
   this->RenderColorLegendAnnotations();
   this->RenderAnnotations();
-  this->GetCanvas().Finish();
 }
 
 void View1D::RenderScreenAnnotations()
