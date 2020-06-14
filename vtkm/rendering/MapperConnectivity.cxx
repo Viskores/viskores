@@ -85,16 +85,6 @@ void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   tracerProxy.Trace(camera, CanvasRT);
 }
 
-void MapperConnectivity::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperConnectivity::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperConnectivity::NewCopy() const
 {
   return new vtkm::rendering::MapperConnectivity(*this);

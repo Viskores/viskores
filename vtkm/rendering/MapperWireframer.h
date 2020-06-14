@@ -42,8 +42,11 @@ public:
   bool GetIsOverlay() const;
   void SetIsOverlay(bool isOverlay);
 
-  virtual void StartScene() override;
-  virtual void EndScene() override;
+  VTKM_DEPRECATED(1.6, "StartScene() does nothing")
+  virtual void StartScene() override {}
+
+  VTKM_DEPRECATED(1.6, "EndScene() does nothing")
+  virtual void EndScene() override {}
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,

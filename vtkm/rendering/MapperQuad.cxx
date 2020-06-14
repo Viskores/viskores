@@ -138,16 +138,6 @@ void MapperQuad::SetCompositeBackground(bool on)
   this->Internals->CompositeBackground = on;
 }
 
-void MapperQuad::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperQuad::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperQuad::NewCopy() const
 {
   return new vtkm::rendering::MapperQuad(*this);

@@ -68,8 +68,12 @@ public:
                    const vtkm::rendering::Camera& camera,
                    const vtkm::Range& scalarRange) override;
 
-  virtual void StartScene() override;
-  virtual void EndScene() override;
+  VTKM_DEPRECATED(1.6, "StartScene() does nothing")
+  virtual void StartScene() override {}
+
+  VTKM_DEPRECATED(1.6, "EndScene() does nothing")
+  virtual void EndScene() override {}
+
   void SetCompositeBackground(bool on);
   vtkm::rendering::Mapper* NewCopy() const override;
 
