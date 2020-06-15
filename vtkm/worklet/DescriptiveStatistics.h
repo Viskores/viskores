@@ -26,6 +26,9 @@ public:
   struct StatState
   {
     StatState() = default;
+
+    // FIXME: is the constructor actually called on the device side?
+    VTKM_EXEC_CONT
     StatState(T value)
       : n(1)
       , min_(value)
@@ -130,6 +133,7 @@ public:
 
   struct MakeStatState
   {
+    // FIXME: is this actually called in the device side?
     template <typename T>
     VTKM_EXEC_CONT vtkm::worklet::DescriptiveStatistics::StatState<T> operator()(T value) const
     {
