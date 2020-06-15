@@ -147,7 +147,7 @@ void TestStreamlineFile(const std::string& fname,
 
   auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
   auto cPortal = coords.ReadPortal();
-  const vtkm::FloatDefault eps = 1e-3;
+  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
 
   for (vtkm::Id i = 0; i < numPoints; i++)
   {
