@@ -10,12 +10,13 @@
 #ifndef vtk_m_worklet_AverageByKey_h
 #define vtk_m_worklet_AverageByKey_h
 
+#include "DescriptiveStatistics.h"
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/worklet/DescriptiveStatistics.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
-#include <vtkm/worklet/StatisticalMoments.h>
 
 namespace vtkm
 {
@@ -103,8 +104,9 @@ struct AverageByKey
   struct ExtractMean
   {
     template <typename KeyType, typename ValueType>
-    VTKM_EXEC ValueType
-    operator()(const vtkm::Pair<KeyType, vtkm::worklet::detail::StatState<ValueType>>& pair) const
+    VTKM_EXEC ValueType operator()(
+      const vtkm::Pair<KeyType, vtkm::worklet::DescriptiveStatistics::StatState<ValueType>>& pair)
+      const
     {
       return pair.second.Mean();
     }
@@ -132,7 +134,7 @@ struct AverageByKey
                             vtkm::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
                             vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
   {
-    auto results = vtkm::worklet::StatisticalMoments::Run(keyArray, valueArray);
+    auto results = vtkm::worklet::DescriptiveStatistics::Run(keyArray, valueArray);
 
     // Copy/TransformCopy from results to outputKeyArray and outputValueArray
     auto results_key = vtkm::cont::make_ArrayHandleTransform(results, ExtractKey{});

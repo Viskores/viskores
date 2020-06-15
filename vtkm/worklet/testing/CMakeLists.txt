@@ -24,6 +24,7 @@ set(unit_tests
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
+  UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
@@ -59,7 +60,6 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestSplitSharpEdges.cxx
   UnitTestScatterAndMaskWithTopology.cxx
-  UnitTestStatisticalMoments.cxx
   UnitTestStreamLineUniformGrid.cxx
   UnitTestStreamSurface.cxx
   UnitTestSurfaceNormals.cxx

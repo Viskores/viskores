@@ -9,7 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/StatisticalMoments.h>
+#include <vtkm/worklet/DescriptiveStatistics.h>
 
 #include <random>
 
@@ -17,7 +17,7 @@ void TestSingle()
 {
   std::vector<vtkm::Float32> single(1, 42);
   auto single_array = vtkm::cont::make_ArrayHandle(single);
-  auto result = vtkm::worklet::StatisticalMoments::Run(single_array);
+  auto result = vtkm::worklet::DescriptiveStatistics::Run(single_array);
 
   VTKM_TEST_ASSERT(result.N() == 1);
   VTKM_TEST_ASSERT(result.Mean() == 42);
@@ -31,7 +31,7 @@ void TestSingle()
 void TestConstant()
 {
   auto constants = vtkm::cont::make_ArrayHandleConstant(1234.f, 10000);
-  auto result = vtkm::worklet::StatisticalMoments::Run(constants);
+  auto result = vtkm::worklet::DescriptiveStatistics::Run(constants);
 
   VTKM_TEST_ASSERT(result.N() == 10000);
   VTKM_TEST_ASSERT(result.Sum() == 12340000);
@@ -44,7 +44,7 @@ void TestIntegerSequence()
   constexpr vtkm::Float32 N = 1000;
 
   auto integers = vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, N);
-  auto result = vtkm::worklet::StatisticalMoments::Run(integers);
+  auto result = vtkm::worklet::DescriptiveStatistics::Run(integers);
 
   VTKM_TEST_ASSERT(result.N() == N);
   VTKM_TEST_ASSERT(result.Sum() == N * (N - 1) / 2);
@@ -56,7 +56,7 @@ void TestCatastrophicCancellation()
   // Good examples of the effect of catastrophic cancellation from Wikipedia.
   std::vector<vtkm::Float64> okay{ 1e8 + 4, 1e8 + 7, 1e8 + 13, 1.0e8 + 16 };
   auto arrayOK = vtkm::cont::make_ArrayHandle(okay);
-  auto resultOK = vtkm::worklet::StatisticalMoments::Run(arrayOK);
+  auto resultOK = vtkm::worklet::DescriptiveStatistics::Run(arrayOK);
 
   VTKM_TEST_ASSERT(resultOK.N() == 4);
   VTKM_TEST_ASSERT(resultOK.Sum() == 4.0e8 + 40);
@@ -69,7 +69,7 @@ void TestCatastrophicCancellation()
   // A naive algorithm will fail in calculating the correct variance
   std::vector<vtkm::Float64> evil{ 1e9 + 4, 1e9 + 7, 1e9 + 13, 1.0e9 + 16 };
   auto arrayEvil = vtkm::cont::make_ArrayHandle(evil);
-  auto resultEvil = vtkm::worklet::StatisticalMoments::Run(arrayEvil);
+  auto resultEvil = vtkm::worklet::DescriptiveStatistics::Run(arrayEvil);
 
   VTKM_TEST_ASSERT(resultEvil.N() == 4);
   VTKM_TEST_ASSERT(resultEvil.Sum() == 4.0e9 + 40);
@@ -96,7 +96,7 @@ void TestGeneGolub()
   }
 
   auto array = vtkm::cont::make_ArrayHandle(v);
-  auto result = vtkm::worklet::StatisticalMoments::Run(array);
+  auto result = vtkm::worklet::DescriptiveStatistics::Run(array);
 
   // Variance should be positive
   VTKM_TEST_ASSERT(result.SampleVariance() >= 0);
@@ -119,8 +119,8 @@ void TestMeanProperties()
   auto x_array = vtkm::cont::make_ArrayHandle(x);
   auto axpb_array = vtkm::cont::make_ArrayHandle(axpb);
 
-  auto mean_x = vtkm::worklet::StatisticalMoments::Run(x_array).Mean();
-  auto mean_axpb = vtkm::worklet::StatisticalMoments::Run(axpb_array).Mean();
+  auto mean_x = vtkm::worklet::DescriptiveStatistics::Run(x_array).Mean();
+  auto mean_axpb = vtkm::worklet::DescriptiveStatistics::Run(axpb_array).Mean();
 
   VTKM_TEST_ASSERT(test_equal(4.0f * mean_x + 1000.f, mean_axpb, 0.01f));
 
@@ -129,7 +129,7 @@ void TestMeanProperties()
   std::shuffle(px.begin(), px.end(), gen);
 
   auto px_array = vtkm::cont::make_ArrayHandle(px);
-  auto mean_px = vtkm::worklet::StatisticalMoments::Run(px_array).Mean();
+  auto mean_px = vtkm::worklet::DescriptiveStatistics::Run(px_array).Mean();
 
   VTKM_TEST_ASSERT(test_equal(mean_x, mean_px, 0.01f));
 }
@@ -150,8 +150,8 @@ void TestVarianceProperty()
 
   auto array_v = vtkm::cont::make_ArrayHandle(v);
   auto array_kv = vtkm::cont::make_ArrayHandle(kv);
-  auto var_v = vtkm::worklet::StatisticalMoments::Run(array_v).SampleVariance();
-  auto var_kv = vtkm::worklet::StatisticalMoments::Run(array_kv).SampleVariance();
+  auto var_v = vtkm::worklet::DescriptiveStatistics::Run(array_v).SampleVariance();
+  auto var_kv = vtkm::worklet::DescriptiveStatistics::Run(array_kv).SampleVariance();
 
   VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f));
 
@@ -160,7 +160,7 @@ void TestVarianceProperty()
   std::shuffle(px.begin(), px.end(), gen);
 
   auto px_array = vtkm::cont::make_ArrayHandle(px);
-  auto var_px = vtkm::worklet::StatisticalMoments::Run(px_array).SampleVariance();
+  auto var_px = vtkm::worklet::DescriptiveStatistics::Run(px_array).SampleVariance();
 
   VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f));
 }
@@ -172,7 +172,7 @@ void TestMomentsByKey()
   auto values_array = vtkm::cont::make_ArrayHandleConstant(1.0f, keys.size());
   auto keys_array = vtkm::cont::make_ArrayHandle(keys);
 
-  auto results = vtkm::worklet::StatisticalMoments::Run(keys_array, values_array);
+  auto results = vtkm::worklet::DescriptiveStatistics::Run(keys_array, values_array);
   VTKM_TEST_ASSERT(results.GetNumberOfValues() == 5);
 
   std::vector<vtkm::UInt32> expected_ns{ 1, 1, 2, 3, 4 };
@@ -189,7 +189,7 @@ void TestMomentsByKey()
   }
 }
 
-void TestStatisticalMoments()
+void TestDescriptiveStatistics()
 {
   TestSingle();
   TestConstant();
@@ -201,7 +201,7 @@ void TestStatisticalMoments()
   TestMomentsByKey();
 }
 
-int UnitTestStatisticalMoments(int argc, char* argv[])
+int UnitTestDescriptiveStatistics(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStatisticalMoments, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestDescriptiveStatistics, argc, argv);
 }
