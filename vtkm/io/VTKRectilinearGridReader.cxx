@@ -100,7 +100,7 @@ void VTKRectilinearGridReader::Read()
     // Two cases if the data in the file differs from FloatDefault:
     if (fileStorageDataType == "float")
     {
-      vtkm::cont::ArrayHandle<float> Xcf, Ycf, Zcf;
+      vtkm::cont::ArrayHandle<vtkm::Float32> Xcf, Ycf, Zcf;
       X.CopyTo(Xcf);
       Y.CopyTo(Ycf);
       Z.CopyTo(Zcf);
@@ -110,7 +110,7 @@ void VTKRectilinearGridReader::Read()
     }
     else
     {
-      vtkm::cont::ArrayHandle<double> Xcd, Ycd, Zcd;
+      vtkm::cont::ArrayHandle<vtkm::Float64> Xcd, Ycd, Zcd;
       X.CopyTo(Xcd);
       Y.CopyTo(Ycd);
       Z.CopyTo(Zcd);
