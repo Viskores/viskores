@@ -157,13 +157,7 @@ void TestStreamlineFile(const std::string& fname,
 
     vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
     vtkm::Vec3f pt = cPortal.Get(ids[ids.size() - 1]);
-    if (vtkm::Magnitude(pt - e) > eps)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Expected magnitude of error <=" << eps << ", but got error "
-                                                  << vtkm::Magnitude(pt - e));
-      VTKM_TEST_ASSERT(false, "Streamline end point is wrong.");
-    }
+    VTKM_TEST_ASSERT(vtkm::Magnitude(pt - e) <= eps, "Particle advection point is wrong");
   }
 }
 
@@ -179,6 +173,7 @@ void TestStreamlineFilters()
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.6f));
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.3f));
+  //End point values were generated in VisIt.
   fusionEndPts.push_back(vtkm::Vec3f(0.5335789918f, 0.87112802267f, 0.6723330020f));
   fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
   fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
@@ -191,6 +186,7 @@ void TestStreamlineFilters()
   fishPts.push_back(vtkm::Vec3f(0.75f, 0.5f, 0.01f));
   fishPts.push_back(vtkm::Vec3f(0.4f, 0.2f, 0.7f));
   fishPts.push_back(vtkm::Vec3f(0.5f, 0.3f, 0.8f));
+  //End point values were generated in VisIt.
   fishEndPts.push_back(vtkm::Vec3f(0.7734669447f, 0.4870159328f, 0.8979591727f));
   fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
   fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));

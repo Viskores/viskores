@@ -860,25 +860,17 @@ void ValidateResult(const ResultType& res,
                    "Wrong number of points in particle advection result.");
 
   auto portal = res.Particles.ReadPortal();
-  bool fail = false;
   for (vtkm::Id i = 0; i < 3; i++)
   {
     vtkm::Vec3f p = portal.Get(i).Pos;
     vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
-    if (vtkm::Magnitude(p - e) > eps)
-    {
-      std::cout << std::setprecision(15) << "P_" << i << " p " << p << " e " << e << " diff "
-                << vtkm::Magnitude(p - e) << " eps= " << eps << std::endl;
-      fail = true;
-    }
 
-    //VTKM_TEST_ASSERT(vtkm::Magnitude(p - e) <= eps, "Particle advection point is wrong");
+    VTKM_TEST_ASSERT(vtkm::Magnitude(p - e) <= eps, "Particle advection point is wrong");
     VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps, "Particle advection NumSteps is wrong");
     VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
     VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
                      "Particle advection particle did not terminate");
   }
-  VTKM_TEST_ASSERT(fail == false, "Particle advection point is wrong");
 }
 
 
@@ -968,6 +960,7 @@ void TestParticleAdvection()
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.6f));
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.3f));
+  //End point values were generated in VisIt.
   fusionEndPts.push_back(vtkm::Vec3f(0.5335789918f, 0.87112802267f, 0.6723330020f));
   fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
   fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
@@ -980,6 +973,7 @@ void TestParticleAdvection()
   fishPts.push_back(vtkm::Vec3f(0.75f, 0.5f, 0.01f));
   fishPts.push_back(vtkm::Vec3f(0.4f, 0.2f, 0.7f));
   fishPts.push_back(vtkm::Vec3f(0.5f, 0.3f, 0.8f));
+  //End point values were generated in VisIt.
   fishEndPts.push_back(vtkm::Vec3f(0.7734669447f, 0.4870159328f, 0.8979591727f));
   fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
   fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
