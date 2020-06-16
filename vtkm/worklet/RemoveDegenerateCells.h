@@ -166,6 +166,8 @@ struct RemoveDegenerateCells
     return result;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
+
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };

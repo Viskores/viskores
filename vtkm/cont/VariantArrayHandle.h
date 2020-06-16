@@ -404,10 +404,6 @@ using ListDynamicTypes =
   vtkm::ListRemoveIf<vtkm::ListCross<TypeList, StorageList>, IsUndefinedStorage>;
 
 
-VTKM_CONT_EXPORT void ThrowCastAndCallException(
-  const vtkm::cont::internal::VariantArrayHandleContainerBase&,
-  const std::type_info&);
-
 } // namespace detail
 
 
@@ -463,6 +459,7 @@ struct VariantArrayHandleTryMultiplexer
     if (foundArray)
     {
       result.SetArray(targetArray);
+      VTKM_LOG_CAST_SUCC(self, result);
     }
   }
 
@@ -568,6 +565,12 @@ inline VTKM_CONT void VariantArrayHandleBase<TypeList>::AsMultiplexer(
   // Make sure IsValid is clear
   result = vtkm::cont::ArrayHandleMultiplexer<T...>{};
   vtkm::ListForEach(detail::VariantArrayHandleTryMultiplexer{}, vtkm::List<T...>{}, *this, result);
+  if (!result.IsValid())
+  {
+    // Could not put the class into the multiplexer. Throw an exception.
+    VTKM_LOG_CAST_FAIL(*this, vtkm::List<T...>);
+    detail::ThrowAsMultiplexerException(*this->ArrayContainer, { typeid(T).name()... });
+  }
 }
 
 namespace internal

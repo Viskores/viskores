@@ -595,6 +595,7 @@ private:
     {
       vtkm::cont::Timer timer{ DeviceAdapterTag() };
       timer.Start();
+      Algorithm::Synchronize();
 
       std::cout << "Timer started. Sleeping..." << std::endl;
 

@@ -51,7 +51,7 @@ public:
   /// \param nearestNeighborIds Nearest neighbor in the traning data set for each points in the
   ///                           testing set
   /// \param distances Distances between query points and their nearest neighbors.
-  /// \param device Tag for selecting device adapter.
+  /// \param deviceId Tag for selecting device adapter.
   template <typename CoordType,
             typename CoordStorageTag1,
             typename CoordStorageTag2,

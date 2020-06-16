@@ -13,7 +13,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -30,7 +29,6 @@ vtkm::cont::PartitionedDataSet PartitionedDataSetBuilder(std::size_t partitionNu
 {
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetFieldAdd dsf;
 
   vtkm::Vec<T, 2> origin(0);
   vtkm::Vec<T, 2> spacing(1);
@@ -51,7 +49,7 @@ vtkm::cont::PartitionedDataSet PartitionedDataSetBuilder(std::size_t partitionNu
       dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                       vtkm::Vec<T, 2>(origin[0], origin[1]),
                                       vtkm::Vec<T, 2>(spacing[0], spacing[1]));
-      dsf.AddCellField(dataSet, "cellvar", varC2D);
+      dataSet.AddCellField("cellvar", varC2D);
     }
 
     if (fieldName == "pointvar")
@@ -65,7 +63,7 @@ vtkm::cont::PartitionedDataSet PartitionedDataSetBuilder(std::size_t partitionNu
       dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                       vtkm::Vec<T, 2>(origin[0], origin[1]),
                                       vtkm::Vec<T, 2>(spacing[0], spacing[1]));
-      dsf.AddPointField(dataSet, "pointvar", varP2D);
+      dataSet.AddPointField("pointvar", varP2D);
     }
 
     partitions.AppendPartition(dataSet);

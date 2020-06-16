@@ -268,9 +268,22 @@ private:
     throw vtkm::cont::ErrorBadType(str.str());
   }
 };
+} // namespace variant
+
+} // namespace internal
+
+namespace detail
+{
+
+VTKM_CONT_EXPORT void ThrowCastAndCallException(
+  const vtkm::cont::internal::VariantArrayHandleContainerBase&,
+  const std::type_info&);
+
+VTKM_CONT_EXPORT void ThrowAsMultiplexerException(
+  const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
+  const std::initializer_list<std::string>& arrayTypes);
+} // namespace detail
 }
-}
-}
-} //namespace vtkm::cont::internal::variant
+} //namespace vtkm::cont
 
 #endif

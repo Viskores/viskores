@@ -56,7 +56,6 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/Initialize.h>
 
 #include <vtkm/filter/ContourTreeUniform.h>
@@ -104,8 +103,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(inDataSet, "values", values);
+  inDataSet.AddPointField("values", values);
 
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeMesh3D filter;

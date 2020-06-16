@@ -87,31 +87,27 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  // Map new field onto the resulting dataset after running the filter
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
-                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                            const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<DerivedPolicy>)
+  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                       const vtkm::cont::Field& field);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    vtkm::filter::PolicyBase<DerivedPolicy>)
   {
-    if (fieldMeta.IsPointField())
-    {
-      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input);
+    return this->MapFieldOntoOutput(result, field);
+  }
 
-      result.AddField(fieldMeta.AsField(output));
-      return true;
-    }
 
-    // cell data must be scattered to the cells created per input cell
-    if (fieldMeta.IsCellField())
-    {
-      vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input);
+  VTKM_FILTER_EXPORT VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
+                                                vtkm::cont::PartitionedDataSet&);
 
-      result.AddField(fieldMeta.AsField(output));
-      return true;
-    }
-
-    return false;
+  template <typename DerivedPolicy>
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
+                             vtkm::cont::PartitionedDataSet& output,
+                             const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  {
+    this->PostExecute(input, output);
   }
 
 private:
@@ -120,6 +116,9 @@ private:
   bool IncludeBoundary;
   bool IncludeOffset;
   vtkm::worklet::ExtractStructured Worklet;
+
+  vtkm::cont::ArrayHandle<vtkm::Id> CellFieldMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> PointFieldMap;
 };
 
 #ifndef vtkm_filter_ExtractStructured_cxx
@@ -128,6 +127,8 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractStructured);
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_ExtractStructured_hxx
 #include <vtkm/filter/ExtractStructured.hxx>
+#endif
 
 #endif // vtk_m_filter_ExtractStructured_h

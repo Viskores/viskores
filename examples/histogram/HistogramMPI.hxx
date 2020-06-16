@@ -18,6 +18,9 @@
 #include <vtkm/cont/FieldRangeGlobalCompute.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/mpi-cast.h>
+
+#include <mpi.h>
 
 namespace example
 {
@@ -81,7 +84,7 @@ public:
                sizeof(vtkm::Id) == 4 ? MPI_INT : MPI_LONG,
                MPI_SUM,
                0,
-               comm);
+               vtkmdiy::mpi::mpi_cast(comm.handle()));
 
     if (comm.rank() == 0)
     {

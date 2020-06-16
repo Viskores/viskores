@@ -86,55 +86,73 @@ ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(ArrayHandle<T, S>&& src) noexcep
 template <typename T, typename S>
 typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage()
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    return *this->Internals->GetControlArray(lock);
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      return *this->Internals->GetControlArray(lock);
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
 template <typename T, typename S>
 const typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage() const
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    return *this->Internals->GetControlArray(lock);
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      return *this->Internals->GetControlArray(lock);
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
 template <typename T, typename S>
 typename ArrayHandle<T, S>::StorageType::PortalType ArrayHandle<T, S>::GetPortalControl()
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    // If the user writes into the iterator we return, then the execution
-    // array will become invalid. Play it safe and release the execution
-    // resources. (Use the const version to preserve the execution array.)
-    this->ReleaseResourcesExecutionInternal(lock);
-    return this->Internals->GetControlArray(lock)->GetPortal();
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      // If the user writes into the iterator we return, then the execution
+      // array will become invalid. Play it safe and release the execution
+      // resources. (Use the const version to preserve the execution array.)
+      this->ReleaseResourcesExecutionInternal(lock, token);
+      return this->Internals->GetControlArray(lock)->GetPortal();
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
@@ -142,65 +160,77 @@ template <typename T, typename S>
 typename ArrayHandle<T, S>::StorageType::PortalConstType ArrayHandle<T, S>::GetPortalConstControl()
   const
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->GetLock();
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    return this->Internals->GetControlArray(lock)->GetPortalConst();
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      return this->Internals->GetControlArray(lock)->GetPortalConst();
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
 template <typename T, typename S>
 typename ArrayHandle<T, S>::ReadPortalType ArrayHandle<T, S>::ReadPortal() const
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
   {
-    vtkm::cont::Token token;
+    LockType lock = this->GetLock();
     this->WaitToRead(lock, token);
-  }
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    return ReadPortalType(this->Internals->GetControlArrayValidPointer(lock),
-                          this->Internals->GetControlArray(lock)->GetPortalConst());
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      return ReadPortalType(this->Internals->GetControlArrayValidPointer(lock),
+                            this->Internals->GetControlArray(lock)->GetPortalConst());
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
 template <typename T, typename S>
 typename ArrayHandle<T, S>::WritePortalType ArrayHandle<T, S>::WritePortal() const
 {
-  LockType lock = this->GetLock();
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
   {
-    vtkm::cont::Token token;
+    LockType lock = this->GetLock();
     this->WaitToWrite(lock, token);
-  }
 
-  this->SyncControlArray(lock);
-  if (this->Internals->IsControlArrayValid(lock))
-  {
-    // If the user writes into the iterator we return, then the execution
-    // array will become invalid. Play it safe and release the execution
-    // resources. (Use the const version to preserve the execution array.)
-    this->ReleaseResourcesExecutionInternal(lock);
-    return WritePortalType(this->Internals->GetControlArrayValidPointer(lock),
-                           this->Internals->GetControlArray(lock)->GetPortal());
-  }
-  else
-  {
-    throw vtkm::cont::ErrorInternal(
-      "ArrayHandle::SyncControlArray did not make control array valid.");
+    this->SyncControlArray(lock, token);
+    if (this->Internals->IsControlArrayValid(lock))
+    {
+      // If the user writes into the iterator we return, then the execution
+      // array will become invalid. Play it safe and release the execution
+      // resources. (Use the const version to preserve the execution array.)
+      this->ReleaseResourcesExecutionInternal(lock, token);
+      return WritePortalType(this->Internals->GetControlArrayValidPointer(lock),
+                             this->Internals->GetControlArray(lock)->GetPortal());
+    }
+    else
+    {
+      throw vtkm::cont::ErrorInternal(
+        "ArrayHandle::SyncControlArray did not make control array valid.");
+    }
   }
 }
 
@@ -226,6 +256,11 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   VTKM_ASSERT(numberOfValues >= 0);
 
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+
   if (numberOfValues > 0)
   {
     LockType lock = this->GetLock();
@@ -234,7 +269,7 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 
     if (numberOfValues < originalNumberOfValues)
     {
-      this->WaitToWrite(lock, vtkm::cont::Token{});
+      this->WaitToWrite(lock, token);
       if (this->Internals->IsControlArrayValid(lock))
       {
         this->Internals->GetControlArray(lock)->Shrink(numberOfValues);
@@ -282,14 +317,11 @@ ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag device, vtkm::cont::Token& t
     this->Internals->SetControlArrayValid(lock, true);
   }
 
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInput(
     !this->Internals->IsExecutionArrayValid(lock), device, token);
 
   this->Internals->SetExecutionArrayValid(lock, true);
-
-  token.Attach(
-    *this, this->Internals->GetReadCount(lock), lock, &this->Internals->ConditionVariable);
 
   return portal;
 }
@@ -311,7 +343,7 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
   // idea when shared with execution.
   this->Internals->SetControlArrayValid(lock, false);
 
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
   auto portal =
     this->Internals->GetExecutionArray(lock)->PrepareForOutput(numberOfValues, device, token);
 
@@ -325,9 +357,6 @@ ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
   // returned from this method, so you would have to work to invalidate this
   // assumption anyway.)
   this->Internals->SetExecutionArrayValid(lock, true);
-
-  token.Attach(
-    *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
 
   return portal;
 }
@@ -350,7 +379,7 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token&
     this->Internals->SetControlArrayValid(lock, true);
   }
 
-  this->PrepareForDevice(lock, device);
+  this->PrepareForDevice(lock, token, device);
   auto portal = this->Internals->GetExecutionArray(lock)->PrepareForInPlace(
     !this->Internals->IsExecutionArrayValid(lock), device, token);
 
@@ -361,15 +390,14 @@ ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token&
   // array. It may be shared as the execution array.
   this->Internals->SetControlArrayValid(lock, false);
 
-  token.Attach(
-    *this, this->Internals->GetWriteCount(lock), lock, &this->Internals->ConditionVariable);
-
   return portal;
 }
 
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
-void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device) const
+void ArrayHandle<T, S>::PrepareForDevice(LockType& lock,
+                                         vtkm::cont::Token& token,
+                                         DeviceAdapterTag device) const
 {
   if (this->Internals->GetExecutionArray(lock) != nullptr)
   {
@@ -389,8 +417,11 @@ void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device
       // could change the ExecutionInterface, which would cause problems. In the future we should
       // support multiple devices, in which case we would not have to delete one execution array
       // to load another.
-      this->WaitToWrite(lock, vtkm::cont::Token{}); // Make sure no one is reading device array
-      this->SyncControlArray(lock);
+      // BUG: The current implementation does not allow the ArrayHandle to be on two devices
+      // at the same time. Thus, it is not possible for two simultaneously read from the same
+      // ArrayHandle on two different devices. This might cause unexpected deadlocks.
+      this->WaitToWrite(lock, token, true); // Make sure no one is reading device array
+      this->SyncControlArray(lock, token);
       // Need to change some state that does not change the logical state from
       // an external point of view.
       this->Internals->DeleteExecutionArray(lock);
@@ -403,7 +434,7 @@ void ArrayHandle<T, S>::PrepareForDevice(LockType& lock, DeviceAdapterTag device
 }
 
 template <typename T, typename S>
-void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
+void ArrayHandle<T, S>::SyncControlArray(LockType& lock, vtkm::cont::Token& token) const
 {
   if (!this->Internals->IsControlArrayValid(lock))
   {
@@ -411,7 +442,7 @@ void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
     // However, if we are here, that `Token` should not already be attached to this array.
     // If it were, then there should be no reason to move data arround (unless the `Token`
     // was used when preparing for multiple devices, which it should not be used like that).
-    this->WaitToRead(lock, vtkm::cont::Token{});
+    this->WaitToRead(lock, token);
 
     // Need to change some state that does not change the logical state from
     // an external point of view.
@@ -430,6 +461,141 @@ void ArrayHandle<T, S>::SyncControlArray(LockType& lock) const
       this->Internals->SetControlArrayValid(lock, true);
     }
   }
+}
+
+template <typename T, typename S>
+bool ArrayHandle<T, S>::CanRead(const LockType& lock, const vtkm::cont::Token& token) const
+{
+  // If the token is already attached to this array, then we allow reading.
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    return true;
+  }
+
+  // If there is anyone else waiting at the top of the queue, we cannot access this array.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && (queue.front() != token))
+  {
+    return false;
+  }
+
+  // No one else is waiting, so we can read the array as long as no one else is writing.
+  return (*this->Internals->GetWriteCount(lock) < 1);
+}
+
+template <typename T, typename S>
+bool ArrayHandle<T, S>::CanWrite(const LockType& lock, const vtkm::cont::Token& token) const
+{
+  // If the token is already attached to this array, then we allow writing.
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    return true;
+  }
+
+  // If there is anyone else waiting at the top of the queue, we cannot access this array.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && (queue.front() != token))
+  {
+    return false;
+  }
+
+  // No one else is waiting, so we can write the array as long as no one else is reading or writing.
+  return ((*this->Internals->GetWriteCount(lock) < 1) &&
+          (*this->Internals->GetReadCount(lock) < 1));
+}
+
+template <typename T, typename S>
+void ArrayHandle<T, S>::WaitToRead(LockType& lock, vtkm::cont::Token& token) const
+{
+  this->Enqueue(lock, token);
+
+  // Note that if you deadlocked here, that means that you are trying to do a read operation on an
+  // array where an object is writing to it.
+  this->Internals->ConditionVariable.wait(
+    lock, [&lock, &token, this] { return this->CanRead(lock, token); });
+
+  token.Attach(this->Internals,
+               this->Internals->GetReadCount(lock),
+               lock,
+               &this->Internals->ConditionVariable);
+
+  // We successfully attached the token. Pop it off the queue.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && queue.front() == token)
+  {
+    queue.pop_front();
+  }
+}
+
+template <typename T, typename S>
+void ArrayHandle<T, S>::WaitToWrite(LockType& lock, vtkm::cont::Token& token, bool fakeRead) const
+{
+  this->Enqueue(lock, token);
+
+  // Note that if you deadlocked here, that means that you are trying to do a write operation on an
+  // array where an object is reading or writing to it.
+  this->Internals->ConditionVariable.wait(
+    lock, [&lock, &token, this] { return this->CanWrite(lock, token); });
+
+  if (!fakeRead)
+  {
+    token.Attach(this->Internals,
+                 this->Internals->GetWriteCount(lock),
+                 lock,
+                 &this->Internals->ConditionVariable);
+  }
+  else
+  {
+    // A current feature limitation of ArrayHandle is that it can only exist on one device at
+    // a time. Thus, if a read request comes in for a different device, the prepare has to
+    // get satisfy a write lock to boot the array off the existing device. However, we don't
+    // want to attach the Token as a write lock because the resulting state is for reading only
+    // and others might also want to read. So, we have to pretend that this is a read lock even
+    // though we have to make a change to the array.
+    //
+    // The main point is, this condition is a hack that should go away once ArrayHandle supports
+    // multiple devices at once.
+    token.Attach(this->Internals,
+                 this->Internals->GetReadCount(lock),
+                 lock,
+                 &this->Internals->ConditionVariable);
+  }
+
+  // We successfully attached the token. Pop it off the queue.
+  auto& queue = this->Internals->GetQueue(lock);
+  if (!queue.empty() && queue.front() == token)
+  {
+    queue.pop_front();
+  }
+}
+
+template <typename T, typename S>
+void ArrayHandle<T, S>::Enqueue(const vtkm::cont::Token& token) const
+{
+  LockType lock = this->GetLock();
+  this->Enqueue(lock, token);
+}
+
+template <typename T, typename S>
+void ArrayHandle<T, S>::Enqueue(const LockType& lock, const vtkm::cont::Token& token) const
+{
+  if (token.IsAttached(this->Internals->GetWriteCount(lock)) ||
+      token.IsAttached(this->Internals->GetReadCount(lock)))
+  {
+    // Do not need to enqueue if we are already attached.
+    return;
+  }
+
+  auto& queue = this->Internals->GetQueue(lock);
+  if (std::find(queue.begin(), queue.end(), token.GetReference()) != queue.end())
+  {
+    // This token is already in the queue.
+    return;
+  }
+
+  this->Internals->GetQueue(lock).push_back(token.GetReference());
 }
 }
 } // vtkm::cont

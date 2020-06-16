@@ -40,15 +40,13 @@
 // trim() from http://stackoverflow.com/a/217605/44738
 static inline std::string& ltrim(std::string& s)
 {
-  s.erase(s.begin(),
-          std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
   return s;
 }
 static inline std::string& rtrim(std::string& s)
 {
-  s.erase(
-    std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
-    s.end());
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
+          s.end());
   return s;
 }
 static inline std::string& trim(std::string& s)
@@ -215,7 +213,8 @@ void printUsage(const std::string& vtkm_options)
             << "Options:\n\n"
             << "  -s, --shape POINT     domain shape [default: 64x64x64]\n"
             << "  -t, --dt FLOAT        time step [default: 0.01]\n"
-            << "  -f, --config STRING   oscillator file (required)\n"
+            << "  -f, --config STRING   oscillator file (required). Available in "
+               "vtk-m/examples/oscillator/inputs\n"
             << "      --t-end FLOAT     end time [default: 10]\n"
             << "  -o, --output STRING   directory to output data\n"
             << "General VTK-m Options:\n\n"

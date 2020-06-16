@@ -57,11 +57,10 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::cont::DataSet&,
-                                            const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                            const vtkm::filter::FieldMetadata&,
-                                            vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool NDEntropy::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                    const vtkm::cont::Field&,
+                                                    vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

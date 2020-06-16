@@ -57,22 +57,16 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
-#include <utility>
-#include <vector>
-#include <vtkm/Bounds.h>
 #include <vtkm/filter/FilterCell.h>
+
+#include <memory>
 
 namespace vtkm
 {
 namespace filter
 {
-
-namespace detail
-{
-class MultiBlockContourTreeHelper;
-} // namespace detail
 
 /// \brief Construct the Contour Tree for a 2D or 3D regular mesh
 ///
@@ -185,52 +179,8 @@ private:
   /// Array with the sorted order of the mesh vertices
   vtkm::worklet::contourtree_augmented::IdArrayType MeshSortOrder;
   /// Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
-  detail::MultiBlockContourTreeHelper* MultiBlockTreeHelper;
-};
-
-///
-/// Helper struct to collect sizing information from the dataset
-///
-struct GetRowsColsSlices
-{
-  //@{
-  /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
-  /// @param[in] cells  The input vtkm::cont::CellSetStructured
-  /// @param[out] nRows  Number of rows (x) in the cell set
-  /// @param[out[ nCols  Number of columns (y) in the cell set
-  /// @param[out] nSlices Number of slices (z) in the cell set
-  void operator()(const vtkm::cont::CellSetStructured<2>& cells,
-                  vtkm::Id& nRows,
-                  vtkm::Id& nCols,
-                  vtkm::Id& nSlices) const
-  {
-    vtkm::Id2 pointDimensions = cells.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = 1;
-  }
-  void operator()(const vtkm::cont::CellSetStructured<3>& cells,
-                  vtkm::Id& nRows,
-                  vtkm::Id& nCols,
-                  vtkm::Id& nSlices) const
-  {
-    vtkm::Id3 pointDimensions = cells.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = pointDimensions[2];
-  }
-  //@}
-
-  ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>
-  template <typename T>
-  void operator()(const T& cells, vtkm::Id& nRows, vtkm::Id& nCols, vtkm::Id& nSlices) const
-  {
-    (void)nRows;
-    (void)nCols;
-    (void)nSlices;
-    (void)cells;
-    throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
-  }
+  std::unique_ptr<vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper>
+    MultiBlockTreeHelper;
 };
 
 } // namespace filter

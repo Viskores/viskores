@@ -41,6 +41,7 @@ struct FetchTagArrayTopologyMapIn
 {
 };
 
+/// @cond NONE
 namespace detail
 {
 
@@ -188,6 +189,7 @@ struct FetchArrayTopologyMapInImplementation<
 };
 
 } // namespace detail
+/// @endcond
 
 template <typename ExecObjectType>
 struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,

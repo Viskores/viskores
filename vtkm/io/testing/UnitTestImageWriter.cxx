@@ -9,8 +9,10 @@
 //============================================================================
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/ImageReader.h>
-#include <vtkm/io/ImageWriter.h>
+#include <vtkm/io/ImageReaderPNG.h>
+#include <vtkm/io/ImageReaderPNM.h>
+#include <vtkm/io/ImageWriterPNG.h>
+#include <vtkm/io/ImageWriterPNM.h>
 #include <vtkm/io/PixelTypes.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
@@ -23,7 +25,6 @@ namespace
 using namespace vtkm::io;
 using namespace vtkm::rendering;
 
-template <typename PixelType>
 void TestFilledImage(vtkm::cont::DataSet& dataSet,
                      const std::string& fieldName,
                      const vtkm::rendering::Canvas& canvas)
@@ -39,112 +40,117 @@ void TestFilledImage(vtkm::cont::DataSet& dataSet,
     pointField.GetData().template Cast<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>().ReadPortal();
 
   auto colorPortal = canvas.GetColorBuffer().ReadPortal();
-  for (vtkm::Id y = 0; y < canvas.GetHeight(); y++)
-  {
-    std::ostringstream row;
-    row << "[";
-    for (vtkm::Id x = 0; x < canvas.GetWidth(); x++)
-    {
-      auto tuple = colorPortal.Get(y * canvas.GetWidth() + x);
-      auto pixelVec = PixelType(pixelPortal.Get(y * canvas.GetWidth() + x));
-      std::ostringstream data;
-      data << pixelVec << ":" << PixelType(tuple) << std::endl;
-      VTKM_TEST_ASSERT(pixelVec == PixelType(tuple),
-                       "Stored pixel did not match canvas value" + data.str());
-      row << pixelVec << ",";
-    }
-    row << "]";
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Row[" << y << "]" << row.str());
-  }
+
+  VTKM_TEST_ASSERT(test_equal_portals(pixelPortal, colorPortal));
 }
 
-template <typename PixelType>
-void TestCreateImageDataSet(BaseImageReader& reader, const vtkm::rendering::Canvas& canvas)
+void TestCreateImageDataSet(const vtkm::rendering::Canvas& canvas)
 {
-  auto dataSet = reader.CreateImageDataSet(canvas);
-  TestFilledImage<PixelType>(dataSet, reader.GetPointFieldName(), canvas);
+  std::cout << "TestCreateImageDataSet" << std::endl;
+  auto dataSet = canvas.GetDataSet("pixel-color");
+  TestFilledImage(dataSet, "pixel-color", canvas);
 }
 
-template <typename PixelType>
-void TestReadAndWritePNG(const vtkm::rendering::Canvas& canvas, std::string image)
+void TestReadAndWritePNG(const vtkm::rendering::Canvas& canvas,
+                         std::string filename,
+                         vtkm::io::ImageWriterBase::PixelDepth pixelDepth)
 {
-  auto pngReader = PNGReader();
-  auto pngWriter = PNGWriter();
-  vtkm::cont::DataSet dataSet;
+  std::cout << "TestReadAndWritePNG - " << filename << std::endl;
   bool throws = false;
   try
   {
-    pngWriter.WriteToFile(image, dataSet);
+    vtkm::io::ImageWriterPNG writer(filename);
+    vtkm::cont::DataSet dataSet;
+    writer.WriteDataSet(dataSet);
   }
-  catch (const vtkm::cont::ErrorBadValue&)
+  catch (const vtkm::cont::Error&)
   {
     throws = true;
   }
   VTKM_TEST_ASSERT(throws, "Fill Image did not throw with empty data");
 
-  dataSet = pngReader.CreateImageDataSet(canvas);
-  pngWriter.WriteToFile(image, dataSet);
-  dataSet = pngReader.ReadFromFile(image);
-  pngWriter.WriteToFile(image, dataSet);
-  dataSet = pngReader.ReadFromFile(image);
-  TestFilledImage<PixelType>(dataSet, pngReader.GetPointFieldName(), canvas);
+  {
+    vtkm::io::ImageWriterPNG writer(filename);
+    writer.SetPixelDepth(pixelDepth);
+    writer.WriteDataSet(canvas.GetDataSet());
+  }
+  {
+    vtkm::io::ImageReaderPNG reader(filename);
+    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+  }
+  {
+    vtkm::io::ImageWriterPNG writer(filename);
+    writer.SetPixelDepth(pixelDepth);
+    writer.WriteDataSet(canvas.GetDataSet());
+  }
+  {
+    vtkm::io::ImageReaderPNG reader(filename);
+    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+    TestFilledImage(dataSet, reader.GetPointFieldName(), canvas);
+  }
 }
 
-template <const vtkm::Id BitDepth>
-void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas)
+void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas,
+                         std::string filename,
+                         vtkm::io::ImageWriterBase::PixelDepth pixelDepth)
 {
-  using PixelType = RGBPixel<BitDepth>;
-  PNMWriter ppmWriter((1 << BitDepth) - 1);
-  PNMReader ppmReader((1 << BitDepth) - 1);
-  vtkm::cont::DataSet dataSet;
+  std::cout << "TestReadAndWritePNM - " << filename << std::endl;
   bool throws = false;
   try
   {
-    ppmWriter.WriteToFile("ppmTestFile" + std::to_string(BitDepth) + "bit.ppm", dataSet);
+    vtkm::io::ImageWriterPNM writer(filename);
+    vtkm::cont::DataSet dataSet;
+    writer.WriteDataSet(dataSet);
   }
-  catch (const vtkm::cont::ErrorBadValue&)
+  catch (const vtkm::cont::Error&)
   {
     throws = true;
   }
   VTKM_TEST_ASSERT(throws, "Fill Image did not throw with empty data");
 
-  dataSet = ppmReader.CreateImageDataSet(canvas);
-  ppmWriter.WriteToFile("ppmTestFile.ppm", dataSet);
-  dataSet = ppmReader.ReadFromFile("ppmTestFile.ppm");
-  ppmWriter.WriteToFile("ppmTestFile2.ppm", dataSet);
-  dataSet = ppmReader.ReadFromFile("ppmTestFile2.ppm");
-  TestFilledImage<PixelType>(dataSet, ppmReader.GetPointFieldName(), canvas);
+  {
+    vtkm::io::ImageWriterPNM writer(filename);
+    writer.SetPixelDepth(pixelDepth);
+    writer.WriteDataSet(canvas.GetDataSet());
+  }
+  {
+    vtkm::io::ImageReaderPNM reader(filename);
+    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+  }
+  {
+    vtkm::io::ImageWriterPNM writer(filename);
+    writer.SetPixelDepth(pixelDepth);
+    writer.WriteDataSet(canvas.GetDataSet());
+  }
+  {
+    vtkm::io::ImageReaderPNM reader(filename);
+    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+    TestFilledImage(dataSet, reader.GetPointFieldName(), canvas);
+  }
 }
 
 
 void TestBaseImageMethods(const vtkm::rendering::Canvas& canvas)
 {
-  auto reader = PNGReader();
-  TestCreateImageDataSet<RGBPixel_8>(reader, canvas);
-  TestCreateImageDataSet<RGBPixel_16>(reader, canvas);
-  TestCreateImageDataSet<GreyPixel_8>(reader, canvas);
-  TestCreateImageDataSet<GreyPixel_16>(reader, canvas);
+  TestCreateImageDataSet(canvas);
 }
 
 void TestPNMImage(const vtkm::rendering::Canvas& canvas)
 {
-  TestReadAndWritePNM<8>(canvas);
-  TestReadAndWritePNM<16>(canvas);
+  TestReadAndWritePNM(canvas, "pnmRGB8Test.png", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_8);
+  TestReadAndWritePNM(canvas, "pnmRGB16Test.png", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
 void TestPNGImage(const vtkm::rendering::Canvas& canvas)
 {
-  TestReadAndWritePNG<RGBPixel_8>(canvas, "pngRGB8Test.png");
-  TestReadAndWritePNG<RGBPixel_16>(canvas, "pngRGB16Test.png");
-  TestReadAndWritePNG<GreyPixel_8>(canvas, "pngGrey8Test.png");
-  TestReadAndWritePNG<GreyPixel_16>(canvas, "pngGrey16Test.png");
+  TestReadAndWritePNG(canvas, "pngRGB8Test.png", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_8);
+  TestReadAndWritePNG(canvas, "pngRGB16Test.png", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
 void TestImage()
 {
   vtkm::rendering::Canvas canvas(16, 16);
   canvas.SetBackgroundColor(vtkm::rendering::Color::red);
-  canvas.Initialize();
   canvas.Activate();
   canvas.Clear();
   // Line from top left to bottom right, ensures correct transposedness

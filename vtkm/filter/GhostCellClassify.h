@@ -17,7 +17,9 @@ namespace vtkm
 namespace filter
 {
 
-struct GhostCellClassifyPolicy : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
+struct VTKM_DEPRECATED(1.6,
+                       "GhostCellClassifyPolicy no longer has an effect.") GhostCellClassifyPolicy
+  : vtkm::filter::PolicyBase<GhostCellClassifyPolicy>
 {
   using FieldTypeList = vtkm::List<vtkm::UInt8>;
 };

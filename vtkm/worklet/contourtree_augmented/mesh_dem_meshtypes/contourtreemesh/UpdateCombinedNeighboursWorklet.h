@@ -122,7 +122,6 @@ public:
       This worklet implemnts the following two loops from the original OpenMP code
       The two loops are the same but the arrays required are different
 
-      #pragma omp parallel for
       for (indexVector::size_type vtx = 0; vtx < firstNeighbour.size(); ++vtx)
       {
         indexType numNeighbours = (vtx < GetNumberOfVertices() - 1) ? firstNeighbour[vtx+1] - firstNeighbour[vtx] : neighbours.size() - firstNeighbour[vtx];
@@ -133,7 +132,6 @@ public:
         }
       }
 
-      #pragma omp parallel for
       for (indexVector::size_type vtx = 0; vtx < other.firstNeighbour.size(); ++vtx)
       {
         indexType numNeighbours = (vtx < other.GetNumberOfVertices() - 1) ? other.firstNeighbour[vtx+1] - other.firstNeighbour[vtx] : other.neighbours.size() - other.firstNeighbour[vtx];

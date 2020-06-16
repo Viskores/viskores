@@ -48,8 +48,8 @@
 #
 #
 
-if (CMAKE_VERSION VERSION_LESS "3.8")
-  message(FATAL_ERROR "VTK-m requires CMake 3.8+")
+if (CMAKE_VERSION VERSION_LESS "3.12")
+  message(FATAL_ERROR "VTK-m requires CMake 3.12+")
 endif()
 if("${CMAKE_GENERATOR}" MATCHES "Visual Studio" AND
    CMAKE_VERSION VERSION_LESS "3.11")
@@ -116,3 +116,7 @@ endif()
 # This includes a host of functions used by VTK-m CMake.
 include(VTKmWrappers)
 include(VTKmRenderingContexts)
+
+# Setup diy magic of chosing the appropriate mpi/no_mpi library to link against
+include(VTKmDIYUtils)
+vtkm_diy_init_target()

@@ -138,7 +138,6 @@ void UniformTests()
   const vtkm::Id NUM_FILL_METHODS = 5;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSetFieldAdd dsf;
 
   std::uniform_int_distribution<vtkm::Id> randomDim(2, MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS - 1);
@@ -184,8 +183,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dims, origin, spacing);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
     }
@@ -212,8 +211,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dims, org, spc);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
     }
@@ -242,8 +241,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dims, origin, spacing);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
     }
@@ -267,8 +266,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
     }
@@ -299,8 +298,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dims, org, spc);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
     }
@@ -332,8 +331,8 @@ void UniformTests()
 
       vtkm::cont::DataSet dataSet;
       dataSet = dataSetBuilder.Create(dims, origin, spacing);
-      dsf.AddPointField(dataSet, "pointvar", pointvar);
-      dsf.AddCellField(dataSet, "cellvar", cellvar);
+      dataSet.AddPointField("pointvar", pointvar);
+      dataSet.AddCellField("cellvar", cellvar);
 
       ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
     }

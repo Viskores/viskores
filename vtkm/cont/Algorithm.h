@@ -23,7 +23,7 @@ namespace vtkm
 {
 namespace cont
 {
-
+/// @cond NONE
 namespace detail
 {
 template <typename Device, typename T>
@@ -365,6 +365,7 @@ struct UpperBoundsFunctor
   }
 };
 } // namespace detail
+/// @endcond
 
 struct Algorithm
 {

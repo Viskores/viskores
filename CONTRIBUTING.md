@@ -44,7 +44,7 @@ Before you begin, perform initial setup:
     developers and users.
 
 [GitLab Access]: https://gitlab.kitware.com/users/sign_in
-[Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/forks/new
+[Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/-/forks/new
 [Register with the VTK-m dashboard]: https://open.cdash.org/register.php
 [Sign up for the VTK-m mailing list]: http://vtk.org/mailman/listinfo/vtkm
 
@@ -178,7 +178,7 @@ upper right.
 When you [pushed your topic branch](#share-a-topic), it will provide you
 with a url of the form
 
-    https://gitlab.kitware.com/<username>/vtk-m/merge_requests/new
+    https://gitlab.kitware.com/<username>/vtk-m/-/merge_requests/new
 
 You can copy/paste that into your web browser to create a new merge
 request. Alternately, you can visit your fork in GitLab, browse to the

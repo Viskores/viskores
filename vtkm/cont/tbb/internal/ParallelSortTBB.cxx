@@ -54,7 +54,7 @@
 #include <vtkm/internal/Windows.h>
 
 #include <tbb/task.h>
-#include <tbb/tbb_thread.h>
+#include <thread>
 
 #if defined(VTKM_MSVC)
 #pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")
@@ -69,7 +69,7 @@ namespace tbb
 namespace sort
 {
 
-const size_t MAX_CORES = ::tbb::tbb_thread::hardware_concurrency();
+const size_t MAX_CORES = std::thread::hardware_concurrency();
 
 // Simple TBB task wrapper around a generic functor.
 template <typename FunctorType>

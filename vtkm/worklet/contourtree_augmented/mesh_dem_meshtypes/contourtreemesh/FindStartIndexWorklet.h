@@ -114,7 +114,6 @@ public:
     }
 
     // In serial this worklet implements the following operation
-    // #pragma omp parallel for
     // for (indexVector::size_type sortedArcNo = 1; sortedArcNo < neighbours.size(); ++sortedArcNo)
     //   {
     //      indexType prevFrom = (neighbours[sortedArcNo-1] % 2 == 0) ? neighbours[sortedArcNo-1]/2 : MaskedIndex(arcs[neighbours[sortedArcNo-1]/2]);

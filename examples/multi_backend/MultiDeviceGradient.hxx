@@ -62,19 +62,19 @@ void process_partition_tbb(RuntimeTaskQueue& queue)
 
 void process_partition_openMP(RuntimeTaskQueue& queue)
 {
-  //Step 1. Set the device adapter to this thread to TBB.
+  //Step 1. Set the device adapter to this thread to openMP.
   //This makes sure that any vtkm::filters used by our
-  //task operate only on TBB. The "global" thread tracker
+  //task operate only on openMP. The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
 
   while (queue.hasTasks())
   {
-    //Step 2. Get the task to run on TBB
+    //Step 2. Get the task to run on openMP
     auto task = queue.pop();
 
-    //Step 3. Run the task on TBB. We check the validity
+    //Step 3. Run the task on openMP. We check the validity
     //of the task since we could be given an empty task
     //when the queue is empty and we are shutting down
     if (task != nullptr)
@@ -84,7 +84,8 @@ void process_partition_openMP(RuntimeTaskQueue& queue)
 
     //Step 4. Notify the queue that we finished processing this task
     queue.completedTask();
-    std::cout << "finished a partition on tbb (" << std::this_thread::get_id() << ")" << std::endl;
+    std::cout << "finished a partition on openMP (" << std::this_thread::get_id() << ")"
+              << std::endl;
   }
 }
 
@@ -189,7 +190,7 @@ VTKM_CONT MultiDeviceGradient::~MultiDeviceGradient()
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& pds,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   //Step 1. Say that we have no more to submit for this PartitionedDataSet
   //This is needed to happen for each execute as we want to support
@@ -219,7 +220,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
+        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(0, result);
       });
     this->Queue.waitForAllTasksToComplete();
@@ -238,7 +239,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::PrepareForE
       [=]() {
         vtkm::filter::Gradient perThreadGrad = gradient;
 
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input, policy);
+        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(index, result);
       });
     index++;

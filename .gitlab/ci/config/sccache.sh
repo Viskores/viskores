@@ -2,8 +2,8 @@
 
 set -e
 
-readonly version="nvcc_v3"
-readonly sha256sum="d5b56dd9e7d4597f4a47a90d6327e30a259151b59b897607e1804d6d3513f491"
+readonly version="nvcc_v4"
+readonly sha256sum="260779b4a740fe8373d251d1e318541a98dd5cd2f8051eedd55227a5a852fdf7"
 readonly filename="sccache-0.2.14-$version-x86_64-unknown-linux-musl"
 readonly tarball="$filename.tar.gz"
 

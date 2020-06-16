@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/LagrangianStructures.h>
@@ -331,8 +330,7 @@ void Test2DLCS()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
-  vtkm::cont::DataSetFieldAdd fieldAdder;
-  fieldAdder.AddPointField(inputData, "velocity", fieldHandle);
+  inputData.AddPointField("velocity", fieldHandle);
 
   vtkm::filter::LagrangianStructures lagrangianStructures;
   lagrangianStructures.SetStepSize(0.025f);
@@ -368,8 +366,7 @@ void Test3DLCS()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> diffHandle = vtkm::cont::make_ArrayHandle(diffVec);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> visitHandle = vtkm::cont::make_ArrayHandle(visitVec);
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldHandle = vtkm::cont::make_ArrayHandle(fieldVec);
-  vtkm::cont::DataSetFieldAdd fieldAdder;
-  fieldAdder.AddPointField(inputData, "velocity", fieldHandle);
+  inputData.AddPointField("velocity", fieldHandle);
 
   vtkm::filter::LagrangianStructures lagrangianStructures;
   lagrangianStructures.SetStepSize(0.01f);

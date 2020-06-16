@@ -11,6 +11,7 @@
 #include <vtkm/rendering/Canvas.h>
 
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/io/DecodePNG.h>
 #include <vtkm/io/EncodePNG.h>
@@ -270,6 +271,29 @@ const Canvas::DepthBufferType& Canvas::GetDepthBuffer() const
 Canvas::DepthBufferType& Canvas::GetDepthBuffer()
 {
   return Internals->DepthBuffer;
+}
+
+vtkm::cont::DataSet Canvas::GetDataSet(const std::string& colorFieldName,
+                                       const std::string& depthFieldName) const
+{
+  vtkm::cont::DataSetBuilderUniform builder;
+  vtkm::cont::DataSet dataSet = builder.Create(vtkm::Id2(this->GetWidth(), this->GetHeight()));
+  if (!colorFieldName.empty())
+  {
+    dataSet.AddPointField(colorFieldName, this->GetColorBuffer());
+  }
+  if (!depthFieldName.empty())
+  {
+    dataSet.AddPointField(depthFieldName, this->GetDepthBuffer());
+  }
+  return dataSet;
+}
+
+vtkm::cont::DataSet Canvas::GetDataSet(const char* colorFieldName, const char* depthFieldName) const
+{
+  return this->GetDataSet((colorFieldName != nullptr) ? std::string(colorFieldName) : std::string(),
+                          (depthFieldName != nullptr) ? std::string(depthFieldName)
+                                                      : std::string());
 }
 
 const vtkm::rendering::Color& Canvas::GetBackgroundColor() const

@@ -20,6 +20,7 @@ set(headers
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h
+  CastInvalidValue.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterListHelpers.h

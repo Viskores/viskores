@@ -41,24 +41,15 @@ vtkm::cont::DataSet MakeWarpVectorTestDataSet()
   dataSet.AddCoordinateSystem(
     vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", vec1);
+  dataSet.AddPointField("vec1", vec1);
 
   vecType vector = vtkm::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(2.0));
   vtkm::cont::ArrayHandleConstant<vecType> vectorAH =
     vtkm::cont::make_ArrayHandleConstant(vector, dim * dim);
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", vectorAH);
+  dataSet.AddPointField("vec2", vectorAH);
 
   return dataSet;
 }
-
-class PolicyWarpVector : public vtkm::filter::PolicyBase<PolicyWarpVector>
-{
-public:
-  using vecType = vtkm::Vec3f;
-  using TypeListWarpVectorTags = vtkm::List<vtkm::cont::ArrayHandleConstant<vecType>::StorageTag,
-                                            vtkm::cont::ArrayHandle<vecType>::StorageTag>;
-  using FieldStorageList = TypeListWarpVectorTags;
-};
 
 void CheckResult(const vtkm::filter::WarpVector& filter, const vtkm::cont::DataSet& result)
 {
@@ -100,7 +91,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 
@@ -109,7 +100,7 @@ void TestWarpVectorFilter()
     vtkm::filter::WarpVector filter(scale);
     filter.SetActiveField("vec1");
     filter.SetVectorField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(ds, PolicyWarpVector());
+    vtkm::cont::DataSet result = filter.Execute(ds);
     CheckResult(filter, result);
   }
 }

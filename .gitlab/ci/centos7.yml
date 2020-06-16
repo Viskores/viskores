@@ -15,7 +15,7 @@ build:centos7_gcc48:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "cuda+turing+32bit_ids"
+    VTKM_SETTINGS: "cuda+turing+32bit_ids+no_rendering"
 
 test:centos7_gcc48:
   tags:
@@ -46,6 +46,8 @@ test:rhel8_test_centos7:
     - .rhel8
     - .cmake_test_linux
     - .only-default
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
     - build:centos7_gcc48
   needs:

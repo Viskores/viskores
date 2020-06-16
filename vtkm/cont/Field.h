@@ -84,6 +84,7 @@ public:
 
   VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
   VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
+  VTKM_CONT bool IsFieldGlobal() const { return this->FieldAssociation == Association::WHOLE_MESH; }
 
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 

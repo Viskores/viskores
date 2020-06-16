@@ -15,14 +15,14 @@ set(unit_tests
   UnitTestVTKDataSetWriter.cxx
 )
 
-vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES vtkm_lodepng)
+set(unit_test_libraries vtkm_lodepng vtkm_io)
 
-if(NOT VTKm_ENABLE_RENDERING)
-  return()
+if(VTKm_ENABLE_RENDERING)
+  set(unit_tests ${unit_tests}
+    UnitTestImageWriter.cxx
+    )
+
+  set(unit_test_libraries ${unit_test_libraries} vtkm_rendering)
 endif()
 
-set(image_unit_tests
-  UnitTestImageWriter.cxx
-)
-
-vtkm_unit_tests(NAME UnitTests_vtkm_io_image_testing SOURCES ${image_unit_tests} ALL_BACKENDS LIBRARIES vtkm_rendering vtkm_lodepng)
+vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES ${unit_test_libraries})

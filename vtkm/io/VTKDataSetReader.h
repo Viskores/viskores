@@ -11,86 +11,27 @@
 #define vtk_m_io_VTKDataSetReader_h
 
 #include <vtkm/io/VTKDataSetReaderBase.h>
-#include <vtkm/io/VTKPolyDataReader.h>
-#include <vtkm/io/VTKRectilinearGridReader.h>
-#include <vtkm/io/VTKStructuredGridReader.h>
-#include <vtkm/io/VTKStructuredPointsReader.h>
-#include <vtkm/io/VTKUnstructuredGridReader.h>
-
-#include <memory>
 
 namespace vtkm
 {
 namespace io
 {
 
-VTKM_SILENCE_WEAK_VTABLE_WARNING_START
-
-class VTKDataSetReader : public VTKDataSetReaderBase
+class VTKM_IO_EXPORT VTKDataSetReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKDataSetReader(const char* fileName)
-    : VTKDataSetReaderBase(fileName)
-  {
-  }
+  VTKM_CONT VTKDataSetReader(const char* fileName);
+  VTKM_CONT VTKDataSetReader(const std::string& fileName);
+  VTKM_CONT ~VTKDataSetReader() override;
 
-  explicit VTKDataSetReader(const std::string& fileName)
-    : VTKDataSetReaderBase(fileName)
-  {
-  }
+  VTKDataSetReader(const VTKDataSetReader&) = delete;
+  void operator=(const VTKDataSetReader&) = delete;
 
-  virtual void PrintSummary(std::ostream& out) const
-  {
-    if (this->Reader)
-    {
-      this->Reader->PrintSummary(out);
-    }
-    else
-    {
-      VTKDataSetReaderBase::PrintSummary(out);
-    }
-  }
+  VTKM_CONT void PrintSummary(std::ostream& out) const override;
 
 private:
-  virtual void CloseFile()
-  {
-    if (this->Reader)
-    {
-      this->Reader->CloseFile();
-    }
-    else
-    {
-      VTKDataSetReaderBase::CloseFile();
-    }
-  }
-
-  virtual void Read()
-  {
-    switch (this->DataFile->Structure)
-    {
-      case vtkm::io::internal::DATASET_STRUCTURED_POINTS:
-        this->Reader.reset(new VTKStructuredPointsReader(""));
-        break;
-      case vtkm::io::internal::DATASET_STRUCTURED_GRID:
-        this->Reader.reset(new VTKStructuredGridReader(""));
-        break;
-      case vtkm::io::internal::DATASET_RECTILINEAR_GRID:
-        this->Reader.reset(new VTKRectilinearGridReader(""));
-        break;
-      case vtkm::io::internal::DATASET_POLYDATA:
-        this->Reader.reset(new VTKPolyDataReader(""));
-        break;
-      case vtkm::io::internal::DATASET_UNSTRUCTURED_GRID:
-        this->Reader.reset(new VTKUnstructuredGridReader(""));
-        break;
-      default:
-        throw vtkm::io::ErrorIO("Unsupported DataSet type.");
-    }
-
-    this->TransferDataFile(*this->Reader.get());
-    this->Reader->Read();
-    this->DataSet = this->Reader->GetDataSet();
-  }
+  VTKM_CONT void CloseFile() override;
+  VTKM_CONT void Read() override;
 
   std::unique_ptr<VTKDataSetReaderBase> Reader;
 };

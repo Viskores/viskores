@@ -68,6 +68,7 @@ set(headers
   ScatterUniform.h
   SplitSharpEdges.h
   StableSortIndices.h
+  DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
   SurfaceNormals.h
@@ -124,6 +125,7 @@ add_subdirectory(connectivities)
 add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
+add_subdirectory(contourtree_distributed)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(histogram)

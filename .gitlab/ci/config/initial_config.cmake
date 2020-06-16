@@ -20,6 +20,9 @@ foreach(option IN LISTS options)
   elseif(shared STREQUAL option)
     set(BUILD_SHARED_LIBS "ON" CACHE STRING "")
 
+  elseif(vtk_types STREQUAL option)
+    set(VTKm_USE_DEFAULT_TYPES_FOR_VTK "ON" CACHE STRING "")
+
   elseif(32bit_ids STREQUAL option)
     set(VTKm_USE_64BIT_IDS "OFF" CACHE STRING "")
 
@@ -33,6 +36,12 @@ foreach(option IN LISTS options)
   elseif(leak STREQUAL option)
     set(VTKm_ENABLE_SANITIZER "ON" CACHE STRING "")
     list(APPEND sanitizers "leak")
+
+  elseif(rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "ON" CACHE STRING "")
+
+  elseif(no_rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")

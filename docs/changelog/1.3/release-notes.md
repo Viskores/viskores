@@ -75,7 +75,7 @@ new adapter is enabled using the CMake option `VTKm_ENABLE_OPENMP` and its
 performance is comparable to the TBB device adapter.
 
 Performance comparisions of `OpenMP` against the `TBB` and  `Serial` device
-adapters can be found at: https://gitlab.kitware.com/vtk/vtk-m/issues/223
+adapters can be found at: https://gitlab.kitware.com/vtk/vtk-m/-/issues/223
 
 
 ## Make all worklets dispatches invoke using a `TryExecute`
