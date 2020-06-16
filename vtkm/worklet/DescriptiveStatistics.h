@@ -25,9 +25,19 @@ public:
   template <typename T>
   struct StatState
   {
-    StatState() = default;
+    VTKM_EXEC_CONT
+    StatState()
+      : n(0)
+      , min_(std::numeric_limits<T>::max())
+      , max_(std::numeric_limits<T>::lowest())
+      , sum(0)
+      , mean_(0)
+      , M2(0)
+      , M3(0)
+      , M4(0)
+    {
+    }
 
-    // FIXME: is the constructor actually called on the device side?
     VTKM_EXEC_CONT
     StatState(T value)
       : n(1)
@@ -35,6 +45,9 @@ public:
       , max_(value)
       , sum(value)
       , mean_(value)
+      , M2(0)
+      , M3(0)
+      , M4(0)
     {
     }
 
@@ -55,7 +68,7 @@ public:
 
       // It is tempting to try to deviate from the literature and calculate
       // mean in each "reduction" from sum and n. This saves one multiplication.
-      // However, RESIST THE TEMPTATION!!! This takes us back to the two-pass
+      // However, RESIST THE TEMPTATION!!! This takes us back to the naive
       // algorithm (mean = sum of a bunch of numbers / N) that actually
       // accumulates more error and causes problem when calculating M2
       // (and thus variance).
@@ -115,20 +128,39 @@ public:
     T PopulationVariance() const { return this->M2 / this->n; }
 
     VTKM_CONT
-    T Skewness() const { return vtkm::Sqrt(this->n) * this->M3 / vtkm::Pow(this->M2, T{ 1.5 }); }
+    T Skewness() const
+    {
+      if (this->M2 == 0)
+        // Shamelessly swiped from Boost Math
+        // The limit is technically undefined, but the interpretation here is clear:
+        // A constant dataset has no skewness.
+        return T{};
+      else
+        return vtkm::Sqrt(this->n) * this->M3 / vtkm::Pow(this->M2, T{ 1.5 });
+    }
 
     VTKM_CONT
-    T Kurtosis() const { return this->n * this->M4 / (this->M2 * this->M2); }
+    T Kurtosis() const
+    {
+      if (this->M2 == 0)
+        // Shamelessly swiped from Boost Math
+        // The limit is technically undefined, but the interpretation here is clear:
+        // A constant dataset has no kurtosis.
+        return T{};
+      else
+        return this->n * this->M4 / (this->M2 * this->M2);
+    }
 
   private:
-    T n = T{};
-    T min_ = std::numeric_limits<T>::max();
-    T max_ = std::numeric_limits<T>::lowest();
-    T sum = T{};
-    T mean_ = T{};
-    T M2 = T{};
-    T M3 = T{};
-    T M4 = T{};
+    // GCC4.8 is not happy about initializing data members here.
+    T n;
+    T min_;
+    T max_;
+    T sum;
+    T mean_;
+    T M2;
+    T M3;
+    T M4;
   }; // StatState
 
   struct MakeStatState

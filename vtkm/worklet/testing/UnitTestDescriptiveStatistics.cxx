@@ -25,7 +25,9 @@ void TestSingle()
   // TODO: what is VTKm way of saying EXPECT_EXCEPTION?
   //VTKM_TEST_FAIL(result.sample_variance());
 
-  // TODO: what are the skewness and kurtosis of a single element? Zero, Nada?
+  // A single number does not have skewness nor kurtosis
+  VTKM_TEST_ASSERT(result.Skewness() == 0);
+  VTKM_TEST_ASSERT(result.Kurtosis() == 0);
 }
 
 void TestConstant()
@@ -36,6 +38,8 @@ void TestConstant()
   VTKM_TEST_ASSERT(result.N() == 10000);
   VTKM_TEST_ASSERT(result.Sum() == 12340000);
   VTKM_TEST_ASSERT(result.PopulationVariance() == 0);
+  VTKM_TEST_ASSERT(result.Skewness() == 0);
+  VTKM_TEST_ASSERT(result.Kurtosis() == 0);
 }
 
 void TestIntegerSequence()
@@ -49,6 +53,33 @@ void TestIntegerSequence()
   VTKM_TEST_ASSERT(result.N() == N);
   VTKM_TEST_ASSERT(result.Sum() == N * (N - 1) / 2);
   VTKM_TEST_ASSERT(test_equal(result.Mean(), (N - 1) / 2));
+
+  // Expected values are from Numpy/SciPy
+  VTKM_TEST_ASSERT(test_equal(result.PopulationVariance(), 83333.25));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0));
+  // We are using the Pearson's definition, with fisher = False when calling
+  // numpy.
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 1.8));
+}
+
+void TestStandardNormal()
+{
+  // Draw random numbers from the Standard Normal distribution, with mean = 0, stddev = 1
+  std::mt19937 gen(0xceed);
+  std::normal_distribution<vtkm::Float32> dis(0.0f, 1.0f);
+
+  std::vector<vtkm::Float32> x(1000000);
+  std::generate(x.begin(), x.end(), [&gen, &dis]() { return dis(gen); });
+
+  auto array = vtkm::cont::make_ArrayHandle(x);
+  auto result = vtkm::worklet::DescriptiveStatistics::Run(array);
+
+  // Variance should be positive
+  VTKM_TEST_ASSERT(result.SampleVariance() >= 0);
+  // SampleStddev should be very close to 1.0, Skewness ~= 0 and Kurtosis ~= 3.0
+  VTKM_TEST_ASSERT(test_equal(result.SampleStddev(), 1.0f, 1.0f / 100));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0.0f, 1.0 / 100));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 3.0f, 1.0 / 100));
 }
 
 void TestCatastrophicCancellation()
@@ -194,6 +225,7 @@ void TestDescriptiveStatistics()
   TestSingle();
   TestConstant();
   TestIntegerSequence();
+  TestStandardNormal();
   TestCatastrophicCancellation();
   TestGeneGolub();
   TestMeanProperties();
