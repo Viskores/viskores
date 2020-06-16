@@ -61,7 +61,7 @@ void VTKPolyDataReader::Read()
   {
     throw vtkm::io::ErrorIO("Incorrect DataSet type");
   }
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   //We need to be able to handle VisIt files which dump Field data
   //at the top of a VTK file
   std::string tag;
@@ -71,12 +71,10 @@ void VTKPolyDataReader::Read()
     this->ReadGlobalFields();
     this->DataFile->Stream >> tag;
   }
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   // Read the points
   internal::parseAssert(tag == "POINTS");
   this->ReadPoints();
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   vtkm::Id numPoints = this->DataSet.GetNumberOfPoints();
 
@@ -109,20 +107,17 @@ void VTKPolyDataReader::Read()
       this->DataFile->Stream.seekg(-static_cast<std::streamoff>(tag.length()), std::ios_base::cur);
       break;
     }
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellConnectivity;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> cellNumIndices;
     this->ReadCells(cellConnectivity, cellNumIndices);
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
     connectivityArrays.push_back(cellConnectivity);
     numIndicesArrays.push_back(cellNumIndices);
     shapesBuffer.insert(
       shapesBuffer.end(), static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()), shape);
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
   }
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity = ConcatinateArrayHandles(connectivityArrays);
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = ConcatinateArrayHandles(numIndicesArrays);
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
@@ -130,11 +125,11 @@ void VTKPolyDataReader::Read()
   std::copy(shapesBuffer.begin(),
             shapesBuffer.end(),
             vtkm::cont::ArrayPortalToIteratorBegin(shapes.WritePortal()));
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   vtkm::cont::ArrayHandle<vtkm::Id> permutation;
   vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
   this->SetCellsPermutation(permutation);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   if (vtkm::io::internal::IsSingleShape(shapes))
   {
     vtkm::cont::CellSetSingleType<> cellSet;
@@ -149,10 +144,9 @@ void VTKPolyDataReader::Read()
     cellSet.Fill(numPoints, shapes, connectivity, offsets);
     this->DataSet.SetCellSet(cellSet);
   }
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   // Read points and cell attributes
   this->ReadAttributes();
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 }
 }
 } // namespace vtkm::io
