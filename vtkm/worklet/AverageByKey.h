@@ -10,7 +10,6 @@
 #ifndef vtk_m_worklet_AverageByKey_h
 #define vtk_m_worklet_AverageByKey_h
 
-#include "DescriptiveStatistics.h"
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
