@@ -22,8 +22,6 @@ void TestSingle()
   VTKM_TEST_ASSERT(result.N() == 1);
   VTKM_TEST_ASSERT(result.Mean() == 42);
   VTKM_TEST_ASSERT(result.PopulationVariance() == 0);
-  // TODO: what is VTKm way of saying EXPECT_EXCEPTION?
-  //VTKM_TEST_FAIL(result.sample_variance());
 
   // A single number does not have skewness nor kurtosis
   VTKM_TEST_ASSERT(result.Skewness() == 0);
@@ -181,10 +179,23 @@ void TestVarianceProperty()
 
   auto array_v = vtkm::cont::make_ArrayHandle(v);
   auto array_kv = vtkm::cont::make_ArrayHandle(kv);
-  auto var_v = vtkm::worklet::DescriptiveStatistics::Run(array_v).SampleVariance();
-  auto var_kv = vtkm::worklet::DescriptiveStatistics::Run(array_kv).SampleVariance();
+  auto result_v = vtkm::worklet::DescriptiveStatistics::Run(array_v);
+  auto result_kv = vtkm::worklet::DescriptiveStatistics::Run(array_kv);
+  auto mean_v = result_v.Mean();
+  auto mean_kv = result_kv.Mean();
+  auto var_v = result_v.SampleVariance();
+  auto var_kv = result_kv.SampleVariance();
 
-  VTKM_TEST_ASSERT(test_equal(var_kv, 4.0f * 4.0f * var_v, 0.01f));
+  vtkm::Float32 condition_number_kv = 0;
+  auto rp = array_kv.ReadPortal();
+  for (vtkm::Id i = 0; i < rp.GetNumberOfValues(); ++i)
+  {
+    condition_number_kv += vtkm::Abs(rp.Get(i) - mean_kv) * vtkm::Abs(rp.Get(i));
+  }
+  condition_number_kv *= (2.0f / ((rp.GetNumberOfValues() - 1) * var_kv));
+  VTKM_TEST_ASSERT(test_equal(var_kv,
+                              4.0 * 4.0 * var_v,
+                              condition_number_kv * std::numeric_limits<vtkm::Float32>::epsilon()));
 
   // Random shuffle
   std::vector<vtkm::Float32> px = v;
@@ -193,7 +204,16 @@ void TestVarianceProperty()
   auto px_array = vtkm::cont::make_ArrayHandle(px);
   auto var_px = vtkm::worklet::DescriptiveStatistics::Run(px_array).SampleVariance();
 
-  VTKM_TEST_ASSERT(test_equal(var_v, var_px, 0.01f));
+  vtkm::Float32 condition_number_v = 0;
+  rp = array_v.ReadPortal();
+  for (vtkm::Id i = 0; i < rp.GetNumberOfValues(); ++i)
+  {
+    condition_number_v += vtkm::Abs(rp.Get(i) - mean_v) * vtkm::Abs(rp.Get(i));
+  }
+  condition_number_v *= (2.0f / ((rp.GetNumberOfValues() - 1) * var_v));
+
+  VTKM_TEST_ASSERT(
+    test_equal(var_v, var_px, condition_number_v * std::numeric_limits<vtkm::Float32>::epsilon()));
 }
 
 void TestMomentsByKey()

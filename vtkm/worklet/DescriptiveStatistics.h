@@ -165,7 +165,6 @@ public:
 
   struct MakeStatState
   {
-    // FIXME: is this actually called in the device side?
     template <typename T>
     VTKM_EXEC_CONT vtkm::worklet::DescriptiveStatistics::StatState<T> operator()(T value) const
     {
