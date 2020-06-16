@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
   // 2048x2048 pixels in the canvas:
   CanvasRayTracer canvas(2048, 2048);
   // Create a view and use it to render the input data using OS Mesa
+
   vtkm::rendering::View3D view(scene, MapperVolume(), canvas, camera, bg);
-  view.Initialize();
   view.Paint();
   view.SaveAs("volume.png");
 
@@ -81,13 +81,11 @@ int main(int argc, char* argv[])
 
   // Wireframe surface:
   vtkm::rendering::View3D isoView(isoScene, MapperWireframer(), canvas, camera, bg);
-  isoView.Initialize();
   isoView.Paint();
   isoView.SaveAs("isosurface_wireframer.png");
 
   // Smooth surface:
   vtkm::rendering::View3D solidView(isoScene, MapperRayTracer(), canvas, camera, bg);
-  solidView.Initialize();
   solidView.Paint();
   solidView.SaveAs("isosurface_raytracer.png");
 

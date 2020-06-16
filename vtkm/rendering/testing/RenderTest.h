@@ -83,7 +83,6 @@ inline void SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera& camera,
 template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(ViewType& view, const std::string& outputFile)
 {
-  view.Initialize();
   view.Paint();
   view.SaveAs(outputFile);
 }

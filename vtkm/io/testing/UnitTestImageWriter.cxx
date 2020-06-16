@@ -151,7 +151,6 @@ void TestImage()
 {
   vtkm::rendering::Canvas canvas(16, 16);
   canvas.SetBackgroundColor(vtkm::rendering::Color::red);
-  canvas.Initialize();
   canvas.Activate();
   canvas.Clear();
   // Line from top left to bottom right, ensures correct transposedness
