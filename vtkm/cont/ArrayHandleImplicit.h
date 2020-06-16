@@ -51,6 +51,7 @@ public:
   using ValueType = typename ArrayHandleImplicitTraits<FunctorType_>::ValueType;
   using FunctorType = FunctorType_;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalImplicit()
     : Functor()
@@ -58,6 +59,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalImplicit(FunctorType f, vtkm::Id numValues)
     : Functor(f)

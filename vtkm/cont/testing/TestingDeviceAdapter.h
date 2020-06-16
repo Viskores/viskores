@@ -595,7 +595,7 @@ private:
       std::cout << "Do array allocation that should fail." << std::endl;
       vtkm::cont::Token token;
       vtkm::cont::ArrayHandle<vtkm::Vec4f_32, StorageTagBasic> bigArray;
-      const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
+      const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFELL;
       bigArray.PrepareForOutput(bigSize, DeviceAdapterTag{}, token);
       // It does not seem reasonable to get here.  The previous call should fail.
       VTKM_TEST_FAIL("A ridiculously sized allocation succeeded.  Either there "

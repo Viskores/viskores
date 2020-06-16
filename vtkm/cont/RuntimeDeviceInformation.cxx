@@ -17,6 +17,7 @@
 
 //Bring in each device adapters runtime class
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
+#include <vtkm/cont/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterRuntimeDetectorOpenMP.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterRuntimeDetectorTBB.h>

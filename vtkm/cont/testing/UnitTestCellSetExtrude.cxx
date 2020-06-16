@@ -29,8 +29,9 @@ struct CopyTopo : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
   typedef void ControlSignature(CellSetIn, FieldOutCell);
   typedef _2 ExecutionSignature(CellShape, PointIndices);
+
   template <typename T>
-  T&& operator()(vtkm::CellShapeTagWedge, T&& t) const
+  VTKM_EXEC T&& operator()(vtkm::CellShapeTagWedge, T&& t) const
   {
     return std::forward<T>(t);
   }
@@ -42,7 +43,9 @@ struct CopyReverseCellCount : public vtkm::worklet::WorkletVisitPointsWithCells
   typedef _2 ExecutionSignature(CellShape, CellCount, CellIndices);
 
   template <typename T>
-  vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape, vtkm::IdComponent count, T&& t) const
+  VTKM_EXEC vtkm::Int32 operator()(vtkm::CellShapeTagVertex shape,
+                                   vtkm::IdComponent count,
+                                   T&& t) const
   {
     if (shape.Id == vtkm::CELL_SHAPE_VERTEX)
     {

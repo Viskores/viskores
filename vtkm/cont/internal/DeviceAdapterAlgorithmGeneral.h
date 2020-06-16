@@ -824,6 +824,22 @@ public:
     return DerivedAlgorithm::ScanInclusive(input, output, vtkm::Add());
   }
 
+private:
+  template <typename T1, typename S1, typename T2, typename S2>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T1, S1>&,
+                                            const vtkm::cont::ArrayHandle<T2, S2>&)
+  {
+    return false;
+  }
+
+  template <typename T, typename S>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T, S>& a1,
+                                            const vtkm::cont::ArrayHandle<T, S>& a2)
+  {
+    return a1 == a2;
+  }
+
+public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
@@ -831,7 +847,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    DerivedAlgorithm::Copy(input, output);
+    if (!ArrayHandlesAreSame(input, output))
+    {
+      DerivedAlgorithm::Copy(input, output);
+    }
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)

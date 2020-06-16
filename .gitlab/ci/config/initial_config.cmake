@@ -20,7 +20,6 @@ endif ()
 string(REPLACE "+" ";" options "$ENV{VTKM_SETTINGS}")
 
 foreach(option IN LISTS options)
-
   if(static STREQUAL option)
     set(BUILD_SHARED_LIBS "OFF" CACHE STRING "")
 
@@ -70,6 +69,9 @@ foreach(option IN LISTS options)
 
   elseif(cuda STREQUAL option)
     set(VTKm_ENABLE_CUDA "ON" CACHE STRING "")
+
+  elseif(kokkos STREQUAL option)
+    set(VTKm_ENABLE_KOKKOS "ON" CACHE STRING "")
 
   elseif(maxwell STREQUAL option)
     set(VTKm_CUDA_Architecture "maxwell" CACHE STRING "")

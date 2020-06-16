@@ -64,18 +64,21 @@ public:
     , Valid(std::move(rhs.Valid))
   {
   }
+
   VTKM_CONT ArrayPortalCheck& operator=(const ArrayPortalCheck& src)
   {
     this->Superclass::operator=(src);
     this->Valid = src.Valid;
     return *this;
   }
+
   VTKM_CONT ArrayPortalCheck& operator=(ArrayPortalCheck&& rhs)
   {
     this->Superclass::operator=(std::move(static_cast<Superclass&&>(rhs)));
     this->Valid = std::move(rhs.Valid);
     return *this;
   }
+
   VTKM_CONT ~ArrayPortalCheck() {}
 
   // The Get and Set methods are marked for execution environment even though they won't
@@ -85,7 +88,7 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsGets<PT>::value, int>::type = 0>
-  VTKM_EXEC_CONT typename Superclass::ValueType Get(vtkm::Id index) const
+  VTKM_CONT typename Superclass::ValueType Get(vtkm::Id index) const
   {
     if (!(*this->Valid))
     {
@@ -123,7 +126,7 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsSets<PT>::value, int>::type = 0>
-  VTKM_EXEC_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
+  VTKM_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
   {
     if (!(*this->Valid))
     {

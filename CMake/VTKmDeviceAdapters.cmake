@@ -251,6 +251,76 @@ if(VTKm_ENABLE_CUDA)
   endif()
 endif()
 
+#-----------------------------------------------------------------------------
+# Kokkos with its Cuda backend enabled, expects everything to be compiled using its
+# `nvcc-wrapper` as the CXX compiler. As the name suggests, nvcc-wrapper is a wrapper around
+# Cuda's nvcc compiler. Kokkos targets have all of the flags meant for the nvcc compiler set as the
+# CXX compiler flags. This function changes all such flags to be CUDA flags so that we can use
+# CMake and vtk-m's existing infrastructure to compile for Cuda and Host separately. Without this
+# all of the files will be compiled using nvcc which can be very time consuming. It can also have
+# issues with calling host functions from device functions when compiling code for other backends.
+function(kokkos_fix_compile_options)
+  set(targets Kokkos::kokkos)
+  set(seen_targets)
+  set(cuda_arch)
+
+  while(targets)
+    list(GET targets 0 target_name)
+    list(REMOVE_AT targets 0)
+
+    get_target_property(link_libraries ${target_name} INTERFACE_LINK_LIBRARIES)
+    foreach(lib_target IN LISTS link_libraries)
+      if (TARGET ${lib_target})
+        if (lib_target IN_LIST seen_targets)
+          continue()
+        endif()
+
+        list(APPEND seen_targets ${lib_target})
+        list(APPEND targets ${lib_target})
+        get_target_property(compile_options ${lib_target} INTERFACE_COMPILE_OPTIONS)
+        if (compile_options)
+          string(REGEX MATCH "[$]<[$]<COMPILE_LANGUAGE:CXX>:-Xcompiler;.*>" cxx_compile_options "${compile_options}")
+          string(REGEX MATCH "-arch=sm_[0-9][0-9]" cuda_arch "${compile_options}")
+          string(REPLACE "-Xcompiler;" "" cxx_compile_options "${cxx_compile_options}")
+          list(TRANSFORM compile_options REPLACE "COMPILE_LANGUAGE:CXX" "COMPILE_LANGUAGE:CUDA")
+          list(APPEND compile_options "${cxx_compile_options}")
+          set_property(TARGET ${lib_target} PROPERTY INTERFACE_COMPILE_OPTIONS ${compile_options})
+        endif()
+
+        set_property(TARGET ${lib_target} PROPERTY INTERFACE_LINK_OPTIONS "")
+      endif()
+    endforeach()
+  endwhile()
+
+  set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<DEVICE_LINK:--relocatable-device-code=true;${cuda_arch}>")
+  if (OPENMP IN_LIST Kokkos_DEVICES)
+    set_property(TARGET vtkm::kokkos PROPERTY INTERFACE_LINK_OPTIONS "$<HOST_LINK:-fopenmp>")
+  endif()
+endfunction()
+
+if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
+  cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+  find_package(Kokkos REQUIRED)
+  if (CUDA IN_LIST Kokkos_DEVICES)
+    cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+    enable_language(CUDA)
+
+    string(REGEX MATCH "[0-9][0-9]$" cuda_arch ${Kokkos_ARCH})
+    set(CMAKE_CUDA_ARCHITECTURES ${cuda_arch})
+    message(STATUS "Detected Cuda arch from Kokkos: ${cuda_arch}")
+
+    add_library(vtkm::kokkos_cuda INTERFACE IMPORTED GLOBAL)
+  endif()
+
+  add_library(vtkm::kokkos INTERFACE IMPORTED GLOBAL)
+  set_target_properties(vtkm::kokkos PROPERTIES INTERFACE_LINK_LIBRARIES "Kokkos::kokkos")
+
+  if (TARGET vtkm::kokkos_cuda)
+    kokkos_fix_compile_options()
+  endif()
+endif()
+
 if(NOT TARGET Threads::Threads)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)

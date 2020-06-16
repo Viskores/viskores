@@ -14,6 +14,10 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/OptionParser.h>
 
+#if defined(VTKM_ENABLE_KOKKOS)
+#include <vtkm/cont/kokkos/internal/Initialize.h>
+#endif
+
 #include <memory>
 #include <sstream>
 
@@ -181,6 +185,10 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   {
     vtkm::cont::InitLogging(argc, argv);
   }
+
+#ifdef VTKM_ENABLE_KOKKOS
+  vtkm::cont::kokkos::internal::Initialize(argc, argv);
+#endif
 
   { // Parse VTKm options
     std::vector<opt::Descriptor> usage;

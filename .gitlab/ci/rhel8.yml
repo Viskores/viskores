@@ -60,3 +60,40 @@ test:rhel8_vtk_types:
     - build:rhel8_vtk_types
   needs:
     - build:rhel8_vtk_types
+
+# Build on rhel8 with kokkos and test on rhel8
+# Uses gcc 8.2.1
+build:rhel8_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+    - large-memory
+  extends:
+    - .rhel8_kokkos
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Unix Makefiles"
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "kokkos+static+64bit_floats"
+
+test:rhel8_kokkos:
+  tags:
+    - test
+    - cuda-rt
+    - turing
+    - vtkm
+    - docker
+    - linux
+  extends:
+    - .rhel8_kokkos
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:rhel8_kokkos
+  needs:
+    - build:rhel8_kokkos
+  variables:
+    CUDA_LAUNCH_BLOCKING: "1"

@@ -665,22 +665,18 @@ private:
 
 } // namespace vtkm
 
-#ifdef VTKM_CUDA
-
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
 // to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the implicit functions here.
-
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
-
+#ifdef VTKM_CUDA
+#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Box);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Cylinder);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Frustum);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Plane);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::Sphere);
-
 #endif
 
 #endif //vtk_m_ImplicitFunction_h
