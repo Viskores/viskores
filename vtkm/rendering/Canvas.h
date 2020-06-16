@@ -45,13 +45,15 @@ public:
   virtual vtkm::rendering::Canvas* NewCopy() const;
 
   VTKM_DEPRECATED(1.6, "Initialize() does nothing.")
-  virtual void Initialize();
+  virtual void Initialize() {}
 
-  virtual void Activate();
+  VTKM_DEPRECATED(1.6, "Activate() does nothing.")
+  virtual void Activate() {}
 
   virtual void Clear();
 
-  virtual void Finish();
+  VTKM_DEPRECATED(1.6, "Finish() does nothing.")
+  virtual void Finish() {}
 
   virtual void BlendBackground();
 
