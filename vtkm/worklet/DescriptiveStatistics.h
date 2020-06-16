@@ -27,27 +27,27 @@ public:
   {
     VTKM_EXEC_CONT
     StatState()
-      : n(0)
+      : n_(0)
       , min_(std::numeric_limits<T>::max())
       , max_(std::numeric_limits<T>::lowest())
-      , sum(0)
+      , sum_(0)
       , mean_(0)
-      , M2(0)
-      , M3(0)
-      , M4(0)
+      , M2_(0)
+      , M3_(0)
+      , M4_(0)
     {
     }
 
     VTKM_EXEC_CONT
     StatState(T value)
-      : n(1)
+      : n_(1)
       , min_(value)
       , max_(value)
-      , sum(value)
+      , sum_(value)
       , mean_(value)
-      , M2(0)
-      , M3(0)
-      , M4(0)
+      , M2_(0)
+      , M3_(0)
+      , M4_(0)
     {
     }
 
@@ -57,14 +57,14 @@ public:
       const StatState<T>& x = *this;
       StatState result;
 
-      result.n = x.n + y.n;
+      result.n_ = x.n_ + y.n_;
 
       result.min_ = vtkm::Min(x.min_, y.min_);
       result.max_ = vtkm::Max(x.max_, y.max_);
 
       // TODO: consider implementing compensated sum
       // https://en.wikipedia.org/wiki/Kahan_summation_algorithm
-      result.sum = x.sum + y.sum;
+      result.sum_ = x.sum_ + y.sum_;
 
       // It is tempting to try to deviate from the literature and calculate
       // mean in each "reduction" from sum and n. This saves one multiplication.
@@ -72,32 +72,33 @@ public:
       // algorithm (mean = sum of a bunch of numbers / N) that actually
       // accumulates more error and causes problem when calculating M2
       // (and thus variance).
-      // TODO: Verify that FeildStatistics exhibits the same problem since
+      // TODO: Verify that FieldStatistics exhibits the same problem since
       // it is using a "parallel" version of the naive algorithm as well.
+      // TODO: or better, just deprecate FieldStatistics.
       T delta = y.mean_ - x.mean_;
-      result.mean_ = x.mean_ + delta * y.n / result.n;
+      result.mean_ = x.mean_ + delta * y.n_ / result.n_;
 
       T delta2 = delta * delta;
-      result.M2 = x.M2 + y.M2 + delta2 * x.n * y.n / result.n;
+      result.M2_ = x.M2_ + y.M2_ + delta2 * x.n_ * y.n_ / result.n_;
 
       T delta3 = delta * delta2;
-      T n2 = result.n * result.n;
-      result.M3 = x.M3 + y.M3;
-      result.M3 += delta3 * x.n * y.n * (x.n - y.n) / n2;
-      result.M3 += T(3.0) * delta * (x.n * y.M2 - y.n * x.M2) / result.n;
+      T n2 = result.n_ * result.n_;
+      result.M3_ = x.M3_ + y.M3_;
+      result.M3_ += delta3 * x.n_ * y.n_ * (x.n_ - y.n_) / n2;
+      result.M3_ += T(3.0) * delta * (x.n_ * y.M2_ - y.n_ * x.M2_) / result.n_;
 
       T delta4 = delta2 * delta2;
-      T n3 = result.n * n2;
-      result.M4 = x.M4 + y.M4;
-      result.M4 += delta4 * x.n * y.n * (x.n * x.n - x.n * y.n + y.n * y.n) / n3;
-      result.M4 += T(6.0) * delta2 * (x.n * x.n * y.M2 + y.n * y.n * x.M2) / n2;
-      result.M4 += T(4.0) * delta * (x.n * y.M3 - y.n * x.M3) / result.n;
+      T n3 = result.n_ * n2;
+      result.M4_ = x.M4_ + y.M4_;
+      result.M4_ += delta4 * x.n_ * y.n_ * (x.n_ * x.n_ - x.n_ * y.n_ + y.n_ * y.n_) / n3;
+      result.M4_ += T(6.0) * delta2 * (x.n_ * x.n_ * y.M2_ + y.n_ * y.n_ * x.M2_) / n2;
+      result.M4_ += T(4.0) * delta * (x.n_ * y.M3_ - y.n_ * x.M3_) / result.n_;
 
       return result;
     }
 
     VTKM_CONT
-    T N() const { return this->n; }
+    T N() const { return this->n_; }
 
     VTKM_CONT
     T Min() const { return this->min_; }
@@ -106,7 +107,7 @@ public:
     T Max() const { return this->max_; }
 
     VTKM_CONT
-    T Sum() const { return this->sum; }
+    T Sum() const { return this->sum_; }
 
     VTKM_CONT
     T Mean() const { return this->mean_; }
@@ -120,47 +121,47 @@ public:
     VTKM_CONT
     T SampleVariance() const
     {
-      VTKM_ASSERT(n != 1);
-      return this->M2 / (this->n - 1);
+      VTKM_ASSERT(n_ != 1);
+      return this->M2_ / (this->n_ - 1);
     }
 
     VTKM_CONT
-    T PopulationVariance() const { return this->M2 / this->n; }
+    T PopulationVariance() const { return this->M2_ / this->n_; }
 
     VTKM_CONT
     T Skewness() const
     {
-      if (this->M2 == 0)
+      if (this->M2_ == 0)
         // Shamelessly swiped from Boost Math
         // The limit is technically undefined, but the interpretation here is clear:
         // A constant dataset has no skewness.
-        return T{};
+        return T(0);
       else
-        return vtkm::Sqrt(this->n) * this->M3 / vtkm::Pow(this->M2, T{ 1.5 });
+        return vtkm::Sqrt(this->n_) * this->M3_ / vtkm::Pow(this->M2_, T{ 1.5 });
     }
 
     VTKM_CONT
     T Kurtosis() const
     {
-      if (this->M2 == 0)
+      if (this->M2_ == 0)
         // Shamelessly swiped from Boost Math
         // The limit is technically undefined, but the interpretation here is clear:
         // A constant dataset has no kurtosis.
-        return T{};
+        return T(0);
       else
-        return this->n * this->M4 / (this->M2 * this->M2);
+        return this->n_ * this->M4_ / (this->M2_ * this->M2_);
     }
 
   private:
     // GCC4.8 is not happy about initializing data members here.
-    T n;
+    T n_;
     T min_;
     T max_;
-    T sum;
+    T sum_;
     T mean_;
-    T M2;
-    T M3;
-    T M4;
+    T M2_;
+    T M3_;
+    T M4_;
   }; // StatState
 
   struct MakeStatState
@@ -216,7 +217,6 @@ public:
     vtkm::cont::ArrayHandle<StatState<ValueType>> results;
     Algorithm::ReduceByKey(keys_copy, states, keys_out, results, vtkm::Add{});
 
-    // FIXME: we didn't break any ArrayHandle lifetime limitation, right?
     return vtkm::cont::make_ArrayHandleZip(keys_out, results);
   }
 }; // DescriptiveStatistics

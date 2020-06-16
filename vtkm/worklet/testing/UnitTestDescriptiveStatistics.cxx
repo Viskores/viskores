@@ -76,8 +76,8 @@ void TestStandardNormal()
   VTKM_TEST_ASSERT(result.SampleVariance() >= 0);
   // SampleStddev should be very close to 1.0, Skewness ~= 0 and Kurtosis ~= 3.0
   VTKM_TEST_ASSERT(test_equal(result.SampleStddev(), 1.0f, 1.0f / 100));
-  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0.0f, 1.0 / 100));
-  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 3.0f, 1.0 / 100));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0.0f, 1.0f / 100));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 3.0f, 1.0f / 100));
 }
 
 void TestCatastrophicCancellation()
@@ -205,7 +205,7 @@ void TestVarianceProperty()
   auto var_px = vtkm::worklet::DescriptiveStatistics::Run(px_array).SampleVariance();
 
   vtkm::Float32 condition_number_v = 0;
-  rp = array_v.ReadPortal();
+  rp = px_array.ReadPortal();
   for (vtkm::Id i = 0; i < rp.GetNumberOfValues(); ++i)
   {
     condition_number_v += vtkm::Abs(rp.Get(i) - mean_v) * vtkm::Abs(rp.Get(i));
