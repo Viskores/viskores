@@ -45,7 +45,8 @@ void TestIntegerSequence()
   // We only have 23 bits for FloatInt in Float32. This limits N to 11 bits.
   constexpr vtkm::Float32 N = 1000;
 
-  auto integers = vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, N);
+  auto integers =
+    vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, static_cast<vtkm::Id>(N));
   auto result = vtkm::worklet::DescriptiveStatistics::Run(integers);
 
   VTKM_TEST_ASSERT(result.N() == N);
@@ -220,7 +221,8 @@ void TestMomentsByKey()
 {
   std::vector<vtkm::UInt32> keys{ 0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 };
 
-  auto values_array = vtkm::cont::make_ArrayHandleConstant(1.0f, keys.size());
+  auto values_array =
+    vtkm::cont::make_ArrayHandleConstant(1.0f, static_cast<vtkm::Id>(keys.size()));
   auto keys_array = vtkm::cont::make_ArrayHandle(keys);
 
   auto results = vtkm::worklet::DescriptiveStatistics::Run(keys_array, values_array);
