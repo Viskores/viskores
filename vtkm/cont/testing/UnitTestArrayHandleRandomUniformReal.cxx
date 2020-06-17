@@ -16,9 +16,10 @@ void TestRangeBounds()
 {
   // the random numbers should fall into the range of [0, 1).
   auto array = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(1000000);
+  auto portal = array.ReadPortal();
   for (vtkm::Id i = 0; i < array.GetNumberOfValues(); ++i)
   {
-    auto value = array.ReadPortal().Get(i);
+    auto value = portal.Get(i);
     VTKM_TEST_ASSERT(0.0 <= value && value < 1.0);
   }
 }
