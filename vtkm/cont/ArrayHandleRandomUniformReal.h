@@ -40,13 +40,13 @@ struct CanonicalFunctor<vtkm::Float64>
 template <>
 struct CanonicalFunctor<vtkm::Float32>
 {
-  // We take 24 bits (number of bits in mantissa in a double) from the 32 bits random source
+  // We take 24 bits (number of bits in mantissa in a double) from the 64 bits random source
   // and divide it by (1 << 24).
   static constexpr vtkm::Float32 DIVISOR = static_cast<vtkm::Float32>(vtkm::UInt32{ 1 } << 24);
   static constexpr vtkm::UInt32 MASK = (vtkm::UInt32{ 1 } << 24) - vtkm::UInt32{ 1 };
 
   VTKM_EXEC_CONT
-  vtkm::Float32 operator()(vtkm::UInt32 bits) const { return (bits & MASK) / DIVISOR; }
+  vtkm::Float32 operator()(vtkm::UInt64 bits) const { return (bits & MASK) / DIVISOR; }
 };
 } // detail
 
