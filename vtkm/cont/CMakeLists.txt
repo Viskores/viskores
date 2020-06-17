@@ -32,6 +32,7 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
   ArrayHandleSOA.h
