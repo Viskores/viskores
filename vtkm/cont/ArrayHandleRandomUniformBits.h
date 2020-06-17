@@ -47,7 +47,7 @@ struct PhiloxFunctor
 private:
   // This is logically a const, however, this make the Functor non-copyable which is required
   // by VTKm infrastructure (e.g. ArrayHandleTransform.)
-  SeedType Seed{};
+  SeedType Seed;
 }; // class PhiloxFunctor
 } // namespace detail
 
