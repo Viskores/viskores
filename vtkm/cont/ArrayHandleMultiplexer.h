@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleMultiplexer_h
 #define vtk_m_cont_ArrayHandleMultiplexer_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Variant.h>
@@ -50,13 +51,35 @@ struct ArrayPortalMultiplexerGetFunctor
 
 struct ArrayPortalMultiplexerSetFunctor
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VTKM_EXEC_CONT void operator()(const PortalType& portal,
                                  vtkm::Id index,
                                  const typename PortalType::ValueType& value) const noexcept
   {
+    this->DoSet(
+      portal, index, value, typename vtkm::internal::PortalSupportsSets<PortalType>::type{});
+  }
+
+private:
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename PortalType>
+  VTKM_EXEC_CONT void DoSet(const PortalType& portal,
+                            vtkm::Id index,
+                            const typename PortalType::ValueType& value,
+                            std::true_type) const noexcept
+  {
     portal.Set(index, value);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename PortalType>
+  VTKM_EXEC_CONT void DoSet(const PortalType&,
+                            vtkm::Id,
+                            const typename PortalType::ValueType&,
+                            std::false_type) const noexcept
+  {
+    // This is an error but whatever.
+    VTKM_ASSERT(false && "Calling Set on a portal that does not support it.");
   }
 };
 

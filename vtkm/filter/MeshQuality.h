@@ -23,7 +23,6 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/filter/FilterField.h>
-#include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/worklet/MeshQuality.h>
 
 namespace vtkm

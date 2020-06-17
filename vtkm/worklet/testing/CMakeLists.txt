@@ -24,6 +24,7 @@ set(unit_tests
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx
+  UnitTestDescriptiveStatistics.cxx
   UnitTestDotProduct.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx

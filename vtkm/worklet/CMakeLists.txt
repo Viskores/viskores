@@ -68,6 +68,7 @@ set(headers
   ScatterUniform.h
   SplitSharpEdges.h
   StableSortIndices.h
+  DescriptiveStatistics.h
   StreamLineUniformGrid.h
   StreamSurface.h
   SurfaceNormals.h
