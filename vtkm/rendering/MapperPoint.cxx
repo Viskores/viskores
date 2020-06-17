@@ -216,16 +216,6 @@ void MapperPoint::SetCompositeBackground(bool on)
   this->Internals->CompositeBackground = on;
 }
 
-void MapperPoint::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperPoint::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperPoint::NewCopy() const
 {
   return new vtkm::rendering::MapperPoint(*this);

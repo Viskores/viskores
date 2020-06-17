@@ -231,16 +231,6 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperWireframer::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,

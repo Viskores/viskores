@@ -151,16 +151,6 @@ void MapperRayTracer::SetShadingOn(bool on)
   this->Internals->Shade = on;
 }
 
-void MapperRayTracer::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperRayTracer::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperRayTracer::NewCopy() const
 {
   return new vtkm::rendering::MapperRayTracer(*this);
