@@ -19,13 +19,13 @@ void TestSingle()
   auto single_array = vtkm::cont::make_ArrayHandle(single);
   auto result = vtkm::worklet::DescriptiveStatistics::Run(single_array);
 
-  VTKM_TEST_ASSERT(result.N() == 1);
-  VTKM_TEST_ASSERT(result.Mean() == 42);
-  VTKM_TEST_ASSERT(result.PopulationVariance() == 0);
+  VTKM_TEST_ASSERT(test_equal(result.N(), 1));
+  VTKM_TEST_ASSERT(test_equal(result.Mean(), 42));
+  VTKM_TEST_ASSERT(test_equal(result.PopulationVariance(), 0));
 
   // A single number does not have skewness nor kurtosis
-  VTKM_TEST_ASSERT(result.Skewness() == 0);
-  VTKM_TEST_ASSERT(result.Kurtosis() == 0);
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 0));
 }
 
 void TestConstant()
@@ -33,11 +33,11 @@ void TestConstant()
   auto constants = vtkm::cont::make_ArrayHandleConstant(1234.f, 10000);
   auto result = vtkm::worklet::DescriptiveStatistics::Run(constants);
 
-  VTKM_TEST_ASSERT(result.N() == 10000);
-  VTKM_TEST_ASSERT(result.Sum() == 12340000);
-  VTKM_TEST_ASSERT(result.PopulationVariance() == 0);
-  VTKM_TEST_ASSERT(result.Skewness() == 0);
-  VTKM_TEST_ASSERT(result.Kurtosis() == 0);
+  VTKM_TEST_ASSERT(test_equal(result.N(), 10000));
+  VTKM_TEST_ASSERT(test_equal(result.Sum(), 12340000));
+  VTKM_TEST_ASSERT(test_equal(result.PopulationVariance(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Skewness(), 0));
+  VTKM_TEST_ASSERT(test_equal(result.Kurtosis(), 0));
 }
 
 void TestIntegerSequence()
@@ -49,8 +49,8 @@ void TestIntegerSequence()
     vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, static_cast<vtkm::Id>(N));
   auto result = vtkm::worklet::DescriptiveStatistics::Run(integers);
 
-  VTKM_TEST_ASSERT(result.N() == N);
-  VTKM_TEST_ASSERT(result.Sum() == N * (N - 1) / 2);
+  VTKM_TEST_ASSERT(test_equal(result.N(), N));
+  VTKM_TEST_ASSERT(test_equal(result.Sum(), N * (N - 1) / 2));
   VTKM_TEST_ASSERT(test_equal(result.Mean(), (N - 1) / 2));
 
   // Expected values are from Numpy/SciPy
@@ -88,10 +88,10 @@ void TestCatastrophicCancellation()
   auto arrayOK = vtkm::cont::make_ArrayHandle(okay);
   auto resultOK = vtkm::worklet::DescriptiveStatistics::Run(arrayOK);
 
-  VTKM_TEST_ASSERT(resultOK.N() == 4);
-  VTKM_TEST_ASSERT(resultOK.Sum() == 4.0e8 + 40);
-  VTKM_TEST_ASSERT(resultOK.Min() == 1.0e8 + 4);
-  VTKM_TEST_ASSERT(resultOK.Max() == 1.0e8 + 16);
+  VTKM_TEST_ASSERT(test_equal(resultOK.N(), 4));
+  VTKM_TEST_ASSERT(test_equal(resultOK.Sum(), 4.0e8 + 40));
+  VTKM_TEST_ASSERT(test_equal(resultOK.Min(), 1.0e8 + 4));
+  VTKM_TEST_ASSERT(test_equal(resultOK.Max(), 1.0e8 + 16));
   VTKM_TEST_ASSERT(test_equal(resultOK.SampleVariance(), 30));
   VTKM_TEST_ASSERT(test_equal(resultOK.PopulationVariance(), 22.5));
 
@@ -101,10 +101,10 @@ void TestCatastrophicCancellation()
   auto arrayEvil = vtkm::cont::make_ArrayHandle(evil);
   auto resultEvil = vtkm::worklet::DescriptiveStatistics::Run(arrayEvil);
 
-  VTKM_TEST_ASSERT(resultEvil.N() == 4);
-  VTKM_TEST_ASSERT(resultEvil.Sum() == 4.0e9 + 40);
-  VTKM_TEST_ASSERT(resultEvil.Min() == 1.0e9 + 4);
-  VTKM_TEST_ASSERT(resultEvil.Max() == 1.0e9 + 16);
+  VTKM_TEST_ASSERT(test_equal(resultEvil.N(), 4));
+  VTKM_TEST_ASSERT(test_equal(resultEvil.Sum(), 4.0e9 + 40));
+  VTKM_TEST_ASSERT(test_equal(resultEvil.Min(), 1.0e9 + 4));
+  VTKM_TEST_ASSERT(test_equal(resultEvil.Max(), 1.0e9 + 16));
   VTKM_TEST_ASSERT(test_equal(resultEvil.SampleVariance(), 30));
   VTKM_TEST_ASSERT(test_equal(resultEvil.PopulationVariance(), 22.5));
 }
@@ -236,9 +236,9 @@ void TestMomentsByKey()
   for (vtkm::Id i = 0; i < results.GetNumberOfValues(); ++i)
   {
     auto result = resultsPortal.Get(i);
-    VTKM_TEST_ASSERT(result.first == i);
-    VTKM_TEST_ASSERT(result.second.N() == expected_ns[i]);
-    VTKM_TEST_ASSERT(result.second.PopulationVariance() == 0);
+    VTKM_TEST_ASSERT(test_equal(result.first, i));
+    VTKM_TEST_ASSERT(test_equal(result.second.N(), expected_ns[static_cast<std::size_t>(i)]));
+    VTKM_TEST_ASSERT(test_equal(result.second.PopulationVariance(), 0));
   }
 }
 
