@@ -97,6 +97,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h

@@ -100,34 +100,6 @@ public:
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
 };
-
-namespace ParticleWorklet
-{
-
-struct CopyPositionWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn inParticle, FieldOut outPos);
-
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle, vtkm::Vec3f& outPos) const
-  {
-    outPos = inParticle.Pos;
-  }
-};
-
-
-struct CopyPositionIDWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn inParticle, FieldOut outPos, FieldOut outID);
-
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle,
-                            vtkm::Vec3f& outPos,
-                            vtkm::Id& outID) const
-  {
-    outPos = inParticle.Pos;
-    outID = inParticle.ID;
-  }
-};
-}
 }
 
 #endif // vtk_m_Particle_h

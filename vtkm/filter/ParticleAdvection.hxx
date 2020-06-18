@@ -16,6 +16,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -75,11 +76,11 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleAdvection::DoExecute(
   res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
   vtkm::cont::DataSet outData;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> outPos;
 
   //Copy particles to coordinate array
-  vtkm::ParticleWorklet::CopyPositionWorklet copyWorklet;
-  this->Invoke(copyWorklet, res.Particles, outPos);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> outPos;
+  vtkm::cont::ParticleArrayCopy(res.Particles, outPos);
+
   vtkm::cont::CoordinateSystem outCoords("coordinates", outPos);
   outData.AddCoordinateSystem(outCoords);
 
