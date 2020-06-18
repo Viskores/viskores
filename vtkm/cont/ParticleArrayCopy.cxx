@@ -54,8 +54,9 @@ struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
 
 } // namespace detail
 
-VTKM_CONT void ParticleArrayCopy(const vtkm::cont::ArrayHandle<vtkm::Particle>& inP,
-                                 vtkm::cont::ArrayHandle<vtkm::Vec3f>& outPos)
+VTKM_CONT void ParticleArrayCopy(
+  const vtkm::cont::ArrayHandle<vtkm::Particle, vtkm::cont::StorageTagBasic>& inP,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos)
 {
   vtkm::cont::Invoker invoke;
   detail::CopyParticlePositionWorklet worklet;
@@ -70,12 +71,13 @@ VTKM_CONT void ParticleArrayCopy(const vtkm::cont::ArrayHandle<vtkm::Particle>& 
 /// \c ArrayHandle.
 ///
 
-VTKM_CONT void ParticleArrayCopy(const vtkm::cont::ArrayHandle<vtkm::Particle>& inP,
-                                 vtkm::cont::ArrayHandle<vtkm::Vec3f>& outPos,
-                                 vtkm::cont::ArrayHandle<vtkm::Id>& outID,
-                                 vtkm::cont::ArrayHandle<vtkm::Id>& outSteps,
-                                 vtkm::cont::ArrayHandle<vtkm::ParticleStatus>& outStatus,
-                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>& outTime)
+VTKM_CONT void ParticleArrayCopy(
+  const vtkm::cont::ArrayHandle<vtkm::Particle, vtkm::cont::StorageTagBasic>& inP,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
+  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outID,
+  vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>& outSteps,
+  vtkm::cont::ArrayHandle<vtkm::ParticleStatus, vtkm::cont::StorageTagBasic>& outStatus,
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>& outTime)
 {
   vtkm::cont::Invoker invoke;
   detail::CopyParticleAllWorklet worklet;
