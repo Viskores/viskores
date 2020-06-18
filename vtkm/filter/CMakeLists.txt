@@ -121,6 +121,7 @@ set(header_template_sources
   MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  ParticleAdvection.hxx
   Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx
