@@ -149,6 +149,7 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
+  ParticleArrayCopy.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   Token.cxx

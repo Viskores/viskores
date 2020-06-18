@@ -12,50 +12,11 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Invoker.h>
 
 namespace vtkm
 {
 namespace cont
 {
-
-namespace detail
-{
-struct CopyParticlePositionWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn inParticle, FieldOut outPos);
-
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle, vtkm::Vec3f& outPos) const
-  {
-    outPos = inParticle.Pos;
-  }
-};
-
-struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn inParticle,
-                                FieldOut outPos,
-                                FieldOut outID,
-                                FieldOut outSteps,
-                                FieldOut outStatus,
-                                FieldOut outTime);
-
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle,
-                            vtkm::Vec3f& outPos,
-                            vtkm::Id& outID,
-                            vtkm::Id& outSteps,
-                            vtkm::ParticleStatus& outStatus,
-                            vtkm::FloatDefault& outTime) const
-  {
-    outPos = inParticle.Pos;
-    outID = inParticle.ID;
-    outSteps = inParticle.NumSteps;
-    outStatus = inParticle.Status;
-    outTime = inParticle.Time;
-  }
-};
-
-} // namespace detail
 
 /// \brief Copy fields in vtkm::Particle to standard types.
 ///
@@ -65,13 +26,7 @@ struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
 
 template <typename InStorage, typename OutStorage>
 VTKM_CONT void ParticleArrayCopy(const vtkm::cont::ArrayHandle<vtkm::Particle, InStorage>& inP,
-                                 vtkm::cont::ArrayHandle<vtkm::Vec3f, OutStorage>& outPos)
-{
-  vtkm::cont::Invoker invoke;
-  detail::CopyParticlePositionWorklet worklet;
-
-  invoke(worklet, inP, outPos);
-}
+                                 vtkm::cont::ArrayHandle<vtkm::Vec3f, OutStorage>& outPos);
 
 /// \brief Copy all fields in vtkm::Particle to standard types.
 ///
@@ -87,13 +42,7 @@ VTKM_CONT void ParticleArrayCopy(
   vtkm::cont::ArrayHandle<vtkm::Id, OutStorage>& outID,
   vtkm::cont::ArrayHandle<vtkm::Id, OutStorage>& outSteps,
   vtkm::cont::ArrayHandle<vtkm::ParticleStatus, OutStorage>& outStatus,
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault, OutStorage>& outTime)
-{
-  vtkm::cont::Invoker invoke;
-  detail::CopyParticleAllWorklet worklet;
-
-  invoke(worklet, inP, outPos, outID, outSteps, outStatus, outTime);
-}
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault, OutStorage>& outTime);
 }
 } // namespace vtkm::cont
 
