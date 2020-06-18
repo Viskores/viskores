@@ -11,12 +11,8 @@
 #define vtk_m_cont_ParticleArrayCopy_h
 
 #include <vtkm/Particle.h>
-//#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
-//#include <vtkm/cont/DeviceAdapterTag.h>
-//#include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Invoker.h>
-//#include <vtkm/cont/Logging.h>
 
 namespace vtkm
 {

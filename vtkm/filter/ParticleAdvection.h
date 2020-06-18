@@ -23,7 +23,7 @@ namespace filter
 /// \brief advect particles in a vector field.
 
 /// Takes as input a vector field and seed locations and generates the
-/// paths taken by the seeds through the vector field.
+/// end points for each seed through the vector field.
 class ParticleAdvection : public vtkm::filter::FilterDataSetWithField<ParticleAdvection>
 {
 public:
