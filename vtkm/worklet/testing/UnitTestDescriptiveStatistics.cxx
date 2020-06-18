@@ -45,7 +45,7 @@ void TestIntegerSequence()
   // We only have 23 bits for FloatInt in Float32. This limits N to 11 bits.
   constexpr vtkm::Float32 N = 1000;
 
-  auto integers = vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, N);
+  auto integers = vtkm::cont::ArrayHandleCounting<vtkm::Float32>(0.0f, 1.0f, vtkm::Id(N));
   auto result = vtkm::worklet::DescriptiveStatistics::Run(integers);
 
   VTKM_TEST_ASSERT(result.N() == N);
@@ -220,7 +220,7 @@ void TestMomentsByKey()
 {
   std::vector<vtkm::UInt32> keys{ 0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 };
 
-  auto values_array = vtkm::cont::make_ArrayHandleConstant(1.0f, keys.size());
+  auto values_array = vtkm::cont::make_ArrayHandleConstant(1.0f, vtkm::Id(keys.size()));
   auto keys_array = vtkm::cont::make_ArrayHandle(keys);
 
   auto results = vtkm::worklet::DescriptiveStatistics::Run(keys_array, values_array);
@@ -229,13 +229,14 @@ void TestMomentsByKey()
   std::vector<vtkm::UInt32> expected_ns{ 1, 1, 2, 3, 4 };
   std::vector<vtkm::Float32> expected_sums{ 1, 1, 2, 3, 4 };
   std::vector<vtkm::Float32> expected_means{ 1, 1, 1, 1, 1 };
+  using size_type = typename std::vector<vtkm::UInt32>::size_type;
 
   auto resultsPortal = results.ReadPortal();
   for (vtkm::Id i = 0; i < results.GetNumberOfValues(); ++i)
   {
     auto result = resultsPortal.Get(i);
-    VTKM_TEST_ASSERT(result.first == i);
-    VTKM_TEST_ASSERT(result.second.N() == expected_ns[i]);
+    VTKM_TEST_ASSERT(result.first == vtkm::UInt32(i));
+    VTKM_TEST_ASSERT(result.second.N() == expected_ns[size_type(i)]);
     VTKM_TEST_ASSERT(result.second.PopulationVariance() == 0);
   }
 }

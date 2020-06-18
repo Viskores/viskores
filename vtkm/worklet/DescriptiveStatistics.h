@@ -97,38 +97,38 @@ public:
       return result;
     }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T N() const { return this->n_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Min() const { return this->min_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Max() const { return this->max_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Sum() const { return this->sum_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Mean() const { return this->mean_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T SampleStddev() const { return vtkm::Sqrt(this->SampleVariance()); }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T PopulationStddev() const { return vtkm::Sqrt(this->PopulationVariance()); }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T SampleVariance() const
     {
       VTKM_ASSERT(n_ != 1);
       return this->M2_ / (this->n_ - 1);
     }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T PopulationVariance() const { return this->M2_ / this->n_; }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Skewness() const
     {
       if (this->M2_ == 0)
@@ -140,7 +140,7 @@ public:
         return vtkm::Sqrt(this->n_) * this->M3_ / vtkm::Pow(this->M2_, T{ 1.5 });
     }
 
-    VTKM_CONT
+    VTKM_EXEC_CONT
     T Kurtosis() const
     {
       if (this->M2_ == 0)
