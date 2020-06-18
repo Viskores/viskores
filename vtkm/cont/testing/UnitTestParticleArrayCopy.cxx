@@ -8,11 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <random>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/cont/testing/Testing.h>
 
 void TestParticleArrayCopy()
 {
+  std::random_device device;
   std::default_random_engine generator(static_cast<vtkm::UInt32>(277));
   vtkm::FloatDefault x0(-1), x1(1);
   std::uniform_real_distribution<vtkm::FloatDefault> dist(x0, x1);
