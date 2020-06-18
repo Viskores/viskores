@@ -40,10 +40,10 @@ public:
   virtual void SetActiveColorTable(const vtkm::cont::ColorTable& ct);
 
   VTKM_DEPRECATED(1.6, "StartScene() does nothing")
-  virtual void StartScene() = 0;
+  void StartScene() {}
 
   VTKM_DEPRECATED(1.6, "EndScene() does nothing")
-  virtual void EndScene() = 0;
+  void EndScene() {}
 
   virtual void SetCanvas(vtkm::rendering::Canvas* canvas) = 0;
   virtual vtkm::rendering::Canvas* GetCanvas() const = 0;
