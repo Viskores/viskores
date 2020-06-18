@@ -30,6 +30,176 @@ namespace vtkm
 {
 namespace cont
 {
+
+/// \brief VariantArrayHandle superclass holding common operations.
+///
+/// `VariantArrayHandleCommon` is a superclass to all `VariantArrayHandleBase`
+/// and `VariantArrayHandle` classes. It contains all operations that are
+/// independent of the type lists defined for these templated class or has
+/// versions of methods that allow you to specify type lists.
+///
+/// See the documentation of `VariantArrayHandleBase` for more information.
+///
+class VTKM_ALWAYS_EXPORT VariantArrayHandleCommon
+{
+  std::shared_ptr<vtkm::cont::internal::VariantArrayHandleContainerBase> ArrayContainer;
+
+public:
+  VTKM_CONT VariantArrayHandleCommon() = default;
+
+  template <typename T, typename Storage>
+  VTKM_CONT VariantArrayHandleCommon(const vtkm::cont::ArrayHandle<T, Storage>& array)
+    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(
+        vtkm::cont::ArrayHandleVirtual<T>{ array }))
+  {
+  }
+
+  template <typename T>
+  VTKM_CONT VariantArrayHandleCommon(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& array)
+    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(array))
+  {
+  }
+
+  /// Returns true if this array matches the array handle type passed in.
+  ///
+  template <typename ArrayHandleType>
+  VTKM_CONT bool IsType() const
+  {
+    return internal::variant::IsType<ArrayHandleType>(this->ArrayContainer.get());
+  }
+
+  /// Returns true if this array matches the ValueType type passed in.
+  ///
+  template <typename T>
+  VTKM_CONT bool IsValueType() const
+  {
+    return internal::variant::IsValueType<T>(this->ArrayContainer.get());
+  }
+
+  /// Returns this array cast to the given \c ArrayHandle type. Throws \c
+  /// ErrorBadType if the cast does not work. Use \c IsType
+  /// to check if the cast can happen.
+  ///
+  template <typename ArrayHandleType>
+  VTKM_CONT ArrayHandleType Cast() const
+  {
+    return internal::variant::Cast<ArrayHandleType>(this->ArrayContainer.get());
+  }
+
+  /// \brief Call a functor using the underlying array type.
+  ///
+  /// `CastAndCall` attempts to cast the held array to a specific value type,
+  /// and then calls the given functor with the cast array. You must specify
+  /// the `TypeList` and `StorageList` as template arguments. (Note that this
+  /// calling differs from that of the `CastAndCall` methods of subclasses.)
+  ///
+  template <typename TypeList, typename StorageList, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCall(Functor&& functor, Args&&... args) const;
+
+  /// Returns this array cast to a `ArrayHandleVirtual` of the given type.
+  /// This will perform type conversions as necessary, and will log warnings
+  /// if the conversion is lossy.
+  ///
+  /// This method internally uses `CastAndCall`. A custom storage tag list may
+  /// be specified in the second template parameter, which will be passed to
+  /// the CastAndCall. You can also specify a list of types to try as the optional
+  /// third template argument.
+  ///
+  template <typename T,
+            typename StorageList = VTKM_DEFAULT_STORAGE_LIST,
+            typename TypeList = vtkm::List<T>>
+  VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
+  {
+    VTKM_IS_LIST(StorageList);
+    VTKM_IS_LIST(TypeList);
+    vtkm::cont::internal::variant::ForceCastToVirtual caster;
+    vtkm::cont::ArrayHandleVirtual<T> output;
+    this->CastAndCall<TypeList, StorageList>(caster, output);
+    return output;
+  }
+
+  /// Returns this array cast to a `ArrayHandleMultiplexer` of the given type.
+  /// This will attempt to cast the internal array to each supported type of
+  /// the multiplexer. If none are supported, an invalid ArrayHandleMultiplexer
+  /// is returned.
+  ///
+  /// As a special case, if one of the arrays in the `ArrayHandleMultiplexer`'s
+  /// type list is an `ArrayHandleCast`, then the multiplexer will look for type
+  /// type of array being cast rather than an actual cast array.
+  ///
+  ///@{
+  template <typename... T>
+  VTKM_CONT void AsMultiplexer(vtkm::cont::ArrayHandleMultiplexer<T...>& result) const;
+
+  template <typename ArrayHandleMultiplexerType>
+  VTKM_CONT ArrayHandleMultiplexerType AsMultiplexer() const
+  {
+    ArrayHandleMultiplexerType result;
+    this->AsMultiplexer(result);
+    return result;
+  }
+  ///@}
+
+  /// Given a references to an ArrayHandle object, casts this array to the
+  /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
+  /// `ErrorBadType` if the cast does not work. Use `IsType` to check
+  /// if the cast can happen.
+  ///
+  /// Note that this is a shallow copy. The data are not copied and a change
+  /// in the data in one array will be reflected in the other.
+  ///
+  template <typename ArrayHandleType>
+  VTKM_CONT void CopyTo(ArrayHandleType& array) const
+  {
+    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+    array = this->Cast<ArrayHandleType>();
+  }
+
+  /// \brief Create a new array of the same type as this array.
+  ///
+  /// This method creates a new array that is the same type as this one and
+  /// returns a new variant array handle for it. This method is convenient when
+  /// creating output arrays that should be the same type as some input array.
+  ///
+  VTKM_CONT VariantArrayHandleCommon NewInstance() const
+  {
+    VariantArrayHandleCommon instance;
+    instance.ArrayContainer = this->ArrayContainer->NewInstance();
+    return instance;
+  }
+
+  /// Releases any resources being used in the execution environment (that are
+  /// not being shared by the control environment).
+  ///
+  void ReleaseResourcesExecution() { return this->ArrayContainer->ReleaseResourcesExecution(); }
+
+
+  /// Releases all resources in both the control and execution environments.
+  ///
+  void ReleaseResources() { return this->ArrayContainer->ReleaseResources(); }
+
+  /// \brief Get the number of components in each array value.
+  ///
+  /// This method will query the array type for the number of components in
+  /// each value of the array. The number of components is determined by
+  /// the \c VecTraits::NUM_COMPONENTS trait class.
+  ///
+  VTKM_CONT
+  vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->ArrayContainer->GetNumberOfComponents();
+  }
+
+  /// \brief Get the number of values in the array.
+  ///
+  VTKM_CONT
+  vtkm::Id GetNumberOfValues() const { return this->ArrayContainer->GetNumberOfValues(); }
+
+  VTKM_CONT
+  void PrintSummary(std::ostream& out) const { this->ArrayContainer->PrintSummary(out); }
+};
+
 /// \brief Holds an array handle without having to specify template parameters.
 ///
 /// \c VariantArrayHandle holds an \c ArrayHandle or \c ArrayHandleVirtual
@@ -61,10 +231,12 @@ namespace cont
 /// component types.
 ///
 template <typename TypeList>
-class VTKM_ALWAYS_EXPORT VariantArrayHandleBase
+class VTKM_ALWAYS_EXPORT VariantArrayHandleBase : public VariantArrayHandleCommon
 {
   VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
                          "Cannot use vtkm::ListUniversal with VariantArrayHandle.");
+
+  using Superclass = VariantArrayHandleCommon;
 
 public:
   VTKM_CONT
@@ -72,21 +244,12 @@ public:
 
   template <typename T, typename Storage>
   VTKM_CONT VariantArrayHandleBase(const vtkm::cont::ArrayHandle<T, Storage>& array)
-    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(
-        vtkm::cont::ArrayHandleVirtual<T>{ array }))
+    : Superclass(array)
   {
   }
 
-  template <typename T>
-  explicit VTKM_CONT VariantArrayHandleBase(
-    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>& array)
-    : ArrayContainer(std::make_shared<internal::VariantArrayHandleContainer<T>>(array))
-  {
-  }
-
-  template <typename OtherTypeList>
-  VTKM_CONT explicit VariantArrayHandleBase(const VariantArrayHandleBase<OtherTypeList>& src)
-    : ArrayContainer(internal::variant::GetContainer::Extract(src))
+  VTKM_CONT explicit VariantArrayHandleBase(const VariantArrayHandleCommon& src)
+    : Superclass(src)
   {
   }
 
@@ -104,32 +267,6 @@ public:
     default;
 
 
-  /// Returns true if this array matches the array handle type passed in.
-  ///
-  template <typename ArrayHandleType>
-  VTKM_CONT bool IsType() const
-  {
-    return internal::variant::IsType<ArrayHandleType>(this->ArrayContainer.get());
-  }
-
-  /// Returns true if this array matches the ValueType type passed in.
-  ///
-  template <typename T>
-  VTKM_CONT bool IsValueType() const
-  {
-    return internal::variant::IsValueType<T>(this->ArrayContainer.get());
-  }
-
-  /// Returns this array cast to the given \c ArrayHandle type. Throws \c
-  /// ErrorBadType if the cast does not work. Use \c IsType
-  /// to check if the cast can happen.
-  ///
-  template <typename ArrayHandleType>
-  VTKM_CONT ArrayHandleType Cast() const
-  {
-    return internal::variant::Cast<ArrayHandleType>(this->ArrayContainer.get());
-  }
-
   /// Returns this array cast to a \c ArrayHandleVirtual of the given type.
   /// This will perform type conversions as necessary, and will log warnings
   /// if the conversion is lossy.
@@ -138,51 +275,10 @@ public:
   /// be specified in the second template parameter, which will be passed to
   /// the CastAndCall.
   ///
-  template <typename T, typename StorageTagList = VTKM_DEFAULT_STORAGE_LIST>
+  template <typename T, typename StorageList = VTKM_DEFAULT_STORAGE_LIST>
   VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
-    VTKM_IS_LIST(StorageTagList);
-    vtkm::cont::internal::variant::ForceCastToVirtual caster;
-    vtkm::cont::ArrayHandleVirtual<T> output;
-    this->CastAndCall(StorageTagList{}, caster, output);
-    return output;
-  }
-
-  /// Returns this array cast to a \c ArrayHandleMultiplexer of the given type.
-  /// This will attempt to cast the internal array to each supported type of
-  /// the multiplexer. If none are supported, an invalid ArrayHandleMultiplexer
-  /// is returned.
-  ///
-  /// As a special case, if one of the arrays in the \c ArrayHandleMultiplexer's
-  /// type list is an \c ArrayHandleCast, then the multiplexer will look for type
-  /// type of array being cast rather than an actual cast array.
-  ///
-  ///@{
-  template <typename... T>
-  VTKM_CONT void AsMultiplexer(vtkm::cont::ArrayHandleMultiplexer<T...>& result) const;
-
-  template <typename ArrayHandleMultiplexerType>
-  VTKM_CONT ArrayHandleMultiplexerType AsMultiplexer() const
-  {
-    ArrayHandleMultiplexerType result;
-    this->AsMultiplexer(result);
-    return result;
-  }
-  ///@}
-
-  /// Given a references to an ArrayHandle object, casts this array to the
-  /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
-  /// \c ErrorBadType if the cast does not work. Use \c
-  /// ArrayHandleType to check if the cast can happen.
-  ///
-  /// Note that this is a shallow copy. The data are not copied and a change
-  /// in the data in one array will be reflected in the other.
-  ///
-  template <typename ArrayHandleType>
-  VTKM_CONT void CopyTo(ArrayHandleType& array) const
-  {
-    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    array = this->Cast<ArrayHandleType>();
+    return this->Superclass::AsVirtual<T, StorageList, TypeList>();
   }
 
   /// Changes the types to try casting to when resolving this variant array,
@@ -202,7 +298,7 @@ public:
   //@{
   /// \brief Call a functor using the underlying array type.
   ///
-  /// \c CastAndCall Attempts to cast the held array to a specific value type,
+  /// `CastAndCall` attempts to cast the held array to a specific value type,
   /// then call the given functor with the cast array. The types
   /// tried in the cast are those in the lists defined by the TypeList.
   /// By default \c VariantArrayHandle set this to \c VTKM_DEFAULT_TYPE_LIST.
@@ -245,59 +341,25 @@ public:
   /// returns a new variant array handle for it. This method is convenient when
   /// creating output arrays that should be the same type as some input array.
   ///
-  VTKM_CONT
-  VariantArrayHandleBase<TypeList> NewInstance() const
+  VTKM_CONT VariantArrayHandleBase<TypeList> NewInstance() const
   {
-    VariantArrayHandleBase<TypeList> instance;
-    instance.ArrayContainer = this->ArrayContainer->NewInstance();
-    return instance;
+    return VariantArrayHandleBase<TypeList>(this->Superclass::NewInstance());
   }
-
-  /// Releases any resources being used in the execution environment (that are
-  /// not being shared by the control environment).
-  ///
-  void ReleaseResourcesExecution() { return this->ArrayContainer->ReleaseResourcesExecution(); }
-
-
-  /// Releases all resources in both the control and execution environments.
-  ///
-  void ReleaseResources() { return this->ArrayContainer->ReleaseResources(); }
-
-  /// \brief Get the number of components in each array value.
-  ///
-  /// This method will query the array type for the number of components in
-  /// each value of the array. The number of components is determined by
-  /// the \c VecTraits::NUM_COMPONENTS trait class.
-  ///
-  VTKM_CONT
-  vtkm::IdComponent GetNumberOfComponents() const
-  {
-    return this->ArrayContainer->GetNumberOfComponents();
-  }
-
-  /// \brief Get the number of values in the array.
-  ///
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->ArrayContainer->GetNumberOfValues(); }
-
-  VTKM_CONT
-  void PrintSummary(std::ostream& out) const { this->ArrayContainer->PrintSummary(out); }
 
 private:
-  friend struct internal::variant::GetContainer;
-  std::shared_ptr<vtkm::cont::internal::VariantArrayHandleContainerBase> ArrayContainer;
-
   template <typename Functor, typename... Args>
   VTKM_CONT void CastAndCallImpl(std::false_type, Functor&& f, Args&&... args) const
   {
-    this->CastAndCallImpl(std::true_type(),
-                          VTKM_DEFAULT_STORAGE_LIST(),
-                          std::forward<Functor>(f),
-                          std::forward<Args>(args)...);
+    this->Superclass::CastAndCall<TypeList, VTKM_DEFAULT_STORAGE_LIST>(std::forward<Functor>(f),
+                                                                       std::forward<Args>(args)...);
   }
 
-  template <typename StorageTagList, typename Functor, typename... Args>
-  VTKM_CONT void CastAndCallImpl(std::true_type, StorageTagList, Functor&& f, Args&&...) const;
+  template <typename StorageList, typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallImpl(std::true_type, StorageList, Functor&& f, Args&&... args) const
+  {
+    this->Superclass::CastAndCall<TypeList, StorageList>(std::forward<Functor>(f),
+                                                         std::forward<Args>(args)...);
+  }
 };
 
 using VariantArrayHandle = vtkm::cont::VariantArrayHandleBase<VTKM_DEFAULT_TYPE_LIST>;
@@ -395,7 +457,7 @@ struct IsUndefinedStorage
 {
 };
 template <typename T, typename U>
-struct IsUndefinedStorage<vtkm::List<T, U>> : vtkm::cont::internal::IsInValidArrayHandle<T, U>
+struct IsUndefinedStorage<vtkm::List<T, U>> : vtkm::cont::internal::IsInvalidArrayHandle<T, U>
 {
 };
 
@@ -408,12 +470,8 @@ using ListDynamicTypes =
 
 
 
-template <typename TypeList>
-template <typename StorageTagList, typename Functor, typename... Args>
-VTKM_CONT void VariantArrayHandleBase<TypeList>::CastAndCallImpl(std::true_type,
-                                                                 StorageTagList,
-                                                                 Functor&& f,
-                                                                 Args&&... args) const
+template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
+VTKM_CONT void VariantArrayHandleCommon::CastAndCall(Functor&& f, Args&&... args) const
 {
   using crossProduct = detail::ListDynamicTypes<TypeList, StorageTagList>;
 
@@ -448,9 +506,9 @@ namespace detail
 
 struct VariantArrayHandleTryMultiplexer
 {
-  template <typename T, typename Storage, typename... TypeList, typename... ArrayTypes>
+  template <typename T, typename Storage, typename... ArrayTypes>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>&,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                            const vtkm::cont::VariantArrayHandleCommon& self,
                             vtkm::cont::ArrayHandleMultiplexer<ArrayTypes...>& result) const
   {
     vtkm::cont::ArrayHandle<T, Storage> targetArray;
@@ -464,15 +522,15 @@ struct VariantArrayHandleTryMultiplexer
   }
 
 private:
-  template <typename T, typename Storage, typename... TypeList>
+  template <typename T, typename Storage>
   VTKM_CONT void FetchArrayExact(vtkm::cont::ArrayHandle<T, Storage>& targetArray,
-                                 const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                                 const vtkm::cont::VariantArrayHandleCommon& self,
                                  bool& foundArray) const
   {
     using ArrayType = vtkm::cont::ArrayHandle<T, Storage>;
-    if (self.template IsType<ArrayType>())
+    if (self.IsType<ArrayType>())
     {
-      targetArray = self.template Cast<ArrayType>();
+      targetArray = self.Cast<ArrayType>();
       foundArray = true;
     }
     else
@@ -481,9 +539,9 @@ private:
     }
   }
 
-  template <typename T, typename Storage, typename... TypeList>
+  template <typename T, typename Storage>
   VTKM_CONT void FetchArray(vtkm::cont::ArrayHandle<T, Storage>& targetArray,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+                            const vtkm::cont::VariantArrayHandleCommon& self,
                             bool& foundArray,
                             bool vtkmNotUsed(foundArrayInPreviousCall)) const
   {
@@ -492,17 +550,13 @@ private:
 
   // Special condition for transformed arrays. Instead of pulling out the
   // transform, pull out the array that is being transformed.
-  template <typename T,
-            typename SrcArray,
-            typename ForwardTransform,
-            typename ReverseTransform,
-            typename... TypeList>
+  template <typename T, typename SrcArray, typename ForwardTransform, typename ReverseTransform>
   VTKM_CONT void FetchArray(
     vtkm::cont::ArrayHandle<
       T,
       vtkm::cont::internal::StorageTagTransform<SrcArray, ForwardTransform, ReverseTransform>>&
       targetArray,
-    const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+    const vtkm::cont::VariantArrayHandleCommon& self,
     bool& foundArray,
     bool foundArrayInPreviousCall) const
   {
@@ -526,11 +580,11 @@ private:
 
   // Special condition for cast arrays. Instead of pulling out an ArrayHandleCast, pull out
   // the array that is being cast.
-  template <typename TargetT, typename SourceT, typename SourceStorage, typename... TypeList>
+  template <typename TargetT, typename SourceT, typename SourceStorage>
   VTKM_CONT void FetchArray(
     vtkm::cont::ArrayHandle<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>&
       targetArray,
-    const vtkm::cont::VariantArrayHandleBase<TypeList...>& self,
+    const vtkm::cont::VariantArrayHandleCommon& self,
     bool& foundArray,
     bool foundArrayInPreviousCall) const
   {
@@ -557,9 +611,8 @@ private:
 
 } // namespace detail
 
-template <typename TypeList>
 template <typename... T>
-inline VTKM_CONT void VariantArrayHandleBase<TypeList>::AsMultiplexer(
+inline VTKM_CONT void VariantArrayHandleCommon::AsMultiplexer(
   vtkm::cont::ArrayHandleMultiplexer<T...>& result) const
 {
   // Make sure IsValid is clear

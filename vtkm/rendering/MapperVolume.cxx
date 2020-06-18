@@ -137,16 +137,6 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   }
 }
 
-void MapperVolume::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperVolume::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperVolume::NewCopy() const
 {
   return new vtkm::rendering::MapperVolume(*this);

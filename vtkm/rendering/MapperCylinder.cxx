@@ -217,16 +217,6 @@ void MapperCylinder::SetCompositeBackground(bool on)
   this->Internals->CompositeBackground = on;
 }
 
-void MapperCylinder::StartScene()
-{
-  // Nothing needs to be done.
-}
-
-void MapperCylinder::EndScene()
-{
-  // Nothing needs to be done.
-}
-
 vtkm::rendering::Mapper* MapperCylinder::NewCopy() const
 {
   return new vtkm::rendering::MapperCylinder(*this);
