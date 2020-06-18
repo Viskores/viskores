@@ -231,7 +231,6 @@ void TestMomentsByKey()
   std::vector<vtkm::UInt32> expected_ns{ 1, 1, 2, 3, 4 };
   std::vector<vtkm::Float32> expected_sums{ 1, 1, 2, 3, 4 };
   std::vector<vtkm::Float32> expected_means{ 1, 1, 1, 1, 1 };
-  using size_type = typename std::vector<vtkm::UInt32>::size_type;
 
   auto resultsPortal = results.ReadPortal();
   for (vtkm::Id i = 0; i < results.GetNumberOfValues(); ++i)
