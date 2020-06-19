@@ -97,6 +97,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
@@ -148,6 +149,7 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
+  ParticleArrayCopy.cxx
   RuntimeDeviceTracker.cxx
   StorageBasic.cxx
   Token.cxx
@@ -182,6 +184,7 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
+  ParticleArrayCopy.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx

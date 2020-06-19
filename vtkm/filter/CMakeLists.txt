@@ -53,6 +53,7 @@ set(headers
   MeshQuality.h
   NDEntropy.h
   NDHistogram.h
+  ParticleAdvection.h
   Pathline.h
   PointAverage.h
   PointElevation.h
@@ -120,6 +121,7 @@ set(header_template_sources
   MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  ParticleAdvection.hxx
   Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx

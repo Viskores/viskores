@@ -10,8 +10,7 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/Pathline.h>
-#include <vtkm/filter/Streamline.h>
+#include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
 namespace
@@ -32,7 +31,7 @@ vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims, const vtkm::Vec3f& vec)
   return ds;
 }
 
-void TestStreamline()
+void TestBasic()
 {
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f vecX(1, 0, 0);
@@ -46,68 +45,31 @@ void TestStreamline()
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
-  vtkm::filter::Streamline streamline;
+  vtkm::filter::ParticleAdvection particleAdvection;
 
-  streamline.SetStepSize(0.1f);
-  streamline.SetNumberOfSteps(20);
-  streamline.SetSeeds(seedArray);
+  particleAdvection.SetStepSize(0.1f);
+  particleAdvection.SetNumberOfSteps(20);
+  particleAdvection.SetSeeds(seedArray);
 
-  streamline.SetActiveField("vector");
-  auto output = streamline.Execute(ds);
+  particleAdvection.SetActiveField("vector");
+  auto output = particleAdvection.Execute(ds);
 
   //Validate the result is correct.
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
 
   vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 3, "Wrong number of coordinates");
 
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
 }
 
-void TestPathline()
-{
-  const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Vec3f vecX(1, 0, 0);
-  const vtkm::Vec3f vecY(0, 1, 0);
-
-  vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
-  vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
-
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  std::vector<vtkm::Particle> seeds(3);
-  seeds[0] = vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
-  seeds[1] = vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
-  seeds[2] = vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
-
-  seedArray = vtkm::cont::make_ArrayHandle(seeds);
-
-  vtkm::filter::Pathline pathline;
-
-  pathline.SetPreviousTime(0.0f);
-  pathline.SetNextTime(1.0f);
-  pathline.SetNextDataSet(ds2);
-  pathline.SetStepSize(static_cast<vtkm::FloatDefault>(0.05f));
-  pathline.SetNumberOfSteps(20);
-  pathline.SetSeeds(seedArray);
-
-  pathline.SetActiveField("vector");
-  auto output = pathline.Execute(ds1);
-
-  //Validate the result is correct.
-  vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
-
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
-}
-
-void TestStreamlineFile(const std::string& fname,
-                        const std::vector<vtkm::Vec3f>& pts,
-                        vtkm::FloatDefault stepSize,
-                        vtkm::Id maxSteps,
-                        const std::vector<vtkm::Vec3f>& endPts)
+void TestFile(const std::string& fname,
+              const std::vector<vtkm::Vec3f>& pts,
+              vtkm::FloatDefault stepSize,
+              vtkm::Id maxSteps,
+              const std::vector<vtkm::Vec3f>& endPts)
 {
   vtkm::io::VTKDataSetReader reader(fname);
   vtkm::cont::DataSet ds;
@@ -131,39 +93,33 @@ void TestStreamlineFile(const std::string& fname,
     seeds.push_back(vtkm::Particle(pts[static_cast<std::size_t>(i)], i));
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
-  vtkm::filter::Streamline streamline;
-  streamline.SetStepSize(stepSize);
-  streamline.SetNumberOfSteps(maxSteps);
-  streamline.SetSeeds(seedArray);
+  vtkm::filter::ParticleAdvection particleAdvection;
+  particleAdvection.SetStepSize(stepSize);
+  particleAdvection.SetNumberOfSteps(maxSteps);
+  particleAdvection.SetSeeds(seedArray);
 
-  streamline.SetActiveField("vec");
-  auto output = streamline.Execute(ds);
+  particleAdvection.SetActiveField("vec");
+  auto output = particleAdvection.Execute(ds);
 
   auto coords = output.GetCoordinateSystem().GetData();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
-  VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
-
-  auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+  VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coordPts;
   auto cPortal = coords.ReadPortal();
-  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
 
+  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
   for (vtkm::Id i = 0; i < numPoints; i++)
   {
-    vtkm::Id numPts = cells.GetNumberOfPointsInCell(i);
-    std::vector<vtkm::Id> ids(static_cast<std::size_t>(numPts));
-    cells.GetCellPointIds(i, ids.data());
-
     vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
-    vtkm::Vec3f pt = cPortal.Get(ids[ids.size() - 1]);
+    vtkm::Vec3f pt = cPortal.Get(i);
     VTKM_TEST_ASSERT(vtkm::Magnitude(pt - e) <= eps, "Particle advection point is wrong");
   }
 }
 
-void TestStreamlineFilters()
+void TestParticleAdvectionFilter()
 {
-  TestStreamline();
-  TestPathline();
+  TestBasic();
 
   std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
 
@@ -178,7 +134,8 @@ void TestStreamlineFilters()
   fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
   vtkm::FloatDefault fusionStep = 0.005f;
   std::string fusionFile = basePath + "/rectilinear/fusion.vtk";
-  TestStreamlineFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
+
+  TestFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
 
   //Fishtank test.
   std::vector<vtkm::Vec3f> fishPts, fishEndPts;
@@ -191,11 +148,12 @@ void TestStreamlineFilters()
   fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
   vtkm::FloatDefault fishStep = 0.001f;
   std::string fishFile = basePath + "/rectilinear/fishtank.vtk";
-  TestStreamlineFile(fishFile, fishPts, fishStep, 100, fishEndPts);
+
+  TestFile(fishFile, fishPts, fishStep, 100, fishEndPts);
 }
 }
 
-int UnitTestStreamlineFilter(int argc, char* argv[])
+int UnitTestParticleAdvectionFilter(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamlineFilters, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestParticleAdvectionFilter, argc, argv);
 }
