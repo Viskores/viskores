@@ -177,7 +177,7 @@ vtkm_library(
   DEVICE_SOURCES ${sources_device}
   USE_VTKM_JOB_POOL
   )
-target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
+target_link_libraries(vtkm_filter PUBLIC vtkm_worklet vtkm_cont)
 
 add_subdirectory(internal)
 
