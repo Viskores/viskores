@@ -16,6 +16,7 @@
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
 
 namespace vtkm
 {
@@ -132,9 +133,9 @@ public:
     dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 
-  static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
-                              const vtkm::rendering::Camera& camera,
-                              const vtkm::rendering::CanvasRayTracer& canvas);
+  VTKM_RENDERING_EXPORT static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
+                                                    const vtkm::rendering::Camera& camera,
+                                                    const vtkm::rendering::CanvasRayTracer& canvas);
 
   template <typename T>
   static vtkm::Id RaysInMesh(Ray<T>& rays)
