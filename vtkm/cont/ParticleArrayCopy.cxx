@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -70,6 +71,7 @@ VTKM_CONT void ParticleArrayCopy(
 /// position, ID, number of steps, status and time into a separate
 /// \c ArrayHandle.
 ///
+
 
 VTKM_CONT void ParticleArrayCopy(
   const vtkm::cont::ArrayHandle<vtkm::Particle, vtkm::cont::StorageTagBasic>& inP,

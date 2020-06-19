@@ -184,6 +184,7 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
+  ParticleArrayCopy.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx

@@ -12,6 +12,7 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm
 {
@@ -23,7 +24,7 @@ namespace cont
 /// Given an \c ArrayHandle of vtkm::Particle, this function copies the
 /// position field into an \c ArrayHandle of \c Vec3f objects.
 ///
-
+VTKM_CONT_EXPORT
 VTKM_CONT void ParticleArrayCopy(
   const vtkm::cont::ArrayHandle<vtkm::Particle, vtkm::cont::StorageTagBasic>& inP,
   vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos);
@@ -34,7 +35,7 @@ VTKM_CONT void ParticleArrayCopy(
 /// position, ID, number of steps, status and time into a separate
 /// \c ArrayHandle.
 ///
-
+VTKM_CONT_EXPORT
 VTKM_CONT void ParticleArrayCopy(
   const vtkm::cont::ArrayHandle<vtkm::Particle, vtkm::cont::StorageTagBasic>& inP,
   vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
