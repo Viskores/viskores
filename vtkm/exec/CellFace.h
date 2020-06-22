@@ -10,13 +10,11 @@
 #ifndef vtk_m_exec_CellFace_h
 #define vtk_m_exec_CellFace_h
 
-#include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Deprecated.h>
 #include <vtkm/ErrorCode.h>
 #include <vtkm/Types.h>
 #include <vtkm/exec/FunctorBase.h>
-#include <vtkm/internal/Assume.h>
 
 namespace vtkm
 {
