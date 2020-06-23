@@ -227,7 +227,7 @@ public:
         return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
                                      this->NumColumns + 1); // {  1,  1,  1 }
       default:
-        VTKM_ASSERT(false);
+        assert(false);
         return meshIndex; // Need to error out here
     }
   } // GetNeighbourIndex

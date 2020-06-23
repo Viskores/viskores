@@ -15,6 +15,15 @@
 
 #include <cassert>
 
+// Pick up conditions where we want to turn on/off assert.
+#ifndef VTKM_NO_ASSERT
+#if defined(NDEBUG)
+#define VTKM_NO_ASSERT
+#elif defined(__CUDA_ARCH__) && defined(VTKM_NO_ASSERT_CUDA)
+#define VTKM_NO_ASSERT
+#endif
+#endif // VTKM_NO_ASSERT
+
 /// \def VTKM_ASSERT(condition)
 ///
 /// Asserts that \a condition resolves to true.  If \a condition is false,
@@ -28,11 +37,7 @@
 ///
 /// The VTKM_NO_ASSERT cmake and preprocessor option allows debugging builds
 /// to remove assertions for performance reasons.
-#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR == 7)
-//CUDA 7.5 doesn't support assert in device code
-#define VTKM_ASSERT(condition) (void)(condition)
-#elif !defined(NDEBUG) && !defined(VTKM_NO_ASSERT)
-//Only assert if we are in debug mode and don't have VTKM_NO_ASSERT defined
+#ifndef VTKM_NO_ASSERT
 #define VTKM_ASSERT(condition) assert(condition)
 #define VTKM_ASSERTS_CHECKED
 #else

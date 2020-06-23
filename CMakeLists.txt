@@ -108,6 +108,11 @@ vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" ON)
 # performance.
 vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 
+# The CUDA compiler (as of CUDA 11) takes a surprising long time to compile
+# kernels with assert in them. By default we turn off asserts when compiling
+# for CUDA devices.
+vtkm_option(VTKm_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
+
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.
@@ -135,6 +140,7 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
+  VTKm_NO_ASSERT_CUDA
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
