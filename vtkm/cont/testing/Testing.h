@@ -130,6 +130,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -165,6 +166,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
