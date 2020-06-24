@@ -158,10 +158,14 @@ public:
                           vtkm::cont::DeviceAdapterId device) const;
   /// @}
 
-  /// \brief Resets the `Buffer` to the memory allocated at the information.
+  /// \brief Resets the `Buffer` to the memory allocated at the `BufferInfo`.
   ///
   /// The `Buffer` is initialized to a state that contains the given `buffer` of data. The
   /// `BufferInfo` object self-describes the pointer, size, and device of the memory.
+  ///
+  /// The given memory is "pinned" in the `Buffer`. This means that this memory will always
+  /// be used on the given host or device. If `SetNumberOfBytes` is later called with a size
+  /// that is inconsistent with the size of this buffer, an exception will be thrown.
   ///
   VTKM_CONT void Reset(const vtkm::cont::internal::BufferInfo& buffer);
 

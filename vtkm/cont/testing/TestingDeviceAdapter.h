@@ -1329,18 +1329,22 @@ private:
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Unique with comparison object" << std::endl;
-    std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+    IdArrayHandle input;
+    input.Allocate(ARRAY_SIZE);
     {
-      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
+      auto portal = input.WritePortal();
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, OFFSET + (index % 50));
+      }
     }
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+
     Algorithm::Sort(input);
     Algorithm::Unique(input, FuseAll());
 
     // Check to make sure that input was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    input.ReadPortal();                // Forces copy back to control.
+    input.SyncControlArray();          // Forces copy back to control.
     input.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VTKM_TEST_ASSERT(input.GetNumberOfValues() == 1,
                      "Unique did not resize array (or size did not copy to control).");

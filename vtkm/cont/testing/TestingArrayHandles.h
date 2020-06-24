@@ -198,7 +198,8 @@ private:
         buffer[static_cast<std::size_t>(index)] = TestValue(index, T());
       }
 
-      vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::make_ArrayHandle(buffer);
+      vtkm::cont::ArrayHandle<T> arrayHandle =
+        vtkm::cont::make_ArrayHandle(buffer, vtkm::CopyFlag::Off);
 
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "ArrayHandle has wrong number of entries.");
@@ -234,22 +235,45 @@ private:
         array_handle_testing::CheckArray(result);
       }
 
+      //clear out user array for next test
+      std::fill(buffer.begin(), buffer.end(), static_cast<T>(-1));
+
       std::cout << "Check out output." << std::endl;
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
         vtkm::cont::Token token;
-        arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
+        auto outputPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token);
 
-        //we can't verify output contents as those aren't fetched, we
-        //can just make sure the allocation didn't throw an exception
+        //fill array on device
+        Algorithm::Schedule(AssignTestValue<T, decltype(outputPortal)>{ outputPortal }, ARRAY_SIZE);
+
+        //sync data, which should fill up the user buffer
+        token.DetachFromAll();
+        arrayHandle.SyncControlArray();
+
+        //check that we got the proper values in the user array
+        array_handle_testing::CheckValues(buffer.begin(), buffer.end(), T{});
       }
 
-      { //an output with a length larger than the memory provided by the user
-        //this should drop the user's data
-        vtkm::cont::Token token;
-        arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
-        token.DetachFromAll();
-        arrayHandle.WritePortal();
+      { //as output with a length larger than the memory provided by the user
+        //this should fail
+        bool gotException = false;
+        try
+        {
+          //you should not be able to allocate a size larger than the
+          //user provided and get the results
+          vtkm::cont::Token token;
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
+          token.DetachFromAll();
+          arrayHandle.WritePortal();
+        }
+        catch (vtkm::cont::Error&)
+        {
+          gotException = true;
+        }
+        VTKM_TEST_ASSERT(gotException,
+                         "PrepareForOutput should fail when asked to "
+                         "re-allocate user provided memory.");
       }
     }
   };
@@ -314,8 +338,8 @@ private:
         //can just make sure the allocation didn't throw an exception
       }
 
-      { //as the memory ownership has been transferred to VTK-m this should
-        //allow VTK-m to free the memory and allocate a new block
+      { //as output with a length larger than the memory provided by the user
+        //this should fail
         bool gotException = false;
         try
         {
@@ -330,9 +354,9 @@ private:
         {
           gotException = true;
         }
-        VTKM_TEST_ASSERT(!gotException,
-                         "PrepareForOutput shouldn't fail when asked to "
-                         "re-allocate user transferred memory.");
+        VTKM_TEST_ASSERT(gotException,
+                         "PrepareForOutput should fail when asked to "
+                         "re-allocate user provided memory.");
       }
     }
   };

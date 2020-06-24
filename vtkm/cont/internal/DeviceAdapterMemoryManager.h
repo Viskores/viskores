@@ -29,6 +29,13 @@ namespace cont
 namespace internal
 {
 
+namespace detail
+{
+
+struct BufferInfoInternals;
+
+} // namespace detail
+
 class VTKM_CONT_EXPORT BufferInfo
 {
 public:
@@ -91,8 +98,7 @@ public:
   VTKM_CONT void Reallocate(vtkm::BufferSizeType newSize);
 
 private:
-  struct InternalsStruct;
-  InternalsStruct* Internals;
+  detail::BufferInfoInternals* Internals;
   vtkm::cont::DeviceAdapterId Device;
 };
 
@@ -135,15 +141,30 @@ public:
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyHostToDevice(
     const vtkm::cont::internal::BufferInfo& src) const = 0;
 
+  /// Copies data from the provided host buffer into the provided pre-allocated device buffer. The
+  /// `BufferInfo` object for the device was created by a previous call to this object.
+  VTKM_CONT virtual void CopyHostToDevice(const vtkm::cont::internal::BufferInfo& src,
+                                          const vtkm::cont::internal::BufferInfo& dest) const = 0;
+
   /// Copies data from the device buffer provided to the host. The passed in `BufferInfo` object
   /// was created by a previous call to this object.
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
     const vtkm::cont::internal::BufferInfo& src) const = 0;
 
+  /// Copies data from the device buffer provided into the provided pre-allocated host buffer. The
+  /// `BufferInfo` object for the device was created by a previous call to this object.
+  VTKM_CONT virtual void CopyDeviceToHost(const vtkm::cont::internal::BufferInfo& src,
+                                          const vtkm::cont::internal::BufferInfo& dest) const = 0;
+
   /// Deep copies data from one device buffer to another device buffer. The passed in `BufferInfo`
   /// object was created by a previous call to this object.
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo& src) const = 0;
+
+  /// Deep copies data from one device buffer to another device buffer. The passed in `BufferInfo`
+  /// objects were created by a previous call to this object.
+  VTKM_CONT virtual void CopyDeviceToDevice(const vtkm::cont::internal::BufferInfo& src,
+                                            const vtkm::cont::internal::BufferInfo& dest) const = 0;
 };
 
 /// \brief The device adapter memory manager.

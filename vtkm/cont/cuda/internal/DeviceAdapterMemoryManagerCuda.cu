@@ -15,6 +15,8 @@
 
 #include <vtkm/cont/ErrorBadAllocation.h>
 
+#include <vtkm/Math.h>
+
 namespace
 {
 
@@ -97,12 +99,12 @@ DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDevice(
 {
   VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{});
 
-  using vtkm::cont::cuda::internal::CudaAllocator;
-  if (CudaAllocator::IsManagedPointer(src.GetPointer()))
+  if (vtkm::cont::cuda::internal::CudaAllocator::IsManagedPointer(src.GetPointer()))
   {
     // In the current code structure, we don't know whether this buffer is going to be used
     // for input or output. (Currently, I don't think there is any difference.)
-    CudaAllocator::PrepareForOutput(src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
+    vtkm::cont::cuda::internal::CudaAllocator::PrepareForOutput(
+      src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
 
     // The provided control pointer is already cuda managed and can be accessed on the device
     // via unified memory. Just shallow copy the pointer.
@@ -113,54 +115,96 @@ DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDevice(
     // Make a new buffer
     vtkm::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
 
-    // Copy the data to the new buffer
-    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
-               "Copying host --> CUDA dev: %s (%lld bytes)",
-               vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(src.GetSize())).c_str(),
-               src.GetSize());
-
-    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
-                                   src.GetPointer(),
-                                   static_cast<std::size_t>(src.GetSize()),
-                                   cudaMemcpyHostToDevice,
-                                   cudaStreamPerThread));
+    this->CopyHostToDevice(src, dest);
 
     return dest;
   }
 }
 
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDevice(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
+  if (vtkm::cont::cuda::internal::CudaAllocator::IsManagedPointer(src.GetPointer()) &&
+      src.GetPointer() == dest.GetPointer())
+  {
+    // In the current code structure, we don't know whether this buffer is going to be used
+    // for input or output. (Currently, I don't think there is any difference.)
+    vtkm::cont::cuda::internal::CudaAllocator::PrepareForOutput(
+      src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
+
+    // The provided pointers are both cuda managed and the same, so the data are already
+    // the same.
+  }
+  else
+  {
+    vtkm::BufferSizeType size = vtkm::Min(src.GetSize(), dest.GetSize());
+
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
+               "Copying host --> CUDA dev: %s (%lld bytes)",
+               vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+               size);
+
+    VTKM_CUDA_CALL(cudaMemcpyAsync(
+      dest.GetPointer(), src.GetPointer(), size, cudaMemcpyHostToDevice, cudaStreamPerThread));
+  }
+}
+
+
 vtkm::cont::internal::BufferInfo
 DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToHost(
   const vtkm::cont::internal::BufferInfo& src) const
 {
-  using vtkm::cont::cuda::internal::CudaAllocator;
   VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagCuda{});
 
   vtkm::cont::internal::BufferInfo dest;
 
-  if (CudaAllocator::IsManagedPointer(src.GetPointer()))
+  if (vtkm::cont::cuda::internal::CudaAllocator::IsManagedPointer(src.GetPointer()))
   {
     // The provided control pointer is already cuda managed and can be accessed on the host
     // via unified memory. Just shallow copy the pointer.
-    CudaAllocator::PrepareForControl(src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
-    dest = vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagCuda{});
+    vtkm::cont::cuda::internal::CudaAllocator::PrepareForControl(
+      src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
+    dest = vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagUndefined{});
+
+    //In all cases we have possibly multiple async calls queued up in
+    //our stream. We need to block on the copy back to control since
+    //we don't wanting it accessing memory that hasn't finished
+    //being used by the GPU
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTagCuda>::Synchronize();
   }
   else
   {
     // Make a new buffer
     dest = vtkm::cont::internal::AllocateOnHost(src.GetSize());
 
-    // Copy the data to the new buffer
+    this->CopyDeviceToHost(src, dest);
+  }
+
+  return dest;
+}
+
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToHost(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
+  if (vtkm::cont::cuda::internal::CudaAllocator::IsManagedPointer(dest.GetPointer()) &&
+      src.GetPointer() == dest.GetPointer())
+  {
+    // The provided pointers are both cuda managed and the same, so the data are already
+    // the same.
+  }
+  else
+  {
+    vtkm::BufferSizeType size = vtkm::Min(src.GetSize(), dest.GetSize());
+
     VTKM_LOG_F(vtkm::cont::LogLevel::MemTransfer,
                "Copying CUDA dev --> host: %s (%lld bytes)",
-               vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(src.GetSize())).c_str(),
-               src.GetSize());
+               vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+               size);
 
-    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
-                                   src.GetPointer(),
-                                   static_cast<std::size_t>(src.GetSize()),
-                                   cudaMemcpyDeviceToHost,
-                                   cudaStreamPerThread));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(
+      dest.GetPointer(), src.GetPointer(), size, cudaMemcpyDeviceToHost, cudaStreamPerThread));
   }
 
   //In all cases we have possibly multiple async calls queued up in
@@ -168,8 +212,6 @@ DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToHost(
   //we don't wanting it accessing memory that hasn't finished
   //being used by the GPU
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTagCuda>::Synchronize();
-
-  return dest;
 }
 
 vtkm::cont::internal::BufferInfo
@@ -177,13 +219,20 @@ DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToDevice
   const vtkm::cont::internal::BufferInfo& src) const
 {
   vtkm::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
+  this->CopyDeviceToDevice(src, dest);
+
+  return dest;
+}
+
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToDevice(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
   VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
                                  src.GetPointer(),
                                  static_cast<std::size_t>(src.GetSize()),
                                  cudaMemcpyDeviceToDevice,
                                  cudaStreamPerThread));
-
-  return dest;
 }
 }
 }

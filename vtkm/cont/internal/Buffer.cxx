@@ -10,6 +10,7 @@
 
 #include <vtkm/internal/Assume.h>
 
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
@@ -21,7 +22,64 @@
 #include <deque>
 #include <map>
 
+namespace
+{
+
 using LockType = std::unique_lock<std::mutex>;
+
+struct BufferState
+{
+  vtkm::cont::internal::BufferInfo Info;
+  bool Pinned = false;
+  bool UpToDate = false;
+
+  BufferState() = default;
+  BufferState(const vtkm::cont::internal::BufferInfo& info,
+              bool pinned = false,
+              bool upToDate = true)
+    : Info(info)
+    , Pinned(pinned)
+    , UpToDate(upToDate)
+  {
+  }
+
+  // Automatically convert to BufferInfo
+  operator vtkm::cont::internal::BufferInfo&() { return this->Info; }
+  operator const vtkm::cont::internal::BufferInfo&() const { return this->Info; }
+
+  // Pass through common BufferInfo methods.
+
+  void* GetPointer() const { return this->Info.GetPointer(); }
+
+  vtkm::BufferSizeType GetSize() const { return this->Info.GetSize(); }
+
+  vtkm::cont::DeviceAdapterId GetDevice() const { return this->Info.GetDevice(); }
+
+  void Reallocate(vtkm::BufferSizeType newSize)
+  {
+    if (this->Info.GetSize() != newSize)
+    {
+      if (this->Pinned)
+      {
+        throw vtkm::cont::ErrorBadAllocation("Attempted to reallocate a pinned buffer.");
+      }
+      this->Info.Reallocate(newSize);
+    }
+  }
+
+  /// Releases the buffer. If the memory is not pinned, it is deleted. In any case, it is
+  /// marked as no longer up to date.
+  void Release()
+  {
+    if (!this->Pinned)
+    {
+      this->Info = vtkm::cont::internal::BufferInfo{};
+    }
+    this->UpToDate = false;
+  }
+};
+
+} // anonymous namespace
 
 namespace vtkm
 {
@@ -33,7 +91,7 @@ namespace internal
 class Buffer::InternalsStruct
 {
 public:
-  using DeviceBufferMap = std::map<vtkm::cont::DeviceAdapterId, vtkm::cont::internal::BufferInfo>;
+  using DeviceBufferMap = std::map<vtkm::cont::DeviceAdapterId, BufferState>;
 
 private:
   vtkm::cont::Token::ReferenceCount ReadCount = 0;
@@ -51,7 +109,7 @@ private:
   vtkm::BufferSizeType NumberOfBytes = 0;
 
   DeviceBufferMap DeviceBuffers;
-  vtkm::cont::internal::BufferInfo HostBuffer;
+  BufferState HostBuffer;
 
 public:
   std::mutex Mutex;
@@ -82,7 +140,7 @@ public:
     return this->DeviceBuffers;
   }
 
-  VTKM_CONT vtkm::cont::internal::BufferInfo& GetHostBuffer(const LockType& lock)
+  VTKM_CONT BufferState& GetHostBuffer(const LockType& lock)
   {
     this->CheckLock(lock);
     return this->HostBuffer;
@@ -245,9 +303,9 @@ struct VTKM_NEVER_EXPORT BufferHelper
                              AccessMode accessMode)
   {
     Wait(internals, lock, token, accessMode);
-    vtkm::cont::internal::BufferInfo& hostBuffer = internals->GetHostBuffer(lock);
+    BufferState& hostBuffer = internals->GetHostBuffer(lock);
     vtkm::BufferSizeType targetSize = internals->GetNumberOfBytes(lock);
-    if (hostBuffer.GetPointer() != nullptr)
+    if (hostBuffer.UpToDate)
     {
       // Buffer already exists on the host. Make sure it is the right size.
       if (hostBuffer.GetSize() != targetSize)
@@ -260,7 +318,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
     // Buffer does not exist on host. See if we can find data on a device.
     for (auto&& deviceBuffer : internals->GetDeviceBuffers(lock))
     {
-      if (deviceBuffer.second.GetPointer() == nullptr)
+      if (!deviceBuffer.second.UpToDate)
       {
         continue;
       }
@@ -271,21 +329,39 @@ struct VTKM_NEVER_EXPORT BufferHelper
       if (deviceBuffer.second.GetSize() > targetSize)
       {
         // Device buffer too large. Resize.
-        memoryManager.Reallocate(deviceBuffer.second, targetSize);
+        deviceBuffer.second.Reallocate(targetSize);
       }
 
-      hostBuffer = memoryManager.CopyDeviceToHost(deviceBuffer.second);
+      if (!hostBuffer.Pinned)
+      {
+        hostBuffer = memoryManager.CopyDeviceToHost(deviceBuffer.second);
+      }
+      else
+      {
+        hostBuffer.Reallocate(targetSize);
+        memoryManager.CopyDeviceToHost(deviceBuffer.second, hostBuffer);
+      }
 
       if (hostBuffer.GetSize() != targetSize)
       {
         hostBuffer.Reallocate(targetSize);
       }
 
+      hostBuffer.UpToDate = true;
+
       return;
     }
 
-    // Buffer not allocated on host or any device, so just allocate a buffer.
-    hostBuffer = vtkm::cont::internal::AllocateOnHost(targetSize);
+    // Buffer not up to date on host or any device, so just allocate a buffer.
+    if (!hostBuffer.Pinned)
+    {
+      hostBuffer = vtkm::cont::internal::AllocateOnHost(targetSize);
+    }
+    else
+    {
+      hostBuffer.Reallocate(targetSize);
+      hostBuffer.UpToDate = true;
+    }
   }
 
   static void AllocateOnDevice(const std::shared_ptr<Buffer::InternalsStruct>& internals,
@@ -300,7 +376,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
     vtkm::cont::internal::DeviceAdapterMemoryManagerBase& memoryManager =
       vtkm::cont::RuntimeDeviceInformation().GetMemoryManager(device);
 
-    if (deviceBuffers[device].GetPointer() != nullptr)
+    if (deviceBuffers[device].UpToDate)
     {
       // Buffer already exists on the device. Make sure it is the right size.
       if (deviceBuffers[device].GetSize() != targetSize)
@@ -314,11 +390,11 @@ struct VTKM_NEVER_EXPORT BufferHelper
     // Buffer does not exist on device. Check to see if it is on another device but not the host.
     // We currently do not support device-to-device transfers, so the data has to go to the
     // host first.
-    if (internals->GetHostBuffer(lock).GetPointer() == nullptr)
+    if (!internals->GetHostBuffer(lock).UpToDate)
     {
       for (auto&& deviceBuffer : deviceBuffers)
       {
-        if (deviceBuffer.second.GetPointer() != nullptr)
+        if (deviceBuffer.second.UpToDate)
         {
           // Copy data to host.
           AllocateOnHost(internals, lock, token, accessMode);
@@ -328,8 +404,8 @@ struct VTKM_NEVER_EXPORT BufferHelper
     }
 
     // If the buffer is now on the host, copy it to the device.
-    vtkm::cont::internal::BufferInfo& hostBuffer = internals->GetHostBuffer(lock);
-    if (hostBuffer.GetPointer() != nullptr)
+    BufferState& hostBuffer = internals->GetHostBuffer(lock);
+    if (hostBuffer.UpToDate)
     {
       if (hostBuffer.GetSize() > targetSize)
       {
@@ -337,7 +413,15 @@ struct VTKM_NEVER_EXPORT BufferHelper
         hostBuffer.Reallocate(targetSize);
       }
 
-      deviceBuffers[device] = memoryManager.CopyHostToDevice(hostBuffer);
+      if (!deviceBuffers[device].Pinned)
+      {
+        deviceBuffers[device] = memoryManager.CopyHostToDevice(hostBuffer);
+      }
+      else
+      {
+        deviceBuffers[device].Reallocate(targetSize);
+        memoryManager.CopyHostToDevice(hostBuffer, deviceBuffers[device]);
+      }
 
       if (deviceBuffers[device].GetSize() != targetSize)
       {
@@ -345,11 +429,21 @@ struct VTKM_NEVER_EXPORT BufferHelper
       }
       VTKM_ASSERT(deviceBuffers[device].GetSize() == targetSize);
 
+      deviceBuffers[device].UpToDate = true;
+
       return;
     }
 
-    // Buffer not allocated anywhere, so just allocate a buffer.
-    deviceBuffers[device] = memoryManager.Allocate(targetSize);
+    // Buffer not up to date anywhere, so just allocate a buffer.
+    if (!deviceBuffers[device].Pinned)
+    {
+      deviceBuffers[device] = memoryManager.Allocate(targetSize);
+    }
+    else
+    {
+      deviceBuffers[device].Reallocate(targetSize);
+      deviceBuffers[device].UpToDate = true;
+    }
   }
 
   static void CopyOnHost(
@@ -362,20 +456,23 @@ struct VTKM_NEVER_EXPORT BufferHelper
     WaitToRead(srcInternals, srcLock, token);
     WaitToWrite(destInternals, destLock, token);
 
+    vtkm::BufferSizeType size = srcInternals->GetNumberOfBytes(srcLock);
+
     // Any current buffers in destination can be (and should be) deleted.
-    destInternals->GetDeviceBuffers(destLock).clear();
+    // Do this before allocating on the host to avoid unnecessary data copies.
+    for (auto&& deviceBuffer : destInternals->GetDeviceBuffers(destLock))
+    {
+      deviceBuffer.second.Release();
+    }
 
-    // Do the copy
-    vtkm::cont::internal::BufferInfo& destBuffer = destInternals->GetHostBuffer(destLock);
-    vtkm::cont::internal::BufferInfo& srcBuffer = srcInternals->GetHostBuffer(srcLock);
+    destInternals->SetNumberOfBytes(destLock, size);
+    AllocateOnHost(destInternals, destLock, token, AccessMode::WRITE);
 
-    destBuffer = vtkm::cont::internal::AllocateOnHost(srcBuffer.GetSize());
+    AllocateOnHost(srcInternals, srcLock, token, AccessMode::READ);
 
-    std::memcpy(destBuffer.GetPointer(),
-                srcBuffer.GetPointer(),
-                static_cast<std::size_t>(srcBuffer.GetSize()));
-
-    destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
+    std::memcpy(destInternals->GetHostBuffer(destLock).GetPointer(),
+                srcInternals->GetHostBuffer(srcLock).GetPointer(),
+                static_cast<std::size_t>(size));
   }
 
   static void CopyOnDevice(
@@ -390,15 +487,30 @@ struct VTKM_NEVER_EXPORT BufferHelper
     WaitToWrite(destInternals, destLock, token);
 
     // Any current buffers in destination can be (and should be) deleted.
-    destInternals->GetHostBuffer(destLock) = vtkm::cont::internal::BufferInfo{};
-    destInternals->GetDeviceBuffers(destLock).clear();
+    // Do this before allocating on the host to avoid unnecessary data copies.
+    vtkm::cont::internal::Buffer::InternalsStruct::DeviceBufferMap& destDeviceBuffers =
+      destInternals->GetDeviceBuffers(destLock);
+    destInternals->GetHostBuffer(destLock).Release();
+    for (auto&& deviceBuffer : destDeviceBuffers)
+    {
+      deviceBuffer.second.Release();
+    }
 
     // Do the copy
     vtkm::cont::internal::DeviceAdapterMemoryManagerBase& memoryManager =
       vtkm::cont::RuntimeDeviceInformation().GetMemoryManager(device);
 
-    destInternals->GetDeviceBuffers(destLock)[device] =
-      memoryManager.CopyDeviceToDevice(srcInternals->GetDeviceBuffers(srcLock)[device]);
+    if (!destDeviceBuffers[device].Pinned)
+    {
+      destDeviceBuffers[device] =
+        memoryManager.CopyDeviceToDevice(srcInternals->GetDeviceBuffers(srcLock)[device]);
+    }
+    else
+    {
+      memoryManager.CopyDeviceToDevice(srcInternals->GetDeviceBuffers(srcLock)[device],
+                                       destDeviceBuffers[device]);
+      destDeviceBuffers[device].UpToDate = true;
+    }
 
     destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
   }
@@ -471,9 +583,12 @@ void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes, vtkm::CopyFlag
     this->Internals->SetNumberOfBytes(lock, numberOfBytes);
     if ((preserve == vtkm::CopyFlag::Off) || (numberOfBytes == 0))
     {
-      // No longer need these buffers. Just delete them.
-      this->Internals->GetHostBuffer(lock) = vtkm::cont::internal::BufferInfo{};
-      this->Internals->GetDeviceBuffers(lock).clear();
+      // No longer need these buffers. Just release them.
+      this->Internals->GetHostBuffer(lock).Release();
+      for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
+      {
+        deviceBuffer.second.Release();
+      }
     }
     else
     {
@@ -486,7 +601,7 @@ void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes, vtkm::CopyFlag
 bool Buffer::IsAllocatedOnHost() const
 {
   LockType lock = this->Internals->GetLock();
-  return (this->Internals->GetHostBuffer(lock).GetPointer() != nullptr);
+  return this->Internals->GetHostBuffer(lock).UpToDate;
 }
 
 bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
@@ -494,7 +609,7 @@ bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
   if (device.IsValueValid())
   {
     LockType lock = this->Internals->GetLock();
-    return (this->Internals->GetDeviceBuffers(lock)[device].GetPointer() != nullptr);
+    return this->Internals->GetDeviceBuffers(lock)[device].UpToDate;
   }
   else if (device == vtkm::cont::DeviceAdapterTagUndefined{})
   {
@@ -507,7 +622,7 @@ bool Buffer::IsAllocatedOnDevice(vtkm::cont::DeviceAdapterId device) const
     LockType lock = this->Internals->GetLock();
     for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
     {
-      if (deviceBuffer.second.GetPointer() != nullptr)
+      if (deviceBuffer.second.UpToDate)
       {
         return true;
       }
@@ -559,7 +674,10 @@ void* Buffer::WritePointerHost(vtkm::cont::Token& token) const
     this->Internals, lock, token, detail::BufferHelper::AccessMode::WRITE);
 
   // Array is being written on host. All other buffers invalidated, so delete them.
-  this->Internals->GetDeviceBuffers(lock).clear();
+  for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
+  {
+    deviceBuffer.second.Release();
+  }
 
   return this->Internals->GetHostBuffer(lock).GetPointer();
 }
@@ -574,13 +692,14 @@ void* Buffer::WritePointerDevice(vtkm::cont::DeviceAdapterId device, vtkm::cont:
       this->Internals, lock, token, device, detail::BufferHelper::AccessMode::WRITE);
 
     // Array is being written on this device. All other buffers invalided, so delete them.
-    this->Internals->GetHostBuffer(lock) = vtkm::cont::internal::BufferInfo{};
-    InternalsStruct::DeviceBufferMap& deviceBuffers = this->Internals->GetDeviceBuffers(lock);
-    auto iter = deviceBuffers.find(device);
-    deviceBuffers.erase(deviceBuffers.begin(), iter);
-    iter = deviceBuffers.find(device);
-    std::advance(iter, 1);
-    deviceBuffers.erase(iter, deviceBuffers.end());
+    this->Internals->GetHostBuffer(lock).Release();
+    for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
+    {
+      if (deviceBuffer.first != device)
+      {
+        deviceBuffer.second.Release();
+      }
+    }
 
     return this->Internals->GetDeviceBuffers(lock)[device].GetPointer();
   }
@@ -615,7 +734,7 @@ void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest) const
     // If we are on a device, copy there.
     for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(srcLock))
     {
-      if (deviceBuffer.second.GetPointer() != nullptr)
+      if (deviceBuffer.second.UpToDate)
       {
         detail::BufferHelper::CopyOnDevice(
           deviceBuffer.first, this->Internals, srcLock, dest.Internals, destLock, token);
@@ -624,7 +743,7 @@ void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest) const
     }
 
     // If we are here, there were no devices to copy on. Copy on host if possible.
-    if (this->Internals->GetHostBuffer(srcLock).GetPointer() != nullptr)
+    if (this->Internals->GetHostBuffer(srcLock).UpToDate)
     {
       detail::BufferHelper::CopyOnHost(this->Internals, srcLock, dest.Internals, destLock, token);
     }
@@ -654,17 +773,19 @@ void Buffer::Reset(const vtkm::cont::internal::BufferInfo& bufferInfo)
 {
   LockType lock = this->Internals->GetLock();
 
-  // Clear out any old buffers.
-  this->Internals->GetHostBuffer(lock) = vtkm::cont::internal::BufferInfo{};
+  // Clear out any old buffers. Because we are resetting the object, we will also get rid of
+  // pinned memory.
+  this->Internals->GetHostBuffer(lock) = BufferState{};
   this->Internals->GetDeviceBuffers(lock).clear();
 
   if (bufferInfo.GetDevice().IsValueValid())
   {
-    this->Internals->GetDeviceBuffers(lock)[bufferInfo.GetDevice()] = bufferInfo;
+    this->Internals->GetDeviceBuffers(lock)[bufferInfo.GetDevice()] =
+      BufferState{ bufferInfo, true, true };
   }
   else if (bufferInfo.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{})
   {
-    this->Internals->GetHostBuffer(lock) = bufferInfo;
+    this->Internals->GetHostBuffer(lock) = BufferState{ bufferInfo, true, true };
   }
   else
   {

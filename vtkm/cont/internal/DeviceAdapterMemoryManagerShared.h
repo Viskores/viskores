@@ -33,11 +33,23 @@ public:
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyHostToDevice(
     const vtkm::cont::internal::BufferInfo& src) const override;
 
+  VTKM_CONT virtual void CopyHostToDevice(
+    const vtkm::cont::internal::BufferInfo& src,
+    const vtkm::cont::internal::BufferInfo& dest) const override;
+
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
     const vtkm::cont::internal::BufferInfo& src) const override;
 
+  VTKM_CONT virtual void CopyDeviceToHost(
+    const vtkm::cont::internal::BufferInfo& src,
+    const vtkm::cont::internal::BufferInfo& dest) const override;
+
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo& src) const override;
+
+  VTKM_CONT virtual void CopyDeviceToDevice(
+    const vtkm::cont::internal::BufferInfo& src,
+    const vtkm::cont::internal::BufferInfo& dest) const override;
 };
 }
 }

@@ -128,25 +128,28 @@ namespace cont
 namespace internal
 {
 
+namespace detail
+{
+
 //----------------------------------------------------------------------------------------
 // The BufferInfo internals behaves much like a std::shared_ptr. However, we do not use
 // std::shared_ptr for compile efficiency issues.
-struct BufferInfo::InternalsStruct
+struct BufferInfoInternals
 {
   void* Memory;
   void* Container;
-  Deleter* Delete;
-  Reallocater* Reallocate;
+  BufferInfo::Deleter* Delete;
+  BufferInfo::Reallocater* Reallocate;
   vtkm::BufferSizeType Size;
 
   using CountType = vtkm::IdComponent;
   std::atomic<CountType> Count;
 
-  VTKM_CONT InternalsStruct(void* memory,
-                            void* container,
-                            vtkm::BufferSizeType size,
-                            Deleter deleter,
-                            Reallocater reallocater)
+  VTKM_CONT BufferInfoInternals(void* memory,
+                                void* container,
+                                vtkm::BufferSizeType size,
+                                BufferInfo::Deleter deleter,
+                                BufferInfo::Reallocater reallocater)
     : Memory(memory)
     , Container(container)
     , Delete(deleter)
@@ -156,9 +159,11 @@ struct BufferInfo::InternalsStruct
   {
   }
 
-  InternalsStruct(const InternalsStruct&) = delete;
-  void operator=(const InternalsStruct&) = delete;
+  BufferInfoInternals(const BufferInfoInternals&) = delete;
+  void operator=(const BufferInfoInternals&) = delete;
 };
+
+} // namespace detail
 
 void* BufferInfo::GetPointer() const
 {
@@ -176,7 +181,7 @@ vtkm::cont::DeviceAdapterId BufferInfo::GetDevice() const
 }
 
 BufferInfo::BufferInfo()
-  : Internals(new InternalsStruct(nullptr, nullptr, 0, HostDeleter, HostReallocate))
+  : Internals(new detail::BufferInfoInternals(nullptr, nullptr, 0, HostDeleter, HostReallocate))
   , Device(vtkm::cont::DeviceAdapterTagUndefined{})
 {
 }
@@ -185,7 +190,7 @@ BufferInfo::~BufferInfo()
 {
   if (this->Internals != nullptr)
   {
-    InternalsStruct::CountType oldCount =
+    detail::BufferInfoInternals::CountType oldCount =
       this->Internals->Count.fetch_sub(1, std::memory_order::memory_order_seq_cst);
     if (oldCount == 1)
     {
@@ -253,7 +258,7 @@ BufferInfo::BufferInfo(vtkm::cont::DeviceAdapterId device,
                        vtkm::BufferSizeType size,
                        Deleter deleter,
                        Reallocater reallocater)
-  : Internals(new InternalsStruct(memory, container, size, deleter, reallocater))
+  : Internals(new detail::BufferInfoInternals(memory, container, size, deleter, reallocater))
   , Device(device)
 {
 }

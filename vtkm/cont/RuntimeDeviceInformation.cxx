@@ -47,14 +47,32 @@ public:
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
+  VTKM_CONT virtual void CopyHostToDevice(const vtkm::cont::internal::BufferInfo&,
+                                          const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
     const vtkm::cont::internal::BufferInfo&) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
+  VTKM_CONT virtual void CopyDeviceToHost(const vtkm::cont::internal::BufferInfo&,
+                                          const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
   VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo&) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
+
+  VTKM_CONT virtual void CopyDeviceToDevice(const vtkm::cont::internal::BufferInfo&,
+                                            const vtkm::cont::internal::BufferInfo&) const override
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }

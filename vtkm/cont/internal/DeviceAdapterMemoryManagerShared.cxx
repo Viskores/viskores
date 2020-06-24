@@ -33,11 +33,35 @@ vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyHostToDev
   return vtkm::cont::internal::BufferInfo(src, this->GetDevice());
 }
 
+void DeviceAdapterMemoryManagerShared::CopyHostToDevice(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
+  VTKM_ASSERT(src.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{});
+  VTKM_ASSERT(dest.GetDevice() == this->GetDevice());
+  if (src.GetPointer() != dest.GetPointer())
+  {
+    this->CopyDeviceToDevice(src, dest);
+  }
+}
+
 vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyDeviceToHost(
   const vtkm::cont::internal::BufferInfo& src) const
 {
   VTKM_ASSERT(src.GetDevice() == this->GetDevice());
   return vtkm::cont::internal::BufferInfo(src, vtkm::cont::DeviceAdapterTagUndefined{});
+}
+
+void DeviceAdapterMemoryManagerShared::CopyDeviceToHost(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
+  VTKM_ASSERT(src.GetDevice() == this->GetDevice());
+  VTKM_ASSERT(dest.GetDevice() == vtkm::cont::DeviceAdapterTagUndefined{});
+  if (src.GetPointer() != dest.GetPointer())
+  {
+    this->CopyDeviceToDevice(src, dest);
+  }
 }
 
 vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyDeviceToDevice(
@@ -47,8 +71,17 @@ vtkm::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyDeviceToD
 
   vtkm::BufferSizeType size = src.GetSize();
   vtkm::cont::internal::BufferInfo dest = this->Allocate(size);
-  std::memcpy(dest.GetPointer(), src.GetPointer(), static_cast<std::size_t>(size));
+  this->CopyDeviceToDevice(src, dest);
   return dest;
+}
+
+void DeviceAdapterMemoryManagerShared::CopyDeviceToDevice(
+  const vtkm::cont::internal::BufferInfo& src,
+  const vtkm::cont::internal::BufferInfo& dest) const
+{
+  VTKM_ASSERT(src.GetSize() == dest.GetSize());
+
+  std::memcpy(dest.GetPointer(), src.GetPointer(), static_cast<std::size_t>(src.GetSize()));
 }
 }
 }
