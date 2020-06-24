@@ -10,9 +10,13 @@
 
 include(CMakeParseArguments)
 
+include(VTKmCMakeBackports)
 include(VTKmDeviceAdapters)
 include(VTKmCPUVectorization)
-include(VTKmMPI)
+
+if(VTKm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
+  find_package(MPI REQUIRED MODULE)
+endif()
 
 #-----------------------------------------------------------------------------
 # INTERNAL FUNCTIONS

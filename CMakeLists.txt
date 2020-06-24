@@ -108,6 +108,11 @@ vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" ON)
 # performance.
 vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 
+# The CUDA compiler (as of CUDA 11) takes a surprising long time to compile
+# kernels with assert in them. By default we turn off asserts when compiling
+# for CUDA devices.
+vtkm_option(VTKm_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
+
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.
@@ -135,6 +140,7 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
+  VTKm_NO_ASSERT_CUDA
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
@@ -268,8 +274,9 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   # Install helper configure files.
   install(
     FILES
+      ${VTKm_SOURCE_DIR}/CMake/VTKmCMakeBackports.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-      ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
+      ${VTKm_SOURCE_DIR}/CMake/patches/3.15/FindMPI.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 
@@ -281,7 +288,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmDIYUtils.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_SOURCE_DIR}/CMake/VTKmMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -315,7 +321,7 @@ endif ()
 #-----------------------------------------------------------------------------
 #add the benchmarking folder
 if(VTKm_ENABLE_BENCHMARKS)
-    add_subdirectory(benchmarking)
+  add_subdirectory(benchmarking)
 endif()
 
 #-----------------------------------------------------------------------------

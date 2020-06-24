@@ -42,9 +42,6 @@ public:
   bool GetIsOverlay() const;
   void SetIsOverlay(bool isOverlay);
 
-  virtual void StartScene() override;
-  virtual void EndScene() override;
-
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,

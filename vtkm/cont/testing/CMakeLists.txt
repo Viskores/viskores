@@ -77,6 +77,7 @@ set(unit_tests
   UnitTestInitialize.cxx
   UnitTestLogging.cxx
   UnitTestMoveConstructors.cxx
+  UnitTestParticleArrayCopy.cxx
   UnitTestPartitionedDataSet.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
