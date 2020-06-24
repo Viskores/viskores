@@ -20,7 +20,11 @@ namespace cont
 
 namespace detail
 {
-struct CanonicalFunctor
+template <typename Real>
+struct CanonicalFunctor;
+
+template <>
+struct CanonicalFunctor<vtkm::Float64>
 {
   /// \brief VTKm's equivalent of std::generate_canonical, turning a random bit source into
   /// random real number in the range of [0, 1).
@@ -32,23 +36,37 @@ struct CanonicalFunctor
   VTKM_EXEC_CONT
   vtkm::Float64 operator()(vtkm::UInt64 bits) const { return (bits & MASK) / DIVISOR; }
 };
+
+template <>
+struct CanonicalFunctor<vtkm::Float32>
+{
+  // We take 24 bits (number of bits in mantissa in a double) from the 64 bits random source
+  // and divide it by (1 << 24).
+  static constexpr vtkm::Float32 DIVISOR = static_cast<vtkm::Float32>(vtkm::UInt32{ 1 } << 24);
+  static constexpr vtkm::UInt32 MASK = (vtkm::UInt32{ 1 } << 24) - vtkm::UInt32{ 1 };
+
+  VTKM_EXEC_CONT
+  vtkm::Float32 operator()(vtkm::UInt64 bits) const { return (bits & MASK) / DIVISOR; }
+};
 } // detail
 
+template <typename Real = vtkm::Float64>
 class VTKM_ALWAYS_EXPORT ArrayHandleRandomUniformReal
   : public vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleRandomUniformBits,
-                                            detail::CanonicalFunctor>
+                                            detail::CanonicalFunctor<Real>>
 {
 public:
   using SeedType = vtkm::Vec<vtkm::UInt32, 1>;
 
-  VTKM_ARRAY_HANDLE_SUBCLASS_NT(
+  VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleRandomUniformReal,
+    (ArrayHandleRandomUniformReal<Real>),
     (vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleRandomUniformBits,
-                                      detail::CanonicalFunctor>));
+                                      detail::CanonicalFunctor<Real>>));
 
   explicit ArrayHandleRandomUniformReal(vtkm::Id length, SeedType seed = { std::random_device{}() })
     : Superclass(vtkm::cont::ArrayHandleRandomUniformBits{ length, seed },
-                 detail::CanonicalFunctor{})
+                 detail::CanonicalFunctor<Real>{})
   {
   }
 };
