@@ -259,22 +259,3 @@ sudo docker login --username=<docker_hub_name>
 cd .gitlab/ci/docker
 sudo ./update_all.sh 20201230
 ```
-
-# ECP OSTI CI
-
-`.gitlab-ci-ecp.yml` allows for VTK-m to run CI on provided by ECP at NMC.
-
-To have this work properly you will need to make sure that the gitlab repository
-has been updated to this non-standard yaml file location
-( "Settings" -> "CI/CD" -> "General pipelines" -> "Custom CI configuration path").
-
-The ECP CI is setup to verify VTK-m mainly on Power9 hardware as that currently is
-missing from VTK-m standard CI infrastructure.
-
-Currently we verify Power9 support with `cuda` and `openmp` builders. The `cuda` builder
-is setup to use the default cuda SDK on the machine and the required `c++` compiler which
-currently is `gcc-4.8.5`. The `openmp` builder is setup to use the newest `c++` compiler provided
-on the machine so that we maximimze compiler coverage.
-
-## Issues
-Currently these builders don't report back to the VTK-m CDash instance.
