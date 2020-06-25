@@ -97,6 +97,19 @@ void TestLagrangianFilterMultiStepInterval()
 void TestLagrangian()
 {
   TestLagrangianFilterMultiStepInterval();
+
+  // This gets around a bug where the LagrangianFilter allows VTK-m to crash during the program
+  // exit handlers. The problem is that vtkm/filter/Lagrangian.hxx declares several static
+  // ArrayHandles. The developers have been warned that this is a terrible idea for many reasons
+  // (c.f. https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/1945), but this has not been
+  // fixed yet. One of the bad things that can happen is that during the C++ exit handler,
+  // the static ArrayHandles could be closed after the device APIs, which could lead to errors
+  // when it tries to free the memory. This has been seen for this test. This hack gets
+  // around it, but eventually these static declarations should really, really, really, really
+  // be removed.
+  BasisParticles.ReleaseResources();
+  BasisParticlesOriginal.ReleaseResources();
+  BasisParticlesValidity.ReleaseResources();
 }
 
 int UnitTestLagrangianFilter(int argc, char* argv[])
