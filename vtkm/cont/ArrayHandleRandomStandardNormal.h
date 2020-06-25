@@ -58,10 +58,8 @@ public:
 
   explicit ArrayHandleRandomStandardNormal(vtkm::Id length,
                                            SeedType seed = { std::random_device{}() })
-    : Superclass(vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandleRandomUniformReal<Real>,
-                                            vtkm::cont::ArrayHandleRandomUniformReal<Real>>(
-                   UniformReal{ length, seed },
-                   UniformReal{ length, { ~seed[0] } }),
+    : Superclass(vtkm::cont::make_ArrayHandleZip(UniformReal{ length, seed },
+                                                 UniformReal{ length, { ~seed[0] } }),
                  detail::BoxMuller{})
   {
   }
