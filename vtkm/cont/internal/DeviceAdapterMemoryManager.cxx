@@ -218,6 +218,15 @@ BufferInfo::BufferInfo(BufferInfo&& src)
 
 BufferInfo& BufferInfo::operator=(const BufferInfo& src)
 {
+  detail::BufferInfoInternals::CountType oldCount =
+    this->Internals->Count.fetch_sub(1, std::memory_order::memory_order_seq_cst);
+  if (oldCount == 1)
+  {
+    this->Internals->Delete(this->Internals->Container);
+    delete this->Internals;
+    this->Internals = nullptr;
+  }
+
   this->Internals = src.Internals;
   this->Device = src.Device;
 
@@ -229,6 +238,15 @@ BufferInfo& BufferInfo::operator=(const BufferInfo& src)
 
 BufferInfo& BufferInfo::operator=(BufferInfo&& src)
 {
+  detail::BufferInfoInternals::CountType oldCount =
+    this->Internals->Count.fetch_sub(1, std::memory_order::memory_order_seq_cst);
+  if (oldCount == 1)
+  {
+    this->Internals->Delete(this->Internals->Container);
+    delete this->Internals;
+    this->Internals = nullptr;
+  }
+
   this->Internals = src.Internals;
   this->Device = src.Device;
 
