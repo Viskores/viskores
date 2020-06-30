@@ -141,7 +141,9 @@ void TestContDataTypesHaveMoveSemantics()
   is_noexcept_movable<vtkm::cont::DataSet>();
   is_noexcept_movable<vtkm::cont::Field>();
   is_noexcept_movable<vtkm::cont::CoordinateSystem>();
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   is_noexcept_movable<vtkm::cont::ArrayHandleVirtualCoordinates>();
+  VTKM_DEPRECATED_SUPPRESS_END
 
   //verify the CellSetStructured, and CellSetExplicit
   //have efficient storage in containers such as std::vector

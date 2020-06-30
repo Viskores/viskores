@@ -381,7 +381,7 @@ void WriteDataSetAsStructured(std::ostream& out,
   ///\todo: support rectilinear
 
   // Type of structured grid (uniform, rectilinear, curvilinear) is determined by coordinate system
-  vtkm::cont::ArrayHandleVirtualCoordinates coordSystem = dataSet.GetCoordinateSystem().GetData();
+  auto coordSystem = dataSet.GetCoordinateSystem().GetData();
   if (coordSystem.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
   {
     // uniform is written as "structured points"

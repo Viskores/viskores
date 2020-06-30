@@ -37,13 +37,15 @@ class VTKM_ALWAYS_EXPORT CoordDataDepWrapper
 {
   using Superclass = vtkm::cont::VariantArrayHandleBase<vtkm::List<vtkm::Vec3f>>;
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates ToArray() const;
+  VTKM_DEPRECATED_SUPPRESS_END
 
 public:
   using Superclass::Superclass;
 
   // Make the return also behave as ArrayHandleVirtualCoordiantes
-  // TODO: Deprecate this behavior
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 
   VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns a VariantArrayHandle.")
   operator vtkm::cont::ArrayHandleVirtualCoordinates() const
@@ -96,6 +98,8 @@ public:
   {
     return this->ToArray().PrepareForOutput(numberOfValues, device, token);
   }
+
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 
 } // namespace detail

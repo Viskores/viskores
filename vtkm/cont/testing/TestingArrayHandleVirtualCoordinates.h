@@ -10,12 +10,17 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandleVirtualCoordinates_h
 #define vtk_m_cont_testing_TestingArrayHandleVirtualCoordinates_h
 
+// This is testing deprecated functionality. It is left to make sure that old code
+// still works, but will be removed if ArrayHandleVirtualCoordinates is removed.
+
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 namespace vtkm
 {
@@ -142,5 +147,6 @@ public:
 }
 } // vtkm::cont::testing
 
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif // vtk_m_cont_testing_TestingArrayHandleVirtualCoordinates_h

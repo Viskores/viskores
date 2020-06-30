@@ -44,6 +44,13 @@ struct CheckSameCoordinateSystem
     CheckSameField{}(originalArray, fileCoords);
   }
 
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandleVirtual<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
   void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
   {
@@ -76,23 +83,6 @@ struct CheckSameCoordinateSystem
     VTKM_TEST_ASSERT(
       test_equal_portals(originalPortal.GetThirdPortal(), filePortal.GetThirdPortal()));
   }
-
-  void operator()(const vtkm::cont::ArrayHandleVirtualCoordinates& originalArray,
-                  const vtkm::cont::CoordinateSystem& fileCoords) const
-  {
-    if (originalArray.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
-    {
-      (*this)(originalArray.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(), fileCoords);
-    }
-    else if (originalArray.IsType<ArrayHandleRectilinearCoords>())
-    {
-      (*this)(originalArray.Cast<ArrayHandleRectilinearCoords>(), fileCoords);
-    }
-    else
-    {
-      CheckSameField{}(originalArray, fileCoords);
-    }
-  }
 };
 
 void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
@@ -111,8 +101,9 @@ void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
   }
 
   VTKM_TEST_ASSERT(fileData.GetNumberOfCoordinateSystems() > 0);
-  CheckSameCoordinateSystem{}(originalData.GetCoordinateSystem().GetData(),
-                              fileData.GetCoordinateSystem());
+  vtkm::cont::CastAndCall(originalData.GetCoordinateSystem().GetData(),
+                          CheckSameCoordinateSystem{},
+                          fileData.GetCoordinateSystem());
 }
 
 void TestVTKWriteTestData(const std::string& methodName, const vtkm::cont::DataSet& data)

@@ -417,6 +417,7 @@ void TestArrayHandleUniformPointCoordinates()
   RunTest(MakeTestVariantArrayHandle(array));
 }
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 void TestArrayHandleVirtualCoordinates()
 {
   int type = RandomValue<int>::Make(0, 2);
@@ -444,6 +445,7 @@ void TestArrayHandleVirtualCoordinates()
   RunTest(array);
   RunTest(MakeTestVariantArrayHandle(array));
 }
+VTKM_DEPRECATED_SUPPRESS_END
 
 struct TestArrayHandleZip
 {
