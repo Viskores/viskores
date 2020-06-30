@@ -76,10 +76,6 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
                                               vtkm::Vec<vtkm::FloatDefault, DIMENSIONS>(0.0f),
                                               vtkm::Vec<vtkm::FloatDefault, DIMENSIONS>(1.0f));
 
-  // copy points
-  vtkm::cont::ArrayHandle<PointType> points;
-  vtkm::cont::ArrayCopy(uniformDs.GetCoordinateSystem().GetData(), points);
-
   auto uniformCs =
     uniformDs.GetCellSet().template Cast<vtkm::cont::CellSetStructured<DIMENSIONS>>();
 
@@ -99,15 +95,21 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
 
   // Warp the coordinates
   std::uniform_real_distribution<vtkm::FloatDefault> warpFactor(-0.10f, 0.10f);
-  auto pointsPortal = points.WritePortal();
-  for (vtkm::Id i = 0; i < pointsPortal.GetNumberOfValues(); ++i)
+  auto inPointsPortal = uniformDs.GetCoordinateSystem()
+                          .GetData()
+                          .template Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>()
+                          .ReadPortal();
+  vtkm::cont::ArrayHandle<PointType> points;
+  points.Allocate(inPointsPortal.GetNumberOfValues());
+  auto outPointsPortal = points.WritePortal();
+  for (vtkm::Id i = 0; i < outPointsPortal.GetNumberOfValues(); ++i)
   {
     PointType warpVec(0);
     for (vtkm::IdComponent c = 0; c < DIMENSIONS; ++c)
     {
       warpVec[c] = warpFactor(RandomGenerator);
     }
-    pointsPortal.Set(i, pointsPortal.Get(i) + warpVec);
+    outPointsPortal.Set(i, inPointsPortal.Get(i) + warpVec);
   }
 
   // build dataset

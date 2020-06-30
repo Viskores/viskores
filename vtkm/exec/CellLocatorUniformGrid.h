@@ -34,8 +34,6 @@ private:
   using VisitType = vtkm::TopologyElementTagCell;
   using IncidentType = vtkm::TopologyElementTagPoint;
   using CellSetPortal = vtkm::exec::ConnectivityStructured<VisitType, IncidentType, dimensions>;
-  using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
 
 public:
   VTKM_CONT
@@ -44,15 +42,12 @@ public:
                          const vtkm::Vec3f origin,
                          const vtkm::Vec3f invSpacing,
                          const vtkm::Vec3f maxPoint,
-                         const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                         DeviceAdapter,
-                         vtkm::cont::Token& token)
+                         DeviceAdapter)
     : CellDims(cellDims)
     , PointDims(pointDims)
     , Origin(origin)
     , InvSpacing(invSpacing)
     , MaxPoint(maxPoint)
-    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
   {
   }
 
@@ -120,7 +115,6 @@ private:
   vtkm::Vec3f Origin;
   vtkm::Vec3f InvSpacing;
   vtkm::Vec3f MaxPoint;
-  CoordsPortal Coords;
 };
 }
 }

@@ -163,7 +163,7 @@ void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   out << "POINTS " << npoints << " " << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name()
       << " " << '\n';
 
-  OutputPointsFunctor{ out }(cdata);
+  cdata.CastAndCall(OutputPointsFunctor{ out });
 }
 
 template <class CellSetType>

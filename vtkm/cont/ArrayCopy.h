@@ -110,6 +110,39 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
   // Static dispatch cases 1 & 2
   detail::ArrayCopyImpl(source, destination, JustCopyStorage{});
 }
+
+// Forward declaration
+// Cannot include VariantArrayHandle.h here due to circular dependency.
+template <typename TypeList>
+class VariantArrayHandleBase;
+
+namespace detail
+{
+
+struct ArrayCopyFunctor
+{
+  template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
+                            vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination) const
+  {
+    vtkm::cont::ArrayCopy(source, destination);
+  }
+};
+
+} // namespace detail
+
+/// \brief Deep copies data in a `VariantArrayHandle` to an array of a known type.
+///
+/// This form of `ArrayCopy` can be used to copy data from an unknown array type to
+/// an array of a known type. Note that regardless of the source type, the data will
+/// be deep copied.
+///
+template <typename InTypeList, typename OutValueType, typename OutStorage>
+VTKM_CONT void ArrayCopy(const vtkm::cont::VariantArrayHandleBase<InTypeList>& source,
+                         vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination)
+{
+  source.CastAndCall(detail::ArrayCopyFunctor{}, destination);
+}
 }
 } // namespace vtkm::cont
 

@@ -194,12 +194,27 @@ public:
   VTKM_CONT vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>, InArrayHandle>
   MapPointFieldShallow(const InArrayHandle& inArray) const
   {
+    VTKM_IS_ARRAY_HANDLE(InArrayHandle);
     VTKM_ASSERT(this->PointScatter);
 
     return vtkm::cont::make_ArrayHandlePermutation(this->PointScatter->GetOutputToInputMap(),
                                                    inArray);
   }
 
+private:
+  struct MapPointFieldDeepFunctor
+  {
+    template <typename InArrayHandle, typename OutArrayHandle>
+    VTKM_CONT void operator()(const InArrayHandle& inArray,
+                              OutArrayHandle& outArray,
+                              const RemoveUnusedPoints& self) const
+    {
+      self.MapPointFieldDeep(inArray, outArray);
+    }
+  };
+
+public:
+  ///@{
   /// \brief Maps a point field from the original points to the new reduced points
   ///
   /// Given an array handle that holds the values for a point field of the
@@ -209,35 +224,30 @@ public:
   /// This version of point mapping performs a deep copy into the destination
   /// array provided.
   ///
-  template <typename InArrayHandle, typename OutArrayHandle>
-  VTKM_CONT void MapPointFieldDeep(const InArrayHandle& inArray, OutArrayHandle& outArray) const
+  template <typename InT, typename InS, typename OutT, typename OutS>
+  VTKM_CONT void MapPointFieldDeep(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
+                                   vtkm::cont::ArrayHandle<OutT, OutS>& outArray) const
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandle);
-    VTKM_IS_ARRAY_HANDLE(OutArrayHandle);
-
     vtkm::cont::ArrayCopy(this->MapPointFieldShallow(inArray), outArray);
   }
 
-  /// \brief Maps a point field from the original points to the new reduced points
-  ///
-  /// Given an array handle that holds the values for a point field of the
-  /// original data set, returns a new array handle containing field values
-  /// rearranged to the new indices of the reduced point set.
-  ///
-  /// This version of point mapping performs a deep copy into an array that is
-  /// returned.
-  ///
+  template <typename InArrayTypes, typename OutArrayHandle>
+  VTKM_CONT void MapPointFieldDeep(const vtkm::cont::VariantArrayHandleBase<InArrayTypes>& inArray,
+                                   OutArrayHandle& outArray) const
+  {
+    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
+  }
+
   template <typename InArrayHandle>
-  vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointFieldDeep(
+  VTKM_CONT vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointFieldDeep(
     const InArrayHandle& inArray) const
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandle);
-
     vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> outArray;
     this->MapPointFieldDeep(inArray, outArray);
 
     return outArray;
   }
+  ///@}
 
   const vtkm::worklet::ScatterCounting& GetPointScatter() const
   {

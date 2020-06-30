@@ -60,7 +60,7 @@ void TestWarpScalar()
   vecType normal = vtkm::make_Vec<vtkm::FloatDefault>(static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(0.0),
                                                       static_cast<vtkm::FloatDefault>(1.0));
-  auto coordinate = ds.GetCoordinateSystem().GetData();
+  auto coordinate = ds.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::Id nov = coordinate.GetNumberOfValues();
   vtkm::cont::ArrayHandleConstant<vecType> normalAH =
     vtkm::cont::make_ArrayHandleConstant(normal, nov);

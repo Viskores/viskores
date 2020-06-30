@@ -234,7 +234,7 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
   vtkm::Id numCells = cellSet.GetNumberOfCells();
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
-  vtkm::cont::ArrayHandleVirtualCoordinates points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
 
   //std::cout << "No of cells: " << numCells << "\n";
   //std::cout.precision(3);
@@ -457,7 +457,7 @@ struct CellLocatorBIHPrepareForExecutionFunctor
     vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
     const vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>& nodes,
     const vtkm::cont::ArrayHandle<vtkm::Id>& processedCellIds,
-    const vtkm::cont::ArrayHandleVirtualCoordinates& coords) const
+    const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coords) const
   {
     using ExecutionType =
       vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
@@ -501,7 +501,7 @@ const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForE
                                  this->ExecutionObjectHandle,
                                  this->Nodes,
                                  this->ProcessedCellIds,
-                                 this->GetCoordinates().GetData());
+                                 this->GetCoordinates().GetDataAsMultiplexer());
   return this->ExecutionObjectHandle.PrepareForExecution(device, token);
   ;
 }

@@ -25,6 +25,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Hash.h>
@@ -419,17 +420,18 @@ public:
     points = uniquePointCoordinates;
   }
 
+  template <typename TL>
   VTKM_CONT void Run(
-    vtkm::Float64 delta,                               // Distance to consider two points coincident
-    bool fastCheck,                                    // If true, approximate distances are used
-    const vtkm::Bounds& bounds,                        // Bounds of points
-    vtkm::cont::ArrayHandleVirtualCoordinates& points) // coordinates, modified to merge close
+    vtkm::Float64 delta,                            // Distance to consider two points coincident
+    bool fastCheck,                                 // If true, approximate distances are used
+    const vtkm::Bounds& bounds,                     // Bounds of points
+    vtkm::cont::VariantArrayHandleBase<TL>& points) // coordinates, modified to merge close
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
-    if (points.IsType<decltype(concretePoints)>())
+    if (points.template IsType<decltype(concretePoints)>())
     {
-      concretePoints = points.Cast<decltype(concretePoints)>();
+      concretePoints = points.template Cast<decltype(concretePoints)>();
     }
     else
     {
@@ -439,7 +441,7 @@ public:
     Run(delta, fastCheck, bounds, concretePoints);
 
     // Make sure that the modified points are reflected back in the virtual array.
-    points = vtkm::cont::ArrayHandleVirtualCoordinates(concretePoints);
+    points = concretePoints;
   }
 
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
@@ -455,9 +457,6 @@ public:
   template <typename InArrayHandle, typename OutArrayHandle>
   VTKM_CONT void MapPointField(const InArrayHandle& inArray, OutArrayHandle& outArray) const
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandle);
-    VTKM_IS_ARRAY_HANDLE(OutArrayHandle);
-
     vtkm::worklet::AverageByKey::Run(this->MergeKeys, inArray, outArray);
   }
 
@@ -465,8 +464,6 @@ public:
   VTKM_CONT vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointField(
     const InArrayHandle& inArray) const
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandle);
-
     vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> outArray;
     this->MapPointField(inArray, outArray);
 

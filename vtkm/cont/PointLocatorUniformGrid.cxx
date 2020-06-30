@@ -115,7 +115,7 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
         rmin,
         rmax,
         self.Dims,
-        self.GetCoordinates().GetData().PrepareForInput(DeviceAdapter(), token),
+        self.GetCoordinates().GetDataAsMultiplexer().PrepareForInput(DeviceAdapter(), token),
         self.PointIds.PrepareForInput(DeviceAdapter(), token),
         self.CellLower.PrepareForInput(DeviceAdapter(), token),
         self.CellUpper.PrepareForInput(DeviceAdapter(), token));

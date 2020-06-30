@@ -85,7 +85,8 @@ struct ValidateNormals
   using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
   using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().ReadPortal());
-  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().ReadPortal());
+  using PointsType =
+    decltype(std::declval<vtkm::cont::CoordinateSystem>().GetDataAsMultiplexer().ReadPortal());
 
   vtkm::cont::CoordinateSystem Coords;
   CellSetType Cells;
@@ -139,7 +140,7 @@ struct ValidateNormals
                   const vtkm::cont::Field& cellNormalsField)
     : Coords{ dataset.GetCoordinateSystem() }
     , Cells{ dataset.GetCellSet().Cast<CellSetType>() }
-    , Points{ this->Coords.GetData().ReadPortal() }
+    , Points{ this->Coords.GetDataAsMultiplexer().ReadPortal() }
     , CheckPoints(checkPoints)
     , CheckCells(checkCells)
   {
@@ -170,7 +171,7 @@ struct ValidateNormals
     // Locate a point with the minimum x coordinate:
     const vtkm::Id startPoint = [&]() -> vtkm::Id {
       const vtkm::Float64 xMin = this->Coords.GetBounds().X.Min;
-      const auto points = this->Coords.GetData().ReadPortal();
+      const auto points = this->Coords.GetDataAsMultiplexer().ReadPortal();
       const vtkm::Id numPoints = points.GetNumberOfValues();
       vtkm::Id resultIdx = -1;
       for (vtkm::Id pointIdx = 0; pointIdx < numPoints; ++pointIdx)
@@ -343,7 +344,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   }
 
   // modify normals in place
-  const auto coords = dataset.GetCoordinateSystem().GetData();
+  const auto coords = dataset.GetCoordinateSystem().GetDataAsMultiplexer();
   const auto cells = dataset.GetCellSet();
   if (testPoints && testCells)
   {

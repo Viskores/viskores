@@ -128,7 +128,6 @@ set(template_sources
   CellSetExtrude.hxx
   CellSetStructured.hxx
   ColorTable.hxx
-  CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
   StorageVirtual.hxx

@@ -10,6 +10,7 @@
 #ifndef vtk_m_exec_PointLocatorUniformGrid_h
 #define vtk_m_exec_PointLocatorUniformGrid_h
 
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -29,7 +30,7 @@ class VTKM_ALWAYS_EXPORT PointLocatorUniformGrid final : public vtkm::exec::Poin
 {
 public:
   using CoordPortalType =
-    typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::template ExecutionTypes<
       DeviceAdapter>::PortalConst;
   using IdPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;

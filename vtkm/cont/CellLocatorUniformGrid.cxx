@@ -81,12 +81,10 @@ struct CellLocatorUniformGridPrepareForExecutionFunctor
   template <typename DeviceAdapter, typename... Args>
   VTKM_CONT bool operator()(DeviceAdapter,
                             vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& execLocator,
-                            vtkm::cont::Token& token,
                             Args&&... args) const
   {
     using ExecutionType = vtkm::exec::CellLocatorUniformGrid<DeviceAdapter, dimensions>;
-    ExecutionType* execObject =
-      new ExecutionType(std::forward<Args>(args)..., DeviceAdapter(), token);
+    ExecutionType* execObject = new ExecutionType(std::forward<Args>(args)..., DeviceAdapter());
     execLocator.Reset(execObject);
     return true;
   }
@@ -103,26 +101,22 @@ const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<3>(),
                                              this->ExecutionObjectHandle,
-                                             token,
                                              this->CellDims,
                                              this->PointDims,
                                              this->Origin,
                                              this->InvSpacing,
-                                             this->MaxPoint,
-                                             this->GetCoordinates().GetData());
+                                             this->MaxPoint);
   }
   else
   {
     success = vtkm::cont::TryExecuteOnDevice(device,
                                              CellLocatorUniformGridPrepareForExecutionFunctor<2>(),
                                              this->ExecutionObjectHandle,
-                                             token,
                                              this->CellDims,
                                              this->PointDims,
                                              this->Origin,
                                              this->InvSpacing,
-                                             this->MaxPoint,
-                                             this->GetCoordinates().GetData());
+                                             this->MaxPoint);
   }
   if (!success)
   {
