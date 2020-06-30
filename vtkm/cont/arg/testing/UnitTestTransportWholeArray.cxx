@@ -17,7 +17,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

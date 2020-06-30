@@ -13,7 +13,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/exec/FunctorBase.h>
 

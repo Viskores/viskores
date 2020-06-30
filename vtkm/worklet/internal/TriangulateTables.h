@@ -16,7 +16,6 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageBasic.h>
 
 namespace vtkm
 {

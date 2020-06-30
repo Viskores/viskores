@@ -27,7 +27,6 @@
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
@@ -157,17 +156,18 @@ public:
     }
   };
 
+  template <typename PortalType>
   struct AddArrayKernel
   {
     VTKM_CONT
-    AddArrayKernel(const IdPortalType& array)
+    AddArrayKernel(const PortalType& array)
       : Array(array)
       , Dims()
     {
     }
 
     VTKM_CONT
-    AddArrayKernel(const IdPortalType& array, const vtkm::Id3& dims)
+    AddArrayKernel(const PortalType& array, const vtkm::Id3& dims)
       : Array(array)
       , Dims(dims)
     {
@@ -187,9 +187,17 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    IdPortalType Array;
+    PortalType Array;
     vtkm::Id3 Dims;
   };
+
+  template <typename PortalType>
+  static VTKM_CONT AddArrayKernel<PortalType> MakeAddArrayKernel(
+    PortalType portal,
+    const vtkm::Id3& dims = vtkm::Id3{})
+  {
+    return AddArrayKernel<PortalType>(portal, dims);
+  }
 
   // Checks that each instance is only visited once:
   struct OverlapKernel
@@ -503,55 +511,74 @@ private:
                      "Device adapter Name does not equal itself.");
   }
 
-  // Note: this test does not actually test to make sure the data is available
-  // in the execution environment. It tests to make sure data gets to the array
-  // and back, but it is possible that the data is not available in the
-  // execution environment.
-  static VTKM_CONT void TestArrayTransfer()
+  static VTKM_CONT void TestMemoryTransfer()
   {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing ArrayHandle Transfer" << std::endl;
+    std::cout << "Testing Memory Transfer" << std::endl;
 
-    using StorageType = vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic>;
+    using T = vtkm::Id;
+    using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<T*>;
+    auto makePortal = [](const vtkm::cont::internal::BufferInfo& buffer) {
+      return PortalType(static_cast<T*>(buffer.GetPointer()),
+                        static_cast<T*>(buffer.GetPointer()) +
+                          static_cast<std::size_t>(buffer.GetSize()) / sizeof(T));
+    };
 
-    // Create original input array.
-    StorageType storage;
-    storage.Allocate(ARRAY_SIZE * 2);
+    constexpr vtkm::BufferSizeType BUFFER_SIZE =
+      ARRAY_SIZE * static_cast<vtkm::BufferSizeType>(sizeof(T));
 
-    StorageType::PortalType portal = storage.GetPortal();
-    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE * 2,
-                     "Storage portal has unexpected size.");
+    // Set up buffer on host.
+    vtkm::cont::internal::BufferInfo hostBufferSrc =
+      vtkm::cont::internal::AllocateOnHost(BUFFER_SIZE);
+    VTKM_TEST_ASSERT(hostBufferSrc.GetSize() == BUFFER_SIZE);
+    SetPortal(makePortal(hostBufferSrc));
 
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+    vtkm::cont::internal::DeviceAdapterMemoryManager<DeviceAdapterTag> memoryManager;
+
+    std::cout << "Allocate a buffer." << std::endl;
+    vtkm::cont::internal::BufferInfo allocatedMemory = memoryManager.Allocate(BUFFER_SIZE);
+    VTKM_TEST_ASSERT(allocatedMemory.GetSize() == BUFFER_SIZE);
+
+    std::cout << "Copy data from host to device." << std::endl;
+    allocatedMemory = memoryManager.CopyHostToDevice(hostBufferSrc);
+
+    std::cout << "Copy data within device." << std::endl;
+    vtkm::cont::internal::BufferInfo workingMemory =
+      memoryManager.CopyDeviceToDevice(allocatedMemory);
+    VTKM_TEST_ASSERT(workingMemory.GetSize() == BUFFER_SIZE);
+
+    std::cout << "Copy data back to host." << std::endl;
+    vtkm::cont::internal::BufferInfo hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE);
+    CheckPortal(makePortal(hostBufferDest));
+
+    std::cout << "Shrink a buffer (and preserve memory)" << std::endl;
+    memoryManager.Reallocate(workingMemory, BUFFER_SIZE / 2);
+    hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE / 2);
+    CheckPortal(makePortal(hostBufferDest));
+
+    std::cout << "Grow a buffer (and preserve memory)" << std::endl;
+    memoryManager.Reallocate(workingMemory, BUFFER_SIZE * 2);
+    hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+    VTKM_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE * 2);
+    hostBufferDest.Reallocate(BUFFER_SIZE / 2);
+    CheckPortal(makePortal(hostBufferDest));
+
+    std::cout << "Make sure data is actually available on the device." << std::endl;
+    // This actually requires running schedule.
+    workingMemory = memoryManager.CopyDeviceToDevice(allocatedMemory);
+    Algorithm::Schedule(MakeAddArrayKernel(makePortal(workingMemory)), ARRAY_SIZE);
+
+    hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+
+    PortalType portal = makePortal(hostBufferDest);
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
+    for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
     {
-      portal.Set(index, TestValue(index, vtkm::Id()));
-    }
-
-    vtkm::cont::ArrayHandle<vtkm::Id> handle(std::move(storage));
-
-    // Do an operation just so we know the values are placed in the execution
-    // environment and they change. We are only calling on half the array
-    // because we are about to shrink.
-    {
-      vtkm::cont::Token token;
-      Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
-                          ARRAY_SIZE);
-    }
-
-    // Change size.
-    handle.Shrink(ARRAY_SIZE);
-
-    VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
-                     "Shrink did not set size of array handle correctly.");
-
-    // Get the array back and check its values.
-    auto checkPortal = handle.ReadPortal();
-    VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE, "Storage portal wrong size.");
-
-    for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-    {
-      VTKM_TEST_ASSERT(checkPortal.Get(index) == TestValue(index, vtkm::Id()) + index,
-                       "Did not get correct values from array.");
+      T expected = TestValue(index, T()) + T(index);
+      T computed = portal.Get(index);
+      VTKM_TEST_ASSERT(test_equal(expected, computed), expected, " != ", computed);
     }
   }
 
@@ -669,7 +696,8 @@ private:
       std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
-        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)), 1);
+        Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+                            1);
       }
 
       std::cout << "Checking results." << std::endl;
@@ -700,7 +728,7 @@ private:
       std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
-        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+        Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
                             ARRAY_SIZE);
       }
 
@@ -734,7 +762,7 @@ private:
       std::cout << "Running add." << std::endl;
       {
         vtkm::cont::Token token;
-        Algorithm::Schedule(AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
+        Algorithm::Schedule(MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token)),
                             size);
       }
 
@@ -776,7 +804,8 @@ private:
       {
         vtkm::cont::Token token;
         Algorithm::Schedule(
-          AddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token), maxRange), maxRange);
+          MakeAddArrayKernel(handle.PrepareForInPlace(DeviceAdapterTag{}, token), maxRange),
+          maxRange);
       }
 
       std::cout << "Checking results." << std::endl;
@@ -1300,18 +1329,22 @@ private:
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Unique with comparison object" << std::endl;
-    std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+    IdArrayHandle input;
+    input.Allocate(ARRAY_SIZE);
     {
-      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
+      auto portal = input.WritePortal();
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, OFFSET + (index % 50));
+      }
     }
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+
     Algorithm::Sort(input);
     Algorithm::Unique(input, FuseAll());
 
     // Check to make sure that input was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    input.ReadPortal();                // Forces copy back to control.
+    input.SyncControlArray();          // Forces copy back to control.
     input.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VTKM_TEST_ASSERT(input.GetNumberOfValues() == 1,
                      "Unique did not resize array (or size did not copy to control).");
@@ -2071,7 +2104,8 @@ private:
         ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
         ARRAY_SIZE);
       Algorithm::Schedule(
-        AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)), ARRAY_SIZE);
+        MakeAddArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag(), token)),
+        ARRAY_SIZE);
     }
 
     //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
@@ -2366,7 +2400,7 @@ private:
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
       for (; nkernels < 100; ++nkernels)
       {
-        Algorithm::Schedule(AddArrayKernel(portal), ARRAY_SIZE);
+        Algorithm::Schedule(MakeAddArrayKernel(portal), ARRAY_SIZE);
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
       }
       Algorithm::Synchronize();
@@ -3097,7 +3131,7 @@ private:
     {
       std::cout << "Doing DeviceAdapter tests" << std::endl;
 
-      TestArrayTransfer();
+      TestMemoryTransfer();
       TestOutOfMemory();
       TestTimer();
       TestVirtualObjectTransfer();

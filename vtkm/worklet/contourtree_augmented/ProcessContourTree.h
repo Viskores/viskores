@@ -229,7 +229,7 @@ public:
     auto hyperarcsPortal = contourTree.Hyperarcs.ReadPortal();
     // auto superarcsPortal = contourTree.Superarcs.ReadPortal();
     auto nodesPortal = contourTree.Nodes.ReadPortal();
-    auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
+    // auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
     for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
     { // per node in sorted order
       vtkm::Id sortID = nodesPortal.Get(sortedNode);

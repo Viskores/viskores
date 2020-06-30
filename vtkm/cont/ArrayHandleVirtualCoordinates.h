@@ -114,8 +114,30 @@ public:
     }
     else
     {
+      using HandleType = BasicCoordsType;
+      using T = typename HandleType::ValueType;
+      using S = typename HandleType::StorageTag;
+      HandleType array;
+      if (obj.IsType<BasicCoordsType>())
+      {
+        // If the object actually is a BasicCoordsType, just save it.
+        array =
+          storage->Cast<vtkm::cont::internal::detail::StorageVirtualImpl<T, S>>()->GetHandle();
+      }
+      else
+      {
+        // Give up and deep copy data.
+        vtkm::Id size = obj.GetNumberOfValues();
+        array.Allocate(size);
+        auto src = obj.ReadPortal();
+        auto dest = array.WritePortal();
+        for (vtkm::IdComponent index = 0; index < size; ++index)
+        {
+          dest.Set(index, src.Get(index));
+        }
+      }
       vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicCoordsType>::Get());
-      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+      vtkmdiy::save(bb, array);
     }
   }
 

@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/StorageVirtual.h>
 
 

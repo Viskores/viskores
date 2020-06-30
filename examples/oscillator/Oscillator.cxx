@@ -102,7 +102,12 @@ void read_oscillators(std::string filePath, vtkm::source::Oscillator& source)
 // ArcticViewer helper
 // ----------------------------------------------------------------------------
 
-void writeData(std::string& basePath, int timestep, int iSize, int jSize, int kSize, double* values)
+void writeData(std::string& basePath,
+               int timestep,
+               int iSize,
+               int jSize,
+               int kSize,
+               const double* values)
 {
   int size = iSize * jSize * kSize;
   std::ostringstream timeValues;
@@ -158,7 +163,7 @@ void writeData(std::string& basePath, int timestep, int iSize, int jSize, int kS
   else
   {
     int stackSize = size * 8;
-    dataFilePathPointer.write((char*)values, stackSize);
+    dataFilePathPointer.write(reinterpret_cast<const char*>(values), stackSize);
     dataFilePathPointer.flush();
     dataFilePathPointer.close();
   }
@@ -313,9 +318,9 @@ int main(int argc, char** argv)
     vtkm::cont::DataSet rdata = source.Execute();
     if (generateOutput)
     {
-      vtkm::cont::ArrayHandle<vtkm::Float64> tmp;
+      vtkm::cont::ArrayHandleBasic<vtkm::Float64> tmp;
       rdata.GetField("scalars", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(tmp);
-      double* values = tmp.GetStorage().GetArray();
+      const double* values = tmp.GetReadPointer();
       writeData(outputDirectory, count++, sizeX, sizeY, sizeZ, values);
     }
 
