@@ -1143,7 +1143,7 @@ void
 diy::Master::
 flush(bool remote)
 {
-#ifdef DEBUG
+#ifdef VTKMDIY_DEBUG
   time_type start = get_time();
   unsigned wait = 1;
 #endif
@@ -1163,7 +1163,7 @@ flush(bool remote)
       {
           comm_exchange(gid_order);
 
-#ifdef DEBUG
+#ifdef VTKMDIY_DEBUG
           time_type cur = get_time();
           if (cur - start > wait*1000)
           {

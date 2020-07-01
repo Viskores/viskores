@@ -60,7 +60,7 @@ find_package(VTKm REQUIRED QUIET)
 ####################################
 if (VTKm_ENABLE_MPI)
   add_executable(ContourTree_Distributed ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Distributed vtkm_filter)
+  target_link_libraries(ContourTree_Distributed vtkm_filter MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
