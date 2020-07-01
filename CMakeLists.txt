@@ -139,6 +139,7 @@ function(add_diy_mpi_library use_mpi)
     endif()
 
     add_library(${lib_name} ${sources})
+    set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_features(${lib_name} PRIVATE cxx_std_11)
     target_compile_definitions(${lib_name}
         PRIVATE -DVTKMDIY_HAS_MPI=${has_mpi_val}
