@@ -59,7 +59,7 @@ set (diy_libraries "")
 # Debugging
 if                          (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
                              ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-    list (APPEND diy_definitions "-DDEBUG")
+    list (APPEND diy_definitions "-DVTKMDIY_DEBUG")
 endif                       ()
 
 # Logging
