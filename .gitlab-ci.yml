@@ -91,13 +91,13 @@
 
 .only-default: &only-default
   only:
-    - master
+    - master@vtk/vtk-m
+    - tags@vtk/vtk-m
     - merge_requests
-    - tags
 
 .only-master: &only-master
   only:
-    - master
+    - master@vtk/vtk-m
 
 
 # General Longer Term Tasks:
