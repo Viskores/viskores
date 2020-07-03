@@ -85,7 +85,6 @@ public:
   // work there. This is so that this class can be used in classes that work in both
   // control and execution environments without having to suppress warnings in them all.
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsGets<PT>::value, int>::type = 0>
   VTKM_CONT typename Superclass::ValueType Get(vtkm::Id index) const
@@ -104,10 +103,9 @@ public:
     return this->Superclass::Get(index);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsGets3D<PT>::value, int>::type = 0>
-  VTKM_EXEC_CONT typename Superclass::ValueType Get(vtkm::Id3 index) const
+  VTKM_CONT typename Superclass::ValueType Get(vtkm::Id3 index) const
   {
     if (!(*this->Valid))
     {
@@ -123,7 +121,6 @@ public:
     return this->Superclass::Get(index);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsSets<PT>::value, int>::type = 0>
   VTKM_CONT void Set(vtkm::Id index, typename Superclass::ValueType value) const
@@ -142,10 +139,9 @@ public:
     this->Superclass::Set(index, value);
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename PT = Superclass,
             typename std::enable_if<vtkm::internal::PortalSupportsSets3D<PT>::value, int>::type = 0>
-  VTKM_EXEC_CONT void Set(vtkm::Id3 index, typename Superclass::ValueType value) const
+  VTKM_CONT void Set(vtkm::Id3 index, typename Superclass::ValueType value) const
   {
     if (!(*this->Valid))
     {
