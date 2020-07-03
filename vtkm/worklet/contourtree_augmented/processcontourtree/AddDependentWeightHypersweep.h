@@ -73,6 +73,149 @@ namespace contourtree_augmented
 {
 namespace process_contourtree_inc
 {
+
+
+
+
+class InitialiseArcsVolume : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayIn, WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _3;
+
+  vtkm::Id totalVolume;
+
+  VTKM_EXEC_CONT InitialiseArcsVolume(vtkm::Id _totalVolume)
+    : totalVolume(_totalVolume)
+  {
+  }
+
+  template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
+  VTKM_EXEC void operator()(const vtkm::Id currentId,
+                            const IdWholeArrayInPortalType& hypersweepSumValuesPortal,
+                            const IdWholeArrayInPortalType& superarcIntrinsicWeightPortal,
+                            const IdWholeArrayInPortalType& superarcsPortal,
+                            const EdgeWholeArrayInOutPortal& arcsPortal) const
+  {
+    Id i = currentId;
+    Id parent = MaskedIndex(superarcsPortal.Get(i));
+    if (parent == 0)
+    {
+      // We expect the root to the last vertex in the supernodes array
+      assert(i != superarcsPortal.GetNumberOfValues() - 2);
+      return;
+    }
+
+    EdgeDataVolume edge;
+    edge.i = i;
+    edge.j = parent;
+    edge.upEdge = IsAscending((superarcsPortal.Get(i)));
+    edge.subtreeVolume =
+      (totalVolume - hypersweepSumValuesPortal.Get(i)) + (superarcIntrinsicWeightPortal.Get(i) - 1);
+
+    EdgeDataVolume oppositeEdge;
+    oppositeEdge.i = parent;
+    oppositeEdge.j = i;
+    oppositeEdge.upEdge = !edge.upEdge;
+    oppositeEdge.subtreeVolume = hypersweepSumValuesPortal.Get(i);
+
+    arcsPortal.Set(i * 2, edge);
+    arcsPortal.Set(i * 2 + 1, oppositeEdge);
+  }
+};
+
+
+class SetFirstVertexForSuperparent : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using InputDomain = _1;
+
+  VTKM_EXEC_CONT SetFirstVertexForSuperparent() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(
+    const vtkm::Id sortedNode,
+    const IdWholeArrayInPortalType& nodesPortal,
+    const IdWholeArrayInPortalType& superparentsPortal,
+    const IdWholeArrayInOutPortalType& firstVertexForSuperparentPortal) const
+  {
+    vtkm::Id sortID = nodesPortal.Get(sortedNode);
+    vtkm::Id superparent = superparentsPortal.Get(sortID);
+    if (sortedNode == 0)
+    {
+      firstVertexForSuperparentPortal.Set(superparent, sortedNode);
+    }
+    else if (superparent != superparentsPortal.Get(nodesPortal.Get(sortedNode - 1)))
+    {
+      firstVertexForSuperparentPortal.Set(superparent, sortedNode);
+    }
+  }
+};
+
+class ComputeIntrinsicWeight : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayIn, WholeArrayIn, WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _2;
+
+  VTKM_EXEC_CONT ComputeIntrinsicWeight() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id superarc,
+                            const IdWholeArrayInPortalType& arcsPortal,
+                            const IdWholeArrayInPortalType& superarcsPortal,
+                            const IdWholeArrayInPortalType& firstVertexForSuperparentPortal,
+                            const IdWholeArrayInOutPortalType& superarcIntrinsicWeightPortal) const
+  {
+    if (superarc == superarcsPortal.GetNumberOfValues() - 1)
+    {
+      superarcIntrinsicWeightPortal.Set(
+        superarc, arcsPortal.GetNumberOfValues() - firstVertexForSuperparentPortal.Get(superarc));
+    }
+    else
+    {
+      superarcIntrinsicWeightPortal.Set(superarc,
+                                        firstVertexForSuperparentPortal.Get(superarc + 1) -
+                                          firstVertexForSuperparentPortal.Get(superarc));
+    }
+  }
+};
+
+
+class SetFirstSupernodePerIteration : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(WholeArrayIn, WholeArrayInOut);
+  typedef void ExecutionSignature(InputIndex, _1, _2);
+  using InputDomain = _1;
+
+  VTKM_EXEC_CONT SetFirstSupernodePerIteration() {}
+
+  template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
+  VTKM_EXEC void operator()(
+    const vtkm::Id supernode,
+    const IdWholeArrayInPortalType& whenTransferredPortal,
+    const IdWholeArrayInOutPortalType& firstSupernodePerIterationPortal) const
+  {
+    vtkm::Id when = MaskedIndex(whenTransferredPortal.Get(supernode));
+    if (supernode == 0)
+    {
+      firstSupernodePerIterationPortal.Set(when, supernode);
+    }
+    else if (when != MaskedIndex(whenTransferredPortal.Get(supernode - 1)))
+    {
+      firstSupernodePerIterationPortal.Set(when, supernode);
+    }
+  }
+};
+
+
+
+
 template <typename Operator>
 class AddDependentWeightHypersweep : public vtkm::worklet::WorkletMapField
 {

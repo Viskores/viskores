@@ -151,9 +151,13 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
 class EdgeData
 {
 public:
+  // RegularNodeID (or sortIndex)
   Id i;
+  // RegularNodeID (or sortIndex)
   Id j;
+  // RegularNodeID (or sortIndex)
   Id subtreeMin;
+  // RegularNodeID (or sortIndex)
   Id subtreeMax;
   bool upEdge;
   Float64 subtreeHeight;
