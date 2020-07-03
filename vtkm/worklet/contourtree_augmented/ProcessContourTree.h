@@ -716,6 +716,7 @@ public:
       supernodeSorter,
       process_contourtree_inc_ns::SuperNodeBranchComparator(whichBranch, contourTree.Supernodes));
 
+
     timer.Stop();
     if (printTime >= 2)
     {
@@ -785,8 +786,8 @@ public:
     PrintIndices("Branch Parent", branchParent);
 #endif
 
-    timer.Reset();
-    timer.Start();
+    //timer.Reset();
+    //timer.Start();
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::BranchSaddleParentSet
       branchSaddleParentSetWorklet;
@@ -799,12 +800,15 @@ public:
            branchSaddle,
            branchParent);
 
-    timer.Stop();
-    if (printTime >= 2)
-    {
-      //std::cout << "----------------//---------------- Branch parents & Saddles setting " << timer.GetElapsedTime() << " seconds." << std::endl;
-      printf("%.6f for Branch parents & Saddles setting.\n", timer.GetElapsedTime());
-    }
+//return ;
+
+
+//timer.Stop();
+//if (printTime >= 2)
+//{
+////std::cout << "----------------//---------------- Branch parents & Saddles setting " << timer.GetElapsedTime() << " seconds." << std::endl;
+//printf("%.6f for Branch parents & Saddles setting.\n", timer.GetElapsedTime());
+//}
 
 #ifdef DEBUG_PRINT
     std::cout << "VII. Branches Constructed" << std::endl;
@@ -844,232 +848,157 @@ public:
       dataFieldIsSorted);
   }
 
-  void static findMinMaxParallel(const IdArrayType supernodes,
-                                 const cont::ArrayHandle<Vec<Id, 2>> tourEdges,
-                                 const bool isMin,
-                                 IdArrayType minMaxIndex,
-                                 IdArrayType parents)
-  {
-    //
-    // Set up some useful portals
-    //
-    auto parentsPortal = parents.WritePortal();
-    auto tourEdgesPortal = tourEdges.ReadPortal();
-
-    //
-    // Set initial values
-    //
-    Id root = tourEdgesPortal.Get(0)[0];
-    parentsPortal.Set(root, root);
-
-    //
-    // Find what the first and last occurence of a vertex is in the euler tour.
-    //
-    cont::ArrayHandle<vtkm::Pair<Id, Id>> firstLastVertex;
-    firstLastVertex.Allocate(supernodes.GetNumberOfValues());
-    for (int i = 0; i < firstLastVertex.GetNumberOfValues(); i++)
-    {
-      firstLastVertex.WritePortal().Set(i,
-                                        { (vtkm::Id)NO_SUCH_ELEMENT, (vtkm::Id)NO_SUCH_ELEMENT });
-    }
-
-    auto firstLastVertexPortal = firstLastVertex.WritePortal();
-
-    for (int i = 0; i < tourEdges.GetNumberOfValues(); i++)
-    {
-      // Forward Edge
-      if (firstLastVertexPortal.Get(tourEdgesPortal.Get(i)[1]).first == NO_SUCH_ELEMENT)
-      {
-        //printf("The parent of %d is %d.\n", tourEdges[i][1], tourEdges[i][0]);
-        parentsPortal.Set(tourEdgesPortal.Get(i)[1], tourEdgesPortal.Get(i)[0]);
-
-        //firstLastVertex[tourEdges.Get(i)[1]].first = i;
-
-        firstLastVertexPortal.Set(
-          tourEdgesPortal.Get(i)[1],
-          { i, firstLastVertexPortal.Get(tourEdgesPortal.Get(i)[1]).second });
-      }
-
-      //firstLastVertex[tourEdges.Get(i)[0]].second = i;
-      firstLastVertexPortal.Set(tourEdgesPortal.Get(i)[1],
-                                { firstLastVertexPortal.Get(tourEdgesPortal.Get(i)[1]).first, i });
-    }
-
-    firstLastVertexPortal.Set(root, { 0, supernodes.GetNumberOfValues() - 1 });
-
-    //
-    // For every vertex look at the subrray between the first and last occurence and find the min/max values in it
-    //
-    vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeMinMaxValues
-      computeMinMax(isMin);
-
-    vtkm::cont::Invoker Invoke;
-    Invoke(computeMinMax, supernodes, firstLastVertex, tourEdges, minMaxIndex);
-  }
-
-  void static findMinMax(const IdArrayType::ReadPortalType supernodes,
-                         const cont::ArrayHandle<Vec<Id, 2>>::ReadPortalType tourEdges,
-                         const bool isMin,
-                         IdArrayType::WritePortalType minMaxIndex,
-                         IdArrayType::WritePortalType parents)
-  {
-    Id root = tourEdges.Get(0)[0];
-
-    struct VertexData
-    {
-      long long distance;
-      unsigned long index;
-    };
-
-    std::vector<VertexData> vertexData(static_cast<unsigned long>(supernodes.GetNumberOfValues()),
-                                       { -1, 0 });
-    for (unsigned long i = 0; i < vertexData.size(); i++)
-    {
-      vertexData[i].index = i;
-    }
-
-    parents.Set(root, root);
-    vertexData[static_cast<unsigned long>(root)].distance = 0;
-
-    for (int i = 0; i < tourEdges.GetNumberOfValues(); i++)
-    {
-      const Vec<Id, 2> e = tourEdges.Get(i);
-      if (-1 == vertexData[static_cast<unsigned long>(e[1])].distance)
-      {
-        parents.Set(e[1], e[0]);
-        vertexData[static_cast<unsigned long>(e[1])].distance =
-          vertexData[static_cast<unsigned long>(e[0])].distance + 1;
-      }
-    }
-
-    std::sort(vertexData.begin(), vertexData.end(), [](const VertexData& a, const VertexData& b) {
-      return a.distance > b.distance;
-    });
-
-    for (int i = 0; i < minMaxIndex.GetNumberOfValues(); i++)
-    {
-      minMaxIndex.Set(i, i);
-    }
-
-    for (unsigned int i = 0; i < vertexData.size(); i++)
-    {
-      Id vertex = static_cast<Id>(vertexData[i].index);
-      Id parent = parents.Get(vertex);
-
-      Id vertexValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(vertex)));
-      Id parentValue = MaskedIndex(supernodes.Get(minMaxIndex.Get(parent)));
-
-      if ((true == isMin && vertexValue < parentValue) ||
-          (false == isMin && vertexValue > parentValue))
-      {
-        minMaxIndex.Set(parent, minMaxIndex.Get(vertex));
-      }
-    }
-  }
-
   // routine to compute the branch decomposition by volume
-  void static ComputeHeightBranchDecomposition(const ContourTree& contourTree,
-                                               const cont::ArrayHandle<Float64> fieldValues,
-                                               const IdArrayType& ctSortOrder,
-                                               const bool useParallelMinMaxSearch,
-                                               IdArrayType& whichBranch,
-                                               IdArrayType& branchMinimum,
-                                               IdArrayType& branchMaximum,
-                                               IdArrayType& branchSaddle,
-                                               IdArrayType& branchParent)
+  void static ComputeVolumeBranchDecompositionNew(const ContourTree& contourTree,
+                                                  const cont::ArrayHandle<Float64> fieldValues,
+                                                  const IdArrayType& ctSortOrder,
+                                                  const int printTime,
+                                                  const vtkm::Id nIterations,
+                                                  IdArrayType& whichBranch,
+                                                  IdArrayType& branchMinimum,
+                                                  IdArrayType& branchMaximum,
+                                                  IdArrayType& branchSaddle,
+                                                  IdArrayType& branchParent)
   { // ComputeHeightBranchDecomposition()
 
-    // Cache the number of non-root supernodes & superarcs
+    // STEP 1. Compute the number of nodes in every superarc
+    IdArrayType superarcIntrinsicWeight;
+    superarcIntrinsicWeight.Allocate(contourTree.Superarcs.GetNumberOfValues());
+
+    IdArrayType firstVertexForSuperparent;
+    firstVertexForSuperparent.Allocate(contourTree.Superarcs.GetNumberOfValues());
+
+    auto nodesPortal = contourTree.Nodes.ReadPortal();
+    auto superparentsPortal = contourTree.Superparents.ReadPortal();
+    auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.WritePortal();
+    auto firstVertexForSuperparentPortal = firstVertexForSuperparent.WritePortal();
+
+    for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
+    { // per node in sorted order
+      vtkm::Id sortID = nodesPortal.Get(sortedNode);
+      vtkm::Id superparent = superparentsPortal.Get(sortID);
+      if (sortedNode == 0)
+      {
+        firstVertexForSuperparentPortal.Set(superparent, sortedNode);
+      }
+      else if (superparent != superparentsPortal.Get(nodesPortal.Get(sortedNode - 1)))
+      {
+        firstVertexForSuperparentPortal.Set(superparent, sortedNode);
+      }
+    } // per node in sorted order
+
+    // Compute the number of regular nodes on every superarc
+    for (vtkm::Id superarc = 0; superarc < contourTree.Superarcs.GetNumberOfValues(); superarc++)
+    {
+      if (superarc == contourTree.Superarcs.GetNumberOfValues() - 1)
+      {
+        superarcIntrinsicWeightPortal.Set(superarc,
+                                          contourTree.Arcs.GetNumberOfValues() -
+                                            firstVertexForSuperparentPortal.Get(superarc));
+      }
+      else
+      {
+        superarcIntrinsicWeightPortal.Set(superarc,
+                                          firstVertexForSuperparentPortal.Get(superarc + 1) -
+                                            firstVertexForSuperparentPortal.Get(superarc));
+      }
+    }
+
+    //// Cache the number of non-root supernodes & superarcs
     vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
 
-    // STAGE I:  Find the upward and downwards weight for each superarc, and set up arrays
-    IdArrayType bestUpward;
-    IdArrayType bestDownward;
+    //// Set up bestUpward and bestDownward array, these are the things we want to compute in this routine.
+    IdArrayType bestUpward, bestDownward;
     vtkm::cont::ArrayCopy(noSuchElementArray, bestUpward);
     vtkm::cont::ArrayCopy(noSuchElementArray, bestDownward);
 
-    //
-    // Compute Euler Tours
-    //
-    cont::ArrayHandle<Vec<Id, 2>> minTourEdges, maxTourEdges;
+    //// We initiale with the weight of the superarcs, once we sum those up we'll get the hypersweep weight
+    IdArrayType sumValues;
+    vtkm::cont::ArrayCopy(superarcIntrinsicWeight, sumValues);
 
-    minTourEdges.Allocate(2 * (nSupernodes - 1));
-    maxTourEdges.Allocate(2 * (nSupernodes - 1));
 
-    // Compute the Euler Tour
-    process_contourtree_inc_ns::EulerTour tour;
-    tour.computeEulerTour(contourTree.Superarcs.ReadPortal());
+    //// This should be 0 here, because we're not changing the root
+    vtkm::cont::ArrayHandle<vtkm::Id> howManyUsed;
+    vtkm::cont::ArrayCopy(
+      vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, contourTree.Hyperarcs.GetNumberOfValues()),
+      howManyUsed);
 
-    // Reroot the Euler Tour at the global min
-    tour.getTourAtRoot(MaskedIndex(contourTree.Superparents.ReadPortal().Get(0)),
-                       minTourEdges.WritePortal());
+    ////
+    //// Min Hypersweep
+    ////
+    const auto sumOperator = vtkm::Sum();
 
-    // Reroot the Euler Tour at the global max
-    tour.getTourAtRoot(MaskedIndex(contourTree.Superparents.ReadPortal().Get(
-                         contourTree.Nodes.GetNumberOfValues() - 1)),
-                       maxTourEdges.WritePortal());
+    vtkm::cont::Timer hypersweepTimer;
+    hypersweepTimer.Start();
 
-    //
-    // Compute Min/Max per subtree
-    //
-    IdArrayType minValues, minParents, maxValues, maxParents;
-    vtkm::cont::ArrayCopy(noSuchElementArray, minValues);
-    vtkm::cont::ArrayCopy(noSuchElementArray, minParents);
-    vtkm::cont::ArrayCopy(noSuchElementArray, maxValues);
-    vtkm::cont::ArrayCopy(noSuchElementArray, maxParents);
+    hyperarcScan<decltype(vtkm::Sum())>(contourTree.Supernodes,
+                                        contourTree.Hypernodes,
+                                        contourTree.Hyperarcs,
+                                        contourTree.Hyperparents,
+                                        contourTree.Hyperparents,
+                                        contourTree.WhenTransferred,
+                                        howManyUsed,
+                                        nIterations,
+                                        vtkm::Sum(),
+                                        sumValues);
 
-    // Finding the min/max for every subtree can either be done in parallel or serial
-    // The parallel implementation is not work efficient and will not work well on a single/few cores
-    // This is why I have left the option to do a BFS style search in serial instead of doing an a prefix min/max for every subtree in the euler tour
-    if (false == useParallelMinMaxSearch)
+    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeDataVolume> arcs;
+    arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
+
+    vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
+
+    for (int i = 0; i < contourTree.Supernodes.GetNumberOfValues(); i++)
     {
-      ProcessContourTree::findMinMax(contourTree.Supernodes.ReadPortal(),
-                                     minTourEdges.ReadPortal(),
-                                     true,
-                                     minValues.WritePortal(),
-                                     minParents.WritePortal());
+      Id parent = MaskedIndex(contourTree.Superarcs.ReadPortal().Get(i));
 
-      ProcessContourTree::findMinMax(contourTree.Supernodes.ReadPortal(),
-                                     maxTourEdges.ReadPortal(),
-                                     false,
-                                     maxValues.WritePortal(),
-                                     maxParents.WritePortal());
+      if (parent == 0)
+        continue;
+
+      EdgeDataVolume edge;
+      edge.i = i;
+      edge.j = parent;
+      edge.upEdge = IsAscending((contourTree.Superarcs.ReadPortal().Get(i)));
+      //edge.subtreeVolume = sumValues.ReadPortal().Get(i);
+      edge.subtreeVolume = (totalVolume - sumValues.ReadPortal().Get(i)) +
+        (superarcIntrinsicWeight.ReadPortal().Get(i) - 1);
+
+      EdgeDataVolume oppositeEdge;
+      oppositeEdge.i = parent;
+      oppositeEdge.j = i;
+      oppositeEdge.upEdge = !edge.upEdge;
+      //oppositeEdge.subtreeVolume = (totalVolume - sumValues.ReadPortal().Get(i)) + (superarcIntrinsicWeight.ReadPortal().Get(i) - 1);
+      oppositeEdge.subtreeVolume = sumValues.ReadPortal().Get(i);
+
+      //std::cout << "The edge " << edge.i << ", " << edge.j << " has sum value " << edge.subtreeVolume << std::endl;
+      //std::cout << "The edge " << oppositeEdge.i << ", " << oppositeEdge.j << " has sum value " << oppositeEdge.subtreeVolume << std::endl;
+
+      arcs.WritePortal().Set(i * 2, edge);
+      arcs.WritePortal().Set(i * 2 + 1, oppositeEdge);
     }
-    else
-    {
-      ProcessContourTree::findMinMaxParallel(
-        contourTree.Supernodes, minTourEdges, true, minValues, minParents);
 
-      ProcessContourTree::findMinMaxParallel(
-        contourTree.Supernodes, maxTourEdges, false, maxValues, maxParents);
-    }
-
-    //
-    // Compute bestUp and bestDown
-    //
-    vtkm::worklet::contourtree_augmented::process_contourtree_inc::ComputeBestUpDown
-      bestUpDownWorklet;
+    vtkm::cont::Algorithm::Sort(arcs, vtkm::SortLess());
 
     vtkm::cont::Invoker Invoke;
-    Invoke(bestUpDownWorklet,
-           tour.first,
-           contourTree.Nodes,
-           contourTree.Supernodes,
-           minValues,
-           minParents,
-           maxValues,
-           maxParents,
-           ctSortOrder,
-           tour.edges,
-           fieldValues,
-           bestUpward,  // output
-           bestDownward // output
-           );
+    vtkm::worklet::contourtree_augmented::process_contourtree_inc::SetBestUpDown setBestUpDown;
+    Invoke(setBestUpDown, bestUpward, bestDownward, arcs);
+
+
+    for (int i = 0; i < arcs.GetNumberOfValues(); i++)
+    {
+      //printf("Arc %d has i = %lld, j = %lld, upEdge = %d and subtreeVolume = %lld \n", i, arcs.ReadPortal().Get(i).i, arcs.ReadPortal().Get(i).j, arcs.ReadPortal().Get(i).upEdge, arcs.ReadPortal().Get(i).subtreeVolume);
+      //cout << "Arc " << i << ""
+    }
+
+    for (int i = 0; i < bestUpward.GetNumberOfValues(); i++)
+    {
+      //std::cout << i << " Up - " << bestUpward.ReadPortal().Get(i) << std::endl;
+      //std::cout << i << " Down - " << bestDownward.ReadPortal().Get(i) << std::endl;
+    }
 
     ProcessContourTree::ComputeBranchData(contourTree,
-                                          false,
+                                          printTime,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -1081,16 +1010,16 @@ public:
   } // ComputeHeightBranchDecomposition()
 
   // routine to compute the branch decomposition by volume
-  void static ComputeHeightBranchDecompositionNew(const ContourTree& contourTree,
-                                                  const cont::ArrayHandle<Float64> fieldValues,
-                                                  const IdArrayType& ctSortOrder,
-                                                  const int printTime,
-                                                  const vtkm::Id nIterations,
-                                                  IdArrayType& whichBranch,
-                                                  IdArrayType& branchMinimum,
-                                                  IdArrayType& branchMaximum,
-                                                  IdArrayType& branchSaddle,
-                                                  IdArrayType& branchParent)
+  void static ComputeHeightBranchDecomposition(const ContourTree& contourTree,
+                                               const cont::ArrayHandle<Float64> fieldValues,
+                                               const IdArrayType& ctSortOrder,
+                                               const int printTime,
+                                               const vtkm::Id nIterations,
+                                               IdArrayType& whichBranch,
+                                               IdArrayType& branchMinimum,
+                                               IdArrayType& branchMaximum,
+                                               IdArrayType& branchSaddle,
+                                               IdArrayType& branchParent)
   { // ComputeHeightBranchDecomposition()
 
     vtkm::cont::Timer timerTotal;
@@ -1248,16 +1177,16 @@ public:
     vtkm::cont::Timer hypersweepTimer;
     hypersweepTimer.Start();
 
-    findMinMaxNewSimple<decltype(vtkm::Minimum())>(contourTree.Supernodes,
-                                                   contourTree.Hypernodes,
-                                                   minHyperarcs,
-                                                   contourTree.Hyperparents,
-                                                   minHyperparents,
-                                                   contourTree.WhenTransferred,
-                                                   minHowManyUsed,
-                                                   nIterations,
-                                                   vtkm::Minimum(),
-                                                   minValues);
+    hyperarcScan<decltype(vtkm::Minimum())>(contourTree.Supernodes,
+                                            contourTree.Hypernodes,
+                                            minHyperarcs,
+                                            contourTree.Hyperparents,
+                                            minHyperparents,
+                                            contourTree.WhenTransferred,
+                                            minHowManyUsed,
+                                            nIterations,
+                                            vtkm::Minimum(),
+                                            minValues);
 
     hypersweepTimer.Stop();
     minHypersweepTime = hypersweepTimer.GetElapsedTime();
@@ -1282,16 +1211,16 @@ public:
                   maxHyperarcs.WritePortal(),
                   maxHowManyUsed.WritePortal());
 
-    findMinMaxNewSimple<decltype(vtkm::Maximum())>(contourTree.Supernodes,
-                                                   contourTree.Hypernodes,
-                                                   maxHyperarcs,
-                                                   contourTree.Hyperparents,
-                                                   maxHyperparents,
-                                                   contourTree.WhenTransferred,
-                                                   maxHowManyUsed,
-                                                   nIterations,
-                                                   vtkm::Maximum(),
-                                                   maxValues);
+    hyperarcScan<decltype(vtkm::Maximum())>(contourTree.Supernodes,
+                                            contourTree.Hypernodes,
+                                            maxHyperarcs,
+                                            contourTree.Hyperparents,
+                                            maxHyperparents,
+                                            contourTree.WhenTransferred,
+                                            maxHowManyUsed,
+                                            nIterations,
+                                            vtkm::Maximum(),
+                                            maxValues);
 
     fixPath(vtkm::Maximum(), maxPath, maxValues.WritePortal());
 
@@ -1384,22 +1313,6 @@ public:
       printf("%.6f for Sorting.\n", timer.GetElapsedTime());
     }
 
-    //const vtkm::Id E = 7439156;
-    ////const vtkm::Id D = 6498111;
-
-    //for (int i = 0 ; i < arcs.GetNumberOfValues() ; i++)
-    //{
-    //const auto arc = arcs.ReadPortal().Get(i);
-
-    //if (arc.i == E || arc.j == E)
-    //{
-    //printf("\n[%lld, %lld], upEdge = %d, subtreeMin = %lld, subtreeMax = %lld, subtreeHeight = %f\n", arc.i, arc.j, arc.upEdge, arc.subtreeMin, arc.subtreeMax, arc.subtreeHeight);
-    //}
-    //}
-
-    //printf("WTF");
-
-
     //
     // Set bestUp and bestDown. Parallelisable
     //
@@ -1459,105 +1372,6 @@ public:
     //printf("Working!");
 
   } // ComputeHeightBranchDecomposition()
-
-  void static findMinMaxNew(
-    const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType supernodesPortal,
-    const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType superarcsPortal,
-    const bool isMin,
-    const Id root,
-    vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl minMaxIndex)
-  {
-    using vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-
-    //
-    // Holds the index and distance of every supernode. Used to sort vertices by their distance for processing.
-    //
-    struct VertexData
-    {
-      Id distance;
-      Id index;
-    };
-
-    //
-    // Set the initial values. Parallelisable.
-    //
-    std::vector<VertexData> vertexData(
-      static_cast<unsigned long>(supernodesPortal.GetNumberOfValues()));
-    for (unsigned long i = 0; i < vertexData.size(); i++)
-    {
-      vertexData[i].index = i;
-      vertexData[i].distance = NO_SUCH_ELEMENT;
-    }
-    vertexData[root].distance = 0;
-
-    //
-    // Compute the distance to all vertices. With memorisation this is O(n). Not data parallelisable.
-    //
-    for (Id i = 0; i < superarcsPortal.GetNumberOfValues(); i++)
-    {
-      // If we have the distance skip this one
-      if (vertexData[i].distance != (vtkm::Id)NO_SUCH_ELEMENT)
-        continue;
-
-      // Find the distance to the root
-      vtkm::Id current = i;
-      Id distanceToRoot = 0;
-      while (vertexData[current].distance == (vtkm::Id)NO_SUCH_ELEMENT)
-      {
-        distanceToRoot++;
-        current = MaskedIndex(superarcsPortal.Get(current));
-      }
-
-      Id miniRoot = current;
-
-      // Set the distance to all nodes on the path to the root
-      current = i;
-      Id iteration = 0;
-      while (vertexData[current].distance == (vtkm::Id)NO_SUCH_ELEMENT)
-      {
-        Id distance = vertexData[miniRoot].distance + distanceToRoot - iteration;
-        vertexData[current].distance = distance;
-        iteration++;
-        current = MaskedIndex(superarcsPortal.Get(current));
-      }
-    }
-
-    //
-    // Sort all vertices based on distance. Parallelisable.
-    //
-    std::sort(vertexData.begin(), vertexData.end(), [](const VertexData& a, const VertexData& b) {
-      return a.distance > b.distance;
-    });
-
-    //
-    // Set an initial value, suppose every vertex is its own min/max. Parallelisable.
-    //
-    for (vtkm::Id i = 0; i < minMaxIndex.GetNumberOfValues(); i++)
-    {
-      minMaxIndex.Set(i, i);
-    }
-
-    //
-    // For every vertex see if it's bigger than its parent. At the end the minMaxIndex with contain the min/max child of every vertex. Not data parallelisable.
-    //
-    for (Id i = 0; i < vertexData.size(); i++)
-    {
-      Id vertex = vertexData[i].index;
-      Id parent = MaskedIndex(superarcsPortal.Get(vertex));
-
-      if (vertex == root)
-        continue;
-
-      Id vertexValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(vertex)));
-      Id parentValue = MaskedIndex(supernodesPortal.Get(minMaxIndex.Get(parent)));
-
-      if ((true == isMin && vertexValue < parentValue) ||
-          (false == isMin && vertexValue > parentValue))
-      {
-        minMaxIndex.Set(parent, minMaxIndex.Get(vertex));
-      }
-    }
-  }
 
   std::vector<Id> static findSuperPathToRoot(
     vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType parentsPortal,
@@ -1633,16 +1447,16 @@ public:
   }
 
   template <class BinaryFunctor>
-  void static findMinMaxNewSimple(const vtkm::cont::ArrayHandle<vtkm::Id> supernodes,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> hypernodes,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> hyperarcs,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> hyperparents,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> hyperparentKeys,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> whenTransferred,
-                                  const vtkm::cont::ArrayHandle<vtkm::Id> howManyUsed,
-                                  const vtkm::Id nIterations,
-                                  const BinaryFunctor operation,
-                                  vtkm::cont::ArrayHandle<vtkm::Id> minMaxIndex)
+  void static hyperarcScan(const vtkm::cont::ArrayHandle<vtkm::Id> supernodes,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> hypernodes,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> hyperarcs,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> hyperparents,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> hyperparentKeys,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> whenTransferred,
+                           const vtkm::cont::ArrayHandle<vtkm::Id> howManyUsed,
+                           const vtkm::Id nIterations,
+                           const BinaryFunctor operation,
+                           vtkm::cont::ArrayHandle<vtkm::Id> minMaxIndex)
   {
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
@@ -1746,82 +1560,8 @@ public:
              hyperarcs,
              howManyUsed,
              minMaxIndex);
-
-
-      //
-      // Remnants of the serial version. Here for debugging.
-      //
-
-      //
-      // For every hyperarc in the current iteration. Parallel.
-      //
-      //for (Id i = firstHypernode; i < lastHypernode; i++)
-      //{
-      //// If it's the last hyperacs (there's nothing to do it's just the root)
-      //if (i >= hypernodesPortal.GetNumberOfValues() - 1) { continue; }
-
-      //vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(i));
-      //vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
-
-      ////
-      //// Prefix scan along the hyperarc chain. Parallel prefix scan.
-      ////
-      //int threshold = 1000;
-      //if (lastSupernode - firstSupernode > threshold)
-      //{
-      //auto subarray = vtkm::cont::make_ArrayHandleView(minMaxIndex, firstSupernode, lastSupernode - firstSupernode);
-      //vtkm::cont::Algorithm::ScanInclusive(subarray, subarray, operation);
-      //}
-
-      //else
-      //{
-      //for (Id j = firstSupernode + 1; j < lastSupernode; j++)
-      //{
-      //Id vertex = j - 1;
-      //Id parent = j;
-
-      //Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
-      //Id parentValue = minMaxIndex.ReadPortal().Get(parent);
-
-      //minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
-      //}
-      //}
-      //}
-
-
-      //
-      // Serial, but can be made parallel if we sort the hypearcs by destination and do a prefix sum on the destination.
-      // The only problem is that figuring that out requries a serial pass anyway.
-      // So we might as well do all of it in serial.
-      // Furthermore the degree of the mesh is limiting this.
-      //
-      //for (Id i = firstHypernode; i < lastHypernode; i++)
-      //{
-      //// If it's the last hyperacs (there's nothing to do it's just the root)
-      //if (i >= hypernodesPortal.GetNumberOfValues() - 1) { continue; }
-
-      ////
-      //// The value of the prefix scan is now accumulated in the last supernode of the hyperarc. Transfer is to the target
-      ////
-      //vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
-
-      ////
-      //// Transfer the accumulated value to the target supernode
-      ////
-      //Id vertex = lastSupernode - 1;
-      //Id parent = MaskedIndex(hyperarcsPortal.Get(i));
-
-      //Id vertexValue = minMaxIndex.ReadPortal().Get(vertex);
-      //Id parentValue = minMaxIndex.ReadPortal().Get(parent);
-
-      //minMaxIndex.WritePortal().Set(parent, operation(vertexValue, parentValue));
-      //}
     }
   }
-
-
-
-
 }; // class ProcessContourTree
 } // namespace contourtree_augmented
 } // worklet

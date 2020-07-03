@@ -190,6 +190,51 @@ public:
   }
 };
 
+class EdgeDataVolume
+{
+public:
+  // RegularNodeID (or sortIndex)
+  Id i;
+  // RegularNodeID (or sortIndex)
+  Id j;
+  bool upEdge;
+  Id subtreeVolume;
+
+  bool operator<(const EdgeDataVolume& b) const
+  {
+    if (this->i == b.i)
+    {
+      if (this->upEdge == b.upEdge)
+      {
+        if (this->subtreeVolume == b.subtreeVolume)
+        {
+          if (this->upEdge == true)
+          {
+            return this->j > b.j;
+          }
+          else
+          {
+            return this->j < b.j;
+          }
+        }
+        else
+        {
+          return this->subtreeVolume > b.subtreeVolume;
+        }
+      }
+      else
+      {
+        return this->upEdge < b.upEdge;
+      }
+    }
+    else
+    {
+      return this->i < b.i;
+    }
+  }
+};
+
+
 
 } // namespace contourtree_augmented
 } // worklet
