@@ -473,6 +473,8 @@ public:
     return outArray;
   }
 
+  vtkm::worklet::Keys<vtkm::Id> GetMergeKeys() const { return this->MergeKeys; }
+
 private:
   vtkm::worklet::Keys<vtkm::Id> MergeKeys;
   vtkm::cont::ArrayHandle<vtkm::Id> PointInputToOutputMap;

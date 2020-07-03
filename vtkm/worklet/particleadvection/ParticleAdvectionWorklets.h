@@ -51,7 +51,7 @@ public:
   {
     vtkm::Particle particle = integralCurve.GetParticle(idx);
 
-    vtkm::Vec3f inpos = particle.Pos;
+    vtkm::Vec3f currPos = particle.Pos;
     vtkm::FloatDefault time = particle.Time;
     bool tookAnySteps = false;
 
@@ -63,30 +63,32 @@ public:
     integralCurve.PreStepUpdate(idx);
     do
     {
-      //vtkm::Particle p = integralCurve.GetParticle(idx);
-      //std::cout<<idx<<": "<<inpos<<" #"<<p.NumSteps<<" "<<p.Status<<std::endl;
       vtkm::Vec3f outpos;
-      auto status = integrator->Step(inpos, time, outpos);
+      auto status = integrator->Step(currPos, time, outpos);
       if (status.CheckOk())
       {
         integralCurve.StepUpdate(idx, time, outpos);
         tookAnySteps = true;
-        inpos = outpos;
+        currPos = outpos;
       }
 
       //We can't take a step inside spatial boundary.
       //Try and take a step just past the boundary.
       else if (status.CheckSpatialBounds())
       {
-        IntegratorStatus status2 = integrator->SmallStep(inpos, time, outpos);
+        IntegratorStatus status2 = integrator->SmallStep(currPos, time, outpos);
         if (status2.CheckOk())
         {
           integralCurve.StepUpdate(idx, time, outpos);
           tookAnySteps = true;
+          currPos = outpos;
 
           //we took a step, so use this status to consider below.
           status = status2;
         }
+        else
+          status =
+            IntegratorStatus(true, status2.CheckSpatialBounds(), status2.CheckTemporalBounds());
       }
 
       integralCurve.StatusUpdate(idx, status, maxSteps);
@@ -95,9 +97,6 @@ public:
 
     //Mark if any steps taken
     integralCurve.UpdateTookSteps(idx, tookAnySteps);
-
-    //particle = integralCurve.GetParticle(idx);
-    //std::cout<<idx<<": "<<inpos<<" #"<<particle.NumSteps<<" "<<particle.Status<<std::endl;
   }
 };
 

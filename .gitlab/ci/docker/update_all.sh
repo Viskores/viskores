@@ -10,6 +10,10 @@ cd centos7/cuda10.2
 sudo docker build -t kitware/vtkm:ci-centos7_cuda10.2-$date .
 cd ../..
 
+cd centos8/base
+sudo docker build -t kitware/vtkm:ci-centos8-$date .
+cd ../..
+
 cd rhel8/cuda10.2
 sudo docker build -t kitware/vtkm:ci-rhel8_cuda10.2-$date .
 cd ../..
@@ -28,6 +32,10 @@ cd ../..
 
 cd ubuntu1804/cuda10.1
 sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda10.1-$date .
+cd ../..
+
+cd ubuntu2004/doxygen/
+sudo docker build -t kitware/vtkm:ci-doxygen-$date .
 cd ../..
 
 # sudo docker login --username=<docker_hub_name>

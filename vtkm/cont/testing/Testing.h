@@ -24,7 +24,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
-#include <vtkm/thirdparty/diy/serialization.h>
+#include <vtkm/thirdparty/diy/diy.h>
 
 namespace opt = vtkm::cont::internal::option;
 
@@ -130,6 +130,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -165,6 +166,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -262,31 +264,6 @@ private:
                    "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
       }
     }
-  }
-};
-
-struct Environment
-{
-  VTKM_CONT Environment(int* argc, char*** argv)
-  {
-#if defined(VTKM_ENABLE_MPI)
-    int provided_threading;
-    MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided_threading);
-
-    // set the global communicator to use in VTKm.
-    vtkmdiy::mpi::communicator comm(MPI_COMM_WORLD);
-    vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
-#else
-    (void)argc;
-    (void)argv;
-#endif
-  }
-
-  VTKM_CONT ~Environment()
-  {
-#if defined(VTKM_ENABLE_MPI)
-    MPI_Finalize();
-#endif
   }
 };
 

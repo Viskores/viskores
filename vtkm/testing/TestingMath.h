@@ -647,6 +647,264 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   VTKM_EXEC
+  void TestFloatDistance() const
+  {
+    {
+      vtkm::UInt64 dist = vtkm::FloatDistance(1.0, 1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 1.0 to 1.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-1.0, -1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -1.0 to -1.0 is not zero.");
+
+      dist = vtkm::FloatDistance(0.0, 0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 0.0 to 0.0 is not zero.");
+
+      // Check nan:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::quiet_NaN(), 1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to a Nan is not the documented value.");
+
+      dist = vtkm::FloatDistance(1.0, std::numeric_limits<vtkm::Float64>::quiet_NaN());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to a Nan is not the documented value.");
+
+      // Check infinity:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::infinity(), 1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to infinity is not the documented value.");
+
+      dist = vtkm::FloatDistance(1.0, std::numeric_limits<vtkm::Float64>::infinity());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to infinity is not the documented value.");
+
+      // Check saturation:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::lowest(),
+                                 std::numeric_limits<vtkm::Float64>::max());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(18437736874454810622uL), dist),
+                       "Float distance from lowest to max is incorrect.");
+
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::max(),
+                                 std::numeric_limits<vtkm::Float64>::lowest());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(18437736874454810622uL), dist),
+                       "Float distance from max to lowest is incorrect.");
+
+      // Check symmetry:
+      dist = vtkm::FloatDistance(-2.0, -1.0);
+      vtkm::UInt64 dist2 = vtkm::FloatDistance(-1.0, -2.0);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist), "Symmetry of negative numbers does not hold.");
+
+      dist = vtkm::FloatDistance(1.0, 2.0);
+      dist2 = vtkm::FloatDistance(2.0, 1.0);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist), "Float distance 1->2 != float distance 2->1.");
+
+      // Check symmetry of bound which includes zero:
+      dist = vtkm::FloatDistance(-0.25, 0.25);
+      dist2 = vtkm::FloatDistance(0.25, -0.25);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist),
+                       "Symmetry is violated over a bound which contains zero.");
+
+      // Check correctness:
+      dist = vtkm::FloatDistance(1.0, 1.0 + std::numeric_limits<vtkm::Float64>::epsilon());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Float distance from 1 to 1 + eps is not = 1.");
+      dist = vtkm::FloatDistance(1.0 + std::numeric_limits<vtkm::Float64>::epsilon(), 1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated");
+
+      dist = vtkm::FloatDistance(1.0, 1.0 + 2 * std::numeric_limits<vtkm::Float64>::epsilon());
+      VTKM_MATH_ASSERT(test_equal(vtkm::Int64(2), dist),
+                       "Float distance from 1 to 1 + 2eps is not 2.");
+      dist = vtkm::FloatDistance(1.0 + 2 * std::numeric_limits<vtkm::Float64>::epsilon(), 1.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::Int64(2), dist), "Symmetry is violated.");
+
+      // Now test x = y:
+      vtkm::Float64 x = -1;
+      for (int i = 0; i < 500; ++i)
+      {
+        dist = vtkm::FloatDistance(x, x);
+        VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                         "Float distance from x to x is not zero.");
+        x += 0.01;
+      }
+      // Test zero:
+      dist = vtkm::FloatDistance(0.0, 0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from zero to zero is not zero.");
+      // Test signed zero:
+      dist = vtkm::FloatDistance(0.0, -0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 0.0 to -0.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-0.0, 0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -0.0 to 0.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-0.0, -0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -0.0 to 0.0 is not zero.");
+
+      // Negative to negative zero:
+      dist = vtkm::FloatDistance(-std::numeric_limits<vtkm::Float64>::denorm_min(), -0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Negative to zero incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(-0.0, -std::numeric_limits<vtkm::Float64>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+
+      // Negative to positive zero:
+      dist = vtkm::FloatDistance(-std::numeric_limits<vtkm::Float64>::denorm_min(), 0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Negative to positive zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(0.0, -std::numeric_limits<vtkm::Float64>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+
+      // Positive to zero:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::denorm_min(), 0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Positive to zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(0.0, std::numeric_limits<vtkm::Float64>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated");
+
+      // Positive to negative zero:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float64>::denorm_min(), -0.0);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Positive to negative zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(-0.0, std::numeric_limits<vtkm::Float64>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+    }
+
+    // I would try to just template these, but in fact the double precision version has to saturate,
+    // whereas the float version has sufficient range.
+    {
+      vtkm::UInt64 dist = vtkm::FloatDistance(1.0f, 1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 1.0 to 1.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-1.0f, -1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -1.0 to -1.0 is not zero.");
+
+      dist = vtkm::FloatDistance(0.0f, 0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 0.0 to 0.0 is not zero.");
+
+      // Check nan:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::quiet_NaN(), 1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to a Nan is not the documented value.");
+
+      dist = vtkm::FloatDistance(1.0f, std::numeric_limits<vtkm::Float32>::quiet_NaN());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to a Nan is not the documented value.");
+
+      // Check infinity:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::infinity(), 1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to infinity is not the documented value.");
+
+      dist = vtkm::FloatDistance(1.0f, std::numeric_limits<vtkm::Float32>::infinity());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
+                       "Float distance to infinity is not the documented value.");
+
+      // Check saturation:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::lowest(),
+                                 std::numeric_limits<vtkm::Float32>::max());
+      VTKM_MATH_ASSERT(dist > 0, "Float distance is negative.");
+
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::max(),
+                                 std::numeric_limits<vtkm::Float32>::lowest());
+      VTKM_MATH_ASSERT(dist > 0, "Float distance is negative.");
+
+      // Check symmetry:
+      dist = vtkm::FloatDistance(-2.0f, -1.0f);
+      vtkm::UInt64 dist2 = vtkm::FloatDistance(-1.0f, -2.0f);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist), "Symmetry of negative numbers does not hold.");
+
+      dist = vtkm::FloatDistance(1.0f, 2.0f);
+      dist2 = vtkm::FloatDistance(2.0f, 1.0f);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist), "Float distance 1->2 != float distance 2->1.");
+
+      // Check symmetry of bound which includes zero:
+      dist = vtkm::FloatDistance(-0.25f, 0.25f);
+      dist2 = vtkm::FloatDistance(0.25f, -0.25f);
+      VTKM_MATH_ASSERT(test_equal(dist2, dist),
+                       "Symmetry is violated over a bound which contains zero.");
+
+      // Check correctness:
+      dist = vtkm::FloatDistance(1.0f, 1.0f + std::numeric_limits<vtkm::Float32>::epsilon());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Float distance from 1 to 1 + eps is not = 1.");
+      dist = vtkm::FloatDistance(1.0f + std::numeric_limits<vtkm::Float32>::epsilon(), 1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated");
+
+      dist = vtkm::FloatDistance(1.0f, 1.0f + 2 * std::numeric_limits<vtkm::Float32>::epsilon());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(2), dist),
+                       "Float distance from 1 to 1 + 2eps is not 2.");
+      dist = vtkm::FloatDistance(1.0f + 2 * std::numeric_limits<vtkm::Float32>::epsilon(), 1.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(2), dist), "Symmetry is violated.");
+
+      // Now test x = y:
+      vtkm::Float32 x = -1;
+      for (int i = 0; i < 500; ++i)
+      {
+        dist = vtkm::FloatDistance(x, x);
+        VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                         "Float distance from x to x is not zero.");
+        x += 0.01f;
+      }
+      // Test zero:
+      dist = vtkm::FloatDistance(0.0f, 0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from zero to zero is not zero.");
+      // Test signed zero:
+      dist = vtkm::FloatDistance(0.0f, -0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from 0.0 to -0.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-0.0f, 0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -0.0 to 0.0 is not zero.");
+
+      dist = vtkm::FloatDistance(-0.0f, -0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(0), dist),
+                       "Float distance from -0.0 to 0.0 is not zero.");
+
+      // Negative to negative zero:
+      dist = vtkm::FloatDistance(-std::numeric_limits<vtkm::Float32>::denorm_min(), -0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Negative to zero incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(-0.0f, -std::numeric_limits<vtkm::Float32>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+
+      // Negative to positive zero:
+      dist = vtkm::FloatDistance(-std::numeric_limits<vtkm::Float32>::denorm_min(), 0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Negative to positive zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(0.0f, -std::numeric_limits<vtkm::Float32>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+
+      // Positive to zero:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::denorm_min(), 0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Positive to zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(0.0f, std::numeric_limits<vtkm::Float32>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated");
+
+      // Positive to negative zero:
+      dist = vtkm::FloatDistance(std::numeric_limits<vtkm::Float32>::denorm_min(), -0.0f);
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist),
+                       "Positive to negative zero is incorrect.");
+      // And symmetry:
+      dist = vtkm::FloatDistance(-0.0f, std::numeric_limits<vtkm::Float32>::denorm_min());
+      VTKM_MATH_ASSERT(test_equal(vtkm::UInt64(1), dist), "Symmetry is violated.");
+    }
+  }
+
+  VTKM_EXEC
   void operator()(vtkm::Id) const
   {
     this->TestTriangleTrig();
@@ -663,6 +921,7 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
     this->TestLog10();
     this->TestLog1P();
     this->TestCopySign();
+    this->TestFloatDistance();
   }
 };
 

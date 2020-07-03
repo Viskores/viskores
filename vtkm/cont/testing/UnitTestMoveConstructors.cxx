@@ -40,6 +40,26 @@ void is_noexcept_movable()
   VTKM_TEST_ASSERT(valid, msg);
 }
 
+// DataSet uses a map which is not nothrow constructible/assignable in the
+// following implementations
+template<>
+void is_noexcept_movable<vtkm::cont::DataSet>()
+{
+  using T = vtkm::cont::DataSet;
+
+  constexpr bool valid =
+#if ((defined(__GNUC__) && (__GNUC__ <= 5)) || defined(_WIN32))
+    std::is_move_constructible<T>::value &&
+    std::is_move_assignable<T>::value;
+#else
+    std::is_nothrow_move_constructible<T>::value &&
+    std::is_nothrow_move_assignable<T>::value;
+#endif
+
+  std::string msg = typeid(T).name() + std::string(" should be noexcept moveable");
+  VTKM_TEST_ASSERT(valid, msg);
+}
+
 template<typename T>
 void is_triv_noexcept_movable()
 {

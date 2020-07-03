@@ -9,7 +9,6 @@
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/Tube.h>
 
@@ -30,7 +29,6 @@ void TestTubeFilters()
   using VecType = vtkm::Vec3f;
 
   vtkm::cont::DataSetBuilderExplicitIterative dsb;
-  vtkm::cont::DataSetFieldAdd dsf;
   std::vector<vtkm::Id> ids;
 
   ids.clear();
@@ -63,8 +61,8 @@ void TestTubeFilters()
   cellVar.push_back(110);
   cellVar.push_back(111);
 
-  dsf.AddPointField(ds, "pointVar", ptVar);
-  dsf.AddCellField(ds, "cellVar", cellVar);
+  ds.AddPointField("pointVar", ptVar);
+  ds.AddCellField("cellVar", cellVar);
 
   vtkm::filter::Tube tubeFilter;
   tubeFilter.SetCapping(true);

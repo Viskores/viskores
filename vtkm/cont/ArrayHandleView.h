@@ -274,7 +274,7 @@ public:
     {
       throw vtkm::cont::ErrorBadValue(
         "The value array must be pre-allocated before it is used for the "
-        "output of ArrayHandlePermutation.");
+        "output of ArrayHandleView.");
     }
 
     return PortalExecution(

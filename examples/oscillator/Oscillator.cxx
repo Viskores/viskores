@@ -40,15 +40,13 @@
 // trim() from http://stackoverflow.com/a/217605/44738
 static inline std::string& ltrim(std::string& s)
 {
-  s.erase(s.begin(),
-          std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
   return s;
 }
 static inline std::string& rtrim(std::string& s)
 {
-  s.erase(
-    std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
-    s.end());
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
+          s.end());
   return s;
 }
 static inline std::string& trim(std::string& s)
@@ -104,7 +102,12 @@ void read_oscillators(std::string filePath, vtkm::source::Oscillator& source)
 // ArcticViewer helper
 // ----------------------------------------------------------------------------
 
-void writeData(std::string& basePath, int timestep, int iSize, int jSize, int kSize, double* values)
+void writeData(std::string& basePath,
+               int timestep,
+               int iSize,
+               int jSize,
+               int kSize,
+               const double* values)
 {
   int size = iSize * jSize * kSize;
   std::ostringstream timeValues;
@@ -160,7 +163,7 @@ void writeData(std::string& basePath, int timestep, int iSize, int jSize, int kS
   else
   {
     int stackSize = size * 8;
-    dataFilePathPointer.write((char*)values, stackSize);
+    dataFilePathPointer.write(reinterpret_cast<const char*>(values), stackSize);
     dataFilePathPointer.flush();
     dataFilePathPointer.close();
   }
@@ -215,7 +218,8 @@ void printUsage(const std::string& vtkm_options)
             << "Options:\n\n"
             << "  -s, --shape POINT     domain shape [default: 64x64x64]\n"
             << "  -t, --dt FLOAT        time step [default: 0.01]\n"
-            << "  -f, --config STRING   oscillator file (required)\n"
+            << "  -f, --config STRING   oscillator file (required). Available in "
+               "vtk-m/examples/oscillator/inputs\n"
             << "      --t-end FLOAT     end time [default: 10]\n"
             << "  -o, --output STRING   directory to output data\n"
             << "General VTK-m Options:\n\n"
@@ -314,9 +318,9 @@ int main(int argc, char** argv)
     vtkm::cont::DataSet rdata = source.Execute();
     if (generateOutput)
     {
-      vtkm::cont::ArrayHandle<vtkm::Float64> tmp;
+      vtkm::cont::ArrayHandleBasic<vtkm::Float64> tmp;
       rdata.GetField("scalars", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(tmp);
-      double* values = tmp.GetStorage().GetArray();
+      const double* values = tmp.GetReadPointer();
       writeData(outputDirectory, count++, sizeX, sizeY, sizeZ, values);
     }
 

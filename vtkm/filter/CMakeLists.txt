@@ -19,6 +19,7 @@ set(headers
   Contour.h
   ContourTreeUniform.h
   ContourTreeUniformAugmented.h
+  ContourTreeUniformDistributed.h
   CoordinateSystemTransform.h
   CreateResult.h
   CrossProduct.h
@@ -45,11 +46,14 @@ set(headers
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
+  MapFieldMergeAverage.h
+  MapFieldPermutation.h
   Mask.h
   MaskPoints.h
   MeshQuality.h
   NDEntropy.h
   NDHistogram.h
+  ParticleAdvection.h
   Pathline.h
   PointAverage.h
   PointElevation.h
@@ -90,6 +94,7 @@ set(header_template_sources
   Contour.hxx
   ContourTreeUniform.hxx
   ContourTreeUniformAugmented.hxx
+  ContourTreeUniformDistributed.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
   DotProduct.hxx
@@ -116,6 +121,7 @@ set(header_template_sources
   MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
+  ParticleAdvection.hxx
   Pathline.hxx
   PointAverage.hxx
   PointElevation.hxx
@@ -150,10 +156,13 @@ set(sources_device
   ContourInteger.cxx
   ContourScalar.cxx
   ExternalFaces.cxx
+  ExtractGeometry.cxx
   ExtractStructured.cxx
   GradientScalar.cxx
   GradientUniformPoints.cxx
   GradientVector.cxx
+  MapFieldMergeAverage.cxx
+  MapFieldPermutation.cxx
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx

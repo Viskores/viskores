@@ -35,8 +35,7 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   vtkm::cont::DataSetBuilderUniform builder;
   ds = builder.Create(dim);
 
-  vtkm::cont::DataSetFieldAdd fieldAdder;
-  fieldAdder.AddPointField(ds, "scalars", scalars, numVerts);
+  ds.AddPointField("scalars", scalars, numVerts);
 
   return ds;
 }

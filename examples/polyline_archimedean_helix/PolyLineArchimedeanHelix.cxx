@@ -11,12 +11,11 @@
 #include <complex>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/Tube.h>
 
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
@@ -100,7 +99,6 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
 
 
-  vtkm::cont::DataSetFieldAdd dsfa;
   std::vector<vtkm::FloatDefault> v(static_cast<std::size_t>(tubePoints.GetNumberOfValues()));
   // The first value is a cap:
   v[0] = 0;
@@ -116,15 +114,18 @@ void TubeThatSpiral(vtkm::FloatDefault radius, vtkm::Id numLineSegments, vtkm::I
   // Point at the end cap should be the same color as the surroundings:
   v[v.size() - 1] = v[v.size() - 2];
 
-  dsfa.AddPointField(tubeDataset, "Spiral Radius", v);
+  tubeDataset.AddPointField("Spiral Radius", v);
   scene.AddActor(vtkm::rendering::Actor(tubeDataset.GetCellSet(),
                                         tubeDataset.GetCoordinateSystem(),
                                         tubeDataset.GetField("Spiral Radius"),
                                         colorTable));
   vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-  view.Initialize();
   view.Paint();
+  // We can save the file as a .NetBPM:
   std::string output_filename = "tube_output_" + std::to_string(numSides) + "_sides.pnm";
+  view.SaveAs(output_filename);
+  // Or as a .png:
+  output_filename = "tube_output_" + std::to_string(numSides) + "_sides.png";
   view.SaveAs(output_filename);
 }
 

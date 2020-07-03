@@ -119,10 +119,9 @@ namespace arg
 // Instead, you need to implement the Load to point to the array portal. You
 // can also ignore the Store because the data is already set in the array at
 // that point.
-template <typename ThreadIndicesType, typename SourcePortalType, typename OffsetsPortalType>
+template <typename SourcePortalType, typename OffsetsPortalType>
 struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
              vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType,
              vtkm::exec::internal::ArrayPortalGroupVecVariable<SourcePortalType, OffsetsPortalType>>
 {
   using ExecObjectType =
@@ -130,15 +129,16 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
   using ValueType = typename ExecObjectType::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType& arrayPortal) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices,
+                           const ExecObjectType& arrayPortal) const
   {
     return arrayPortal.Get(indices.GetOutputIndex());
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // We can actually ignore this because the VecFromPortal will already have
     // set new values in the array.

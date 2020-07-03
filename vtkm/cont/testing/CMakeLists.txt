@@ -47,7 +47,9 @@ set(unit_tests
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
+  UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformBits.cxx
+  UnitTestArrayHandleRandomUniformReal.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
@@ -75,11 +77,11 @@ set(unit_tests
   UnitTestInitialize.cxx
   UnitTestLogging.cxx
   UnitTestMoveConstructors.cxx
+  UnitTestParticleArrayCopy.cxx
   UnitTestPartitionedDataSet.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
-  UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
   UnitTestStorageList.cxx
   UnitTestStorageListTag.cxx

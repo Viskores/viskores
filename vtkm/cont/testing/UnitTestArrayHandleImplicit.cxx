@@ -42,12 +42,13 @@ struct ImplicitTests
 
     using ImplicitHandle = vtkm::cont::ArrayHandleImplicit<FunctorType>;
 
-    ImplicitHandle implict = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
+    ImplicitHandle implicit = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
 
     //verify that the control portal works
+    auto implicitPortal = implicit.ReadPortal();
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {
-      const ValueType v = implict.ReadPortal().Get(i);
+      const ValueType v = implicitPortal.Get(i);
       const ValueType correct_value = functor(i);
       VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
     }
@@ -56,7 +57,7 @@ struct ImplicitTests
     vtkm::cont::Token token;
     using Device = vtkm::cont::DeviceAdapterTagSerial;
     using CEPortal = typename ImplicitHandle::template ExecutionTypes<Device>::PortalConst;
-    CEPortal execPortal = implict.PrepareForInput(Device(), token);
+    CEPortal execPortal = implicit.PrepareForInput(Device(), token);
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {
       const ValueType v = execPortal.Get(i);

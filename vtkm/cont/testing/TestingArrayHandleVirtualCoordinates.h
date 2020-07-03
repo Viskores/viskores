@@ -103,9 +103,10 @@ private:
     c1.Allocate(length);
     c2.Allocate(length);
     c3.Allocate(length);
+    auto portal = a1.ReadPortal();
     for (vtkm::Id i = 0; i < length; ++i)
     {
-      auto p = a1.ReadPortal().Get(i);
+      auto p = portal.Get(i);
       c1.WritePortal().Set(i, p[0]);
       c2.WritePortal().Set(i, p[1]);
       c3.WritePortal().Set(i, p[2]);

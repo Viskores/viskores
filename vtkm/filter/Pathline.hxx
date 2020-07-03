@@ -90,11 +90,10 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Pathline::DoMapField(vtkm::cont::DataSet&,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                           const vtkm::filter::FieldMetadata&,
-                                           vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Pathline::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                   const vtkm::cont::Field&,
+                                                   vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

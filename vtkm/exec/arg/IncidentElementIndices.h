@@ -12,7 +12,6 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
-#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm
 {
@@ -43,30 +42,6 @@ struct IncidentElementIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static constexpr vtkm::IdComponent INDEX = 1;
   using AspectTag = vtkm::exec::arg::AspectTagIncidentElementIndices;
-};
-
-template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagIncidentElementIndices,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
-             ExecObjectType>
-{
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
-
-  using ValueType = typename ThreadIndicesType::IndicesIncidentType;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
-  {
-    return indices.GetIndicesIncident();
-  }
-
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
-  {
-    // Store is a no-op.
-  }
 };
 }
 }

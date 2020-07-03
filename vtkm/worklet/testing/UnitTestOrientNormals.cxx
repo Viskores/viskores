@@ -33,6 +33,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/SurfaceNormals.h>
@@ -48,14 +49,6 @@
 namespace
 {
 
-struct TestPolicy : public vtkm::filter::PolicyBase<TestPolicy>
-{
-  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec<vtkm::FloatDefault, 3>>;
-};
-
 VTKM_CONT
 vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 {
@@ -64,14 +57,16 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   wavelet.SetMagnitude({ 5 });
   auto dataSet = wavelet.Execute();
 
-  // Cut a contour
+  vtkm::filter::CleanGrid toGrid;
+
+  // unstructured grid contour
   vtkm::filter::Contour contour;
   contour.SetActiveField("scalars", vtkm::cont::Field::Association::POINTS);
   contour.SetNumberOfIsoValues(1);
   contour.SetIsoValue(192);
   contour.SetMergeDuplicatePoints(true);
   contour.SetGenerateNormals(false);
-  dataSet = contour.Execute(dataSet);
+  dataSet = contour.Execute(toGrid.Execute(dataSet));
 
   vtkm::filter::SurfaceNormals normals;
   normals.SetGeneratePointNormals(pointNormals);
@@ -79,7 +74,7 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
   normals.SetPointNormalsName("normals");
   normals.SetCellNormalsName("normals");
   normals.SetAutoOrientNormals(false);
-  dataSet = normals.Execute(dataSet, TestPolicy{});
+  dataSet = normals.Execute(dataSet);
 
   return dataSet;
 }

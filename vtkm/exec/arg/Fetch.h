@@ -45,10 +45,7 @@ namespace arg
 /// ExecutionSignature with a particular aspect is pointing to the wrong
 /// argument or an invalid argument in the ControlSignature.
 ///
-template <typename FetchTag,
-          typename AspectTag,
-          typename ThreadIndicesType,
-          typename ExecObjectType>
+template <typename FetchTag, typename AspectTag, typename ExecObjectType>
 struct Fetch
 #ifdef VTKM_DOXYGEN_ONLY
 {
@@ -68,8 +65,9 @@ struct Fetch
   /// work instance. If there is no actual data to load (for example for a
   /// write-only fetch), this method can be a no-op and return any value.
   ///
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType& execObject) const;
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices,
+                           const ExecObjectType& execObject) const;
 
   /// \brief Store data from a work instance.
   ///
@@ -80,10 +78,10 @@ struct Fetch
   /// fetch. If the store is not applicable (for example for a read-only
   /// fetch), this method can be a no-op.
   ///
-  VTKM_EXEC
-  void Store(const ThreadIndicesType& indices,
-             const ExecObjectType& execObject,
-             const ValueType& value) const;
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType& indices,
+                       const ExecObjectType& execObject,
+                       const ValueType& value) const;
 };
 #else  // VTKM_DOXYGEN_ONLY
   ;

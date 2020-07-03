@@ -18,7 +18,6 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <fstream>
@@ -36,9 +35,11 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
     return false;
   }
 
+  auto ahPortal = ah.ReadPortal();
+  auto expectedPortal = expected.ReadPortal();
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.ReadPortal().Get(i) != expected.ReadPortal().Get(i))
+    if (ahPortal.Get(i) != expectedPortal.Get(i))
     {
       return false;
     }
@@ -53,7 +54,6 @@ vtkm::cont::DataSet MakeCosmo_2DDataSet_0()
 {
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
-  vtkm::cont::DataSetFieldAdd dsf;
 
   // Coordinates
   const int nVerts = 17;
@@ -100,11 +100,11 @@ vtkm::cont::DataSet MakeCosmo_2DDataSet_0()
   vtkm::Id haloId[nCells] = { 0, 0, 2, 0, 2, 0, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0, 0 };
   vtkm::Id mbp[nCells] = { 8, 8, 7, 8, 7, 8, 8, 7, 8, 8, 8, 7, 8, 8, 7, 8, 8 };
 
-  dsf.AddCellField(dataSet, "xLocation", xLocation, nCells);
-  dsf.AddCellField(dataSet, "yLocation", yLocation, nCells);
-  dsf.AddCellField(dataSet, "zLocation", zLocation, nCells);
-  dsf.AddCellField(dataSet, "haloId", haloId, nCells);
-  dsf.AddCellField(dataSet, "mbp", mbp, nCells);
+  dataSet.AddCellField("xLocation", xLocation, nCells);
+  dataSet.AddCellField("yLocation", yLocation, nCells);
+  dataSet.AddCellField("zLocation", zLocation, nCells);
+  dataSet.AddCellField("haloId", haloId, nCells);
+  dataSet.AddCellField("mbp", mbp, nCells);
   return dataSet;
 }
 
@@ -115,7 +115,6 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
 {
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetBuilderExplicit dsb;
-  vtkm::cont::DataSetFieldAdd dsf;
 
   // Coordinates
   const int nVerts = 14;
@@ -165,11 +164,11 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
   vtkm::Id haloId[nCells] = { 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1 };
   vtkm::Id mbp[nCells] = { 9, 4, 4, 4, 4, 9, 9, 9, 9, 9, 4, 9, 9, 4 };
 
-  dsf.AddCellField(dataSet, "xLocation", xLocation, nCells);
-  dsf.AddCellField(dataSet, "yLocation", yLocation, nCells);
-  dsf.AddCellField(dataSet, "zLocation", zLocation, nCells);
-  dsf.AddCellField(dataSet, "haloId", haloId, nCells);
-  dsf.AddCellField(dataSet, "mbp", mbp, nCells);
+  dataSet.AddCellField("xLocation", xLocation, nCells);
+  dataSet.AddCellField("yLocation", yLocation, nCells);
+  dataSet.AddCellField("zLocation", zLocation, nCells);
+  dataSet.AddCellField("haloId", haloId, nCells);
+  dataSet.AddCellField("mbp", mbp, nCells);
   return dataSet;
 }
 

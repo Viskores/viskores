@@ -11,7 +11,6 @@
 #include <iostream>
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/Lagrangian.h>
@@ -39,7 +38,6 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
   vtkm::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
-  vtkm::cont::DataSetFieldAdd dsf;
 
   vtkm::Id numPoints = DIMS[0] * DIMS[1] * DIMS[2];
 
@@ -59,7 +57,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet()
       }
     }
   }
-  dsf.AddPointField(dataset, "velocity", velocityField);
+  dataset.AddPointField("velocity", velocityField);
   return dataset;
 }
 
@@ -99,6 +97,19 @@ void TestLagrangianFilterMultiStepInterval()
 void TestLagrangian()
 {
   TestLagrangianFilterMultiStepInterval();
+
+  // This gets around a bug where the LagrangianFilter allows VTK-m to crash during the program
+  // exit handlers. The problem is that vtkm/filter/Lagrangian.hxx declares several static
+  // ArrayHandles. The developers have been warned that this is a terrible idea for many reasons
+  // (c.f. https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/1945), but this has not been
+  // fixed yet. One of the bad things that can happen is that during the C++ exit handler,
+  // the static ArrayHandles could be closed after the device APIs, which could lead to errors
+  // when it tries to free the memory. This has been seen for this test. This hack gets
+  // around it, but eventually these static declarations should really, really, really, really
+  // be removed.
+  BasisParticles.ReleaseResources();
+  BasisParticlesOriginal.ReleaseResources();
+  BasisParticlesValidity.ReleaseResources();
 }
 
 int UnitTestLagrangianFilter(int argc, char* argv[])

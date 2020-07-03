@@ -16,7 +16,6 @@
 #include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>

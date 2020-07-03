@@ -49,6 +49,22 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(
   out << "TypeList: " << type.name() << "\n";
   throw vtkm::cont::ErrorBadValue(out.str());
 }
+
+VTKM_CONT_EXPORT void ThrowAsMultiplexerException(
+  const vtkm::cont::internal::VariantArrayHandleContainerBase& ref,
+  const std::initializer_list<std::string>& arrayTypes)
+{
+  std::ostringstream out;
+  out << "Could not find appropriate cast for array in AsMultiplexer.\n"
+         "Array: ";
+  ref.PrintSummary(out);
+  out << "Supported arrays:\n";
+  for (auto&& type : arrayTypes)
+  {
+    out << "  " << type << "\n";
+  }
+  throw vtkm::cont::ErrorBadValue(out.str());
+}
 }
 }
 } // namespace vtkm::cont::detail

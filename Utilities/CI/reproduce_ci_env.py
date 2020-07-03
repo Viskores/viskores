@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 #=============================================================================
 #
@@ -57,23 +57,9 @@ def load_ci_file(ci_file_path):
           ci_state.update(yaml.safe_load(open(include_path)))
   return ci_state
 
-def ci_stages_and_jobs(ci_state):
-  stages = ci_state['stages']
-  jobs = dict((s,[]) for s in stages)
-  for key in ci_state:
-    maybe_stage = key.split(':')
-    if maybe_stage[0] in stages:
-      jobs[maybe_stage[0]].append(maybe_stage[1])
-  return jobs
-
-def subset_yml(ci_state, stage, name):
-  #given a stage and name generate a new yaml
-  #file that only contains information for stage and name.
-  #Does basic extend merging so that recreating the env is easier
-  runner_yml = {}
-  yml_name = stage+":"+name
-  runner_yml[yml_name] = ci_state[yml_name]
-  entry = runner_yml[yml_name]
+def flattened_entry_copy(ci_state, name):
+  import copy
+  entry = copy.deepcopy(ci_state[name])
 
   #Flatten 'extends' entries, only presume the first level of inheritance is
   #important
@@ -86,6 +72,41 @@ def subset_yml(ci_state, stage, name):
     for e in entry['extends']:
       entry.update(ci_state[e])
     del entry['extends']
+  return entry
+
+def ci_stages_and_jobs(ci_state):
+  stages = ci_state['stages']
+  jobs = dict((s,[]) for s in stages)
+  for key in ci_state:
+    entry = flattened_entry_copy(ci_state, key)
+
+    is_job = False
+    if 'stage' in entry:
+      stage = entry['stage']
+      if stage in stages:
+        is_job = True
+
+    # if we have a job ( that isn't private )
+    if is_job and not key.startswith('.'):
+      # clean up the name
+      clean_name = key
+      if ':' in key:
+        clean_name = key.split(':')[1]
+      jobs[stage].append(clean_name)
+
+
+  return jobs
+
+def subset_yml(ci_state, stage, name):
+  #given a stage and name generate a new yaml
+  #file that only contains information for stage and name.
+  #Does basic extend merging so that recreating the env is easier
+  runner_yml = {}
+
+  if stage+":"+name in ci_state:
+    name = stage+":"+name
+
+  runner_yml[name] = flattened_entry_copy(ci_state, name)
   return runner_yml
 
 class CallMode(enum.Enum):
@@ -147,8 +168,12 @@ def create_container(ci_file_path, *args):
   #fully expanded into a single definition
   subset = subset_yml(ci_state, stage, name)
 
+  job_name = name
+  if stage+":"+name in subset:
+    job_name = stage+":"+name
   runner_name = stage+":"+name
-  runner = subset[runner_name]
+
+  runner = subset[job_name]
   src_dir = get_root_dir()
   gitlab_env = [ k + '="' + v + '"' for k,v in runner['variables'].items()]
 

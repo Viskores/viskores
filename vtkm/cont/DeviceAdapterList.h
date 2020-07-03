@@ -16,10 +16,10 @@
 
 #include <vtkm/List.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
 namespace vtkm
 {

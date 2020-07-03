@@ -23,8 +23,7 @@ namespace
 using TimerTestDevices =
   vtkm::ListAppend<VTKM_DEFAULT_DEVICE_ADAPTER_LIST, vtkm::List<vtkm::cont::DeviceAdapterTagAny>>;
 
-constexpr long long waitTimeMilliseconds = 250;
-constexpr vtkm::Float64 waitTimeSeconds = vtkm::Float64(waitTimeMilliseconds) / 1000;
+constexpr long long waitTimeMilliseconds = 5;
 
 struct Waiter
 {
@@ -44,16 +43,9 @@ struct Waiter
     long long millisecondsToSleep = this->ExpectedTimeMilliseconds - elapsedMilliseconds;
 
     std::cout << "  Sleeping for " << millisecondsToSleep << "ms (to " << expectedTimeSeconds
-              << "s)" << std::endl;
+              << "s)\n";
 
     std::this_thread::sleep_for(std::chrono::milliseconds(millisecondsToSleep));
-
-    VTKM_TEST_ASSERT(std::chrono::duration_cast<std::chrono::milliseconds>(
-                       std::chrono::high_resolution_clock::now() - this->Start)
-                         .count() <
-                       (this->ExpectedTimeMilliseconds + ((3 * waitTimeMilliseconds) / 4)),
-                     "Internal test error: Sleep lasted longer than expected. System must be busy. "
-                     "Might need to increase waitTimeMilliseconds.");
 
     return expectedTimeSeconds;
   }
@@ -64,14 +56,11 @@ void CheckTime(const vtkm::cont::Timer& timer, vtkm::Float64 expectedTime)
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();
   VTKM_TEST_ASSERT(
     elapsedTime > (expectedTime - 0.001), "Timer did not capture full wait. ", elapsedTime);
-  VTKM_TEST_ASSERT(elapsedTime < (expectedTime + waitTimeSeconds),
-                   "Timer counted too far or system really busy. ",
-                   elapsedTime);
 }
 
 void DoTimerCheck(vtkm::cont::Timer& timer)
 {
-  std::cout << "  Starting timer" << std::endl;
+  std::cout << "  Starting timer\n";
   timer.Start();
   VTKM_TEST_ASSERT(timer.Started(), "Timer fails to track started status");
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track non stopped status");
@@ -85,14 +74,14 @@ void DoTimerCheck(vtkm::cont::Timer& timer)
 
   CheckTime(timer, expectedTime);
 
-  std::cout << "  Make sure timer is still running" << std::endl;
+  std::cout << "  Make sure timer is still running\n";
   VTKM_TEST_ASSERT(!timer.Stopped(), "Timer fails to track stopped status");
 
   expectedTime = waiter.Wait();
 
   CheckTime(timer, expectedTime);
 
-  std::cout << "  Stop the timer" << std::endl;
+  std::cout << "  Stop the timer\n";
   timer.Stop();
   VTKM_TEST_ASSERT(timer.Stopped(), "Timer fails to track stopped status");
 
@@ -100,7 +89,7 @@ void DoTimerCheck(vtkm::cont::Timer& timer)
 
   waiter.Wait(); // Do not advanced expected time
 
-  std::cout << "  Check that timer legitimately stopped" << std::endl;
+  std::cout << "  Check that timer legitimately stopped\n";
   CheckTime(timer, expectedTime);
 }
 
@@ -146,7 +135,7 @@ struct TimerCheckFunctor
 
 void DoTimerTest()
 {
-  std::cout << "Check default timer" << std::endl;
+  std::cout << "Check default timer\n";
   vtkm::cont::Timer timer;
   DoTimerCheck(timer);
 

@@ -84,7 +84,7 @@ struct InvocationToFetch
       typename Invocation::DeviceAdapterTag,
       typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type>::type;
 
-  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType>;
+  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ExecObjectType>;
 
   VTKM_EXEC static ExecObjectType GetParameterImpl(const Invocation&, std::true_type)
   {

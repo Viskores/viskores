@@ -27,7 +27,7 @@ namespace internal
 
 static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 {
-  vtkmdiy::ContinuousBounds result;
+  vtkmdiy::ContinuousBounds result(3);
   result.min[0] = static_cast<float>(bds.X.Min);
   result.min[1] = static_cast<float>(bds.Y.Min);
   result.min[2] = static_cast<float>(bds.Z.Min);
@@ -38,11 +38,11 @@ static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 }
 
 
-template <typename DerivedPolicy>
+template <typename FilterType>
 class Redistributor
 {
   const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& Decomposer;
-  const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
+  const FilterType& Filter;
 
   vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input,
                               const vtkmdiy::ContinuousBounds& bds) const
@@ -53,7 +53,7 @@ class Redistributor
     vtkm::filter::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
     extractor.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(box));
-    return extractor.Execute(input, this->Policy);
+    return extractor.Execute(input);
   }
 
   class ConcatenateFields
@@ -120,9 +120,9 @@ class Redistributor
 
 public:
   Redistributor(const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& decomposer,
-                const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+                const FilterType& filter)
     : Decomposer(decomposer)
-    , Policy(policy)
+    , Filter(filter)
   {
   }
 
@@ -136,11 +136,11 @@ public:
         {
           auto target = rp.out_link().target(cc);
           // let's get the bounding box for the target block.
-          vtkmdiy::ContinuousBounds bds;
+          vtkmdiy::ContinuousBounds bds(3);
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
-          rp.enqueue(target, vtkm::filter::MakeSerializableDataSet(extractedDS, DerivedPolicy{}));
+          rp.enqueue(target, vtkm::filter::MakeSerializableDataSet(extractedDS, this->Filter));
         }
         // clear our dataset.
         *block = vtkm::cont::DataSet();
@@ -155,7 +155,7 @@ public:
         auto target = rp.in_link().target(cc);
         if (rp.incoming(target.gid).size() > 0)
         {
-          auto sds = vtkm::filter::MakeSerializableDataSet(DerivedPolicy{});
+          auto sds = vtkm::filter::MakeSerializableDataSet(this->Filter);
           rp.dequeue(target.gid, sds);
           receives.push_back(sds.DataSet);
           numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
@@ -212,7 +212,7 @@ public:
 template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
@@ -237,7 +237,7 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::PrepareForEx
     *ds = input.GetPartition(lid);
   });
 
-  internal::Redistributor<DerivedPolicy> redistributor(decomposer, policy);
+  internal::Redistributor<RedistributePoints> redistributor(decomposer, *this);
   vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
   vtkm::cont::PartitionedDataSet result;

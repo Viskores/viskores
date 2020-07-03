@@ -86,9 +86,10 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>& outputArra
   PortalConstType readPortal = outputArray.ReadPortal();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
+  auto portal = outputArray.ReadPortal();
   for (int i = 0; i < outputArray.GetNumberOfValues(); ++i)
   {
-    std::cout << outputArray.ReadPortal().Get(i);
+    std::cout << portal.Get(i);
   }
   std::cout << std::endl;
 }
@@ -104,9 +105,10 @@ void OutputArrayDebug(
   PortalConstType readPortal = outputArray.ReadPortal();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
+  auto outputPortal = outputArray.ReadPortal();
   for (int i = 0; i < outputArray.GetNumberOfValues(); ++i)
   {
-    std::cout << outputArray.ReadPortal().Get(i);
+    std::cout << outputPortal.Get(i);
   }
   std::cout << std::endl;
 }

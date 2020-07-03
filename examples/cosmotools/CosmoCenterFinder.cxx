@@ -11,8 +11,8 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Initialize.h>
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/worklet/CosmoTools.h>
 
@@ -38,12 +38,12 @@ void TestCosmoCenterFinder(const char* fileName)
   }
 
   // Read in number of particles and locations
-  int nParticles;
+  vtkm::Id nParticles;
   inFile >> nParticles;
 
-  float* xLocation = new float[nParticles];
-  float* yLocation = new float[nParticles];
-  float* zLocation = new float[nParticles];
+  float* xLocation = new float[static_cast<std::size_t>(nParticles)];
+  float* yLocation = new float[static_cast<std::size_t>(nParticles)];
+  float* zLocation = new float[static_cast<std::size_t>(nParticles)];
   std::cout << "Running MBP on " << nParticles << std::endl;
 
   for (vtkm::Id p = 0; p < nParticles; p++)

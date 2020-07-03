@@ -185,10 +185,7 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectIn>
+struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObjectIn>
 {
   using ValueType = vtkm::Id;
 
@@ -207,10 +204,7 @@ struct Fetch<TestFetchTagInput,
 };
 
 template <>
-struct Fetch<TestFetchTagOutput,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic,
-             TestExecObjectOut>
+struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObjectOut>
 {
   using ValueType = vtkm::Id;
 

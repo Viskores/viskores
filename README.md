@@ -157,7 +157,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/Range.h>
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/filter/Contour.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -166,7 +166,7 @@ Marching Cubes algorithm on it, and render the results to an image:
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 
-vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
+vtkm::io::VTKDataSetReader reader("path/to/vtk_image_file.vtk");
 vtkm::cont::DataSet inputData = reader.ReadDataSet();
 std::string fieldName = "scalars";
 
@@ -200,9 +200,8 @@ scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
                                       outputData.GetField(fieldName),
                                       colorTable));
 vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-view.Initialize();
 view.Paint();
-view.SaveAs("demo_output.pnm");
+view.SaveAs("demo_output.png");
 ```
 
 A minimal CMakeLists.txt such as the following one can be used to build this
@@ -230,7 +229,7 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [VTK-m Doxygen]:            http://m.vtk.org/documentation/
 [VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
 [VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/issues
+[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/-/issues
 [VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx
 [VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
 [VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm

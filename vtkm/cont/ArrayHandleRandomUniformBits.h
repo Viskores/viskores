@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_ArrayHandlePhiloxURBG_h
-#define vtk_m_cont_ArrayHandlePhiloxURBG_h
+#ifndef vtk_m_cont_ArrayHandleRandomUniformBits_h
+#define vtk_m_cont_ArrayHandleRandomUniformBits_h
 
 #include <random>
 #include <vtkm/cont/ArrayHandleImplicit.h>
@@ -45,7 +45,9 @@ struct PhiloxFunctor
   }
 
 private:
-  const SeedType Seed{};
+  // This is logically a const, however, this make the Functor non-copyable which is required
+  // by VTKm infrastructure (e.g. ArrayHandleTransform.)
+  SeedType Seed;
 }; // class PhiloxFunctor
 } // namespace detail
 
@@ -96,4 +98,4 @@ namespace cont
 }
 } // namespace vtkm::cont
 /// @endcond
-#endif //vtk_m_cont_ArrayHandlePhiloxURBG_h
+#endif //vtk_m_cont_ArrayHandleRandomUniformBits_h

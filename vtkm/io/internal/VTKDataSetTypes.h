@@ -11,6 +11,7 @@
 #define vtk_m_io_internal_VTKDataSetTypes_h
 
 #include <vtkm/Types.h>
+#include <vtkm/VecTraits.h>
 
 #include <algorithm>
 #include <cassert>
@@ -237,5 +238,8 @@ inline void SelectTypeAndCall(DataType dtype,
 }
 }
 } // namespace vtkm::io::internal
+
+VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
+VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
 
 #endif // vtk_m_io_internal_VTKDataSetTypes_h

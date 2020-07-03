@@ -103,10 +103,10 @@ void TestCellSetExplicit()
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfCells(),
                    "result length not equal to number of cells");
+  auto portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == cellset.GetNumberOfPointsInCell(i),
-                     "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == cellset.GetNumberOfPointsInCell(i), "incorrect result");
   }
 
   std::cout << "\tTesting CellToPoint\n";
@@ -116,9 +116,10 @@ void TestCellSetExplicit()
                    "result length not equal to number of points");
 
   vtkm::Id expected1[] = { 1, 2, 2, 1, 2, 4, 4, 2, 2, 1, 2 };
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == expected1[i], "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == expected1[i], "incorrect result");
   }
 
   std::cout << "----------------------------------------------------\n";
@@ -130,10 +131,10 @@ void TestCellSetExplicit()
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfCells(),
                    "result length not equal to number of cells");
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == cellset.GetNumberOfPointsInCell(i),
-                     "incorrect result");
+    VTKM_TEST_ASSERT(portal.Get(i) == cellset.GetNumberOfPointsInCell(i), "incorrect result");
   }
 
   std::cout << "\tTesting CellToPoint\n";
@@ -143,9 +144,10 @@ void TestCellSetExplicit()
                    "result length not equal to number of points");
 
   vtkm::Id expected2[] = { 0, 1, 1, 0, 0, 2, 2, 0, 2, 0, 1 };
+  portal = result.ReadPortal();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(result.ReadPortal().Get(i) == expected2[i], "incorrect result at ", i);
+    VTKM_TEST_ASSERT(portal.Get(i) == expected2[i], "incorrect result at ", i);
   }
 
   std::cout << "----------------------------------------------------\n";

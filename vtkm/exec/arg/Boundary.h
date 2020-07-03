@@ -40,24 +40,20 @@ struct Boundary : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template <typename FetchTag, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagBoundary,
-             vtkm::exec::arg::ThreadIndicesPointNeighborhood,
-             ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagBoundary, ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesPointNeighborhood;
 
   using ValueType = vtkm::exec::BoundaryState;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetBoundaryState();
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }

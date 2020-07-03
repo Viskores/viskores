@@ -516,6 +516,8 @@ public:
     return result;
   }
 
+  vtkm::cont::ArrayHandle<vtkm::Id> GetNewPointsIdArray() const { return this->NewPointsIdArray; }
+
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> NewPointsIdArray;
 };

@@ -37,7 +37,8 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   }
   else
   {
-    this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(cells, policy), outCellSet);
+    this->Worklet.Run(vtkm::filter::ApplyPolicyCellSetUnstructured(cells, policy, *this),
+                      outCellSet);
   }
 
   return this->GenerateOutput(input, outCellSet);

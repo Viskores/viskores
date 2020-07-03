@@ -58,7 +58,7 @@ template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      CellShapeType shape,
-                                     const vtkm::exec::FunctorBase&)
+                                     vtkm::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -78,11 +78,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      vtkm::CellShapeTagQuad,
-                                     const vtkm::exec::FunctorBase& worklet)
+                                     vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Jacobian metric(quad) requires 4 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -113,11 +113,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      vtkm::CellShapeTagHexahedron,
-                                     const vtkm::exec::FunctorBase& worklet)
+                                     vtkm::ErrorCode& ec)
 {
   if (numPts != 8)
   {
-    worklet.RaiseError("Jacobian metric(hexahedron) requires 8 points.");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 
@@ -160,11 +160,11 @@ template <typename OutType, typename PointCoordVecType>
 VTKM_EXEC OutType CellJacobianMetric(const vtkm::IdComponent& numPts,
                                      const PointCoordVecType& pts,
                                      vtkm::CellShapeTagTetra,
-                                     const vtkm::exec::FunctorBase& worklet)
+                                     vtkm::ErrorCode& ec)
 {
   if (numPts != 4)
   {
-    worklet.RaiseError("Jacobian metric (tetra) requires 4 points");
+    ec = vtkm::ErrorCode::InvalidNumberOfPoints;
     return OutType(0.0);
   }
 

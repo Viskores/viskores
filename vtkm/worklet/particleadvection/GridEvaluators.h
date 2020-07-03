@@ -112,6 +112,7 @@ public:
 
     for (vtkm::IdComponent i = 0; i < nVerts; i++)
       fieldValues.Append(Field.Get(ptIndices[i]));
+
     vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
 
     status.SetOk();

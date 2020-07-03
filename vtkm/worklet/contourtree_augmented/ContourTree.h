@@ -57,6 +57,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 // local includes
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
@@ -146,11 +148,14 @@ public:
   // because not all Hyperarcs lead to hypernodes
   IdArrayType Hyperarcs;
 
+  // counter for the number of iterations it took to construct the tree
+  // this is also used for hypersweep computations
+  vtkm::Id NumIterations;
 
-  // THIS ONE HAS BEEN DELETED BECAUSE IT'S THE SAME AS THE HYPERNODE ID
-  // ALTHOUGH THIS IS NOT NECESSARY, IT'S THE RESULT OF THE CONSTRUCTION
-  // vector to find the first child superarc
-  // IdArrayType FirstSuperchild;
+  // vectors tracking the segments used in each iteration of the hypersweep
+  IdArrayType FirstSupernodePerIteration;
+  IdArrayType FirstHypernodePerIteration;
+
 
   // ROUTINES
 
@@ -161,15 +166,14 @@ public:
   inline void Init(vtkm::Id dataSize);
 
   // debug routine
-  inline void DebugPrint(const char* message, const char* fileName, long lineNum);
+  inline void DebugPrint(const char* message, const char* fileName, long lineNum) const;
 
   // print contents
   inline void PrintContent() const;
 
   // print routines
-  //void PrintDotHyperStructure();
-  inline void PrintDotSuperStructure();
-  //void PrintDotRegularStructure();
+  inline void PrintDotSuperStructure() const;
+  inline std::string PrintHyperStructureStatistics(bool print = true) const;
 
 }; // class ContourTree
 
@@ -215,9 +219,14 @@ inline void ContourTree::PrintContent() const
   PrintHeader(Augmentnodes.GetNumberOfValues());
   PrintIndices("Augmentnodes", Augmentnodes);
   PrintIndices("Augmentarcs", this->Augmentarcs);
+  std::cout << std::endl;
+  std::cout << "NumIterations: " << this->NumIterations << std::endl;
+  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues());
+  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration);
+  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration);
 }
 
-void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum)
+void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
@@ -237,13 +246,7 @@ void ContourTree::DebugPrint(const char* message, const char* fileName, long lin
 #endif
 } // DebugPrint()
 
-// print routines
-// void ContourTree::PrintDotHyperStructure()
-//        { // PrintDotHyperStructure()
-//        } // PrintDotHyperStructure()
-
-
-void ContourTree::PrintDotSuperStructure()
+void ContourTree::PrintDotSuperStructure() const
 { // PrintDotSuperStructure()
   // print the header information
   printf("digraph G\n\t{\n");
@@ -330,9 +333,80 @@ void ContourTree::PrintDotSuperStructure()
   printf("\t}\n");
 } // PrintDotSuperStructure()
 
-// void ContourTree::PrintDotRegularStructure()
-//        { // PrintDotRegularStructure()
-//        } // PrintDotRegularStructure()
+std::string ContourTree::PrintHyperStructureStatistics(bool print) const
+{ // PrintHyperStructureStatistics()
+  // arrays for collecting statistics
+  std::vector<vtkm::Id> minPath;
+  std::vector<vtkm::Id> maxPath;
+  std::vector<vtkm::Id> supernodeCount;
+  std::vector<vtkm::Id> hypernodeCount;
+  auto whenTransferredPortal = this->WhenTransferred.ReadPortal();
+  auto hypernodesPortal = this->Hypernodes.ReadPortal();
+
+  // set an initial iteration number to negative to get it started
+  long whichIteration = -1;
+
+  // loop through the hypernodes
+  for (vtkm::Id hypernode = 0; hypernode < this->Hypernodes.GetNumberOfValues(); hypernode++)
+  { // per hypernode
+    // retrieve corresponding supernode ID
+    vtkm::Id supernodeID = hypernodesPortal.Get(hypernode);
+    // and the iteration of transfer
+    vtkm::Id iterationNo = MaskedIndex(whenTransferredPortal.Get(supernodeID));
+
+    // if it doesn't match, we've hit a boundary
+    if (whichIteration != iterationNo)
+    { // new iteration
+      // initialise the next iteration
+      // this one is larger than the maximum possible to force minimum
+      minPath.push_back(static_cast<vtkm::Id>(this->Supernodes.GetNumberOfValues() + 1));
+      maxPath.push_back(0);
+      supernodeCount.push_back(0);
+      hypernodeCount.push_back(0);
+      // and increment the iteration ID
+      whichIteration++;
+    } // new iteration
+
+    // now compute the new path length - default to off the end
+    vtkm::Id pathLength = static_cast<vtkm::Id>(this->Supernodes.GetNumberOfValues() - supernodeID);
+    // for all except the last, take the next one
+    if (hypernode != this->Hypernodes.GetNumberOfValues() - 1)
+    {
+      pathLength = hypernodesPortal.Get(hypernode + 1) - supernodeID;
+    }
+    // update the statistics
+    if (pathLength < minPath[static_cast<std::size_t>(whichIteration)])
+    {
+      minPath[static_cast<std::size_t>(whichIteration)] = pathLength;
+    }
+    if (pathLength > maxPath[static_cast<std::size_t>(whichIteration)])
+    {
+      maxPath[static_cast<std::size_t>(whichIteration)] = pathLength;
+    }
+    supernodeCount[static_cast<std::size_t>(whichIteration)] += pathLength;
+    hypernodeCount[static_cast<std::size_t>(whichIteration)]++;
+  } // per hypernode
+
+  // now print out the statistics
+  std::stringstream resultString;
+  for (std::size_t iteration = 0; iteration < minPath.size(); iteration++)
+  { // per iteration
+    double averagePath = static_cast<double>(supernodeCount[iteration]) /
+      static_cast<double>(hypernodeCount[iteration]);
+    resultString << "Iteration: " << iteration << " Hyper: " << hypernodeCount[iteration]
+                 << " Super: " << supernodeCount[iteration] << " Min: " << minPath[iteration]
+                 << " Avg: " << averagePath << " Max: " << maxPath[iteration] << std::endl;
+  } // per iteration
+  resultString << "Total Hypernodes: " << this->Hypernodes.GetNumberOfValues()
+               << " Supernodes: " << this->Supernodes.GetNumberOfValues() << std::endl;
+  if (print)
+  {
+    std::cout << resultString.str() << std::endl;
+  }
+
+  return resultString.str();
+} // PrintHyperStructureStatistics()
+
 
 } // namespace contourtree_augmented
 } // worklet

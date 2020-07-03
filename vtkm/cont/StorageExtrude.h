@@ -290,9 +290,10 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrude
   vtkm::Int32 NumberOfPlanes;
   bool UseCylindrical;
 };
+
 template <typename PortalType>
-typename ArrayPortalExtrude<PortalType>::ValueType
-ArrayPortalExtrude<PortalType>::ArrayPortalExtrude::Get(vtkm::Id index) const
+typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType>::Get(
+  vtkm::Id index) const
 {
   using CompType = typename ValueType::ComponentType;
 
@@ -313,8 +314,8 @@ ArrayPortalExtrude<PortalType>::ArrayPortalExtrude::Get(vtkm::Id index) const
 }
 
 template <typename PortalType>
-typename ArrayPortalExtrude<PortalType>::ValueType
-ArrayPortalExtrude<PortalType>::ArrayPortalExtrude::Get(vtkm::Id2 index) const
+typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType>::Get(
+  vtkm::Id2 index) const
 {
   using CompType = typename ValueType::ComponentType;
 
@@ -336,7 +337,7 @@ ArrayPortalExtrude<PortalType>::ArrayPortalExtrude::Get(vtkm::Id2 index) const
 
 template <typename PortalType>
 vtkm::Vec<typename ArrayPortalExtrude<PortalType>::ValueType, 6>
-ArrayPortalExtrude<PortalType>::ArrayPortalExtrude::GetWedge(const IndicesExtrude& index) const
+ArrayPortalExtrude<PortalType>::GetWedge(const IndicesExtrude& index) const
 {
   using CompType = typename ValueType::ComponentType;
 

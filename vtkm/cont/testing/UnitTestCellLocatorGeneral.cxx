@@ -188,11 +188,14 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   // CellLocatorGeneral is non-copyable. Pass it via a pointer.
   dispatcher.Invoke(points, &locator, cellIds, pcoords);
 
+  auto cellIdPortal = cellIds.ReadPortal();
+  auto expCellIdsPortal = expCellIds.ReadPortal();
+  auto pcoordsPortal = pcoords.ReadPortal();
+  auto expPCoordsPortal = expPCoords.ReadPortal();
   for (vtkm::Id i = 0; i < 128; ++i)
   {
-    VTKM_TEST_ASSERT(cellIds.ReadPortal().Get(i) == expCellIds.ReadPortal().Get(i),
-                     "Incorrect cell ids");
-    VTKM_TEST_ASSERT(test_equal(pcoords.ReadPortal().Get(i), expPCoords.ReadPortal().Get(i), 1e-3),
+    VTKM_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
+    VTKM_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
                      "Incorrect parameteric coordinates");
   }
 

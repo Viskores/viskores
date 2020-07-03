@@ -102,7 +102,6 @@ public:
     }
 
     // In serial this worklet implements the following operation
-    // #pragma omp parallel for
     // for (indexVector::size_type from = 0; from < arcs.size(); ++from)
     //  {
     //    indexType to = arcs[from];

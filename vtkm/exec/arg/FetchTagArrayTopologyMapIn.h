@@ -19,6 +19,7 @@
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
+#include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
 #include <vtkm/VecFromPortalPermute.h>
@@ -40,6 +41,7 @@ struct FetchTagArrayTopologyMapIn
 {
 };
 
+/// @cond NONE
 namespace detail
 {
 
@@ -51,12 +53,9 @@ namespace detail
 // and the field is regular point coordinates, it is much faster to compute the
 // field directly.
 
-template <typename ConnectivityType, typename FieldExecObjectType>
+template <typename ConnectivityType, typename FieldExecObjectType, typename ThreadIndicesType>
 struct FetchArrayTopologyMapInImplementation
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
-
-  // ThreadIndicesTopologyMap has special incident element indices that are
   // stored in a Vec-like object.
   using IndexVecType = typename ThreadIndicesType::IndicesIncidentType;
 
@@ -128,18 +127,18 @@ static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<3> make_VecAxisAlig
   return vtkm::VecAxisAlignedPointCoordinates<3>(offsetOrigin, spacing);
 }
 
-template <vtkm::IdComponent NumDimensions>
+template <vtkm::IdComponent NumDimensions, typename ThreadIndicesType>
 struct FetchArrayTopologyMapInImplementation<
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                      vtkm::TopologyElementTagPoint,
                                      NumDimensions>,
-  vtkm::internal::ArrayPortalUniformPointCoordinates>
+  vtkm::internal::ArrayPortalUniformPointCoordinates,
+  ThreadIndicesType>
 
 {
   using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                                               vtkm::TopologyElementTagPoint,
                                                               NumDimensions>;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
   using ValueType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
@@ -155,14 +154,15 @@ struct FetchArrayTopologyMapInImplementation<
   }
 };
 
-template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
+template <typename PermutationPortal, vtkm::IdComponent NumDimensions, typename ThreadIndicesType>
 struct FetchArrayTopologyMapInImplementation<
   vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                        vtkm::TopologyElementTagPoint,
                                        NumDimensions>>,
-  vtkm::internal::ArrayPortalUniformPointCoordinates>
+  vtkm::internal::ArrayPortalUniformPointCoordinates,
+  ThreadIndicesType>
 
 {
   using ConnectivityType = vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<
@@ -170,7 +170,6 @@ struct FetchArrayTopologyMapInImplementation<
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                        vtkm::TopologyElementTagPoint,
                                        NumDimensions>>;
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
   using ValueType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
@@ -190,29 +189,58 @@ struct FetchArrayTopologyMapInImplementation<
 };
 
 } // namespace detail
+/// @endcond
 
-template <typename ConnectivityType, typename ExecObjectType>
+template <typename ExecObjectType>
 struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  using Implementation =
-    detail::FetchArrayTopologyMapInImplementation<ConnectivityType, ExecObjectType>;
-
-  using ValueType = typename Implementation::ValueType;
-
+  //using ConnectivityType = typename ThreadIndicesType::Connectivity;
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType& field) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices, const ExecObjectType& field) const
+    -> decltype(
+      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
+                                                    ExecObjectType,
+                                                    ThreadIndicesType>::Load(indices, field))
   {
+    using Implementation =
+      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
+                                                    ExecObjectType,
+                                                    ThreadIndicesType>;
     return Implementation::Load(indices, field);
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  //Optimized fetch for point arrays when iterating the cells ConnectivityExtrude
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const ExecObjectType& portal) -> vtkm::Vec<typename ExecObjectType::ValueType, 6>
+  {
+    // std::cout << "opimized fetch for point values" << std::endl;
+    const auto& xgcidx = indices.GetIndicesIncident();
+    const vtkm::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
+    const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
+
+    using ValueType = vtkm::Vec<typename ExecObjectType::ValueType, 6>;
+    ValueType result;
+
+    result[0] = portal.Get(offset1 + xgcidx.PointIds[0][0]);
+    result[1] = portal.Get(offset1 + xgcidx.PointIds[0][1]);
+    result[2] = portal.Get(offset1 + xgcidx.PointIds[0][2]);
+    result[3] = portal.Get(offset2 + xgcidx.PointIds[1][0]);
+    result[4] = portal.Get(offset2 + xgcidx.PointIds[1][1]);
+    result[5] = portal.Get(offset2 + xgcidx.PointIds[1][2]);
+    return result;
+  }
+
+
+  template <typename ThreadIndicesType, typename T>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const T&) const
   {
     // Store is a no-op for this fetch.
   }

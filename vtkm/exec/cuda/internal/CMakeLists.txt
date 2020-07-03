@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  ArrayPortalBasicCuda.h
   ArrayPortalFromThrust.h
   ExecutionPolicy.h
   IteratorFromArrayPortal.h

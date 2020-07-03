@@ -59,7 +59,6 @@ void createVectors(std::size_t numPts,
   {
     //Test some other vector combinations
     std::uniform_real_distribution<vtkm::Float64> randomDist(-10.0, 10.0);
-    randomDist(randGenerator);
 
     vecs1.resize(numPts);
     vecs2.resize(numPts);
@@ -133,8 +132,8 @@ void TestCrossProduct()
     field1 = vtkm::cont::make_ArrayHandle(vecs1);
     field2 = vtkm::cont::make_ArrayHandle(vecs2);
 
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", field1);
-    vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
+    dataSet.AddPointField("vec1", field1);
+    dataSet.AddPointField("vec2", field2);
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecA", field1));
     dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecB", field2));
 

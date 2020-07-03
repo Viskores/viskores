@@ -45,7 +45,6 @@ struct FetchArrayDirectInTests
 
     using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
                                              vtkm::exec::arg::AspectTagDefault,
-                                             vtkm::exec::arg::ThreadIndicesTesting,
                                              TestPortal<T>>;
 
     FetchType fetch;

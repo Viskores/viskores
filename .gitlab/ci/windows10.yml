@@ -1,0 +1,88 @@
+
+.cmake_build_windows: &cmake_build_windows
+  stage: build
+  timeout:  2 hours
+  interruptible: true
+  before_script:
+    - .gitlab/ci/config/setup_vs_powershell.ps1
+    - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The artifacts of the build.
+      - build/bin/
+      - build/include/
+      - build/lib/
+      - build/vtkm/thirdparty/diy/vtkmdiy/include
+
+      # CTest and CMake install files.
+      # XXX(globbing): Can be simplified with support from
+      # https://gitlab.com/gitlab-org/gitlab-runner/issues/4840
+      #
+      # Note: this also captures our CIState.cmake file
+      - build/CMakeCache.txt
+      - build/*.cmake
+      - build/*/*.cmake
+      - build/*/*/*.cmake
+      - build/*/*/*/*.cmake
+      - build/*/*/*/*/*.cmake
+      - build/*/*/*/*/*/*.cmake
+      - build/Testing/
+
+      # CDash files.
+      - build/DartConfiguration.tcl
+
+
+.cmake_test_windows: &cmake_test_windows
+  stage: test
+  timeout:  50 minutes
+  interruptible: true
+  before_script:
+    - .gitlab/ci/config/setup_vs_powershell.ps1
+  script:
+    #Need to use our custom ctest-latest symlink
+    #This will allow us to use 3.17+ which has support
+    #for running failed tests multiple times so failures
+    #due to system load are not reported
+    - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+
+# Build on windows10 with Visual Studio
+# Will have CUDA 10.2 once build issues are resolved
+build:windows_vs2019:
+  tags:
+    - build
+    - vtkm
+    - windows
+    - vs2019
+    - shell
+    - large-memory
+  extends:
+    - .cmake_build_windows
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    # Disabled while we track down cub allocator issues with vtkm/io tests
+    # VTKM_SETTINGS: "cuda+turing"
+    VTKM_SETTINGS: "serial"
+
+test:windows_vs2019:
+  tags:
+    - test
+    - vtkm
+    - windows
+    - shell
+    - cuda-rt
+    - turing
+  extends:
+    - .cmake_test_windows
+    - .only-default
+  dependencies:
+    - build:windows_vs2019
+  needs:
+    - build:windows_vs2019

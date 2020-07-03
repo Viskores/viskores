@@ -20,8 +20,6 @@ int UnitTestTransferEGL(int argc, char* argv[])
 
   //get egl canvas to construct a context for us
   vtkm::rendering::CanvasEGL canvas(1024, 1024);
-  canvas.Initialize();
-  canvas.Activate();
 
   //get glew to bind all the opengl functions
   glewInit();

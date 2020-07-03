@@ -10,6 +10,8 @@
 #ifndef vtk_m_filter_Streamline_hxx
 #define vtk_m_filter_Streamline_hxx
 
+#include <vtkm/filter/Streamline.h>
+
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -80,11 +82,10 @@ inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT bool Streamline::DoMapField(vtkm::cont::DataSet&,
-                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                             const vtkm::filter::FieldMetadata&,
-                                             vtkm::filter::PolicyBase<DerivedPolicy>)
+template <typename DerivedPolicy>
+inline VTKM_CONT bool Streamline::MapFieldOntoOutput(vtkm::cont::DataSet&,
+                                                     const vtkm::cont::Field&,
+                                                     vtkm::filter::PolicyBase<DerivedPolicy>)
 {
   return false;
 }

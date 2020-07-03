@@ -43,8 +43,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
   values.push_back(2.0);
   values.push_back(1.0);
   values.push_back(0.0);
-  vtkm::cont::DataSetFieldAdd fieldAdder;
-  fieldAdder.AddPointField(ds, "scalars", values);
+  ds.AddPointField("scalars", values);
 
   return ds;
 }

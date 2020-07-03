@@ -13,6 +13,7 @@ set(headers
   ArrayCopy.h
   ArrayGetValues.h
   ArrayHandle.h
+  ArrayHandleBasic.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
@@ -32,7 +33,9 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
+  ArrayHandleRandomUniformReal.h
   ArrayHandleSOA.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
@@ -96,6 +99,7 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
@@ -103,7 +107,6 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageBasic.h
   StorageExtrude.h
   StorageImplicit.h
   StorageList.h
@@ -128,27 +131,28 @@ set(template_sources
   CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageBasic.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx
   )
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  internal/ArrayHandleBasicImpl.cxx
-  internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/Buffer.cxx
+  internal/DeviceAdapterMemoryManager.cxx
+  internal/DeviceAdapterMemoryManagerShared.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
+  ParticleArrayCopy.cxx
   RuntimeDeviceTracker.cxx
-  StorageBasic.cxx
   Token.cxx
   TryExecute.cxx
   )
@@ -181,6 +185,7 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
+  ParticleArrayCopy.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx

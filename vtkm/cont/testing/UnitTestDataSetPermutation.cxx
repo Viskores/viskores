@@ -32,9 +32,10 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
     return false;
   }
 
+  auto ahPortal = ah.ReadPortal();
   for (vtkm::Id i = 0; i < size; ++i)
   {
-    if (ah.ReadPortal().Get(i) != expected[i])
+    if (ahPortal.Get(i) != expected[i])
     {
       return false;
     }
@@ -75,7 +76,7 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
   const int nVerts = 5;
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-  vtkm::cont::DataSetFieldAdd::AddPointField(ds, "pointvar", vars, nVerts);
+  ds.AddPointField("pointvar", vars, nVerts);
 
   return ds;
 }
@@ -110,9 +111,10 @@ void TestDataSet_Explicit()
 
   //iterate same cell 4 times
   vtkm::Float32 expected[4] = { 30.1667f, 30.1667f, 30.1667f, 30.1667f };
+  auto resultPortal = result.ReadPortal();
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultPortal.Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on explicit subset data");
   }
 }
@@ -145,9 +147,10 @@ void TestDataSet_Structured2D()
   dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
 
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
+  auto resultPortal = result.ReadPortal();
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultPortal.Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }
@@ -180,9 +183,10 @@ void TestDataSet_Structured3D()
   dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
 
   vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
+  auto resultPortal = result.ReadPortal();
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.ReadPortal().Get(i), expected[i]),
+    VTKM_TEST_ASSERT(test_equal(resultPortal.Get(i), expected[i]),
                      "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }

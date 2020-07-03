@@ -103,52 +103,6 @@ private:
 
   StorageType* Storage;
 };
-
-// Specializations for basic storage:
-template <typename T>
-struct ExecutionPortalFactoryBasicShareWithControl
-{
-  using ValueType = T;
-  using PortalType = ArrayPortalFromIterators<ValueType*>;
-  using PortalConstType = ArrayPortalFromIterators<const ValueType*>;
-
-  VTKM_CONT
-  static PortalType CreatePortal(ValueType* start, ValueType* end)
-  {
-    return PortalType(start, end);
-  }
-
-  VTKM_CONT
-  static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end)
-  {
-    return PortalConstType(start, end);
-  }
-};
-
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicShareWithControl
-  : public ExecutionArrayInterfaceBasicBase
-{
-  //inherit our parents constructor
-  using ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase;
-
-  VTKM_CONT void Allocate(TypelessExecutionArray& execArray,
-                          vtkm::Id numberOfValues,
-                          vtkm::UInt64 sizeOfValue) const final;
-  VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
-
-  VTKM_CONT void CopyFromControl(const void* src, void* dst, vtkm::UInt64 bytes) const final;
-  VTKM_CONT void CopyToControl(const void* src, void* dst, vtkm::UInt64 bytes) const final;
-
-  VTKM_CONT void UsingForRead(const void* controlPtr,
-                              const void* executionPtr,
-                              vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void UsingForWrite(const void* controlPtr,
-                               const void* executionPtr,
-                               vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void UsingForReadWrite(const void* controlPtr,
-                                   const void* executionPtr,
-                                   vtkm::UInt64 numBytes) const final;
-};
 }
 }
 } // namespace vtkm::cont::internal

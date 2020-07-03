@@ -110,7 +110,6 @@ public:
     }
 
     // In serial this worklet implements the following operation
-    // #pragma omp parallel for
     // for (indexVector::size_type startVtxNo = 0; startVtxNo < firstNeighbour.size()-1; ++startVtxNo)
     //   {
     //     nNeighbours[startVtxNo] = firstNeighbour[startVtxNo+1] - firstNeighbour[startVtxNo];

@@ -241,7 +241,7 @@ inline void MergeTree::DebugPrintTree(const char* message,
   for (vtkm::Id entry = 0; entry < mesh.NumVertices; entry++)
   {
     vtkm::Id sortIndex = mesh.SortIndices.ReadPortal().Get(entry);
-    vtkm::Id arc = this->arcs.ReadPortal().Get(sortIndex);
+    vtkm::Id arc = this->Arcs.ReadPortal().Get(sortIndex);
     if (NoSuchElement(arc))
     {
       std::cout << "-1" << std::endl;
@@ -259,7 +259,7 @@ inline void MergeTree::DebugPrintTree(const char* message,
     }
     else if (mesh.NumDims == 3)
     {
-      if ((entry % (mesh.NumColumns * mesh.NumRows)) == (mesh.nCols * mesh.NumRows - 1))
+      if ((entry % (mesh.NumColumns * mesh.NumRows)) == (mesh.NumColumns * mesh.NumRows - 1))
       {
         std::cout << std::endl;
       }

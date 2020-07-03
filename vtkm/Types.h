@@ -629,6 +629,7 @@ public:
 
   // The enable_if predicate will disable this constructor for Size=1 so that
   // the variadic constructor constexpr VecBase(T, Ts&&...) is called instead.
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <vtkm::IdComponent Size2 = Size, typename std::enable_if<Size2 != 1, int>::type = 0>
   VTKM_EXEC_CONT explicit VecBase(const ComponentType& value)
   {
@@ -638,6 +639,7 @@ public:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename... Ts>
   VTKM_EXEC_CONT constexpr VecBase(ComponentType value0, Ts&&... values)
     : Components{ value0, values... }
@@ -645,6 +647,7 @@ public:
     VTKM_STATIC_ASSERT(sizeof...(Ts) + 1 == Size);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   VecBase(std::initializer_list<ComponentType> values)
   {
@@ -684,11 +687,12 @@ public:
 #pragma warning(disable : 4244)
 #endif
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherValueType, typename OtherDerivedType>
   VTKM_EXEC_CONT explicit VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
   {
     //DO NOT CHANGE THIS AND THE ABOVE PRAGMA'S UNLESS YOU FULLY UNDERSTAND THE
-    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/issues/221
+    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/-/issues/221
     for (vtkm::IdComponent i = 0; i < Size; ++i)
     {
       this->Components[i] = src[i];
@@ -714,6 +718,7 @@ public:
   }
 
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator+(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -729,6 +734,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator-(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -744,6 +750,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator*(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -759,6 +766,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator/(const VecBaseCommon<OtherComponentType, OtherClass>& other) const

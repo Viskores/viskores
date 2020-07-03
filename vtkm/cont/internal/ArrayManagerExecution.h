@@ -11,6 +11,7 @@
 #define vtk_m_cont_internal_ArrayManagerExecution_h
 
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Token.h>
 
 namespace vtkm
 {

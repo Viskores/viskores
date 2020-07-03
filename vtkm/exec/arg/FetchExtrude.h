@@ -26,26 +26,21 @@ namespace arg
 {
 
 //Optimized fetch for point ids when iterating the cells ConnectivityExtrude
-template <typename FetchType, typename Device, typename ExecObjectType>
-struct Fetch<FetchType,
-             vtkm::exec::arg::AspectTagIncidentElementIndices,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>,
-             ExecObjectType>
+template <typename FetchType, typename ExecObjectType>
+struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecObjectType>
 {
-  using ThreadIndicesType =
-    vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>;
-
-  using ValueType = vtkm::Vec<vtkm::Id, 6>;
-
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const ExecObjectType&) const -> vtkm::Vec<vtkm::Id, 6>
   {
     // std::cout << "opimized fetch for point ids" << std::endl;
     const auto& xgcidx = indices.GetIndicesIncident();
     const vtkm::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
     const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
-    ValueType result;
+    vtkm::Vec<vtkm::Id, 6> result;
     result[0] = offset1 + xgcidx.PointIds[0][0];
     result[1] = offset1 + xgcidx.PointIds[0][1];
     result[2] = offset1 + xgcidx.PointIds[0][2];
@@ -55,132 +50,106 @@ struct Fetch<FetchType,
     return result;
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename ConnectivityType, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType, ScatterAndMaskMode>& indices,
+    const ExecObjectType&) const -> decltype(indices.GetIndicesIncident())
+  {
+    return indices.GetIndicesIncident();
+  }
+
+  template <typename ThreadIndicesType, typename ValueType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }
 };
 
-//Optimized fetch for point arrays when iterating the cells ConnectivityExtrude
-template <typename Device, typename PortalType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>,
-             PortalType>
-{
-  using ThreadIndicesType =
-    vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>;
-  using ValueType = vtkm::Vec<typename PortalType::ValueType, 6>;
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const PortalType& portal)
-  {
-    // std::cout << "opimized fetch for point values" << std::endl;
-    const auto& xgcidx = indices.GetIndicesIncident();
-    const vtkm::Id offset1 = (xgcidx.Planes[0] * xgcidx.NumberOfPointsPerPlane);
-    const vtkm::Id offset2 = (xgcidx.Planes[1] * xgcidx.NumberOfPointsPerPlane);
-    ValueType result;
-    result[0] = portal.Get(offset1 + xgcidx.PointIds[0][0]);
-    result[1] = portal.Get(offset1 + xgcidx.PointIds[0][1]);
-    result[2] = portal.Get(offset1 + xgcidx.PointIds[0][2]);
-    result[3] = portal.Get(offset2 + xgcidx.PointIds[1][0]);
-    result[4] = portal.Get(offset2 + xgcidx.PointIds[1][1]);
-    result[5] = portal.Get(offset2 + xgcidx.PointIds[1][2]);
-    return result;
-  }
-
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const PortalType&, const ValueType&) const
-  {
-    // Store is a no-op for this fetch.
-  }
-};
-
 //Optimized fetch for point coordinates when iterating the cells of ConnectivityExtrude
-template <typename Device, typename T>
+template <typename T>
 struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>,
              vtkm::exec::ArrayPortalExtrude<T>>
 
 {
-  using ThreadIndicesType =
-    vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>;
-  using ValueType = vtkm::Vec<typename vtkm::exec::ArrayPortalExtrude<T>::ValueType, 6>;
-
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const vtkm::exec::ArrayPortalExtrude<T>& points)
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
+                      const vtkm::exec::ArrayPortalExtrude<T>& points)
+    -> decltype(points.GetWedge(indices.GetIndicesIncident()))
   {
     // std::cout << "opimized fetch for point coordinates" << std::endl;
     return points.GetWedge(indices.GetIndicesIncident());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&,
-             const vtkm::exec::ArrayPortalExtrude<T>&,
-             const ValueType&) const
+  template <typename ThreadIndicesType, typename ValueType>
+  VTKM_EXEC void Store(const ThreadIndicesType&,
+                       const vtkm::exec::ArrayPortalExtrude<T>&,
+                       const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
 };
 
 //Optimized fetch for point coordinates when iterating the cells of ConnectivityExtrude
-template <typename Device, typename T>
+template <typename T>
 struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
              vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>,
              vtkm::exec::ArrayPortalExtrudePlane<T>>
 {
-  using ThreadIndicesType =
-    vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>>;
-  using ValueType = vtkm::Vec<typename vtkm::exec::ArrayPortalExtrudePlane<T>::ValueType, 6>;
-
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices,
-                 const vtkm::exec::ArrayPortalExtrudePlane<T>& portal)
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
+                      const vtkm::exec::ArrayPortalExtrudePlane<T>& portal)
+    -> decltype(portal.GetWedge(indices.GetIndicesIncident()))
   {
     // std::cout << "opimized fetch for point coordinates" << std::endl;
     return portal.GetWedge(indices.GetIndicesIncident());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&,
-             const vtkm::exec::ArrayPortalExtrudePlane<T>&,
-             const ValueType&) const
+  template <typename ThreadIndicesType, typename ValueType>
+  VTKM_EXEC void Store(const ThreadIndicesType&,
+                       const vtkm::exec::ArrayPortalExtrudePlane<T>&,
+                       const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
 };
 
 //Optimized fetch for point coordinates when iterating the points of ConnectivityExtrude
-template <typename Device, typename T>
-struct Fetch<
-  vtkm::exec::arg::FetchTagArrayDirectIn,
-  vtkm::exec::arg::AspectTagDefault,
-  vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>,
-  vtkm::exec::ArrayPortalExtrude<T>>
+template <typename T>
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::ArrayPortalExtrude<T>>
 
 {
-  using ThreadIndicesType =
-    vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>>;
-  using ValueType = typename vtkm::exec::ArrayPortalExtrude<T>::ValueType;
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename ThreadIndicesType>
+  VTKM_EXEC auto Load(const ThreadIndicesType& indices,
+                      const vtkm::exec::ArrayPortalExtrude<T>& points)
+    -> decltype(points.Get(indices.GetInputIndex()))
+  {
+    // std::cout << "optimized fetch for point coordinates" << std::endl;
+    return points.Get(indices.GetInputIndex());
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const vtkm::exec::ArrayPortalExtrude<T>& points)
+  template <typename Device, typename ScatterAndMaskMode>
+  VTKM_EXEC auto Load(
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>,
+                                                    ScatterAndMaskMode>& indices,
+    const vtkm::exec::ArrayPortalExtrude<T>& points)
+    -> decltype(points.Get(indices.GetIndexLogical()))
   {
-    // std::cout << "opimized fetch for point coordinates" << std::endl;
+    // std::cout << "optimized fetch for point coordinates" << std::endl;
     return points.Get(indices.GetIndexLogical());
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&,
-             const vtkm::exec::ArrayPortalExtrude<T>&,
-             const ValueType&) const
+  template <typename ThreadIndicesType, typename ValueType>
+  VTKM_EXEC void Store(const ThreadIndicesType&,
+                       const vtkm::exec::ArrayPortalExtrude<T>&,
+                       const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }

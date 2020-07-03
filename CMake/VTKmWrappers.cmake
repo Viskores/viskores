@@ -10,9 +10,13 @@
 
 include(CMakeParseArguments)
 
+include(VTKmCMakeBackports)
 include(VTKmDeviceAdapters)
 include(VTKmCPUVectorization)
-include(VTKmMPI)
+
+if(VTKm_ENABLE_MPI AND NOT TARGET MPI::MPI_CXX)
+  find_package(MPI REQUIRED MODULE)
+endif()
 
 #-----------------------------------------------------------------------------
 # INTERNAL FUNCTIONS
@@ -35,11 +39,11 @@ endfunction(vtkm_get_kit_name)
 #-----------------------------------------------------------------------------
 function(vtkm_pyexpander_generated_file generated_file_name)
   # If pyexpander is available, add targets to build and check
-  if(PYEXPANDER_FOUND AND PYTHONINTERP_FOUND)
+  if(PYEXPANDER_FOUND AND TARGET Python::Interpreter)
     add_custom_command(
       OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}.checked
       COMMAND ${CMAKE_COMMAND}
-        -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
+        -DPYTHON_EXECUTABLE=${Python_EXECUTABLE}
         -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
         -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
         -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
@@ -378,7 +382,7 @@ function(vtkm_library)
                               EXTENDS_VTKM
                               DEVICE_SOURCES ${VTKm_LIB_DEVICE_SOURCES}
                               )
-  if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  if(VTKm_HIDE_PRIVATE_SYMBOLS)
     set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
     set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()

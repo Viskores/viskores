@@ -11,34 +11,36 @@
 
 #include <vtkm/thirdparty/diy/diy.h>
 
+#include <memory>
+
 namespace vtkm
 {
 namespace cont
 {
 namespace internal
 {
-static vtkmdiy::mpi::communicator GlobalCommuncator(MPI_COMM_NULL);
+static std::unique_ptr<vtkmdiy::mpi::communicator> GlobalCommuncator;
 }
 
 void EnvironmentTracker::SetCommunicator(const vtkmdiy::mpi::communicator& comm)
 {
-  vtkm::cont::internal::GlobalCommuncator = comm;
+  if (!internal::GlobalCommuncator)
+  {
+    internal::GlobalCommuncator.reset(new vtkmdiy::mpi::communicator(comm));
+  }
+  else
+  {
+    *internal::GlobalCommuncator = comm;
+  }
 }
 
 const vtkmdiy::mpi::communicator& EnvironmentTracker::GetCommunicator()
 {
-#ifndef VTKM_DIY_NO_MPI
-  int flag;
-  MPI_Initialized(&flag);
-  if (!flag)
+  if (!internal::GlobalCommuncator)
   {
-    int argc = 0;
-    char** argv = nullptr;
-    MPI_Init(&argc, &argv);
-    internal::GlobalCommuncator = vtkmdiy::mpi::communicator(MPI_COMM_WORLD);
+    internal::GlobalCommuncator.reset(new vtkmdiy::mpi::communicator());
   }
-#endif
-  return vtkm::cont::internal::GlobalCommuncator;
+  return *internal::GlobalCommuncator;
 }
 } // namespace vtkm::cont
 } // namespace vtkm

@@ -152,7 +152,7 @@ void View::SetForegroundColor(const vtkm::rendering::Color& color)
 
 void View::Initialize()
 {
-  this->GetCanvas().Initialize();
+  // does nothing
 }
 
 void View::SaveAs(const std::string& fileName) const

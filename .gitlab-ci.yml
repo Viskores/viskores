@@ -1,26 +1,30 @@
 
 # Docker Images:
 #
-# - CentOS 7
 #   * .gitlab/ci/docker/centos7/cuda10.2/
 #     - cuda
 #     - gcc 4.8.5
-#   * .gitlab/ci/rhel8/cuda10.2/
+#   * .gitlab/ci/docker/centos8/base/
+#     - gcc 8.3.1
+#     - clang 8.0.1
+#     - openmp
+#     - asan, ubsan
+#   * .gitlab/ci/docker/rhel8/cuda10.2/
 #     - cuda
 #     - gcc 8.2.1
-#   * .gitlab/ci/ubuntu1604/base/
+#   * .gitlab/ci/docker/ubuntu1604/base/
 #     - gcc 4.8
 #     - clang 3.8
 #     - clang 5.0
 #     - tbb
 #     - openmpi
-#   * .gitlab/ci/ubuntu1604/cuda9.2/
+#   * .gitlab/ci/docker/ubuntu1604/cuda9.2/
 #     - cuda
 #     - gcc 5.4
 #     - tbb
 #     - openmp
 #     - openmpi
-#   * .gitlab/ci/ubuntu1804/base/
+#   * .gitlab/ci/docker/ubuntu1804/base/
 #     - gcc 6.5
 #     - gcc 7.4
 #     - gcc 9
@@ -28,9 +32,14 @@
 #     - tbb
 #     - openmp
 #     - mpich2
-#   * .gitlab/ci/ubuntu1804/cuda10.1/
+#   * .gitlab/ci/docker/ubuntu1804/cuda10.1/
 #     - cuda
 #     - gcc 7.4
+#     - tbb
+#     - openmp
+#     - mpich2
+#   * .gitlab/ci/docker/ubuntu2004/doxygen/
+#     - gcc 9.3
 #     - tbb
 #     - openmp
 #     - mpich2
@@ -40,52 +49,60 @@
     GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
 
 .centos7: &centos7
-  image: "kitware/vtkm:ci-centos7_cuda10.2-20200410"
+  image: "kitware/vtkm:ci-centos7_cuda10.2-20200601"
+  extends:
+    - .docker_image
+
+.centos8: &centos8
+  image: "kitware/vtkm:ci-centos8-20200601"
   extends:
     - .docker_image
 
 .rhel8: &rhel8
-  image: "kitware/vtkm:ci-rhel8_cuda10.2-20200410"
+  image: "kitware/vtkm:ci-rhel8_cuda10.2-20200601"
   extends:
     - .docker_image
 
 .ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20200410"
+  image: "kitware/vtkm:ci-ubuntu1604-20200601"
   extends:
     - .docker_image
 
 .ubuntu1604_cuda: &ubuntu1604_cuda
-  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20200410"
+  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20200601"
   extends:
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20200410"
+  image: "kitware/vtkm:ci-ubuntu1804-20200601"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda10.1-20200410"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda10.1-20200601"
   extends:
     - .docker_image
 
+.ubuntu2004_doxygen: &ubuntu2004_doxygen
+  image: "kitware/vtkm:ci-doxygen-20200601"
+  extends:
+    - .docker_image
+
+
 .only-default: &only-default
   only:
-    - master
+    - master@vtk/vtk-m
+    - tags@vtk/vtk-m
     - merge_requests
-    - tags
 
 .only-master: &only-master
   only:
-    - master
+    - master@vtk/vtk-m
+
 
 # General Longer Term Tasks:
-# - setup asan, and ubsan as sub-pipeline
-# - setup clang tidy as sub-pipeline
-#
-# Current Tasks:
-# - Determine if we can get sccache to work with CUDA
-# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/issues/447
+# - Setup clang tidy as sub-pipeline
+# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/-/issues/447
 #   Note: Centos7 doesn't work as they ship separate standard library
 #   headers for each version. We will have to figure out something else
 #   like using spack or building llvm/clang from source
@@ -116,6 +133,7 @@ stages:
       # The artifacts of the build.
       - build/bin/
       - build/include/
+      - build/vtkm/thirdparty/diy/vtkmdiy/
       - build/lib/
 
       # CTest and CMake install files.
@@ -146,8 +164,18 @@ stages:
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
 
+.cmake_memcheck_linux: &cmake_memcheck_linux
+  stage: test
+  timeout:  2 hours
+  interruptible: true
+  script:
+    - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+
 include:
   - local: '/.gitlab/ci/centos7.yml'
+  - local: '/.gitlab/ci/centos8.yml'
+  - local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
+  - local: '/.gitlab/ci/windows10.yml'

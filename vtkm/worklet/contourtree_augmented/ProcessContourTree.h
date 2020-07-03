@@ -240,7 +240,7 @@ public:
     auto hyperarcsPortal = contourTree.Hyperarcs.ReadPortal();
     // auto superarcsPortal = contourTree.Superarcs.ReadPortal();
     auto nodesPortal = contourTree.Nodes.ReadPortal();
-    auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
+    // auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
     for (vtkm::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
     { // per node in sorted order
       vtkm::Id sortID = nodesPortal.Get(sortedNode);
@@ -273,7 +273,13 @@ public:
       hyperarcDependentWeight);
 
     // set up the array which tracks which supernodes to deal with on which iteration
-    IdArrayType firstSupernodePerIteration;
+    auto firstSupernodePerIterationPortal = contourTree.FirstSupernodePerIteration.ReadPortal();
+    auto firstHypernodePerIterationPortal = contourTree.FirstHypernodePerIteration.ReadPortal();
+    auto supernodeTransferWeightPortal = supernodeTransferWeight.WritePortal();
+    auto superarcDependentWeightPortal = superarcDependentWeight.WritePortal();
+    auto hyperarcDependentWeightPortal = hyperarcDependentWeight.WritePortal();
+
+    /*
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1),
                           firstSupernodePerIteration);
     auto firstSupernodePerIterationPortal = firstSupernodePerIteration.WritePortal();
@@ -309,6 +315,7 @@ public:
       firstHypernodePerIterationPortal.Set(
         iteration, hyperparentsPortal.Get(firstSupernodePerIterationPortal.Get(iteration)));
     firstHypernodePerIterationPortal.Set(nIterations, contourTree.Hypernodes.GetNumberOfValues());
+    */
 
     // now iterate, propagating weights inwards
     for (vtkm::Id iteration = 0; iteration < nIterations; iteration++)

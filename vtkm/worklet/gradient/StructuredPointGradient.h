@@ -45,15 +45,19 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     using OT = typename GradientOutType::ComponentType;
 
     vtkm::Vec<CT, 3> xi, eta, zeta;
-    this->Jacobian(inputPoints, boundary, xi, eta, zeta); //store the metrics in xi,eta,zeta
+    vtkm::Vec<bool, 3> onBoundary{ !boundary.IsRadiusInXBoundary(1),
+                                   !boundary.IsRadiusInYBoundary(1),
+                                   !boundary.IsRadiusInZBoundary(1) };
+
+    this->Jacobian(inputPoints, onBoundary, xi, eta, zeta); //store the metrics in xi,eta,zeta
 
     auto dxi = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
     auto deta = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
     auto dzeta = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
-    dxi = (boundary.IsRadiusInXBoundary(1) ? dxi * 0.5f : dxi);
-    deta = (boundary.IsRadiusInYBoundary(1) ? deta * 0.5f : deta);
-    dzeta = (boundary.IsRadiusInZBoundary(1) ? dzeta * 0.5f : dzeta);
+    dxi = (onBoundary[0] ? dxi : dxi * 0.5f);
+    deta = (onBoundary[1] ? deta : deta * 0.5f);
+    dzeta = (onBoundary[2] ? dzeta : dzeta * 0.5f);
 
     outputGradient[0] = static_cast<OT>(xi[0] * dxi + eta[0] * deta + zeta[0] * dzeta);
     outputGradient[1] = static_cast<OT>(xi[1] * dxi + eta[1] * deta + zeta[1] * dzeta);
@@ -75,24 +79,44 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
     using CoordType = typename PointsIn::ValueType;
     using OT = typename GradientOutType::ComponentType;
 
-
     CoordType r = inputPoints.Portal.GetSpacing();
-
-    r[0] = (boundary.IsRadiusInXBoundary(1) ? r[0] * 0.5f : r[0]);
-    r[1] = (boundary.IsRadiusInYBoundary(1) ? r[1] * 0.5f : r[1]);
-    r[2] = (boundary.IsRadiusInZBoundary(1) ? r[2] * 0.5f : r[2]);
-
-    auto dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
-    auto dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
-    auto dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
 #if (defined(VTKM_CUDA) && defined(VTKM_GCC))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
-    outputGradient[0] = static_cast<OT>(dx * r[0]);
-    outputGradient[1] = static_cast<OT>(dy * r[1]);
-    outputGradient[2] = static_cast<OT>(dz * r[2]);
+    if (boundary.IsRadiusInXBoundary(1))
+    {
+      auto dx = inputField.GetUnchecked(1, 0, 0) - inputField.GetUnchecked(-1, 0, 0);
+      outputGradient[0] = static_cast<OT>(dx * (r[0] * 0.5f));
+    }
+    else
+    {
+      auto dx = inputField.Get(1, 0, 0) - inputField.Get(-1, 0, 0);
+      outputGradient[0] = static_cast<OT>(dx * r[0]);
+    }
+
+    if (boundary.IsRadiusInYBoundary(1))
+    {
+      auto dy = inputField.GetUnchecked(0, 1, 0) - inputField.GetUnchecked(0, -1, 0);
+      outputGradient[1] = static_cast<OT>(dy * r[1] * 0.5f);
+    }
+    else
+    {
+      auto dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
+      outputGradient[1] = static_cast<OT>(dy * (r[1]));
+    }
+
+    if (boundary.IsRadiusInZBoundary(1))
+    {
+      auto dz = inputField.GetUnchecked(0, 0, 1) - inputField.GetUnchecked(0, 0, -1);
+      outputGradient[2] = static_cast<OT>(dz * r[2] * 0.5f);
+    }
+    else
+    {
+      auto dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
+      outputGradient[2] = static_cast<OT>(dz * (r[2]));
+    }
 #if (defined(VTKM_CUDA) && defined(VTKM_GCC))
 #pragma GCC diagnostic pop
 #endif
@@ -103,20 +127,41 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
   //will be float,3 even when T is a 3 component field
   template <typename PointsIn, typename CT>
   VTKM_EXEC void Jacobian(const PointsIn& inputPoints,
-                          const vtkm::exec::BoundaryState& boundary,
+                          const vtkm::Vec<bool, 3>& onBoundary,
                           vtkm::Vec<CT, 3>& m_xi,
                           vtkm::Vec<CT, 3>& m_eta,
                           vtkm::Vec<CT, 3>& m_zeta) const
   {
     using CoordType = typename PointsIn::ValueType;
+    CoordType xi, eta, zeta;
 
-    CoordType xi = inputPoints.Get(1, 0, 0) - inputPoints.Get(-1, 0, 0);
-    CoordType eta = inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0);
-    CoordType zeta = inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1);
 
-    xi = (boundary.IsRadiusInXBoundary(1) ? xi * 0.5f : xi);
-    eta = (boundary.IsRadiusInYBoundary(1) ? eta * 0.5f : eta);
-    zeta = (boundary.IsRadiusInZBoundary(1) ? zeta * 0.5f : zeta);
+    if (onBoundary[0])
+    {
+      xi = (inputPoints.Get(1, 0, 0) - inputPoints.Get(-1, 0, 0));
+    }
+    else
+    {
+      xi = (inputPoints.GetUnchecked(1, 0, 0) - inputPoints.GetUnchecked(-1, 0, 0)) * 0.5f;
+    }
+
+    if (onBoundary[1])
+    {
+      eta = (inputPoints.Get(0, 1, 0) - inputPoints.Get(0, -1, 0));
+    }
+    else
+    {
+      eta = (inputPoints.GetUnchecked(0, 1, 0) - inputPoints.GetUnchecked(0, -1, 0)) * 0.5f;
+    }
+
+    if (onBoundary[2])
+    {
+      zeta = (inputPoints.Get(0, 0, 1) - inputPoints.Get(0, 0, -1));
+    }
+    else
+    {
+      zeta = (inputPoints.GetUnchecked(0, 0, 1) - inputPoints.GetUnchecked(0, 0, -1)) * 0.5f;
+    }
 
     CT aj = xi[0] * eta[1] * zeta[2] + xi[1] * eta[2] * zeta[0] + xi[2] * eta[0] * zeta[1] -
       xi[2] * eta[1] * zeta[0] - xi[1] * eta[0] * zeta[2] - xi[0] * eta[2] * zeta[1];

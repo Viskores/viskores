@@ -160,8 +160,9 @@ VTKM_CONT void CopyFromHandle(
   }
 
   //Allocate the memory and set it as static draw and copy into opengl
-  const ValueType* memory =
-    &(*vtkm::cont::ArrayPortalToIteratorBegin(handle.PrepareForInput(DeviceAdapterTag())));
+  vtkm::cont::Token token;
+  auto portal = handle.PrepareForInput(DeviceAdapterTag{}, token);
+  const ValueType* memory = &(*vtkm::cont::ArrayPortalToIteratorBegin(portal));
   glBufferSubData(state.GetType(), 0, size, memory);
 }
 

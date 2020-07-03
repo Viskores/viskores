@@ -105,9 +105,8 @@ vtkm::cont::DataSet Make3DExplicitSimpleCube()
   vtkm::FloatDefault vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f };
   vtkm::FloatDefault cellvar[nCells] = { 100.1f, 200.2f, 300.3f, 400.4f, 500.5f, 600.6f };
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
-  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells);
+  dataSet.AddPointField("pointvar", vars, nVerts);
+  dataSet.AddCellField("cellvar", cellvar, nCells);
 
   return dataSet;
 }
@@ -219,14 +218,6 @@ void TestWithExplicitData()
   TestSplitSharpEdgesFilterNoSplit(simpleCubeWithSN, splitSharpEdgesFilter);
 }
 
-struct SplitSharpTestPolicy : public vtkm::filter::PolicyBase<SplitSharpTestPolicy>
-{
-  using StructuredCellSetList = vtkm::List<vtkm::cont::CellSetStructured<3>>;
-  using UnstructuredCellSetList = vtkm::List<vtkm::cont::CellSetSingleType<>>;
-  using AllCellSetList = vtkm::ListAppend<StructuredCellSetList, UnstructuredCellSetList>;
-  using FieldTypeList = vtkm::List<vtkm::FloatDefault, vtkm::Vec3f>;
-};
-
 
 void TestWithStructuredData()
 {
@@ -254,7 +245,7 @@ void TestWithStructuredData()
   std::cout << dataSet.GetNumberOfPoints() << std::endl;
   vtkm::filter::SplitSharpEdges split;
   split.SetActiveField("normals", vtkm::cont::Field::Association::CELL_SET);
-  dataSet = split.Execute(dataSet, SplitSharpTestPolicy{});
+  dataSet = split.Execute(dataSet);
 }
 
 

@@ -12,13 +12,9 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/GhostCellRemove.h>
-
-#include <vtkm/io/writer/VTKDataSetWriter.h>
-
 
 namespace
 {
@@ -99,8 +95,7 @@ static vtkm::cont::DataSet MakeUniform(vtkm::Id numI,
     ds = dsb.Create(vtkm::Id3(numI + 1, numJ + 1, numK + 1));
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }
@@ -135,8 +130,7 @@ static vtkm::cont::DataSet MakeRectilinear(vtkm::Id numI,
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers, addMidGhost);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }
@@ -212,8 +206,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
 
   auto ghosts = StructuredGhostCellArray(numI, numJ, numK, numLayers);
 
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddCellField(ds, "vtkmGhostCells", ghosts);
+  ds.AddCellField("vtkmGhostCells", ghosts);
 
   return ds;
 }

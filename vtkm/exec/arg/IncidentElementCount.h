@@ -12,7 +12,6 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
-#include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm
 {
@@ -44,25 +43,20 @@ struct IncidentElementCount : vtkm::exec::arg::ExecutionSignatureTagBase
   using AspectTag = vtkm::exec::arg::AspectTagIncidentElementCount;
 };
 
-template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagIncidentElementCount,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
-             ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagIncidentElementCount, ExecObjectType>
 {
-  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
-
   using ValueType = vtkm::IdComponent;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetIndicesIncident().GetNumberOfComponents();
   }
 
-  VTKM_EXEC
-  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
+  template <typename ThreadIndicesType>
+  VTKM_EXEC void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }

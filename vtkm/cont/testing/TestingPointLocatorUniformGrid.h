@@ -168,12 +168,14 @@ public:
 
     ///// verify search result /////
     bool passTest = true;
+    auto nnPortal = nnDis_Handle.ReadPortal();
+    auto bfPortal = bfnnDis_Handle.ReadPortal();
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
       vtkm::Id workletIdx = nnId_Handle.WritePortal().Get(i);
-      vtkm::FloatDefault workletDis = nnDis_Handle.ReadPortal().Get(i);
+      vtkm::FloatDefault workletDis = nnPortal.Get(i);
       vtkm::Id bfworkletIdx = bfnnId_Handle.WritePortal().Get(i);
-      vtkm::FloatDefault bfworkletDis = bfnnDis_Handle.ReadPortal().Get(i);
+      vtkm::FloatDefault bfworkletDis = bfPortal.Get(i);
 
       if (workletIdx != bfworkletIdx)
       {

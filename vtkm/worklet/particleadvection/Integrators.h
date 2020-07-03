@@ -13,7 +13,6 @@
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
 #define vtk_m_worklet_particleadvection_Integrators_h
 
-#include <iomanip>
 #include <limits>
 
 #include <vtkm/Bitset.h>
@@ -168,43 +167,56 @@ protected:
       //we terminate, the outside value is the stepsize that will nudge
       //the particle outside the dataset.
 
-      //The binary search will be between [0, this->StepLength]
-      vtkm::FloatDefault stepShort = 0, stepLong = this->StepLength;
-      vtkm::Vec3f currPos(inpos), velocity;
-      vtkm::FloatDefault currTime = time;
+      //The binary search will be between {0, this->StepLength}
+      vtkm::FloatDefault stepRange[2] = { 0, this->StepLength };
 
-      auto evalStatus = this->Evaluator.Evaluate(currPos, time, velocity);
+      vtkm::Vec3f currPos(inpos), currVel;
+      auto evalStatus = this->Evaluator.Evaluate(currPos, time, currVel);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
 
-      const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>();
+      const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>() * 10;
       vtkm::FloatDefault div = 1;
-      for (int i = 0; i < 50; i++)
+      vtkm::Vec3f tmp;
+      while ((stepRange[1] - stepRange[0]) > eps)
       {
+        //Try a step midway between stepRange[0] and stepRange[1]
         div *= 2;
-        vtkm::FloatDefault stepCurr = stepShort + (this->StepLength / div);
+        vtkm::FloatDefault stepCurr = stepRange[0] + (this->StepLength / div);
+
         //See if we can step by stepCurr.
-        IntegratorStatus status = this->CheckStep(inpos, stepCurr, time, velocity);
-        if (status.CheckOk())
+        IntegratorStatus status = this->CheckStep(inpos, stepCurr, time, currVel);
+
+        if (status.CheckOk()) //Integration step succedded.
         {
-          currPos = inpos + velocity * stepShort;
-          stepShort = stepCurr;
+          //See if this point is in/out.
+          auto newPos = inpos + stepCurr * currVel;
+          evalStatus = this->Evaluator.Evaluate(newPos, time + stepCurr, tmp);
+          if (evalStatus.CheckOk())
+          {
+            //Point still in. Update currPos and set range to {stepCurr, stepRange[1]}
+            currPos = newPos;
+            stepRange[0] = stepCurr;
+          }
+          else
+          {
+            //The step succedded, but the next point is outside.
+            //Step too long. Set range to: {stepRange[0], stepCurr} and continue.
+            stepRange[1] = stepCurr;
+          }
         }
         else
-          stepLong = stepCurr;
-
-        //Stop if step bracket is small enough.
-        if (stepLong - stepShort < eps)
-          break;
+        {
+          //Step too long. Set range to: {stepRange[0], stepCurr} and continue.
+          stepRange[1] = stepCurr;
+        }
       }
-
-      //Take Euler step.
-      currTime = time + stepShort;
-      evalStatus = this->Evaluator.Evaluate(currPos, currTime, velocity);
+      evalStatus = this->Evaluator.Evaluate(currPos, time + stepRange[0], currVel);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
-
-      outpos = currPos + stepLong * velocity;
+      //Update the position and time.
+      outpos = currPos + stepRange[1] * currVel;
+      time += stepRange[1];
       return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
     }
 
@@ -292,6 +304,12 @@ public:
       if ((time + stepLength + vtkm::Epsilon<vtkm::FloatDefault>() - boundary) > 0.0)
         stepLength = boundary - time;
 
+      //k1 = F(p,t)
+      //k2 = F(p+hk1/2, t+h/2
+      //k3 = F(p+hk2/2, t+h/2
+      //k4 = F(p+hk3, t+h)
+      //Yn+1 = Yn + 1/6 h (k1+2k2+2k3+k4)
+
       vtkm::FloatDefault var1 = (stepLength / static_cast<vtkm::FloatDefault>(2));
       vtkm::FloatDefault var2 = time + var1;
       vtkm::FloatDefault var3 = time + stepLength;
@@ -313,7 +331,7 @@ public:
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
 
-      velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
+      velocity = (k1 + 2 * k2 + 2 * k3 + k4) / static_cast<vtkm::FloatDefault>(6);
       return IntegratorStatus(true, false, evalStatus.CheckTemporalBounds());
     }
   };
@@ -352,13 +370,13 @@ public:
 
   template <typename Device>
   class ExecObject : public Integrator::ExecObjectBaseImpl<
-                       decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device())),
+                       vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
                        typename EulerIntegrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
     using FieldEvaluateExecType =
-      decltype(std::declval<FieldEvaluateType>().PrepareForExecution(Device()));
+      vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>;
     using Superclass =
       Integrator::ExecObjectBaseImpl<FieldEvaluateExecType,
                                      typename EulerIntegrator::template ExecObject<Device>>;

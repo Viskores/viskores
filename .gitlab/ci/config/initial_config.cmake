@@ -20,11 +20,28 @@ foreach(option IN LISTS options)
   elseif(shared STREQUAL option)
     set(BUILD_SHARED_LIBS "ON" CACHE STRING "")
 
+  elseif(vtk_types STREQUAL option)
+    set(VTKm_USE_DEFAULT_TYPES_FOR_VTK "ON" CACHE STRING "")
+
   elseif(32bit_ids STREQUAL option)
     set(VTKm_USE_64BIT_IDS "OFF" CACHE STRING "")
 
   elseif(64bit_floats STREQUAL option)
     set(VTKm_USE_DOUBLE_PRECISION "ON" CACHE STRING "")
+
+  elseif(asan STREQUAL option)
+    set(VTKm_ENABLE_SANITIZER "ON" CACHE STRING "")
+    list(APPEND sanitizers "address")
+
+  elseif(leak STREQUAL option)
+    set(VTKm_ENABLE_SANITIZER "ON" CACHE STRING "")
+    list(APPEND sanitizers "leak")
+
+  elseif(rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "ON" CACHE STRING "")
+
+  elseif(no_rendering STREQUAL option)
+    set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
   elseif(examples STREQUAL option)
     set(VTKm_ENABLE_EXAMPLES "ON" CACHE STRING "")
@@ -74,4 +91,9 @@ if(SCCACHE_COMMAND)
   if(VTKm_ENABLE_CUDA)
     set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   endif()
+endif()
+
+# Setup all the sanitizers as a list
+if(sanitizers)
+  set(VTKm_USE_SANITIZER "${sanitizers}"  CACHE STRING "" FORCE)
 endif()

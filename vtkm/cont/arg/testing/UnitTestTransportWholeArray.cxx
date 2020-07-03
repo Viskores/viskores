@@ -17,7 +17,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -149,10 +148,11 @@ struct TryWholeArrayType
     token.DetachFromAll();
 
     VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Array size wrong?");
+    auto portal = array.ReadPortal();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       T expectedValue = TestValue(index, T()) + T(OFFSET);
-      T retrievedValue = array.ReadPortal().Get(index);
+      T retrievedValue = portal.Get(index);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "In/Out array not set correctly.");
     }

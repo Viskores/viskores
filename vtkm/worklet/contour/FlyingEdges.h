@@ -16,7 +16,6 @@
 #include <vtkm/worklet/contour/FlyingEdgesPass1.h>
 #include <vtkm/worklet/contour/FlyingEdgesPass2.h>
 #include <vtkm/worklet/contour/FlyingEdgesPass4.h>
-#include <vtkm/worklet/contour/FlyingEdgesPass5.h>
 
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/Invoker.h>
@@ -30,32 +29,6 @@ namespace flying_edges
 
 namespace detail
 {
-inline vtkm::cont::CellSetStructured<3> make_metaDataMesh3D(SumXAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<3> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id3{ pdims[1], pdims[2], 1 });
-  return metaDataMesh;
-}
-inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<2> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[1], pdims[2] });
-  return metaDataMesh;
-}
-
-inline vtkm::cont::CellSetStructured<3> make_metaDataMesh3D(SumYAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<3> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id3{ pdims[0], pdims[2], 1 });
-  return metaDataMesh;
-}
-inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis, const vtkm::Id3& pdims)
-{
-  vtkm::cont::CellSetStructured<2> metaDataMesh;
-  metaDataMesh.SetPointDimensions(vtkm::Id2{ pdims[0], pdims[2] });
-  return metaDataMesh;
-}
-
 template <typename T, typename S>
 vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 {
@@ -75,7 +48,6 @@ vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 }
 }
 
-
 //----------------------------------------------------------------------------
 template <typename ValueType,
           typename StorageTagField,
@@ -92,25 +64,21 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
-  //Tasks:
-  //2. Refactor how we map fields.
-  //   We need the ability unload everything in SharedState after
-  //   we have mapped all fields
-  //3. Support switching AxisToSum by running this whole thing in a TryExecute
-  //   Passes 5 can ignore this
-
-  using AxisToSum = SumXAxis;
-
   vtkm::cont::Invoker invoke;
 
+  vtkm::Vec3f origin, spacing;
+  { //extract out the origin and spacing as these are needed for Pass4 to properly
+    //interpolate the new points
+    auto portal = coordinateSystem.ReadPortal();
+    origin = portal.GetOrigin();
+    spacing = portal.GetSpacing();
+  }
   auto pdims = cells.GetPointDimensions();
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases;
   edgeCases.Allocate(coordinateSystem.GetNumberOfValues());
 
-  vtkm::cont::CellSetStructured<3> metaDataMesh3D = detail::make_metaDataMesh3D(AxisToSum{}, pdims);
-  vtkm::cont::CellSetStructured<2> metaDataMesh2D = detail::make_metaDataMesh2D(AxisToSum{}, pdims);
-
+  vtkm::cont::CellSetStructured<2> metaDataMesh2D;
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataLinearSums; //per point of metaDataMesh
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataMin;        //per point of metaDataMesh
   vtkm::cont::ArrayHandle<vtkm::Id> metaDataMax;        //per point of metaDataMesh
@@ -138,19 +106,44 @@ vtkm::cont::CellSetSingleType<> execute(
     // figure out where intersections along the row begins and ends
     // (i.e., gather information for computational trimming).
     //
-    // We mark everything as below as it is faster than having the worklet to it
-    vtkm::cont::Algorithm::Fill(edgeCases, static_cast<vtkm::UInt8>(FlyingEdges3D::Below));
-    ComputePass1<ValueType, AxisToSum> worklet1(isoval, pdims);
-    invoke(worklet1, metaDataMesh3D, metaDataSums, metaDataMin, metaDataMax, edgeCases, inputField);
+    {
+      VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass1");
+
+      // We have different logic for CUDA compared to Shared memory systems
+      // since this is the first touch of lots of the arrays, and will effect
+      // NUMA perf.
+      //
+      // Additionally CUDA does significantly better when you do an initial fill
+      // and write only non-below values
+      //
+      ComputePass1<ValueType> worklet1(isoval, pdims);
+      vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
+                                     launchComputePass1{},
+                                     worklet1,
+                                     inputField,
+                                     edgeCases,
+                                     metaDataMesh2D,
+                                     metaDataSums,
+                                     metaDataMin,
+                                     metaDataMax);
+    }
 
     //----------------------------------------------------------------------------
     // PASS 2: Process a single row of voxels/cells. Count the number of other
     // axis intersections by topological reasoning from previous edge cases.
     // Determine the number of primitives (i.e., triangles) generated from this
     // row. Use computational trimming to reduce work.
-    ComputePass2<AxisToSum> worklet2(pdims);
-    invoke(
-      worklet2, metaDataMesh2D, metaDataSums, metaDataMin, metaDataMax, metaDataNumTris, edgeCases);
+    {
+      VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass2");
+      ComputePass2 worklet2(pdims);
+      invoke(worklet2,
+             metaDataMesh2D,
+             metaDataSums,
+             metaDataMin,
+             metaDataMax,
+             metaDataNumTris,
+             edgeCases);
+    }
 
     //----------------------------------------------------------------------------
     // PASS 3: Compute the number of points and triangles that each edge
@@ -164,50 +157,42 @@ vtkm::cont::CellSetSingleType<> execute(
       detail::extend_by(sharedState.CellIdMap, sumTris);
 
 
-      auto newPointSize =
+      vtkm::Id newPointSize =
         vtkm::cont::Algorithm::ScanExclusive(metaDataLinearSums, metaDataLinearSums);
       detail::extend_by(sharedState.InterpolationEdgeIds, newPointSize);
       detail::extend_by(sharedState.InterpolationWeights, newPointSize);
 
       //----------------------------------------------------------------------------
       // PASS 4: Process voxel rows and generate topology, and interpolation state
-      ComputePass4<ValueType, AxisToSum> worklet4(
-        isoval, pdims, multiContourCellOffset, multiContourPointOffset);
-      invoke(worklet4,
-             metaDataMesh2D,
-             metaDataSums,
-             metaDataMin,
-             metaDataMax,
-             metaDataNumTris,
-             edgeCases,
-             inputField,
-             triangle_topology,
-             sharedState.InterpolationEdgeIds,
-             sharedState.InterpolationWeights,
-             sharedState.CellIdMap);
-    }
+      {
+        VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass4");
 
-    //----------------------------------------------------------------------------
-    // PASS 5: Convert the edge interpolation information to point and normals
-    vtkm::Vec3f origin, spacing;
-    { //extract out the origin and spacing as these are needed for Pass5 to properly
-      //interpolate the new points
-      auto portal = coordinateSystem.ReadPortal();
-      origin = portal.GetOrigin();
-      spacing = portal.GetSpacing();
-    }
-    if (sharedState.GenerateNormals)
-    {
-      normals.Allocate(sharedState.InterpolationEdgeIds.GetNumberOfValues());
-    }
+        launchComputePass4 pass4(
+          pdims, origin, spacing, multiContourCellOffset, multiContourPointOffset);
 
-    ComputePass5<ValueType> worklet5(pdims, origin, spacing, sharedState.GenerateNormals);
-    invoke(worklet5,
-           sharedState.InterpolationEdgeIds,
-           sharedState.InterpolationWeights,
-           points,
-           inputField,
-           normals);
+        detail::extend_by(points, newPointSize);
+        if (sharedState.GenerateNormals)
+        {
+          detail::extend_by(normals, newPointSize);
+        }
+
+        vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
+                                       pass4,
+                                       newPointSize,
+                                       isoval,
+                                       inputField,
+                                       edgeCases,
+                                       metaDataMesh2D,
+                                       metaDataSums,
+                                       metaDataMin,
+                                       metaDataMax,
+                                       metaDataNumTris,
+                                       sharedState,
+                                       triangle_topology,
+                                       points,
+                                       normals);
+      }
+    }
   }
 
   vtkm::cont::CellSetSingleType<> outputCells;

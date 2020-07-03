@@ -40,7 +40,6 @@ View3D::~View3D()
 
 void View3D::Paint()
 {
-  this->GetCanvas().Activate();
   this->GetCanvas().Clear();
 
   this->SetupForWorldSpace();
@@ -50,8 +49,6 @@ void View3D::Paint()
   this->SetupForScreenSpace();
   this->RenderAnnotations();
   this->RenderScreenAnnotations();
-
-  this->GetCanvas().Finish();
 }
 
 void View3D::RenderScreenAnnotations()
