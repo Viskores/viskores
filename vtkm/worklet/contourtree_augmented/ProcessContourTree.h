@@ -1392,16 +1392,15 @@ public:
     return path;
   }
 
+  // Given a path from a leaf (the global min/max) to the root of the contour tree and a hypersweep (where all hyperarcs are cut at the path)
+  // This function performs a prefix scan along that path to obtain the correct hypersweep values (as in the global min/max is the root of the hypersweep)
   void static fixPath(const std::function<vtkm::Id(vtkm::Id, vtkm::Id)> operation,
                       const std::vector<vtkm::Id> path,
                       vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType minMaxIndex)
   {
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
-    //
     // Fix path from the old root to the new root. Parallelisble with a prefix scan.
-    // The root is correct so we need to start with the next vertex.
-    //
     for (int i = path.size() - 2; i > 0; i--)
     {
       Id vertex = path[i + 1];
@@ -1414,6 +1413,10 @@ public:
     }
   }
 
+  // This function edits all the hyperarcs which contain vertices which are on the supplied path. This path is usually the path between the global min/max to the root of the tree.
+  // This function effectively cuts hyperarcs at the first node they encounter along that path.
+  // In addition to this it computed the number of supernodes every hyperarc has on that path. This helps in the function hyperarcScan for choosing the new target of the cut hyperarcs.
+  // NOTE: It is assumed that the supplied path starts at a leaf and ends at the root of the contour tree.
   void static editHyperarcs(
     const vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType hyperparentsPortal,
     const std::vector<vtkm::Id> path,
@@ -1425,22 +1428,16 @@ public:
     int i = 0;
     while (i < path.size())
     {
-      //cout << "Node " << maxPath[i] << " is in hArc " << MaskedIndex(ct.Hyperparents.ReadPortal().Get(maxPath[i])) << endl;
-
-      //
       // Cut the hyperacs at the first point
-      //
       hyperarcsPortal.Set(MaskedIndex(hyperparentsPortal.Get(path[i])), path[i]);
 
-      //cout << "Now pointing from " << MaskedIndex(ct.Hyperparents.ReadPortal().Get(maxPath[i])) << " -- " << maxPath[i] << endl;
-
       Id currentHyperparent = MaskedIndex(hyperparentsPortal.Get(path[i]));
-      // Skip all others on the same hyperarc
+
+      // Skip all supernodes which are on the same hyperarc
       while (i < path.size() && MaskedIndex(hyperparentsPortal.Get(path[i])) == currentHyperparent)
       {
-        auto value = howManyUsedPortal.Get(MaskedIndex(hyperparentsPortal.Get(path[i])));
+        const auto value = howManyUsedPortal.Get(MaskedIndex(hyperparentsPortal.Get(path[i])));
         howManyUsedPortal.Set(MaskedIndex(hyperparentsPortal.Get(path[i])), value + 1);
-        //cout << "Skipping over " << maxPath[i] << endl;
         i++;
       }
     }
@@ -1467,10 +1464,7 @@ public:
     auto whenTransferredPortal = whenTransferred.ReadPortal();
     auto howManyUsedPortal = howManyUsed.ReadPortal();
 
-    //
     // Set the first supernode per iteration
-    //
-
     vtkm::cont::ArrayHandle<vtkm::Id> firstSupernodePerIteration;
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1),
                           firstSupernodePerIteration);
@@ -1503,9 +1497,7 @@ public:
     // set the sentinel at the end of the array
     firstSupernodePerIterationPortal.Set(nIterations, supernodesPortal.GetNumberOfValues());
 
-    //
     // Set the first hypernode per iteration
-    //
     vtkm::cont::ArrayHandle<vtkm::Id> firstHypernodePerIteration;
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, nIterations + 1),
                           firstHypernodePerIteration);
@@ -1520,22 +1512,20 @@ public:
     // Set the sentinel at the end of the array
     firstHypernodePerIterationPortal.Set(nIterations, hypernodesPortal.GetNumberOfValues());
 
-    vtkm::worklet::contourtree_augmented::process_contourtree_inc::PrefixScanHyperarcs<
-      BinaryFunctor>
-      prefixScanHyperarcsWorklet(operation);
+    // This workled is used in every iteration of the following loop, so it's initialised outside.
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::AddDependentWeightHypersweep<
       BinaryFunctor>
       addDependentWeightHypersweepWorklet(operation);
 
-    //
-    // For every iteration do prefix scan on all hyperarcs and then transfer to their target supernode
-    //
+    // For every iteration do a prefix scan on all hyperarcs in that iteration and then transfer the scanned value to every hyperarc's target supernode
     for (vtkm::Id iteration = 0; iteration < nIterations; iteration++)
     {
       // Determine the first and last hypernode in the current iteration (all hypernodes between them are also in the current iteration)
       vtkm::Id firstHypernode = firstHypernodePerIterationPortal.Get(iteration);
       vtkm::Id lastHypernode = firstHypernodePerIterationPortal.Get(iteration + 1);
       lastHypernode = vtkm::Minimum()(lastHypernode, hypernodes.GetNumberOfValues() - 1);
+
+      // Determine the first and last supernode in the current iteration (all supernode between them are also in the current iteration)
       vtkm::Id firstSupernode = MaskedIndex(hypernodesPortal.Get(firstHypernode));
       vtkm::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(lastHypernode));
       lastSupernode = vtkm::Minimum()(lastSupernode, hyperparents.GetNumberOfValues() - 1);
