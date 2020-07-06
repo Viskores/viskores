@@ -860,8 +860,12 @@ void InitDataSet(int& argc, char** argv)
 
   if (options[HELP])
   {
-    // FIXME: Print google benchmark usage too
-    option::printUsage(std::cerr, usage.data());
+    option::printUsage(std::cout, usage.data());
+    // Print google benchmark usage too
+    const char* helpstr = "--help";
+    char* tmpargv[] = { argv[0], const_cast<char*>(helpstr), nullptr };
+    int tmpargc = 2;
+    VTKM_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
     exit(0);
   }
 
@@ -1014,16 +1018,12 @@ int main(int argc, char* argv[])
   // Parse VTK-m options:
   Config = vtkm::cont::Initialize(argc, args.data(), opts);
 
-  // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
-  {
-    std::cout << Config.Usage << std::endl;
-  }
-  else
+  // This opts changes when it is help
+  if (opts != vtkm::cont::InitializeOptions::None)
   {
     vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
-    InitDataSet(argc, args.data());
   }
+  InitDataSet(argc, args.data());
 
   const std::string dataSetSummary = []() -> std::string {
     std::ostringstream out;
