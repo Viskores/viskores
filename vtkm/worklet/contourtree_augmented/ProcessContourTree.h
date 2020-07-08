@@ -83,8 +83,7 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/SuperNodeBranchComparator.h>
 
 #include <vtkm/cont/Invoker.h>
-#include <vtkm/worklet/contourtree_augmented/processcontourtree/AddDependentWeightHypersweep.h>
-#include <vtkm/worklet/contourtree_augmented/processcontourtree/HypwersweepWorklets.h>
+#include <vtkm/worklet/contourtree_augmented/processcontourtree/HypersweepWorklets.h>
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
 
 //#define DEBUG_PRINT

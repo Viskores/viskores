@@ -259,7 +259,7 @@ public:
     Id parent = MaskedIndex(hyperarcsPortal.Get(i));
 
     Id vertexValue = minMaxIndexPortal.Get(vertex);
-    Id parentValue = minMaxIndexPortal.Get(parent);
+    //Id parentValue = minMaxIndexPortal.Get(parent);
 
     //Id writeValue = op(vertexValue, parentValue);
 

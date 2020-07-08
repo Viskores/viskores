@@ -14,7 +14,6 @@ set(headers
   SuperArcVolumetricComparator.h
   SuperNodeBranchComparator.h
   PointerDoubling.h
-  AddDependentWeightHypersweep.h
   HypersweepWorklets.h
  )
 
