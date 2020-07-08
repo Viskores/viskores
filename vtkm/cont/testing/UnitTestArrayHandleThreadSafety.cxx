@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Token.h>
@@ -244,12 +245,45 @@ void ThreadsIncrementToArrayOrdered(vtkm::cont::ArrayHandle<ValueType, Storage> 
 }
 
 template <typename Storage>
+void AllocateQueuedArray(vtkm::cont::ArrayHandle<ValueType, Storage>& array)
+{
+  std::cout << "  Check allocating queued array." << std::endl;
+
+  // We have had instances where a PrepareForOutput that resized the array would lock
+  // up even when the given Token had the lock because the allocation used a different
+  // token. This regression tests makes sure we don't reintroduce that.
+
+  vtkm::cont::Token token;
+
+  array.Enqueue(token);
+
+  // If we deadlock in this call, then there is probably an issue with the allocation
+  // not waiting for write access correctly.
+  auto writePortal =
+    array.PrepareForOutput(ARRAY_SIZE * 2, vtkm::cont::DeviceAdapterTagSerial{}, token);
+  VTKM_TEST_ASSERT(writePortal.GetNumberOfValues() == ARRAY_SIZE * 2);
+  SetPortal(writePortal);
+
+  token.DetachFromAll();
+  CheckPortal(array.ReadPortal());
+}
+
+template <typename S1, typename S2>
+void AllocateQueuedArray(
+  vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagPermutation<S1, S2>>&)
+{
+  // Permutation array cannot be resized.
+  std::cout << "  Check allocating queued array... skipping" << std::endl;
+}
+
+template <typename Storage>
 void DoThreadSafetyTest(vtkm::cont::ArrayHandle<ValueType, Storage> array)
 {
   ThreadsIncrementToArray(array);
   ThreadsCheckArray(array);
   ThreadsDecrementArray(array);
   ThreadsIncrementToArrayOrdered(array);
+  AllocateQueuedArray(array);
 }
 
 void DoTest()
@@ -258,12 +292,18 @@ void DoTest()
   vtkm::cont::ArrayHandle<ValueType> basicArray;
   DoThreadSafetyTest(basicArray);
 
-  std::cout << "Fancy array handle." << std::endl;
+  std::cout << "Fancy array handle 1." << std::endl;
   vtkm::cont::ArrayHandle<ValueType> valueArray;
   valueArray.Allocate(ARRAY_SIZE);
-  auto fancyArray =
+  auto fancyArray1 =
     vtkm::cont::make_ArrayHandlePermutation(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), valueArray);
-  DoThreadSafetyTest(fancyArray);
+  DoThreadSafetyTest(fancyArray1);
+
+  std::cout << "Fancy array handle 2." << std::endl;
+  vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 3>> vecArray;
+  vecArray.Allocate(ARRAY_SIZE);
+  auto fancyArray2 = vtkm::cont::make_ArrayHandleExtractComponent(vecArray, 0);
+  DoThreadSafetyTest(fancyArray2);
 }
 
 } // anonymous namespace

@@ -78,7 +78,9 @@ public:
   /// The `preserve` argument flags whether any existing data in the buffer is preserved.
   /// Preserving data might cost more time or memory.
   ///
-  VTKM_CONT void SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes, vtkm::CopyFlag preserve);
+  VTKM_CONT void SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
+                                  vtkm::CopyFlag preserve,
+                                  vtkm::cont::Token& token);
 
   /// \brief Returns `true` if the buffer is allocated on the host.
   ///

@@ -51,9 +51,10 @@ public:
 
   VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
                                vtkm::cont::internal::Buffer* buffers,
-                               vtkm::CopyFlag preserve)
+                               vtkm::CopyFlag preserve,
+                               vtkm::cont::Token& token)
   {
-    buffers[0].SetNumberOfBytes(detail::NumberOfBytes(numValues, sizeof(T)), preserve);
+    buffers[0].SetNumberOfBytes(detail::NumberOfBytes(numValues, sizeof(T)), preserve, token);
   }
 
   VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
