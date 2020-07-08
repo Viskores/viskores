@@ -81,7 +81,10 @@ void DoTest()
 
   std::cout << "Initialize buffer" << std::endl;
   vtkm::cont::internal::Buffer buffer;
-  buffer.SetNumberOfBytes(BUFFER_SIZE, vtkm::CopyFlag::Off);
+  {
+    vtkm::cont::Token token;
+    buffer.SetNumberOfBytes(BUFFER_SIZE, vtkm::CopyFlag::Off, token);
+  }
 
   VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE);
 
@@ -105,10 +108,10 @@ void DoTest()
   VTKM_TEST_ASSERT(buffer.IsAllocatedOnDevice(device));
 
   std::cout << "Resize array and access write on device" << std::endl;
-  buffer.SetNumberOfBytes(BUFFER_SIZE / 2, vtkm::CopyFlag::On);
-  VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE / 2);
   {
     vtkm::cont::Token token;
+    buffer.SetNumberOfBytes(BUFFER_SIZE / 2, vtkm::CopyFlag::On, token);
+    VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE / 2);
     CheckPortal(MakePortal(buffer.WritePointerDevice(device, token), ARRAY_SIZE / 2));
   }
   VTKM_TEST_ASSERT(!buffer.IsAllocatedOnHost());
@@ -117,10 +120,10 @@ void DoTest()
   std::cout << "Resize array and access write on host" << std::endl;
   // Note that this is a weird corner case where the array was resized while saving the data
   // and then requested on another device.
-  buffer.SetNumberOfBytes(BUFFER_SIZE * 2, vtkm::CopyFlag::On);
-  VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE * 2);
   {
     vtkm::cont::Token token;
+    buffer.SetNumberOfBytes(BUFFER_SIZE * 2, vtkm::CopyFlag::On, token);
+    VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE * 2);
     // Although the array is twice ARRAY_SIZE, the valid values are only ARRAY_SIZE/2
     CheckPortal(MakePortal(buffer.WritePointerHost(token), ARRAY_SIZE / 2));
   }

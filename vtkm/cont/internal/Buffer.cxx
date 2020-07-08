@@ -560,41 +560,38 @@ vtkm::BufferSizeType Buffer::GetNumberOfBytes() const
   return this->Internals->GetNumberOfBytes(lock);
 }
 
-void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes, vtkm::CopyFlag preserve)
+void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
+                              vtkm::CopyFlag preserve,
+                              vtkm::cont::Token& token)
 {
   VTKM_ASSUME(numberOfBytes >= 0);
-  // A Token should not be declared within the scope of a lock. When the token goes out of scope
-  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
-  // the lock.
-  vtkm::cont::Token token;
+
+  LockType lock = this->Internals->GetLock();
+  if (this->Internals->GetNumberOfBytes(lock) == numberOfBytes)
   {
-    LockType lock = this->Internals->GetLock();
-    if (this->Internals->GetNumberOfBytes(lock) == numberOfBytes)
-    {
-      // Allocation has not changed. Just return.
-      // Note, if you set the size to the old size and then try to get the buffer on a different
-      // place, a copy might happen.
-      return;
-    }
+    // Allocation has not changed. Just return.
+    // Note, if you set the size to the old size and then try to get the buffer on a different
+    // place, a copy might happen.
+    return;
+  }
 
-    // We are altering the array, so make sure we can write to it.
-    detail::BufferHelper::WaitToWrite(this->Internals, lock, token);
+  // We are altering the array, so make sure we can write to it.
+  detail::BufferHelper::WaitToWrite(this->Internals, lock, token);
 
-    this->Internals->SetNumberOfBytes(lock, numberOfBytes);
-    if ((preserve == vtkm::CopyFlag::Off) || (numberOfBytes == 0))
+  this->Internals->SetNumberOfBytes(lock, numberOfBytes);
+  if ((preserve == vtkm::CopyFlag::Off) || (numberOfBytes == 0))
+  {
+    // No longer need these buffers. Just release them.
+    this->Internals->GetHostBuffer(lock).Release();
+    for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
     {
-      // No longer need these buffers. Just release them.
-      this->Internals->GetHostBuffer(lock).Release();
-      for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
-      {
-        deviceBuffer.second.Release();
-      }
+      deviceBuffer.second.Release();
     }
-    else
-    {
-      // Do nothing (other than resetting numberOfBytes). Buffers will get resized when you get the
-      // pointer.
-    }
+  }
+  else
+  {
+    // Do nothing (other than resetting numberOfBytes). Buffers will get resized when you get the
+    // pointer.
   }
 }
 
@@ -750,7 +747,7 @@ void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest) const
     else
     {
       // Nothing actually allocated. Just create allocation for dest. (Allocation happens lazily.)
-      dest.SetNumberOfBytes(this->GetNumberOfBytes(), vtkm::CopyFlag::Off);
+      dest.SetNumberOfBytes(this->GetNumberOfBytes(), vtkm::CopyFlag::Off, token);
     }
   }
 }
@@ -843,8 +840,8 @@ void Serialization<vtkm::cont::internal::Buffer>::load(BinaryBuffer& bb,
   vtkm::BufferSizeType size;
   vtkmdiy::load(bb, size);
 
-  obj.SetNumberOfBytes(size, vtkm::CopyFlag::Off);
   vtkm::cont::Token token;
+  obj.SetNumberOfBytes(size, vtkm::CopyFlag::Off, token);
   vtkm::UInt8* data = reinterpret_cast<vtkm::UInt8*>(obj.WritePointerHost(token));
   vtkmdiy::load(bb, data, static_cast<std::size_t>(size));
 }
