@@ -51,4 +51,11 @@ set(unit_tests
   UnitTestVecVariable.cxx
   )
 
+
+#suppress gcc note:
+#variable tracking size limit exceeded with -fvar-tracking-assignments, retrying without
+if (VTKM_COMPILER_IS_GNU)
+  set_source_files_properties(UnitTestBounds.cxx PROPERTIES COMPILE_OPTIONS "-fno-var-tracking-assignments")
+endif()
+
 vtkm_unit_tests(SOURCES ${unit_tests})

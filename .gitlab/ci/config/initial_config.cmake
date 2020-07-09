@@ -10,6 +10,13 @@
 ##
 ##=============================================================================
 
+# Default to Release builds.
+if ("$ENV{CMAKE_BUILD_TYPE}" STREQUAL "")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "")
+else ()
+  set(CMAKE_BUILD_TYPE "$ENV{CMAKE_BUILD_TYPE}" CACHE STRING "")
+endif ()
+
 string(REPLACE "+" ";" options "$ENV{VTKM_SETTINGS}")
 
 foreach(option IN LISTS options)
