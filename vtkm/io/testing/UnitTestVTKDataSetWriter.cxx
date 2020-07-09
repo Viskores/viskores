@@ -64,16 +64,19 @@ struct CheckSameCoordinateSystem
     VTKM_TEST_ASSERT(test_equal(originalPortal.GetRange3(), filePortal.GetRange3()));
   }
 
-  using ArrayHandleRectilinearCoords =
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
-  void operator()(const ArrayHandleRectilinearCoords& originalArray,
+  template <typename T>
+  using ArrayHandleRectilinearCoords = vtkm::cont::ArrayHandle<
+    T,
+    typename vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T>,
+                                                     vtkm::cont::ArrayHandle<T>,
+                                                     vtkm::cont::ArrayHandle<T>>::StorageTag>;
+  template <typename T>
+  void operator()(const ArrayHandleRectilinearCoords<T>& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
   {
-    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords>());
-    ArrayHandleRectilinearCoords fileArray =
-      fileCoords.GetData().Cast<ArrayHandleRectilinearCoords>();
+    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords<T>>());
+    ArrayHandleRectilinearCoords<T> fileArray =
+      fileCoords.GetData().Cast<ArrayHandleRectilinearCoords<T>>();
     auto originalPortal = originalArray.ReadPortal();
     auto filePortal = fileArray.ReadPortal();
     VTKM_TEST_ASSERT(

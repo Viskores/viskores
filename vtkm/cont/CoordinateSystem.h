@@ -33,9 +33,9 @@ namespace detail
 // supported. Once the behavior is removed (probably when
 // ArrayHandleVirtualCoordinates is removed), then this class should be removed.
 class VTKM_ALWAYS_EXPORT CoordDataDepWrapper
-  : public vtkm::cont::VariantArrayHandleBase<vtkm::List<vtkm::Vec3f>>
+  : public vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>
 {
-  using Superclass = vtkm::cont::VariantArrayHandleBase<vtkm::List<vtkm::Vec3f>>;
+  using Superclass = vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>;
 
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates ToArray() const;
@@ -149,7 +149,14 @@ public:
   VTKM_CONT detail::CoordDataDepWrapper GetData() const;
 
 private:
-  struct StorageToArray
+#ifdef VTKM_USE_DOUBLE_PRECISION
+  using FloatNonDefault = vtkm::Float32;
+#else
+  using FloatNonDefault = vtkm::Float64;
+#endif
+  using Vec3f_nd = vtkm::Vec<FloatNonDefault, 3>;
+
+  struct StorageToArrayDefault
   {
     template <typename S>
     using IsInvalid = vtkm::cont::internal::IsInvalidArrayHandle<vtkm::Vec3f, S>;
@@ -158,12 +165,27 @@ private:
     using Transform = vtkm::cont::ArrayHandle<vtkm::Vec3f, S>;
   };
 
+  struct StorageToArrayNonDefault
+  {
+    template <typename S>
+    using IsInvalid = vtkm::cont::internal::IsInvalidArrayHandle<Vec3f_nd, S>;
+
+    template <typename S>
+    using Transform =
+      vtkm::cont::ArrayHandleCast<vtkm::Vec3f, vtkm::cont::ArrayHandle<Vec3f_nd, S>>;
+  };
+
+  using ArraysFloatDefault = vtkm::ListTransform<
+    vtkm::ListRemoveIf<VTKM_DEFAULT_STORAGE_LIST, StorageToArrayDefault::IsInvalid>,
+    StorageToArrayDefault::Transform>;
+  using ArraysFloatNonDefault = vtkm::ListTransform<
+    vtkm::ListRemoveIf<VTKM_DEFAULT_STORAGE_LIST, StorageToArrayNonDefault::IsInvalid>,
+    StorageToArrayNonDefault::Transform>;
+
 public:
-  using MultiplexerArrayType =                                                    //
-    vtkm::cont::ArrayHandleMultiplexerFromList<                                   //
-      vtkm::ListTransform<                                                        //
-        vtkm::ListRemoveIf<VTKM_DEFAULT_STORAGE_LIST, StorageToArray::IsInvalid>, //
-        StorageToArray::Transform>>;
+  using MultiplexerArrayType = //
+    vtkm::cont::ArrayHandleMultiplexerFromList<
+      vtkm::ListAppend<ArraysFloatDefault, ArraysFloatNonDefault>>;
 
   /// \brief Returns the data for the coordinate system as an `ArrayHandleMultiplexer`.
   ///

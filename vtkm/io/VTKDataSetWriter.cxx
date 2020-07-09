@@ -159,9 +159,11 @@ void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   int cindex = 0;
   auto cdata = dataSet.GetCoordinateSystem(cindex).GetData();
 
+  std::string typeName;
+  vtkm::cont::CastAndCall(cdata, GetDataTypeName(typeName));
+
   vtkm::Id npoints = cdata.GetNumberOfValues();
-  out << "POINTS " << npoints << " " << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name()
-      << " " << '\n';
+  out << "POINTS " << npoints << " " << typeName << " " << '\n';
 
   cdata.CastAndCall(OutputPointsFunctor{ out });
 }

@@ -140,7 +140,8 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  dispatcher.Invoke(
+    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
 }
 
 //-----------------------------------------------------------------------------

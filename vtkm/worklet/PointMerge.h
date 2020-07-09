@@ -454,19 +454,43 @@ public:
       inCellSet, this->PointInputToOutputMap, this->MergeKeys.GetInputRange());
   }
 
+private:
+  struct MapPointFieldFunctor
+  {
+    template <typename T, typename S>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& inArray,
+                              vtkm::cont::VariantArrayHandleCommon& outHolder,
+                              const PointMerge& self) const
+    {
+      vtkm::cont::ArrayHandle<T> outArray;
+      self.MapPointField(inArray, outArray);
+      outHolder = vtkm::cont::VariantArrayHandleCommon(outArray);
+    }
+  };
+
+public:
   template <typename InArrayHandle, typename OutArrayHandle>
   VTKM_CONT void MapPointField(const InArrayHandle& inArray, OutArrayHandle& outArray) const
   {
     vtkm::worklet::AverageByKey::Run(this->MergeKeys, inArray, outArray);
   }
 
-  template <typename InArrayHandle>
-  VTKM_CONT vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointField(
-    const InArrayHandle& inArray) const
+  template <typename T, typename S>
+  VTKM_CONT vtkm::cont::ArrayHandle<T> MapPointField(
+    const vtkm::cont::ArrayHandle<T, S>& inArray) const
   {
-    vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> outArray;
+    vtkm::cont::ArrayHandle<T> outArray;
     this->MapPointField(inArray, outArray);
 
+    return outArray;
+  }
+
+  template <typename InTypes>
+  VTKM_CONT vtkm::cont::VariantArrayHandleBase<InTypes> MapPointField(
+    const vtkm::cont::VariantArrayHandleBase<InTypes>& inArray) const
+  {
+    vtkm::cont::VariantArrayHandleBase<InTypes> outArray;
+    vtkm::cont::CastAndCall(inArray, MapPointFieldFunctor{}, outArray, *this);
     return outArray;
   }
 

@@ -70,7 +70,8 @@ void TestWarpScalar()
   scaleFactor.CopyTo(scaleFactorArray);
 
   vtkm::worklet::WarpScalar warpWorklet;
-  warpWorklet.Run(ds.GetCoordinateSystem(), normalAH, scaleFactor, scaleAmount, result);
+  warpWorklet.Run(
+    ds.GetCoordinateSystem().GetDataAsMultiplexer(), normalAH, scaleFactor, scaleAmount, result);
 
   auto sFAPortal = scaleFactorArray.ReadPortal();
   auto resultPortal = result.ReadPortal();

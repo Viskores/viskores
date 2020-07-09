@@ -204,12 +204,22 @@ public:
 private:
   struct MapPointFieldDeepFunctor
   {
-    template <typename InArrayHandle, typename OutArrayHandle>
-    VTKM_CONT void operator()(const InArrayHandle& inArray,
-                              OutArrayHandle& outArray,
+    template <typename InT, typename InS, typename OutT, typename OutS>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
+                              vtkm::cont::ArrayHandle<OutT, OutS>& outArray,
                               const RemoveUnusedPoints& self) const
     {
       self.MapPointFieldDeep(inArray, outArray);
+    }
+
+    template <typename InT, typename InS>
+    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InT, InS>& inArray,
+                              vtkm::cont::VariantArrayHandleCommon& outHolder,
+                              const RemoveUnusedPoints& self) const
+    {
+      vtkm::cont::ArrayHandle<InT> outArray;
+      (*this)(inArray, outArray, self);
+      outHolder = vtkm::cont::VariantArrayHandleCommon{ outArray };
     }
   };
 
@@ -231,6 +241,16 @@ public:
     vtkm::cont::ArrayCopy(this->MapPointFieldShallow(inArray), outArray);
   }
 
+  template <typename T, typename S>
+  VTKM_CONT vtkm::cont::ArrayHandle<T> MapPointFieldDeep(
+    const vtkm::cont::ArrayHandle<T, S>& inArray) const
+  {
+    vtkm::cont::ArrayHandle<T> outArray;
+    this->MapPointFieldDeep(inArray, outArray);
+
+    return outArray;
+  }
+
   template <typename InArrayTypes, typename OutArrayHandle>
   VTKM_CONT void MapPointFieldDeep(const vtkm::cont::VariantArrayHandleBase<InArrayTypes>& inArray,
                                    OutArrayHandle& outArray) const
@@ -238,12 +258,12 @@ public:
     vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
   }
 
-  template <typename InArrayHandle>
-  VTKM_CONT vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointFieldDeep(
-    const InArrayHandle& inArray) const
+  template <typename InTypes>
+  VTKM_CONT vtkm::cont::VariantArrayHandleBase<InTypes> MapPointFieldDeep(
+    const vtkm::cont::VariantArrayHandleBase<InTypes>& inArray) const
   {
-    vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> outArray;
-    this->MapPointFieldDeep(inArray, outArray);
+    vtkm::cont::VariantArrayHandleBase<InTypes> outArray;
+    vtkm::cont::CastAndCall(inArray, MapPointFieldDeepFunctor{}, outArray, *this);
 
     return outArray;
   }
