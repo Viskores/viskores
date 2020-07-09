@@ -60,7 +60,6 @@
 #include "vtkm/cont/ArrayHandle.h"
 #include "vtkm/cont/ArrayHandleCounting.h"
 #include <algorithm>
-#include <c++/7/bits/c++config.h>
 #include <iomanip>
 #include <iostream>
 
