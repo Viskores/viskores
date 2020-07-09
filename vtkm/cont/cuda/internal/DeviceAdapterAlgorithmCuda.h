@@ -16,6 +16,7 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -262,6 +263,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
 #ifndef VTKM_CUDA
 private:
 #endif
+
+  using Superclass = vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>,
+    vtkm::cont::DeviceAdapterTagCuda>;
 
   template <typename BitsPortal, typename IndicesPortal, typename GlobalPopCountType>
   struct BitFieldToUnorderedSetFunctor : public vtkm::exec::FunctorBase
@@ -1338,6 +1343,25 @@ public:
     vtkm::cont::Token token;
     return ReducePortal(
       input.PrepareForInput(DeviceAdapterTagCuda(), token), initialValue, binary_functor);
+  }
+
+  // At least some versions of Thrust/nvcc result in compile errors when calling Thrust's
+  // reduce with sufficiently complex iterators, which can happen with some versions of
+  // ArrayHandleMultiplexer. Thus, don't use the Thrust version for ArrayHandleMultiplexer.
+  template <typename T, typename U, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue)
+  {
+    return Superclass::Reduce(input, initialValue);
+  }
+  template <typename T, typename U, typename BinaryFunctor, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue,
+    BinaryFunctor binary_functor)
+  {
+    return Superclass::Reduce(input, initialValue, binary_functor);
   }
 
   template <typename T,
