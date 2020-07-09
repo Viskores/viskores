@@ -552,7 +552,6 @@ public:
 #endif
 
     ProcessContourTree::ComputeBranchData(contourTree,
-                                          false,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -564,7 +563,6 @@ public:
 
   // routine to compute the branch decomposition by volume
   void static ComputeBranchData(const ContourTree& contourTree,
-                                const bool printTime,
                                 IdArrayType& whichBranch,
                                 IdArrayType& branchMinimum,
                                 IdArrayType& branchMaximum,
@@ -749,9 +747,6 @@ public:
 
   // routine to compute the branch decomposition by volume
   void static ComputeVolumeBranchDecomposition(const ContourTree& contourTree,
-                                               const cont::ArrayHandle<Float64> fieldValues,
-                                               const IdArrayType& ctSortOrder,
-                                               const int printTime,
                                                const vtkm::Id nIterations,
                                                IdArrayType& whichBranch,
                                                IdArrayType& branchMinimum,
@@ -835,7 +830,6 @@ public:
     Invoke(setBestUpDown, bestUpward, bestDownward, arcs);
 
     ProcessContourTree::ComputeBranchData(contourTree,
-                                          printTime,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -850,7 +844,6 @@ public:
   void static ComputeHeightBranchDecomposition(const ContourTree& contourTree,
                                                const cont::ArrayHandle<Float64> fieldValues,
                                                const IdArrayType& ctSortOrder,
-                                               const int printTime,
                                                const vtkm::Id nIterations,
                                                IdArrayType& whichBranch,
                                                IdArrayType& branchMinimum,
@@ -1025,7 +1018,6 @@ public:
 
     // Having computed the bestUp/Down we can propagte those to obtain the branches of the branch decomposition
     ProcessContourTree::ComputeBranchData(contourTree,
-                                          printTime,
                                           whichBranch,
                                           branchMinimum,
                                           branchMaximum,
@@ -1088,7 +1080,7 @@ public:
   {
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
-    int i = 0;
+    std::size_t i = 0;
     while (i < path.size())
     {
       // Cut the hyperacs at the first point
