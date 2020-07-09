@@ -60,6 +60,7 @@
 #include "vtkm/cont/ArrayHandle.h"
 #include "vtkm/cont/ArrayHandleCounting.h"
 #include <algorithm>
+#include <c++/7/bits/c++config.h>
 #include <iomanip>
 #include <iostream>
 
@@ -891,14 +892,14 @@ public:
     auto maxPath = findSuperPathToRoot(contourTree.Superarcs.ReadPortal(), maxSuperNode);
 
     // Reserve the direction of the superarcs on the min path.
-    for (uint i = 1; i < minPath.size(); i++)
+    for (std::size_t i = 1; i < minPath.size(); i++)
     {
       minParents.WritePortal().Set(minPath[i], minPath[i - 1]);
     }
     minParents.WritePortal().Set(minPath[0], 0);
 
     // Reserve the direction of the superarcs on the max path.
-    for (uint i = 1; i < maxPath.size(); i++)
+    for (std::size_t i = 1; i < maxPath.size(); i++)
     {
       maxParents.WritePortal().Set(maxPath[i], maxPath[i - 1]);
     }
@@ -919,14 +920,14 @@ public:
     vtkm::cont::ArrayCopy(contourTree.Hyperparents, minHyperparents);
     vtkm::cont::ArrayCopy(contourTree.Hyperparents, maxHyperparents);
 
-    for (uint i = 0; i < minPath.size(); i++)
+    for (std::size_t i = 0; i < minPath.size(); i++)
     {
       // Set a unique dummy Id (something that the prefix scan by key will leave alone)
       minHyperparents.WritePortal().Set(minPath[i],
                                         contourTree.Hypernodes.GetNumberOfValues() + minPath[i]);
     }
 
-    for (uint i = 0; i < maxPath.size(); i++)
+    for (std::size_t i = 0; i < maxPath.size(); i++)
     {
       // Set a unique dummy Id (something that the prefix scan by key will leave alone)
       maxHyperparents.WritePortal().Set(maxPath[i],

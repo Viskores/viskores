@@ -15,6 +15,7 @@ set(headers
   SuperNodeBranchComparator.h
   PointerDoubling.h
   HypersweepWorklets.h
+  SetTriangleSuperarcId.h
  )
 
 #-----------------------------------------------------------------------------
