@@ -11,6 +11,7 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -22,11 +23,107 @@ namespace
 #define WRITE_FILE(MakeTestDataMethod)                                                             \
   TestVTKWriteTestData(#MakeTestDataMethod, tds.MakeTestDataMethod())
 
+struct CheckSameField
+{
+  template <typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandle<T, S>& originalArray,
+                  const vtkm::cont::Field& fileField) const
+  {
+    vtkm::cont::ArrayHandle<T> fileArray;
+    fileField.GetData().CopyTo(fileArray);
+    VTKM_TEST_ASSERT(test_equal_portals(originalArray.ReadPortal(), fileArray.ReadPortal()));
+  }
+};
+
+struct CheckSameCoordinateSystem
+{
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
+  void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>());
+    vtkm::cont::ArrayHandleUniformPointCoordinates fileArray =
+      fileCoords.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    auto originalPortal = originalArray.ReadPortal();
+    auto filePortal = fileArray.ReadPortal();
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetOrigin(), filePortal.GetOrigin()));
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetSpacing(), filePortal.GetSpacing()));
+    VTKM_TEST_ASSERT(test_equal(originalPortal.GetRange3(), filePortal.GetRange3()));
+  }
+
+  using ArrayHandleRectilinearCoords =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+  void operator()(const ArrayHandleRectilinearCoords& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords>());
+    ArrayHandleRectilinearCoords fileArray =
+      fileCoords.GetData().Cast<ArrayHandleRectilinearCoords>();
+    auto originalPortal = originalArray.ReadPortal();
+    auto filePortal = fileArray.ReadPortal();
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetFirstPortal(), filePortal.GetFirstPortal()));
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetSecondPortal(), filePortal.GetSecondPortal()));
+    VTKM_TEST_ASSERT(
+      test_equal_portals(originalPortal.GetThirdPortal(), filePortal.GetThirdPortal()));
+  }
+
+  void operator()(const vtkm::cont::ArrayHandleVirtualCoordinates& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    if (originalArray.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    {
+      (*this)(originalArray.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(), fileCoords);
+    }
+    else if (originalArray.IsType<ArrayHandleRectilinearCoords>())
+    {
+      (*this)(originalArray.Cast<ArrayHandleRectilinearCoords>(), fileCoords);
+    }
+    else
+    {
+      CheckSameField{}(originalArray, fileCoords);
+    }
+  }
+};
+
+void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
+                          const vtkm::cont::DataSet& fileData)
+{
+  VTKM_TEST_ASSERT(originalData.GetNumberOfPoints() == fileData.GetNumberOfPoints());
+  VTKM_TEST_ASSERT(originalData.GetNumberOfCells() == fileData.GetNumberOfCells());
+
+  for (vtkm::IdComponent fieldId = 0; fieldId < originalData.GetNumberOfFields(); ++fieldId)
+  {
+    vtkm::cont::Field originalField = originalData.GetField(fieldId);
+    VTKM_TEST_ASSERT(fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
+    vtkm::cont::Field fileField =
+      fileData.GetField(originalField.GetName(), originalField.GetAssociation());
+    vtkm::cont::CastAndCall(originalField, CheckSameField{}, fileField);
+  }
+
+  VTKM_TEST_ASSERT(fileData.GetNumberOfCoordinateSystems() > 0);
+  CheckSameCoordinateSystem{}(originalData.GetCoordinateSystem().GetData(),
+                              fileData.GetCoordinateSystem());
+}
+
 void TestVTKWriteTestData(const std::string& methodName, const vtkm::cont::DataSet& data)
 {
   std::cout << "Writing " << methodName << std::endl;
   vtkm::io::VTKDataSetWriter writer(methodName + ".vtk");
   writer.WriteDataSet(data);
+
+  // Read back and check.
+  vtkm::io::VTKDataSetReader reader(methodName + ".vtk");
+  CheckWrittenReadData(data, reader.ReadDataSet());
 }
 
 void TestVTKExplicitWrite()
