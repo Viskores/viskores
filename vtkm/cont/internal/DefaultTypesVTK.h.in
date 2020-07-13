@@ -82,7 +82,8 @@ using CellListUnstructuredInVTK = vtkm::List< //
   CellSetExplicit32Bit,                       //
   CellSetExplicit64Bit,                       //
   CellSetSingleType32Bit,                     //
-  CellSetSingleType64Bit                      //
+  CellSetSingleType64Bit,                     //
+  vtkm::cont::CellSetExtrude                  //
   >;
 
 using CellListUnstructuredOutVTK = vtkm::List<                     //
