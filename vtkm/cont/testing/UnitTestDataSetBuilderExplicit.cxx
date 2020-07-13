@@ -105,6 +105,9 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
   {
     std::vector<T> xvals(numPoints), yvals(numPoints), zvals(numPoints);
     std::vector<T> varP(numPoints), varC(numCells);
+    std::vector<vtkm::UInt8> shapevals(numCells);
+    std::vector<vtkm::IdComponent> indicesvals(numCells);
+    std::vector<vtkm::Id> connvals(numConn);
     for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       xvals[i] = coords[i * 3 + 0];
@@ -116,15 +119,18 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     for (std::size_t i = 0; i < numCells; i++, f++)
     {
       varC[i] = static_cast<T>(f * 1.1f);
+      shapevals[i] = shape[i];
+      indicesvals[i] = indices[i];
     }
-    vtkm::cont::ArrayHandle<T> X, Y, Z, P, C;
-    DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), X);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(yvals), Y);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Z);
+    for (std::size_t i = 0; i < numConn; i++)
+    {
+      connvals[i] = conn[i];
+    }
+    dataSet = dsb.Create(xvals, yvals, zvals, shapevals, indicesvals, connvals);
+
+    vtkm::cont::ArrayHandle<T> P, C;
     DFA::Copy(vtkm::cont::make_ArrayHandle(varP), P);
     DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
-    dataSet = dsb.Create(
-      X, Y, Z, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
     dataSet.AddPointField("pointvar", P);
     dataSet.AddCellField("cellvar", C);
     return dataSet;
@@ -229,7 +235,6 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
 
 void TestDataSetBuilderExplicit()
 {
-  vtkm::cont::DataSetBuilderExplicit dsb;
   vtkm::cont::DataSet ds;
   vtkm::Bounds bounds;
 

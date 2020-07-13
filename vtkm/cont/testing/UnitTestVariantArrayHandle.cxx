@@ -187,6 +187,9 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
     VTKM_TEST_ASSERT(!calledUnusual, "The array somehow got cast to an unusual storage.");
   }
 
+#if 0
+  // Test disabled. CastAndCall no longer casts to ArrayHandleVirtual because
+  // that is getting deprecated.
   std::cout << "  CastAndCall with no storage" << std::endl;
   calledBasic = false;
   calledUnusual = false;
@@ -197,6 +200,7 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
     "The functor was never called (and apparently a bad value exception not thrown).");
   VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
   VTKM_TEST_ASSERT(!calledUnusual, "The array somehow got cast to an unusual storage.");
+#endif
 
   std::cout << "  CastAndCall with extra storage" << std::endl;
   calledBasic = false;
@@ -469,6 +473,9 @@ void TryUnusualType()
   std::cout << "  Found type when type list was reset." << std::endl;
 }
 
+#if 0
+  // It is now requred to know the storage used (no longer wrapping in ArrayHandleVirtual),
+  // so disable this test.
 void TryUnusualStorage()
 {
   vtkm::cont::VariantArrayHandle array = ArrayHandleWithUnusualStorage<vtkm::Id>();
@@ -506,6 +513,7 @@ void TryUnusualTypeAndStorage()
     VTKM_TEST_FAIL("CastAndCall with Variant failed to handle unusual storage.");
   }
 }
+#endif
 
 template <typename ArrayHandleType>
 void TryCastToArrayHandle(const ArrayHandleType& array)
@@ -586,11 +594,15 @@ void TestVariantArrayHandle()
   std::cout << "Try unusual type." << std::endl;
   TryUnusualType();
 
+#if 0
+  // It is now requred to know the storage used (no longer wrapping in ArrayHandleVirtual),
+  // so disable this test.
   std::cout << "Try unusual storage." << std::endl;
   TryUnusualStorage();
 
   std::cout << "Try unusual type in unusual storage." << std::endl;
   TryUnusualTypeAndStorage();
+#endif
 
   std::cout << "Try CastToArrayHandle" << std::endl;
   TryCastToArrayHandle();

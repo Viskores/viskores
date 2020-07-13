@@ -132,30 +132,6 @@ struct TestArrayHandleCast
   }
 };
 
-struct TestArrayHandleCompositeVector
-{
-  template <typename T>
-  void operator()(T) const
-  {
-    auto array = vtkm::cont::make_ArrayHandleCompositeVector(RandomArrayHandle<T>::Make(ArraySize),
-                                                             RandomArrayHandle<T>::Make(ArraySize));
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-};
-
-struct TestArrayHandleConcatenate
-{
-  template <typename T>
-  void operator()(T) const
-  {
-    auto array = vtkm::cont::make_ArrayHandleConcatenate(RandomArrayHandle<T>::Make(ArraySize),
-                                                         RandomArrayHandle<T>::Make(ArraySize));
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-};
-
 struct TestArrayHandleConstant
 {
   template <typename T>
@@ -176,19 +152,6 @@ struct TestArrayHandleCounting
     T start = RandomValue<T>::Make();
     T step = RandomValue<T>::Make(0, 5);
     auto array = vtkm::cont::make_ArrayHandleCounting(start, step, ArraySize);
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-};
-
-struct TestArrayHandleExtractComponent
-{
-  template <typename T>
-  void operator()(T) const
-  {
-    auto numComps = vtkm::VecTraits<T>::NUM_COMPONENTS;
-    auto array = vtkm::cont::make_ArrayHandleExtractComponent(
-      RandomArrayHandle<T>::Make(ArraySize), RandomValue<vtkm::IdComponent>::Make(0, numComps - 1));
     RunTest(array);
     RunTest(MakeTestVariantArrayHandle(array));
   }
@@ -253,37 +216,6 @@ struct TestArrayHandleGroupVecVariable
   }
 };
 
-struct TestArrayHandleImplicit
-{
-  template <typename T>
-  struct ImplicitFunctor
-  {
-    ImplicitFunctor() = default;
-
-    explicit ImplicitFunctor(const T& factor)
-      : Factor(factor)
-    {
-    }
-
-    VTKM_EXEC_CONT T operator()(vtkm::Id index) const
-    {
-      return static_cast<T>(this->Factor *
-                            static_cast<typename vtkm::VecTraits<T>::ComponentType>(index));
-    }
-
-    T Factor;
-  };
-
-  template <typename T>
-  void operator()(T) const
-  {
-    ImplicitFunctor<T> functor(RandomValue<T>::Make(2, 9));
-    auto array = vtkm::cont::make_ArrayHandleImplicit(functor, ArraySize);
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-};
-
 void TestArrayHandleIndex()
 {
   auto size = RandomValue<vtkm::Id>::Make(2, 10);
@@ -321,86 +253,6 @@ struct TestArrayHandleReverse
   }
 };
 
-struct TestArrayHandleSwizzle
-{
-  template <typename T>
-  void operator()(T) const
-  {
-    static const vtkm::IdComponent2 map2s[6] = { { 0, 1 }, { 0, 2 }, { 1, 0 },
-                                                 { 1, 2 }, { 2, 0 }, { 2, 1 } };
-    static const vtkm::IdComponent3 map3s[6] = { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 },
-                                                 { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
-
-    auto numOutComps = RandomValue<vtkm::IdComponent>::Make(2, 3);
-    switch (numOutComps)
-    {
-      case 2:
-      {
-        auto array = make_ArrayHandleSwizzle(RandomArrayHandle<vtkm::Vec<T, 3>>::Make(ArraySize),
-                                             map2s[RandomValue<int>::Make(0, 5)]);
-        RunTest(array);
-        RunTest(MakeTestVariantArrayHandle(array));
-        break;
-      }
-      case 3:
-      default:
-      {
-        auto array = make_ArrayHandleSwizzle(RandomArrayHandle<vtkm::Vec<T, 3>>::Make(ArraySize),
-                                             map3s[RandomValue<int>::Make(0, 5)]);
-        RunTest(array);
-        RunTest(MakeTestVariantArrayHandle(array));
-        break;
-      }
-    }
-  }
-};
-
-
-struct TestArrayHandleTransform
-{
-  struct TransformFunctor
-  {
-    template <typename T>
-    VTKM_EXEC_CONT T operator()(const T& in) const
-    {
-      return static_cast<T>(in * T{ 2 });
-    }
-  };
-
-  struct InverseTransformFunctor
-  {
-    template <typename T>
-    VTKM_EXEC_CONT T operator()(const T& in) const
-    {
-      return static_cast<T>(in / T{ 2 });
-    }
-  };
-
-  template <typename T>
-  void TestType1() const
-  {
-    auto array = vtkm::cont::make_ArrayHandleTransform(RandomArrayHandle<T>::Make(ArraySize),
-                                                       TransformFunctor{});
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-
-  template <typename T>
-  void TestType2() const
-  {
-    auto array = vtkm::cont::make_ArrayHandleTransform(
-      RandomArrayHandle<T>::Make(ArraySize), TransformFunctor{}, InverseTransformFunctor{});
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-
-  template <typename T>
-  void operator()(T) const
-  {
-    this->TestType1<T>();
-    this->TestType2<T>();
-  }
-};
 
 vtkm::cont::ArrayHandleUniformPointCoordinates MakeRandomArrayHandleUniformPointCoordinates()
 {
@@ -417,48 +269,6 @@ void TestArrayHandleUniformPointCoordinates()
   RunTest(MakeTestVariantArrayHandle(array));
 }
 
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-void TestArrayHandleVirtualCoordinates()
-{
-  int type = RandomValue<int>::Make(0, 2);
-
-  vtkm::cont::ArrayHandleVirtualCoordinates array;
-  switch (type)
-  {
-    case 0:
-      array =
-        vtkm::cont::ArrayHandleVirtualCoordinates(MakeRandomArrayHandleUniformPointCoordinates());
-      break;
-    case 1:
-      array =
-        vtkm::cont::ArrayHandleVirtualCoordinates(vtkm::cont::make_ArrayHandleCartesianProduct(
-          RandomArrayHandle<vtkm::FloatDefault>::Make(ArraySize),
-          RandomArrayHandle<vtkm::FloatDefault>::Make(ArraySize),
-          RandomArrayHandle<vtkm::FloatDefault>::Make(ArraySize)));
-      break;
-    default:
-      array =
-        vtkm::cont::ArrayHandleVirtualCoordinates(RandomArrayHandle<vtkm::Vec3f>::Make(ArraySize));
-      break;
-  }
-
-  RunTest(array);
-  RunTest(MakeTestVariantArrayHandle(array));
-}
-VTKM_DEPRECATED_SUPPRESS_END
-
-struct TestArrayHandleZip
-{
-  template <typename T>
-  void operator()(T) const
-  {
-    auto array = vtkm::cont::make_ArrayHandleZip(RandomArrayHandle<T>::Make(ArraySize),
-                                                 vtkm::cont::ArrayHandleIndex(ArraySize));
-    RunTest(array);
-    RunTest(MakeTestVariantArrayHandle(array));
-  }
-};
-
 
 //-----------------------------------------------------------------------------
 void TestArrayHandleSerialization()
@@ -466,62 +276,81 @@ void TestArrayHandleSerialization()
   std::cout << "Testing ArrayHandleBasic\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
 
-  std::cout << "Testing ArrayHandleSOA\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST, vtkm::cont::StorageTagSOA>::value)
+  {
+    std::cout << "Testing ArrayHandleSOA\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleCartesianProduct\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                                           vtkm::cont::StorageTagBasic,
+                                                           vtkm::cont::StorageTagBasic>>::value)
+  {
+    std::cout << "Testing ArrayHandleCartesianProduct\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesList());
+  }
 
-  std::cout << "Testing TestArrayHandleCast\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleCast(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagCast<vtkm::Int8, vtkm::cont::StorageTagBasic>>::value)
+  {
+    std::cout << "Testing TestArrayHandleCast\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleCast(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleCompositeVector\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleCompositeVector(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST, vtkm::cont::StorageTagConstant>::value)
+  {
+    std::cout << "Testing ArrayHandleConstant\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleConstant(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleConcatenate\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleConcatenate(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST, vtkm::cont::StorageTagCounting>::value)
+  {
+    std::cout << "Testing ArrayHandleCounting\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleCounting(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleConstant\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleConstant(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagGroupVec<vtkm::cont::StorageTagBasic, 3>>::value)
+  {
+    std::cout << "Testing ArrayHandleGroupVec\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleGroupVec(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleCounting\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleCounting(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagGroupVecVariable<vtkm::cont::StorageTagBasic,
+                                                           vtkm::cont::StorageTagBasic>>::value)
+  {
+    std::cout << "Testing ArrayHandleGroupVecVariable\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleGroupVecVariable(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleExtractComponent\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleExtractComponent(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST, vtkm::cont::StorageTagIndex>::value)
+  {
+    std::cout << "Testing ArrayHandleIndex\n";
+    TestArrayHandleIndex();
+  }
 
-  std::cout << "Testing ArrayHandleGroupVec\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleGroupVec(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagPermutation<vtkm::cont::StorageTagBasic,
+                                                      vtkm::cont::StorageTagBasic>>::value)
+  {
+    std::cout << "Testing ArrayHandlePermutation\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandlePermutation(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleGroupVecVariable\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleGroupVecVariable(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST,
+                    vtkm::cont::StorageTagReverse<vtkm::cont::StorageTagBasic>>::value)
+  {
+    std::cout << "Testing ArrayHandleReverse\n";
+    vtkm::testing::Testing::TryTypes(TestArrayHandleReverse(), TestTypesList());
+  }
 
-  std::cout << "Testing ArrayHandleImplicit\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleImplicit(), TestTypesList());
-
-  std::cout << "Testing ArrayHandleIndex\n";
-  TestArrayHandleIndex();
-
-  std::cout << "Testing ArrayHandlePermutation\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandlePermutation(), TestTypesList());
-
-  std::cout << "Testing ArrayHandleReverse\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleReverse(), TestTypesList());
-
-  std::cout << "Testing ArrayHandleSwizzle\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleSwizzle(), TestTypesList());
-
-  std::cout << "Testing ArrayHandleTransform\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleTransform(), TestTypesList());
-
-  std::cout << "Testing ArrayHandleUniformPointCoordinates\n";
-  TestArrayHandleUniformPointCoordinates();
-
-  std::cout << "Testing ArrayHandleVirtualCoordinates\n";
-  TestArrayHandleVirtualCoordinates();
-
-  std::cout << "Testing ArrayHandleZip\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleZip(), TestTypesList());
+  if (vtkm::ListHas<VTKM_DEFAULT_STORAGE_LIST, vtkm::cont::StorageTagUniformPoints>::value)
+  {
+    std::cout << "Testing ArrayHandleUniformPointCoordinates\n";
+    TestArrayHandleUniformPointCoordinates();
+  }
 }
 
 } // anonymous namespace
@@ -542,37 +371,3 @@ int UnitTestSerializationArrayHandle(int argc, char* argv[])
 
   return vtkm::cont::testing::Testing::Run(TestArrayHandleSerialization, argc, argv);
 }
-
-//-----------------------------------------------------------------------------
-namespace vtkm
-{
-namespace cont
-{
-
-template <typename T>
-struct SerializableTypeString<TestArrayHandleImplicit::ImplicitFunctor<T>>
-{
-  static VTKM_CONT const std::string& Get()
-  {
-    static std::string name =
-      "TestArrayHandleImplicit::ImplicitFunctor<" + SerializableTypeString<T>::Get() + ">";
-    return name;
-  }
-};
-
-template <>
-struct SerializableTypeString<TestArrayHandleTransform::TransformFunctor>
-{
-  static VTKM_CONT const std::string Get() { return "TestArrayHandleTransform::TransformFunctor"; }
-};
-
-template <>
-struct SerializableTypeString<TestArrayHandleTransform::InverseTransformFunctor>
-{
-  static VTKM_CONT const std::string Get()
-  {
-    return "TestArrayHandleTransform::InverseTransformFunctor";
-  }
-};
-}
-} // vtkm::cont
