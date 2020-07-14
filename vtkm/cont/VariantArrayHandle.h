@@ -84,7 +84,18 @@ public:
   template <typename ArrayHandleType>
   VTKM_CONT ArrayHandleType Cast() const
   {
+// MSVC will issue deprecation warnings if this templated method is instantiated with
+// a deprecated class here even if the method is called from a section of code where
+// deprecation warnings are suppressed. This is annoying behavior since this templated
+// method has no control over what class it is used from. To get around it, we have to
+// suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
     return internal::variant::Cast<ArrayHandleType>(this->ArrayContainer.get());
+#ifdef VTKM_MSVC
+    VTKM_DEPRECATED_SUPPRESS_END
+#endif
   }
 
   /// \brief Call a functor using the underlying array type.

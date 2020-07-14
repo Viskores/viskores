@@ -211,6 +211,14 @@ struct VTKM_ALWAYS_EXPORT Caster<T, vtkm::cont::StorageTagVirtual>
   }
 };
 
+// MSVC will issue deprecation warnings here if this template is instantiated with
+// a deprecated class even if the template is used from a section of code where
+// deprecation warnings are suppressed. This is annoying behavior since this template
+// has no control over what class it is used with. To get around it, we have to
+// suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
 template <typename ArrayHandleType>
 VTKM_CONT ArrayHandleType Cast(const VariantArrayHandleContainerBase* container)
 { //container could be nullptr
@@ -220,6 +228,9 @@ VTKM_CONT ArrayHandleType Cast(const VariantArrayHandleContainerBase* container)
   auto ret = Caster<Type, Storage>{}(container);
   return ArrayHandleType(std::move(ret));
 }
+#ifdef VTKM_MSVC
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
 
 struct ForceCastToVirtual
 {
