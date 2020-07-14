@@ -44,7 +44,8 @@ void View2D::Paint()
   this->UpdateCameraProperties();
   this->SetupForWorldSpace();
   this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  this->RenderWorldAnnotations();
+  if (this->WorldAnnotationsEnabled)
+    this->RenderWorldAnnotations();
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
   this->RenderAnnotations();
