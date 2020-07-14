@@ -1101,7 +1101,8 @@ public:
     return this->Internals->Storage.GetNumberOfValues(this->GetBuffers());
   }
 
-  /// \brief Allocates an array large enough to hold the given number of values.
+  ///@{
+  ///  \brief Allocates an array large enough to hold the given number of values.
   ///
   /// The allocation may be done on an already existing array. If so, then the data
   /// are preserved as best as possible if the preserve flag is set to `vtkm::CopyFlag::On`.
@@ -1112,10 +1113,19 @@ public:
   /// `ErrorBadValue` if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
+  VTKM_CONT void Allocate(vtkm::Id numberOfValues,
+                          vtkm::CopyFlag preserve,
+                          vtkm::cont::Token& token)
+  {
+    this->Internals->Storage.ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
+  }
+
   VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::CopyFlag preserve = vtkm::CopyFlag::Off)
   {
-    this->Internals->Storage.ResizeBuffers(numberOfValues, this->GetBuffers(), preserve);
+    vtkm::cont::Token token;
+    this->Allocate(numberOfValues, preserve, token);
   }
+  ///@}
 
   /// Deprecate this.
   VTKM_CONT void Shrink(vtkm::Id numberOfValues)
@@ -1191,7 +1201,7 @@ public:
                                              vtkm::cont::DeviceAdapterId device,
                                              vtkm::cont::Token& token)
   {
-    this->Allocate(numberOfValues, vtkm::CopyFlag::Off);
+    this->Allocate(numberOfValues, vtkm::CopyFlag::Off, token);
     return this->Internals->Storage.CreateWritePortal(this->GetBuffers(), device, token);
   }
 

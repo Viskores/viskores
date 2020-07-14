@@ -121,7 +121,7 @@ struct ReduceKernel : vtkm::exec::FunctorBase
   BinaryFunctor BinaryOperator;
   vtkm::Id PortalLength;
 
-  VTKM_CONT
+  VTKM_EXEC_CONT
   ReduceKernel()
     : Portal()
     , InitialValue()
