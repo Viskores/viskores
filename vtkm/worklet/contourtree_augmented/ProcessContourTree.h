@@ -1056,13 +1056,13 @@ public:
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
     // Fix path from the old root to the new root. Parallelisble with a prefix scan.
-    for (int i = path.size() - 2; i > 0; i--)
+    for (auto i = path.size() - 2; i > 0; i--)
     {
-      Id vertex = path[i + 1];
-      Id parent = path[i];
+      const auto vertex = path[i + 1];
+      const auto parent = path[i];
 
-      Id vertexValue = minMaxIndex.Get(vertex);
-      Id parentValue = minMaxIndex.Get(parent);
+      const auto vertexValue = minMaxIndex.Get(vertex);
+      const auto parentValue = minMaxIndex.Get(parent);
 
       minMaxIndex.Set(parent, operation(vertexValue, parentValue));
     }

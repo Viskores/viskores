@@ -263,9 +263,9 @@ public:
 
     //Id writeValue = op(vertexValue, parentValue);
 
-    vtkm::Int32 cur = minMaxIndexPortal.Get(parent); // Load the current value at idx
-    vtkm::Int32 newVal;                              // will hold the result of the multiplication
-    vtkm::Int32 expect; // will hold the expected value before multiplication
+    auto cur = minMaxIndexPortal.Get(parent); // Load the current value at idx
+    vtkm::Id newVal;                          // will hold the result of the multiplication
+    vtkm::Id expect;                          // will hold the expected value before multiplication
 
     do
     {
