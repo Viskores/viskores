@@ -10,6 +10,7 @@
 
 set(headers
   AverageByKey.h
+  BoundaryTypes.h
   CellAverage.h
   CellDeepCopy.h
   CellMeasure.h
@@ -21,6 +22,7 @@ set(headers
   CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherCellNeighborhood.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DotProduct.h
@@ -84,6 +86,7 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletCellNeighborhood.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
   ZFPCompressor.h

@@ -7,12 +7,12 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_WorkletPointNeighborhood_h
-#define vtk_m_worklet_WorkletPointNeighborhood_h
+#ifndef vtk_m_worklet_WorkletCellNeighborhood_h
+#define vtk_m_worklet_WorkletCellNeighborhood_h
 
 /// \brief Worklet for volume algorithms that require a neighborhood
 ///
-/// WorkletPointNeighborhood executes on every point inside a volume providing
+/// WorkletCellNeighborhood executes on every point inside a volume providing
 /// access to the 3D neighborhood values. The neighborhood is always cubic in
 /// nature and is fixed at compile time.
 
@@ -36,7 +36,7 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 #include <vtkm/exec/arg/FetchTagArrayNeighborhoodIn.h>
 #include <vtkm/exec/arg/FetchTagCellSetIn.h>
-#include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
+#include <vtkm/exec/arg/ThreadIndicesCellNeighborhood.h>
 
 #include <vtkm/worklet/BoundaryTypes.h>
 #include <vtkm/worklet/ScatterIdentity.h>
@@ -47,17 +47,17 @@ namespace worklet
 {
 
 template <typename WorkletType>
-class DispatcherPointNeighborhood;
+class DispatcherCellNeighborhood;
 
-class WorkletPointNeighborhoodBase : public vtkm::worklet::internal::WorkletBase
+class WorkletCellNeighborhoodBase : public vtkm::worklet::internal::WorkletBase
 {
 public:
   template <typename Worklet>
-  using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
+  using Dispatcher = vtkm::worklet::DispatcherCellNeighborhood<Worklet>;
 
   /// \brief The \c ExecutionSignature tag to query if the current iteration is inside the boundary.
   ///
-  /// A \c WorkletPointNeighborhood operates by iterating over all points using a defined
+  /// A \c WorkletCellNeighborhood operates by iterating over all points using a defined
   /// neighborhood. This \c ExecutionSignature tag provides a \c BoundaryState object that allows
   /// you to query whether the neighborhood of the current iteration is completely inside the
   /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
@@ -129,12 +129,12 @@ public:
   };
 };
 
-class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
+class WorkletCellNeighborhood : public WorkletCellNeighborhoodBase
 {
 public:
   /// \brief A control signature tag for neighborhood input values.
   ///
-  /// A \c WorkletPointNeighborhood operates allowing access to a adjacent point
+  /// A \c WorkletCellNeighborhood operates allowing access to a adjacent point
   /// values in a NxNxN patch called a neighborhood.
   /// No matter the size of the neighborhood it is symmetric across its center
   /// in each axis, and the current point value will be at the center
@@ -157,7 +157,7 @@ public:
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             vtkm::IdComponent Dimension>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesCellNeighborhood GetThreadIndices(
     vtkm::Id threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -168,7 +168,7 @@ public:
     ) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(
       threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 
@@ -195,7 +195,7 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesPointNeighborhood> GetThreadIndices(
+  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesCellNeighborhood> GetThreadIndices(
     vtkm::Id threadIndex1D,
     const vtkm::Id3& threadIndex3D,
     const OutToInArrayType& vtkmNotUsed(outToIn),
@@ -203,7 +203,7 @@ public:
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
     const InputDomainType& connectivity) const
   {
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(
       threadIndex3D, threadIndex1D, connectivity);
   }
 
@@ -214,7 +214,7 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesPointNeighborhood>
+  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesCellNeighborhood>
   GetThreadIndices(vtkm::Id threadIndex1D,
                    const vtkm::Id3& threadIndex3D,
                    const OutToInArrayType& outToIn,
@@ -223,12 +223,12 @@ public:
                    const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex3D,
-                                                           threadIndex1D,
-                                                           outToIn.Get(outIndex),
-                                                           visit.Get(outIndex),
-                                                           outIndex,
-                                                           connectivity);
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(threadIndex3D,
+                                                          threadIndex1D,
+                                                          outToIn.Get(outIndex),
+                                                          visit.Get(outIndex),
+                                                          outIndex,
+                                                          connectivity);
   }
 };
 }
