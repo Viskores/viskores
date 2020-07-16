@@ -33,6 +33,7 @@ set(headers
   ThreadIndicesBasic.h
   ThreadIndicesBasic3D.h
   ThreadIndicesExtrude.h
+  ThreadIndicesNeighborhood.h
   ThreadIndicesCellNeighborhood.h
   ThreadIndicesPointNeighborhood.h
   ThreadIndicesReduceByKey.h
