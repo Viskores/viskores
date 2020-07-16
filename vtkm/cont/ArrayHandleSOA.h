@@ -478,9 +478,13 @@ public:
 
   // This only works if all the templated arguments are of type std::vector<ComponentType>.
   template <typename... RemainingVectors>
+#ifndef VTKM_MSVC
+  // For some reason, having VTKM_DEPRECATED here is causing a syntax error in some MSVC
+  // compilers.
   VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-  ArrayHandleSOA(const std::vector<ComponentType>& vector0,
-                 const RemainingVectors&... componentVectors)
+#endif
+    ArrayHandleSOA(const std::vector<ComponentType>& vector0,
+                   const RemainingVectors&... componentVectors)
     : Superclass(
         StorageType(vtkm::cont::make_ArrayHandle(vector0, vtkm::CopyFlag::Off),
                     vtkm::cont::make_ArrayHandle(componentVectors, vtkm::CopyFlag::Off)...))
@@ -526,10 +530,14 @@ public:
 
   // This only works if all the templated arguments are of type std::vector<ComponentType>.
   template <typename... RemainingArrays>
+#ifndef VTKM_MSVC
+  // For some reason, having VTKM_DEPRECATED here is causing a syntax error in some MSVC
+  // compilers.
   VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
-  ArrayHandleSOA(vtkm::Id length,
-                 const ComponentType* array0,
-                 const RemainingArrays&... componentArrays)
+#endif
+    ArrayHandleSOA(vtkm::Id length,
+                   const ComponentType* array0,
+                   const RemainingArrays&... componentArrays)
     : Superclass(
         StorageType(vtkm::cont::make_ArrayHandle(array0, length, vtkm::CopyFlag::Off),
                     vtkm::cont::make_ArrayHandle(componentArrays, length, vtkm::CopyFlag::Off)...))
