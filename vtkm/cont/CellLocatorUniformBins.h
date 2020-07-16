@@ -94,9 +94,9 @@ private:
   using ArrayPortalConst =
     typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  using CoordsPortalType = decltype(vtkm::cont::ArrayHandleVirtualCoordinates{}.PrepareForInput(
-    DeviceAdapter{},
-    std::declval<vtkm::cont::Token&>()));
+  using CoordsPortalType =
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ExecutionTypes<
+      DeviceAdapter>::PortalConst;
 
   using CellSetP2CExecType =
     decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},
@@ -150,7 +150,7 @@ public:
                                       vtkm::TopologyElementTagCell{},
                                       vtkm::TopologyElementTagPoint{},
                                       token))
-    , Coords(coords.GetData().PrepareForInput(DeviceAdapter{}, token))
+    , Coords(coords.GetDataAsMultiplexer().PrepareForInput(DeviceAdapter{}, token))
   {
   }
 

@@ -66,7 +66,7 @@ protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
   vtkm::Bounds SpatialExtent;
-  vtkm::cont::ArrayHandleVirtualCoordinates Coordinates;
+  vtkm::cont::CoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;

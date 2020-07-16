@@ -102,8 +102,8 @@ void ValidateCoordTransform(const vtkm::cont::DataSet& ds,
                             const vtkm::cont::DataSet& dsTrn,
                             const std::vector<bool>& isAngle)
 {
-  auto points = ds.GetCoordinateSystem().GetData();
-  auto pointsTrn = dsTrn.GetCoordinateSystem().GetData();
+  auto points = ds.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto pointsTrn = dsTrn.GetCoordinateSystem().GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 

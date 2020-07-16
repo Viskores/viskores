@@ -121,7 +121,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
@@ -166,7 +166,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
   splitSharpEdges.Run(simpleCube.GetCellSet(),
                       featureAngle,
                       faceNormals,
-                      simpleCube.GetCoordinateSystem().GetData(),
+                      simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(),
                       newCoords,
                       newCellset);
 
@@ -213,7 +213,8 @@ void TestSplitSharpEdges()
   vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
   NormalsArrayHandle faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
-  faceted.Run(simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetData(), faceNormals);
+  faceted.Run(
+    simpleCube.GetCellSet(), simpleCube.GetCoordinateSystem().GetDataAsMultiplexer(), faceNormals);
 
   vtkm::worklet::SplitSharpEdges splitSharpEdges;
 

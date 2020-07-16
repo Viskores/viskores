@@ -126,10 +126,10 @@ public:
     this->ModifiedFlag = true;
   }
 
-  VTKM_CONT
-  void SetData(const vtkm::cont::VariantArrayHandle& newdata)
+  template <typename TypeList>
+  VTKM_CONT void SetData(const vtkm::cont::VariantArrayHandleBase<TypeList>& newdata)
   {
-    this->Data = newdata;
+    this->Data = vtkm::cont::VariantArrayHandle(newdata);
     this->ModifiedFlag = true;
   }
 

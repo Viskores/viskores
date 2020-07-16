@@ -90,6 +90,21 @@ static void ComputeChunkSize(const vtkm::Id numVals,
   valuesPerChunk = CeilDivide(pagesPerChunk * VTKM_PAGE_SIZE, bytesPerValue);
 }
 
+template <typename T>
+struct CleanArrayRefImpl
+{
+  using type = T;
+};
+
+template <typename PortalType>
+struct CleanArrayRefImpl<vtkm::internal::ArrayPortalValueReference<PortalType>>
+{
+  using type = typename PortalType::ValueType;
+};
+
+template <typename T>
+using CleanArrayRef = typename CleanArrayRefImpl<T>::type;
+
 template <typename T, typename U>
 static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
 {
@@ -103,19 +118,24 @@ static void DoCopy(T src, U dst, vtkm::Id numVals, std::true_type)
 template <typename InIterT, typename OutIterT>
 static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals, std::false_type)
 {
-  using ValueType = typename std::iterator_traits<OutIterT>::value_type;
+  using InValueType = CleanArrayRef<typename std::iterator_traits<InIterT>::value_type>;
+  using OutValueType = CleanArrayRef<typename std::iterator_traits<OutIterT>::value_type>;
 
   for (vtkm::Id i = 0; i < numVals; ++i)
   {
-    *(outIter++) = static_cast<ValueType>(*(inIter++));
+    // The conversion to InputType and then OutputType looks weird, but it is necessary.
+    // *inItr actually returns an ArrayPortalValueReference, which can automatically convert
+    // itself to InputType but not necessarily OutputType. Thus, we first convert to
+    // InputType, and then allow the conversion to OutputType.
+    *(outIter++) = static_cast<OutValueType>(static_cast<InValueType>(*(inIter++)));
   }
 }
 
 template <typename InIterT, typename OutIterT>
 static void DoCopy(InIterT inIter, OutIterT outIter, vtkm::Id numVals)
 {
-  using InValueType = typename std::iterator_traits<InIterT>::value_type;
-  using OutValueType = typename std::iterator_traits<OutIterT>::value_type;
+  using InValueType = CleanArrayRef<typename std::iterator_traits<InIterT>::value_type>;
+  using OutValueType = CleanArrayRef<typename std::iterator_traits<OutIterT>::value_type>;
 
   DoCopy(inIter, outIter, numVals, std::is_same<InValueType, OutValueType>());
 }

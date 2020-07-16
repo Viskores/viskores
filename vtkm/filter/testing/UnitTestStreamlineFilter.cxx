@@ -139,7 +139,7 @@ void TestStreamlineFile(const std::string& fname,
   streamline.SetActiveField("vec");
   auto output = streamline.Execute(ds);
 
-  auto coords = output.GetCoordinateSystem().GetData();
+  auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
   VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");

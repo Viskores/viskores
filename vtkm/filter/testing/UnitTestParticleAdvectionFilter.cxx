@@ -101,7 +101,7 @@ void TestFile(const std::string& fname,
   particleAdvection.SetActiveField("vec");
   auto output = particleAdvection.Execute(ds);
 
-  auto coords = output.GetCoordinateSystem().GetData();
+  auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
   VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");

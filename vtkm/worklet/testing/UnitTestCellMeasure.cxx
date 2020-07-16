@@ -27,7 +27,8 @@ void TestCellMeasureUniform3D()
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<vtkm::Volume>> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), result);
+  dispatcher.Invoke(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem().GetDataAsMultiplexer(), result);
 
   vtkm::Float32 expected[4] = { 1.f, 1.f, 1.f, 1.f };
   for (int i = 0; i < 4; ++i)
@@ -48,7 +49,8 @@ void TestCellMeasureWorklet(vtkm::cont::DataSet& dataset,
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
-  dispatcher.Invoke(dataset.GetCellSet(), dataset.GetCoordinateSystem(), result);
+  dispatcher.Invoke(
+    dataset.GetCellSet(), dataset.GetCoordinateSystem().GetDataAsMultiplexer(), result);
 
   VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Wrong number of values in the output array");

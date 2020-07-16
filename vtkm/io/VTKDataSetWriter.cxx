@@ -159,11 +159,13 @@ void WritePoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
   int cindex = 0;
   auto cdata = dataSet.GetCoordinateSystem(cindex).GetData();
 
-  vtkm::Id npoints = cdata.GetNumberOfValues();
-  out << "POINTS " << npoints << " " << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name()
-      << " " << '\n';
+  std::string typeName;
+  vtkm::cont::CastAndCall(cdata, GetDataTypeName(typeName));
 
-  OutputPointsFunctor{ out }(cdata);
+  vtkm::Id npoints = cdata.GetNumberOfValues();
+  out << "POINTS " << npoints << " " << typeName << " " << '\n';
+
+  cdata.CastAndCall(OutputPointsFunctor{ out });
 }
 
 template <class CellSetType>
@@ -381,7 +383,7 @@ void WriteDataSetAsStructured(std::ostream& out,
   ///\todo: support rectilinear
 
   // Type of structured grid (uniform, rectilinear, curvilinear) is determined by coordinate system
-  vtkm::cont::ArrayHandleVirtualCoordinates coordSystem = dataSet.GetCoordinateSystem().GetData();
+  auto coordSystem = dataSet.GetCoordinateSystem().GetData();
   if (coordSystem.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
   {
     // uniform is written as "structured points"

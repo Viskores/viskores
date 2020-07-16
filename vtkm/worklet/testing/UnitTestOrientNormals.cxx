@@ -85,7 +85,7 @@ struct ValidateNormals
   using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
   using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().ReadPortal());
-  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetData().ReadPortal());
+  using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetDataAsMultiplexer());
 
   vtkm::cont::CoordinateSystem Coords;
   CellSetType Cells;
@@ -139,7 +139,7 @@ struct ValidateNormals
                   const vtkm::cont::Field& cellNormalsField)
     : Coords{ dataset.GetCoordinateSystem() }
     , Cells{ dataset.GetCellSet().Cast<CellSetType>() }
-    , Points{ this->Coords.GetData().ReadPortal() }
+    , Points{ this->Coords.GetDataAsMultiplexer() }
     , CheckPoints(checkPoints)
     , CheckCells(checkCells)
   {
@@ -170,7 +170,8 @@ struct ValidateNormals
     // Locate a point with the minimum x coordinate:
     const vtkm::Id startPoint = [&]() -> vtkm::Id {
       const vtkm::Float64 xMin = this->Coords.GetBounds().X.Min;
-      const auto points = this->Coords.GetData().ReadPortal();
+      const auto pointArray = this->Coords.GetDataAsMultiplexer();
+      const auto points = pointArray.ReadPortal();
       const vtkm::Id numPoints = points.GetNumberOfValues();
       vtkm::Id resultIdx = -1;
       for (vtkm::Id pointIdx = 0; pointIdx < numPoints; ++pointIdx)
@@ -240,6 +241,7 @@ private:
                                                           vtkm::TopologyElementTagCell{},
                                                           token);
 
+    auto points = this->Points.ReadPortal();
     while (!queue.empty())
     {
       const vtkm::Id curPtIdx = queue.back().first;
@@ -251,7 +253,7 @@ private:
         const NormalType curNormal = this->PointNormals.Get(curPtIdx);
         if (!this->SameHemisphere(curNormal, refNormal))
         {
-          const auto coord = this->Points.Get(curPtIdx);
+          const auto coord = points.Get(curPtIdx);
           std::cerr << "BadPointNormal PtId: " << curPtIdx << "\n\t"
                     << "- Normal: {" << curNormal[0] << ", " << curNormal[1] << ", " << curNormal[2]
                     << "}\n\t"
@@ -343,7 +345,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   }
 
   // modify normals in place
-  const auto coords = dataset.GetCoordinateSystem().GetData();
+  const auto coords = dataset.GetCoordinateSystem().GetDataAsMultiplexer();
   const auto cells = dataset.GetCellSet();
   if (testPoints && testCells)
   {

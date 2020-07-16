@@ -84,7 +84,18 @@ public:
   template <typename ArrayHandleType>
   VTKM_CONT ArrayHandleType Cast() const
   {
+// MSVC will issue deprecation warnings if this templated method is instantiated with
+// a deprecated class here even if the method is called from a section of code where
+// deprecation warnings are suppressed. This is annoying behavior since this templated
+// method has no control over what class it is used from. To get around it, we have to
+// suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
     return internal::variant::Cast<ArrayHandleType>(this->ArrayContainer.get());
+#ifdef VTKM_MSVC
+    VTKM_DEPRECATED_SUPPRESS_END
+#endif
   }
 
   /// \brief Call a functor using the underlying array type.
@@ -202,7 +213,7 @@ public:
 
 /// \brief Holds an array handle without having to specify template parameters.
 ///
-/// \c VariantArrayHandle holds an \c ArrayHandle or \c ArrayHandleVirtual
+/// `VariantArrayHandle` holds an `ArrayHandle`
 /// object using runtime polymorphism to manage different value types and
 /// storage rather than compile-time templates. This adds a programming
 /// convenience that helps avoid a proliferation of templates. It also provides
@@ -210,24 +221,23 @@ public:
 /// will not be known until runtime.
 ///
 /// To interface between the runtime polymorphism and the templated algorithms
-/// in VTK-m, \c VariantArrayHandle contains a method named \c CastAndCall that
-/// will determine the correct type from some known list of types. It returns
-/// an ArrayHandleVirtual which type erases the storage type by using polymorphism.
+/// in VTK-m, `VariantArrayHandle` contains a method named `CastAndCall` that
+/// will determine the correct type from some known list of types.
 /// This mechanism is used internally by VTK-m's worklet invocation
 /// mechanism to determine the type when running algorithms.
 ///
-/// By default, \c VariantArrayHandle will assume that the value type in the
-/// array matches one of the types specified by \c VTKM_DEFAULT_TYPE_LIST
-/// This list can be changed by using the \c ResetTypes. It is
+/// By default, `VariantArrayHandle` will assume that the value type in the
+/// array matches one of the types specified by `VTKM_DEFAULT_TYPE_LIST`
+/// This list can be changed by using the `ResetTypes`. It is
 /// worthwhile to match these lists closely to the possible types that might be
 /// used. If a type is missing you will get a runtime error. If there are more
 /// types than necessary, then the template mechanism will create a lot of
 /// object code that is never used, and keep in mind that the number of
-/// combinations grows exponentially when using multiple \c VariantArrayHandle
+/// combinations grows exponentially when using multiple `VariantArrayHandle`
 /// objects.
 ///
-/// The actual implementation of \c VariantArrayHandle is in a templated class
-/// named \c VariantArrayHandleBase, which is templated on the list of
+/// The actual implementation of `VariantArrayHandle` is in a templated class
+/// named `VariantArrayHandleBase`, which is templated on the list of
 /// component types.
 ///
 template <typename TypeList>
@@ -301,16 +311,12 @@ public:
   /// `CastAndCall` attempts to cast the held array to a specific value type,
   /// then call the given functor with the cast array. The types
   /// tried in the cast are those in the lists defined by the TypeList.
-  /// By default \c VariantArrayHandle set this to \c VTKM_DEFAULT_TYPE_LIST.
+  /// By default `VariantArrayHandle` set this to `VTKM_DEFAULT_TYPE_LIST`.
   ///
-  /// In addition to the value type, an \c ArrayHandle also requires a storage tag.
-  /// By default, \c CastAndCall attempts to cast the array using the storage tags
-  /// listed in \c VTKM_DEFAULT_STORAGE_LIST. You can optionally give a custom
-  /// list of storage tags as the second argument. If the storage of the underlying
-  /// array does not match any of the storage tags given, then the array will
-  /// be cast to an \c ArrayHandleVirtual, which can hold any array given the
-  /// appropriate value type. To always use \c ArrayHandleVirtual, pass
-  /// \c vtkm::ListEmpty as thefirst argument.
+  /// In addition to the value type, an `ArrayHandle` also requires a storage tag.
+  /// By default, `CastAndCall` attempts to cast the array using the storage tags
+  /// listed in `VTKM_DEFAULT_STORAGE_LIST`. You can optionally give a custom
+  /// list of storage tags as the second argument.
   ///
   /// As previous stated, if a storage tag list is provided, it is given in the
   /// first argument. The functor to call with the cast array is given as the next
@@ -318,7 +324,7 @@ public:
   /// The remaning arguments, if any, are passed to the functor.
   ///
   /// The functor will be called with the cast array as its first argument. Any
-  /// remaining arguments are passed from the arguments to \c CastAndCall.
+  /// remaining arguments are passed from the arguments to `CastAndCall`.
   ///
   template <typename FunctorOrStorageList, typename... Args>
   VTKM_CONT void CastAndCall(FunctorOrStorageList&& functorOrStorageList, Args&&... args) const
@@ -423,35 +429,6 @@ struct VariantArrayHandleTry
   }
 };
 
-struct VariantArrayHandleTryFallback
-{
-  template <typename T, typename Functor, typename... Args>
-  void operator()(T,
-                  Functor&& f,
-                  bool& called,
-                  const vtkm::cont::internal::VariantArrayHandleContainerBase& container,
-                  Args&&... args) const
-  {
-    if (!called && vtkm::cont::internal::variant::IsValueType<T>(&container))
-    {
-      called = true;
-      const auto* derived =
-        static_cast<const vtkm::cont::internal::VariantArrayHandleContainer<T>*>(&container);
-      VTKM_LOG_CAST_SUCC(container, derived);
-
-      // If you get a compile error here, it means that you have called CastAndCall for a
-      // vtkm::cont::VariantArrayHandle and the arguments of the functor do not match those
-      // being passed. This is often because it is calling the functor with an ArrayHandle
-      // type that was not expected. Either add overloads to the functor to accept all
-      // possible array types or constrain the types tried for the CastAndCall. Note that
-      // the functor will be called with an array of type vtkm::cont::ArrayHandle<T, S>.
-      // Directly using a subclass of ArrayHandle (e.g. vtkm::cont::ArrayHandleConstant<T>)
-      // might not work.
-      f(derived->Array, std::forward<Args>(args)...);
-    }
-  }
-};
-
 template <typename T>
 struct IsUndefinedStorage
 {
@@ -483,16 +460,6 @@ VTKM_CONT void VariantArrayHandleCommon::CastAndCall(Functor&& f, Args&&... args
                     called,
                     ref,
                     std::forward<Args>(args)...);
-  if (!called)
-  {
-    // try to fall back to using ArrayHandleVirtual
-    vtkm::ListForEach(detail::VariantArrayHandleTryFallback{},
-                      TypeList{},
-                      std::forward<Functor>(f),
-                      called,
-                      ref,
-                      std::forward<Args>(args)...);
-  }
   if (!called)
   {
     // throw an exception
@@ -660,14 +627,14 @@ struct VariantArrayHandleSerializeFunctor
 
 struct VariantArrayHandleDeserializeFunctor
 {
-  template <typename T, typename TypeList>
-  void operator()(T,
+  template <typename T, typename S, typename TypeList>
+  void operator()(vtkm::List<T, S>,
                   vtkm::cont::VariantArrayHandleBase<TypeList>& dh,
                   const std::string& typeString,
                   bool& success,
                   BinaryBuffer& bb) const
   {
-    using ArrayHandleType = vtkm::cont::ArrayHandleVirtual<T>;
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T, S>;
 
     if (!success && (typeString == vtkm::cont::SerializableTypeString<ArrayHandleType>::Get()))
     {
@@ -690,7 +657,7 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
   {
-    obj.CastAndCall(vtkm::ListEmpty(), internal::VariantArrayHandleSerializeFunctor{}, bb);
+    obj.CastAndCall(internal::VariantArrayHandleSerializeFunctor{}, bb);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
@@ -699,8 +666,12 @@ public:
     vtkmdiy::load(bb, typeString);
 
     bool success = false;
-    vtkm::ListForEach(
-      internal::VariantArrayHandleDeserializeFunctor{}, TypeList{}, obj, typeString, success, bb);
+    vtkm::ListForEach(internal::VariantArrayHandleDeserializeFunctor{},
+                      vtkm::cont::detail::ListDynamicTypes<TypeList, VTKM_DEFAULT_STORAGE_LIST>{},
+                      obj,
+                      typeString,
+                      success,
+                      bb);
 
     if (!success)
     {
