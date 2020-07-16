@@ -63,16 +63,8 @@ vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
   vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
   using StorageType = vtkm::cont::internal::Storage<vtkm::Vec<T, 3>, internal::StorageTagExtrude>;
-  if (copy == vtkm::CopyFlag::Off)
-  {
-    return ArrayHandleExtrudeCoords<T>(StorageType(array, length, numberOfPlanes, cylindrical));
-  }
-  else
-  {
-    auto storage = StorageType(
-      vtkm::cont::make_ArrayHandle(array, length, vtkm::CopyFlag::On), numberOfPlanes, cylindrical);
-    return ArrayHandleExtrudeCoords<T>(storage);
-  }
+  return ArrayHandleExtrudeCoords<T>(
+    StorageType(vtkm::cont::make_ArrayHandle(array, length, copy), numberOfPlanes, cylindrical));
 }
 
 template <typename T>

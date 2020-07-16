@@ -49,7 +49,7 @@ struct TryArrayInOutType
     }
 
     using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
-    ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE);
+    ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
     using PortalType = typename ArrayHandleType::template ExecutionTypes<Device>::Portal;
 

@@ -121,7 +121,6 @@ void RectilinearTests()
   const vtkm::Id NUM_FILL_METHODS = 5;
 
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
-  vtkm::cont::DataSet dataSet;
 
   std::uniform_int_distribution<vtkm::Id> randomDim(1, MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS - 1);
@@ -129,6 +128,8 @@ void RectilinearTests()
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
     std::cout << "Trial " << trial << std::endl;
+
+    vtkm::cont::DataSet dataSet;
 
     vtkm::Id3 dimensions(
       randomDim(g_RandomGenerator), randomDim(g_RandomGenerator), randomDim(g_RandomGenerator));
@@ -216,10 +217,11 @@ void RectilinearTests()
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with ArrayHandle" << std::endl;
-      dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
-                                      vtkm::cont::make_ArrayHandle(yCoordinates));
-      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP2D));
-      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC2D));
+      dataSet =
+        dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates, vtkm::CopyFlag::Off),
+                              vtkm::cont::make_ArrayHandle(yCoordinates, vtkm::CopyFlag::Off));
+      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP2D, vtkm::CopyFlag::Off));
+      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC2D, vtkm::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
     }
 
@@ -259,16 +261,17 @@ void RectilinearTests()
                                       &xCoordinates.front(),
                                       &yCoordinates.front(),
                                       &zCoordinates.front());
-      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP3D));
-      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC3D));
+      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP3D, vtkm::CopyFlag::Off));
+      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC3D, vtkm::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with ArrayHandle" << std::endl;
-      dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
-                                      vtkm::cont::make_ArrayHandle(yCoordinates),
-                                      vtkm::cont::make_ArrayHandle(zCoordinates));
-      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP3D));
-      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC3D));
+      dataSet =
+        dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates, vtkm::CopyFlag::Off),
+                              vtkm::cont::make_ArrayHandle(yCoordinates, vtkm::CopyFlag::Off),
+                              vtkm::cont::make_ArrayHandle(zCoordinates, vtkm::CopyFlag::Off));
+      dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP3D, vtkm::CopyFlag::Off));
+      dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC3D, vtkm::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
     }
   }

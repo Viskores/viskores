@@ -41,8 +41,9 @@ void TestFieldTypesPoint()
   VTKM_TEST_ASSERT(helperMD.IsCellField() == false, "point can't be a cell field");
 
   //verify the field helper works properly
-  vtkm::Float32 vars[6] = { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f };
-  auto field = vtkm::cont::make_Field("pointvar", vtkm::cont::Field::Association::POINTS, vars, 6);
+  auto field = vtkm::cont::make_FieldPoint(
+    "pointvar",
+    vtkm::cont::make_ArrayHandle<vtkm::Float32>({ 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f }));
   vtkm::filter::FieldMetadata makeMDFromField(field);
   VTKM_TEST_ASSERT(makeMDFromField.IsPointField() == true, "point should be a point field");
   VTKM_TEST_ASSERT(makeMDFromField.IsCellField() == false, "point can't be a cell field");
@@ -57,8 +58,9 @@ void TestFieldTypesCell()
   VTKM_TEST_ASSERT(helperMD.IsCellField() == true, "cell should be a cell field");
 
   //verify the field helper works properly
-  vtkm::Float32 vars[6] = { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f };
-  auto field = vtkm::cont::make_FieldCell("pointvar", vtkm::cont::make_ArrayHandle(vars, 6));
+  auto field = vtkm::cont::make_FieldCell(
+    "pointvar",
+    vtkm::cont::make_ArrayHandle<vtkm::Float32>({ 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f }));
   vtkm::filter::FieldMetadata makeMDFromField(field);
   VTKM_TEST_ASSERT(makeMDFromField.IsPointField() == false, "cell can't be a point field");
   VTKM_TEST_ASSERT(makeMDFromField.IsCellField() == true, "cell should be a cell field");

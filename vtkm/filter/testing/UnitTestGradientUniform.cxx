@@ -60,7 +60,8 @@ void TestCellGradientUniform3DWithVectorField()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
   dataSet.AddPointField("vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
@@ -118,7 +119,8 @@ void TestPointGradientUniform3DWithVectorField()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
   dataSet.AddPointField("vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset

@@ -315,7 +315,8 @@ void ValidateEvaluator(const EvalType& eval,
   using Status = vtkm::worklet::particleadvection::GridEvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
-  vtkm::cont::ArrayHandle<vtkm::Massless> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::cont::ArrayHandle<vtkm::Massless> pointsHandle =
+    vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
@@ -365,7 +366,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -398,7 +399,7 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
 
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -568,7 +569,7 @@ void TestIntegrators()
   std::vector<vtkm::Vec3f> fieldData;
   for (vtkm::Id i = 0; i < nElements; i++)
     fieldData.push_back(vtkm::Vec3f(0., 0., 1.));
-  FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData);
+  FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData, vtkm::CopyFlag::Off);
   FieldType velocities(fieldValues);
 
   GridEvalType eval(dataset.GetCoordinateSystem(), dataset.GetCellSet(), velocities);
@@ -616,7 +617,7 @@ void TestParticleWorkletsWithDataSetTypes()
     field.push_back(vtkm::Normal(vec));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
   FieldType velocities(fieldArray);
 
   std::vector<vtkm::Bounds> bounds;
@@ -713,7 +714,7 @@ void TestParticleStatus()
   vtkm::FloatDefault stepSize = 0.01f;
 
   FieldHandle fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
   FieldType velocities(fieldArray);
 
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
@@ -749,8 +750,8 @@ void TestWorkletsBasic()
   for (vtkm::Id i = 0; i < nElements; i++)
     field.push_back(vtkm::Normal(vecDir));
 
-  FieldHandle fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
   FieldType velocities(fieldArray);
 
   vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
@@ -940,7 +941,7 @@ void TestParticleAdvectionFile(const std::string& fname,
     std::vector<vtkm::Massless> seeds;
     for (size_t j = 0; j < pts.size(); j++)
       seeds.push_back(vtkm::Massless(pts[j], static_cast<vtkm::Id>(j)));
-    auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
+    auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
     if (i == 0)
     {

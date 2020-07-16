@@ -86,12 +86,9 @@ void TestDataSet_Explicit()
 
   vtkm::cont::DataSet dataSet = make_SingleTypeDataSet();
 
-  std::vector<vtkm::Id> validIds;
-  validIds.push_back(1); //iterate the 2nd cell 4 times
-  validIds.push_back(1);
-  validIds.push_back(1);
-  validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
+  //iterate the 2nd cell 4 times
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1 });
 
   //get the cellset single type from the dataset
   vtkm::cont::CellSetSingleType<> cellSet;
@@ -125,12 +122,9 @@ void TestDataSet_Structured2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  std::vector<vtkm::Id> validIds;
-  validIds.push_back(1); //iterate the 2nd cell 4 times
-  validIds.push_back(1);
-  validIds.push_back(1);
-  validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
+  //iterate the 2nd cell 4 times
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1 });
 
   vtkm::cont::CellSetStructured<2> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
@@ -161,12 +155,9 @@ void TestDataSet_Structured3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  std::vector<vtkm::Id> validIds;
-  validIds.push_back(1); //iterate the 2nd cell 4 times
-  validIds.push_back(1);
-  validIds.push_back(1);
-  validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
+  //iterate the 2nd cell 4 times
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
+    vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1 });
 
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);

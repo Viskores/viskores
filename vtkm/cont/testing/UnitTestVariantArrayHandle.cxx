@@ -164,14 +164,10 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
 template <typename T>
 vtkm::cont::VariantArrayHandle CreateArrayVariant(T)
 {
-  // Declared static to prevent going out of scope.
-  static T buffer[ARRAY_SIZE];
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
-  {
-    buffer[index] = TestValue(index, T());
-  }
-
-  return vtkm::cont::VariantArrayHandle(vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE));
+  vtkm::cont::ArrayHandle<T> array;
+  array.Allocate(ARRAY_SIZE);
+  SetPortal(array.WritePortal());
+  return vtkm::cont::VariantArrayHandle(array);
 }
 
 template <typename ArrayHandleType>
@@ -415,7 +411,8 @@ void TryCastToArrayHandle()
     buffer[index] = TestValue(index, vtkm::Id());
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Id> array = vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<vtkm::Id> array =
+    vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, vtkm::CopyFlag::On);
   TryCastToArrayHandle(array);
 
   std::cout << "  Cast array handle." << std::endl;

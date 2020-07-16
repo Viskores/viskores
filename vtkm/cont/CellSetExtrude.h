@@ -168,10 +168,23 @@ CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
                                    const std::vector<vtkm::Int32>& nextNode,
                                    bool periodic = true)
 {
-  return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn),
+  return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn, vtkm::CopyFlag::On),
                          static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
                          coords.GetNumberOfPlanes(),
-                         vtkm::cont::make_ArrayHandle(nextNode),
+                         vtkm::cont::make_ArrayHandle(nextNode, vtkm::CopyFlag::On),
+                         periodic };
+}
+
+template <typename T>
+CellSetExtrude make_CellSetExtrude(std::vector<vtkm::Int32>&& conn,
+                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   std::vector<vtkm::Int32>&& nextNode,
+                                   bool periodic = true)
+{
+  return CellSetExtrude{ vtkm::cont::make_ArrayHandleMove(std::move(conn)),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
+                         coords.GetNumberOfPlanes(),
+                         vtkm::cont::make_ArrayHandleMove(std::move(nextNode)),
                          periodic };
 }
 }

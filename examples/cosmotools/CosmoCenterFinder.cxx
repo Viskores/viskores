@@ -52,11 +52,11 @@ void TestCosmoCenterFinder(const char* fileName)
   }
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(xLocation, nParticles);
+    vtkm::cont::make_ArrayHandle<vtkm::Float32>(xLocation, nParticles, vtkm::CopyFlag::Off);
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(yLocation, nParticles);
+    vtkm::cont::make_ArrayHandle<vtkm::Float32>(yLocation, nParticles, vtkm::CopyFlag::Off);
   vtkm::cont::ArrayHandle<vtkm::Float32> zLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(zLocation, nParticles);
+    vtkm::cont::make_ArrayHandle<vtkm::Float32>(zLocation, nParticles, vtkm::CopyFlag::Off);
 
   // Output MBP particleId pairs array
   vtkm::Pair<vtkm::Id, vtkm::Float32> nxnResult;

@@ -245,12 +245,11 @@ void TestNDimsHistMarginalization()
   // setup for histogram marginalization
   // use a bool array to indicate the marginal variable (true -> marginal variable)
   // the length of this array has to be equal to number of input variables
-  bool marginalVariableAry[3] = { true, false, true };
   vtkm::cont::ArrayHandle<bool> marginalVariable =
-    vtkm::cont::make_ArrayHandle(marginalVariableAry, 3);
+    vtkm::cont::make_ArrayHandle({ true, false, true });
 
-  std::vector<vtkm::Id> numberOfBinsVec(3, 10);
-  vtkm::cont::ArrayHandle<vtkm::Id> numberOfBins = vtkm::cont::make_ArrayHandle(numberOfBinsVec);
+  vtkm::cont::ArrayHandle<vtkm::Id> numberOfBins =
+    vtkm::cont::make_ArrayHandleMove(std::vector<vtkm::Id>(3, 10));
 
   // calculate marginal histogram by the setup (return sparse represetnation)
   std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> marginalBinIds;

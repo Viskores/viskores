@@ -145,7 +145,8 @@ public:
     pointsVec.push_back(vtkm::make_Vec(0, 4, 4));
     pointsVec.push_back(vtkm::make_Vec(4, 0, 4));
 
-    vtkm::cont::ArrayHandle<PointType> points = vtkm::cont::make_ArrayHandle(pointsVec);
+    vtkm::cont::ArrayHandle<PointType> points =
+      vtkm::cont::make_ArrayHandle(pointsVec, vtkm::CopyFlag::Off);
     // Query the points using the locators.
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<PointType> parametric;

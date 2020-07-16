@@ -97,8 +97,8 @@ void BenchContToExecRead(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec);
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -181,8 +181,8 @@ void BenchContToExecReadWrite(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec);
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -223,8 +223,8 @@ void BenchRoundTripRead(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec);
+  std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
+  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
@@ -277,7 +277,7 @@ void BenchRoundTripReadWrite(benchmark::State& state)
   }
 
   std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec);
+  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };

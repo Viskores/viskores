@@ -53,11 +53,11 @@ void TestCosmoHaloFinder(const char* fileName)
   }
 
   vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(xLocation, nParticles);
+    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(xLocation, nParticles);
   vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(yLocation, nParticles);
+    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(yLocation, nParticles);
   vtkm::cont::ArrayHandle<vtkm::Float32> zLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(zLocation, nParticles);
+    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(zLocation, nParticles);
 
   // Output halo id, mbp id and min potential per particle
   vtkm::cont::ArrayHandle<vtkm::Id> resultHaloId;
@@ -88,10 +88,6 @@ void TestCosmoHaloFinder(const char* fileName)
   xLocArray.ReleaseResources();
   yLocArray.ReleaseResources();
   zLocArray.ReleaseResources();
-
-  delete[] xLocation;
-  delete[] yLocation;
-  delete[] zLocation;
 }
 
 /////////////////////////////////////////////////////////////////////

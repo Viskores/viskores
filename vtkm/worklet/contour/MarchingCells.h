@@ -626,7 +626,8 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
+    vtkm::cont::make_ArrayHandle(isovalues, vtkm::CopyFlag::Off);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated

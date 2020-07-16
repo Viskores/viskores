@@ -122,7 +122,8 @@ void TryKeyType(KeyType)
     keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
 
-  vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keyArray =
+    vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
   vtkm::cont::ArrayCopy(keyArray, sortedKeys);

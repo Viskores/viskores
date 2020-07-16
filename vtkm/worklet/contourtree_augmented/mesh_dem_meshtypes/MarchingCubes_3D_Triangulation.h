@@ -118,37 +118,42 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
 
 {
   // Initialize the case tables in vtkm
-  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m3d_marchingcubes::EdgeBoundaryDetectionMasks, m3d_marchingcubes::N_ALL_NEIGHBOURS);
+  this->EdgeBoundaryDetectionMasks =
+    vtkm::cont::make_ArrayHandle(m3d_marchingcubes::EdgeBoundaryDetectionMasks,
+                                 m3d_marchingcubes::N_ALL_NEIGHBOURS,
+                                 vtkm::CopyFlag::Off);
   this->CubeVertexPermutations = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       CubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lenghts ...PermVecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes::CubeVertexPermutations, // the array to convert
       m3d_marchingcubes::CubeVertexPermutations_NumPermutations *
-        m3d_marchingcubes::CubeVertexPermutations_PermVecLength // total number of elements
-      ));
+        m3d_marchingcubes::CubeVertexPermutations_PermVecLength, // total number of elements
+      vtkm::CopyFlag::Off));
   this->LinkVertexConnectionsSix = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes::LinkVertexConnectionsSix, // the array to convert
       m3d_marchingcubes::LinkVertexConnectionsSix_NumPairs *
-        m3d_marchingcubes::VertexConnections_VecLength // total number of elements
-      ));
+        m3d_marchingcubes::VertexConnections_VecLength, // total number of elements
+      vtkm::CopyFlag::Off));
   this->LinkVertexConnectionsEighteen = vtkm::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       VertexConnections_VecLength>( // create 2D array of vectors o lenght ...VecLength
     vtkm::cont::make_ArrayHandle(
       m3d_marchingcubes::LinkVertexConnectionsEighteen, // the array to convert
       m3d_marchingcubes::LinkVertexConnectionsEighteen_NumPairs *
-        m3d_marchingcubes::VertexConnections_VecLength // total number of elements
-      ));
-  this->InCubeConnectionsSix = vtkm::cont::make_ArrayHandle(
-    m3d_marchingcubes::InCubeConnectionsSix, m3d_marchingcubes::InCubeConnectionsSix_NumElements);
+        m3d_marchingcubes::VertexConnections_VecLength, // total number of elements
+      vtkm::CopyFlag::Off));
+  this->InCubeConnectionsSix =
+    vtkm::cont::make_ArrayHandle(m3d_marchingcubes::InCubeConnectionsSix,
+                                 m3d_marchingcubes::InCubeConnectionsSix_NumElements,
+                                 vtkm::CopyFlag::Off);
   this->InCubeConnectionsEighteen =
     vtkm::cont::make_ArrayHandle(m3d_marchingcubes::InCubeConnectionsEighteen,
-                                 m3d_marchingcubes::InCubeConnectionsEighteen_NumElements);
+                                 m3d_marchingcubes::InCubeConnectionsEighteen_NumElements,
+                                 vtkm::CopyFlag::Off);
 }
 
 template <typename T, typename StorageType>

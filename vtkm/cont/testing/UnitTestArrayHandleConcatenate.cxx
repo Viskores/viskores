@@ -54,7 +54,7 @@ void TestConcatenateEmptyArray()
   using ArrayConcat = vtkm::cont::ArrayHandleConcatenate<CoeffArrayTypeTmp, CoeffArrayTypeTmp>;
   using ArrayConcat2 = vtkm::cont::ArrayHandleConcatenate<ArrayConcat, CoeffArrayTypeTmp>;
 
-  CoeffArrayTypeTmp arr1 = vtkm::cont::make_ArrayHandle(vec);
+  CoeffArrayTypeTmp arr1 = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::Off);
   CoeffArrayTypeTmp arr2, arr3;
 
   ArrayConcat arrConc(arr2, arr1);

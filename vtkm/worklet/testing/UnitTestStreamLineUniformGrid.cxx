@@ -124,7 +124,7 @@ void TestStreamLineUniformGrid()
     field.push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements);
+  fieldArray = vtkm::cont::make_ArrayHandle(&field[0], nElements, vtkm::CopyFlag::On);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
   vtkm::cont::DataSet inDataSet;

@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     p.ID = i;
     seeds.push_back(p);
   }
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   //compute streamlines
   vtkm::filter::Streamline streamline;

@@ -129,14 +129,14 @@ int TestCellSetExtrude()
 
   // verify that a constant value point field can be accessed
   std::vector<float> pvalues(static_cast<size_t>(coords.GetNumberOfValues()), 42.0f);
-  vtkm::cont::Field pfield(
-    "pfield", vtkm::cont::Field::Association::POINTS, vtkm::cont::make_ArrayHandle(pvalues));
+  vtkm::cont::Field pfield = vtkm::cont::make_Field(
+    "pfield", vtkm::cont::Field::Association::POINTS, pvalues, vtkm::CopyFlag::Off);
   dataset.AddField(pfield);
 
   // verify that a constant cell value can be accessed
   std::vector<float> cvalues(static_cast<size_t>(cells.GetNumberOfCells()), 42.0f);
-  vtkm::cont::Field cfield =
-    vtkm::cont::make_FieldCell("cfield", vtkm::cont::make_ArrayHandle(cvalues));
+  vtkm::cont::Field cfield = vtkm::cont::make_Field(
+    "cfield", vtkm::cont::Field::Association::CELL_SET, cvalues, vtkm::CopyFlag::Off);
   dataset.AddField(cfield);
 
   vtkm::filter::PointAverage avg;

@@ -54,9 +54,7 @@ struct DoTestAtomicArrayWorklet
   VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
-    T inOutValue = 0;
-
-    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(&inOutValue, 1);
+    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle<T>({ 0 });
 
     this->CallWorklet(vtkm::cont::VariantArrayHandle(inOutHandle));
 

@@ -32,9 +32,8 @@ public:
     dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
-    const int nCells = 2;
-    vtkm::Id cellids[nCells] = { 1, 2 };
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds = vtkm::cont::make_ArrayHandle(cellids, nCells);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellIds = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 2 });
+    const vtkm::Id nCells = cellIds.GetNumberOfValues();
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
@@ -107,9 +106,9 @@ public:
     dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
-    const int nCells = 5;
-    vtkm::Id cellids[nCells] = { 0, 4, 5, 10, 15 };
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds = vtkm::cont::make_ArrayHandle(cellids, nCells);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellIds =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 4, 5, 10, 15 });
+    const vtkm::Id nCells = cellIds.GetNumberOfValues();
 
     // Output data set permutation of with only extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
@@ -140,9 +139,9 @@ public:
     dataset.GetCellSet().CopyTo(cellSet);
 
     // Cells to extract
-    const int nCells = 5;
-    vtkm::Id cellids[nCells] = { 0, 4, 5, 10, 15 };
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds = vtkm::cont::make_ArrayHandle(cellids, nCells);
+    vtkm::cont::ArrayHandle<vtkm::Id> cellIds =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 4, 5, 10, 15 });
+    const vtkm::Id nCells = cellIds.GetNumberOfValues();
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;

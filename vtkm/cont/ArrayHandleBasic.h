@@ -175,17 +175,49 @@ public:
   {
   }
 
-  template <typename Deleter>
   ArrayHandleBasic(
     T* array,
     vtkm::Id numberOfValues,
     vtkm::cont::DeviceAdapterId device,
-    Deleter deleter,
+    vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
     : Superclass(std::vector<vtkm::cont::internal::Buffer>{
         vtkm::cont::internal::MakeBuffer(device,
                                          array,
                                          array,
+                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
+                                         deleter,
+                                         reallocater) })
+  {
+  }
+
+  ArrayHandleBasic(
+    T* array,
+    void* container,
+    vtkm::Id numberOfValues,
+    vtkm::cont::internal::BufferInfo::Deleter deleter,
+    vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
+        vtkm::cont::internal::MakeBuffer(vtkm::cont::DeviceAdapterTagUndefined{},
+                                         array,
+                                         container,
+                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
+                                         deleter,
+                                         reallocater) })
+  {
+  }
+
+  ArrayHandleBasic(
+    T* array,
+    void* container,
+    vtkm::Id numberOfValues,
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::internal::BufferInfo::Deleter deleter,
+    vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
+        vtkm::cont::internal::MakeBuffer(device,
+                                         array,
+                                         container,
                                          internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
                                          deleter,
                                          reallocater) })
@@ -238,11 +270,85 @@ public:
   /// @}
 };
 
+namespace internal
+{
+
+// Deletes a container object by casting it to a pointer of a given type (the template argument)
+// and then using delete[] on the object.
+template <typename T>
+VTKM_CONT inline void SimpleArrayDeleter(void* container_)
+{
+  T* container = reinterpret_cast<T*>(container_);
+  delete[] container;
+}
+
+// Reallocates a standard C array. Note that the allocation method is different than the default
+// host allocation of vtkm::cont::internal::BufferInfo and may be less efficient.
+template <typename T>
+VTKM_CONT inline void SimpleArrayReallocater(void*& memory,
+                                             void*& container,
+                                             vtkm::BufferSizeType oldSize,
+                                             vtkm::BufferSizeType newSize)
+{
+  VTKM_ASSERT(memory == container);
+  VTKM_ASSERT(static_cast<std::size_t>(newSize) % sizeof(T) == 0);
+
+  // If the new size is not much smaller than the old size, just reuse the buffer (and waste a
+  // little memory).
+  if ((newSize > ((3 * oldSize) / 4)) && (newSize <= oldSize))
+  {
+    return;
+  }
+
+  void* newBuffer = new T[static_cast<std::size_t>(newSize) / sizeof(T)];
+  std::memcpy(newBuffer, memory, static_cast<std::size_t>(newSize < oldSize ? newSize : oldSize));
+
+  if (memory != nullptr)
+  {
+    SimpleArrayDeleter<T>(memory);
+  }
+
+  memory = container = newBuffer;
+}
+
+// Deletes a container object by casting it to a pointer of a given type (the template argument)
+// and then using delete on the object.
+template <typename T>
+VTKM_CONT inline void CastDeleter(void* container_)
+{
+  T* container = reinterpret_cast<T*>(container_);
+  delete container;
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT inline void StdVectorDeleter(void* container)
+{
+  CastDeleter<std::vector<T, Allocator>>(container);
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT inline void StdVectorReallocater(void*& memory,
+                                           void*& container,
+                                           vtkm::BufferSizeType oldSize,
+                                           vtkm::BufferSizeType newSize)
+{
+  using vector_type = std::vector<T, Allocator>;
+  vector_type* vector = reinterpret_cast<vector_type*>(container);
+  VTKM_ASSERT(memory == &vector->front());
+  VTKM_ASSERT(oldSize == static_cast<vtkm::BufferSizeType>(vector->size()));
+
+  vector->resize(static_cast<std::size_t>(newSize));
+  memory = &vector->front();
+}
+
+} // namespace internal
+
 /// A convenience function for creating an ArrayHandle from a standard C array.
 ///
 template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandleBasic<T>
-make_ArrayHandle(const T* array, vtkm::Id numberOfValues, vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const T* array,
+                                                           vtkm::Id numberOfValues,
+                                                           vtkm::CopyFlag copy)
 {
   if (copy == vtkm::CopyFlag::On)
   {
@@ -258,12 +364,35 @@ make_ArrayHandle(const T* array, vtkm::Id numberOfValues, vtkm::CopyFlag copy = 
   }
 }
 
+template <typename T>
+VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const T* array, vtkm::Id numberOfValues)
+{
+  return make_ArrayHandle(array, numberOfValues, vtkm::CopyFlag::Off);
+}
+
+/// A convenience function to move a user-allocated array into an `ArrayHandle`.
+/// The provided array pointer will be reset to `nullptr`.
+/// If the array was not allocated with the `new[]` operator, then deleter and reallocater
+/// functions must be provided.
+///
+template <typename T>
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandleMove(
+  T*& array,
+  vtkm::Id numberOfValues,
+  vtkm::cont::internal::BufferInfo::Deleter deleter = internal::SimpleArrayDeleter<T>,
+  vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::SimpleArrayReallocater<T>)
+{
+  vtkm::cont::ArrayHandleBasic<T> arrayHandle(array, numberOfValues, deleter, reallocater);
+  array = nullptr;
+  return arrayHandle;
+}
+
 /// A convenience function for creating an ArrayHandle from an std::vector.
 ///
 template <typename T, typename Allocator>
-VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(
-  const std::vector<T, Allocator>& array,
-  vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, Allocator>& array,
+                                                           vtkm::CopyFlag copy)
 {
   if (!array.empty())
   {
@@ -274,6 +403,56 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(
     // Vector empty. Just return an empty array handle.
     return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
   }
+}
+
+template <typename T, typename Allocator>
+VTKM_DEPRECATED(1.6, "Specify a vtkm::CopyFlag or use a move version of make_ArrayHandle.")
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, Allocator>& array)
+{
+  return make_ArrayHandle(array, vtkm::CopyFlag::Off);
+}
+
+/// Move an std::vector into an ArrayHandle.
+///
+template <typename T, typename Allocator>
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandleMove(std::vector<T, Allocator>&& array)
+{
+  using vector_type = std::vector<T, Allocator>;
+  vector_type* container = new vector_type(std::move(array));
+  return vtkm::cont::ArrayHandleBasic<T>(container->data(),
+                                         container,
+                                         static_cast<vtkm::Id>(container->size()),
+                                         internal::StdVectorDeleter<T, Allocator>,
+                                         internal::StdVectorReallocater<T, Allocator>);
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Allocator>&& array,
+                                                           vtkm::CopyFlag copy)
+{
+  if (copy == vtkm::CopyFlag::On)
+  {
+    VTKM_LOG_S(
+      vtkm::cont::LogLevel::Info,
+      "CopyFlag states std::vector should be copied, but it can be moved. Ignoring copy flag.");
+  }
+  if (!array.empty())
+  {
+    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
+  }
+  else
+  {
+    // Vector empty. Just return an empty array handle.
+    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
+  }
+}
+
+/// Create an ArrayHandle directly from an initializer list of values.
+///
+template <typename T>
+VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::initializer_list<T>&& values)
+{
+  return make_ArrayHandle(values.begin(), static_cast<vtkm::Id>(values.size()), vtkm::CopyFlag::On);
 }
 }
 } // namespace vtkm::cont
