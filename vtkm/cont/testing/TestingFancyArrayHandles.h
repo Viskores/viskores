@@ -381,14 +381,14 @@ private:
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
-            { &vector0.front(), &vector1.front(), &vector2.front() }, ARRAY_SIZE);
+            { vector0.data(), vector1.data(), vector2.data() }, ARRAY_SIZE);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA(
-            ARRAY_SIZE, vtkm::CopyFlag::Off, &vector0.front(), &vector1.front(), &vector2.front());
+            ARRAY_SIZE, vtkm::CopyFlag::Off, vector0.data(), vector1.data(), vector2.data());
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }

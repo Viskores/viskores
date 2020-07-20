@@ -334,11 +334,11 @@ VTKM_CONT inline void StdVectorReallocater(void*& memory,
 {
   using vector_type = std::vector<T, Allocator>;
   vector_type* vector = reinterpret_cast<vector_type*>(container);
-  VTKM_ASSERT(memory == &vector->front());
+  VTKM_ASSERT(vector->empty() || (memory == vector->data()));
   VTKM_ASSERT(oldSize == static_cast<vtkm::BufferSizeType>(vector->size()));
 
   vector->resize(static_cast<std::size_t>(newSize));
-  memory = &vector->front();
+  memory = vector->data();
 }
 
 } // namespace internal
@@ -396,7 +396,7 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, 
 {
   if (!array.empty())
   {
-    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
+    return make_ArrayHandle(array.data(), static_cast<vtkm::Id>(array.size()), copy);
   }
   else
   {
@@ -438,7 +438,7 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Alloca
   }
   if (!array.empty())
   {
-    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
+    return make_ArrayHandle(array.data(), static_cast<vtkm::Id>(array.size()), copy);
   }
   else
   {

@@ -77,7 +77,7 @@ vtkm::cont::ArrayHandleExtrudeCoords<T> make_ArrayHandleExtrudeCoords(
   if (!array.empty())
   {
     return make_ArrayHandleExtrudeCoords(
-      &array.front(), static_cast<vtkm::Id>(array.size()), numberOfPlanes, cylindrical, copy);
+      array.data(), static_cast<vtkm::Id>(array.size()), numberOfPlanes, cylindrical, copy);
   }
   else
   {

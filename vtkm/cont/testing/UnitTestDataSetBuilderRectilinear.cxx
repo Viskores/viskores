@@ -211,9 +211,9 @@ void RectilinearTests()
 
       std::cout << "  Create with C array" << std::endl;
       dataSet = dataSetBuilder.Create(
-        dimensions[0], dimensions[1], &xCoordinates.front(), &yCoordinates.front());
-      dataSet.AddPointField("pointvar", &varP2D.front(), numPoints);
-      dataSet.AddCellField("cellvar", &varC2D.front(), numCells);
+        dimensions[0], dimensions[1], xCoordinates.data(), yCoordinates.data());
+      dataSet.AddPointField("pointvar", varP2D.data(), numPoints);
+      dataSet.AddCellField("cellvar", varC2D.data(), numCells);
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with ArrayHandle" << std::endl;
@@ -258,9 +258,9 @@ void RectilinearTests()
       dataSet = dataSetBuilder.Create(dimensions[0],
                                       dimensions[1],
                                       dimensions[2],
-                                      &xCoordinates.front(),
-                                      &yCoordinates.front(),
-                                      &zCoordinates.front());
+                                      xCoordinates.data(),
+                                      yCoordinates.data(),
+                                      zCoordinates.data());
       dataSet.AddPointField("pointvar", vtkm::cont::make_ArrayHandle(varP3D, vtkm::CopyFlag::Off));
       dataSet.AddCellField("cellvar", vtkm::cont::make_ArrayHandle(varC3D, vtkm::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
