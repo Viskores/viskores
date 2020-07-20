@@ -27,12 +27,12 @@ template <typename WorkletType>
 class DispatcherPointNeighborhood
   : public vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                                    WorkletType,
-                                                   vtkm::worklet::WorkletPointNeighborhoodBase>
+                                                   vtkm::worklet::WorkletNeighborhood>
 {
   using Superclass =
     vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
                                             WorkletType,
-                                            vtkm::worklet::WorkletPointNeighborhoodBase>;
+                                            vtkm::worklet::WorkletNeighborhood>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

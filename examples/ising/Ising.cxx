@@ -111,7 +111,7 @@ int main(int argc, char** argv)
   view.SaveAs("spin0.png");
 
   vtkm::cont::Invoker invoker;
-  for (int i = 1; i < 10; ++i)
+  for (vtkm::UInt32 i = 1; i < 10; ++i)
   {
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32> prob(dataSet.GetNumberOfCells(), { i });
     invoker(UpdateSpins{}, dataSet.GetCellSet(), spins, prob, spins);

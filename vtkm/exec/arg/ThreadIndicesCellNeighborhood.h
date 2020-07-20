@@ -13,6 +13,7 @@
 #include <vtkm/exec/BoundaryState.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/arg/ThreadIndicesNeighborhood.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h> //for Deflate and Inflate
 
 #include <vtkm/Math.h>
