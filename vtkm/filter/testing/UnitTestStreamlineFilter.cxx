@@ -136,6 +136,7 @@ void TestStreamlineFile(const std::string& fname,
   streamline.SetNumberOfSteps(maxSteps);
   streamline.SetSeeds(seedArray);
 
+  VTKM_TEST_ASSERT(ds.HasField("vec"));
   streamline.SetActiveField("vec");
   auto output = streamline.Execute(ds);
 

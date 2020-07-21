@@ -921,18 +921,14 @@ void TestParticleAdvectionFile(const std::string& fname,
   vtkm::cont::Field& field = ds.GetField("vec");
   auto fieldData = field.GetData();
 
-  if (!fieldData.IsType<FieldHandle>())
-  {
-    ds.PrintSummary(std::cout);
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "The field data is of type "
-                 << vtkm::cont::TypeToString<decltype(fieldData)>()
-                 << ", but we expect type vtkm::cont::ArrayHandle<vtkm::Vec3f>");
-    VTKM_TEST_FAIL("No field with correct type found.");
-  }
+  FieldHandle fieldArray;
+  if (fieldData.IsType<FieldHandle>())
+    fieldArray = fieldData.Cast<FieldHandle>();
+  else
+    vtkm::cont::ArrayCopy(fieldData, fieldArray);
 
-  FieldHandle fieldArray = fieldData.Cast<FieldHandle>();
-  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  FieldType velocities(fieldArray);
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
   RK4Type rk4(eval, stepSize);
 
   for (int i = 0; i < 2; i++)
