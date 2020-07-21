@@ -35,9 +35,9 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Invoker.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/MaskIndices.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>

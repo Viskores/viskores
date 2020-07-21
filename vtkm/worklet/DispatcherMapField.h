@@ -10,13 +10,14 @@
 #ifndef vtk_m_worklet_Dispatcher_MapField_h
 #define vtk_m_worklet_Dispatcher_MapField_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+
+class WorkletMapField;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapField.
 ///

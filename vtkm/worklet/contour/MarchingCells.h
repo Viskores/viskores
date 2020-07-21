@@ -28,6 +28,7 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 
+#include <vtkm/worklet/WorkletReduceByKey.h>
 #include <vtkm/worklet/contour/CommonState.h>
 #include <vtkm/worklet/contour/MarchingCellTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>

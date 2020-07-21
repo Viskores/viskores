@@ -11,15 +11,14 @@
 #define vtk_m_worklet_DispatcherPointNeighborhood_h
 
 #include <vtkm/cont/DeviceAdapter.h>
-
-#include <vtkm/worklet/WorkletPointNeighborhood.h>
-
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+class WorkletNeighborhood;
+class WorkletPointNeighborhood;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletPointNeighborhood.
 ///

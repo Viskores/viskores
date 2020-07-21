@@ -20,6 +20,7 @@ namespace vtkm
 {
 namespace worklet
 {
+class WorkletCellNeighborhood;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletCellNeighborhood.
 ///

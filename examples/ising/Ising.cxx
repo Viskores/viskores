@@ -23,6 +23,7 @@
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View2D.h>
+#include <vtkm/worklet/WorkletCellNeighborhood.h>
 
 struct UpDown
 {

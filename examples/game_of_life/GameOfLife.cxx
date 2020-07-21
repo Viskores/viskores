@@ -17,7 +17,6 @@
 #include <iostream>
 #include <random>
 
-#include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -29,12 +28,8 @@
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-
-//Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
