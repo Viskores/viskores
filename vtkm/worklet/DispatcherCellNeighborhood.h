@@ -7,12 +7,12 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_DispatcherPointNeighborhood_h
-#define vtk_m_worklet_DispatcherPointNeighborhood_h
+#ifndef vtk_m_worklet_DispatcherCellNeighborhood_h
+#define vtk_m_worklet_DispatcherCellNeighborhood_h
 
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/worklet/WorkletPointNeighborhood.h>
+#include <vtkm/worklet/WorkletCellNeighborhood.h>
 
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
@@ -21,23 +21,23 @@ namespace vtkm
 namespace worklet
 {
 
-/// \brief Dispatcher for worklets that inherit from \c WorkletPointNeighborhood.
+/// \brief Dispatcher for worklets that inherit from \c WorkletCellNeighborhood.
 ///
 template <typename WorkletType>
-class DispatcherPointNeighborhood
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
+class DispatcherCellNeighborhood
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherCellNeighborhood<WorkletType>,
                                                    WorkletType,
                                                    vtkm::worklet::WorkletNeighborhood>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
+    vtkm::worklet::internal::DispatcherBase<DispatcherCellNeighborhood<WorkletType>,
                                             WorkletType,
                                             vtkm::worklet::WorkletNeighborhood>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
   template <typename... T>
-  VTKM_CONT DispatcherPointNeighborhood(T&&... args)
+  VTKM_CONT DispatcherCellNeighborhood(T&&... args)
     : Superclass(std::forward<T>(args)...)
   {
   }
@@ -58,7 +58,7 @@ public:
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
     const InputDomainType& inputDomain = invocation.GetInputDomain();
-    auto inputRange = SchedulingRange(inputDomain, vtkm::TopologyElementTagPoint{});
+    auto inputRange = SchedulingRange(inputDomain, vtkm::TopologyElementTagCell{});
 
     // This is pretty straightforward dispatch. Once we know the number
     // of invocations, the superclass can take care of the rest.
@@ -68,4 +68,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif //vtk_m_worklet_DispatcherPointNeighborhood_h
+#endif //vtk_m_worklet_DispatcherCellNeighborhood_h

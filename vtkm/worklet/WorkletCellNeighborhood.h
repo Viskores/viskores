@@ -7,15 +7,16 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_worklet_WorkletPointNeighborhood_h
-#define vtk_m_worklet_WorkletPointNeighborhood_h
+#ifndef vtk_m_worklet_WorkletCellNeighborhood_h
+#define vtk_m_worklet_WorkletCellNeighborhood_h
 
 /// \brief Worklet for volume algorithms that require a neighborhood
 ///
-/// WorkletPointNeighborhood executes on every point inside a volume providing
+/// WorkletCellNeighborhood executes on every point inside a volume providing
 /// access to the 3D neighborhood values. The neighborhood is always cubic in
 /// nature and is fixed at compile time.
-#include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
+
+#include <vtkm/exec/arg/ThreadIndicesCellNeighborhood.h>
 #include <vtkm/worklet/WorkletNeighborhood.h>
 
 namespace vtkm
@@ -24,13 +25,13 @@ namespace worklet
 {
 
 template <typename WorkletType>
-class DispatcherPointNeighborhood;
+class DispatcherCellNeighborhood;
 
-class WorkletPointNeighborhood : public WorkletNeighborhood
+class WorkletCellNeighborhood : public WorkletNeighborhood
 {
 public:
   template <typename Worklet>
-  using Dispatcher = vtkm::worklet::DispatcherPointNeighborhood<Worklet>;
+  using Dispatcher = vtkm::worklet::DispatcherCellNeighborhood<Worklet>;
 
   /// Point neighborhood worklets use the related thread indices class.
   ///
@@ -39,7 +40,7 @@ public:
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             vtkm::IdComponent Dimension>
-  VTKM_EXEC vtkm::exec::arg::ThreadIndicesPointNeighborhood GetThreadIndices(
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesCellNeighborhood GetThreadIndices(
     vtkm::Id threadIndex,
     const OutToInArrayType& outToIn,
     const VisitArrayType& visit,
@@ -50,7 +51,7 @@ public:
     ) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(
       threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, inputDomain);
   }
 
@@ -77,7 +78,7 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesPointNeighborhood> GetThreadIndices(
+  VTKM_EXEC EnableFnWhen<S && M, vtkm::exec::arg::ThreadIndicesCellNeighborhood> GetThreadIndices(
     vtkm::Id threadIndex1D,
     const vtkm::Id3& threadIndex3D,
     const OutToInArrayType& vtkmNotUsed(outToIn),
@@ -85,7 +86,7 @@ public:
     const ThreadToOutArrayType& vtkmNotUsed(threadToOut),
     const InputDomainType& connectivity) const
   {
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(
       threadIndex3D, threadIndex1D, connectivity);
   }
 
@@ -96,7 +97,7 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesPointNeighborhood>
+  VTKM_EXEC EnableFnWhen<!(S && M), vtkm::exec::arg::ThreadIndicesCellNeighborhood>
   GetThreadIndices(vtkm::Id threadIndex1D,
                    const vtkm::Id3& threadIndex3D,
                    const OutToInArrayType& outToIn,
@@ -105,12 +106,12 @@ public:
                    const InputDomainType& connectivity) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex1D);
-    return vtkm::exec::arg::ThreadIndicesPointNeighborhood(threadIndex3D,
-                                                           threadIndex1D,
-                                                           outToIn.Get(outIndex),
-                                                           visit.Get(outIndex),
-                                                           outIndex,
-                                                           connectivity);
+    return vtkm::exec::arg::ThreadIndicesCellNeighborhood(threadIndex3D,
+                                                          threadIndex1D,
+                                                          outToIn.Get(outIndex),
+                                                          visit.Get(outIndex),
+                                                          outIndex,
+                                                          connectivity);
   }
 };
 }
