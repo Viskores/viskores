@@ -86,6 +86,7 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletNeighborhood.h
   WorkletCellNeighborhood.h
   WorkletPointNeighborhood.h
   WorkletReduceByKey.h
