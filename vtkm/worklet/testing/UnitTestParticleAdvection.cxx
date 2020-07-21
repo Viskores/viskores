@@ -969,7 +969,6 @@ void TestParticleAdvection()
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();
 
-  /*
   std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
 
   //Fusion test.
@@ -998,7 +997,6 @@ void TestParticleAdvection()
   vtkm::FloatDefault fishStep = 0.001f;
   std::string fishFile = basePath + "/rectilinear/fishtank.vtk";
   TestParticleAdvectionFile(fishFile, fishPts, fishStep, 100, fishEndPts);
-  */
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])
