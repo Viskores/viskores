@@ -11,6 +11,8 @@
 #define vtk_m_Particle_h
 
 #include <vtkm/Bitset.h>
+#include <vtkm/VecVariable.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
 {
@@ -68,6 +70,12 @@ public:
   VTKM_EXEC_CONT
   Particle() {}
 
+  VTKM_EXEC_CONT virtual ~Particle() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
   VTKM_EXEC_CONT
   Particle(const vtkm::Vec3f& p,
            const vtkm::Id& id,
@@ -92,7 +100,20 @@ public:
   {
   }
 
-  vtkm::Particle& operator=(const vtkm::Particle& p) = default;
+  vtkm::Particle& operator=(const vtkm::Particle&) = default;
+
+  // The basic particle is only meant to be advected in a velocity
+  // field. In that case it is safe to assume that the velocity value
+  // will always be stored in the first location of vectors
+  VTKM_EXEC_CONT
+  virtual vtkm::Vec3f Next(const vtkm::VecVariable<vtkm::Vec3f, 2>&, const vtkm::FloatDefault&) = 0;
+
+  // The basic particle is only meant to be advected in a velocity
+  // field. In that case it is safe to assume that the velocity value
+  // will always be stored in the first location of vectors
+  VTKM_EXEC_CONT
+  virtual vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>&,
+                               const vtkm::FloatDefault&) = 0;
 
   vtkm::Vec3f Pos;
   vtkm::Id ID = -1;
@@ -100,6 +121,141 @@ public:
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
 };
-}
+
+class Massless : public vtkm::Particle
+{
+public:
+  VTKM_EXEC_CONT
+  Massless() {}
+
+  VTKM_EXEC_CONT ~Massless() noexcept override
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
+
+  VTKM_EXEC_CONT
+  Massless(const vtkm::Vec3f& p,
+           const vtkm::Id& id,
+           const vtkm::Id& numSteps = 0,
+           const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
+           const vtkm::FloatDefault& time = 0)
+    : Particle(p, id, numSteps, status, time)
+  {
+  }
+
+  /*VTKM_EXEC_CONT
+  Massless(const vtkm::Massless& p)
+    : Particle(p)
+  {
+  }*/
+
+  VTKM_EXEC_CONT
+  vtkm::Vec3f Next(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
+                   const vtkm::FloatDefault& length) override
+  {
+    VTKM_ASSERT(vectors.GetNumberOfComponents() > 0);
+    return this->Pos + length * vectors[0];
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
+                       const vtkm::FloatDefault& vtkmNotUsed(length)) override
+  {
+    // Velocity is evaluated from the Velocity field
+    // and is not influenced by the particle
+    VTKM_ASSERT(vectors.GetNumberOfComponents() > 0);
+    return vectors[0];
+  }
+};
+
+class Electron : public vtkm::Particle
+{
+public:
+  VTKM_EXEC_CONT
+  Electron() {}
+
+  VTKM_EXEC_CONT
+  Electron(const vtkm::Vec3f& position,
+           const vtkm::Id& id,
+           const vtkm::FloatDefault& mass,
+           const vtkm::FloatDefault& charge,
+           const vtkm::FloatDefault& weighting,
+           const vtkm::Vec3f& momentum,
+           const vtkm::Id& numSteps = 0,
+           const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
+           const vtkm::FloatDefault& time = 0)
+    : Particle(position, id, numSteps, status, time)
+    , Mass(mass)
+    , Charge(charge)
+    , Weighting(weighting)
+    , Momentum(momentum)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::FloatDefault Beta(vtkm::Vec3f momentum) const
+  {
+    return static_cast<vtkm::FloatDefault>(vtkm::Magnitude(momentum / this->Mass) /
+                                           vtkm::Pow(SPEED_OF_LIGHT, 2));
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Vec3f Next(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
+                   const vtkm::FloatDefault& length) override
+  {
+    // TODO: implement Lorentz force calculation
+    return this->Pos + length * this->Velocity(vectors, length);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
+                       const vtkm::FloatDefault& length) override
+  {
+    VTKM_ASSERT(vectors.GetNumberOfComponents() == 2);
+
+    // Suppress unused warning
+    (void)this->Weighting;
+
+    vtkm::Vec3f velocity;
+    // Particle has a charge and a mass
+    // Velocity updated using Lorentz force
+    // Return velocity of the particle
+    vtkm::Vec3f eField = vectors[0];
+    vtkm::Vec3f bField = vectors[1];
+    const vtkm::FloatDefault QoM = this->Charge / this->Mass;
+    const vtkm::FloatDefault half = 0.5;
+    const vtkm::Vec3f mom_ = this->Momentum + (half * this->Charge * eField * length);
+
+    //TODO : Calculate Gamma
+    vtkm::Vec3f gamma_reci = vtkm::Sqrt(1 - this->Beta(mom_));
+    // gamma(mom_, mass) -> needs velocity calculation
+    const vtkm::Vec3f t = half * QoM * bField * gamma_reci * length;
+    const vtkm::Vec3f s = 2.0f * t * (1 / 1 + vtkm::Magnitude(t));
+
+    const vtkm::Vec3f mom_pr = mom_ + vtkm::Cross(mom_, t);
+    const vtkm::Vec3f mom_pl = mom_ + vtkm::Cross(mom_pr, s);
+
+    const vtkm::Vec3f mom_new = mom_pl + 0.5 * this->Charge * eField * length;
+
+    //TODO : this is a const method, figure a better way to update momentum
+
+    this->Momentum = mom_new;
+    velocity = mom_new / this->Mass;
+
+    return velocity;
+  }
+
+private:
+  vtkm::FloatDefault Mass;
+  vtkm::FloatDefault Charge;
+  vtkm::FloatDefault Weighting;
+  vtkm::Vec3f Momentum;
+  constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
+    static_cast<vtkm::FloatDefault>(2.99792458e8);
+};
+
+} //namespace vtkm
 
 #endif // vtk_m_Particle_h
