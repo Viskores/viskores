@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_Invoker_h
 #define vtk_m_cont_Invoker_h
 
+#include <vtkm/worklet/DispatcherCellNeighborhood.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherPointNeighborhood.h>
