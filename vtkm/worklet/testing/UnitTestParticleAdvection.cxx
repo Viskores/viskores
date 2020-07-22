@@ -929,24 +929,7 @@ void TestParticleAdvectionFile(const std::string& fname,
   if (fieldData.IsType<FieldHandle>())
     fieldArray = fieldData.Cast<FieldHandle>();
   else
-  {
-    using VecFloat = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
-    using VecDouble = vtkm::cont::ArrayHandle<vtkm::Vec3f_64>;
-    //vtkm::Vec3f is a Float32, convert to Float64
-    if (fieldData.IsType<VecFloat>())
-    {
-      auto tmp = fieldData.Cast<VecFloat>();
-      vtkm::cont::ArrayCopy(tmp, fieldArray);
-    }
-    //vtkm::Vec3f is a Float64, convert to Float32
-    else if (fieldData.IsType<VecDouble>())
-    {
-      auto tmp = fieldData.Cast<VecDouble>();
-      vtkm::cont::ArrayCopy(tmp, fieldArray);
-    }
-    else
-      VTKM_TEST_ASSERT(false, "Data set missing a 3D vector field named 'vec'");
-  }
+    vtkm::cont::ArrayCopy(fieldData.ResetTypes<vtkm::TypeListFieldVec3>(), fieldArray);
 
   FieldType velocities(fieldArray);
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
