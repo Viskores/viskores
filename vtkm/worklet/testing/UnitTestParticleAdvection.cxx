@@ -917,15 +917,36 @@ void TestParticleAdvectionFile(const std::string& fname,
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  VTKM_TEST_ASSERT(ds.HasField("vec"));
+  VTKM_TEST_ASSERT(ds.HasField("vec"), "Data set missing a field named 'vec'");
   vtkm::cont::Field& field = ds.GetField("vec");
   auto fieldData = field.GetData();
 
   FieldHandle fieldArray;
+
+  // Get fieldData (from file) into an ArrayHandle of type vtkm::Vec3f
+  // If types match, do a simple cast.
+  // If not, need to copy it into the appropriate type.
   if (fieldData.IsType<FieldHandle>())
     fieldArray = fieldData.Cast<FieldHandle>();
   else
-    vtkm::cont::ArrayCopy(fieldData, fieldArray);
+  {
+    using VecFloat = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
+    using VecDouble = vtkm::cont::ArrayHandle<vtkm::Vec3f_64>;
+    //vtkm::Vec3f is a Float32, convert to Float64
+    if (fieldData.IsType<VecFloat>())
+    {
+      auto tmp = fieldData.Cast<VecFloat>();
+      vtkm::cont::ArrayCopy(tmp, fieldArray);
+    }
+    //vtkm::Vec3f is a Float64, convert to Float32
+    else if (fieldData.IsType<VecDouble>())
+    {
+      auto tmp = fieldData.Cast<VecDouble>();
+      vtkm::cont::ArrayCopy(tmp, fieldArray);
+    }
+    else
+      VTKM_TEST_ASSERT(false, "Data set missing a 3D vector field named 'vec'");
+  }
 
   FieldType velocities(fieldArray);
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
