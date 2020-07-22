@@ -12,14 +12,14 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/worklet/WorkletCellNeighborhood.h>
-
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+class WorkletNeighborhood;
+class WorkletCellNeighborhood;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletCellNeighborhood.
 ///

@@ -8,11 +8,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/MaskIndices.h>
 #include <vtkm/worklet/ScatterUniform.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>

@@ -16,15 +16,13 @@
 /// access to the 3D neighborhood values. The neighborhood is always cubic in
 /// nature and is fixed at compile time.
 #include <vtkm/exec/arg/ThreadIndicesPointNeighborhood.h>
+#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/WorkletNeighborhood.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-
-template <typename WorkletType>
-class DispatcherPointNeighborhood;
 
 class WorkletPointNeighborhood : public WorkletNeighborhood
 {

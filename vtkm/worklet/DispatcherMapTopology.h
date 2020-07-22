@@ -12,13 +12,18 @@
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+namespace detail
+{
+struct WorkletMapTopologyBase;
+}
+class WorkletVisitCellsWithPoints;
+class WorkletVisitPointsWithCells;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapTopology.
 ///

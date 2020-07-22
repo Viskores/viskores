@@ -11,9 +11,8 @@
 #include <vtkm/rendering/raytracing/SphereExtractor.h>
 
 #include <vtkm/cont/Algorithm.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {

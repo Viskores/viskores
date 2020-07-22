@@ -14,8 +14,8 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/DescriptiveStatistics.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
 
 namespace vtkm
 {

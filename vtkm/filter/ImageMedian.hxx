@@ -12,6 +12,7 @@
 #define vtk_m_filter_ImageMedian_hxx
 
 #include <vtkm/Swap.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 namespace vtkm
 {

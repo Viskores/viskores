@@ -17,6 +17,7 @@
 /// nature and is fixed at compile time.
 
 #include <vtkm/exec/arg/ThreadIndicesCellNeighborhood.h>
+#include <vtkm/worklet/DispatcherCellNeighborhood.h>
 #include <vtkm/worklet/WorkletNeighborhood.h>
 
 namespace vtkm
