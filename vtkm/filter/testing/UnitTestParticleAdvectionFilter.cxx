@@ -37,11 +37,11 @@ void TestBasic()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  std::vector<vtkm::Particle> seeds(3);
-  seeds[0] = vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
-  seeds[1] = vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
-  seeds[2] = vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
+  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
+  std::vector<vtkm::Massless> seeds(3);
+  seeds[0] = vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
+  seeds[1] = vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
+  seeds[2] = vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
 
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
@@ -88,9 +88,9 @@ void TestFile(const std::string& fname,
   }
   vtkm::Id numPoints = static_cast<vtkm::Id>(pts.size());
 
-  std::vector<vtkm::Particle> seeds;
+  std::vector<vtkm::Massless> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
-    seeds.push_back(vtkm::Particle(pts[static_cast<std::size_t>(i)], i));
+    seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
   vtkm::filter::ParticleAdvection particleAdvection;

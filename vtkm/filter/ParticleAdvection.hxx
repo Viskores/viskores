@@ -34,7 +34,7 @@ inline VTKM_CONT ParticleAdvection::ParticleAdvection()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void ParticleAdvection::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
+inline VTKM_CONT void ParticleAdvection::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds)
 {
   this->Seeds = seeds;
 }
@@ -63,15 +63,16 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleAdvection::DoExecute(
   }
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   GridEvalType eval(coords, cells, field);
   RK4Type rk4(eval, this->StepSize);
 
-  vtkm::worklet::ParticleAdvectionResult res;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
 
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 
@@ -79,7 +80,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleAdvection::DoExecute(
 
   //Copy particles to coordinate array
   vtkm::cont::ArrayHandle<vtkm::Vec3f> outPos;
-  vtkm::cont::ParticleArrayCopy(res.Particles, outPos);
+  vtkm::cont::ParticleArrayCopy<vtkm::Massless>(res.Particles, outPos);
 
   vtkm::cont::CoordinateSystem outCoords("coordinates", outPos);
   outData.AddCoordinateSystem(outCoords);

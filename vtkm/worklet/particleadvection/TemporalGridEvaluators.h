@@ -21,13 +21,13 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldArrayType>
+template <typename DeviceAdapter, typename FieldType>
 class ExecutionTemporalGridEvaluator
 {
 private:
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldArrayType>;
+  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using ExecutionGridEvaluator =
-    vtkm::worklet::particleadvection::ExecutionGridEvaluator<DeviceAdapter, FieldArrayType>;
+    vtkm::worklet::particleadvection::ExecutionGridEvaluator<DeviceAdapter, FieldType>;
 
 public:
   VTKM_CONT
@@ -70,9 +70,9 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& particle,
                                          vtkm::FloatDefault time,
-                                         Point& out) const
+                                         vtkm::VecVariable<Point, 2>& out) const
   {
     // Validate time is in bounds for the current two slices.
     GridEvaluatorStatus status;
@@ -84,17 +84,21 @@ public:
       return status;
     }
 
-    Point one, two;
-    status = this->EvaluatorOne.Evaluate(pos, one);
+    vtkm::VecVariable<Point, 2> e1, e2;
+    status = this->EvaluatorOne.Evaluate(particle, e1);
     if (status.CheckFail())
       return status;
-    status = this->EvaluatorTwo.Evaluate(pos, two);
+    status = this->EvaluatorTwo.Evaluate(particle, e2);
     if (status.CheckFail())
       return status;
 
     // LERP between the two values of calculated fields to obtain the new value
     vtkm::FloatDefault proportion = (time - this->TimeOne) / this->TimeDiff;
-    out = vtkm::Lerp(one, two, proportion);
+    VTKM_ASSERT(e1.GetNumberOfComponents() != 0 &&
+                e1.GetNumberOfComponents() == e2.GetNumberOfComponents());
+    out = vtkm::VecVariable<Point, 2>{};
+    for (vtkm::IdComponent index = 0; index < e1.GetNumberOfComponents(); ++index)
+      out.Append(vtkm::Lerp(e1[index], e2[index], proportion));
 
     status.SetOk();
     return status;
@@ -108,11 +112,11 @@ private:
   vtkm::FloatDefault TimeDiff;
 };
 
-template <typename FieldArrayType>
+template <typename FieldType>
 class TemporalGridEvaluator : public vtkm::cont::ExecutionObjectBase
 {
 private:
-  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldArrayType>;
+  using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
 
 public:
   VTKM_CONT TemporalGridEvaluator() = default;
@@ -130,11 +134,11 @@ public:
 
   VTKM_CONT TemporalGridEvaluator(const vtkm::cont::CoordinateSystem& coordinatesOne,
                                   const vtkm::cont::DynamicCellSet& cellsetOne,
-                                  const FieldArrayType& fieldOne,
+                                  const FieldType& fieldOne,
                                   const vtkm::FloatDefault timeOne,
                                   const vtkm::cont::CoordinateSystem& coordinatesTwo,
                                   const vtkm::cont::DynamicCellSet& cellsetTwo,
-                                  const FieldArrayType& fieldTwo,
+                                  const FieldType& fieldTwo,
                                   const vtkm::FloatDefault timeTwo)
     : EvaluatorOne(GridEvaluator(coordinatesOne, cellsetOne, fieldOne))
     , EvaluatorTwo(GridEvaluator(coordinatesTwo, cellsetTwo, fieldTwo))
@@ -144,11 +148,11 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ExecutionTemporalGridEvaluator<DeviceAdapter, FieldArrayType> PrepareForExecution(
+  VTKM_CONT ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType> PrepareForExecution(
     DeviceAdapter,
     vtkm::cont::Token& token) const
   {
-    return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldArrayType>(
+    return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType>(
       this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, token);
   }
 

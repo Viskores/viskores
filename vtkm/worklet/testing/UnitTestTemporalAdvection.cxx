@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <typeinfo>
+#include <vtkm/VecVariable.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
@@ -17,6 +18,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
@@ -48,18 +50,21 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename EvaluatorType>
-  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
+  VTKM_EXEC void operator()(vtkm::Massless& pointIn,
                             const EvaluatorType& evaluator,
                             vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
-    status = evaluator.Evaluate(pointIn.Pos, 0.5f, pointOut);
+    vtkm::VecVariable<vtkm::Vec3f, 2> values;
+    status = evaluator.Evaluate(pointIn.Pos, 0.5f, values);
+    if (values.GetNumberOfComponents() > 0)
+      pointOut = values[0];
   }
 };
 
 template <typename EvalType>
 void ValidateEvaluator(const EvalType& eval,
-                       const vtkm::cont::ArrayHandle<vtkm::Particle>& pointIns,
+                       const vtkm::cont::ArrayHandle<vtkm::Massless>& pointIns,
                        const vtkm::cont::ArrayHandle<vtkm::Vec3f>& validity,
                        const std::string& msg)
 {
@@ -114,13 +119,13 @@ vtkm::Vec3f RandomPt(const vtkm::Bounds& bounds)
 
 void GeneratePoints(const vtkm::Id numOfEntries,
                     const vtkm::Bounds& bounds,
-                    vtkm::cont::ArrayHandle<vtkm::Particle>& pointIns)
+                    vtkm::cont::ArrayHandle<vtkm::Massless>& pointIns)
 {
   pointIns.Allocate(numOfEntries);
   auto writePortal = pointIns.WritePortal();
   for (vtkm::Id index = 0; index < numOfEntries; index++)
   {
-    vtkm::Particle particle(RandomPt(bounds), index);
+    vtkm::Massless particle(RandomPt(bounds), index);
     writePortal.Set(index, particle);
   }
 }
@@ -144,8 +149,9 @@ void TestTemporalEvaluators()
   using ScalarType = vtkm::FloatDefault;
   using PointType = vtkm::Vec<ScalarType, 3>;
   using FieldHandle = vtkm::cont::ArrayHandle<PointType>;
-  using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
-  using TemporalEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using EvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+  using TemporalEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
 
   // Create Datasets
   vtkm::Id3 dims(5, 5, 5);
@@ -159,14 +165,16 @@ void TestTemporalEvaluators()
   vtkm::cont::ArrayHandle<PointType> alongX, alongZ;
   CreateConstantVectorField(125, X, alongX);
   CreateConstantVectorField(125, Z, alongZ);
+  FieldType velocityX(alongX);
+  FieldType velocityZ(alongZ);
 
   // Send them to test
-  EvalType evalOne(sliceOne.GetCoordinateSystem(), sliceOne.GetCellSet(), alongX);
-  EvalType evalTwo(sliceTwo.GetCoordinateSystem(), sliceTwo.GetCellSet(), alongZ);
+  EvalType evalOne(sliceOne.GetCoordinateSystem(), sliceOne.GetCellSet(), velocityX);
+  EvalType evalTwo(sliceTwo.GetCoordinateSystem(), sliceTwo.GetCellSet(), velocityZ);
 
   // Test data : populate with meaningful values
   vtkm::Id numValues = 10;
-  vtkm::cont::ArrayHandle<vtkm::Particle> pointIns;
+  vtkm::cont::ArrayHandle<vtkm::Massless> pointIns;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> validity;
   GeneratePoints(numValues, bounds, pointIns);
   GenerateValidity(numValues, validity, X, Z);

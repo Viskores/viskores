@@ -59,12 +59,12 @@ public:
 
   public:
     VTKM_EXEC
-    virtual IntegratorStatus Step(const vtkm::Vec3f& inpos,
+    virtual IntegratorStatus Step(vtkm::Particle* inpos,
                                   vtkm::FloatDefault& time,
                                   vtkm::Vec3f& outpos) const = 0;
 
     VTKM_EXEC
-    virtual IntegratorStatus SmallStep(vtkm::Vec3f& inpos,
+    virtual IntegratorStatus SmallStep(vtkm::Particle* inpos,
                                        vtkm::FloatDefault& time,
                                        vtkm::Vec3f& outpos) const = 0;
 
@@ -111,20 +111,20 @@ protected:
 
   public:
     VTKM_EXEC
-    IntegratorStatus Step(const vtkm::Vec3f& inpos,
+    IntegratorStatus Step(vtkm::Particle* particle,
                           vtkm::FloatDefault& time,
                           vtkm::Vec3f& outpos) const override
     {
       // If particle is out of either spatial or temporal boundary to begin with,
       // then return the corresponding status.
       IntegratorStatus status;
-      if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
+      if (!this->Evaluator.IsWithinSpatialBoundary(particle->Pos))
       {
         status.SetFail();
         status.SetSpatialBounds();
         return status;
       }
-      if (!this->Evaluator.IsWithinTemporalBoundary(time))
+      if (!this->Evaluator.IsWithinTemporalBoundary(particle->Time))
       {
         status.SetFail();
         status.SetTemporalBounds();
@@ -132,31 +132,31 @@ protected:
       }
 
       vtkm::Vec3f velocity;
-      status = CheckStep(inpos, this->StepLength, time, velocity);
+      status = CheckStep(particle, this->StepLength, velocity);
       if (status.CheckOk())
       {
-        outpos = inpos + StepLength * velocity;
-        time += StepLength;
+        outpos = particle->Pos + this->StepLength * velocity;
+        time += this->StepLength;
       }
       else
-        outpos = inpos;
+        outpos = particle->Pos;
 
       return status;
     }
 
     VTKM_EXEC
-    IntegratorStatus SmallStep(vtkm::Vec3f& inpos,
+    IntegratorStatus SmallStep(vtkm::Particle* particle,
                                vtkm::FloatDefault& time,
                                vtkm::Vec3f& outpos) const override
     {
-      if (!this->Evaluator.IsWithinSpatialBoundary(inpos))
+      if (!this->Evaluator.IsWithinSpatialBoundary(particle->Pos))
       {
-        outpos = inpos;
+        outpos = particle->Pos;
         return IntegratorStatus(false, true, false);
       }
-      if (!this->Evaluator.IsWithinTemporalBoundary(time))
+      if (!this->Evaluator.IsWithinTemporalBoundary(particle->Time))
       {
-        outpos = inpos;
+        outpos = particle->Pos;
         return IntegratorStatus(false, false, true);
       }
 
@@ -170,14 +170,14 @@ protected:
       //The binary search will be between {0, this->StepLength}
       vtkm::FloatDefault stepRange[2] = { 0, this->StepLength };
 
-      vtkm::Vec3f currPos(inpos), currVel;
-      auto evalStatus = this->Evaluator.Evaluate(currPos, time, currVel);
+      vtkm::Vec3f currPos(particle->Pos), currVelocity;
+      vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
+      auto evalStatus = this->Evaluator.Evaluate(currPos, particle->Time, currValue);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
 
       const vtkm::FloatDefault eps = vtkm::Epsilon<vtkm::FloatDefault>() * 10;
       vtkm::FloatDefault div = 1;
-      vtkm::Vec3f tmp;
       while ((stepRange[1] - stepRange[0]) > eps)
       {
         //Try a step midway between stepRange[0] and stepRange[1]
@@ -185,13 +185,13 @@ protected:
         vtkm::FloatDefault stepCurr = stepRange[0] + (this->StepLength / div);
 
         //See if we can step by stepCurr.
-        IntegratorStatus status = this->CheckStep(inpos, stepCurr, time, currVel);
+        IntegratorStatus status = this->CheckStep(particle, stepCurr, currVelocity);
 
         if (status.CheckOk()) //Integration step succedded.
         {
           //See if this point is in/out.
-          auto newPos = inpos + stepCurr * currVel;
-          evalStatus = this->Evaluator.Evaluate(newPos, time + stepCurr, tmp);
+          auto newPos = particle->Pos + stepCurr * currVelocity;
+          evalStatus = this->Evaluator.Evaluate(newPos, particle->Time + stepCurr, tmp);
           if (evalStatus.CheckOk())
           {
             //Point still in. Update currPos and set range to {stepCurr, stepRange[1]}
@@ -211,22 +211,23 @@ protected:
           stepRange[1] = stepCurr;
         }
       }
-      evalStatus = this->Evaluator.Evaluate(currPos, time + stepRange[0], currVel);
+      evalStatus = this->Evaluator.Evaluate(currPos, particle->Time + stepRange[0], currValue);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
       //Update the position and time.
-      outpos = currPos + stepRange[1] * currVel;
+      outpos = currPos + stepRange[1] * particle->Velocity(currValue, stepRange[1]);
       time += stepRange[1];
-      return IntegratorStatus(true, true, !this->Evaluator.IsWithinTemporalBoundary(time));
+
+      return IntegratorStatus(
+        true, true, !this->Evaluator.IsWithinTemporalBoundary(particle->Time));
     }
 
     VTKM_EXEC
-    IntegratorStatus CheckStep(const vtkm::Vec3f& inpos,
+    IntegratorStatus CheckStep(vtkm::Particle* particle,
                                vtkm::FloatDefault stepLength,
-                               vtkm::FloatDefault time,
                                vtkm::Vec3f& velocity) const
     {
-      return static_cast<const DerivedType*>(this)->CheckStep(inpos, stepLength, time, velocity);
+      return static_cast<const DerivedType*>(this)->CheckStep(particle, stepLength, velocity);
     }
 
   protected:
@@ -295,11 +296,12 @@ public:
     }
 
     VTKM_EXEC
-    IntegratorStatus CheckStep(const vtkm::Vec3f& inpos,
+    IntegratorStatus CheckStep(vtkm::Particle* particle,
                                vtkm::FloatDefault stepLength,
-                               vtkm::FloatDefault time,
                                vtkm::Vec3f& velocity) const
     {
+      auto time = particle->Time;
+      auto inpos = particle->Pos;
       vtkm::FloatDefault boundary = this->Evaluator.GetTemporalBoundary(static_cast<vtkm::Id>(1));
       if ((time + stepLength + vtkm::Epsilon<vtkm::FloatDefault>() - boundary) > 0.0)
         stepLength = boundary - time;
@@ -314,24 +316,33 @@ public:
       vtkm::FloatDefault var2 = time + var1;
       vtkm::FloatDefault var3 = time + stepLength;
 
-      vtkm::Vec3f k1 = vtkm::TypeTraits<vtkm::Vec3f>::ZeroInitialization();
-      vtkm::Vec3f k2 = k1, k3 = k1, k4 = k1;
+      vtkm::Vec3f v1 = vtkm::TypeTraits<vtkm::Vec3f>::ZeroInitialization();
+      vtkm::Vec3f v2 = v1, v3 = v1, v4 = v1;
+      vtkm::VecVariable<vtkm::Vec3f, 2> k1, k2, k3, k4;
 
       GridEvaluatorStatus evalStatus;
+
       evalStatus = this->Evaluator.Evaluate(inpos, time, k1);
       if (evalStatus.CheckFail())
         return IntegratorStatus(evalStatus);
-      evalStatus = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
-      if (evalStatus.CheckFail())
-        return IntegratorStatus(evalStatus);
-      evalStatus = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
-      if (evalStatus.CheckFail())
-        return IntegratorStatus(evalStatus);
-      evalStatus = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
-      if (evalStatus.CheckFail())
-        return IntegratorStatus(evalStatus);
+      v1 = particle->Velocity(k1, stepLength);
 
-      velocity = (k1 + 2 * k2 + 2 * k3 + k4) / static_cast<vtkm::FloatDefault>(6);
+      evalStatus = this->Evaluator.Evaluate(inpos + var1 * v1, var2, k2);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      v2 = particle->Velocity(k2, stepLength);
+
+      evalStatus = this->Evaluator.Evaluate(inpos + var1 * v2, var2, k3);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      v3 = particle->Velocity(k3, stepLength);
+
+      evalStatus = this->Evaluator.Evaluate(inpos + stepLength * v3, var3, k4);
+      if (evalStatus.CheckFail())
+        return IntegratorStatus(evalStatus);
+      v4 = particle->Velocity(k4, stepLength);
+
+      velocity = (v1 + 2 * v2 + 2 * v3 + v4) / static_cast<vtkm::FloatDefault>(6);
       return IntegratorStatus(true, false, evalStatus.CheckTemporalBounds());
     }
   };
@@ -391,12 +402,15 @@ public:
     }
 
     VTKM_EXEC
-    IntegratorStatus CheckStep(const vtkm::Vec3f& inpos,
-                               vtkm::FloatDefault vtkmNotUsed(stepLength),
-                               vtkm::FloatDefault time,
+    IntegratorStatus CheckStep(vtkm::Particle* particle,
+                               vtkm::FloatDefault stepLength,
                                vtkm::Vec3f& velocity) const
     {
-      GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, velocity);
+      auto time = particle->Time;
+      auto inpos = particle->Pos;
+      vtkm::VecVariable<vtkm::Vec3f, 2> vectors;
+      GridEvaluatorStatus status = this->Evaluator.Evaluate(inpos, time, vectors);
+      velocity = particle->Velocity(vectors, stepLength);
       return IntegratorStatus(status);
     }
   };

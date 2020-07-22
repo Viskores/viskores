@@ -57,11 +57,11 @@ int main(int argc, char** argv)
 
   //create seeds randomly placed withing the bounding box of the data.
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  std::vector<vtkm::Particle> seeds;
+  std::vector<vtkm::Massless> seeds;
 
   for (vtkm::Id i = 0; i < numSeeds; i++)
   {
-    vtkm::Particle p;
+    vtkm::Massless p;
     vtkm::FloatDefault rx = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault ry = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;
     vtkm::FloatDefault rz = (vtkm::FloatDefault)rand() / (vtkm::FloatDefault)RAND_MAX;

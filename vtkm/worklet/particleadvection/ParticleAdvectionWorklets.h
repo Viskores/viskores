@@ -49,9 +49,9 @@ public:
                             IntegralCurveType& integralCurve,
                             const vtkm::Id& maxSteps) const
   {
-    vtkm::Particle particle = integralCurve.GetParticle(idx);
+    auto particle = integralCurve.GetParticle(idx);
 
-    vtkm::Vec3f currPos = particle.Pos;
+    //vtkm::Vec3f currPos = particle.Pos;
     vtkm::FloatDefault time = particle.Time;
     bool tookAnySteps = false;
 
@@ -64,25 +64,24 @@ public:
     do
     {
       vtkm::Vec3f outpos;
-      auto status = integrator->Step(currPos, time, outpos);
+      auto status = integrator->Step(&particle, time, outpos);
       if (status.CheckOk())
       {
         integralCurve.StepUpdate(idx, time, outpos);
+        particle.Pos = outpos;
         tookAnySteps = true;
-        currPos = outpos;
       }
 
       //We can't take a step inside spatial boundary.
       //Try and take a step just past the boundary.
       else if (status.CheckSpatialBounds())
       {
-        IntegratorStatus status2 = integrator->SmallStep(currPos, time, outpos);
+        IntegratorStatus status2 = integrator->SmallStep(&particle, time, outpos);
         if (status2.CheckOk())
         {
           integralCurve.StepUpdate(idx, time, outpos);
+          particle.Pos = outpos;
           tookAnySteps = true;
-          currPos = outpos;
-
           //we took a step, so use this status to consider below.
           status = status2;
         }
@@ -90,7 +89,6 @@ public:
           status =
             IntegratorStatus(true, status2.CheckSpatialBounds(), status2.CheckTemporalBounds());
       }
-
       integralCurve.StatusUpdate(idx, status, maxSteps);
 
     } while (integralCurve.CanContinue(idx));
@@ -101,7 +99,7 @@ public:
 };
 
 
-template <typename IntegratorType>
+template <typename IntegratorType, typename ParticleType>
 class ParticleAdvectionWorklet
 {
 public:
@@ -110,14 +108,14 @@ public:
   ~ParticleAdvectionWorklet() {}
 
   void Run(const IntegratorType& integrator,
-           vtkm::cont::ArrayHandle<vtkm::Particle>& particles,
+           vtkm::cont::ArrayHandle<ParticleType>& particles,
            vtkm::Id& MaxSteps)
   {
 
     using ParticleAdvectWorkletType = vtkm::worklet::particleadvection::ParticleAdvectWorklet;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles;
+    using ParticleArrayType = vtkm::worklet::particleadvection::Particles<ParticleType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(particles.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -130,7 +128,7 @@ public:
     (void)stack;
 #endif // VTKM_CUDA
 
-    ParticleType particlesObj(particles, MaxSteps);
+    ParticleArrayType particlesObj(particles, MaxSteps);
 
     //Invoke particle advection worklet
     ParticleWorkletDispatchType particleWorkletDispatch;
@@ -174,13 +172,13 @@ public:
 } // namespace detail
 
 
-template <typename IntegratorType>
+template <typename IntegratorType, typename ParticleType>
 class StreamlineWorklet
 {
 public:
   template <typename PointStorage, typename PointStorage2>
   void Run(const IntegratorType& it,
-           vtkm::cont::ArrayHandle<vtkm::Particle, PointStorage>& particles,
+           vtkm::cont::ArrayHandle<ParticleType, PointStorage>& particles,
            vtkm::Id& MaxSteps,
            vtkm::cont::ArrayHandle<vtkm::Vec3f, PointStorage2>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines)
@@ -188,7 +186,8 @@ public:
 
     using ParticleWorkletDispatchType = typename vtkm::worklet::DispatcherMapField<
       vtkm::worklet::particleadvection::ParticleAdvectWorklet>;
-    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles;
+    using StreamlineArrayType =
+      vtkm::worklet::particleadvection::StateRecordingParticles<ParticleType>;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
 
@@ -205,7 +204,7 @@ public:
 #endif // VTKM_CUDA
 
     //Run streamline worklet
-    StreamlineType streamlines(particles, MaxSteps);
+    StreamlineArrayType streamlines(particles, MaxSteps);
     ParticleWorkletDispatchType particleWorkletDispatch;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> maxSteps(MaxSteps, numSeeds);
     particleWorkletDispatch.Invoke(idxArray, it, streamlines, maxSteps);
