@@ -30,6 +30,8 @@
 
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/TryExecute.h>
+
+//Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
