@@ -360,12 +360,6 @@ private:
         }
 
         {
-          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = { vector0, vector1, vector2 };
-          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.ReadPortal());
-        }
-
-        {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
             vtkm::cont::make_ArrayHandleSOA<Vec3>({ vector0, vector1, vector2 });
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
@@ -381,7 +375,7 @@ private:
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
-            { vector0.data(), vector1.data(), vector2.data() }, ARRAY_SIZE);
+            { vector0.data(), vector1.data(), vector2.data() }, ARRAY_SIZE, vtkm::CopyFlag::Off);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }
