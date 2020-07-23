@@ -169,6 +169,13 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
     VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
   }
 
+// Work around apparent bug in some versions of GCC that give a warning about
+// StorageVirtualImpl<>::GetNumberOfValues() being "declared 'static' but never defined"
+// (even though nothing about this method is declared static). See the following
+// stackoverflow discussion for more details:
+//
+// https://stackoverflow.com/questions/56615695/how-to-fix-declared-static-but-never-defined-on-member-function
+#if !defined(VTKM_GCC) || (__GNUC__ >= 9)
   std::cout << "  CastAndCall with extra storage" << std::endl;
   calledBasic = false;
   calledVirtual = false;
@@ -188,6 +195,7 @@ void CheckArrayVariant(const vtkm::cont::VariantArrayHandleBase<TypeList>& array
   {
     VTKM_TEST_ASSERT(!calledBasic, "The array somehow got cast to a basic storage.");
   }
+#endif
 }
 
 template <typename T>
