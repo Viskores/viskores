@@ -428,23 +428,9 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandleMove(std::vector<T, Al
 
 template <typename T, typename Allocator>
 VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Allocator>&& array,
-                                                           vtkm::CopyFlag copy)
+                                                           vtkm::CopyFlag vtkmNotUsed(copy))
 {
-  if (copy == vtkm::CopyFlag::On)
-  {
-    VTKM_LOG_S(
-      vtkm::cont::LogLevel::Info,
-      "CopyFlag states std::vector should be copied, but it can be moved. Ignoring copy flag.");
-  }
-  if (!array.empty())
-  {
-    return make_ArrayHandle(array.data(), static_cast<vtkm::Id>(array.size()), copy);
-  }
-  else
-  {
-    // Vector empty. Just return an empty array handle.
-    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
-  }
+  return make_ArrayHandleMove(array);
 }
 
 /// Create an ArrayHandle directly from an initializer list of values.

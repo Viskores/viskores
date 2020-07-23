@@ -223,14 +223,8 @@ template <typename T>
 vtkm::cont::Field make_Field(std::string name,
                              Field::Association association,
                              std::vector<T>&& data,
-                             vtkm::CopyFlag copy)
+                             vtkm::CopyFlag vtkmNotUsed(copy))
 {
-  if (copy == vtkm::CopyFlag::On)
-  {
-    VTKM_LOG_S(
-      vtkm::cont::LogLevel::Info,
-      "CopyFlag states std::vector should be copied, but it can be moved. Ignoring copy flag.");
-  }
   return make_FieldMove(name, association, std::move(data));
 }
 
