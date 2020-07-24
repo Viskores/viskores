@@ -55,13 +55,13 @@
 #define vtk_m_worklet_contourtree_augmented_process_contourtree_h
 
 // global includes
-#include "vtkm/BinaryOperators.h"
-#include "vtkm/BinaryPredicates.h"
-#include "vtkm/cont/ArrayHandle.h"
-#include "vtkm/cont/ArrayHandleCounting.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <vtkm/BinaryOperators.h>
+#include <vtkm/BinaryPredicates.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 
 // local includes
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
@@ -411,9 +411,8 @@ public:
                                                      IdArrayType& branchSaddle,
                                                      IdArrayType& branchParent)
   { // ComputeVolumeBranchDecomposition()
-    //auto superarcsPortal = contourTree.Superarcs.ReadPortal();
-    //auto superarcDependentWeightPortal = superarcDependentWeight.ReadPortal();
-    //auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.ReadPortal();
+    auto superarcDependentWeightPortal = superarcDependentWeight.ReadPortal();
+    auto superarcIntrinsicWeightPortal = superarcIntrinsicWeight.ReadPortal();
 
     // cache the number of non-root supernodes & superarcs
     vtkm::Id nSupernodes = contourTree.Supernodes.GetNumberOfValues();
@@ -433,8 +432,8 @@ public:
     IdArrayType bestDownward;
     vtkm::cont::ArrayCopy(noSuchElementArray, bestDownward);
     vtkm::cont::ArrayCopy(noSuchElementArray, whichBranch);
-    //auto bestUpwardPortal = bestUpward.WritePortal();
-    //auto bestDownwardPortal = bestDownward.WritePortal();
+    auto bestUpwardPortal = bestUpward.WritePortal();
+    auto bestDownwardPortal = bestDownward.WritePortal();
 
     // STAGE II: Pick the best (largest volume) edge upwards and downwards
     // II A. Pick the best upwards weight by sorting on lower vertex then processing by segments
@@ -443,40 +442,38 @@ public:
     vtkm::cont::ArrayHandle<EdgePair> superarcList;
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
                           superarcList);
-    //auto superarcListPortal = superarcList.WritePortal();
+    auto superarcListPortal = superarcList.WritePortal();
     vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
     std::cout << "Total Volume: " << totalVolume << std::endl;
 #endif
+    auto superarcsPortal = contourTree.Superarcs.ReadPortal();
+
     // NB: Last element in array is guaranteed to be root superarc to infinity,
     // so we can easily skip it by not indexing to the full size
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      if (IsAscending(contourTree.Superarcs.ReadPortal().Get(superarc)))
+      if (IsAscending(superarcsPortal.Get(superarc)))
       { // ascending superarc
-        superarcList.WritePortal().Set(
-          superarc,
-          EdgePair(superarc, MaskedIndex(contourTree.Superarcs.ReadPortal().Get(superarc))));
-        upWeight.WritePortal().Set(superarc, superarcDependentWeight.ReadPortal().Get(superarc));
+        superarcListPortal.Set(superarc,
+                               EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
+        upWeight.WritePortal().Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        downWeight.WritePortal().Set(
-          superarc,
-          (totalVolume - superarcDependentWeight.ReadPortal().Get(superarc)) +
-            (superarcIntrinsicWeight.ReadPortal().Get(superarc) - 1));
+        downWeight.WritePortal().Set(superarc,
+                                     (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
+                                       (superarcIntrinsicWeightPortal.Get(superarc) - 1));
       } // ascending superarc
       else
       { // descending superarc
-        superarcList.WritePortal().Set(
-          superarc,
-          EdgePair(MaskedIndex(contourTree.Superarcs.ReadPortal().Get(superarc)), superarc));
-        downWeight.WritePortal().Set(superarc, superarcDependentWeight.ReadPortal().Get(superarc));
+        superarcListPortal.Set(superarc,
+                               EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
+        downWeight.WritePortal().Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        upWeight.WritePortal().Set(
-          superarc,
-          (totalVolume - superarcDependentWeight.ReadPortal().Get(superarc)) +
-            (superarcIntrinsicWeight.ReadPortal().Get(superarc) - 1));
+        upWeight.WritePortal().Set(superarc,
+                                   (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
+                                     (superarcIntrinsicWeightPortal.Get(superarc) - 1));
       } // descending superarc
     }   // per superarc
 
@@ -494,9 +491,9 @@ public:
     // II B 1.      Sort the superarcs by upper vertex
     IdArrayType superarcSorter;
     superarcSorter.Allocate(nSuperarcs);
-    //auto superarcSorterPortal = superarcSorter.WritePortal();
+    auto superarcSorterPortal = superarcSorter.WritePortal();
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
-      superarcSorter.WritePortal().Set(superarc, superarc);
+      superarcSorterPortal.Set(superarc, superarc);
 
     vtkm::cont::Algorithm::Sort(
       superarcSorter,
@@ -505,18 +502,17 @@ public:
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorter.ReadPortal().Get(superarc);
-      const EdgePair& edge = superarcList.ReadPortal().Get(superarcID);
+      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
+      const EdgePair& edge = superarcListPortal.Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
-        bestDownward.WritePortal().Set(edge.second, edge.first);
+        bestDownwardPortal.Set(edge.second, edge.first);
       else
       { // not the last one
-        const EdgePair& nextEdge =
-          superarcList.ReadPortal().Get(superarcSorter.ReadPortal().Get(superarc + 1));
+        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.second != edge.second)
-          bestDownward.WritePortal().Set(edge.second, edge.first);
+          bestDownwardPortal.Set(edge.second, edge.first);
       } // not the last one
     }   // per superarc
 
@@ -528,18 +524,17 @@ public:
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorter.ReadPortal().Get(superarc);
-      const EdgePair& edge = superarcList.ReadPortal().Get(superarcID);
+      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
+      const EdgePair& edge = superarcListPortal.Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
-        bestUpward.WritePortal().Set(edge.first, edge.second);
+        bestUpwardPortal.Set(edge.first, edge.second);
       else
       { // not the last one
-        const EdgePair& nextEdge =
-          superarcList.ReadPortal().Get(superarcSorter.ReadPortal().Get(superarc + 1));
+        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.first != edge.first)
-          bestUpward.WritePortal().Set(edge.first, edge.second);
+          bestUpwardPortal.Set(edge.first, edge.second);
       } // not the last one
     }   // per superarc
 
@@ -656,8 +651,7 @@ public:
 #endif
 
     IdArrayType supernodeSorter;
-    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, nSupernodes),
-                          supernodeSorter);
+    vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleIndex(nSupernodes), supernodeSorter);
 
     vtkm::cont::Algorithm::Sort(
       supernodeSorter,
@@ -795,7 +789,6 @@ public:
     IdArrayType sumValues;
     vtkm::cont::ArrayCopy(superarcIntrinsicWeight, sumValues);
 
-
     // This should be 0 here, because we're not changing the root
     vtkm::cont::ArrayHandle<vtkm::Id> howManyUsed;
     vtkm::cont::ArrayCopy(
@@ -872,6 +865,9 @@ public:
     vtkm::cont::ArrayCopy(contourTree.Superarcs, minParents);
     vtkm::cont::ArrayCopy(contourTree.Superarcs, maxParents);
 
+    auto minParentsPortal = minParents.WritePortal();
+    auto maxParentsPortal = maxParents.WritePortal();
+
     // Cache the glonal minimum and global maximum (these will be the roots in the min and max hypersweep)
     Id minSuperNode = MaskedIndex(contourTree.Superparents.ReadPortal().Get(0));
     Id maxSuperNode = MaskedIndex(
@@ -886,16 +882,16 @@ public:
     // Reserve the direction of the superarcs on the min path.
     for (std::size_t i = 1; i < minPath.size(); i++)
     {
-      minParents.WritePortal().Set(minPath[i], minPath[i - 1]);
+      minParentsPortal.Set(minPath[i], minPath[i - 1]);
     }
-    minParents.WritePortal().Set(minPath[0], 0);
+    minParentsPortal.Set(minPath[0], 0);
 
     // Reserve the direction of the superarcs on the max path.
     for (std::size_t i = 1; i < maxPath.size(); i++)
     {
-      maxParents.WritePortal().Set(maxPath[i], maxPath[i - 1]);
+      maxParentsPortal.Set(maxPath[i], maxPath[i - 1]);
     }
-    maxParents.WritePortal().Set(maxPath[0], 0);
+    maxParentsPortal.Set(maxPath[0], 0);
 
     vtkm::cont::Invoker Invoke;
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::UnmaskArray unmaskArrayWorklet;
@@ -912,18 +908,21 @@ public:
     vtkm::cont::ArrayCopy(contourTree.Hyperparents, minHyperparents);
     vtkm::cont::ArrayCopy(contourTree.Hyperparents, maxHyperparents);
 
+    auto minHyperparentsPortal = minHyperparents.WritePortal();
+    auto maxHyperparentsPortal = maxHyperparents.WritePortal();
+
     for (std::size_t i = 0; i < minPath.size(); i++)
     {
       // Set a unique dummy Id (something that the prefix scan by key will leave alone)
-      minHyperparents.WritePortal().Set(minPath[i],
-                                        contourTree.Hypernodes.GetNumberOfValues() + minPath[i]);
+      minHyperparentsPortal.Set(minPath[i],
+                                contourTree.Hypernodes.GetNumberOfValues() + minPath[i]);
     }
 
     for (std::size_t i = 0; i < maxPath.size(); i++)
     {
       // Set a unique dummy Id (something that the prefix scan by key will leave alone)
-      maxHyperparents.WritePortal().Set(maxPath[i],
-                                        contourTree.Hypernodes.GetNumberOfValues() + maxPath[i]);
+      maxHyperparentsPortal.Set(maxPath[i],
+                                contourTree.Hypernodes.GetNumberOfValues() + maxPath[i]);
     }
 
     // These arrays hold the number of nodes in each hypearcs that are on the min or max path for the min and max hypersweep respectively.
@@ -996,7 +995,7 @@ public:
     Invoke(incorporateParentMaximumWorklet, maxParents, contourTree.Supernodes, maxValues);
 
     // Initialise all directed superarcs in the contour tree. Those will correspond to subtrees whos height we need for the branch decomposition.
-    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeData> arcs;
+    vtkm::cont::ArrayHandle<vtkm::worklet::contourtree_augmented::EdgeDataHeight> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::InitialiseArcs initArcs(
@@ -1055,7 +1054,7 @@ public:
   {
     using vtkm::worklet::contourtree_augmented::MaskedIndex;
 
-    // Fix path from the old root to the new root. Parallelisble with a prefix scan.
+    // Fix path from the old root to the new root. Parallelisble with a prefix scan, but sufficiently fast for now.
     for (auto i = path.size() - 2; i > 0; i--)
     {
       const auto vertex = path[i + 1];
@@ -1088,7 +1087,7 @@ public:
 
       Id currentHyperparent = MaskedIndex(hyperparentsPortal.Get(path[i]));
 
-      // Skip all supernodes which are on the same hyperarc
+      // Skip the rest of the supernodes which are on the same hyperarc
       while (i < path.size() && MaskedIndex(hyperparentsPortal.Get(path[i])) == currentHyperparent)
       {
         const auto value = howManyUsedPortal.Get(MaskedIndex(hyperparentsPortal.Get(path[i])));
@@ -1129,8 +1128,6 @@ public:
     invoke(setFirstSupernodePerIteration, whenTransferred, firstSupernodePerIteration);
 
     auto firstSupernodePerIterationPortal = firstSupernodePerIteration.WritePortal();
-
-    // Why do we need this?
     for (vtkm::Id iteration = 1; iteration < nIterations; ++iteration)
     {
       if (firstSupernodePerIterationPortal.Get(iteration) == 0)

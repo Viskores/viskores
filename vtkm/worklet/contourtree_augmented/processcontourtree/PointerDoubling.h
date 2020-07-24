@@ -80,11 +80,11 @@ public:
   typedef void ExecutionSignature(InputIndex, _1);
   using InputDomain = _1;
 
-  vtkm::Id nSupernodes;
+  vtkm::Id NumSupernodes;
 
   // Default Constructor
-  VTKM_EXEC_CONT PointerDoubling(vtkm::Id _nSupernodes)
-    : nSupernodes(_nSupernodes)
+  VTKM_EXEC_CONT PointerDoubling(vtkm::Id _NumSupernodes)
+    : NumSupernodes(_NumSupernodes)
   {
   }
 

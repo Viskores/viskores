@@ -76,10 +76,10 @@ public:
   typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
   using InputDomain = _3;
 
-  vtkm::Id totalVolume;
+  vtkm::Id TotalVolume;
 
   VTKM_EXEC_CONT InitialiseArcsVolume(vtkm::Id _totalVolume)
-    : totalVolume(_totalVolume)
+    : TotalVolume(_totalVolume)
   {
   }
 
@@ -95,22 +95,22 @@ public:
     if (parent == 0)
     {
       // We expect the root to the last vertex in the supernodes array
-      assert(i != superarcsPortal.GetNumberOfValues() - 2);
+      VTKM_ASSERT(i != superarcsPortal.GetNumberOfValues() - 2);
       return;
     }
 
     EdgeDataVolume edge;
-    edge.i = i;
-    edge.j = parent;
-    edge.upEdge = IsAscending((superarcsPortal.Get(i)));
-    edge.subtreeVolume =
-      (totalVolume - hypersweepSumValuesPortal.Get(i)) + (superarcIntrinsicWeightPortal.Get(i) - 1);
+    edge.I = i;
+    edge.J = parent;
+    edge.UpEdge = IsAscending((superarcsPortal.Get(i)));
+    edge.SubtreeVolume = (this->TotalVolume - hypersweepSumValuesPortal.Get(i)) +
+      (superarcIntrinsicWeightPortal.Get(i) - 1);
 
     EdgeDataVolume oppositeEdge;
-    oppositeEdge.i = parent;
-    oppositeEdge.j = i;
-    oppositeEdge.upEdge = !edge.upEdge;
-    oppositeEdge.subtreeVolume = hypersweepSumValuesPortal.Get(i);
+    oppositeEdge.I = parent;
+    oppositeEdge.J = i;
+    oppositeEdge.UpEdge = !edge.UpEdge;
+    oppositeEdge.SubtreeVolume = hypersweepSumValuesPortal.Get(i);
 
     arcsPortal.Set(i * 2, edge);
     arcsPortal.Set(i * 2 + 1, oppositeEdge);
@@ -221,11 +221,11 @@ public:
   typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  Operator op;
+  Operator Op;
 
   // Default Constructor
   VTKM_EXEC_CONT AddDependentWeightHypersweep(Operator _op)
-    : op(_op)
+    : Op(_op)
   {
   }
 
@@ -269,8 +269,8 @@ public:
 
     do
     {
-      expect = cur;                  // Used to ensure the value hasn't changed since reading
-      newVal = op(cur, vertexValue); // the actual multiplication
+      expect = cur;                        // Used to ensure the value hasn't changed since reading
+      newVal = this->Op(cur, vertexValue); // the actual multiplication
     } while ((cur = minMaxIndexPortal.CompareAndSwap(parent, newVal, expect)) != expect);
 
     //minMaxIndexPortal.Set(parent, writeValue);
@@ -289,14 +289,14 @@ public:
   typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  vtkm::Id globalMinSortedIndex, globalMaxSortedIndex, rootSupernodeId;
+  vtkm::Id GlobalMinSortedIndex, GlobalMaxSortedIndex, RootSupernodeId;
 
   VTKM_EXEC_CONT InitialiseArcs(vtkm::Id _globalMinSortedIndex,
                                 vtkm::Id _globalMaxSortedIndex,
                                 vtkm::Id _rootSupernodeId)
-    : globalMinSortedIndex(_globalMinSortedIndex)
-    , globalMaxSortedIndex(_globalMaxSortedIndex)
-    , rootSupernodeId(_rootSupernodeId)
+    : GlobalMinSortedIndex(_globalMinSortedIndex)
+    , GlobalMaxSortedIndex(_globalMaxSortedIndex)
+    , RootSupernodeId(_rootSupernodeId)
   {
   }
 
@@ -311,46 +311,48 @@ public:
   {
     Id i = currentId;
     Id parent = MaskedIndex(superarcsPortal.Get(i));
+
+    // The root does not correspond to an arc
     if (parent == 0)
       return;
 
-    EdgeData edge;
-    edge.i = i;
-    edge.j = parent;
-    edge.upEdge = IsAscending((superarcsPortal.Get(i)));
+    EdgeDataHeight edge;
+    edge.I = i;
+    edge.J = parent;
+    edge.UpEdge = IsAscending((superarcsPortal.Get(i)));
 
-    EdgeData oppositeEdge;
-    oppositeEdge.i = parent;
-    oppositeEdge.j = i;
-    oppositeEdge.upEdge = !edge.upEdge;
+    EdgeDataHeight oppositeEdge;
+    oppositeEdge.I = parent;
+    oppositeEdge.J = i;
+    oppositeEdge.UpEdge = !edge.UpEdge;
 
 
     // Is it in the direction of the minRootedTree?
-    if (MaskedIndex(minParentsPortal.Get(edge.j)) == edge.i)
+    if (MaskedIndex(minParentsPortal.Get(edge.J)) == edge.I)
     {
-      edge.subtreeMin = minValuesPortal.Get(edge.j);
-      oppositeEdge.subtreeMin = globalMinSortedIndex;
+      edge.SubtreeMin = minValuesPortal.Get(edge.J);
+      oppositeEdge.SubtreeMin = this->GlobalMinSortedIndex;
     }
     else
     {
-      oppositeEdge.subtreeMin = minValuesPortal.Get(oppositeEdge.j);
-      edge.subtreeMin = globalMinSortedIndex;
+      oppositeEdge.SubtreeMin = minValuesPortal.Get(oppositeEdge.J);
+      edge.SubtreeMin = this->GlobalMinSortedIndex;
     }
 
     // Is it in the direction of the maxRootedTree?
-    if (MaskedIndex(maxParentsPortal.Get(edge.j)) == edge.i)
+    if (MaskedIndex(maxParentsPortal.Get(edge.J)) == edge.I)
     {
-      edge.subtreeMax = maxValuesPortal.Get(edge.j);
-      oppositeEdge.subtreeMax = globalMaxSortedIndex;
+      edge.SubtreeMax = maxValuesPortal.Get(edge.J);
+      oppositeEdge.SubtreeMax = this->GlobalMaxSortedIndex;
     }
     else
     {
-      oppositeEdge.subtreeMax = maxValuesPortal.Get(oppositeEdge.j);
-      edge.subtreeMax = globalMaxSortedIndex;
+      oppositeEdge.SubtreeMax = maxValuesPortal.Get(oppositeEdge.J);
+      edge.SubtreeMax = this->GlobalMaxSortedIndex;
     }
 
-    // We technically don't need this
-    if (i > rootSupernodeId)
+    // We technically don't need this because the root is supposed to be the last vertex
+    if (i > this->RootSupernodeId)
     {
       i--;
     }
@@ -380,18 +382,18 @@ public:
                             const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
     Id i = currentId;
-    EdgeData edge = arcsPortal.Get(i);
+    EdgeDataHeight edge = arcsPortal.Get(i);
 
-    Float64 minIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.subtreeMin));
-    Float64 maxIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.subtreeMax));
+    Float64 minIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.SubtreeMin));
+    Float64 maxIsoval = fieldValuesPortal.Get(ctSortOrderPortal.Get(edge.SubtreeMax));
     Float64 vertexIsoval =
-      fieldValuesPortal.Get(ctSortOrderPortal.Get(supernodesPortal.Get(edge.i)));
+      fieldValuesPortal.Get(ctSortOrderPortal.Get(supernodesPortal.Get(edge.I)));
 
     // We need to incorporate the value of the vertex into the height of the tree (otherwise leafs edges have 0 persistence)
     minIsoval = vtkm::Minimum()(minIsoval, vertexIsoval);
     maxIsoval = vtkm::Maximum()(maxIsoval, vertexIsoval);
 
-    edge.subtreeHeight = maxIsoval - minIsoval;
+    edge.SubtreeHeight = maxIsoval - minIsoval;
 
     arcsPortal.Set(i, edge);
   }
@@ -419,26 +421,26 @@ public:
 
     if (i == 0)
     {
-      if (arcsPortal.Get(0).upEdge == 0)
+      if (arcsPortal.Get(0).UpEdge == 0)
       {
-        bestDownwardPortal.Set(arcsPortal.Get(0).i, arcsPortal.Get(0).j);
+        bestDownwardPortal.Set(arcsPortal.Get(0).I, arcsPortal.Get(0).J);
       }
       else
       {
-        bestUpwardPortal.Set(arcsPortal.Get(0).i, arcsPortal.Get(0).j);
+        bestUpwardPortal.Set(arcsPortal.Get(0).I, arcsPortal.Get(0).J);
       }
     }
     else
     {
-      if (arcsPortal.Get(i).upEdge == 0 && arcsPortal.Get(i).i != arcsPortal.Get(i - 1).i)
+      if (arcsPortal.Get(i).UpEdge == 0 && arcsPortal.Get(i).I != arcsPortal.Get(i - 1).I)
       {
-        bestDownwardPortal.Set(arcsPortal.Get(i).i, arcsPortal.Get(i).j);
+        bestDownwardPortal.Set(arcsPortal.Get(i).I, arcsPortal.Get(i).J);
       }
 
-      if (arcsPortal.Get(i).upEdge == 1 &&
-          (arcsPortal.Get(i).i != arcsPortal.Get(i - 1).i || arcsPortal.Get(i - 1).upEdge == 0))
+      if (arcsPortal.Get(i).UpEdge == 1 &&
+          (arcsPortal.Get(i).I != arcsPortal.Get(i - 1).I || arcsPortal.Get(i - 1).UpEdge == 0))
       {
-        bestUpwardPortal.Set(arcsPortal.Get(i).i, arcsPortal.Get(i).j);
+        bestUpwardPortal.Set(arcsPortal.Get(i).I, arcsPortal.Get(i).J);
       }
     }
   }
@@ -527,11 +529,11 @@ public:
   typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
   using InputDomain = _2;
 
-  vtkm::Id nSupernodes;
+  vtkm::Id NumSupernodes;
 
   // Default Constructor
-  VTKM_EXEC_CONT BranchMinMaxSet(vtkm::Id _nSupernodes)
-    : nSupernodes(_nSupernodes)
+  VTKM_EXEC_CONT BranchMinMaxSet(vtkm::Id _NumSupernodes)
+    : NumSupernodes(_NumSupernodes)
   {
   }
 
@@ -556,7 +558,7 @@ public:
       branchMinimumPortal.Set(branchID, supernodeID);
     } // LHE
     // use RHE of segment to set branch maximum
-    if (supernode == nSupernodes - 1)
+    if (supernode == this->NumSupernodes - 1)
     { // sn = max
       branchMaximumPortal.Set(branchID, supernodeID);
     } // sn = max
@@ -680,11 +682,11 @@ public:
   typedef void ExecutionSignature(InputIndex, _1, _2, _3);
   using InputDomain = _1;
 
-  Operator op;
+  Operator Op;
 
   // Default Constructor
   VTKM_EXEC_CONT IncorporateParent(Operator _op)
-    : op(_op)
+    : Op(_op)
   {
   }
 
@@ -701,7 +703,7 @@ public:
     Id subtreeValue = hypersweepValuesPortal.Get(i);
     Id parentValue = MaskedIndex(supernodesPortal.Get(parent));
 
-    hypersweepValuesPortal.Set(i, op(subtreeValue, parentValue));
+    hypersweepValuesPortal.Set(i, this->Op(subtreeValue, parentValue));
   }
 }; // ComputeMinMaxValues
 

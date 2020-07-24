@@ -73,7 +73,7 @@ template <typename T>
 class Branch
 {
 public:
-  vtkm::Id originalId;              // Index of the extremum in the mesh
+  vtkm::Id OriginalId;              // Index of the extremum in the mesh
   vtkm::Id Extremum;                // Index of the extremum in the mesh
   T ExtremumVal;                    // Value at the extremum:w
   vtkm::Id Saddle;                  // Index of the saddle in the mesh (or minimum for root branch)

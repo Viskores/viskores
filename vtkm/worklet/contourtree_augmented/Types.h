@@ -148,50 +148,50 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
   return fString;
 } // FlagString()
 
-class EdgeData
+class EdgeDataHeight
 {
 public:
   // RegularNodeID (or sortIndex)
-  Id i;
+  Id I;
   // RegularNodeID (or sortIndex)
-  Id j;
+  Id J;
   // RegularNodeID (or sortIndex)
-  Id subtreeMin;
+  Id SubtreeMin;
   // RegularNodeID (or sortIndex)
-  Id subtreeMax;
-  bool upEdge;
-  Float64 subtreeHeight;
+  Id SubtreeMax;
+  bool UpEdge;
+  Float64 SubtreeHeight;
 
-  bool operator<(const EdgeData& b) const
+  bool operator<(const EdgeDataHeight& b) const
   {
-    if (this->i == b.i)
+    if (this->I == b.I)
     {
-      if (this->upEdge == b.upEdge)
+      if (this->UpEdge == b.UpEdge)
       {
-        if (this->subtreeHeight == b.subtreeHeight)
+        if (this->SubtreeHeight == b.SubtreeHeight)
         {
-          if (this->subtreeMin == b.subtreeMin)
+          if (this->SubtreeMin == b.SubtreeMin)
           {
-            return this->subtreeMax > b.subtreeMax;
+            return this->SubtreeMax > b.SubtreeMax;
           }
           else
           {
-            return this->subtreeMin < b.subtreeMin;
+            return this->SubtreeMin < b.SubtreeMin;
           }
         }
         else
         {
-          return this->subtreeHeight > b.subtreeHeight;
+          return this->SubtreeHeight > b.SubtreeHeight;
         }
       }
       else
       {
-        return this->upEdge < b.upEdge;
+        return this->UpEdge < b.UpEdge;
       }
     }
     else
     {
-      return this->i < b.i;
+      return this->I < b.I;
     }
   }
 };
@@ -200,42 +200,42 @@ class EdgeDataVolume
 {
 public:
   // RegularNodeID (or sortIndex)
-  Id i;
+  Id I;
   // RegularNodeID (or sortIndex)
-  Id j;
-  bool upEdge;
-  Id subtreeVolume;
+  Id J;
+  bool UpEdge;
+  Id SubtreeVolume;
 
   bool operator<(const EdgeDataVolume& b) const
   {
-    if (this->i == b.i)
+    if (this->I == b.I)
     {
-      if (this->upEdge == b.upEdge)
+      if (this->UpEdge == b.UpEdge)
       {
-        if (this->subtreeVolume == b.subtreeVolume)
+        if (this->SubtreeVolume == b.SubtreeVolume)
         {
-          if (this->upEdge == true)
+          if (this->UpEdge == true)
           {
-            return this->j > b.j;
+            return this->J > b.J;
           }
           else
           {
-            return this->j < b.j;
+            return this->J < b.J;
           }
         }
         else
         {
-          return this->subtreeVolume > b.subtreeVolume;
+          return this->SubtreeVolume > b.SubtreeVolume;
         }
       }
       else
       {
-        return this->upEdge < b.upEdge;
+        return this->UpEdge < b.UpEdge;
       }
     }
     else
     {
-      return this->i < b.i;
+      return this->I < b.I;
     }
   }
 };
