@@ -109,7 +109,7 @@ public:
   ~Branch();
 
   // Compute list of relevant/interesting isovalues
-  void GetRelevantValues(int type, T eps, std::vector<std::pair<T, vtkm::Id>>& values) const;
+  void GetRelevantValues(int type, T eps, std::vector<T>& values) const;
 
   void AccumulateIntervals(int type, T eps, PiecewiseLinearFunction<T>& plf) const;
 
@@ -177,7 +177,7 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   // Reconstruct explicit branch decomposition from array representation
   for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
-    branches[branchID]->originalId = branchID;
+    branches[branchID]->OriginalId = branchID;
     if (!NoSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       branches[branchID]->Saddle = MaskedIndex(
@@ -344,9 +344,7 @@ Branch<T>::~Branch()
 
 // TODO this recursive accumlation of values does not lend itself well to the use of VTKM data structures
 template <typename T>
-void Branch<T>::GetRelevantValues(int type,
-                                  T eps,
-                                  std::vector<std::pair<T, vtkm::Id>>& values) const
+void Branch<T>::GetRelevantValues(int type, T eps, std::vector<T>& values) const
 { // GetRelevantValues()
   T val;
 
@@ -368,7 +366,7 @@ void Branch<T>::GetRelevantValues(int type,
       break;
   }
   if (Parent)
-    values.push_back({ val, this->originalId });
+    values.push_back({ val });
   for (Branch* c : Children)
     c->GetRelevantValues(type, eps, values);
 } // GetRelevantValues()
