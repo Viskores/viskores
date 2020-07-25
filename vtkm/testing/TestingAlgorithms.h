@@ -55,15 +55,14 @@ struct TestBinarySearch
   {
     using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    std::vector<vtkm::Id> needlesData{ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 };
-    std::vector<vtkm::Id> hayStackData{ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 };
+    IdArray needles = vtkm::cont::make_ArrayHandle<vtkm::Id>({ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
+    IdArray hayStack =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 });
+    IdArray results;
+
     std::vector<bool> expectedFound{
       false, true, true, false, true, true, false, false, true, false
     };
-
-    IdArray needles = vtkm::cont::make_ArrayHandle(needlesData);
-    IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
-    IdArray results;
 
     vtkm::cont::Token token;
 
@@ -128,13 +127,12 @@ struct TestLowerBound
   {
     using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    std::vector<vtkm::Id> needlesData{ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 };
-    std::vector<vtkm::Id> hayStackData{ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 };
-    std::vector<vtkm::Id> expected{ 0, 0, 1, 4, 4, 6, 9, 9, 9, 11 };
-
-    IdArray needles = vtkm::cont::make_ArrayHandle(needlesData);
-    IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
+    IdArray needles = vtkm::cont::make_ArrayHandle<vtkm::Id>({ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
+    IdArray hayStack =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 });
     IdArray results;
+
+    std::vector<vtkm::Id> expected{ 0, 0, 1, 4, 4, 6, 9, 9, 9, 11 };
 
     vtkm::cont::Token token;
 
@@ -187,13 +185,12 @@ struct TestUpperBound
   {
     using Algo = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-    std::vector<vtkm::Id> needlesData{ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 };
-    std::vector<vtkm::Id> hayStackData{ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 };
-    std::vector<vtkm::Id> expected{ 0, 1, 4, 4, 6, 9, 9, 9, 11, 11 };
-
-    IdArray needles = vtkm::cont::make_ArrayHandle(needlesData);
-    IdArray hayStack = vtkm::cont::make_ArrayHandle(hayStackData);
+    IdArray needles = vtkm::cont::make_ArrayHandle<vtkm::Id>({ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
+    IdArray hayStack =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 });
     IdArray results;
+
+    std::vector<vtkm::Id> expected{ 0, 1, 4, 4, 6, 9, 9, 9, 11, 11 };
 
     vtkm::cont::Token token;
 

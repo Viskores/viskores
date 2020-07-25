@@ -833,15 +833,20 @@ ColorTable::TransferState ColorTable::GetExecutionDataForTransfer() const
 
   if (this->Impl->ColorArraysChanged)
   {
-    this->Impl->ColorPosHandle = vtkm::cont::make_ArrayHandle(this->Impl->ColorNodePos);
-    this->Impl->ColorRGBHandle = vtkm::cont::make_ArrayHandle(this->Impl->ColorRGB);
+    this->Impl->ColorPosHandle =
+      vtkm::cont::make_ArrayHandle(this->Impl->ColorNodePos, vtkm::CopyFlag::Off);
+    this->Impl->ColorRGBHandle =
+      vtkm::cont::make_ArrayHandle(this->Impl->ColorRGB, vtkm::CopyFlag::Off);
   }
 
   if (this->Impl->OpacityArraysChanged)
   {
-    this->Impl->OpacityPosHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityNodePos);
-    this->Impl->OpacityAlphaHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityAlpha);
-    this->Impl->OpacityMidSharpHandle = vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp);
+    this->Impl->OpacityPosHandle =
+      vtkm::cont::make_ArrayHandle(this->Impl->OpacityNodePos, vtkm::CopyFlag::Off);
+    this->Impl->OpacityAlphaHandle =
+      vtkm::cont::make_ArrayHandle(this->Impl->OpacityAlpha, vtkm::CopyFlag::Off);
+    this->Impl->OpacityMidSharpHandle =
+      vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp, vtkm::CopyFlag::Off);
   }
 
   TransferState state = { (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged ||

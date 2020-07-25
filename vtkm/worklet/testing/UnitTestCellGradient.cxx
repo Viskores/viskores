@@ -84,7 +84,8 @@ void TestCellGradientUniform3DWithVectorField()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::Off);
 
   //we need to add Vec3 array to the dataset
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> result;
@@ -159,7 +160,8 @@ void TestCellGradientUniform3DWithVectorField2()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::Off);
 
   vtkm::worklet::GradientOutputFields<vtkm::Vec3f_64> extraOutput;
   extraOutput.SetComputeGradient(false);

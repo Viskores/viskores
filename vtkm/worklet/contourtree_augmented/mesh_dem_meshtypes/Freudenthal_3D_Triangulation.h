@@ -114,12 +114,16 @@ Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_3D
 
 {
   // Initialize the case tables in vtkm
-  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal::EdgeBoundaryDetectionMasks, m3d_freudenthal::N_INCIDENT_EDGES);
+  this->EdgeBoundaryDetectionMasks =
+    vtkm::cont::make_ArrayHandle(m3d_freudenthal::EdgeBoundaryDetectionMasks,
+                                 m3d_freudenthal::N_INCIDENT_EDGES,
+                                 vtkm::CopyFlag::Off);
   this->NeighbourOffsets = vtkm::cont::make_ArrayHandleGroupVec<3>(vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal::NeighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3));
-  this->LinkComponentCaseTable = vtkm::cont::make_ArrayHandle(
-    m3d_freudenthal::LinkComponentCaseTable, m3d_freudenthal::LINK_COMPONENT_CASES);
+    m3d_freudenthal::NeighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3, vtkm::CopyFlag::Off));
+  this->LinkComponentCaseTable =
+    vtkm::cont::make_ArrayHandle(m3d_freudenthal::LinkComponentCaseTable,
+                                 m3d_freudenthal::LINK_COMPONENT_CASES,
+                                 vtkm::CopyFlag::Off);
 }
 
 

@@ -83,9 +83,9 @@ void RunTest()
         createArr(Y, nY);
         createArr(Z, nZ);
 
-        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X),
-                           vtkm::cont::make_ArrayHandle(Y),
-                           vtkm::cont::make_ArrayHandle(Z));
+        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X, vtkm::CopyFlag::Off),
+                           vtkm::cont::make_ArrayHandle(Y, vtkm::CopyFlag::Off),
+                           vtkm::cont::make_ArrayHandle(Z, vtkm::CopyFlag::Off));
       }
     }
   }

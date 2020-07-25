@@ -51,8 +51,8 @@ private:
     std::random_device rng;
     std::mt19937 urng(rng());
     std::shuffle(data, data + nvals, urng);
-    auto field =
-      vtkm::cont::make_Field("TestField", vtkm::cont::Field::Association::POINTS, data, nvals);
+    auto field = vtkm::cont::make_Field(
+      "TestField", vtkm::cont::Field::Association::POINTS, data, nvals, vtkm::CopyFlag::Off);
 
     vtkm::Range result;
     field.GetRange(&result);
@@ -78,8 +78,8 @@ private:
         fieldData[j][i] = data[j];
       }
     }
-    auto field =
-      vtkm::cont::make_Field("TestField", vtkm::cont::Field::Association::POINTS, fieldData, nvals);
+    auto field = vtkm::cont::make_Field(
+      "TestField", vtkm::cont::Field::Association::POINTS, fieldData, nvals, vtkm::CopyFlag::Off);
 
     vtkm::Range result[NumberOfComponents];
     field.GetRange(result, CustomTypeList());

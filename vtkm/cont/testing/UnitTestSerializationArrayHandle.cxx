@@ -206,8 +206,8 @@ struct TestArrayHandleGroupVecVariable
       return offset;
     });
 
-    auto array = vtkm::cont::make_ArrayHandleGroupVecVariable(RandomArrayHandle<T>::Make(size),
-                                                              vtkm::cont::make_ArrayHandle(comps));
+    auto array = vtkm::cont::make_ArrayHandleGroupVecVariable(
+      RandomArrayHandle<T>::Make(size), vtkm::cont::make_ArrayHandle(comps, vtkm::CopyFlag::On));
     RunTest(array);
 
     // cannot make a VariantArrayHandle containing ArrayHandleGroupVecVariable

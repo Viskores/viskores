@@ -83,9 +83,7 @@ std::vector<T> createVec(std::size_t n, const T* data)
 template <typename T>
 vtkm::cont::ArrayHandle<T> createAH(std::size_t n, const T* data)
 {
-  vtkm::cont::ArrayHandle<T> arr;
-  DFA::Copy(vtkm::cont::make_ArrayHandle(data, static_cast<vtkm::Id>(n)), arr);
-  return arr;
+  return vtkm::cont::make_ArrayHandle(data, static_cast<vtkm::Id>(n), vtkm::CopyFlag::On);
 }
 
 template <typename T>
@@ -128,9 +126,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(xvals, yvals, zvals, shapevals, indicesvals, connvals);
 
-    vtkm::cont::ArrayHandle<T> P, C;
-    DFA::Copy(vtkm::cont::make_ArrayHandle(varP), P);
-    DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
+    vtkm::cont::ArrayHandle<T> P = vtkm::cont::make_ArrayHandle(varP, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<T> C = vtkm::cont::make_ArrayHandle(varC, vtkm::CopyFlag::On);
     dataSet.AddPointField("pointvar", P);
     dataSet.AddCellField("cellvar", C);
     return dataSet;
@@ -151,8 +148,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     {
       varC[i][0] = static_cast<T>(f * 1.1f);
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts;
-    DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
+    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts =
+      vtkm::cont::make_ArrayHandle(tmp, vtkm::CopyFlag::On);
     dataSet = dsb.Create(
       pts, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
     dataSet.AddPointField("pointvar", varP);

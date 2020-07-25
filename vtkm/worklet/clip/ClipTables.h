@@ -2522,10 +2522,12 @@ public:
   };
 
   ClipTables()
-    : ClipTablesDataArray(vtkm::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_DATA_SIZE))
-    , ClipTablesIndicesArray(
-        vtkm::cont::make_ArrayHandle(ClipTablesIndices, CLIP_TABLES_INDICES_SIZE))
-    , CellEdgesArray(vtkm::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE))
+    : ClipTablesDataArray(
+        vtkm::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_DATA_SIZE, vtkm::CopyFlag::Off))
+    , ClipTablesIndicesArray(vtkm::cont::make_ArrayHandle(ClipTablesIndices,
+                                                          CLIP_TABLES_INDICES_SIZE,
+                                                          vtkm::CopyFlag::Off))
+    , CellEdgesArray(vtkm::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE, vtkm::CopyFlag::Off))
   {
   }
 

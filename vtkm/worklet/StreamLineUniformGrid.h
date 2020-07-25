@@ -334,18 +334,20 @@ public:
     InDataSet.GetField("vecData").GetData().CopyTo(fieldArray);
 
     // Generate random seeds for starting streamlines
-    std::vector<vtkm::Vec<FieldType, 3>> seeds;
-    for (vtkm::Id i = 0; i < numSeeds; i++)
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedPosArray;
+    seedPosArray.Allocate(numSeeds);
     {
-      vtkm::Vec<FieldType, 3> seed;
-      seed[0] = static_cast<FieldType>(rand() % vdims[0]);
-      seed[1] = static_cast<FieldType>(rand() % vdims[1]);
-      seed[2] = static_cast<FieldType>(rand() % vdims[2]);
-      seeds.push_back(seed);
+      auto seedPosPortal = seedPosArray.WritePortal();
+      for (vtkm::Id i = 0; i < numSeeds; i++)
+      {
+        vtkm::Vec<FieldType, 3> seed;
+        seed[0] = static_cast<FieldType>(rand() % vdims[0]);
+        seed[1] = static_cast<FieldType>(rand() % vdims[1]);
+        seed[2] = static_cast<FieldType>(rand() % vdims[2]);
+        seedPosPortal.Set(i, seed);
+      }
     }
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedPosArray =
-      vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> seedIdArray(0, 1, numSeeds);
+    vtkm::cont::ArrayHandleIndex seedIdArray(numSeeds);
 
     // Number of streams * number of steps * [forward, backward]
     vtkm::Id numCells = numSeeds * 2;

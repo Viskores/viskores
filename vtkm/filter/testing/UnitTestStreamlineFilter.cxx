@@ -38,13 +38,10 @@ void TestStreamline()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  std::vector<vtkm::Massless> seeds(3);
-  seeds[0] = vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
-  seeds[1] = vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
-  seeds[2] = vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
-
-  seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Streamline streamline;
 
@@ -75,13 +72,10 @@ void TestPathline()
   vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
   vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  std::vector<vtkm::Massless> seeds(3);
-  seeds[0] = vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0);
-  seeds[1] = vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1);
-  seeds[2] = vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2);
-
-  seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Pathline pathline;
 
@@ -129,7 +123,7 @@ void TestStreamlineFile(const std::string& fname,
   std::vector<vtkm::Massless> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
     seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::On);
 
   vtkm::filter::Streamline streamline;
   streamline.SetStepSize(stepSize);

@@ -37,7 +37,8 @@ public:
     vtkm::cont::DataSetBuilderUniform builder;
     vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 4, 1));
 
-    auto colorField = vtkm::cont::make_FieldPoint("color", vtkm::cont::make_ArrayHandle(pixels));
+    auto colorField = vtkm::cont::make_FieldPoint(
+      "color", vtkm::cont::make_ArrayHandle(pixels, vtkm::CopyFlag::On));
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
@@ -60,17 +61,16 @@ public:
   {
     // example from Figure 35.7 of Connected Component Labeling in CUDA by OndˇrejˇŚtava,
     // Bedˇrich Beneˇ
-    std::vector<vtkm::UInt8> pixels{
+    auto pixels = vtkm::cont::make_ArrayHandle<vtkm::UInt8>({
       0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1,
       1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1,
       1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
-    };
+    });
 
     vtkm::cont::DataSetBuilderUniform builder;
     vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 8, 1));
 
-    auto colorField =
-      vtkm::cont::make_Field("color", vtkm::cont::Field::Association::POINTS, pixels);
+    auto colorField = vtkm::cont::make_FieldPoint("color", pixels);
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;

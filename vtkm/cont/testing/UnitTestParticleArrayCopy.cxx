@@ -31,7 +31,7 @@ void TestParticleArrayCopy()
 
   for (int i = 0; i < 2; i++)
   {
-    auto particleAH = vtkm::cont::make_ArrayHandle(particles);
+    auto particleAH = vtkm::cont::make_ArrayHandle(particles, vtkm::CopyFlag::Off);
 
     //Test copy position only
     if (i == 0)

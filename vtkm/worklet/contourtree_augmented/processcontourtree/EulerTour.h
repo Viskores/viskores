@@ -115,14 +115,10 @@ public:
     //cont::ArrayHandle<Id> first;
     cont::ArrayHandle<Id> next;
 
-    vtkm::cont::ArrayCopy(
-      vtkm::cont::make_ArrayHandle(std::vector<Id>(
-        static_cast<unsigned long>(superarcs.GetNumberOfValues()), NO_SUCH_ELEMENT)),
-      first);
-    vtkm::cont::ArrayCopy(
-      vtkm::cont::make_ArrayHandle(
-        std::vector<Id>(static_cast<unsigned long>(edges.GetNumberOfValues()), NO_SUCH_ELEMENT)),
-      next);
+    first = vtkm::cont::make_ArrayHandleMove(
+      std::vector<Id>(static_cast<unsigned long>(superarcs.GetNumberOfValues()), NO_SUCH_ELEMENT));
+    next = vtkm::cont::make_ArrayHandleMove(
+      std::vector<Id>(static_cast<unsigned long>(edges.GetNumberOfValues()), NO_SUCH_ELEMENT));
 
     //
     // Compute First and Next arrays that are needed to compute the euler tour linked list

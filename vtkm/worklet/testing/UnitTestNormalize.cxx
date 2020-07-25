@@ -56,7 +56,7 @@ void TestNormal()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> inputArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> outputArray;
-  inputArray = vtkm::cont::make_ArrayHandle(inputVecs);
+  inputArray = vtkm::cont::make_ArrayHandle(inputVecs, vtkm::CopyFlag::On);
 
   vtkm::worklet::Normal normalWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Normal> dispatcherNormal(normalWorklet);
@@ -91,7 +91,7 @@ void TestNormalize()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> inputArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> outputArray;
-  inputArray = vtkm::cont::make_ArrayHandle(inputVecs);
+  inputArray = vtkm::cont::make_ArrayHandle(inputVecs, vtkm::CopyFlag::On);
 
   vtkm::worklet::Normalize normalizeWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Normalize> dispatcherNormalize(normalizeWorklet);

@@ -107,8 +107,10 @@ Mesh_DEM_Triangulation_2D_Freudenthal<T, StorageType>::Mesh_DEM_Triangulation_2D
   : Mesh_DEM_Triangulation_2D<T, StorageType>(ncols, nrows)
 
 {
-  this->EdgeBoundaryDetectionMasks = vtkm::cont::make_ArrayHandle(
-    m2d_freudenthal::EdgeBoundaryDetectionMasks, m2d_freudenthal::N_INCIDENT_EDGES);
+  this->EdgeBoundaryDetectionMasks =
+    vtkm::cont::make_ArrayHandle(m2d_freudenthal::EdgeBoundaryDetectionMasks,
+                                 m2d_freudenthal::N_INCIDENT_EDGES,
+                                 vtkm::CopyFlag::Off);
 }
 
 template <typename T, typename StorageType>

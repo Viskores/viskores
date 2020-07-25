@@ -118,7 +118,7 @@ public:
     coordi.push_back(vtkm::make_Vec(00.0f, 10.0f, 10.0f));
     coordi.push_back(vtkm::make_Vec(10.0f, 00.0f, 10.0f));
     coordi.push_back(vtkm::make_Vec(10.0f, 10.0f, 10.0f));
-    auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
+    auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi, vtkm::CopyFlag::Off);
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
@@ -145,7 +145,7 @@ public:
     qcVec.push_back(vtkm::make_Vec(0.01f, 9.99f, 9.99f));
     qcVec.push_back(vtkm::make_Vec(9.99f, 0.01f, 9.99f));
     qcVec.push_back(vtkm::make_Vec(9.99f, 9.99f, 9.99f));
-    auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec);
+    auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec, vtkm::CopyFlag::Off);
 
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> nnDis_Handle;
@@ -163,8 +163,7 @@ public:
     vtkm::worklet::DispatcherMapField<NearestNeighborSearchBruteForce3DWorklet> nnsbf3DDispatcher(
       nnsbf3dWorklet);
     nnsbf3DDispatcher.SetDevice(DeviceAdapter());
-    nnsbf3DDispatcher.Invoke(
-      qc_Handle, vtkm::cont::make_ArrayHandle(coordi), bfnnId_Handle, bfnnDis_Handle);
+    nnsbf3DDispatcher.Invoke(qc_Handle, coordi_Handle, bfnnId_Handle, bfnnDis_Handle);
 
     ///// verify search result /////
     bool passTest = true;
