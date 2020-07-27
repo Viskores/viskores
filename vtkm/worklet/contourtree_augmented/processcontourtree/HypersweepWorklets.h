@@ -667,7 +667,8 @@ public:
     }
     else
     {
-      chainToBranchPortal.Set(supernode, NO_SUCH_ELEMENT);
+      // This should just be vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT, but there's the build error - identifier "vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT" is undefined in device code
+      chainToBranchPortal.Set(supernode, std::numeric_limits<vtkm::Id>::min());
     }
   }
 }; // ComputeMinMaxValues

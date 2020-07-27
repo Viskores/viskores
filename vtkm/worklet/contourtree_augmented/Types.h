@@ -162,6 +162,7 @@ public:
   bool UpEdge;
   Float64 SubtreeHeight;
 
+  VTKM_EXEC
   bool operator<(const EdgeDataHeight& b) const
   {
     if (this->I == b.I)
@@ -206,6 +207,7 @@ public:
   bool UpEdge;
   Id SubtreeVolume;
 
+  VTKM_EXEC
   bool operator<(const EdgeDataVolume& b) const
   {
     if (this->I == b.I)
