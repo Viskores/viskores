@@ -28,6 +28,7 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 
+#include <vtkm/worklet/WorkletReduceByKey.h>
 #include <vtkm/worklet/contour/CommonState.h>
 #include <vtkm/worklet/contour/MarchingCellTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
@@ -625,7 +626,8 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
+    vtkm::cont::make_ArrayHandle(isovalues, vtkm::CopyFlag::Off);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated

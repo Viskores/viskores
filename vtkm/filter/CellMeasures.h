@@ -35,7 +35,7 @@ public:
   VTKM_CONT
   CellMeasures();
 
-  /// Set/Get the name of the cell measure field. If empty, "measure" is used.
+  /// Set/Get the name of the cell measure field. If not set, "measure" is used.
   void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }
   const std::string& GetCellMeasureName() const { return this->GetOutputFieldName(); }
 

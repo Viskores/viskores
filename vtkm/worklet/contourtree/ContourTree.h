@@ -903,7 +903,7 @@ void ContourTree<T, StorageType>::CollectSaddlePeak(
 
   // Setting saddlePeak reference to the make_ArrayHandle directly does not work
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> tempArray =
-    vtkm::cont::make_ArrayHandle(superarcVector);
+    vtkm::cont::make_ArrayHandle(superarcVector, vtkm::CopyFlag::Off);
 
   // now sort it
   vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());

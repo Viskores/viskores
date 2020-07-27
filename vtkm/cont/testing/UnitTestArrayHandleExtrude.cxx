@@ -96,7 +96,7 @@ int TestArrayHandleExtrude()
   const int numPlanes = 8;
 
   auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(
-    vtkm::cont::make_ArrayHandle(points_rz), numPlanes, false);
+    vtkm::cont::make_ArrayHandle(points_rz, vtkm::CopyFlag::Off), numPlanes, false);
 
   VTKM_TEST_ASSERT(coords.GetNumberOfValues() ==
                      static_cast<vtkm::Id>(((points_rz.size() / 2) * numPlanes)),

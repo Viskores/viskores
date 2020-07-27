@@ -395,15 +395,6 @@ public:
   {
   }
 
-  // Create with externally managed memory
-  Storage(const BaseT* array, vtkm::Id arrayLength, vtkm::Int32 numberOfPlanes, bool cylindrical)
-    : Array(vtkm::cont::make_ArrayHandle(array, arrayLength))
-    , NumberOfPlanes(numberOfPlanes)
-    , UseCylindrical(cylindrical)
-  {
-    VTKM_ASSERT(this->Array.GetNumberOfValues() >= 0);
-  }
-
   Storage(const HandleType& array, vtkm::Int32 numberOfPlanes, bool cylindrical)
     : Array(array)
     , NumberOfPlanes(numberOfPlanes)

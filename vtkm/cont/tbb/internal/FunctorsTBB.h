@@ -107,10 +107,15 @@ struct CopyBody
   template <typename InIter, typename OutIter>
   void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
   {
-    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    using InputType = typename InputPortalType::ValueType;
+    using OutputType = typename OutputPortalType::ValueType;
     while (src != srcEnd)
     {
-      *dst = static_cast<OutputType>(*src);
+      // The conversion to InputType and then OutputType looks weird, but it is necessary.
+      // *src actually returns an ArrayPortalValueReference, which can automatically convert
+      // itself to InputType but not necessarily OutputType. Thus, we first convert to
+      // InputType, and then allow the conversion to OutputType.
+      *dst = static_cast<OutputType>(static_cast<InputType>(*src));
       ++src;
       ++dst;
     }

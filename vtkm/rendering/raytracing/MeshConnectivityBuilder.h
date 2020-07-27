@@ -43,12 +43,12 @@ public:
 protected:
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetSingleType<>& cellSetUnstructured,
-                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
+                         const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coordinates,
                          vtkm::Bounds coordsBounds);
 
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetExplicit<>& cellSetUnstructured,
-                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
+                         const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coordinates,
                          vtkm::Bounds coordsBounds);
 
   vtkm::cont::ArrayHandle<vtkm::Id> FaceConnectivity;

@@ -10,6 +10,7 @@
 
 set(headers
   CellInterpolationHelper.h
+  Field.h
   GridEvaluators.h
   GridEvaluatorStatus.h
   Integrators.h

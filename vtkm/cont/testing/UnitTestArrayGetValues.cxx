@@ -53,8 +53,7 @@ void TryCopy()
   }
 
   { // ArrayHandle ids
-    const std::vector<vtkm::Id> idsVec{ 3, 8, 7 };
-    const auto ids = vtkm::cont::make_ArrayHandle(idsVec);
+    const auto ids = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 3, 8, 7 });
     { // Return vector:
       const std::vector<ValueType> output = vtkm::cont::ArrayGetValues(ids, data);
       TestValues<ValueType>(output, { 3, 8, 7 });

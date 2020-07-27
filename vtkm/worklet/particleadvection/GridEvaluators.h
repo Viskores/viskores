@@ -24,6 +24,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluatorStatus.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 
@@ -34,12 +35,9 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldArrayType>
+template <typename DeviceAdapter, typename FieldType>
 class ExecutionGridEvaluator
 {
-  using FieldPortalType =
-    typename FieldArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
 public:
   VTKM_CONT
   ExecutionGridEvaluator() = default;
@@ -48,13 +46,13 @@ public:
   ExecutionGridEvaluator(std::shared_ptr<vtkm::cont::CellLocator> locator,
                          std::shared_ptr<vtkm::cont::CellInterpolationHelper> interpolationHelper,
                          const vtkm::Bounds& bounds,
-                         const FieldArrayType& field,
+                         const FieldType& field,
                          vtkm::cont::Token& token)
     : Bounds(bounds)
-    , Field(field.PrepareForInput(DeviceAdapter(), token))
   {
     Locator = locator->PrepareForExecution(DeviceAdapter(), token);
     InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter(), token);
+    Field = field.PrepareForExecution(DeviceAdapter(), token);
   }
 
   template <typename Point>
@@ -84,13 +82,13 @@ public:
   template <typename Point>
   VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& pos,
                                          vtkm::FloatDefault vtkmNotUsed(time),
-                                         Point& out) const
+                                         vtkm::VecVariable<Point, 2>& out) const
   {
     return this->Evaluate(pos, out);
   }
 
   template <typename Point>
-  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point, Point& out) const
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point, vtkm::VecVariable<Point, 2>& out) const
   {
     vtkm::Id cellId;
     Point parametric;
@@ -110,10 +108,11 @@ public:
     vtkm::VecVariable<vtkm::Vec3f, 8> fieldValues;
     InterpolationHelper->GetCellInfo(cellId, cellShape, nVerts, ptIndices);
 
-    for (vtkm::IdComponent i = 0; i < nVerts; i++)
-      fieldValues.Append(Field.Get(ptIndices[i]));
+    this->Field->GetValue(ptIndices, nVerts, parametric, cellShape, out);
+    //for (vtkm::IdComponent i = 0; i < nVerts; i++)
+    //  fieldValues.Append(Field->GetValue(ptIndices[i]));
 
-    vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
+    //vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
 
     status.SetOk();
     return status;
@@ -122,11 +121,11 @@ public:
 private:
   const vtkm::exec::CellLocator* Locator;
   const vtkm::exec::CellInterpolationHelper* InterpolationHelper;
+  const vtkm::worklet::particleadvection::ExecutionField* Field;
   vtkm::Bounds Bounds;
-  FieldPortalType Field;
 };
 
-template <typename FieldArrayType>
+template <typename FieldType>
 class GridEvaluator : public vtkm::cont::ExecutionObjectBase
 {
 public:
@@ -143,8 +142,8 @@ public:
   VTKM_CONT
   GridEvaluator(const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::DynamicCellSet& cellset,
-                const FieldArrayType& field)
-    : Vectors(field)
+                const FieldType& field)
+    : Field(field)
     , Bounds(coordinates.GetBounds())
   {
     if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
@@ -205,18 +204,18 @@ public:
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT ExecutionGridEvaluator<DeviceAdapter, FieldArrayType> PrepareForExecution(
+  VTKM_CONT ExecutionGridEvaluator<DeviceAdapter, FieldType> PrepareForExecution(
     DeviceAdapter,
     vtkm::cont::Token& token) const
   {
-    return ExecutionGridEvaluator<DeviceAdapter, FieldArrayType>(
-      this->Locator, this->InterpolationHelper, this->Bounds, this->Vectors, token);
+    return ExecutionGridEvaluator<DeviceAdapter, FieldType>(
+      this->Locator, this->InterpolationHelper, this->Bounds, this->Field, token);
   }
 
 private:
   std::shared_ptr<vtkm::cont::CellLocator> Locator;
   std::shared_ptr<vtkm::cont::CellInterpolationHelper> InterpolationHelper;
-  FieldArrayType Vectors;
+  FieldType Field;
   vtkm::Bounds Bounds;
 };
 

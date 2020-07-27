@@ -23,6 +23,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -32,8 +33,8 @@
 #include <string.h>
 
 static vtkm::Id cycle = 0;
-static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticles;
-static vtkm::cont::ArrayHandle<vtkm::Particle> BasisParticlesOriginal;
+static vtkm::cont::ArrayHandle<vtkm::Massless> BasisParticles;
+static vtkm::cont::ArrayHandle<vtkm::Massless> BasisParticlesOriginal;
 static vtkm::cont::ArrayHandle<vtkm::Id> BasisParticlesValidity;
 
 namespace
@@ -51,7 +52,7 @@ public:
   }
 
   template <typename ValidityType>
-  VTKM_EXEC void operator()(const vtkm::Particle& end_point, ValidityType& res) const
+  VTKM_EXEC void operator()(const vtkm::Massless& end_point, ValidityType& res) const
   {
     vtkm::Id steps = end_point.NumSteps;
     if (steps > 0 && res == 1)
@@ -83,8 +84,8 @@ public:
   using InputDomain = _1;
 
   template <typename DisplacementType>
-  VTKM_EXEC void operator()(const vtkm::Particle& end_point,
-                            const vtkm::Particle& start_point,
+  VTKM_EXEC void operator()(const vtkm::Massless& end_point,
+                            const vtkm::Massless& start_point,
                             DisplacementType& res) const
   {
     res[0] = end_point.Pos[0] - start_point.Pos[0];
@@ -193,7 +194,7 @@ inline void Lagrangian::InitializeSeedPositions(const vtkm::cont::DataSet& input
       {
         vtkm::FloatDefault xi = static_cast<vtkm::FloatDefault>(x * x_spacing);
         portal1.Set(id,
-                    vtkm::Particle(Vec3f(static_cast<vtkm::FloatDefault>(bounds.X.Min) + xi,
+                    vtkm::Massless(Vec3f(static_cast<vtkm::FloatDefault>(bounds.X.Min) + xi,
                                          static_cast<vtkm::FloatDefault>(bounds.Y.Min) + yi,
                                          static_cast<vtkm::FloatDefault>(bounds.Z.Min) + zi),
                                    id));
@@ -264,7 +265,7 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
     throw vtkm::cont::ErrorFilterExecution(
       "Write frequency can not be 0. Use SetWriteFrequency().");
   }
-  vtkm::cont::ArrayHandle<vtkm::Particle> basisParticleArray;
+  vtkm::cont::ArrayHandle<vtkm::Massless> basisParticleArray;
   vtkm::cont::ArrayCopy(BasisParticles, basisParticleArray);
 
   cycle += 1;
@@ -274,12 +275,14 @@ inline VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::worklet::ParticleAdvection particleadvection;
-  vtkm::worklet::ParticleAdvectionResult res;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
 
-  GridEvalType gridEval(coords, cells, field);
+  FieldType velocities(field);
+  GridEvalType gridEval(coords, cells, velocities);
   RK4Type rk4(gridEval, static_cast<vtkm::Float32>(this->stepSize));
 
   res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step

@@ -67,7 +67,8 @@ struct DoStaticTestWorklet
       inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle =
+      vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE, vtkm::CopyFlag::On);
     vtkm::cont::ArrayHandle<T> outputHandle, outputHandleAsPtr;
     vtkm::cont::ArrayHandle<T> inoutHandle, inoutHandleAsPtr;
 
@@ -115,7 +116,8 @@ struct DoVariantTestWorklet
       inputArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle =
+      vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE, vtkm::CopyFlag::On);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 

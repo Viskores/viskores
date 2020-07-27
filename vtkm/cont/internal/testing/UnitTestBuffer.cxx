@@ -48,10 +48,10 @@ void VectorReallocator(void*& memory,
 {
   std::vector<T>* v = reinterpret_cast<std::vector<T>*>(container);
   VTKM_TEST_ASSERT(v->size() == static_cast<std::size_t>(oldSize));
-  VTKM_TEST_ASSERT(memory == &v->front());
+  VTKM_TEST_ASSERT(v->empty() || (memory == v->data()));
 
   v->resize(static_cast<std::size_t>(newSize));
-  memory = &v->front();
+  memory = v->data();
 }
 struct VectorDeleter
 {
@@ -67,7 +67,7 @@ struct VectorDeleter
   {
     if (this->Data)
     {
-      VTKM_TEST_ASSERT(reinterpret_cast<T*>(p) == &this->Data->front());
+      VTKM_TEST_ASSERT(reinterpret_cast<T*>(p) == this->Data->data());
       this->Data.reset();
     }
   }
@@ -132,7 +132,7 @@ void DoTest()
 
   std::cout << "Reset with device data" << std::endl;
   std::vector<T> v(ARRAY_SIZE);
-  void* devicePointer = &v.front();
+  void* devicePointer = v.data();
   SetPortal(MakePortal(devicePointer, ARRAY_SIZE));
   buffer.Reset(vtkm::cont::internal::BufferInfo(device,
                                                 devicePointer,

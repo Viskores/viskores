@@ -122,7 +122,7 @@ bool TestMeshQualityFilter(const vtkm::cont::DataSet& input,
 
   //Test the computed metric values (for all cells) and expected metric
   //values for equality.
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+  vtkm::cont::ArrayHandle<vtkm::Float64> values;
   output.GetField(outputname).GetData().CopyTo(values);
   auto portal1 = values.ReadPortal();
   if (portal1.GetNumberOfValues() != (vtkm::Id)expectedVals.size())

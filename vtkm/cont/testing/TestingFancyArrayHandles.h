@@ -360,12 +360,6 @@ private:
         }
 
         {
-          vtkm::cont::ArrayHandleSOA<Vec3> soaArray = { vector0, vector1, vector2 };
-          VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-          CheckPortal(soaArray.ReadPortal());
-        }
-
-        {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
             vtkm::cont::make_ArrayHandleSOA<Vec3>({ vector0, vector1, vector2 });
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
@@ -374,21 +368,21 @@ private:
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray =
-            vtkm::cont::make_ArrayHandleSOA(vector0, vector1, vector2);
+            vtkm::cont::make_ArrayHandleSOA(vtkm::CopyFlag::Off, vector0, vector1, vector2);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA<Vec3>(
-            { &vector0.front(), &vector1.front(), &vector2.front() }, ARRAY_SIZE);
+            { vector0.data(), vector1.data(), vector2.data() }, ARRAY_SIZE, vtkm::CopyFlag::Off);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }
 
         {
           vtkm::cont::ArrayHandleSOA<Vec3> soaArray = vtkm::cont::make_ArrayHandleSOA(
-            ARRAY_SIZE, &vector0.front(), &vector1.front(), &vector2.front());
+            ARRAY_SIZE, vtkm::CopyFlag::Off, vector0.data(), vector1.data(), vector2.data());
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
         }
@@ -436,7 +430,7 @@ private:
       const ValueType value = TestValue(13, ValueType());
       std::vector<ValueType> compositeData(ARRAY_SIZE, value);
       vtkm::cont::ArrayHandle<ValueType> compositeInput =
-        vtkm::cont::make_ArrayHandle(compositeData);
+        vtkm::cont::make_ArrayHandle(compositeData, vtkm::CopyFlag::Off);
 
       auto composite =
         vtkm::cont::make_ArrayHandleCompositeVector(compositeInput, compositeInput, compositeInput);
@@ -597,7 +591,7 @@ private:
           basicVec.push_back(ValueType(static_cast<ComponentType>(i)));
           basicVec.push_back(ValueType(ComponentType(i)));
         }
-        BasicArrayType basic = vtkm::cont::make_ArrayHandle(basicVec);
+        BasicArrayType basic = vtkm::cont::make_ArrayHandle(basicVec, vtkm::CopyFlag::Off);
 
         // concatenate two arrays together
         ConcatenateType concatenate = vtkm::cont::make_ArrayHandleConcatenate(implicit, basic);
@@ -986,14 +980,9 @@ private:
     {
       using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
-      ComponentType testValues[ARRAY_SIZE * NUM_COMPONENTS];
-
-      for (vtkm::Id index = 0; index < ARRAY_SIZE * NUM_COMPONENTS; ++index)
-      {
-        testValues[index] = TestValue(index, ComponentType());
-      }
-      vtkm::cont::ArrayHandle<ComponentType> baseArray =
-        vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE * NUM_COMPONENTS);
+      vtkm::cont::ArrayHandle<ComponentType> baseArray;
+      baseArray.Allocate(ARRAY_SIZE * NUM_COMPONENTS);
+      SetPortal(baseArray.WritePortal());
 
       vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS>
         groupArray(baseArray);
@@ -1210,9 +1199,10 @@ private:
         testKeys[i] = KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i));
         testValues[i] = ValueType(static_cast<ValueComponentType>(i));
       }
-      vtkm::cont::ArrayHandle<KeyType> keys = vtkm::cont::make_ArrayHandle(testKeys, ARRAY_SIZE);
+      vtkm::cont::ArrayHandle<KeyType> keys =
+        vtkm::cont::make_ArrayHandle(testKeys, ARRAY_SIZE, vtkm::CopyFlag::Off);
       vtkm::cont::ArrayHandle<ValueType> values =
-        vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE);
+        vtkm::cont::make_ArrayHandle(testValues, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
       vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<KeyType>,
                                  vtkm::cont::ArrayHandle<ValueType>>
@@ -1425,7 +1415,7 @@ private:
                                         ValueType(static_cast<ValueComponentType>(i)));
       }
       vtkm::cont::ArrayHandle<PairType> input =
-        vtkm::cont::make_ArrayHandle(testKeysAndValues, ARRAY_SIZE);
+        vtkm::cont::make_ArrayHandle(testKeysAndValues, ARRAY_SIZE, vtkm::CopyFlag::Off);
 
       vtkm::cont::ArrayHandle<KeyType> result_keys;
       vtkm::cont::ArrayHandle<ValueType> result_values;

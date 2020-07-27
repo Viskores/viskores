@@ -120,7 +120,7 @@ void TestClippingExplicit()
              clipValue,
              invertClip);
 
-  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
@@ -176,7 +176,7 @@ void TestClippingStructured()
              clipValue,
              invertClip);
 
-  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   CoordsOutType coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
@@ -238,7 +238,7 @@ void TestClippingWithImplicitFunction()
              ds.GetCoordinateSystem("coords"),
              invertClip);
 
-  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
@@ -297,7 +297,7 @@ void TestClippingWithImplicitFunctionInverted()
              ds.GetCoordinateSystem("coords"),
              invertClip);
 
-  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;

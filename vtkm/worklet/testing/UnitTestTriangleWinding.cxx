@@ -53,7 +53,7 @@ vtkm::cont::DataSet GenerateDataSet()
 void Validate(vtkm::cont::DataSet dataSet)
 {
   const auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
-  const auto coordsArray = dataSet.GetCoordinateSystem().GetData();
+  const auto coordsArray = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
   const auto conn =
     cellSet.GetConnectivityArray(vtkm::TopologyElementTagCell{}, vtkm::TopologyElementTagPoint{});
   const auto offsets =

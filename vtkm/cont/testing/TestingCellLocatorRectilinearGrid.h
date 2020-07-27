@@ -170,7 +170,8 @@ public:
       pointsVec.push_back(point);
     }
 
-    vtkm::cont::ArrayHandle<PointType> points = vtkm::cont::make_ArrayHandle(pointsVec);
+    vtkm::cont::ArrayHandle<PointType> points =
+      vtkm::cont::make_ArrayHandle(pointsVec, vtkm::CopyFlag::Off);
 
     // Initialize locator
     vtkm::cont::CellLocatorRectilinearGrid locator;

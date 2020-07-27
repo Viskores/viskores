@@ -971,7 +971,7 @@ private:
       testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
 
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(&(*testData.begin()), ARRAY_SIZE);
+    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
@@ -1017,7 +1017,7 @@ private:
     randomData[5] = 955; // 3 (lower), 4 (upper)
 
     //change the control structure under the handle
-    input = vtkm::cont::make_ArrayHandle(randomData, RANDOMDATA_SIZE);
+    input = vtkm::cont::make_ArrayHandle(randomData, RANDOMDATA_SIZE, vtkm::CopyFlag::Off);
 
     FloatCastHandle tempCast(temp);
     Algorithm::Copy(input, tempCast);
@@ -1064,7 +1064,7 @@ private:
       testData[i] = static_cast<vtkm::Id>(OFFSET + ((ARRAY_SIZE - i) % 50));
     }
 
-    IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
     IdArrayHandle sorted;
     Algorithm::Copy(unsorted, sorted);
 
@@ -1095,7 +1095,7 @@ private:
     }
 
     //sort the users memory in-place
-    IdArrayHandle sorted = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle sorted = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
     Algorithm::Sort(sorted);
 
     //copy the sorted array into our own memory, if use the same user ptr
@@ -1136,7 +1136,7 @@ private:
       testData[i] = static_cast<vtkm::Id>(OFFSET + ((ARRAY_SIZE - i) % 50));
     }
 
-    IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
     IdArrayHandle sorted;
     Algorithm::Copy(unsorted, sorted);
 
@@ -1202,8 +1202,8 @@ private:
       testValues[index] = TestValue(i, Vec3());
     }
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(testKeys);
-    Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(testKeys, vtkm::CopyFlag::Off);
+    Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues, vtkm::CopyFlag::Off);
 
     Algorithm::SortByKey(keys, values);
 
@@ -1261,7 +1261,7 @@ private:
     {
       testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
@@ -1297,7 +1297,7 @@ private:
     {
       testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
@@ -1408,7 +1408,7 @@ private:
     }
     testData[ARRAY_SIZE / 2] = maxValue;
 
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
     vtkm::Id2 range = Algorithm::Reduce(input, vtkm::Id2(0, 0), vtkm::MinAndMax<vtkm::Id>());
 
     VTKM_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
@@ -1430,27 +1430,24 @@ private:
     std::cout << "  Reduce bool array with vtkm::LogicalAnd to see if all values are true."
               << std::endl;
     //construct an array of bools and verify that they aren't all true
-    constexpr vtkm::Id inputLength = 60;
-    constexpr bool inputValues[inputLength] = {
-      true, true, true, true, true, true, false, true, true, true, true, true, true, true, true,
-      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
-      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true,
-      true, true, true, true, true, true, true,  true, true, true, true, true, true, true, true
-    };
-    auto barray = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    auto barray =
+      vtkm::cont::make_ArrayHandle({ true, true, true, true, true, true, false, true, true, true,
+                                     true, true, true, true, true, true, true,  true, true, true,
+                                     true, true, true, true, true, true, true,  true, true, true,
+                                     true, true, true, true, true, true, true,  true, true, true,
+                                     true, true, true, true, true, true, true,  true, true, true,
+                                     true, true, true, true, true, true, true,  true, true, true });
     bool all_true = Algorithm::Reduce(barray, true, vtkm::LogicalAnd());
     VTKM_TEST_ASSERT(all_true == false, "reduction with vtkm::LogicalAnd should return false");
 
     std::cout << "  Reduce with custom value type and custom comparison operator." << std::endl;
     //test with a custom value type with the reduction value being a vtkm::Vec<float,2>
-    constexpr CustomTForReduce inputFValues[inputLength] = {
-      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 413.1f, -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
-      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
-      13.1f, -2.1f, -11.0f, 13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
-      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -211.1f, -1.0f,
-      13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 113.1f, -2.1f,   -1.0f
-    };
-    auto farray = vtkm::cont::make_ArrayHandle(inputFValues, inputLength);
+    auto farray = vtkm::cont::make_ArrayHandle<CustomTForReduce>(
+      { 13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 413.1f, -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+        13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+        13.1f, -2.1f, -11.0f, 13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
+        13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -211.1f, -1.0f,
+        13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 113.1f, -2.1f,   -1.0f });
     vtkm::Vec2f_32 frange =
       Algorithm::Reduce(farray, vtkm::Vec2f_32(0.0f, 0.0f), CustomMinAndMax<CustomTForReduce>());
     VTKM_TEST_ASSERT(-211.1f == frange[0],
@@ -1494,20 +1491,15 @@ private:
     {
       //lastly test with heterogeneous zip values ( vec3, and constant array handle),
       //and a custom reduce binary functor
-      const vtkm::Id indexLength = 30;
-      const vtkm::Id valuesLength = 10;
       using ValueType = vtkm::Float32;
 
-      vtkm::Id indexs[indexLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
-                                       5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 };
-      ValueType values[valuesLength] = {
-        1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, -2.0f
-      };
-      const ValueType expectedSum = 125;
+      IdArrayHandle indexHandle =
+        vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+                                                 5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 });
+      vtkm::cont::ArrayHandle<ValueType> valueHandle = vtkm::cont::make_ArrayHandle(
+        { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, -2.0f });
 
-      IdArrayHandle indexHandle = vtkm::cont::make_ArrayHandle(indexs, indexLength);
-      vtkm::cont::ArrayHandle<ValueType> valueHandle =
-        vtkm::cont::make_ArrayHandle(values, valuesLength);
+      const ValueType expectedSum = 125;
 
       vtkm::cont::ArrayHandlePermutation<IdArrayHandle, vtkm::cont::ArrayHandle<ValueType>> perm;
       perm = vtkm::cont::make_ArrayHandlePermutation(indexHandle, valueHandle);
@@ -1526,15 +1518,14 @@ private:
 
     //first test with very basic integer key / values
     {
-      const vtkm::Id inputLength = 12;
       const vtkm::Id expectedLength = 6;
-      vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 }; // in keys
-      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // in values
       vtkm::IdComponent expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
       vtkm::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
 
-      IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-      IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+      IdComponentArrayHandle keys =
+        vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
+      IdArrayHandle values =
+        vtkm::cont::make_ArrayHandle<vtkm::Id>({ 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 });
 
       IdComponentArrayHandle keysOut;
       IdArrayHandle valuesOut;
@@ -1560,21 +1551,18 @@ private:
     //next test with a single key across the entire set, using vec3 as the
     //value, using a custom reduce binary functor
     {
-      const vtkm::Id inputLength = 3;
+      IdArrayHandle keys = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 0 });
+      vtkm::cont::ArrayHandle<vtkm::Vec3f_64, StorageTag> values =
+        vtkm::cont::make_ArrayHandle({ vtkm::Vec3f_64(13.1, 13.3, 13.5),
+                                       vtkm::Vec3f_64(-2.1, -2.3, -2.5),
+                                       vtkm::Vec3f_64(-1.0, -1.0, 1.0) });
+
       const vtkm::Id expectedLength = 1;
-      vtkm::Id inputKeys[inputLength] = { 0, 0, 0 }; // input keys
-      vtkm::Vec3f_64 inputValues[inputLength];
-      inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
-      inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
-      inputValues[2] = vtkm::make_Vec(-1.0, -1.0, 1.0); // input keys
+
       vtkm::Id expectedKeys[expectedLength] = { 0 };
 
       vtkm::Vec3f_64 expectedValues[expectedLength];
       expectedValues[0] = vtkm::make_Vec(27.51, 30.59, -33.75);
-
-      IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-      vtkm::cont::ArrayHandle<vtkm::Vec3f_64, StorageTag> values =
-        vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
       IdArrayHandle keysOut;
       vtkm::cont::ArrayHandle<vtkm::Vec3f_64, StorageTag> valuesOut;
@@ -1603,16 +1591,15 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce By Key with Fancy Arrays" << std::endl;
 
-    const vtkm::Id inputLength = 12;
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
+    IdArrayHandle values =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 });
+    FloatCastHandle castValues(values);
+
     const vtkm::Id expectedLength = 6;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 }; // in keys
-    vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 };    // in values
     vtkm::IdComponent expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
     vtkm::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
-    FloatCastHandle castValues(values);
 
     IdComponentArrayHandle keysOut;
     IdArrayHandle valuesOut;
@@ -1640,21 +1627,14 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Inclusive By Key with 1 elements" << std::endl;
 
-    const vtkm::Id inputLength = 1;
-    vtkm::Id inputKeys[inputLength] = { 0 };
-    vtkm::Id inputValues[inputLength] = { 5 };
-
-    const vtkm::Id expectedLength = 1;
-
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 5 });
 
     IdArrayHandle valuesOut;
 
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut, vtkm::Add());
 
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == 1, "Got wrong number of output values");
     const vtkm::Id v = valuesOut.ReadPortal().Get(0);
     VTKM_TEST_ASSERT(5 == v, "Incorrect scanned value");
   }
@@ -1664,15 +1644,11 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Exclusive By Key with 2 elements" << std::endl;
 
-    const vtkm::Id inputLength = 2;
-    vtkm::Id inputKeys[inputLength] = { 0, 1 };
-    vtkm::Id inputValues[inputLength] = { 1, 1 };
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1 });
 
     const vtkm::Id expectedLength = 2;
     vtkm::Id expectedValues[expectedLength] = { 1, 1 };
-
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
 
@@ -1692,8 +1668,7 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Inclusive By Key with " << ARRAY_SIZE << " elements" << std::endl;
 
-    const vtkm::Id inputLength = ARRAY_SIZE;
-    std::vector<vtkm::Id> inputKeys(inputLength);
+    std::vector<vtkm::Id> inputKeys(ARRAY_SIZE);
 
     for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
     {
@@ -1702,10 +1677,9 @@ private:
       else
         inputKeys[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(i);
     }
-    std::vector<vtkm::Id> inputValues(inputLength, 1);
+    std::vector<vtkm::Id> inputValues(ARRAY_SIZE, 1);
 
-    const vtkm::Id expectedLength = ARRAY_SIZE;
-    std::vector<vtkm::Id> expectedValues(expectedLength);
+    std::vector<vtkm::Id> expectedValues(ARRAY_SIZE);
     for (std::size_t i = 0; i < ARRAY_SIZE; i++)
     {
       if (i % 100 < 98)
@@ -1714,17 +1688,17 @@ private:
         expectedValues[i] = static_cast<vtkm::Id>(1);
     }
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues);
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, vtkm::CopyFlag::Off);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, vtkm::CopyFlag::Off);
 
     IdArrayHandle valuesOut;
 
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut, vtkm::Add());
 
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == ARRAY_SIZE,
                      "Got wrong number of output values");
     auto values_portal = valuesOut.ReadPortal();
-    for (auto i = 0; i < expectedLength; i++)
+    for (auto i = 0; i < ARRAY_SIZE; i++)
     {
       const vtkm::Id v = values_portal.Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
@@ -1735,15 +1709,12 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Inclusive By Key" << std::endl;
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
 
@@ -1763,15 +1734,12 @@ private:
     std::cout << "Testing Scan Inclusive By Key In Place" << std::endl;
 
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     Algorithm::ScanInclusiveByKey(keys, values, values);
     VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
@@ -1789,16 +1757,13 @@ private:
     std::cout << "Testing Scan Inclusive By Key In Place with a Fancy Array" << std::endl;
 
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    FloatCastHandle castValues(values);
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
-    FloatCastHandle castValues(values);
 
     Algorithm::ScanInclusiveByKey(keys, castValues, castValues);
     VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
@@ -1816,15 +1781,12 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Exclusive By Key with 1 elements" << std::endl;
 
-    const vtkm::Id inputLength = 1;
-    vtkm::Id inputKeys[inputLength] = { 0 };
-    vtkm::Id inputValues[inputLength] = { 0 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 1;
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0 });
 
     IdArrayHandle valuesOut;
 
@@ -1841,16 +1803,13 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Exclusive By Key with 2 elements" << std::endl;
 
-    const vtkm::Id inputLength = 2;
-    vtkm::Id inputKeys[inputLength] = { 0, 1 };
-    vtkm::Id inputValues[inputLength] = { 1, 1 };
     vtkm::Id init = 5;
+
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1 });
 
     const vtkm::Id expectedLength = 2;
     vtkm::Id expectedValues[expectedLength] = { 5, 5 };
-
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
 
@@ -1871,8 +1830,7 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Exclusive By Key with " << ARRAY_SIZE << " elements" << std::endl;
 
-    const vtkm::Id inputLength = ARRAY_SIZE;
-    std::vector<vtkm::Id> inputKeys(inputLength);
+    std::vector<vtkm::Id> inputKeys(ARRAY_SIZE);
     for (std::size_t i = 0; i < ARRAY_SIZE; i++)
     {
       if (i % 100 < 98)
@@ -1880,11 +1838,10 @@ private:
       else
         inputKeys[i] = static_cast<vtkm::Id>(i);
     }
-    std::vector<vtkm::Id> inputValues(inputLength, 1);
+    std::vector<vtkm::Id> inputValues(ARRAY_SIZE, 1);
     vtkm::Id init = 5;
 
-    const vtkm::Id expectedLength = ARRAY_SIZE;
-    std::vector<vtkm::Id> expectedValues(expectedLength);
+    std::vector<vtkm::Id> expectedValues(ARRAY_SIZE);
     for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
     {
       if (i % 100 < 98)
@@ -1893,17 +1850,17 @@ private:
         expectedValues[static_cast<std::size_t>(i)] = init;
     }
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues);
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, vtkm::CopyFlag::Off);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, vtkm::CopyFlag::Off);
 
     IdArrayHandle valuesOut;
 
     Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, vtkm::Add());
 
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == ARRAY_SIZE,
                      "Got wrong number of output values");
     auto valuesPortal = valuesOut.ReadPortal();
-    for (vtkm::Id i = 0; i < expectedLength; i++)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
     {
       const vtkm::Id v = valuesPortal.Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
@@ -1915,16 +1872,14 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Scan Exclusive By Key" << std::endl;
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::Id init = 5;
+
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
 
@@ -1945,16 +1900,14 @@ private:
     std::cout << "Testing Scan Inclusive By Key In Place" << std::endl;
 
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::Id init = 5;
+
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     Algorithm::ScanExclusiveByKey(keys, values, values, init, vtkm::Add());
     VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
@@ -1972,17 +1925,15 @@ private:
     std::cout << "Testing Scan Inclusive By Key In Place with a Fancy Array" << std::endl;
 
 
-    const vtkm::Id inputLength = 10;
-    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
-    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::FloatDefault init = 5;
+
+    IdComponentArrayHandle keys =
+      vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle<vtkm::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    FloatCastHandle castValues(values);
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
-
-    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
-    FloatCastHandle castValues(values);
 
     Algorithm::ScanExclusiveByKey(keys, castValues, castValues, init, vtkm::Add());
     VTKM_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
@@ -2049,7 +2000,7 @@ private:
       inputValues[mid] = 0.0;
 
       vtkm::cont::ArrayHandle<vtkm::Float64> array =
-        vtkm::cont::make_ArrayHandle(&inputValues[0], ARRAY_SIZE);
+        vtkm::cont::make_ArrayHandle(inputValues, vtkm::CopyFlag::Off);
 
       vtkm::Float64 product = Algorithm::ScanInclusive(array, array, vtkm::Multiply());
 
@@ -2082,7 +2033,7 @@ private:
       {
         testValues[i] = TestValue(1, Vec3());
       }
-      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
+      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues, vtkm::CopyFlag::Off);
 
       Vec3 sum = Algorithm::ScanInclusive(values, values);
       std::cout << "Sum that was returned " << sum << std::endl;
@@ -2194,7 +2145,8 @@ private:
       std::size_t mid = ARRAY_SIZE / 2;
       inputValues[mid] = 0.0;
 
-      vtkm::cont::ArrayHandle<vtkm::Float64> array = vtkm::cont::make_ArrayHandle(inputValues);
+      vtkm::cont::ArrayHandle<vtkm::Float64> array =
+        vtkm::cont::make_ArrayHandle(inputValues, vtkm::CopyFlag::Off);
 
       vtkm::Float64 initialValue = 2.00;
       vtkm::Float64 product =
@@ -2231,7 +2183,7 @@ private:
       {
         testValues[i] = TestValue(1, Vec3());
       }
-      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
+      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues, vtkm::CopyFlag::Off);
 
       Vec3 sum = Algorithm::ScanExclusive(values, values);
       std::cout << "Sum that was returned " << sum << std::endl;
@@ -2470,7 +2422,7 @@ private:
       testData[i] = TestCopy<T>::get(index);
     }
 
-    vtkm::cont::ArrayHandle<T> input = vtkm::cont::make_ArrayHandle(&testData[0], COPY_ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> input = vtkm::cont::make_ArrayHandle(testData, vtkm::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     {
@@ -2680,7 +2632,7 @@ private:
       testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
 
-    IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
+    IdArrayHandle input = vtkm::cont::make_ArrayHandle<vtkm::Id>(testData, vtkm::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     vtkm::cont::ArrayHandle<vtkm::Float64> temp;
@@ -2710,10 +2662,8 @@ private:
     // a single atomic value.
     std::cout << "Testing Atomic Add with vtkm::Int32" << std::endl;
     {
-      std::vector<vtkm::Int32> singleElement;
-      singleElement.push_back(0);
       vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
-        vtkm::cont::make_ArrayHandle(singleElement);
+        vtkm::cont::make_ArrayHandle<vtkm::Int32>({ 0 });
 
       vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
       {
@@ -2727,10 +2677,8 @@ private:
 
     std::cout << "Testing Atomic Add with vtkm::Int64" << std::endl;
     {
-      std::vector<vtkm::Int64> singleElement;
-      singleElement.push_back(0);
       vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
-        vtkm::cont::make_ArrayHandle(singleElement);
+        vtkm::cont::make_ArrayHandle<vtkm::Int64>({ 0 });
 
       vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
       {
@@ -2744,10 +2692,8 @@ private:
 
     std::cout << "Testing Atomic CAS with vtkm::Int32" << std::endl;
     {
-      std::vector<vtkm::Int32> singleElement;
-      singleElement.push_back(0);
       vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
-        vtkm::cont::make_ArrayHandle(singleElement);
+        vtkm::cont::make_ArrayHandle<vtkm::Int32>({ 0 });
 
       vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
       {
@@ -2761,10 +2707,8 @@ private:
 
     std::cout << "Testing Atomic CAS with vtkm::Int64" << std::endl;
     {
-      std::vector<vtkm::Int64> singleElement;
-      singleElement.push_back(0);
       vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
-        vtkm::cont::make_ArrayHandle(singleElement);
+        vtkm::cont::make_ArrayHandle<vtkm::Int64>({ 0 });
 
       vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
       {

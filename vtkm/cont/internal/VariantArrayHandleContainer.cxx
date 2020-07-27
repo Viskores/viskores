@@ -43,7 +43,7 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(
   const std::type_info& type)
 {
   std::ostringstream out;
-  out << "Could not find appropriate cast for array in CastAndCall1.\n"
+  out << "Could not find appropriate cast for array in CastAndCall.\n"
          "Array: ";
   ref.PrintSummary(out);
   out << "TypeList: " << type.name() << "\n";

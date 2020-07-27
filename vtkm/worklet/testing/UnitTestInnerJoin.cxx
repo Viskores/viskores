@@ -40,11 +40,10 @@ public:
   {
     using Algorithm = vtkm::cont::Algorithm;
 
-    std::vector<vtkm::Id> A = { 8, 3, 6, 8, 9, 5, 12, 10, 14 };
-    std::vector<vtkm::Id> B = { 7, 11, 9, 8, 5, 1, 0, 5 };
-
-    vtkm::cont::ArrayHandle<vtkm::Id> A_arr = vtkm::cont::make_ArrayHandle(A);
-    vtkm::cont::ArrayHandle<vtkm::Id> B_arr = vtkm::cont::make_ArrayHandle(B);
+    vtkm::cont::ArrayHandle<vtkm::Id> A_arr =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 8, 3, 6, 8, 9, 5, 12, 10, 14 });
+    vtkm::cont::ArrayHandle<vtkm::Id> B_arr =
+      vtkm::cont::make_ArrayHandle<vtkm::Id>({ 7, 11, 9, 8, 5, 1, 0, 5 });
     vtkm::cont::ArrayHandle<vtkm::Id> idxA;
     vtkm::cont::ArrayHandle<vtkm::Id> idxB;
 

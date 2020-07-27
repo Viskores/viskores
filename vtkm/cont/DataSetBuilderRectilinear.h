@@ -27,7 +27,8 @@ class VTKM_CONT_EXPORT DataSetBuilderRectilinear
   template <typename T, typename U>
   VTKM_CONT static void CopyInto(const std::vector<T>& input, vtkm::cont::ArrayHandle<U>& output)
   {
-    DataSetBuilderRectilinear::CopyInto(vtkm::cont::make_ArrayHandle(input), output);
+    DataSetBuilderRectilinear::CopyInto(vtkm::cont::make_ArrayHandle(input, vtkm::CopyFlag::Off),
+                                        output);
   }
 
   template <typename T, typename U>
@@ -40,7 +41,8 @@ class VTKM_CONT_EXPORT DataSetBuilderRectilinear
   template <typename T, typename U>
   VTKM_CONT static void CopyInto(const T* input, vtkm::Id len, vtkm::cont::ArrayHandle<U>& output)
   {
-    DataSetBuilderRectilinear::CopyInto(vtkm::cont::make_ArrayHandle(input, len), output);
+    DataSetBuilderRectilinear::CopyInto(
+      vtkm::cont::make_ArrayHandle(input, len, vtkm::CopyFlag::Off), output);
   }
 
 public:

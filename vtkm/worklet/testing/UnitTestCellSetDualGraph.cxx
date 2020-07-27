@@ -40,10 +40,11 @@ private:
 public:
   void TestTriangleMesh() const
   {
-    std::vector<vtkm::Id> connectivity = { 0, 2, 4, 1, 3, 5, 2, 6, 4, 5, 3, 7, 2, 9, 6, 4, 6, 8 };
+    auto connectivity = vtkm::cont::make_ArrayHandle<vtkm::Id>(
+      { 0, 2, 4, 1, 3, 5, 2, 6, 4, 5, 3, 7, 2, 9, 6, 4, 6, 8 });
 
     vtkm::cont::CellSetSingleType<> cellSet;
-    cellSet.Fill(8, vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::cont::make_ArrayHandle(connectivity));
+    cellSet.Fill(8, vtkm::CELL_SHAPE_TRIANGLE, 3, connectivity);
 
     vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;

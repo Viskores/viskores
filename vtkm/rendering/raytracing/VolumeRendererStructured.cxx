@@ -737,7 +737,7 @@ void VolumeRendererStructured::SetData(const vtkm::cont::CoordinateSystem& coord
   IsUniformDataSet = !coords.GetData().IsType<CartesianArrayHandle>();
   IsSceneDirty = true;
   SpatialExtent = coords.GetBounds();
-  Coordinates = coords.GetData();
+  Coordinates = coords;
   ScalarField = &scalarField;
   Cellset = cellset;
   ScalarRange = scalarRange;
@@ -829,7 +829,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   {
     vtkm::cont::Token token;
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-    vertices = Coordinates.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    vertices = Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
     UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
@@ -872,7 +872,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   {
     vtkm::cont::Token token;
     CartesianArrayHandle vertices;
-    vertices = Coordinates.Cast<CartesianArrayHandle>();
+    vertices = Coordinates.GetData().Cast<CartesianArrayHandle>();
     RectilinearLocator<Device> locator(vertices, Cellset, token);
     if (isAssocPoints)
     {

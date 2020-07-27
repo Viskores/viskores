@@ -172,7 +172,7 @@ static vtkm::cont::DataSet MakeExplicit(vtkm::Id numI, vtkm::Id numJ, vtkm::Id n
 
   vtkm::cont::DataSet dsUniform = MakeUniform(numI, numJ, numK, numLayers);
 
-  auto coordData = dsUniform.GetCoordinateSystem(0).GetData();
+  auto coordData = dsUniform.GetCoordinateSystem(0).GetDataAsMultiplexer();
   vtkm::Id numPts = coordData.GetNumberOfValues();
   vtkm::cont::ArrayHandle<CoordType> explCoords;
 

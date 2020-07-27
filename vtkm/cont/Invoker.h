@@ -10,10 +10,8 @@
 #ifndef vtk_m_cont_Invoker_h
 #define vtk_m_cont_Invoker_h
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/DispatcherPointNeighborhood.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/internal/MaskBase.h>
+#include <vtkm/worklet/internal/ScatterBase.h>
 
 #include <vtkm/cont/TryExecute.h>
 

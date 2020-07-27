@@ -177,9 +177,7 @@ public:
     vtkm::cont::ColorTable table(range, rgb1, rgb2, rgbspace);
     VTKM_TEST_ASSERT(table.GetClamping() == true, "clamping not setup properly");
 
-    constexpr vtkm::Id nvals = 4;
-    constexpr int data[nvals] = { -1, 0, 1, 2 };
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ -1, 0, 1, 2 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = table.Map(field, colors);
@@ -202,9 +200,7 @@ public:
     table.SetClampingOff();
     VTKM_TEST_ASSERT(table.GetClamping() == false, "clamping not setup properly");
 
-    constexpr vtkm::Id nvals = 4;
-    constexpr int data[nvals] = { -2, -1, 2, 3 };
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ -2, -1, 2, 3 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = table.Map(field, colors);
@@ -249,9 +245,7 @@ public:
                      "rescaled has incorrect number of control points");
 
     //Verify that the rescaled color table generates correct colors
-    constexpr vtkm::Id nvals = 6;
-    constexpr int data[nvals] = { 0, 10, 20, 30, 40, 50 };
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ 0, 10, 20, 30, 40, 50 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     const bool ran = newTable.Map(field, colors);
@@ -284,11 +278,8 @@ public:
     VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 4,
                      "adding points caused number of control points to be wrong");
 
-    constexpr vtkm::Id nvals = 3;
-    constexpr float data[nvals] = { 10.0f, -5.0f, -15.0f };
-
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ 10.0f, -5.0f, -15.0f });
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
@@ -322,11 +313,8 @@ public:
     VTKM_TEST_ASSERT(opacityData[3] == 0.0, "rescale modified mid/sharp of opacity");
 
 
-    constexpr vtkm::Id nvals = 6;
-    constexpr int data[nvals] = { 0, 10, 20, 30, 40, 50 };
-
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ 0, 10, 20, 30, 40, 50 });
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
@@ -366,11 +354,8 @@ public:
                      "removing points didn't update range");
     table.RescaleToRange(vtkm::Range{ 0.0, 50.0 });
 
-    constexpr vtkm::Id nvals = 6;
-    constexpr float data[nvals] = { 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
-
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f });
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
@@ -424,11 +409,8 @@ public:
                      "removing points didn't update range");
     table.RescaleToRange(vtkm::Range{ 0.0, 50.0 });
 
-    constexpr vtkm::Id nvals = 6;
-    constexpr float data[nvals] = { 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f };
-
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f });
     const bool ran = table.Map(field, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
@@ -454,9 +436,7 @@ public:
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
                      "loading linear green table failed with number of control points");
 
-    constexpr vtkm::Id nvals = 3;
-    constexpr double data[3] = { 0.0, 0.5, 1.0 };
-    auto samples = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto samples = vtkm::cont::make_ArrayHandle({ 0.0, 0.5, 1.0 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     {
@@ -503,11 +483,8 @@ public:
     table.Sample(256, samples);
     VTKM_TEST_ASSERT((samples.Samples.GetNumberOfValues() == 260), "invalid sample length");
 
-    constexpr vtkm::Id nvals = 8;
-    constexpr int data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
-
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    auto field = vtkm::cont::make_ArrayHandle(data, nvals);
+    auto field = vtkm::cont::make_ArrayHandle({ -1, 0, 10, 20, 30, 40, 50, 60 });
     const bool ran = table.Map(field, samples, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 

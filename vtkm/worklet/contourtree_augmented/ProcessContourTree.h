@@ -150,9 +150,8 @@ public:
 
     // now sort it
     // Setting saddlePeak reference to the make_ArrayHandle directly does not work
-    EdgePairArray tempArray = vtkm::cont::make_ArrayHandle(arcSorter);
-    vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
-    vtkm::cont::ArrayCopy(tempArray, sortedArcs);
+    sortedArcs = vtkm::cont::make_ArrayHandle(arcSorter, vtkm::CopyFlag::On);
+    vtkm::cont::Algorithm::Sort(sortedArcs, SaddlePeakSort());
   } // CollectSortedArcs
 
   // collect the sorted superarcs
@@ -206,11 +205,10 @@ public:
     } // per vertex
 
     // Setting saddlePeak reference to the make_ArrayHandle directly does not work
-    EdgePairArray tempArray = vtkm::cont::make_ArrayHandle(superarcSorter);
+    saddlePeak = vtkm::cont::make_ArrayHandle(superarcSorter, vtkm::CopyFlag::On);
 
     // now sort it
-    vtkm::cont::Algorithm::Sort(tempArray, SaddlePeakSort());
-    vtkm::cont::ArrayCopy(tempArray, saddlePeak);
+    vtkm::cont::Algorithm::Sort(saddlePeak, SaddlePeakSort());
   } // CollectSortedSuperarcs()
 
   // routine to compute the volume for each hyperarc and superarc

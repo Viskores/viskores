@@ -61,7 +61,7 @@ vtkm::cont::DataSet MakeTestDataSetRectilinear()
 vtkm::cont::DataSet MakeTestDataSetCurvilinear()
 {
   auto recti = MakeTestDataSetRectilinear();
-  auto coords = recti.GetCoordinateSystem().GetData();
+  auto coords = recti.GetCoordinateSystem().GetDataAsMultiplexer();
 
   vtkm::cont::ArrayHandle<PointType> sheared;
   sheared.Allocate(coords.GetNumberOfValues());
@@ -140,7 +140,8 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
 
   vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
-  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  dispatcher.Invoke(
+    ds.GetCellSet(), ds.GetCoordinateSystem().GetDataAsMultiplexer(), pcoords, wcoords);
 }
 
 //-----------------------------------------------------------------------------

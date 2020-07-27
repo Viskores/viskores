@@ -196,14 +196,7 @@ struct PermutationTests
     }
 
     // Create an ArrayHandle from the buffer
-    ValueArrayType array = vtkm::cont::make_ArrayHandle(buffer);
-
-    // Copy the array so that the data is not destroyed when we return from
-    // this method.
-    ValueArrayType arrayCopy;
-    Algorithm::Copy(array, arrayCopy);
-
-    return arrayCopy;
+    return vtkm::cont::make_ArrayHandle(buffer, vtkm::CopyFlag::On);
   }
 
   void operator()() const

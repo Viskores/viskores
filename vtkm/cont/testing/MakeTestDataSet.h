@@ -364,8 +364,10 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
   dataSet.AddPointField("pointvar", pointvar);
 
   vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1) * (dims[2] - 1);
-  dataSet.AddCellField(
-    "cellvar", vtkm::cont::make_ArrayHandleCounting(vtkm::Float64(0), vtkm::Float64(1), numCells));
+  vtkm::cont::ArrayHandle<vtkm::Float64> cellvar;
+  vtkm::cont::ArrayCopy(
+    vtkm::cont::make_ArrayHandleCounting(vtkm::Float64(0), vtkm::Float64(1), numCells), cellvar);
+  dataSet.AddCellField("cellvar", cellvar);
 
   return dataSet;
 }

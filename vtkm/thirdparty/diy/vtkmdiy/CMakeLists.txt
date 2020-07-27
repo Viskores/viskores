@@ -251,8 +251,8 @@ endif()
 
 install(TARGETS ${diy_targets} EXPORT ${diy_export_name} DESTINATION ${diy_install_lib_dir})
 
-export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) # Only generate these files when diy is the main project
-    install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
-    install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
+  export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
+  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
+  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
 endif()

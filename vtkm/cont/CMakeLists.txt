@@ -128,9 +128,9 @@ set(template_sources
   CellSetExtrude.hxx
   CellSetStructured.hxx
   ColorTable.hxx
-  CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
+  ParticleArrayCopy.hxx
   StorageVirtual.hxx
   VirtualObjectHandle.hxx
   )
@@ -151,7 +151,6 @@ set(sources
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
-  ParticleArrayCopy.cxx
   RuntimeDeviceTracker.cxx
   Token.cxx
   TryExecute.cxx
@@ -185,7 +184,6 @@ set(sources
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
-  ParticleArrayCopy.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
   PointLocatorUniformGrid.cxx

@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -32,7 +33,7 @@ inline VTKM_CONT Pathline::Pathline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
+inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds)
 {
   this->Seeds = seeds;
 }
@@ -67,17 +68,20 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   }
 
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using GridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
+  FieldType velocities(field);
+  FieldType velocities2(field2);
   GridEvalType eval(
-    coords, cells, field, this->PreviousTime, coords2, cells2, field2, this->NextTime);
+    coords, cells, velocities, this->PreviousTime, coords2, cells2, velocities2, this->NextTime);
   RK4Type rk4(eval, this->StepSize);
 
   vtkm::worklet::Streamline streamline;
-  vtkm::worklet::StreamlineResult res;
+  vtkm::worklet::StreamlineResult<vtkm::Massless> res;
 
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 

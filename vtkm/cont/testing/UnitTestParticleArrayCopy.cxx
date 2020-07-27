@@ -19,25 +19,25 @@ void TestParticleArrayCopy()
   vtkm::FloatDefault x0(-1), x1(1);
   std::uniform_real_distribution<vtkm::FloatDefault> dist(x0, x1);
 
-  std::vector<vtkm::Particle> particles;
+  std::vector<vtkm::Massless> particles;
   vtkm::Id N = 17;
   for (vtkm::Id i = 0; i < N; i++)
   {
     auto x = dist(generator);
     auto y = dist(generator);
     auto z = dist(generator);
-    particles.push_back(vtkm::Particle(vtkm::Vec3f(x, y, z), i));
+    particles.push_back(vtkm::Massless(vtkm::Vec3f(x, y, z), i));
   }
 
   for (int i = 0; i < 2; i++)
   {
-    auto particleAH = vtkm::cont::make_ArrayHandle(particles);
+    auto particleAH = vtkm::cont::make_ArrayHandle(particles, vtkm::CopyFlag::Off);
 
     //Test copy position only
     if (i == 0)
     {
       vtkm::cont::ArrayHandle<vtkm::Vec3f> pos;
-      vtkm::cont::ParticleArrayCopy(particleAH, pos);
+      vtkm::cont::ParticleArrayCopy<vtkm::Massless>(particleAH, pos);
 
       auto pPortal = particleAH.ReadPortal();
       for (vtkm::Id j = 0; j < N; j++)
@@ -54,7 +54,7 @@ void TestParticleArrayCopy()
       vtkm::cont::ArrayHandle<vtkm::ParticleStatus> status;
       vtkm::cont::ArrayHandle<vtkm::FloatDefault> ptime;
 
-      vtkm::cont::ParticleArrayCopy(particleAH, pos, ids, steps, status, ptime);
+      vtkm::cont::ParticleArrayCopy<vtkm::Massless>(particleAH, pos, ids, steps, status, ptime);
 
       auto pPortal = particleAH.ReadPortal();
       for (vtkm::Id j = 0; j < N; j++)

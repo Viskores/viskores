@@ -958,7 +958,7 @@ public:
   ///
   VTKM_CONT ArrayHandleNewStyle(const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                 const StorageType& storage = StorageType())
-    : Internals(std::make_shared<InternalsStruct>(&buffers.front(), storage))
+    : Internals(std::make_shared<InternalsStruct>(buffers.data(), storage))
   {
     VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Internals->Buffers.size()) ==
                 GetNumberOfBuffers());
@@ -1304,7 +1304,7 @@ public:
   ///
   VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
   {
-    return &this->Internals->Buffers.front();
+    return this->Internals->Buffers.data();
   }
 
 private:
@@ -1409,8 +1409,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   vtkm::Id sz = array.GetNumberOfValues();
 
   out << "valueType=" << vtkm::cont::TypeToString<T>()
-      << " storageType=" << vtkm::cont::TypeToString<StorageT>() << sz << " values occupying "
-      << (static_cast<size_t>(sz) * sizeof(T)) << " bytes [";
+      << " storageType=" << vtkm::cont::TypeToString<StorageT>() << " " << sz
+      << " values occupying " << (static_cast<size_t>(sz) * sizeof(T)) << " bytes [";
 
   PortalType portal = array.ReadPortal();
   if (full || sz <= 7)
