@@ -158,7 +158,7 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   const IdArrayType& sortOrder,
   const vtkm::cont::ArrayHandle<T, StorageType>& dataField,
   bool dataFieldIsSorted)
-{ // ComputeBranchDecomposition()
+{ // C)omputeBranchDecomposition()
   auto branchMinimumPortal = branchMinimum.ReadPortal();
   auto branchMaximumPortal = branchMaximum.ReadPortal();
   auto branchSaddlePortal = branchSaddle.ReadPortal();
@@ -177,7 +177,7 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
   // Reconstruct explicit branch decomposition from array representation
   for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
   {
-    branches[branchID]->OriginalId = branchID;
+    branches[branchID]->OriginalId = static_cast<vtkm::Id>(branchID);
     if (!NoSuchElement(branchSaddlePortal.Get(static_cast<vtkm::Id>(branchID))))
     {
       branches[branchID]->Saddle = MaskedIndex(
