@@ -201,22 +201,6 @@ void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet)
   }
 }
 
-void WriteVertexCells(std::ostream& out, const vtkm::cont::DataSet& dataSet)
-{
-  vtkm::Id nCells = dataSet.GetCoordinateSystem(0).GetNumberOfPoints();
-
-  out << "CELLS " << nCells << " " << nCells * 2 << '\n';
-  for (int i = 0; i < nCells; i++)
-  {
-    out << "1 " << i << '\n';
-  }
-  out << "CELL_TYPES " << nCells << '\n';
-  for (int i = 0; i < nCells; i++)
-  {
-    out << vtkm::CELL_SHAPE_VERTEX << '\n';
-  }
-}
-
 void WritePointFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
 {
   bool wrote_header = false;
@@ -303,13 +287,6 @@ void WriteCellFields(std::ostream& out, const vtkm::cont::DataSet& dataSet)
     vtkm::cont::CastAndCall(field.GetData().ResetTypes(vtkm::TypeListAll{}),
                             OutputFieldFunctor(out));
   }
-}
-
-void WriteDataSetAsPoints(std::ostream& out, const vtkm::cont::DataSet& dataSet)
-{
-  out << "DATASET UNSTRUCTURED_GRID" << '\n';
-  WritePoints(out, dataSet);
-  WriteVertexCells(out, dataSet);
 }
 
 template <class CellSetType>
@@ -407,7 +384,7 @@ void WriteDataSetAsStructured(std::ostream& out,
   }
 }
 
-void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, bool just_points = false)
+void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
 {
   // The Paraview parser cannot handle scientific notation:
   out << std::fixed;
@@ -415,43 +392,35 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet, bool just_poin
   out << "vtk output" << '\n';
   out << "ASCII" << '\n';
 
-  if (just_points)
+  vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
+  if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
   {
-    WriteDataSetAsPoints(out, dataSet);
-    WritePointFields(out, dataSet);
+    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
+  {
+    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>());
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
+  {
+    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>());
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
+  {
+    WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>());
+  }
+  else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
+  {
+    // these function just like explicit cell sets
+    WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>());
   }
   else
   {
-    vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
-    if (cellSet.IsType<vtkm::cont::CellSetExplicit<>>())
-    {
-      WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetExplicit<>>());
-    }
-    else if (cellSet.IsType<vtkm::cont::CellSetStructured<1>>())
-    {
-      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<1>>());
-    }
-    else if (cellSet.IsType<vtkm::cont::CellSetStructured<2>>())
-    {
-      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<2>>());
-    }
-    else if (cellSet.IsType<vtkm::cont::CellSetStructured<3>>())
-    {
-      WriteDataSetAsStructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetStructured<3>>());
-    }
-    else if (cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
-    {
-      // these function just like explicit cell sets
-      WriteDataSetAsUnstructured(out, dataSet, cellSet.Cast<vtkm::cont::CellSetSingleType<>>());
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
-    }
-
-    WritePointFields(out, dataSet);
-    WriteCellFields(out, dataSet);
+    throw vtkm::cont::ErrorBadType("Could not determine type to write out.");
   }
+
+  WritePointFields(out, dataSet);
+  WriteCellFields(out, dataSet);
 }
 
 } // anonymous namespace
@@ -471,7 +440,7 @@ VTKDataSetWriter::VTKDataSetWriter(const std::string& fileName)
 {
 }
 
-void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet, bool just_points) const
+void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet) const
 {
   if (dataSet.GetNumberOfCoordinateSystems() < 1)
   {
@@ -481,7 +450,7 @@ void VTKDataSetWriter::WriteDataSet(const vtkm::cont::DataSet& dataSet, bool jus
   try
   {
     std::ofstream fileStream(this->FileName.c_str(), std::fstream::trunc);
-    Write(fileStream, dataSet, just_points);
+    Write(fileStream, dataSet);
     fileStream.close();
   }
   catch (std::ofstream::failure& error)
