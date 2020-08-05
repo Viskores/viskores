@@ -66,7 +66,7 @@ public:
 
     T* storage = reinterpret_cast<T*>(this->TempStorage.get());
     //construct a handle that is a view onto the memory
-    return vtkm::cont::make_ArrayHandle(storage, size);
+    return vtkm::cont::make_ArrayHandle(storage, size, vtkm::CopyFlag::Off);
   }
 
   template <typename T>
