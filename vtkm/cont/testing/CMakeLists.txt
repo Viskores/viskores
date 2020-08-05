@@ -88,6 +88,7 @@ set(unit_tests
   UnitTestTimer.cxx
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
+  UnitTestUnknownArrayHandle.cxx
   UnitTestVariantArrayHandle.cxx
   )
 
