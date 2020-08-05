@@ -419,10 +419,10 @@ public:
     // STAGE I:  Find the upward and downwards weight for each superarc, and set up arrays
     IdArrayType upWeight;
     upWeight.Allocate(nSuperarcs);
-    //auto upWeightPortal = upWeight.WritePortal();
+    auto upWeightPortal = upWeight.WritePortal();
     IdArrayType downWeight;
     downWeight.Allocate(nSuperarcs);
-    //auto downWeightPortal = downWeight.WritePortal();
+    auto downWeightPortal = downWeight.WritePortal();
     IdArrayType bestUpward;
     auto noSuchElementArray =
       vtkm::cont::ArrayHandleConstant<vtkm::Id>((vtkm::Id)NO_SUCH_ELEMENT, nSupernodes);
@@ -455,23 +455,23 @@ public:
       { // ascending superarc
         superarcListPortal.Set(superarc,
                                EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
-        upWeight.WritePortal().Set(superarc, superarcDependentWeightPortal.Get(superarc));
+        upWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        downWeight.WritePortal().Set(superarc,
-                                     (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
-                                       (superarcIntrinsicWeightPortal.Get(superarc) - 1));
+        downWeightPortal.Set(superarc,
+                             (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
+                               (superarcIntrinsicWeightPortal.Get(superarc) - 1));
       } // ascending superarc
       else
       { // descending superarc
         superarcListPortal.Set(superarc,
                                EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
-        downWeight.WritePortal().Set(superarc, superarcDependentWeightPortal.Get(superarc));
+        downWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
-        upWeight.WritePortal().Set(superarc,
-                                   (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
-                                     (superarcIntrinsicWeightPortal.Get(superarc) - 1));
+        upWeightPortal.Set(superarc,
+                           (totalVolume - superarcDependentWeightPortal.Get(superarc)) +
+                             (superarcIntrinsicWeightPortal.Get(superarc) - 1));
       } // descending superarc
     }   // per superarc
 
