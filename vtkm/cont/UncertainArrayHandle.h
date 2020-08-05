@@ -119,4 +119,99 @@ VTKM_CONT vtkm::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>
 }
 }
 
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename ValueTypeList, typename StorageTypeList>
+struct SerializableTypeString<vtkm::cont::UncertainArrayHandle<ValueTypeList, StorageTypeList>>
+{
+  static VTKM_CONT std::string Get()
+  {
+    return SerializableTypeString<vtkm::cont::UnknownArrayHandle>::Get();
+  }
+};
+}
+} // namespace vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+namespace internal
+{
+
+struct UncertainArrayHandleSerializeFunctor
+{
+  template <typename ArrayHandleType>
+  void operator()(const ArrayHandleType& ah, BinaryBuffer& bb) const
+  {
+    vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<ArrayHandleType>::Get());
+    vtkmdiy::save(bb, ah);
+  }
+};
+
+struct UncertainArrayHandleDeserializeFunctor
+{
+  template <typename T, typename S>
+  void operator()(vtkm::List<T, S>,
+                  vtkm::cont::UnknownArrayHandle& unknownArray,
+                  const std::string& typeString,
+                  bool& success,
+                  BinaryBuffer& bb) const
+  {
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T, S>;
+
+    if (!success && (typeString == vtkm::cont::SerializableTypeString<ArrayHandleType>::Get()))
+    {
+      ArrayHandleType knownArray;
+      vtkmdiy::load(bb, knownArray);
+      unknownArray = knownArray;
+      success = true;
+    }
+  }
+};
+
+} // internal
+
+template <typename ValueTypeList, typename StorageTypeList>
+struct Serialization<vtkm::cont::UncertainArrayHandle<ValueTypeList, StorageTypeList>>
+{
+  using Type = vtkm::cont::UncertainArrayHandle<ValueTypeList, StorageTypeList>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
+  {
+    obj.CastAndCall(internal::UncertainArrayHandleSerializeFunctor{}, bb);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
+  {
+    std::string typeString;
+    vtkmdiy::load(bb, typeString);
+
+    bool success = false;
+    vtkm::ListForEach(internal::UncertainArrayHandleDeserializeFunctor{},
+                      vtkm::cont::detail::ListAllArrayTypes<ValueTypeList, StorageTypeList>{},
+                      obj,
+                      typeString,
+                      success,
+                      bb);
+
+    if (!success)
+    {
+      throw vtkm::cont::ErrorBadType(
+        "Error deserializing Unknown/UncertainArrayHandle. Message TypeString: " + typeString);
+    }
+  }
+};
+
+} // namespace mangled_diy_namespace
+
+/// @endcond SERIALIZATION
+
 #endif //vtk_m_cont_UncertainArrayHandle_h

@@ -538,14 +538,14 @@ template <typename T>
 struct IsUndefinedArrayType
 {
 };
-template <typename T, typename U>
-struct IsUndefinedArrayType<vtkm::List<T, U>> : vtkm::cont::internal::IsInvalidArrayHandle<T, U>
+template <typename T, typename S>
+struct IsUndefinedArrayType<vtkm::List<T, S>> : vtkm::cont::internal::IsInvalidArrayHandle<T, S>
 {
 };
 
-template <typename TypeList, typename StorageList>
+template <typename ValueTypeList, typename StorageTypeList>
 using ListAllArrayTypes =
-  vtkm::ListRemoveIf<vtkm::ListCross<TypeList, StorageList>, IsUndefinedArrayType>;
+  vtkm::ListRemoveIf<vtkm::ListCross<ValueTypeList, StorageTypeList>, IsUndefinedArrayType>;
 
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHandle&,
@@ -583,5 +583,37 @@ void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
 }
 }
 } // namespace vtkm::cont
+
+//=============================================================================
+// Specializations of serialization related classes
+/// @cond SERIALIZATION
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <>
+struct VTKM_CONT_EXPORT SerializableTypeString<vtkm::cont::UnknownArrayHandle>
+{
+  static VTKM_CONT std::string Get();
+};
+}
+} // namespace vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+template <>
+struct VTKM_CONT_EXPORT Serialization<vtkm::cont::UnknownArrayHandle>
+{
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::UnknownArrayHandle& obj);
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::UnknownArrayHandle& obj);
+};
+
+} // namespace mangled_diy_namespace
+
+/// @endcond SERIALIZATION
 
 #endif //vtk_m_cont_UnknownArrayHandle_h

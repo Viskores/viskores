@@ -22,6 +22,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
@@ -376,6 +377,39 @@ struct TestEqualArrayHandle
   template <typename TypeList1, typename TypeList2>
   VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
                             const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCall(*this, array1, result);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
+                            const vtkm::cont::UnknownArrayHandle& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
+      *this, array1, result);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
+                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
+                            TestEqualResult& result) const
+  {
+    array1.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
+      *this, array2, result);
+  }
+
+  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
+                            const vtkm::cont::UnknownArrayHandle& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCallForTypes<vtkm::TypeListAll, VTKM_DEFAULT_STORAGE_LIST>(*this, array1, result);
+  }
+
+  template <typename TypeList, typename StorageList>
+  VTKM_CONT void operator()(const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
+                            const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array2,
                             TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);
