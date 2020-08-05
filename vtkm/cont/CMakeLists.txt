@@ -116,6 +116,7 @@ set(headers
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  UncertainArrayHandle.h
   UnknownArrayHandle.h
   VariantArrayHandle.h
   VirtualObjectHandle.h

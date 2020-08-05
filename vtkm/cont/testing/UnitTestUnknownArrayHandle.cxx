@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/TypeTraits.h>
@@ -104,7 +105,7 @@ void CheckUnknownArrayDefaults(const vtkm::cont::UnknownArrayHandle& array,
 
   std::cout << "  CastAndCall with default types" << std::endl;
   bool called = false;
-  CastAndCall(array, CheckFunctor(), called);
+  vtkm::cont::CastAndCall(array, CheckFunctor(), called);
 }
 
 template <typename TypeList, typename StorageList>
@@ -118,7 +119,12 @@ void CheckUnknownArray(const vtkm::cont::UnknownArrayHandle& array, vtkm::IdComp
   std::cout << "  CastAndCall with given types" << std::endl;
   bool called = false;
   array.CastAndCallForTypes<TypeList, StorageList>(CheckFunctor{}, called);
+  VTKM_TEST_ASSERT(
+    called, "The functor was never called (and apparently a bad value exception not thrown).");
 
+  std::cout << "  Check CastAndCall again with UncertainArrayHandle" << std::endl;
+  called = false;
+  vtkm::cont::CastAndCall(array.ResetTypes<TypeList, StorageList>(), CheckFunctor{}, called);
   VTKM_TEST_ASSERT(
     called, "The functor was never called (and apparently a bad value exception not thrown).");
 }

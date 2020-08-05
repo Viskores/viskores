@@ -177,10 +177,14 @@ inline std::shared_ptr<UnknownAHContainer> MakeUnknownAHContainerFunctor::operat
 
 } // namespace detail
 
-/// \brief An ArrayHandle of an unknown type and storage.
+// Forward declaration. Include UncertainArrayHandle.h if using this.
+template <typename ValueTypeList, typename StorageTypeList>
+class UncertainArrayHandle;
+
+/// \brief An ArrayHandle of an unknown value type and storage.
 ///
 /// `UnknownArrayHandle` holds an `ArrayHandle` object using runtime polymorphism
-/// to manage different value types and storage rather than compile-time templates.
+/// to manage different value and storage types rather than compile-time templates.
 /// This adds a programming convenience that helps avoid a proliferation of
 /// templates. It also provides the management necessary to interface VTK-m with
 /// data sources where types will not be known until runtime and is the storage
@@ -226,13 +230,16 @@ public:
   /// \brief Create a new array of the same type as this array.
   ///
   /// This method creates a new array that is the same type as this one and
-  /// returns a new variant array handle for it. This method is convenient when
+  /// returns a new `UnknownArrayHandle` for it. This method is convenient when
   /// creating output arrays that should be the same type as some input array.
   ///
   VTKM_CONT UnknownArrayHandle NewInstance() const
   {
     UnknownArrayHandle newArray;
-    newArray.Container = this->Container->MakeNewInstance();
+    if (this->Container)
+    {
+      newArray.Container = this->Container->MakeNewInstance();
+    }
     return newArray;
   }
 
@@ -262,11 +269,31 @@ public:
             this->IsStorageType<typename ArrayHandleType::StorageTag>());
   }
 
+  /// \brief Assigns potential value and storage types.
+  ///
+  /// Calling this method will return an `UncertainArrayHandle` with the provided
+  /// value and storage type lists. The returned object will hold the same
+  /// `ArrayHandle`, but `CastAndCall`s on the returned object will be constrained
+  /// to the given types.
+  ///
+  // Defined in UncertainArrayHandle.h
+  template <typename NewValueTypeList, typename NewStorageTypeList>
+  VTKM_CONT vtkm::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList> ResetTypes(
+    NewValueTypeList = NewValueTypeList{},
+    NewStorageTypeList = NewStorageTypeList{}) const;
+
   /// \brief Returns the number of values in the array.
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const
   {
-    return this->Container->NumberOfValues(this->Container->ArrayHandlePointer);
+    if (this->Container)
+    {
+      return this->Container->NumberOfValues(this->Container->ArrayHandlePointer);
+    }
+    else
+    {
+      return 0;
+    }
   }
 
   /// \brief Returns the number of components for each value in the array.
@@ -276,7 +303,14 @@ public:
   ///
   VTKM_CONT vtkm::IdComponent GetNumberOfComponents() const
   {
-    return this->Container->NumberOfComponents();
+    if (this->Container)
+    {
+      return this->Container->NumberOfComponents();
+    }
+    else
+    {
+      return 0;
+    }
   }
 
   /// \brief Determine if the contained array can be passed to the given array type.
@@ -344,19 +378,32 @@ public:
   ///
   VTKM_CONT void ReleaseResourcesExecution() const
   {
-    return this->Container->ReleaseResourcesExecution(this->Container->ArrayHandlePointer);
+    if (this->Container)
+    {
+      this->Container->ReleaseResourcesExecution(this->Container->ArrayHandlePointer);
+    }
   }
 
   /// Releases all resources in both the control and execution environments.
   ///
   VTKM_CONT void ReleaseResources() const
   {
-    return this->Container->ReleaseResources(this->Container->ArrayHandlePointer);
+    if (this->Container)
+    {
+      this->Container->ReleaseResources(this->Container->ArrayHandlePointer);
+    }
   }
 
   VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const
   {
-    this->Container->PrintSummary(this->Container->ArrayHandlePointer, out, full);
+    if (this->Container)
+    {
+      this->Container->PrintSummary(this->Container->ArrayHandlePointer, out, full);
+    }
+    else
+    {
+      out << "null array" << std::endl;
+    }
   }
 };
 
