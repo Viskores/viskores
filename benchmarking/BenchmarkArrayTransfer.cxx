@@ -77,6 +77,14 @@ struct ReadWriteValues : vtkm::worklet::WorkletMapField
   }
 };
 
+// Takes a vector of data and creates a fresh ArrayHandle with memory just allocated
+// in the control environment.
+template <typename T>
+vtkm::cont::ArrayHandle<T> CreateFreshArrayHandle(const std::vector<T>& vec)
+{
+  return vtkm::cont::make_ArrayHandleMove(std::vector<T>(vec));
+}
+
 //------------- Benchmark functors -------------------------------------------
 
 // Copies NumValues from control environment to execution environment and
@@ -98,13 +106,17 @@ void BenchContToExecRead(benchmark::State& state)
   }
 
   std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
     timer.Start();
     invoker(ReadValues{}, array);
     timer.Stop();
@@ -182,18 +194,25 @@ void BenchContToExecReadWrite(benchmark::State& state)
   }
 
   std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
+
     timer.Start();
     invoker(ReadWriteValues{}, array);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
+
+    // Remove data from execution environment so it has to be transferred again.
+    array.ReleaseResourcesExecution();
   }
 
   const int64_t iterations = static_cast<int64_t>(state.iterations());
@@ -224,20 +243,22 @@ void BenchRoundTripRead(benchmark::State& state)
   }
 
   std::vector<ValueType> vec(static_cast<std::size_t>(numValues), 2);
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
-    // Ensure data is in control before we start:
-    array.ReleaseResourcesExecution();
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
 
     timer.Start();
     invoker(ReadValues{}, array);
 
     // Copy back to host and read:
+    // (Note, this probably does not copy. The array exists in both control and execution for read.)
     auto portal = array.ReadPortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
@@ -277,21 +298,23 @@ void BenchRoundTripReadWrite(benchmark::State& state)
   }
 
   std::vector<ValueType> vec(static_cast<std::size_t>(numValues));
-  ArrayType array = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
-    // Ensure data is in control before we start:
-    array.ReleaseResourcesExecution();
+
+    // Make a fresh array each iteration to force a copy from control to execution each time.
+    // (Prevents unified memory devices from caching data.)
+    ArrayType array = CreateFreshArrayHandle(vec);
 
     timer.Start();
 
     // Do work on device:
     invoker(ReadWriteValues{}, array);
 
+    // Copy back to host and read/write:
     auto portal = array.WritePortal();
     for (vtkm::Id i = 0; i < numValues; ++i)
     {
@@ -330,14 +353,14 @@ void BenchExecToContRead(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  ArrayType array;
-  array.Allocate(numValues);
-
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
     // Time the copy:
     timer.Start();
 
@@ -383,14 +406,14 @@ void BenchExecToContWrite(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  ArrayType array;
-  array.Allocate(numValues);
-
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
     timer.Start();
 
     // Allocate/write data on device
@@ -435,14 +458,14 @@ void BenchExecToContReadWrite(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  ArrayType array;
-  array.Allocate(numValues);
-
   vtkm::cont::Invoker invoker{ device };
   vtkm::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
+    ArrayType array;
+    array.Allocate(numValues);
+
     timer.Start();
 
     // Allocate/write data on device
