@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/internal/DeviceAdapterMemoryManager.h>
 
 #include <vtkm/Math.h>
@@ -127,6 +128,12 @@ namespace cont
 {
 namespace internal
 {
+
+VTKM_CONT void InvalidRealloc(void*&, void*&, vtkm::BufferSizeType, vtkm::BufferSizeType)
+{
+  vtkm::cont::ErrorBadAllocation("User provided memory does not have a reallocater.");
+}
+
 
 namespace detail
 {
@@ -287,6 +294,22 @@ void BufferInfo::Reallocate(vtkm::BufferSizeType newSize)
     this->Internals->Memory, this->Internals->Container, this->Internals->Size, newSize);
   this->Internals->Size = newSize;
 }
+
+TransferredBuffer BufferInfo::TransferOwnership()
+{
+  TransferredBuffer tbufffer = { this->Internals->Memory,
+                                 this->Internals->Container,
+                                 this->Internals->Delete,
+                                 this->Internals->Reallocate,
+                                 this->Internals->Size };
+
+  this->Internals->Delete = [](void*) {};
+  this->Internals->Reallocate = vtkm::cont::internal::InvalidRealloc;
+
+  return tbufffer;
+}
+
+
 
 //----------------------------------------------------------------------------------------
 vtkm::cont::internal::BufferInfo AllocateOnHost(vtkm::BufferSizeType size)

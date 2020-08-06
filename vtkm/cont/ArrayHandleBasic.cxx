@@ -37,11 +37,6 @@ vtkm::BufferSizeType NumberOfBytes(vtkm::Id numValues, std::size_t typeSize)
 
 } // namespace detail
 
-VTKM_CONT void InvalidRealloc(void*&, void*&, vtkm::BufferSizeType, vtkm::BufferSizeType)
-{
-  vtkm::cont::ErrorBadAllocation("User provided memory does not have a reallocater.");
-}
-
 #define VTKM_STORAGE_INSTANTIATE(Type)                                                             \
   template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;                                  \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;                    \

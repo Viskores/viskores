@@ -17,7 +17,9 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+#include <cstring>
 #include <memory>
+#include <vector>
 
 namespace vtkm
 {
@@ -28,6 +30,8 @@ namespace cont
 {
 namespace internal
 {
+
+struct TransferredBuffer;
 
 namespace detail
 {
@@ -97,9 +101,36 @@ public:
   ///
   VTKM_CONT void Reallocate(vtkm::BufferSizeType newSize);
 
+  /// Transfers ownership of the underlying allocation and Deleter and Reallocater to the caller.
+  /// After ownership has been transferred this buffer will be equivalant to one that was passed
+  /// to VTK-m as `view` only.
+  ///
+  /// This means that the Deleter will do nothing, and the Reallocater will throw an `ErrorBadAllocation`.
+  ///
+  VTKM_CONT TransferredBuffer TransferOwnership();
+
 private:
   detail::BufferInfoInternals* Internals;
   vtkm::cont::DeviceAdapterId Device;
+};
+
+
+/// Represents the buffer being transferred to external ownership
+///
+/// The Memory pointer represents the actual data allocation to
+/// be used for access and execution
+///
+/// The container represents what needs to be deleted. This might
+/// not be equivalent to \c Memory when we have transferred things
+/// such as std::vector
+///
+struct TransferredBuffer
+{
+  void* Memory;
+  void* Container;
+  BufferInfo::Deleter* Delete;
+  BufferInfo::Reallocater* Reallocate;
+  vtkm::BufferSizeType Size;
 };
 
 /// Allocates a `BufferInfo` object for the host.
@@ -175,6 +206,79 @@ public:
 ///
 template <typename DeviceAdapterTag>
 class DeviceAdapterMemoryManager;
+
+VTKM_CONT_EXPORT VTKM_CONT void InvalidRealloc(void*&,
+                                               void*&,
+                                               vtkm::BufferSizeType,
+                                               vtkm::BufferSizeType);
+
+// Deletes a container object by casting it to a pointer of a given type (the template argument)
+// and then using delete[] on the object.
+template <typename T>
+VTKM_CONT inline void SimpleArrayDeleter(void* container_)
+{
+  T* container = reinterpret_cast<T*>(container_);
+  delete[] container;
+}
+
+// Reallocates a standard C array. Note that the allocation method is different than the default
+// host allocation of vtkm::cont::internal::BufferInfo and may be less efficient.
+template <typename T>
+VTKM_CONT inline void SimpleArrayReallocater(void*& memory,
+                                             void*& container,
+                                             vtkm::BufferSizeType oldSize,
+                                             vtkm::BufferSizeType newSize)
+{
+  VTKM_ASSERT(memory == container);
+  VTKM_ASSERT(static_cast<std::size_t>(newSize) % sizeof(T) == 0);
+
+  // If the new size is not much smaller than the old size, just reuse the buffer (and waste a
+  // little memory).
+  if ((newSize > ((3 * oldSize) / 4)) && (newSize <= oldSize))
+  {
+    return;
+  }
+
+  void* newBuffer = new T[static_cast<std::size_t>(newSize) / sizeof(T)];
+  std::memcpy(newBuffer, memory, static_cast<std::size_t>(newSize < oldSize ? newSize : oldSize));
+
+  if (memory != nullptr)
+  {
+    SimpleArrayDeleter<T>(memory);
+  }
+
+  memory = container = newBuffer;
+}
+
+// Deletes a container object by casting it to a pointer of a given type (the template argument)
+// and then using delete on the object.
+template <typename T>
+VTKM_CONT inline void CastDeleter(void* container_)
+{
+  T* container = reinterpret_cast<T*>(container_);
+  delete container;
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT inline void StdVectorDeleter(void* container)
+{
+  CastDeleter<std::vector<T, Allocator>>(container);
+}
+
+template <typename T, typename Allocator>
+VTKM_CONT inline void StdVectorReallocater(void*& memory,
+                                           void*& container,
+                                           vtkm::BufferSizeType oldSize,
+                                           vtkm::BufferSizeType newSize)
+{
+  using vector_type = std::vector<T, Allocator>;
+  vector_type* vector = reinterpret_cast<vector_type*>(container);
+  VTKM_ASSERT(vector->empty() || (memory == vector->data()));
+  VTKM_ASSERT(oldSize == static_cast<vtkm::BufferSizeType>(vector->size()));
+
+  vector->resize(static_cast<std::size_t>(newSize));
+  memory = vector->data();
+}
 }
 }
 } // namespace vtkm::cont::internal

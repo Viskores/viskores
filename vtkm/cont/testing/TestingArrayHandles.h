@@ -569,6 +569,73 @@ private:
     }
   };
 
+  struct VerifyVTKMTransferredOwnership
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+
+      vtkm::cont::internal::TransferredBuffer transferredMemory;
+
+      //Steal memory from a handle that has multiple copies to verify all
+      //copies are updated correctly
+      {
+        vtkm::cont::ArrayHandle<T> arrayHandle;
+        auto copyOfHandle = arrayHandle;
+
+        VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
+                         "ArrayHandle has wrong number of entries.");
+        {
+          vtkm::cont::Token token;
+          using ExecutionPortalType =
+            typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+          ExecutionPortalType executionPortal =
+            arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag(), token);
+
+          //we drop down to manually scheduling so that we don't need
+          //need to bring in array handle counting
+          AssignTestValue<T, ExecutionPortalType> functor(executionPortal);
+          Algorithm::Schedule(functor, ARRAY_SIZE * 2);
+        }
+
+        transferredMemory = copyOfHandle.GetBuffers()->TakeHostBufferOwnership();
+
+        VTKM_TEST_ASSERT(copyOfHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
+                         "Array not allocated correctly.");
+        array_handle_testing::CheckArray(arrayHandle);
+
+        std::cout << "Try in place operation." << std::endl;
+        {
+          vtkm::cont::Token token;
+          using ExecutionPortalType =
+            typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+
+          // Reset array data.
+          Algorithm::Schedule(AssignTestValue<T, ExecutionPortalType>{ arrayHandle.PrepareForOutput(
+                                ARRAY_SIZE * 2, DeviceAdapterTag{}, token) },
+                              ARRAY_SIZE * 2);
+
+          ExecutionPortalType executionPortal =
+            arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+
+          //in place can't be done through the dispatcher
+          //instead we have to drop down to manually scheduling
+          InplaceFunctor<T, ExecutionPortalType> functor(executionPortal);
+          Algorithm::Schedule(functor, ARRAY_SIZE * 2);
+        }
+        typename vtkm::cont::ArrayHandle<T>::ReadPortalType controlPortal =
+          arrayHandle.ReadPortal();
+        for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+        {
+          VTKM_TEST_ASSERT(test_equal(controlPortal.Get(index), TestValue(index, T()) + T(1)),
+                           "Did not get result from in place operation.");
+        }
+      }
+
+      transferredMemory.Delete(transferredMemory.Container);
+    }
+  };
+
   struct VerifyEqualityOperators
   {
     template <typename T>
@@ -641,6 +708,7 @@ private:
       vtkm::testing::Testing::TryTypes(VerifyVectorMovedMemory{});
       vtkm::testing::Testing::TryTypes(VerifyInitializerList{});
       vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle{});
+      vtkm::testing::Testing::TryTypes(VerifyVTKMTransferredOwnership{});
       vtkm::testing::Testing::TryTypes(VerifyEqualityOperators{});
     }
   };
