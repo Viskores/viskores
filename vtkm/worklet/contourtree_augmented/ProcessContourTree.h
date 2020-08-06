@@ -621,9 +621,7 @@ public:
     invoke(prepareChainToBranchWorklet, whichBranch, chainToBranch);
 
     // Prefix scanto get IDs
-    vtkm::cont::Algorithm::ScanInclusive(chainToBranch, chainToBranch);
-
-    vtkm::Id nBranches = chainToBranch.ReadPortal().Get(chainToBranch.GetNumberOfValues() - 1);
+    vtkm::Id nBranches = vtkm::cont::Algorithm::ScanInclusive(chainToBranch, chainToBranch);
 
     vtkm::worklet::contourtree_augmented::process_contourtree_inc::FinaliseChainToBranch
       finaliseChainToBranchWorklet;
