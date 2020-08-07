@@ -141,9 +141,9 @@ void TestVTKExplicitWrite()
   WRITE_FILE(Make3DExplicitDataSetPolygonal);
   WRITE_FILE(Make3DExplicitDataSetCowNose);
 
-  std::cout << "Force writer to output an explicit grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DExplicitDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DExplicitDataSet0(), true);
+  std::cout << "Set writer to output an explicit grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DExplicitDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DExplicitDataSet0());
 }
 
 void TestVTKUniformWrite()
@@ -166,9 +166,9 @@ void TestVTKUniformWrite()
   WRITE_FILE(Make3DRegularDataSet0);
   WRITE_FILE(Make3DRegularDataSet1);
 
-  std::cout << "Force writer to output a uniform grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DUniformDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DUniformDataSet0(), true);
+  std::cout << "Set writer to output an uniform grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DUniformDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DUniformDataSet0());
 }
 
 void TestVTKRectilinearWrite()
@@ -179,9 +179,9 @@ void TestVTKRectilinearWrite()
 
   WRITE_FILE(Make3DRectilinearDataSet0);
 
-  std::cout << "Force writer to output a rectilinear grid as points" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("Make3DRectilinearDataSet0-no-grid.vtk");
-  writer.WriteDataSet(tds.Make3DRectilinearDataSet0(), true);
+  std::cout << "Set writer to output a rectilinear grid" << std::endl;
+  vtkm::io::VTKDataSetWriter writer("Make3DRectilinearDataSet0.vtk");
+  writer.WriteDataSet(tds.Make3DRectilinearDataSet0());
 }
 
 void TestVTKCompoundWrite()

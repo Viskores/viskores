@@ -26,6 +26,7 @@ doxygen:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - doxygen build/docs/doxyfile
+    - chmod 400 $DOC_KEY_FILE
     - rsync -tv --recursive --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ kitware@public.kitware.com:vtkm_documentation/
   variables:
     CMAKE_BUILD_TYPE: Release

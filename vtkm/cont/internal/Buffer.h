@@ -183,6 +183,17 @@ public:
   VTKM_CONT vtkm::cont::internal::BufferInfo GetDeviceBufferInfo(
     vtkm::cont::DeviceAdapterId device) const;
 
+  /// \brief Transfer ownership of the Host `BufferInfo` from this buffer
+  /// to the caller. This is used to allow memory owned by VTK-m to be
+  /// transferred to an owner whose lifespan is longer
+  VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeHostBufferOwnership();
+
+  /// \brief Transfer ownership of the device `BufferInfo` from this buffer
+  /// to the caller. This is used to allow memory owned by VTK-m to be
+  /// transferred to an owner whose lifespan is longer
+  VTKM_CONT vtkm::cont::internal::TransferredBuffer TakeDeviceBufferOwnership(
+    vtkm::cont::DeviceAdapterId device);
+
   VTKM_CONT bool operator==(const vtkm::cont::internal::Buffer& rhs) const
   {
     return (this->Internals == rhs.Internals);

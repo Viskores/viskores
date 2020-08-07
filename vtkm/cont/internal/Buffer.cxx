@@ -799,6 +799,51 @@ vtkm::cont::internal::BufferInfo Buffer::GetHostBufferInfo() const
   return this->Internals->GetHostBuffer(lock);
 }
 
+vtkm::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership()
+{
+  // A Token should not be declared within the scope of a lock. when the token goes out of scope
+  // it will attempt to acquire the lock, which is undefined behavior of the thread already has
+  // the lock.
+  vtkm::cont::Token token;
+  {
+    LockType lock = this->Internals->GetLock();
+    detail::BufferHelper::AllocateOnHost(
+      this->Internals, lock, token, detail::BufferHelper::AccessMode::READ);
+    auto& buffer = this->Internals->GetHostBuffer(lock);
+    buffer.Pinned = true;
+    return buffer.Info.TransferOwnership();
+  }
+}
+
+vtkm::cont::internal::TransferredBuffer Buffer::TakeDeviceBufferOwnership(
+  vtkm::cont::DeviceAdapterId device)
+{
+  if (device.IsValueValid())
+  {
+    // A Token should not be declared within the scope of a lock. when the token goes out of scope
+    // it will attempt to acquire the lock, which is undefined behavior of the thread already has
+    // the lock.
+    vtkm::cont::Token token;
+    {
+      LockType lock = this->Internals->GetLock();
+      detail::BufferHelper::AllocateOnDevice(
+        this->Internals, lock, token, device, detail::BufferHelper::AccessMode::READ);
+      auto& buffer = this->Internals->GetDeviceBuffers(lock)[device];
+      buffer.Pinned = true;
+      return buffer.Info.TransferOwnership();
+    }
+  }
+  else if (device == vtkm::cont::DeviceAdapterTagUndefined{})
+  {
+    return this->TakeHostBufferOwnership();
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadDevice(
+      "Called Buffer::TakeDeviceBufferOwnership with invalid device");
+  }
+}
+
 vtkm::cont::internal::BufferInfo Buffer::GetDeviceBufferInfo(
   vtkm::cont::DeviceAdapterId device) const
 {
