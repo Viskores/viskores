@@ -306,6 +306,14 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
     cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
     enable_language(CUDA)
 
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND
+       CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "10.0" AND CMAKE_CUDA_COMPILER_VERSION VERSION_LESS "11.0" AND
+       CMAKE_BUILD_TYPE STREQUAL "Release")
+      message(WARNING "There is a known issue with Cuda 10 and -O3 optimization. Switching to -O2. Please refer to issue #555.")
+      string(REPLACE "-O3" "-O2" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+      string(REPLACE "-O3" "-O2" CMAKE_CUDA_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+    endif()
+
     string(REGEX MATCH "[0-9][0-9]$" cuda_arch ${Kokkos_ARCH})
     set(CMAKE_CUDA_ARCHITECTURES ${cuda_arch})
     message(STATUS "Detected Cuda arch from Kokkos: ${cuda_arch}")
