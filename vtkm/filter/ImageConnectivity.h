@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ImageConnectivity_h
 #define vtk_m_filter_ImageConnectivity_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
 /// \brief Groups connected points that have the same field value
@@ -28,7 +28,7 @@ namespace vtkm
 {
 namespace filter
 {
-class ImageConnectivity : public vtkm::filter::FilterCell<ImageConnectivity>
+class ImageConnectivity : public vtkm::filter::FilterField<ImageConnectivity>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;

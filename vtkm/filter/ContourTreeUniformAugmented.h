@@ -59,7 +59,7 @@
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 #include <memory>
 
@@ -83,7 +83,7 @@ namespace filter
 /// tree are merged progressively using a binary-reduction scheme to compute the
 /// final contour tree. I.e., in the multi-block context, the final tree is
 /// constructed on rank 0.
-class ContourTreeAugmented : public vtkm::filter::FilterCell<ContourTreeAugmented>
+class ContourTreeAugmented : public vtkm::filter::FilterField<ContourTreeAugmented>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;

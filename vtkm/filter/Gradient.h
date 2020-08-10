@@ -13,7 +13,7 @@
 
 #include <vtkm/filter/vtkm_filter_export.h>
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace vtkm
 {
@@ -29,7 +29,7 @@ namespace filter
 ///
 /// Note: If no explicit name for the output field is provided the filter will
 /// default to "Gradients"
-class Gradient : public vtkm::filter::FilterCell<Gradient>
+class Gradient : public vtkm::filter::FilterField<Gradient>
 {
 public:
   using SupportedTypes = vtkm::List<vtkm::Float32, vtkm::Float64, vtkm::Vec3f_32, vtkm::Vec3f_64>;

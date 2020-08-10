@@ -103,7 +103,7 @@ struct PostExecuteCaller
 //-----------------------------------------------------------------------------
 ContourTreeAugmented::ContourTreeAugmented(bool useMarchingCubes,
                                            unsigned int computeRegularStructure)
-  : vtkm::filter::FilterCell<ContourTreeAugmented>()
+  : vtkm::filter::FilterField<ContourTreeAugmented>()
   , UseMarchingCubes(useMarchingCubes)
   , ComputeRegularStructure(computeRegularStructure)
   , MultiBlockTreeHelper(nullptr)

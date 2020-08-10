@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_ComputeMoments_h
 #define vtk_m_filter_ComputeMoments_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 
 namespace vtkm
