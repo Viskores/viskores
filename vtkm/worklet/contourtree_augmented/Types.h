@@ -148,6 +148,100 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
   return fString;
 } // FlagString()
 
+class EdgeDataHeight
+{
+public:
+  // RegularNodeID (or sortIndex)
+  Id I;
+  // RegularNodeID (or sortIndex)
+  Id J;
+  // RegularNodeID (or sortIndex)
+  Id SubtreeMin;
+  // RegularNodeID (or sortIndex)
+  Id SubtreeMax;
+  bool UpEdge;
+  Float64 SubtreeHeight;
+
+  VTKM_EXEC
+  bool operator<(const EdgeDataHeight& b) const
+  {
+    if (this->I == b.I)
+    {
+      if (this->UpEdge == b.UpEdge)
+      {
+        if (this->SubtreeHeight == b.SubtreeHeight)
+        {
+          if (this->SubtreeMin == b.SubtreeMin)
+          {
+            return this->SubtreeMax > b.SubtreeMax;
+          }
+          else
+          {
+            return this->SubtreeMin < b.SubtreeMin;
+          }
+        }
+        else
+        {
+          return this->SubtreeHeight > b.SubtreeHeight;
+        }
+      }
+      else
+      {
+        return this->UpEdge < b.UpEdge;
+      }
+    }
+    else
+    {
+      return this->I < b.I;
+    }
+  }
+};
+
+class EdgeDataVolume
+{
+public:
+  // RegularNodeID (or sortIndex)
+  Id I;
+  // RegularNodeID (or sortIndex)
+  Id J;
+  bool UpEdge;
+  Id SubtreeVolume;
+
+  VTKM_EXEC
+  bool operator<(const EdgeDataVolume& b) const
+  {
+    if (this->I == b.I)
+    {
+      if (this->UpEdge == b.UpEdge)
+      {
+        if (this->SubtreeVolume == b.SubtreeVolume)
+        {
+          if (this->UpEdge == true)
+          {
+            return this->J > b.J;
+          }
+          else
+          {
+            return this->J < b.J;
+          }
+        }
+        else
+        {
+          return this->SubtreeVolume > b.SubtreeVolume;
+        }
+      }
+      else
+      {
+        return this->UpEdge < b.UpEdge;
+      }
+    }
+    else
+    {
+      return this->I < b.I;
+    }
+  }
+};
+
 
 ///
 /// Helper struct to collect sizing information from a dataset.

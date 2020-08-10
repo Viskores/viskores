@@ -50,19 +50,18 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
-#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_euler_tour_list_h
+#ifndef vtk_m_worklet_contourtree_augmented_process_contourtree_inc_pointer_doubling_h
+#define vtk_m_worklet_contourtree_augmented_process_contourtree_inc_pointer_doubling_h
 
-#include <vtkm/cont/Algorithm.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 /*
-* This code is written by Petar Hristov in 09.2019
+ *
+* This code is written by Petar Hristov in 03.2020
 *
-* This worklet performs the second step in computing an Euler tour.
-* That is computing the adjacency list of the euler edge tour.
-* See https://en.wikipedia.org/wiki/Euler_tour_technique for details
+* It does pointer doubling on an array.
+*
 *
 */
 namespace vtkm
@@ -73,54 +72,34 @@ namespace contourtree_augmented
 {
 namespace process_contourtree_inc
 {
-class ComputeEulerTourList : public vtkm::worklet::WorkletMapField
+class PointerDoubling : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn next,
-                                WholeArrayIn first,
-                                WholeArrayIn edges,
-                                WholeArrayOut succ);
+  typedef void ControlSignature(WholeArrayInOut whichBranch);
 
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3, _4);
+  typedef void ExecutionSignature(InputIndex, _1);
   using InputDomain = _1;
 
-  template <typename NextArrayPortalType,
-            typename FirstArrayPortalType,
-            typename EdgesArrayPortalType,
-            typename OutputArrayPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id i,
-                            const NextArrayPortalType& next,
-                            const FirstArrayPortalType& first,
-                            const EdgesArrayPortalType& edges,
-                            const OutputArrayPortalType& succ) const
+  vtkm::Id NumSupernodes;
+
+  // Default Constructor
+  VTKM_EXEC_CONT PointerDoubling(vtkm::Id _NumSupernodes)
+    : NumSupernodes(_NumSupernodes)
   {
-    // For edge (a, b) find the opposite edge (b, a) in the sorted list of edges
-    // This relies on the fact that in the contour tree nodes have bounded degree.
-    // This comes from the fact that vertices in a 2D/3D mesh have a bounded degree.
-    auto currentEdge = edges.Get(i);
-    auto oppositeIndex = first.Get(currentEdge[1]);
+  }
 
-    while (oppositeIndex < edges.GetNumberOfValues() &&
-           currentEdge[1] == edges.Get(oppositeIndex)[0])
+  template <typename WhichBranchArrayPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id supernode,
+                            const WhichBranchArrayPortalType& whichBranchPortal) const
+  {
+    if (!IsTerminalElement(whichBranchPortal.Get(supernode)))
     {
-      if (currentEdge[0] == edges.Get(oppositeIndex)[1])
-      {
-        break;
-      }
-
-      oppositeIndex++;
-    }
-
-    if (NO_SUCH_ELEMENT == next.Get(oppositeIndex))
-    {
-      succ.Set(i, first.Get(edges.Get(i)[1]));
-    }
-    else
-    {
-      succ.Set(i, next.Get(oppositeIndex));
+      const auto currentValue =
+        MaskedIndex(whichBranchPortal.Get(MaskedIndex(whichBranchPortal.Get(supernode))));
+      whichBranchPortal.Set(supernode, currentValue);
     }
   }
-}; // ComputeEulerTourList
+}; // ComputeMinMaxValues
 } // process_contourtree_inc
 } // namespace contourtree_augmented
 } // namespace worklet

@@ -719,12 +719,12 @@ int main(int argc, char* argv[])
     ctaug_ns::IdArrayType superarcDependentWeight;
     ctaug_ns::IdArrayType supernodeTransferWeight;
     ctaug_ns::IdArrayType hyperarcDependentWeight;
-    ctaug_ns::ProcessContourTree::ComputeVolumeWeights(filter.GetContourTree(),
-                                                       filter.GetNumIterations(),
-                                                       superarcIntrinsicWeight,  // (output)
-                                                       superarcDependentWeight,  // (output)
-                                                       supernodeTransferWeight,  // (output)
-                                                       hyperarcDependentWeight); // (output)
+    ctaug_ns::ProcessContourTree::ComputeVolumeWeightsSerial(filter.GetContourTree(),
+                                                             filter.GetNumIterations(),
+                                                             superarcIntrinsicWeight,  // (output)
+                                                             superarcDependentWeight,  // (output)
+                                                             supernodeTransferWeight,  // (output)
+                                                             hyperarcDependentWeight); // (output)
     // Record the timings for the branch decomposition
     std::stringstream timingsStream; // Use a string stream to log in one message
     timingsStream << std::endl;
@@ -740,14 +740,14 @@ int main(int argc, char* argv[])
     ctaug_ns::IdArrayType branchMaximum;
     ctaug_ns::IdArrayType branchSaddle;
     ctaug_ns::IdArrayType branchParent;
-    ctaug_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(filter.GetContourTree(),
-                                                                   superarcDependentWeight,
-                                                                   superarcIntrinsicWeight,
-                                                                   whichBranch,   // (output)
-                                                                   branchMinimum, // (output)
-                                                                   branchMaximum, // (output)
-                                                                   branchSaddle,  // (output)
-                                                                   branchParent); // (output)
+    ctaug_ns::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(filter.GetContourTree(),
+                                                                         superarcDependentWeight,
+                                                                         superarcIntrinsicWeight,
+                                                                         whichBranch,   // (output)
+                                                                         branchMinimum, // (output)
+                                                                         branchMaximum, // (output)
+                                                                         branchSaddle,  // (output)
+                                                                         branchParent); // (output)
     // Record and log the branch decompostion timings
     timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Branch Decomposition"
                   << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
