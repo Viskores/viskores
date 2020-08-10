@@ -330,8 +330,5 @@ void TestHistogram()
 
 int UnitTestHistogramFilter(int argc, char* argv[])
 {
-  // Setup MPI environment: This test is not intendent to be run in parallel
-  // but filter does make some DIY/MPI calls
-  vtkmdiy::mpi::environment env(argc, argv);
   return vtkm::cont::testing::Testing::Run(TestHistogram, argc, argv);
 }

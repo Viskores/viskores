@@ -27,7 +27,6 @@ function(vtkm_create_test_executable
   # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
   if (is_mpi_test)
     set(extraArgs EXTRA_INCLUDE "vtkm/thirdparty/diy/environment.h")
-    set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "vtkmdiy::mpi::environment env(ac, av);")
 
     if (use_mpi)
       vtkm_diy_use_mpi(ON)
