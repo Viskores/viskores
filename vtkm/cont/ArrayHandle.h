@@ -904,9 +904,6 @@ public:
   using ReadPortalType = typename StorageType::ReadPortalType;
   using WritePortalType = typename StorageType::WritePortalType;
 
-  static constexpr vtkm::IdComponent NUMBER_OF_BUFFERS = StorageType::NUMBER_OF_BUFFERS;
-  static constexpr vtkm::IdComponent GetNumberOfBuffers() { return NUMBER_OF_BUFFERS; }
-
   // TODO: Deprecate this
   template <typename Device>
   struct ExecutionTypes
@@ -961,7 +958,7 @@ public:
     : Internals(std::make_shared<InternalsStruct>(buffers.data(), storage))
   {
     VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Internals->Buffers.size()) ==
-                GetNumberOfBuffers());
+                this->GetNumberOfBuffers());
   }
 
   VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::internal::Buffer* buffers,
@@ -1025,6 +1022,11 @@ public:
   VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const
   {
     return true; // different valuetype and/or storage
+  }
+
+  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const
+  {
+    return this->Internals->Storage.GetNumberOfBuffers();
   }
 
   /// Get the storage.
@@ -1313,17 +1315,18 @@ private:
     mutable std::vector<vtkm::cont::internal::Buffer> Buffers;
     mutable StorageType Storage;
 
-    VTKM_CONT InternalsStruct()
-      : Buffers(GetNumberOfBuffers())
+    VTKM_CONT InternalsStruct(StorageType storage = StorageType())
+      : Buffers(static_cast<std::size_t>(storage.GetNumberOfBuffers()))
+      , Storage(storage)
     {
     }
 
     VTKM_CONT InternalsStruct(const vtkm::cont::internal::Buffer* buffers,
                               const StorageType& storage)
-      : Buffers(GetNumberOfBuffers())
+      : Buffers(static_cast<std::size_t>(storage.GetNumberOfBuffers()))
       , Storage(storage)
     {
-      std::copy(buffers, buffers + GetNumberOfBuffers(), this->Buffers.begin());
+      std::copy(buffers, buffers + storage.GetNumberOfBuffers(), this->Buffers.begin());
     }
   };
   std::shared_ptr<InternalsStruct> Internals;
