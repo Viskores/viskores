@@ -15,7 +15,7 @@
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/PointAverage.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace filter
 /// specified per cell) into point data (i.e., data specified at cell
 /// points). The method of transformation is based on averaging the data
 /// values of all cells using a particular point.
-class VTKM_ALWAYS_EXPORT PointAverage : public vtkm::filter::FilterCell<PointAverage>
+class VTKM_ALWAYS_EXPORT PointAverage : public vtkm::filter::FilterField<PointAverage>
 {
 public:
   template <typename T, typename StorageType, typename DerivedPolicy>
