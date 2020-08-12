@@ -39,10 +39,10 @@ template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagBasic>
 {
 public:
-  static constexpr vtkm::IdComponent NUMBER_OF_BUFFERS = 1;
-
   using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
+
+  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const { return 1; }
 
   VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
                                vtkm::cont::internal::Buffer* buffers,
@@ -65,7 +65,7 @@ public:
                           this->GetNumberOfValues(buffers));
   }
 
-  VTKM_CONT WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
+  VTKM_CONT WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
                                               vtkm::cont::DeviceAdapterId device,
                                               vtkm::cont::Token& token)
   {
