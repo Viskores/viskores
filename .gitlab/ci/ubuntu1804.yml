@@ -180,3 +180,41 @@ test:ubuntu1804_clang8:
     - build:ubuntu1804_clang8
   needs:
     - build:ubuntu1804_clang8
+
+# Build on ubuntu1804 with kokkos and test on ubuntu1804
+# Uses CUDA 11
+build:ubuntu1804_kokkos:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - large-memory
+  extends:
+    - .ubuntu1804_cuda_kokkos
+    - .cmake_build_linux
+    - .only-default
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "kokkos+static+64bit_floats"
+
+test:ubuntu1804_kokkos:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - turing
+  extends:
+    - .ubuntu1804_cuda_kokkos
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:ubuntu1804_kokkos
+  needs:
+    - build:ubuntu1804_kokkos
+  variables:
+    CUDA_LAUNCH_BLOCKING: "1"

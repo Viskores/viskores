@@ -97,7 +97,10 @@ find_program(SCCACHE_COMMAND NAMES sccache)
 if(SCCACHE_COMMAND)
   set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
-  if(VTKm_ENABLE_CUDA)
+
+  # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
+  # since this will also capture when kokkos is being used with CUDA backing
+  if(DEFINED VTKm_CUDA_Architecture)
     set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   endif()
 endif()

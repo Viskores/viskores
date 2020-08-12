@@ -18,10 +18,6 @@ cd rhel8/cuda10.2
 sudo docker build -t kitware/vtkm:ci-rhel8_cuda10.2-$date .
 cd ../..
 
-cd rhel8/kokkos
-sudo docker build -t kitware/vtkm:ci-rhel8_kokkos-$date .
-cd ../..
-
 cd ubuntu1604/base
 sudo docker build -t kitware/vtkm:ci-ubuntu1604-$date .
 cd ../..
@@ -36,6 +32,10 @@ cd ../..
 
 cd ubuntu1804/cuda10.1
 sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda10.1-$date .
+cd ../..
+
+cd ubuntu1804/kokkos-cuda
+sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-$date .
 cd ../..
 
 cd ubuntu2004/doxygen/
