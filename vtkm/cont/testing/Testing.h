@@ -108,6 +108,12 @@ public:
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
+    std::unique_ptr<vtkmdiy::mpi::environment> env_diy = nullptr;
+    if (!vtkmdiy::mpi::environment::initialized())
+    {
+      env_diy.reset(new vtkmdiy::mpi::environment(argc, argv));
+    }
+
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
