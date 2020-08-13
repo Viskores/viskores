@@ -11,10 +11,9 @@
 #ifndef vtk_m_filter_ParticleAdvection_h
 #define vtk_m_filter_ParticleAdvection_h
 
+#include <vtkm/Particle.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/ParticleAdvection.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 
 namespace vtkm
 {
@@ -41,11 +40,9 @@ public:
   VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
+  template <typename DerivedPolicy>
+  vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
