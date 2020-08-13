@@ -168,7 +168,7 @@ public:
   void PreStepUpdate(const vtkm::Id& idx)
   {
     ParticleType p = this->ParticleExecutionObject<Device, ParticleType>::GetParticle(idx);
-    if (p.NumSteps == 0)
+    if (this->StepCount.Get(idx) == 0)
     {
       vtkm::Id loc = idx * Length;
       this->History.Set(loc, p.Pos);

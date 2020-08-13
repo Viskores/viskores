@@ -123,7 +123,7 @@ void TestStreamlineFile(const std::string& fname,
   std::vector<vtkm::Massless> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
     seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::On);
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   vtkm::filter::Streamline streamline;
   streamline.SetStepSize(stepSize);
@@ -192,5 +192,8 @@ void TestStreamlineFilters()
 
 int UnitTestStreamlineFilter(int argc, char* argv[])
 {
+  // Setup MPI environment: This test is not intendent to be run in parallel
+  // but filter does make MPI calls
+  vtkmdiy::mpi::environment env(argc, argv);
   return vtkm::cont::testing::Testing::Run(TestStreamlineFilters, argc, argv);
 }

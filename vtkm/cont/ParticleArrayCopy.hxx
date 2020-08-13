@@ -11,6 +11,9 @@
 #ifndef vtk_m_cont_ParticleArrayCopy_hxx
 #define vtk_m_cont_ParticleArrayCopy_hxx
 
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -22,14 +25,17 @@ namespace cont
 
 namespace detail
 {
-struct CopyParticlePositionWorklet : public vtkm::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn inParticle, FieldOut outPos);
 
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle, vtkm::Vec3f& outPos) const
-  {
-    outPos = inParticle.Pos;
-  }
+struct ExtractPositionFunctor
+{
+  VTKM_EXEC_CONT
+  vtkm::Vec3f operator()(const vtkm::Massless& p) const { return p.Pos; }
+};
+
+struct ExtractTerminatedFunctor
+{
+  VTKM_EXEC_CONT
+  bool operator()(const vtkm::Massless& p) const { return p.Status.CheckTerminate(); }
 };
 
 struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
@@ -62,12 +68,18 @@ struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
 template <typename ParticleType>
 VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   const vtkm::cont::ArrayHandle<ParticleType, vtkm::cont::StorageTagBasic>& inP,
-  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos)
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
+  bool CopyTerminatedOnly)
 {
-  vtkm::cont::Invoker invoke;
-  detail::CopyParticlePositionWorklet worklet;
+  auto posTrn = vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractPositionFunctor());
 
-  invoke(worklet, inP, outPos);
+  if (CopyTerminatedOnly)
+  {
+    auto termTrn = vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractTerminatedFunctor());
+    vtkm::cont::Algorithm::CopyIf(posTrn, termTrn, outPos);
+  }
+  else
+    vtkm::cont::ArrayCopy(posTrn, outPos);
 }
 
 /// \brief Copy all fields in vtkm::Particle to standard types.
