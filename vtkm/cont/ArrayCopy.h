@@ -16,6 +16,8 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 // TODO: When virtual arrays are available, compile the implementation in a .cxx/.cu file. Common
 // arrays are copied directly but anything else would be copied through virtual methods.
 
@@ -27,7 +29,8 @@ namespace cont
 namespace detail
 {
 
-// normal element-wise copy:
+// Element-wise copy.
+// TODO: Remove last argument once ArryHandleNewStyle becomes ArrayHandle
 template <typename InArrayType, typename OutArrayType>
 void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* Copy storage */)
 {
@@ -58,6 +61,7 @@ void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* 
 }
 
 // Copy storage for implicit arrays, must be of same type:
+// TODO: This will go away once ArrayHandleNewStyle becomes ArrayHandle.
 template <typename ArrayType>
 void ArrayCopyImpl(const ArrayType& in, ArrayType& out, std::true_type /* Copy storage */)
 {
@@ -65,6 +69,33 @@ void ArrayCopyImpl(const ArrayType& in, ArrayType& out, std::true_type /* Copy s
   // writable. This allows read-only implicit array handles to be copied.
   auto newStorage = in.GetStorage();
   out = ArrayType(newStorage);
+}
+
+// TODO: This will go away once ArrayHandleNewStyle becomes ArrayHandle.
+template <typename InArrayType, typename OutArrayType>
+VTKM_CONT void ArrayCopyImpl(const InArrayType& source, OutArrayType& destination)
+{
+  using SameTypes = std::is_same<InArrayType, OutArrayType>;
+  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<OutArrayType>;
+  using JustCopyStorage = std::integral_constant<bool, SameTypes::value && !IsWritable::value>;
+  ArrayCopyImpl(source, destination, JustCopyStorage{});
+}
+
+// TODO: ArrayHandleNewStyle will eventually become ArrayHandle, in which case this
+// will become the only version with the same array types.
+template <typename T, typename S>
+VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandleNewStyle<T, S>& source,
+                             vtkm::cont::ArrayHandleNewStyle<T, S>& destination)
+{
+  std::size_t numBuffers = static_cast<std::size_t>(source.GetNumberOfBuffers());
+  std::vector<vtkm::cont::internal::Buffer> destinationBuffers(numBuffers);
+  vtkm::cont::internal::Buffer* sourceBuffers = source.GetBuffers();
+  for (std::size_t bufferIndex = 0; bufferIndex < numBuffers; ++bufferIndex)
+  {
+    sourceBuffers[bufferIndex].DeepCopy(destinationBuffers[bufferIndex]);
+  }
+
+  destination = vtkm::cont::ArrayHandleNewStyle<T, S>(destinationBuffers, source.GetStorage());
 }
 
 } // namespace detail
@@ -93,11 +124,11 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
   using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<OutArrayType>;
 
   // There are three cases handled here:
-  // 1. Output is writable:
-  //    -> Do element-wise copy (normal copy behavior)
-  // 2. Output is not writable and arrays are same type:
-  //    -> just copy storage (special case for implicit array cloning)
-  // 3. Output is not writable and arrays are different types:
+  // 1. The arrays are the same type:
+  //    -> Deep copy the buffers and the Storage object
+  // 2. The arrays are different and the output is writable:
+  //    -> Do element-wise copy
+  // 3. The arrays are different and the output is not writable:
   //    -> fail (cannot copy)
 
   // Give a nice error message for case 3:
@@ -105,10 +136,8 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
                          "Cannot copy to a read-only array with a different "
                          "type than the source.");
 
-  using JustCopyStorage = std::integral_constant<bool, SameTypes::value && !IsWritable::value>;
-
   // Static dispatch cases 1 & 2
-  detail::ArrayCopyImpl(source, destination, JustCopyStorage{});
+  detail::ArrayCopyImpl(source, destination);
 }
 
 // Forward declaration
