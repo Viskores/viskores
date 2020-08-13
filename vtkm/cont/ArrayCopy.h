@@ -87,15 +87,7 @@ template <typename T, typename S>
 VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandleNewStyle<T, S>& source,
                              vtkm::cont::ArrayHandleNewStyle<T, S>& destination)
 {
-  std::size_t numBuffers = static_cast<std::size_t>(source.GetNumberOfBuffers());
-  std::vector<vtkm::cont::internal::Buffer> destinationBuffers(numBuffers);
-  vtkm::cont::internal::Buffer* sourceBuffers = source.GetBuffers();
-  for (std::size_t bufferIndex = 0; bufferIndex < numBuffers; ++bufferIndex)
-  {
-    sourceBuffers[bufferIndex].DeepCopy(destinationBuffers[bufferIndex]);
-  }
-
-  destination = vtkm::cont::ArrayHandleNewStyle<T, S>(destinationBuffers, source.GetStorage());
+  destination = source.DeepCopy();
 }
 
 } // namespace detail
