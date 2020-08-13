@@ -184,7 +184,6 @@ vtkm_library(
 target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
 
 if (VTKm_ENABLE_MPI)
-  target_compile_definitions(vtkm_filter PRIVATE "MPI_ENABLED")
   target_link_libraries(vtkm_filter PUBLIC MPI::MPI_CXX)
 endif()
 

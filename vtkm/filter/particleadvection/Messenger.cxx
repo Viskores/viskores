@@ -67,17 +67,17 @@ void Messenger::InitializeBuffers()
   {
     int tag = it->first, num = it->second.first;
     for (int i = 0; i < num; i++)
-      PostRecv(tag);
+      this->PostRecv(tag);
   }
 }
 
 void Messenger::CleanupRequests(int tag)
 {
   std::vector<RequestTagPair> delKeys;
-  for (auto i = this->RecvBuffers.begin(); i != this->RecvBuffers.end(); i++)
+  for (auto&& i : this->RecvBuffers)
   {
-    if (tag == TAG_ANY || tag == i->first.second)
-      delKeys.push_back(i->first);
+    if (tag == TAG_ANY || tag == i.first.second)
+      delKeys.push_back(i.first);
   }
 
   if (!delKeys.empty())
@@ -99,7 +99,7 @@ void Messenger::PostRecv(int tag)
 {
   auto it = this->MessageTagInfo.find(tag);
   if (it != this->MessageTagInfo.end())
-    PostRecv(tag, it->second.second);
+    this->PostRecv(tag, it->second.second);
 }
 
 void Messenger::PostRecv(int tag, int sz, int src)

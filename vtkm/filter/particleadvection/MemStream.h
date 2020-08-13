@@ -23,10 +23,6 @@ namespace vtkm
 namespace filter
 {
 
-namespace detail
-{
-}
-
 class MemStream
 {
 public:
