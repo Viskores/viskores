@@ -132,6 +132,12 @@ if(VTKm_ENABLE_CUDA)
       INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     )
 
+    if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
+      CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0)
+      # CUDA 11+ deprecated C++11 support
+      target_compile_features(vtkm_cuda INTERFACE cxx_std_14)
+    endif()
+
     # add the -gencode flags so that all cuda code
     # way compiled properly
 
