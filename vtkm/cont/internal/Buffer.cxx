@@ -22,6 +22,26 @@
 #include <deque>
 #include <map>
 
+namespace vtkm
+{
+namespace internal
+{
+
+vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues, std::size_t typeSize)
+{
+  VTKM_ASSERT(numValues >= 0);
+
+  if (numValues > (std::numeric_limits<vtkm::BufferSizeType>::max() /
+                   static_cast<vtkm::BufferSizeType>(typeSize)))
+  {
+    throw vtkm::cont::ErrorBadAllocation("Asking for a buffer too big to represent.");
+  }
+
+  return numValues * static_cast<vtkm::BufferSizeType>(typeSize);
+}
+}
+} // namespace vtkm::internal
+
 namespace
 {
 

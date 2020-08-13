@@ -23,6 +23,32 @@
 
 namespace vtkm
 {
+
+namespace internal
+{
+
+///@{
+/// \brief Convert the number of values of a type to the number of bytes needed to store it.
+///
+/// A convenience function that takes the number of values in an array and either the type or the
+/// size of the type and safely converts that to the number of bytes required to store the array.
+///
+/// This function can throw an `vtkm::cont::ErrorBadAllocation` if the number of bytes cannot be
+/// stored in the returned `vtkm::BufferSizeType`. (That would be a huge array and probably
+/// indicative of an error.)
+///
+VTKM_CONT_EXPORT vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues,
+                                                                    std::size_t typeSize);
+
+template <typename T>
+vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues)
+{
+  return NumberOfValuesToNumberOfBytes(numValues, sizeof(T));
+}
+///@}
+
+} // namespace internal
+
 namespace cont
 {
 namespace internal

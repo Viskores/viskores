@@ -19,24 +19,6 @@ namespace cont
 namespace internal
 {
 
-namespace detail
-{
-
-vtkm::BufferSizeType NumberOfBytes(vtkm::Id numValues, std::size_t typeSize)
-{
-  VTKM_ASSERT(numValues >= 0);
-
-  if (numValues > (std::numeric_limits<vtkm::BufferSizeType>::max() /
-                   static_cast<vtkm::BufferSizeType>(typeSize)))
-  {
-    throw vtkm::cont::ErrorBadAllocation("Asking for a buffer too big to represent.");
-  }
-
-  return numValues * static_cast<vtkm::BufferSizeType>(typeSize);
-}
-
-} // namespace detail
-
 #define VTKM_STORAGE_INSTANTIATE(Type)                                          \
   template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;               \
   template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>; \
