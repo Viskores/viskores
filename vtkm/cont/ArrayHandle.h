@@ -1302,6 +1302,25 @@ public:
     }
   }
 
+  /// \brief Deep copies the data in the array.
+  ///
+  /// This returns a new `ArrayHandle` that contains a deep copy of the data from
+  /// this array.
+  ///
+  VTKM_CONT vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag> DeepCopy() const
+  {
+    std::vector<vtkm::cont::internal::Buffer> destBuffers;
+    destBuffers.reserve(static_cast<std::size_t>(this->GetNumberOfBuffers()));
+    for (auto&& srcBuffer : this->Internals->Buffers)
+    {
+      vtkm::cont::internal::Buffer destBuffer;
+      srcBuffer.DeepCopy(destBuffer);
+      destBuffers.push_back(std::move(destBuffer));
+    }
+
+    return vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>(destBuffers, this->GetStorage());
+  }
+
   /// Returns the internal `Buffer` structures that hold the data.
   ///
   VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
