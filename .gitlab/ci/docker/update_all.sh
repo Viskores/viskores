@@ -34,8 +34,16 @@ cd ubuntu1804/cuda10.1
 sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda10.1-$date .
 cd ../..
 
+cd ubuntu1804/kokkos-cuda
+sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-$date .
+cd ../..
+
 cd ubuntu2004/doxygen/
 sudo docker build -t kitware/vtkm:ci-doxygen-$date .
+cd ../..
+
+cd ubuntu2004/kokkos
+sudo docker build -t kitware/vtkm:ci-ubuntu2004_kokkos-$date .
 cd ../..
 
 # sudo docker login --username=<docker_hub_name>

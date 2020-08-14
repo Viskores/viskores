@@ -211,9 +211,9 @@ private:
       { //as input
         vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+          executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
+        static_cast<void>(executionPortal);
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -225,9 +225,9 @@ private:
       { //as inplace
         vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+          executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
+        static_cast<void>(executionPortal);
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -303,9 +303,9 @@ private:
       { //as input
         vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
+          executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag(), token);
         token.DetachFromAll();
+        static_cast<void>(executionPortal);
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -317,9 +317,9 @@ private:
       { //as inplace
         vtkm::cont::Token token;
         typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-          executionPortal;
-        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
+          executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag(), token);
         token.DetachFromAll();
+        static_cast<void>(executionPortal);
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;

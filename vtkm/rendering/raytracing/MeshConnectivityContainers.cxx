@@ -128,6 +128,20 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
       }
       return Handle.PrepareForExecution(CUDA(), token);
 #endif
+#ifdef VTKM_ENABLE_KOKKOS
+    case VTKM_DEVICE_ADAPTER_KOKKOS:
+      using KOKKOS = vtkm::cont::DeviceAdapterTagKokkos;
+      {
+        MeshConnUnstructured<KOKKOS> conn(this->FaceConnectivity,
+                                          this->FaceOffsets,
+                                          this->CellConn,
+                                          this->CellOffsets,
+                                          this->Shapes,
+                                          token);
+        Handle = make_MeshConnHandle(conn);
+      }
+      return Handle.PrepareForExecution(KOKKOS(), token);
+#endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;
     default:
@@ -243,6 +257,21 @@ const MeshConnectivityBase* UnstructuredSingleContainer::Construct(
       }
       return Handle.PrepareForExecution(CUDA(), token);
 #endif
+#ifdef VTKM_ENABLE_KOKKOS
+    case VTKM_DEVICE_ADAPTER_KOKKOS:
+      using KOKKOS = vtkm::cont::DeviceAdapterTagKokkos;
+      {
+        MeshConnSingleType<KOKKOS> conn(this->FaceConnectivity,
+                                        this->CellConnectivity,
+                                        this->CellOffsets,
+                                        this->ShapeId,
+                                        this->NumIndices,
+                                        this->NumFaces,
+                                        token);
+        Handle = make_MeshConnHandle(conn);
+      }
+      return Handle.PrepareForExecution(KOKKOS(), token);
+#endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;
     default:
@@ -298,6 +327,10 @@ const MeshConnectivityBase* StructuredContainer::Construct(
 #ifdef VTKM_ENABLE_CUDA
     case VTKM_DEVICE_ADAPTER_CUDA:
       return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagCuda(), token);
+#endif
+#ifdef VTKM_ENABLE_KOKKOS
+    case VTKM_DEVICE_ADAPTER_KOKKOS:
+      return Handle.PrepareForExecution(vtkm::cont::DeviceAdapterTagKokkos(), token);
 #endif
     case VTKM_DEVICE_ADAPTER_SERIAL:
       VTKM_FALLTHROUGH;

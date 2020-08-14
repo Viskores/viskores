@@ -92,6 +92,7 @@ void VerifyScopedRuntimeDeviceTracker()
   using OpenMPTag = ::vtkm::cont::DeviceAdapterTagOpenMP;
   using TBBTag = ::vtkm::cont::DeviceAdapterTagTBB;
   using CudaTag = ::vtkm::cont::DeviceAdapterTagCuda;
+  using KokkosTag = ::vtkm::cont::DeviceAdapterTagKokkos;
   using AnyTag = ::vtkm::cont::DeviceAdapterTagAny;
 
   //Verify that for each device adapter we compile code for, that it
@@ -100,6 +101,7 @@ void VerifyScopedRuntimeDeviceTracker()
   verify_srdt_support(OpenMPTag(), all_off, all_on, defaults);
   verify_srdt_support(CudaTag(), all_off, all_on, defaults);
   verify_srdt_support(TBBTag(), all_off, all_on, defaults);
+  verify_srdt_support(KokkosTag(), all_off, all_on, defaults);
 
   // Verify that all the ScopedRuntimeDeviceTracker changes
   // have been reverted

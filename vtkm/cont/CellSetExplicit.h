@@ -46,6 +46,7 @@ struct NumIndicesDecorator
   {
     OffsetsPortal Offsets;
 
+    VTKM_SUPPRESS_EXEC_WARNINGS
     VTKM_EXEC_CONT
     vtkm::IdComponent operator()(vtkm::Id cellId) const
     {

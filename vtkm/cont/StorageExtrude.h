@@ -292,8 +292,8 @@ struct VTKM_ALWAYS_EXPORT ArrayPortalExtrude
 };
 
 template <typename PortalType>
-typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType>::Get(
-  vtkm::Id index) const
+VTKM_EXEC_CONT typename ArrayPortalExtrude<PortalType>::ValueType
+ArrayPortalExtrude<PortalType>::Get(vtkm::Id index) const
 {
   using CompType = typename ValueType::ComponentType;
 
@@ -314,8 +314,8 @@ typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType
 }
 
 template <typename PortalType>
-typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType>::Get(
-  vtkm::Id2 index) const
+VTKM_EXEC_CONT typename ArrayPortalExtrude<PortalType>::ValueType
+ArrayPortalExtrude<PortalType>::Get(vtkm::Id2 index) const
 {
   using CompType = typename ValueType::ComponentType;
 
@@ -336,7 +336,7 @@ typename ArrayPortalExtrude<PortalType>::ValueType ArrayPortalExtrude<PortalType
 }
 
 template <typename PortalType>
-vtkm::Vec<typename ArrayPortalExtrude<PortalType>::ValueType, 6>
+VTKM_EXEC_CONT vtkm::Vec<typename ArrayPortalExtrude<PortalType>::ValueType, 6>
 ArrayPortalExtrude<PortalType>::GetWedge(const IndicesExtrude& index) const
 {
   using CompType = typename ValueType::ComponentType;
@@ -468,7 +468,7 @@ public:
   using PortalConstControl = typename StorageType::PortalConstType;
 
   //meant to be an invalid writeable execution portal
-  using PortalExecution = typename StorageType::PortalType;
+  using PortalExecution = vtkm::exec::ArrayPortalExtrude<TPortalType>;
 
   using PortalConstExecution = vtkm::exec::ArrayPortalExtrude<TPortalType>;
 

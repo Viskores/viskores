@@ -63,6 +63,7 @@ public:
     return this->portal1.GetNumberOfValues() + this->portal2.GetNumberOfValues();
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
@@ -76,6 +77,7 @@ public:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Writable_ = Writable,
             typename = typename std::enable_if<Writable_::value>::type>
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const

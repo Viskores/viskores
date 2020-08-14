@@ -37,6 +37,7 @@
 #define VTKM_DEVICE_ADAPTER_CUDA 2
 #define VTKM_DEVICE_ADAPTER_TBB 3
 #define VTKM_DEVICE_ADAPTER_OPENMP 4
+#define VTKM_DEVICE_ADAPTER_KOKKOS 5
 //VTKM_DEVICE_ADAPTER_TestAlgorithmGeneral 7
 #define VTKM_MAX_DEVICE_ADAPTER_ID 8
 #define VTKM_DEVICE_ADAPTER_ANY 127
@@ -88,6 +89,7 @@ DeviceAdapterId make_DeviceAdapterId(const DeviceAdapterNameType& name);
 /// DeviceAdapterTagCuda == 2
 /// DeviceAdapterTagTBB == 3
 /// DeviceAdapterTagOpenMP == 4
+/// DeviceAdapterTagKokkos == 5
 ///
 inline DeviceAdapterId make_DeviceAdapterId(vtkm::Int8 id)
 {

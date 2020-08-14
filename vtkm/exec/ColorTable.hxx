@@ -648,7 +648,7 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the portal types here.
 #ifdef VTKM_CUDA
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
+#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableRGB);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableHSV);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::exec::ColorTableHSVWrap);

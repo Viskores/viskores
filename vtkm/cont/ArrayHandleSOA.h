@@ -82,6 +82,7 @@ public:
   }
 
 private:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <std::size_t I>
   VTKM_EXEC_CONT ComponentType GetComponent(vtkm::Id valueIndex) const
   {
@@ -94,6 +95,7 @@ private:
     return ValueType{ this->GetComponent<I>(valueIndex)... };
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <std::size_t I>
   VTKM_EXEC_CONT bool SetComponent(vtkm::Id valueIndex, const ValueType& value) const
   {
