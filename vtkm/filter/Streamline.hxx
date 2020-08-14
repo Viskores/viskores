@@ -17,7 +17,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm

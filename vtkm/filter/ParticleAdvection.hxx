@@ -18,8 +18,8 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 namespace vtkm
 {
