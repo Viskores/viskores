@@ -13,6 +13,8 @@
 #ifndef vtk_m_worklet_particleadvection_RK4Integrator_h
 #define vtk_m_worklet_particleadvection_RK4Integrator_h
 
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
+
 namespace vtkm
 {
 namespace worklet
