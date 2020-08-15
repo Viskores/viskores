@@ -38,7 +38,7 @@ if(NOT GENERATED_FILE)
 endif()
 
 execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
+  COMMAND ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
   RESULT_VARIABLE pyexpander_result
   OUTPUT_VARIABLE pyexpander_output
   )
