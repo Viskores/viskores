@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/particleadvection/Messenger.h>
 
 #ifdef VTKM_ENABLE_MPI
@@ -42,21 +43,19 @@ void Messenger::RegisterTag(int tag, int num_recvs, int size)
   {
     std::stringstream msg;
     msg << "Invalid message tag: " << tag << std::endl;
-    throw msg.str();
+    throw vtkm::cont::ErrorFilterExecution(msg.str());
   }
   this->MessageTagInfo[tag] = std::pair<int, int>(num_recvs, size);
 }
 
 int Messenger::CalcMessageBufferSize(int msgSz)
 {
-  MemStream buff;
-  int rank = 0;
-
-  std::vector<int> m(static_cast<std::size_t>(msgSz));
-  vtkm::filter::write(buff, rank);
-  vtkm::filter::write(buff, m);
-
-  return static_cast<int>(buff.GetLen());
+  return static_cast<int>(sizeof(int)) // rank
+    // std::vector<int> msg;
+    // msg.size()
+    + static_cast<int>(sizeof(std::size_t))
+    // msgSz ints.
+    + msgSz * static_cast<int>(sizeof(int));
 }
 
 void Messenger::InitializeBuffers()
@@ -175,7 +174,7 @@ void Messenger::PrepareForSend(int tag, MemStream* buff, std::vector<unsigned ch
   {
     std::stringstream msg;
     msg << "Message tag not found: " << tag << std::endl;
-    throw msg.str();
+    throw vtkm::cont::ErrorFilterExecution(msg.str());
   }
 
   int bytesLeft = buff->GetLen();
@@ -307,7 +306,7 @@ bool Messenger::RecvData(std::set<int>& tags,
     {
       delete[] status;
       delete[] indices;
-      throw "receive buffer not found";
+      throw vtkm::cont::ErrorFilterExecution("receive buffer not found");
     }
 
     incomingBuffers[i] = it->second;

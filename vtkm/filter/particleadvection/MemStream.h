@@ -11,6 +11,7 @@
 #define vtk_m_filter_MemStream_h
 
 #include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkmstd/is_trivially_copyable.h>
 
 #include <cstring>
 #include <iostream>
@@ -29,6 +30,7 @@ public:
   MemStream(std::size_t sz0 = 32);
   MemStream(std::size_t sz, const unsigned char* buff);
   MemStream(const MemStream& s);
+  MemStream(MemStream&& s);
   ~MemStream();
 
   void Rewind() { this->Pos = 0; }
@@ -96,10 +98,9 @@ inline void MemStream::SetPos(std::size_t p)
 template <typename T>
 struct Serialization
 {
-#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
-  static_assert(std::is_trivially_copyable<T>::value,
+  static_assert(vtkmstd::is_trivially_copyable<T>::value,
                 "Default serialization works only for trivially copyable types");
-#endif
+
   static void write(MemStream& memstream, const T& data)
   {
     memstream.WriteBinary((const unsigned char*)&data, sizeof(T));

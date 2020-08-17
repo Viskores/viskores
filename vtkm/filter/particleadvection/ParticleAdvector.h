@@ -13,8 +13,10 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleMessenger.h>
@@ -166,7 +168,7 @@ public:
 
       N += (myTerm + numTermMessages);
       if (N > totalNumSeeds)
-        throw "Particle count error";
+        throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
 
     std::cout << "Done: " << this->Rank << " Terminated= " << this->Terminated.size() << std::endl;
@@ -326,7 +328,7 @@ public:
         vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
         vtkm::Id connectivityLen =
           vtkm::cont::Algorithm::ScanExclusive(numPointsPerCellArray, cellIndex);
-        vtkm::cont::ArrayHandleCounting<vtkm::Id> connCount(0, 1, connectivityLen);
+        vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
         vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
         vtkm::cont::ArrayCopy(connCount, connectivity);
 

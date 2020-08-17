@@ -78,9 +78,10 @@ public:
 
   std::vector<vtkm::Id> FindBlocks(const vtkm::Vec3f& p) const { return this->FindBlocks(p, -1); }
 
-  std::vector<vtkm::Id> FindBlocks(const vtkm::Vec3f& p, const std::vector<vtkm::Id>& oldIDs) const
+  std::vector<vtkm::Id> FindBlocks(const vtkm::Vec3f& p,
+                                   const std::vector<vtkm::Id>& ignoreBlocks) const
   {
-    vtkm::Id ignoreID = (oldIDs.empty() ? -1 : oldIDs[0]);
+    vtkm::Id ignoreID = (ignoreBlocks.empty() ? -1 : ignoreBlocks[0]);
     return FindBlocks(p, ignoreID);
   }
 

@@ -13,15 +13,8 @@
 
 #include <iostream>
 #include <string.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/filter/particleadvection/Logger.h>
-
-#if 0
-#define DBG(msg) vtkm::filter::Logger::GetInstance("out")->GetStream() << msg
-#define WDBG(msg) vtkm::filter::Logger::GetInstance("wout")->GetStream() << msg
-#else
-#define DBG(msg)
-#define WDBG(msg)
-#endif
 
 namespace vtkm
 {
@@ -47,21 +40,21 @@ ParticleMessenger::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
 #endif
 }
 
-int ParticleMessenger::CalcParticleBufferSize(int nParticles, int numBlockIds)
+int ParticleMessenger::CalcParticleBufferSize(int nParticles, int nBlockIds)
 {
-  MemStream buff;
-  int r = 0;
-
-  //Make a vector of particles where each particle has 'numBlockIds' in the blockId array.
-  std::vector<vtkm::Massless> v(static_cast<std::size_t>(nParticles));
-  std::vector<vtkm::Id> blockIDs(static_cast<std::size_t>(numBlockIds), 0);
-
-  vtkm::filter::write(buff, r);
-  vtkm::filter::write(buff, v);
-  for (int i = 0; i < nParticles; i++)
-    vtkm::filter::write(buff, blockIDs);
-
-  return static_cast<int>(buff.GetLen());
+  return
+    // rank
+    static_cast<int>(sizeof(int))
+    //std::vector<vtkm::Massless> p;
+    //p.size()
+    + static_cast<int>(sizeof(std::size_t))
+    //nParticles of vtkm::Massless
+    + nParticles * static_cast<int>(sizeof(vtkm::Massless))
+    // std::vector<vtkm::Id> blockIDs for each particle.
+    // blockIDs.size() for each particle
+    + nParticles * static_cast<int>(sizeof(std::size_t))
+    // nBlockIDs of vtkm::Id for each particle.
+    + nParticles * nBlockIds * static_cast<int>(sizeof(vtkm::Id));
 }
 
 VTKM_CONT
@@ -111,7 +104,6 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
   std::vector<MsgCommType> msgData;
   if (RecvAny(&msgData, &particleData, false))
   {
-    DBG("-----Recv: M: " << msgData.size() << " P: " << particleData.size() << std::endl);
     for (auto& it : particleData)
       for (const auto& v : it.second)
       {
@@ -124,10 +116,7 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
     for (auto& m : msgData)
     {
       if (m.second[0] == MSG_TERMINATE)
-      {
         numTerminateMessages += static_cast<vtkm::Id>(m.second[1]);
-        DBG("-----TERMinate: Recv: " << m.second[1] << std::endl);
-      }
     }
   }
 
@@ -135,7 +124,6 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
   if (numLocalTerm > 0)
   {
     std::vector<int> msg = { MSG_TERMINATE, static_cast<int>(numLocalTerm) };
-    DBG("-----SendAllMsg: msg=" << msg << std::endl);
     SendAllMsg(msg);
   }
 
@@ -245,7 +233,7 @@ void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
 {
   if (dst == this->Rank)
   {
-    std::cerr << "Error. Sending IC to yourself" << std::endl;
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Error. Sending a particle to yourself.");
     return;
   }
   if (c.empty())

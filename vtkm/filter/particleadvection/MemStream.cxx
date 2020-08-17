@@ -16,7 +16,7 @@ namespace filter
 {
 
 MemStream::MemStream(std::size_t sz0)
-  : Data(NULL)
+  : Data(nullptr)
   , Len(0)
   , MaxLen(0)
   , Pos(0)
@@ -25,7 +25,7 @@ MemStream::MemStream(std::size_t sz0)
 }
 
 MemStream::MemStream(std::size_t sz, const unsigned char* buff)
-  : Data(NULL)
+  : Data(nullptr)
   , Len(sz)
   , MaxLen(sz)
   , Pos(0)
@@ -43,6 +43,19 @@ MemStream::MemStream(const MemStream& s)
   std::memcpy(this->Data, s.GetData(), this->Len);
 }
 
+MemStream::MemStream(MemStream&& s)
+{
+  this->Pos = 0;
+  this->Len = s.GetLen();
+  this->MaxLen = this->Len;
+  this->Data = s.Data;
+
+  s.Pos = 0;
+  s.Len = 0;
+  s.MaxLen = 0;
+  s.Data = nullptr;
+}
+
 MemStream::~MemStream()
 {
   this->ClearMemStream();
@@ -53,7 +66,7 @@ void MemStream::ClearMemStream()
   if (this->Data)
   {
     delete[] this->Data;
-    this->Data = NULL;
+    this->Data = nullptr;
   }
   this->Pos = 0;
   this->Len = 0;
