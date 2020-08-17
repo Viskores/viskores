@@ -266,6 +266,14 @@
 #ifndef VTKM_ENABLE_OPENMP
 #cmakedefine VTKM_ENABLE_OPENMP
 #endif
+//Mark if we are building with Kokkos enabled
+#ifndef VTKM_ENABLE_KOKKOS
+#cmakedefine VTKM_ENABLE_KOKKOS
+#endif
+//Mark if Kokkos has Cuda backend enabled
+#ifndef VTKM_KOKKOS_CUDA
+#cmakedefine VTKM_KOKKOS_CUDA
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI

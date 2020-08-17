@@ -21,11 +21,16 @@ set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 set(VTKM_ENABLE_OPENMP ${VTKm_ENABLE_OPENMP})
+set(VTKM_ENABLE_KOKKOS ${VTKm_ENABLE_KOKKOS})
 set(VTKM_ENABLE_MPI ${VTKm_ENABLE_MPI})
 
 if(VTKM_ENABLE_CUDA)
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\1" VTKM_CUDA_VERSION_MAJOR ${CMAKE_CUDA_COMPILER_VERSION})
   string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\2" VTKM_CUDA_VERSION_MINOR ${CMAKE_CUDA_COMPILER_VERSION})
+endif()
+
+if (TARGET vtkm::kokkos_cuda)
+  set(VTKM_KOKKOS_CUDA ON)
 endif()
 
 set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
@@ -79,4 +84,3 @@ vtkm_pyexpander_generated_file(FunctionInterfaceDetailPost.h)
 vtkm_pyexpander_generated_file(VariantDetail.h)
 
 add_subdirectory(testing)
-

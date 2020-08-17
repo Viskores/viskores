@@ -330,19 +330,19 @@ VTKM_CONT MeshConnHandle make_MeshConnHandle(MeshConnType&& func,
 }
 } //namespace vtkm::rendering::raytracing
 
-#ifdef VTKM_CUDA
 
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
 // to be instantiated in a consistent order among all the translation units of an
 // executable. Failing to do so results in random crashes and incorrect results.
 // We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
 // all the implicit functions here.
-
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
+#ifdef VTKM_CUDA
+#include <vtkm/cont/internal/VirtualObjectTransferInstantiate.h>
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::rendering::raytracing::MeshConnStructured);
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_CUDA(
   vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagCuda>);
-
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER_KOKKOS(
+  vtkm::rendering::raytracing::MeshConnUnstructured<vtkm::cont::DeviceAdapterTagKokkos>);
 #endif
 
 #endif // MeshConnectivityBase

@@ -13,7 +13,7 @@ set(unit_tests
   UnitTestArrayPortalValueReference.cxx
   UnitTestConfigureFor32.cxx
   UnitTestConfigureFor64.cxx
-  UnitTestFunctionInterface.cxx
+  #UnitTestFunctionInterface.cxx #FIXME
   UnitTestVariant.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

@@ -309,11 +309,16 @@ function(vtkm_add_target_information uses_vtkm_target)
   #
   # This is required as CUDA currently doesn't support device side calls across
   # dynamic library boundaries.
-  if(TARGET vtkm::cuda)
+  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
     set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
     foreach(target IN LISTS targets)
       get_target_property(lib_type ${target} TYPE)
-      get_target_property(requires_static vtkm::cuda requires_static_builds)
+      if (TARGET vtkm::cuda)
+        get_target_property(requires_static vtkm::cuda requires_static_builds)
+      endif()
+      if (TARGET vtkm::kokkos)
+        get_target_property(requires_static vtkm::kokkos requires_static_builds)
+      endif()
 
       if(requires_static AND ${lib_type} STREQUAL "SHARED_LIBRARY" AND VTKm_TI_EXTENDS_VTKM)
         #We provide different error messages based on if we are building VTK-m

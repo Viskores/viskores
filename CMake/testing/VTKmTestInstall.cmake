@@ -110,6 +110,10 @@ function(vtkm_test_against_install dir)
     )
   endif()
 
+  if(TARGET vtkm::kokkos)
+    list(APPEND args "-DKokkos_DIR=${Kokkos_DIR}")
+  endif()
+
   #determine if the test is expected to compile or fail to build. We use
   #this information to built the test name to make it clear to the user
   #what a 'passing' test means

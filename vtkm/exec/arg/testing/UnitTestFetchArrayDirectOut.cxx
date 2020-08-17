@@ -26,10 +26,8 @@ struct TestPortal
 {
   using ValueType = T;
 
-  VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
-  VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");

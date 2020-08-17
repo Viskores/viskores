@@ -53,6 +53,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
