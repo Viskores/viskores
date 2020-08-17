@@ -14,7 +14,6 @@
 #include <iostream>
 #include <string.h>
 #include <vtkm/cont/Logging.h>
-#include <vtkm/filter/particleadvection/Logger.h>
 
 namespace vtkm
 {

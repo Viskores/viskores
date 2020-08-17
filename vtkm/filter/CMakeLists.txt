@@ -166,7 +166,6 @@ set(sources_device
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx
-  particleadvection/Logger.cxx
   particleadvection/MemStream.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx

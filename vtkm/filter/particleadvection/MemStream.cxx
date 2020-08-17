@@ -38,7 +38,7 @@ MemStream::MemStream(std::size_t sz, const unsigned char* buff)
 
 MemStream::MemStream(const MemStream& s)
 {
-  this->Pos = 0;
+  this->Pos = s.GetPos();
   this->Len = s.GetLen();
   this->MaxLen = this->Len;
   this->Data = new unsigned char[this->Len];

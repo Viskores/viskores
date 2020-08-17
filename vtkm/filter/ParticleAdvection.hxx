@@ -17,9 +17,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
@@ -51,21 +48,20 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   if (this->Seeds.GetNumberOfValues() == 0)
-  {
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-  }
 
   std::string activeField = this->GetActiveFieldName();
-  vtkm::filter::BoundsMap boundsMap(input);
-  std::vector<vtkm::filter::DataSetIntegrator> dsi;
+  vtkm::filter::particleadvection::BoundsMap boundsMap(input);
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+  std::vector<DataSetIntegratorType> dsi;
 
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-    dsi.push_back(vtkm::filter::DataSetIntegrator(input.GetPartition(i), blockId, activeField));
+    dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
   }
 
-  vtkm::filter::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
+  vtkm::filter::particleadvection::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
   pa.SetNumberOfSteps(this->NumberOfSteps);
   pa.SetStepSize(this->StepSize);
   pa.SetSeeds(this->Seeds);
