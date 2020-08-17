@@ -162,19 +162,6 @@ private:
       this->GlobalBounds.Include(block);
       idx += 6;
     }
-
-    /*
-    if (rank == 0)
-    {
-      std::cout << "GlobalBounds: " << this->GlobalBounds << std::endl;
-      int bid = 0;
-      for (auto& it : this->BlockBounds)
-      {
-        std::cout << " " << bid << " " << it << " owner: " << this->FindRank(bid) << std::endl;
-        bid++;
-      }
-    }
-    */
   }
 
   vtkm::Id LocalNumBlocks;

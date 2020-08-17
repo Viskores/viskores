@@ -135,16 +135,9 @@ public:
       {
         blockId = this->ParticleBlockIDsMap[v[0].ID][0];
         auto& block = this->GetDataSet(blockId);
-        std::cout << "block_" << blockId << ".Advect() " << v.size() << std::endl;
+
         ResultType r;
         block.Advect(v, this->StepSize, this->NumberOfSteps, r);
-
-        auto portal = r.Particles.ReadPortal();
-        for (int i = 0; i < r.Particles.GetNumberOfValues(); i++)
-        {
-          std::cout << "    " << i << ": " << portal.Get(i).ID
-                    << " Status= " << portal.Get(i).Status << std::endl;
-        }
         this->UpdateResult(r, blockId, I, T, A);
 
         if (!A.empty())
@@ -167,7 +160,6 @@ public:
 
       if (!T.empty())
       {
-        std::cout << "Terminations: " << T.size() << " in block " << blockId << std::endl;
         auto& it = this->Terminated[blockId];
         it.insert(it.end(), T.begin(), T.end());
       }
@@ -176,8 +168,6 @@ public:
       if (N > totalNumSeeds)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
-
-    std::cout << "Done: " << this->Rank << " Terminated= " << this->Terminated.size() << std::endl;
   }
 
 protected:
