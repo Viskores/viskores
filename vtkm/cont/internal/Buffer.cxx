@@ -536,9 +536,7 @@ Buffer::Buffer(Buffer&& src)
 }
 
 // Defined to prevent issues with CUDA
-Buffer::~Buffer()
-{
-}
+Buffer::~Buffer() {}
 
 // Defined to prevent issues with CUDA
 Buffer& Buffer::operator=(const Buffer& src)

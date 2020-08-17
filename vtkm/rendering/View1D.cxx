@@ -36,9 +36,7 @@ View1D::View1D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View1D::~View1D()
-{
-}
+View1D::~View1D() {}
 
 void View1D::Paint()
 {

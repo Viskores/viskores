@@ -1558,11 +1558,11 @@ static inline VTKM_EXEC_CONT typename detail::DotType<T>::type Dot(const vtkm::V
 }
 // Integer types of a width less than an integer get implicitly casted to
 // an integer when doing a multiplication.
-#define VTK_M_SCALAR_DOT(stype)                                                                    \
-  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b)                  \
-  {                                                                                                \
-    return a * b;                                                                                  \
-  } /* LEGACY */                                                                                   \
+#define VTK_M_SCALAR_DOT(stype)                                                   \
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b) \
+  {                                                                               \
+    return a * b;                                                                 \
+  } /* LEGACY */                                                                  \
   static inline VTKM_EXEC_CONT detail::DotType<stype>::type Dot(stype a, stype b) { return a * b; }
 VTK_M_SCALAR_DOT(vtkm::Int8)
 VTK_M_SCALAR_DOT(vtkm::UInt8)

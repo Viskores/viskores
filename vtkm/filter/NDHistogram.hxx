@@ -19,9 +19,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT NDHistogram::NDHistogram()
-{
-}
+inline VTKM_CONT NDHistogram::NDHistogram() {}
 
 void NDHistogram::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {

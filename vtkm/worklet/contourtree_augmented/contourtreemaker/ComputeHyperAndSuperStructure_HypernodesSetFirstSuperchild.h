@@ -73,7 +73,7 @@ public:
   typedef void ControlSignature(WholeArrayIn contourTreeHyperparents, // (input)
                                 WholeArrayIn superSortIndex,          // (input)
                                 WholeArrayOut contourTreeHypernodes   // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, InputIndex, _2, _3);
   using InputDomain = _1;
 

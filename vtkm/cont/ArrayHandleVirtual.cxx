@@ -15,14 +15,14 @@ namespace vtkm
 namespace cont
 {
 
-#define VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(T)                                                  \
-  template class VTKM_CONT_EXPORT ArrayHandle<T, StorageTagVirtual>;                               \
-  template class VTKM_CONT_EXPORT ArrayHandleVirtual<T>;                                           \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 2>, StorageTagVirtual>;                 \
-  template class VTKM_CONT_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 2>>;                             \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 3>, StorageTagVirtual>;                 \
-  template class VTKM_CONT_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 3>>;                             \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 4>, StorageTagVirtual>;                 \
+#define VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(T)                                  \
+  template class VTKM_CONT_EXPORT ArrayHandle<T, StorageTagVirtual>;               \
+  template class VTKM_CONT_EXPORT ArrayHandleVirtual<T>;                           \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 2>, StorageTagVirtual>; \
+  template class VTKM_CONT_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 2>>;             \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 3>, StorageTagVirtual>; \
+  template class VTKM_CONT_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 3>>;             \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<T, 4>, StorageTagVirtual>; \
   template class VTKM_CONT_EXPORT ArrayHandleVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(char);

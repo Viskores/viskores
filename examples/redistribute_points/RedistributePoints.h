@@ -223,11 +223,12 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::PrepareForEx
   vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds> decomposer(
     /*dim*/ 3, internal::convert(gbounds), assigner.nblocks());
 
-  vtkmdiy::Master master(comm,
-                         /*threads*/ 1,
-                         /*limit*/ -1,
-                         []() -> void* { return new vtkm::cont::DataSet(); },
-                         [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
+  vtkmdiy::Master master(
+    comm,
+    /*threads*/ 1,
+    /*limit*/ -1,
+    []() -> void* { return new vtkm::cont::DataSet(); },
+    [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
   decomposer.decompose(comm.rank(), assigner, master);
 
   assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfPartitions());

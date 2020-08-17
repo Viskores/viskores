@@ -48,14 +48,10 @@ PartitionedDataSet::PartitionedDataSet(vtkm::Id size)
 }
 
 VTKM_CONT
-PartitionedDataSet::PartitionedDataSet()
-{
-}
+PartitionedDataSet::PartitionedDataSet() {}
 
 VTKM_CONT
-PartitionedDataSet::~PartitionedDataSet()
-{
-}
+PartitionedDataSet::~PartitionedDataSet() {}
 
 VTKM_CONT
 PartitionedDataSet& PartitionedDataSet::operator=(const vtkm::cont::PartitionedDataSet& src)

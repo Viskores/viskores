@@ -20,10 +20,10 @@
 
 #include <limits>
 
-#define VTKM_MATH_ASSERT(condition, message)                                                       \
-  if (!(condition))                                                                                \
-  {                                                                                                \
-    this->RaiseError(message);                                                                     \
+#define VTKM_MATH_ASSERT(condition, message) \
+  if (!(condition))                          \
+  {                                          \
+    this->RaiseError(message);               \
   }
 
 //-----------------------------------------------------------------------------

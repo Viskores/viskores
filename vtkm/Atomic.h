@@ -471,29 +471,29 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr,
   *addr = val;
 }
 
-#define VTKM_ATOMIC_OP(vtkmName, winName, vtkmType, winType, suffix)                               \
-  VTKM_EXEC_CONT inline vtkmType vtkmName(vtkmType* addr, vtkmType arg, vtkm::MemoryOrder order)   \
-  {                                                                                                \
-    return BitCast<vtkmType>(                                                                      \
-      winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));          \
+#define VTKM_ATOMIC_OP(vtkmName, winName, vtkmType, winType, suffix)                             \
+  VTKM_EXEC_CONT inline vtkmType vtkmName(vtkmType* addr, vtkmType arg, vtkm::MemoryOrder order) \
+  {                                                                                              \
+    return BitCast<vtkmType>(                                                                    \
+      winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));        \
   }
 
-#define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                                        \
-  VTKM_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, vtkmType, winType, suffix)                \
-  VTKM_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, vtkmType, winType, suffix)                        \
-  VTKM_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, vtkmType, winType, suffix)                          \
-  VTKM_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, vtkmType, winType, suffix)                        \
-  VTKM_EXEC_CONT inline vtkmType AtomicNotImpl(vtkmType* addr, vtkm::MemoryOrder order)            \
-  {                                                                                                \
-    return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }), order);                     \
-  }                                                                                                \
-  VTKM_EXEC_CONT inline vtkmType AtomicCompareAndSwapImpl(                                         \
-    vtkmType* addr, vtkmType desired, vtkmType expected, vtkm::MemoryOrder order)                  \
-  {                                                                                                \
-    return BitCast<vtkmType>(                                                                      \
-      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),               \
-                                          BitCast<winType>(desired),                               \
-                                          BitCast<winType>(expected)));                            \
+#define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                             \
+  VTKM_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, vtkmType, winType, suffix)     \
+  VTKM_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, vtkmType, winType, suffix)             \
+  VTKM_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, vtkmType, winType, suffix)               \
+  VTKM_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, vtkmType, winType, suffix)             \
+  VTKM_EXEC_CONT inline vtkmType AtomicNotImpl(vtkmType* addr, vtkm::MemoryOrder order) \
+  {                                                                                     \
+    return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }), order);          \
+  }                                                                                     \
+  VTKM_EXEC_CONT inline vtkmType AtomicCompareAndSwapImpl(                              \
+    vtkmType* addr, vtkmType desired, vtkmType expected, vtkm::MemoryOrder order)       \
+  {                                                                                     \
+    return BitCast<vtkmType>(                                                           \
+      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),    \
+                                          BitCast<winType>(desired),                    \
+                                          BitCast<winType>(expected)));                 \
   }
 
 VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt8, CHAR, 8)

@@ -29,10 +29,16 @@ public:
   using ValueType = bool;
 
   VTKM_EXEC_CONT
-  explicit ArrayPortalBitField(const BitPortalType& portal) noexcept : BitPortal{ portal } {}
+  explicit ArrayPortalBitField(const BitPortalType& portal) noexcept
+    : BitPortal{ portal }
+  {
+  }
 
   VTKM_EXEC_CONT
-  explicit ArrayPortalBitField(BitPortalType&& portal) noexcept : BitPortal{ std::move(portal) } {}
+  explicit ArrayPortalBitField(BitPortalType&& portal) noexcept
+    : BitPortal{ std::move(portal) }
+  {
+  }
 
   ArrayPortalBitField() noexcept = default;
   ArrayPortalBitField(const ArrayPortalBitField&) noexcept = default;
@@ -78,7 +84,10 @@ public:
   {
   }
 
-  explicit VTKM_CONT Storage(vtkm::cont::BitField&& data) noexcept : Data{ std::move(data) } {}
+  explicit VTKM_CONT Storage(vtkm::cont::BitField&& data) noexcept
+    : Data{ std::move(data) }
+  {
+  }
 
   VTKM_CONT Storage() = default;
   VTKM_CONT Storage(const Storage&) = default;

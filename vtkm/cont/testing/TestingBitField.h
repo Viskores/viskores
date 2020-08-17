@@ -23,32 +23,32 @@
 
 #include <cstdio>
 
-#define DEVICE_ASSERT_MSG(cond, message)                                                           \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(cond))                                                                                   \
-    {                                                                                              \
-      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n\t- Subtest: %s\n",               \
-             __FILE__,                                                                             \
-             __LINE__,                                                                             \
-             #cond,                                                                                \
-             message);                                                                             \
-      return false;                                                                                \
-    }                                                                                              \
+#define DEVICE_ASSERT_MSG(cond, message)                                             \
+  do                                                                                 \
+  {                                                                                  \
+    if (!(cond))                                                                     \
+    {                                                                                \
+      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n\t- Subtest: %s\n", \
+             __FILE__,                                                               \
+             __LINE__,                                                               \
+             #cond,                                                                  \
+             message);                                                               \
+      return false;                                                                  \
+    }                                                                                \
   } while (false)
 
-#define DEVICE_ASSERT(cond)                                                                        \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(cond))                                                                                   \
-    {                                                                                              \
-      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n", __FILE__, __LINE__, #cond);    \
-      return false;                                                                                \
-    }                                                                                              \
+#define DEVICE_ASSERT(cond)                                                                     \
+  do                                                                                            \
+  {                                                                                             \
+    if (!(cond))                                                                                \
+    {                                                                                           \
+      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n", __FILE__, __LINE__, #cond); \
+      return false;                                                                             \
+    }                                                                                           \
   } while (false)
 
 // Test with some trailing bits in partial last word:
-#define NUM_BITS                                                                                   \
+#define NUM_BITS \
   vtkm::Id { 7681 }
 
 using vtkm::cont::BitField;

@@ -83,23 +83,20 @@ struct AllTriviallyCopyable<T0, T1, T2>
 
 template <typename T0, typename T1, typename T2, typename T3>
 struct AllTriviallyCopyable<T0, T1, T2, T3>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value &&
-                            vtkmstd::is_trivially_copyable<T2>::value &&
-                            vtkmstd::is_trivially_copyable<T3>::value)>
+  : std::integral_constant<
+      bool,
+      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
+       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value)>
 {
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
 struct AllTriviallyCopyable<T0, T1, T2, T3, T4, Ts...>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value &&
-                            vtkmstd::is_trivially_copyable<T2>::value &&
-                            vtkmstd::is_trivially_copyable<T3>::value &&
-                            vtkmstd::is_trivially_copyable<T4>::value &&
-                            AllTriviallyCopyable<Ts...>::value)>
+  : std::integral_constant<
+      bool,
+      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
+       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value &&
+       vtkmstd::is_trivially_copyable<T4>::value && AllTriviallyCopyable<Ts...>::value)>
 {
 };
 

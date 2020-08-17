@@ -67,13 +67,15 @@ protected:
   // Send/Recv Integral curves.
   VTKM_CONT
   template <typename P,
-            template <typename, typename> class Container,
+            template <typename, typename>
+            class Container,
             typename Allocator = std::allocator<P>>
   inline void SendParticles(int dst, const Container<P, Allocator>& c);
 
   VTKM_CONT
   template <typename P,
-            template <typename, typename> class Container,
+            template <typename, typename>
+            class Container,
             typename Allocator = std::allocator<P>>
   inline void SendParticles(const std::map<int, Container<P, Allocator>>& m);
 

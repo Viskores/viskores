@@ -31,9 +31,7 @@ AxisAnnotation2D::AxisAnnotation2D()
   this->MoreOrLessTickAdjustment = 0;
 }
 
-AxisAnnotation2D::~AxisAnnotation2D()
-{
-}
+AxisAnnotation2D::~AxisAnnotation2D() {}
 
 void AxisAnnotation2D::SetRangeForAutoTicks(const Range& range)
 {

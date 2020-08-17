@@ -107,9 +107,7 @@ ScalarRenderer::ScalarRenderer()
 {
 }
 
-ScalarRenderer::~ScalarRenderer()
-{
-}
+ScalarRenderer::~ScalarRenderer() {}
 
 void ScalarRenderer::SetShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
 {

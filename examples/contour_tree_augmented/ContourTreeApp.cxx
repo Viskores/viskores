@@ -370,28 +370,14 @@ int main(int argc, char* argv[])
     VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info,
                   numLevels > 0,
                   std::endl
-                    << "    ------------ Settings Isolevel Selection -----------"
-                    << std::endl
-                    << "    levels="
-                    << numLevels
-                    << std::endl
-                    << "    eps="
-                    << eps
-                    << std::endl
-                    << "    comp"
-                    << numComp
-                    << std::endl
-                    << "    type="
-                    << contourType
-                    << std::endl
-                    << "    method="
-                    << contourSelectMethod
-                    << std::endl
-                    << "    mc="
-                    << useMarchingCubes
-                    << std::endl
-                    << "    use"
-                    << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
+                    << "    ------------ Settings Isolevel Selection -----------" << std::endl
+                    << "    levels=" << numLevels << std::endl
+                    << "    eps=" << eps << std::endl
+                    << "    comp" << numComp << std::endl
+                    << "    type=" << contourType << std::endl
+                    << "    method=" << contourSelectMethod << std::endl
+                    << "    mc=" << useMarchingCubes << std::endl
+                    << "    use" << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
   }
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 startUpTime = currTime - prevTime;
@@ -558,19 +544,17 @@ int main(int argc, char* argv[])
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                std::endl
-                 << "    ---------------- Input Mesh Properties --------------"
-                 << std::endl
-                 << "    Number of dimensions: "
-                 << nDims);
+                 << "    ---------------- Input Mesh Properties --------------" << std::endl
+                 << "    Number of dimensions: " << nDims);
   }
 
   // Check if marching cubes is enabled for non 3D data
   bool invalidMCOption = (useMarchingCubes && nDims != 3);
-  VTKM_LOG_IF_S(
-    vtkm::cont::LogLevel::Error,
-    invalidMCOption && (rank == 0),
-    "The input mesh is " << nDims << "D. "
-                         << "Contour tree using marching cubes is only supported for 3D data.");
+  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
+                invalidMCOption && (rank == 0),
+                "The input mesh is "
+                  << nDims << "D. "
+                  << "Contour tree using marching cubes is only supported for 3D data.");
 
   // If we found any errors in the setttings than finalize MPI and exit the execution
   if (invalidMCOption)
@@ -583,7 +567,7 @@ int main(int argc, char* argv[])
 
 #ifndef WITH_MPI                              // construct regular, single-block VTK-M input dataset
   vtkm::cont::DataSet useDataSet = inDataSet; // Single block dataset
-#else                                         // Create a multi-block dataset for multi-block DIY-paralle processing
+#else  // Create a multi-block dataset for multi-block DIY-paralle processing
   vtkm::cont::PartitionedDataSet useDataSet; // Partitioned variant of the input dataset
   vtkm::Id3 blocksPerDim =
     nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
@@ -683,7 +667,7 @@ int main(int argc, char* argv[])
       useDataSet.AppendPartition(ds);
     }
   }
-#endif                                        // WITH_MPI construct input dataset
+#endif // WITH_MPI construct input dataset
 
   currTime = totalTime.GetElapsedTime();
   buildDatasetTime = currTime - prevTime;
@@ -866,116 +850,47 @@ int main(int argc, char* argv[])
   currTime = totalTime.GetElapsedTime();
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
-               << "    -------------------------- Totals "
-               << rank
-               << " -----------------------------"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Start-up"
-               << ": "
-               << startUpTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Data Read"
-               << ": "
-               << dataReadTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Build VTKM Dataset"
-               << ": "
-               << buildDatasetTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Compute Contour Tree"
-               << ": "
-               << computeContourTreeTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Compute Branch Decomposition"
-               << ": "
-               << computeBranchDecompTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Total Time"
-               << ": "
-               << currTime
-               << " seconds");
+               << "    -------------------------- Totals " << rank
+               << " -----------------------------" << std::endl
+               << std::setw(42) << std::left << "    Start-up"
+               << ": " << startUpTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Data Read"
+               << ": " << dataReadTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Build VTKM Dataset"
+               << ": " << buildDatasetTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Compute Contour Tree"
+               << ": " << computeContourTreeTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Compute Branch Decomposition"
+               << ": " << computeBranchDecompTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Total Time"
+               << ": " << currTime << " seconds");
 
   const ctaug_ns::ContourTree& ct = filter.GetContourTree();
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
-               << "    ---------------- Contour Tree Array Sizes ---------------------"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Nodes"
-               << ": "
-               << ct.Nodes.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Arcs"
-               << ": "
-               << ct.Arcs.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Superparents"
-               << ": "
-               << ct.Superparents.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Superarcs"
-               << ": "
-               << ct.Superarcs.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Supernodes"
-               << ": "
-               << ct.Supernodes.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Hyperparents"
-               << ": "
-               << ct.Hyperparents.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #WhenTransferred"
-               << ": "
-               << ct.WhenTransferred.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Hypernodes"
-               << ": "
-               << ct.Hypernodes.GetNumberOfValues()
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    #Hyperarcs"
-               << ": "
-               << ct.Hyperarcs.GetNumberOfValues()
-               << std::endl);
+               << "    ---------------- Contour Tree Array Sizes ---------------------" << std::endl
+               << std::setw(42) << std::left << "    #Nodes"
+               << ": " << ct.Nodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Arcs"
+               << ": " << ct.Arcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superparents"
+               << ": " << ct.Superparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superarcs"
+               << ": " << ct.Superarcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Supernodes"
+               << ": " << ct.Supernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperparents"
+               << ": " << ct.Hyperparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #WhenTransferred"
+               << ": " << ct.WhenTransferred.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hypernodes"
+               << ": " << ct.Hypernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperarcs"
+               << ": " << ct.Hyperarcs.GetNumberOfValues() << std::endl);
   // Print hyperstructure statistics
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
-               << ct.PrintHyperStructureStatistics(false)
-               << std::endl);
+               << ct.PrintHyperStructureStatistics(false) << std::endl);
 
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;

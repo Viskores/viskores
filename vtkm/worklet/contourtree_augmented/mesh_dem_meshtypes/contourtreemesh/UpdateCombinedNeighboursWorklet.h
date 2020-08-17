@@ -85,7 +85,7 @@ public:
       toCombinedSortOrder, // (input) thisToCombinedSortOrder or otherToCombinedSortOrder array
     WholeArrayIn combinedFirstNeighbour, // (input) combinedFirstNeighbour array in both cases
     WholeArrayIn
-      combinedOtherStartIndex,         // (input) const 0 array of length combinedOtherStartIndex for this and combinedOtherStartIndex for other loop
+      combinedOtherStartIndex, // (input) const 0 array of length combinedOtherStartIndex for this and combinedOtherStartIndex for other loop
     WholeArrayOut combinedNeighbours); // (output) combinedNeighbours array in both cases
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5, _6);
   typedef _1 InputDomain;

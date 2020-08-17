@@ -16,8 +16,6 @@ namespace cont
 {
 
 VTKM_CONT
-DataSetBuilderRectilinear::DataSetBuilderRectilinear()
-{
-}
+DataSetBuilderRectilinear::DataSetBuilderRectilinear() {}
 }
 } // end namespace vtkm::cont

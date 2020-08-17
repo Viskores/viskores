@@ -13,9 +13,9 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
 
-#define VTK_M_DEPRECATED_MAKE_MESSAGE(...)                                                         \
+#define VTK_M_DEPRECATED_MAKE_MESSAGE(...) \
   VTKM_EXPAND(VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(__VA_ARGS__, "", vtkm::internal::NullType{}))
-#define VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(version, message, ...)                                  \
+#define VTK_M_DEPRECATED_MAKE_MESSAGE_IMPL(version, message, ...) \
   message " Deprecated in version " #version "."
 
 /// \def VTKM_DEPRECATED(version, message)
@@ -104,7 +104,7 @@
 #if defined(VTKM_GCC) || defined(VTKM_CLANG)
 
 #define VTKM_DEPRECATED_SUPPRESS_SUPPORTED
-#define VTKM_DEPRECATED_SUPPRESS_BEGIN                                                             \
+#define VTKM_DEPRECATED_SUPPRESS_BEGIN \
   _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
 #define VTKM_DEPRECATED_SUPPRESS_END _Pragma("GCC diagnostic pop")
 

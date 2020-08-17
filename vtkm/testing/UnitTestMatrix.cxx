@@ -32,8 +32,8 @@ vtkm::Matrix<T, NumRow, NumCol> TestValue(vtkm::Id index, const vtkm::Matrix<T, 
 namespace
 {
 
-#define FOR_ROW_COL(matrix)                                                                        \
-  for (vtkm::IdComponent row = 0; row < (matrix).NUM_ROWS; row++)                                  \
+#define FOR_ROW_COL(matrix)                                       \
+  for (vtkm::IdComponent row = 0; row < (matrix).NUM_ROWS; row++) \
     for (vtkm::IdComponent col = 0; col < (matrix).NUM_COLUMNS; col++)
 
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>

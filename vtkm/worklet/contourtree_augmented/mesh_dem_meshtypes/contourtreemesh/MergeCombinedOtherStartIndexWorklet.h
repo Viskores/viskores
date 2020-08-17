@@ -89,7 +89,7 @@ public:
     WholeArrayInOut combinedOtherStartIndex, // (input, output and input domain)
     WholeArrayInOut combinedNeighbours,      // (input, output)
     WholeArrayIn combinedFirstNeighbour      // (input)
-    );
+  );
   typedef void ExecutionSignature(InputIndex, _1, _2, _3);
   typedef _1 InputDomain;
 

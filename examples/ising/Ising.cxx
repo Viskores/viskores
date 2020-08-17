@@ -66,10 +66,10 @@ struct UpdateSpins : public vtkm::worklet::WorkletCellNeighborhood
     const auto mySpin = prevspin.Get(0, 0, 0);
 
     // 1. Calculate the energy of flipping, E_flip
-    vtkm::Float32 E_flip =
-      J * mySpin * (prevspin.Get(-1, -1, 0) + prevspin.Get(-1, 0, 0) + prevspin.Get(-1, 1, 0) +
-                    prevspin.Get(0, -1, 0) + prevspin.Get(0, 1, 0) + prevspin.Get(1, -1, 0) +
-                    prevspin.Get(1, 0, 0) + prevspin.Get(1, 1, 0));
+    vtkm::Float32 E_flip = J * mySpin *
+      (prevspin.Get(-1, -1, 0) + prevspin.Get(-1, 0, 0) + prevspin.Get(-1, 1, 0) +
+       prevspin.Get(0, -1, 0) + prevspin.Get(0, 1, 0) + prevspin.Get(1, -1, 0) +
+       prevspin.Get(1, 0, 0) + prevspin.Get(1, 1, 0));
 
     if (E_flip <= 0)
     {

@@ -274,8 +274,9 @@ private:
   { // number of components do not match
     std::ostringstream str;
     str << "VariantArrayHandle::AsVirtual: Cannot cast from " << vtkm::cont::TypeToString<S>()
-        << " to " << vtkm::cont::TypeToString<D>() << "; "
-                                                      "number of components must match exactly.";
+        << " to " << vtkm::cont::TypeToString<D>()
+        << "; "
+           "number of components must match exactly.";
     throw vtkm::cont::ErrorBadType(str.str());
   }
 };

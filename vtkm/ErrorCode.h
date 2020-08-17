@@ -108,14 +108,14 @@ VTKM_EXEC_CONT inline vtkm::ErrorCode LclErrorToVtkmError(lcl::ErrorCode code) n
 
 } // namespace vtkm
 
-#define VTKM_RETURN_ON_ERROR(call)                                                                 \
-  do                                                                                               \
-  {                                                                                                \
-    auto status = (call);                                                                          \
-    if (status != ::vtkm::ErrorCode::Success)                                                      \
-    {                                                                                              \
-      return status;                                                                               \
-    }                                                                                              \
+#define VTKM_RETURN_ON_ERROR(call)            \
+  do                                          \
+  {                                           \
+    auto status = (call);                     \
+    if (status != ::vtkm::ErrorCode::Success) \
+    {                                         \
+      return status;                          \
+    }                                         \
   } while (false)
 
 #endif //vtk_m_exec_ErrorCode_h

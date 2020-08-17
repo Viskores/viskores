@@ -37,11 +37,12 @@ Field::Field(const vtkm::cont::Field& src)
 }
 
 VTKM_CONT
-Field::Field(vtkm::cont::Field&& src) noexcept : Name(std::move(src.Name)),
-                                                 FieldAssociation(std::move(src.FieldAssociation)),
-                                                 Data(std::move(src.Data)),
-                                                 Range(std::move(src.Range)),
-                                                 ModifiedFlag(std::move(src.ModifiedFlag))
+Field::Field(vtkm::cont::Field&& src) noexcept
+  : Name(std::move(src.Name))
+  , FieldAssociation(std::move(src.FieldAssociation))
+  , Data(std::move(src.Data))
+  , Range(std::move(src.Range))
+  , ModifiedFlag(std::move(src.ModifiedFlag))
 {
 }
 
@@ -92,9 +93,7 @@ void Field::PrintSummary(std::ostream& out) const
 }
 
 VTKM_CONT
-Field::~Field()
-{
-}
+Field::~Field() {}
 
 
 VTKM_CONT

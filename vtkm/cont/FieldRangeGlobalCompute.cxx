@@ -60,11 +60,12 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
 
   using VectorOfRangesT = std::vector<vtkm::Range>;
 
-  vtkmdiy::Master master(comm,
-                         1,
-                         -1,
-                         []() -> void* { return new VectorOfRangesT(); },
-                         [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
+  vtkmdiy::Master master(
+    comm,
+    1,
+    -1,
+    []() -> void* { return new VectorOfRangesT(); },
+    [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
 
   vtkmdiy::ContiguousAssigner assigner(/*num ranks*/ comm.size(),
                                        /*global-num-blocks*/ comm.size());
@@ -76,8 +77,9 @@ vtkm::cont::ArrayHandle<vtkm::Range> MergeRangesGlobal(
 
   vtkmdiy::RegularAllReducePartners all_reduce_partners(decomposer, /*k*/ 2);
 
-  auto callback = [](
-    VectorOfRangesT* data, const vtkmdiy::ReduceProxy& srp, const vtkmdiy::RegularMergePartners&) {
+  auto callback = [](VectorOfRangesT* data,
+                     const vtkmdiy::ReduceProxy& srp,
+                     const vtkmdiy::RegularMergePartners&) {
     const auto selfid = srp.gid();
     // 1. dequeue.
     std::vector<int> incoming;

@@ -76,7 +76,7 @@ public:
                                 WholeArrayOut hyperId,             // (output) hyperId
                                 WholeArrayOut treeHypernodes, // (output) hypernodes of the tree
                                 WholeArrayOut treeSupernodes  // (output) supernodes of the tree
-                                );                            // (input/output) hyperarcs
+  );                                                          // (input/output) hyperarcs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 

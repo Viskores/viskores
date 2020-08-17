@@ -440,23 +440,23 @@ struct ReduceHelper
 #ifdef VTKM_OPENMP_USE_NATIVE_REDUCTION
 
 // Specialize for vtkm functors with OpenMP special cases:
-#define VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)                                  \
-  template <typename PortalT, typename ReturnType>                                                 \
-  static ReturnType Execute(                                                                       \
-    PortalT portal, ReturnType value, FunctorType functorIn, std::true_type)                       \
-  {                                                                                                \
-    const vtkm::Id numValues = portal.GetNumberOfValues();                                         \
-    internal::WrappedBinaryOperator<ReturnType, FunctorType> f(functorIn);                         \
-    _Pragma(#PragmaString) for (vtkm::Id i = 0; i < numValues; ++i)                                \
-    {                                                                                              \
-      value = f(value, portal.Get(i));                                                             \
-    }                                                                                              \
-    return value;                                                                                  \
+#define VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)            \
+  template <typename PortalT, typename ReturnType>                           \
+  static ReturnType Execute(                                                 \
+    PortalT portal, ReturnType value, FunctorType functorIn, std::true_type) \
+  {                                                                          \
+    const vtkm::Id numValues = portal.GetNumberOfValues();                   \
+    internal::WrappedBinaryOperator<ReturnType, FunctorType> f(functorIn);   \
+    _Pragma(#PragmaString) for (vtkm::Id i = 0; i < numValues; ++i)          \
+    {                                                                        \
+      value = f(value, portal.Get(i));                                       \
+    }                                                                        \
+    return value;                                                            \
   }
 
 // Constructing the pragma string inside the _Pragma call doesn't work so
 // we jump through a hoop:
-#define VTKM_OPENMP_SPECIALIZE_REDUCE(FunctorType, Operator)                                       \
+#define VTKM_OPENMP_SPECIALIZE_REDUCE(FunctorType, Operator) \
   VTKM_OPENMP_SPECIALIZE_REDUCE1(FunctorType, "omp parallel for reduction(" #Operator ":value)")
 
   // + (Add, Sum)

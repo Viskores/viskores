@@ -35,8 +35,8 @@ public:
   ArrayPortalRef() = default;
 
   ArrayPortalRef(std::shared_ptr<vtkm::ArrayPortalVirtual<T>> portal, vtkm::Id numValues) noexcept
-    : vtkm::ArrayPortalRef<T>(portal.get(), numValues),
-      ManagedPortal(portal)
+    : vtkm::ArrayPortalRef<T>(portal.get(), numValues)
+    , ManagedPortal(portal)
   {
   }
 };

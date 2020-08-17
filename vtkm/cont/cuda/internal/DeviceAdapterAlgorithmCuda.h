@@ -1183,10 +1183,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }

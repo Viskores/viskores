@@ -321,9 +321,7 @@ vtkm::cont::internal::BufferInfo AllocateOnHost(vtkm::BufferSizeType size)
 }
 
 //----------------------------------------------------------------------------------------
-DeviceAdapterMemoryManagerBase::~DeviceAdapterMemoryManagerBase()
-{
-}
+DeviceAdapterMemoryManagerBase::~DeviceAdapterMemoryManagerBase() {}
 
 void DeviceAdapterMemoryManagerBase::Reallocate(vtkm::cont::internal::BufferInfo& buffer,
                                                 vtkm::BufferSizeType newSize) const

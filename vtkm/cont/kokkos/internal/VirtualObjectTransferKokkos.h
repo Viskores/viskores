@@ -54,17 +54,19 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagKok
         auto executionObjectPtr = this->ExecutionObject =
           static_cast<VirtualDerivedType*>(Kokkos::kokkos_malloc(sizeof(VirtualDerivedType)));
         // Initialize the device object
-        Kokkos::parallel_for("ConstructVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
-          new (executionObjectPtr) VirtualDerivedType(*deviceTarget);
-        });
+        Kokkos::parallel_for(
+          "ConstructVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
+            new (executionObjectPtr) VirtualDerivedType(*deviceTarget);
+          });
       }
       else if (updateData)
       {
         auto executionObjectPtr = this->ExecutionObject;
         // Initialize the device object
-        Kokkos::parallel_for("UpdateVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
-          *executionObjectPtr = *deviceTarget;
-        });
+        Kokkos::parallel_for(
+          "UpdateVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
+            *executionObjectPtr = *deviceTarget;
+          });
       }
     }
 

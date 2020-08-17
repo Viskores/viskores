@@ -224,10 +224,10 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
     vtkm::cont::testing::ExplicitData##num::numConn, vtkm::cont::testing::ExplicitData##num::conn, \
     vtkm::cont::testing::ExplicitData##num::numIndices,                                            \
     vtkm::cont::testing::ExplicitData##num::shapes
-#define TEST_NUMS(num)                                                                             \
-  vtkm::cont::testing::ExplicitData##num::numPoints,                                               \
+#define TEST_NUMS(num)                               \
+  vtkm::cont::testing::ExplicitData##num::numPoints, \
     vtkm::cont::testing::ExplicitData##num::numCells
-#define TEST_BOUNDS(num)                                                                           \
+#define TEST_BOUNDS(num) \
   vtkm::cont::testing::ExplicitData##num::numPoints, vtkm::cont::testing::ExplicitData##num::coords
 
 void TestDataSetBuilderExplicit()

@@ -440,7 +440,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
   this->Invoke(tempWorklet1,
                this->BoundarySuperparents,
                this->SuperarcIntrinsicBoundaryCount // output
-               );
+  );
 
   // iii.Repeat to subtract and compute the extent lengths (i.e. the counts)
   //     Note that the 0th element will subtract 0 and can be omitted
@@ -448,7 +448,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
   this->Invoke(tempWorklet2,
                this->BoundarySuperparents,
                this->SuperarcIntrinsicBoundaryCount // output
-               );
+  );
 
   // resize local array
   this->BoundarySuperparents.ReleaseResources();
@@ -509,7 +509,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
         lastSupernode - firstSupernode,       // number of values to copy
         this->SuperarcDependentBoundaryCount, // target output array
         firstSupernode // index in the output array where we start writing values to
-        );
+      );
     } // end local context for step ii
 
     // iii.Perform prefix sum on dependent count range
@@ -528,7 +528,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
         tempArray.GetNumberOfValues(), // copy all of tempArray
         this->SuperarcDependentBoundaryCount,
         firstSupernode // to the SuperarcDependentBoundaryCound starting at firstSupernode
-        );
+      );
     } // end local context for step iii
 
     //  iv.  Subtract out the dependent count of the prefix to the entire hyperarc
@@ -552,7 +552,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
         this->ContourTree->Hypernodes,                                // input
         this->SuperarcDependentBoundaryCount,                         // input
         newSuperArcDependentBoundaryCount                             // (input/output)
-        );
+      );
       // copy the results back into our main array
       vtkm::cont::Algorithm::CopySubRange(newSuperArcDependentBoundaryCount,
                                           0,
@@ -575,7 +575,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
         this->ContourTree->Hypernodes,                        // input
         this->SuperarcDependentBoundaryCount,                 // input
         this->HyperarcDependentBoundaryCount                  // output
-        );
+      );
       // transferring the count is done as a separate reduction
     } // end local context for step iv
 
@@ -601,7 +601,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
       auto permutedHyperarcDependentCount =
         vtkm::cont::make_ArrayHandlePermutation(hyperarcTargetSortPermutation,       // id array
                                                 this->HyperarcDependentBoundaryCount // value array
-                                                );
+        );
       vtkm::cont::Algorithm::ScanInclusive(permutedHyperarcDependentCount,
                                            accumulatedBoundaryCount);
 
@@ -679,7 +679,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->ContourTree->Superarcs,         // input
                this->SuperarcDependentBoundaryCount, // input
                this->IsNecessary                     // output
-               );
+  );
 
   // separate pass to set the superparent of every boundary node to be necessary
   auto setSuperparentNecessaryWorklet =
@@ -716,7 +716,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->ContourTree->Superparents, // input
                this->ContourTree->Supernodes,   // input
                isNecessaryAndInterior           // output
-               );
+  );
 
   //  b.  Now append all necessary supernodes to the boundary vertex array
   // first count how many are needed, then resize the arrays
@@ -778,7 +778,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
                                             this->Mesh->SortOrder  // value array to be permuted
                                             ),
     this->BractVertexSuperset // Copy the permuted Mesh->SortOrder to BractVertexSuperset
-    );
+  );
 
   // allocate memory for the superarcs (same size as supernodes for now)
   vtkm::cont::Algorithm::Copy(
@@ -802,11 +802,11 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
     auto tempPermutedBoundaryTreeId =
       vtkm::cont::make_ArrayHandlePermutation(this->BractVertexSuperset, // index array
                                               this->BoundaryTreeId       // value array
-                                              );
+      );
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::ArrayHandleIndex(this->BractVertexSuperset.GetNumberOfValues), // copy 0,1, ... n
       tempPermutedBoundaryTreeId // copy to BoundaryTreeId permuted by BractVertexIndex
-      );
+    );
   }
   // We now compute the superarc "to" for every bract node
   auto superarcToWorklet = bract_maker::FindBractSuperarcsSuperarcToWorklet();
@@ -821,7 +821,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
                this->Mesh->SortOrder,           // input
                this->TreeToSuperset,            // output
                this->Bract->Superarcs           // output
-               );
+  );
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -888,7 +888,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType,
                this->Mesh->SortIndex,     // input
                this->UpNeighbour,         // output
                this->DownNeighbour        // output
-               );
+  );
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -922,7 +922,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->UpNeighbour,         // input
                this->DownNeighbour,       // input
                this->NewVertexId          // output
-               );
+  );
 
   //  c.  We also want to flag the leaves and boundary nodes as necessary
   auto stepTwoWorklet = bract_maker::IdentifyRegularisedSupernodesStepTwoWorklet();
@@ -932,7 +932,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->DownNeighbour,               // input
                this->MeshBoundaryExecutionObject, // input
                this->NewVertexId                  // output
-               );
+  );
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -958,7 +958,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->NewVertexId,  // input
                this->UpNeighbour,  // output
                this->DownNeighbour // output
-               );
+  );
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1063,14 +1063,14 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->UpNeighbour,   //input
                this->DownNeighbour, //input
                newSuperarc          //output
-               );
+  );
 
   //  3.  Now do the pass to resolve the root: choose the direction with decreasing index
   auto resolveRootWorklet = bract_maker::CompressRegularisedNodesResolveRootWorklet();
   this->Invoke(resolveRootWorklet,
                vtkm::cont::ArrayHandleIndex(this->NumKept), // input
                newSuperarc                                  // output
-               );
+  );
 
   // 4.  Now transfer the vertices & resize
   vtkm::worklet::contourtree_augmented::IdArrayType newVertexIndex;
@@ -1080,7 +1080,7 @@ void BoundaryRestrictedAugmentedContourTreeMaker<MeshType, MeshBoundaryExecObjTy
                this->BractVertexSuperset, // input
                this->NewVertexId,         // input
                newVertexIndex             // output
-               );
+  );
 
   // 5.  Create an index array and sort it indirectly by sortOrder
   vtkm::worklet::contourtree_augmented::IdArrayType vertexSorter;

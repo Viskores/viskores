@@ -74,9 +74,7 @@ MapperCylinder::MapperCylinder()
 {
 }
 
-MapperCylinder::~MapperCylinder()
-{
-}
+MapperCylinder::~MapperCylinder() {}
 
 void MapperCylinder::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
@@ -182,8 +180,8 @@ void MapperCylinder::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   //
   // Create rays
   //
-  vtkm::Int32 width = (vtkm::Int32) this->Internals->Canvas->GetWidth();
-  vtkm::Int32 height = (vtkm::Int32) this->Internals->Canvas->GetHeight();
+  vtkm::Int32 width = (vtkm::Int32)this->Internals->Canvas->GetWidth();
+  vtkm::Int32 height = (vtkm::Int32)this->Internals->Canvas->GetHeight();
 
   this->Internals->RayCamera.SetParameters(camera, width, height);
 

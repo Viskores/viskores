@@ -78,7 +78,7 @@ public:
     WholeArrayIn hyperarcs,                              // (input) contour tree hyperarcs
     WholeArrayIn accumulatedBoundaryCountPortal,         // (input)
     WholeArrayInOut supernodeTransferBoundaryCountPortal // (input/output)
-    );
+  );
   using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
   using InputDomain = _1;
 

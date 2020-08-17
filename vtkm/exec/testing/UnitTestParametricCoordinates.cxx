@@ -20,7 +20,7 @@
 #include <ctime>
 #include <random>
 
-#define CHECK_CALL(call)                                                                           \
+#define CHECK_CALL(call) \
   VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
 
 namespace

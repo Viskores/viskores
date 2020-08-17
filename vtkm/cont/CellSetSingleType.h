@@ -61,10 +61,11 @@ public:
   }
 
   VTKM_CONT
-  CellSetSingleType(Thisclass&& src) noexcept : Superclass(std::forward<Superclass>(src)),
-                                                ExpectedNumberOfCellsAdded(-1),
-                                                CellShapeAsId(src.CellShapeAsId),
-                                                NumberOfPointsPerCell(src.NumberOfPointsPerCell)
+  CellSetSingleType(Thisclass&& src) noexcept
+    : Superclass(std::forward<Superclass>(src))
+    , ExpectedNumberOfCellsAdded(-1)
+    , CellShapeAsId(src.CellShapeAsId)
+    , NumberOfPointsPerCell(src.NumberOfPointsPerCell)
   {
   }
 

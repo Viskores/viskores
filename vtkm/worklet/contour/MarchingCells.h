@@ -615,10 +615,10 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
+  using vtkm::worklet::contour::MapPointField;
   using vtkm::worklet::marching_cells::ClassifyCell;
   using vtkm::worklet::marching_cells::EdgeWeightGenerate;
   using vtkm::worklet::marching_cells::EdgeWeightGenerateMetaData;
-  using vtkm::worklet::contour::MapPointField;
 
   vtkm::worklet::marching_cells::CellClassifyTable classTable;
   vtkm::worklet::marching_cells::TriangleGenerationTable triTable;

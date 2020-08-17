@@ -84,7 +84,7 @@ public:
                                 WholeArrayOut contourTreeHyperarcs,      // (output)
                                 WholeArrayOut contourTreeSuperarcs,      // (output)
                                 WholeArrayOut contourTreeWhenTransferred // (output)
-                                );
+  );
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4, _5);
   using InputDomain = _1;

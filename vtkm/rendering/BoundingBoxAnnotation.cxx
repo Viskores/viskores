@@ -21,9 +21,7 @@ BoundingBoxAnnotation::BoundingBoxAnnotation()
 {
 }
 
-BoundingBoxAnnotation::~BoundingBoxAnnotation()
-{
-}
+BoundingBoxAnnotation::~BoundingBoxAnnotation() {}
 
 void BoundingBoxAnnotation::Render(const vtkm::rendering::Camera&, const WorldAnnotator& annotator)
 {

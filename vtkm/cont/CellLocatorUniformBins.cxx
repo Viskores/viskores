@@ -70,9 +70,10 @@ VTKM_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds, const
 
 VTKM_EXEC static vtkm::Id GetNumberOfBins(const BinsBBox& binsBBox)
 {
-  return binsBBox.Empty() ? 0 : ((binsBBox.Max[0] - binsBBox.Min[0] + 1) *
-                                 (binsBBox.Max[1] - binsBBox.Min[1] + 1) *
-                                 (binsBBox.Max[2] - binsBBox.Min[2] + 1));
+  return binsBBox.Empty()
+    ? 0
+    : ((binsBBox.Max[0] - binsBBox.Min[0] + 1) * (binsBBox.Max[1] - binsBBox.Min[1] + 1) *
+       (binsBBox.Max[2] - binsBBox.Min[2] + 1));
 }
 
 class BBoxIterator

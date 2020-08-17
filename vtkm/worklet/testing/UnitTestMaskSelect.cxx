@@ -48,7 +48,22 @@ TestMaskArrays MakeMaskArraysLong()
   TestMaskArrays arrays;
 
   arrays.SelectArray = vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
   });
   arrays.ThreadToOutputMap =
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15 });

@@ -95,7 +95,7 @@
 // edge from - vertex with same row & col
 #define EDGE_FROM(E, NCOLS) VERTEX_ID(EDGE_ROW(E, NCOLS), EDGE_COL(E, NCOLS), NCOLS)
 // edge to - edge from +1 col if not vertical, +1 row if not horizontal
-#define EDGE_TO(E, NCOLS)                                                                          \
-  VERTEX_ID(EDGE_ROW(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_HORIZONTAL) ? 0 : 1),                \
-            EDGE_COL(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_VERTICAL) ? 0 : 1),                  \
+#define EDGE_TO(E, NCOLS)                                                           \
+  VERTEX_ID(EDGE_ROW(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_HORIZONTAL) ? 0 : 1), \
+            EDGE_COL(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_VERTICAL) ? 0 : 1),   \
             NCOLS)

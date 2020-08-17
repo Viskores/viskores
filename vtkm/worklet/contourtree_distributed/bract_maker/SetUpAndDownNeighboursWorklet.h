@@ -75,7 +75,7 @@ public:
                                 WholeArrayIn meshSortIndex,       // input
                                 WholeArrayOut upNeighbour,        // output
                                 WholeArrayOut downNeighbour       // output
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _2, _1, _3, _4, _5);
   using InputDomain = _1;
 

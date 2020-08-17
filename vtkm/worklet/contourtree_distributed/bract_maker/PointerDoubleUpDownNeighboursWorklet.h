@@ -71,7 +71,7 @@ class PointerDoubleUpDownNeighboursWorklet : public vtkm::worklet::WorkletMapFie
 public:
   using ControlSignature = void(WholeArrayInOut upNeighbour,  // input/output
                                 WholeArrayInOut downNeighbour // input/output
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _1, _2);
   using InputDomain = _1;
 

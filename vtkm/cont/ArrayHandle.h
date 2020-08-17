@@ -135,7 +135,7 @@ struct ArrayHandleCheck
   using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
-#define VTKM_IS_ARRAY_HANDLE(T)                                                                    \
+#define VTKM_IS_ARRAY_HANDLE(T) \
   VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>::type::value)
 
 } // namespace internal
@@ -173,7 +173,10 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
-  classname(Thisclass&& src) noexcept : Superclass(std::move(src)) {}                              \
+  classname(Thisclass&& src) noexcept                                                              \
+    : Superclass(std::move(src))                                                                   \
+  {                                                                                                \
+  }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
@@ -227,7 +230,7 @@ struct GetTypeInParentheses<void(T)>
 /// templated. For ArrayHandle sublcasses that are not templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS_NT.
 ///
-#define VTKM_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass)                           \
+#define VTKM_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass) \
   VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename)
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
@@ -250,7 +253,7 @@ struct GetTypeInParentheses<void(T)>
 /// templated. For ArrayHandle sublcasses that are templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS.
 ///
-#define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass)                                       \
+#define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass) \
   VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, (classname), superclass, )
 
 /// \brief Manages an array-worth of data.

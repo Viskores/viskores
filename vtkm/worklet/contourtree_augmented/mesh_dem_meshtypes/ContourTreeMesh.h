@@ -214,7 +214,7 @@ public:
   void GetBoundaryVertices(IdArrayType& boundaryVertexArray,                    // output
                            IdArrayType& boundarySortIndexArray,                 // output
                            MeshBoundaryContourTreeMeshExec* meshBoundaryExecObj //input
-                           ) const;
+  ) const;
 
 private:
   vtkm::cont::Invoker Invoke;
@@ -399,7 +399,7 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
                this->Neighbours,
                arcs,
                this->FirstNeighbour // output
-               );
+  );
 
 
   // Replace arc number with 'to' vertex in neighbours array
@@ -407,7 +407,7 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
   this->Invoke(replaceArcNumWithToVertexWorklet,
                this->Neighbours, // input/output
                arcs              // input
-               );
+  );
 
   // Compute maximum number of neighbours
   this->ComputeMaxNeighbours();
@@ -589,7 +589,7 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
                  otherToCombinedSortOrder, // input
                  combinedNNeighbours,      // input/output
                  combinedOtherStartIndex   // input/output
-                 );
+    );
   }
 
 #ifdef DEBUG_PRINT
@@ -805,7 +805,7 @@ void ContourTreeMesh<FieldType>::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,                    // output
   IdArrayType& boundarySortIndexArray,                 // output
   MeshBoundaryContourTreeMeshExec* meshBoundaryExecObj //input
-  ) const
+) const
 {
   // start by generating a temporary array of indices
   auto indexArray = vtkm::cont::ArrayHandleIndex(this->GlobalMeshIndex.GetNumberOfValues());
@@ -816,7 +816,7 @@ void ContourTreeMesh<FieldType>::GetBoundaryVertices(
                indexArray,           // input
                *meshBoundaryExecObj, // input
                isOnBoundary          // outut
-               );
+  );
 
   // we will conditionally copy the boundary vertices' indices, capturing the end iterator to compute the # of boundary vertices
   vtkm::cont::Algorithm::CopyIf(indexArray, isOnBoundary, boundaryVertexArray);

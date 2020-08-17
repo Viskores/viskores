@@ -36,9 +36,10 @@ public:
   }
 
   template <typename Device>
-  class ExecObject : public IntegratorBase::ExecObjectBaseImpl<
-                       vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
-                       typename EulerIntegrator::template ExecObject<Device>>
+  class ExecObject
+    : public IntegratorBase::ExecObjectBaseImpl<
+        vtkm::cont::internal::ExecutionObjectType<FieldEvaluateType, Device>,
+        typename EulerIntegrator::template ExecObject<Device>>
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 

@@ -101,8 +101,8 @@ StorageVirtualImpl<T, S>::StorageVirtualImpl(const vtkm::cont::ArrayHandle<T, S>
 VTKM_CONT
 template <typename T, typename S>
 StorageVirtualImpl<T, S>::StorageVirtualImpl(vtkm::cont::ArrayHandle<T, S>&& ah) noexcept
-  : vtkm::cont::internal::detail::StorageVirtual(),
-    Handle(std::move(ah))
+  : vtkm::cont::internal::detail::StorageVirtual()
+  , Handle(std::move(ah))
 {
 }
 
@@ -359,10 +359,10 @@ public:
 
 #ifndef vtk_m_cont_StorageVirtual_cxx
 
-#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                                     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;           \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;           \
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(T)                                           \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<T>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_TRANSFER_VIRTUAL_EXPORT(char);

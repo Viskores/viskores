@@ -183,13 +183,10 @@ struct ArrayHandleSOATraits
 
   using IsTrueVec = std::integral_constant<bool, (NUM_COMPONENTS > 1)>;
 
-  using PortalControl = typename detail::SOAPortalChooser<ValueType,
-                                                          typename BaseArrayType::WritePortalType,
-                                                          IsTrueVec>::Type;
-  using PortalConstControl =
-    typename detail::SOAPortalChooser<ValueType,
-                                      typename BaseArrayType::ReadPortalType,
-                                      IsTrueVec>::Type;
+  using PortalControl = typename detail::
+    SOAPortalChooser<ValueType, typename BaseArrayType::WritePortalType, IsTrueVec>::Type;
+  using PortalConstControl = typename detail::
+    SOAPortalChooser<ValueType, typename BaseArrayType::ReadPortalType, IsTrueVec>::Type;
 
   template <typename Device>
   using PortalExecution = typename detail::SOAPortalChooser<
@@ -778,10 +775,10 @@ namespace vtkm
 namespace cont
 {
 
-#define VTKM_ARRAYHANDLE_SOA_EXPORT(Type)                                                          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagSOA>;                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagSOA>;  \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagSOA>;  \
+#define VTKM_ARRAYHANDLE_SOA_EXPORT(Type)                                                         \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagSOA>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagSOA>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagSOA>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagSOA>;
 
 VTKM_ARRAYHANDLE_SOA_EXPORT(char)

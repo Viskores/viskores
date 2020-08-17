@@ -46,9 +46,7 @@ struct VtkmArg : public opt::Arg
         VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                           "Missing device after option '"
                             << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\nValid devices are: "
-                            << VtkmArg::GetValidDeviceNames()
-                            << "\n");
+                            << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
       }
       return opt::ARG_ILLEGAL;
     }
@@ -59,12 +57,9 @@ struct VtkmArg : public opt::Arg
     {
       VTKM_LOG_ALWAYS_S(vtkm::cont::LogLevel::Error,
                         "Unavailable device specificed after option '"
-                          << std::string(option.name, static_cast<size_t>(option.namelen))
-                          << "': '"
+                          << std::string(option.name, static_cast<size_t>(option.namelen)) << "': '"
                           << option.arg
-                          << "'.\nValid devices are: "
-                          << VtkmArg::GetValidDeviceNames()
-                          << "\n");
+                          << "'.\nValid devices are: " << VtkmArg::GetValidDeviceNames() << "\n");
       return opt::ARG_ILLEGAL;
     }
 

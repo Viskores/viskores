@@ -101,7 +101,8 @@ struct ArrayPortalMultiplexer
   ArrayPortalMultiplexer& operator=(const ArrayPortalMultiplexer&) = default;
 
   template <typename Portal>
-  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src) noexcept : PortalVariant(src)
+  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src) noexcept
+    : PortalVariant(src)
   {
   }
 

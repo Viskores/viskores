@@ -71,7 +71,7 @@ class ComputeHyperAndSuperStructure_ResetHyperparentsId : public vtkm::worklet::
 public:
   typedef void ControlSignature(WholeArrayIn superSortIndex,            // (input)
                                 WholeArrayInOut contourTreeHyperparents // (input/output)
-                                );                                      // (output)
+  );                                                                    // (output)
   typedef void ExecutionSignature(_1, InputIndex, _2);
   using InputDomain = _1;
 

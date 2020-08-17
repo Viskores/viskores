@@ -95,7 +95,10 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   }
 
   typename PointCoordVecType::ComponentType edges[4] = {
-    pts[1] - pts[0], pts[2] - pts[1], pts[3] - pts[2], pts[0] - pts[3],
+    pts[1] - pts[0],
+    pts[2] - pts[1],
+    pts[3] - pts[2],
+    pts[0] - pts[3],
   };
 
   typename PointCoordVecType::ComponentType cornerNormals[4] = {
@@ -107,7 +110,8 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
 
   // principal axes
   typename PointCoordVecType::ComponentType principalAxes[2] = {
-    edges[0] - edges[2], edges[1] - edges[3],
+    edges[0] - edges[2],
+    edges[1] - edges[3],
   };
 
   // Unit normal at the quadrilateral center

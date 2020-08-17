@@ -1179,8 +1179,8 @@ struct InclusiveToExtendedKernel : vtkm::exec::FunctorBase
   {
     // The output array has one more value than the input, which holds the
     // total sum.
-    const ValueType result =
-      (index == 0) ? this->InitialValue : (index == this->InPortal.GetNumberOfValues())
+    const ValueType result = (index == 0) ? this->InitialValue
+                                          : (index == this->InPortal.GetNumberOfValues())
         ? this->FinalValue
         : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
 

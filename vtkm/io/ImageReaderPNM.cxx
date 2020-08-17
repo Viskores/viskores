@@ -21,9 +21,7 @@ namespace vtkm
 namespace io
 {
 
-ImageReaderPNM::~ImageReaderPNM() noexcept
-{
-}
+ImageReaderPNM::~ImageReaderPNM() noexcept {}
 
 VTKM_CONT
 void ImageReaderPNM::Read()

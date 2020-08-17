@@ -175,10 +175,11 @@ public:
 
     Kokkos::MDRangePolicy<Kokkos::Rank<3>, Kokkos::IndexType<vtkm::Id>> policy(
       { 0, 0, 0 }, { rangeMax[0], rangeMax[1], rangeMax[2] });
-    Kokkos::parallel_for(policy, KOKKOS_LAMBDA(vtkm::Id i, vtkm::Id j, vtkm::Id k) {
-      auto flatIdx = i + (j * rangeMax[0]) + (k * rangeMax[0] * rangeMax[1]);
-      functor(vtkm::Id3(i, j, k), flatIdx);
-    });
+    Kokkos::parallel_for(
+      policy, KOKKOS_LAMBDA(vtkm::Id i, vtkm::Id j, vtkm::Id k) {
+        auto flatIdx = i + (j * rangeMax[0]) + (k * rangeMax[0] * rangeMax[1]);
+        functor(vtkm::Id3(i, j, k), flatIdx);
+      });
 
     CheckForErrors(errorMessageStorage);
   }

@@ -24,14 +24,14 @@ namespace
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 #define STRINGIFY_IMPL(x) #x
 
-#define TEST_ASSERT_WORKLET(condition)                                                             \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(condition))                                                                              \
-    {                                                                                              \
-      this->RaiseError("Test assert failed: " #condition "\n" __FILE__ ":" STRINGIFY(__LINE__));   \
-      return;                                                                                      \
-    }                                                                                              \
+#define TEST_ASSERT_WORKLET(condition)                                                           \
+  do                                                                                             \
+  {                                                                                              \
+    if (!(condition))                                                                            \
+    {                                                                                            \
+      this->RaiseError("Test assert failed: " #condition "\n" __FILE__ ":" STRINGIFY(__LINE__)); \
+      return;                                                                                    \
+    }                                                                                            \
   } while (false)
 
 #define ARRAY_SIZE 1033
