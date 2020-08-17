@@ -20,10 +20,12 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 VTKM_CONT
 ParticleMessenger::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
-                                     const vtkm::filter::BoundsMap& boundsMap,
+                                     const vtkm::filter::particleadvection::BoundsMap& boundsMap,
                                      int msgSz,
                                      int numParticles)
   : Messenger(comm)
@@ -155,8 +157,8 @@ void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
   MemStream* buff = new MemStream();
 
   //Write data.
-  vtkm::filter::write(*buff, this->Rank);
-  vtkm::filter::write(*buff, msg);
+  vtkm::filter::particleadvection::write(*buff, this->Rank);
+  vtkm::filter::particleadvection::write(*buff, msg);
   this->SendData(dst, ParticleMessenger::MESSAGE_TAG, buff);
 }
 
@@ -198,8 +200,8 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
     {
       int sendRank;
       std::vector<int> m;
-      vtkm::filter::read(*buffers[i].second, sendRank);
-      vtkm::filter::read(*buffers[i].second, m);
+      vtkm::filter::particleadvection::read(*buffers[i].second, sendRank);
+      vtkm::filter::particleadvection::read(*buffers[i].second, m);
 
       msgs->push_back(std::make_pair(sendRank, m));
     }
@@ -207,15 +209,15 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
     {
       int sendRank;
       std::size_t num;
-      vtkm::filter::read(*buffers[i].second, sendRank);
-      vtkm::filter::read(*buffers[i].second, num);
+      vtkm::filter::particleadvection::read(*buffers[i].second, sendRank);
+      vtkm::filter::particleadvection::read(*buffers[i].second, num);
       if (num > 0)
       {
         std::vector<ParticleCommType> particles(num);
         for (std::size_t j = 0; j < num; j++)
         {
-          vtkm::filter::read(*(buffers[i].second), particles[j].first);
-          vtkm::filter::read(*(buffers[i].second), particles[j].second);
+          vtkm::filter::particleadvection::read(*(buffers[i].second), particles[j].first);
+          vtkm::filter::particleadvection::read(*(buffers[i].second), particles[j].second);
         }
         recvParticles->push_back(std::make_pair(sendRank, particles));
       }
@@ -239,9 +241,10 @@ void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
   if (c.empty())
     return;
 
-  vtkm::filter::MemStream* buff = new vtkm::filter::MemStream();
-  vtkm::filter::write(*buff, this->Rank);
-  vtkm::filter::write(*buff, c);
+  vtkm::filter::particleadvection::MemStream* buff =
+    new vtkm::filter::particleadvection::MemStream();
+  vtkm::filter::particleadvection::write(*buff, this->Rank);
+  vtkm::filter::particleadvection::write(*buff, c);
   this->SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
 }
 
@@ -256,4 +259,5 @@ void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator
 
 #endif
 }
-} // vtkm::filter
+}
+} // vtkm::filter::particleadvection

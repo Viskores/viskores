@@ -15,6 +15,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 template <typename ResultType>
 inline vtkm::Id ParticleAdvectorBase<ResultType>::ComputeTotalNumParticles(vtkm::Id numLocal) const
@@ -28,8 +30,8 @@ inline vtkm::Id ParticleAdvectorBase<ResultType>::ComputeTotalNumParticles(vtkm:
 }
 
 template <typename ResultType>
-inline const vtkm::filter::DataSetIntegrator& ParticleAdvectorBase<ResultType>::GetDataSet(
-  vtkm::Id id) const
+inline const vtkm::filter::particleadvection::DataSetIntegrator&
+ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) const
 {
   for (const auto& it : this->Blocks)
     if (it.GetID() == id)
@@ -106,6 +108,7 @@ inline void ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType& res
   this->StoreResult(res, blockId);
 }
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 #endif

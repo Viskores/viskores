@@ -22,6 +22,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 VTKM_CONT
 #ifdef VTKM_ENABLE_MPI
@@ -392,4 +394,5 @@ void Messenger::ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuff
 }
 #endif
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection

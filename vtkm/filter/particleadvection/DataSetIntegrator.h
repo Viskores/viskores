@@ -21,6 +21,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 class VTKM_ALWAYS_EXPORT DataSetIntegrator
 {
@@ -100,6 +102,7 @@ inline void DataSetIntegrator::DoAdvect(
   result = Worklet.Run(rk4, seeds, maxSteps);
 }
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 #endif

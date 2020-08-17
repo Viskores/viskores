@@ -28,6 +28,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 class VTKM_ALWAYS_EXPORT Messenger
 {
@@ -93,7 +95,8 @@ protected:
   static int CalcMessageBufferSize(int msgSz);
 };
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 
 #endif

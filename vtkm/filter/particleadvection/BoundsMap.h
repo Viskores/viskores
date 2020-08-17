@@ -31,6 +31,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 class VTKM_ALWAYS_EXPORT BoundsMap
 {
@@ -183,6 +185,7 @@ private:
   vtkm::Bounds GlobalBounds;
 };
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 #endif

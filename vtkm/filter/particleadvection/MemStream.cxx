@@ -14,6 +14,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 MemStream::MemStream(std::size_t sz0)
   : Data(nullptr)
@@ -95,4 +97,5 @@ void MemStream::CheckSize(std::size_t sz)
   }
 }
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection

@@ -24,8 +24,10 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
-class VTKM_ALWAYS_EXPORT ParticleMessenger : public vtkm::filter::Messenger
+class VTKM_ALWAYS_EXPORT ParticleMessenger : public vtkm::filter::particleadvection::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;
@@ -38,7 +40,7 @@ class VTKM_ALWAYS_EXPORT ParticleMessenger : public vtkm::filter::Messenger
 
 public:
   VTKM_CONT ParticleMessenger(vtkmdiy::mpi::communicator& comm,
-                              const vtkm::filter::BoundsMap& bm,
+                              const vtkm::filter::particleadvection::BoundsMap& bm,
                               int msgSz = 1,
                               int numParticles = 128);
   VTKM_CONT ~ParticleMessenger() {}
@@ -84,7 +86,7 @@ protected:
   VTKM_CONT bool RecvAny(std::vector<MsgCommType>* msgs,
                          std::vector<ParticleRecvCommType>* recvParticles,
                          bool blockAndWait);
-  const vtkm::filter::BoundsMap& BoundsMap;
+  const vtkm::filter::particleadvection::BoundsMap& BoundsMap;
 
 #endif
 
@@ -101,30 +103,32 @@ protected:
 template <>
 struct Serialization<vtkm::Massless>
 {
-  static void write(vtkm::filter::MemStream& memstream, const vtkm::Massless& data)
+  static void write(vtkm::filter::particleadvection::MemStream& memstream,
+                    const vtkm::Massless& data)
   {
-    vtkm::filter::write(memstream, data.Pos[0]);
-    vtkm::filter::write(memstream, data.Pos[1]);
-    vtkm::filter::write(memstream, data.Pos[2]);
-    vtkm::filter::write(memstream, data.ID);
-    vtkm::filter::write(memstream, data.Status);
-    vtkm::filter::write(memstream, data.NumSteps);
-    vtkm::filter::write(memstream, data.Time);
+    vtkm::filter::particleadvection::write(memstream, data.Pos[0]);
+    vtkm::filter::particleadvection::write(memstream, data.Pos[1]);
+    vtkm::filter::particleadvection::write(memstream, data.Pos[2]);
+    vtkm::filter::particleadvection::write(memstream, data.ID);
+    vtkm::filter::particleadvection::write(memstream, data.Status);
+    vtkm::filter::particleadvection::write(memstream, data.NumSteps);
+    vtkm::filter::particleadvection::write(memstream, data.Time);
   }
 
-  static void read(vtkm::filter::MemStream& memstream, vtkm::Massless& data)
+  static void read(vtkm::filter::particleadvection::MemStream& memstream, vtkm::Massless& data)
   {
-    vtkm::filter::read(memstream, data.Pos[0]);
-    vtkm::filter::read(memstream, data.Pos[1]);
-    vtkm::filter::read(memstream, data.Pos[2]);
-    vtkm::filter::read(memstream, data.ID);
-    vtkm::filter::read(memstream, data.Status);
-    vtkm::filter::read(memstream, data.NumSteps);
-    vtkm::filter::read(memstream, data.Time);
+    vtkm::filter::particleadvection::read(memstream, data.Pos[0]);
+    vtkm::filter::particleadvection::read(memstream, data.Pos[1]);
+    vtkm::filter::particleadvection::read(memstream, data.Pos[2]);
+    vtkm::filter::particleadvection::read(memstream, data.ID);
+    vtkm::filter::particleadvection::read(memstream, data.Status);
+    vtkm::filter::particleadvection::read(memstream, data.NumSteps);
+    vtkm::filter::particleadvection::read(memstream, data.Time);
   }
 };
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 
 #endif

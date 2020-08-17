@@ -23,6 +23,8 @@ namespace vtkm
 {
 namespace filter
 {
+namespace particleadvection
+{
 
 class MemStream
 {
@@ -129,18 +131,18 @@ struct Serialization<std::vector<T>>
   static void write(MemStream& memstream, const std::vector<T>& data)
   {
     const std::size_t sz = data.size();
-    vtkm::filter::write(memstream, sz);
+    vtkm::filter::particleadvection::write(memstream, sz);
     for (std::size_t i = 0; i < sz; i++)
-      vtkm::filter::write(memstream, data[i]);
+      vtkm::filter::particleadvection::write(memstream, data[i]);
   }
 
   static void read(MemStream& memstream, std::vector<T>& data)
   {
     std::size_t sz;
-    vtkm::filter::read(memstream, sz);
+    vtkm::filter::particleadvection::read(memstream, sz);
     data.resize(sz);
     for (std::size_t i = 0; i < sz; i++)
-      vtkm::filter::read(memstream, data[i]);
+      vtkm::filter::particleadvection::read(memstream, data[i]);
   }
 };
 
@@ -149,20 +151,20 @@ struct Serialization<std::list<T>>
 {
   static void write(MemStream& memstream, const std::list<T>& data)
   {
-    vtkm::filter::write(memstream, data.size());
+    vtkm::filter::particleadvection::write(memstream, data.size());
     typename std::list<T>::const_iterator it;
     for (it = data.begin(); it != data.end(); it++)
-      vtkm::filter::write(memstream, *it);
+      vtkm::filter::particleadvection::write(memstream, *it);
   }
 
   static void read(MemStream& memstream, std::list<T>& data)
   {
     std::size_t sz;
-    vtkm::filter::read(memstream, sz);
+    vtkm::filter::particleadvection::read(memstream, sz);
     for (std::size_t i = 0; i < sz; i++)
     {
       T v;
-      vtkm::filter::read(memstream, v);
+      vtkm::filter::particleadvection::read(memstream, v);
       data.push_back(v);
     }
   }
@@ -173,35 +175,17 @@ struct Serialization<std::pair<T, U>>
 {
   static void write(MemStream& memstream, const std::pair<T, U>& data)
   {
-    vtkm::filter::write(memstream, data.first);
-    vtkm::filter::write(memstream, data.second);
+    vtkm::filter::particleadvection::write(memstream, data.first);
+    vtkm::filter::particleadvection::write(memstream, data.second);
   }
 
   static void read(MemStream& memstream, std::pair<T, U>& data)
   {
-    vtkm::filter::read(memstream, data.first);
-    vtkm::filter::read(memstream, data.second);
+    vtkm::filter::particleadvection::read(memstream, data.first);
+    vtkm::filter::particleadvection::read(memstream, data.second);
   }
 };
-
-//template<>
-//struct Serialization<std::string>
-//{
-//  static void write(MemStream &memstream, const std::string &data)
-//  {
-//    std::size_t sz = data.size();
-//    memstream.write(sz);
-//    memstream.write(data.data(), sz);
-//  }
-//
-//  static void read(MemStream &memstream, std::string &data)
-//  {
-//    std::size_t sz;
-//    memstream.read(sz);
-//    data.resize(sz);
-//    memstream.read(&data[0], sz);
-//  }
-//};
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 #endif

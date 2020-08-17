@@ -28,7 +28,8 @@ namespace vtkm
 {
 namespace filter
 {
-
+namespace particleadvection
+{
 //
 // Base class for particle advector
 //
@@ -36,9 +37,11 @@ namespace filter
 template <typename ResultType>
 class VTKM_ALWAYS_EXPORT ParticleAdvectorBase
 {
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+
 public:
-  ParticleAdvectorBase(const vtkm::filter::BoundsMap& bm,
-                       const std::vector<vtkm::filter::DataSetIntegrator>& blocks)
+  ParticleAdvectorBase(const vtkm::filter::particleadvection::BoundsMap& bm,
+                       const std::vector<DataSetIntegratorType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumberOfSteps(0)
@@ -60,7 +63,7 @@ protected:
 
   inline vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const;
 
-  inline const vtkm::filter::DataSetIntegrator& GetDataSet(vtkm::Id id) const;
+  inline const DataSetIntegratorType& GetDataSet(vtkm::Id id) const;
   virtual void StoreResult(const ResultType& vtkmNotUsed(res), vtkm::Id vtkmNotUsed(blockId)) {}
 
   inline void UpdateResult(const ResultType& res,
@@ -69,8 +72,8 @@ protected:
                            std::vector<vtkm::Massless>& T,
                            std::vector<vtkm::Massless>& A);
 
-  std::vector<vtkm::filter::DataSetIntegrator> Blocks;
-  vtkm::filter::BoundsMap BoundsMap;
+  std::vector<DataSetIntegratorType> Blocks;
+  vtkm::filter::particleadvection::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id NumberOfSteps;
   vtkm::Id NumRanks;
@@ -87,9 +90,11 @@ protected:
 template <typename ResultType>
 class VTKM_ALWAYS_EXPORT PABaseAlgorithm : public ParticleAdvectorBase<ResultType>
 {
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+
 public:
-  PABaseAlgorithm(const vtkm::filter::BoundsMap& bm,
-                  const std::vector<vtkm::filter::DataSetIntegrator>& blocks)
+  PABaseAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
+                  const std::vector<DataSetIntegratorType>& blocks)
     : ParticleAdvectorBase<ResultType>(bm, blocks)
   {
   }
@@ -114,7 +119,8 @@ public:
 
   void Go() override
   {
-    vtkm::filter::ParticleMessenger messenger(this->Comm, this->BoundsMap, 1, 128);
+    vtkm::filter::particleadvection::ParticleMessenger messenger(
+      this->Comm, this->BoundsMap, 1, 128);
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
     vtkm::Id totalNumSeeds = this->ComputeTotalNumParticles(nLocal);
@@ -208,9 +214,11 @@ protected:
 class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
   : public PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>>
 {
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+
 public:
-  ParticleAdvectionAlgorithm(const vtkm::filter::BoundsMap& bm,
-                             const std::vector<vtkm::filter::DataSetIntegrator>& blocks)
+  ParticleAdvectionAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
+                             const std::vector<DataSetIntegratorType>& blocks)
     : PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>>(bm, blocks)
   {
   }
@@ -255,9 +263,11 @@ protected:
 class VTKM_ALWAYS_EXPORT StreamlineAlgorithm
   : public PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Massless>>
 {
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+
 public:
-  StreamlineAlgorithm(const vtkm::filter::BoundsMap& bm,
-                      const std::vector<vtkm::filter::DataSetIntegrator>& blocks)
+  StreamlineAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
+                      const std::vector<DataSetIntegratorType>& blocks)
     : PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Massless>>(bm, blocks)
   {
   }
@@ -359,7 +369,8 @@ protected:
   std::map<vtkm::Id, std::vector<vtkm::worklet::StreamlineResult<vtkm::Massless>>> Results;
 };
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::filter::particleadvection
 
 
 #ifndef vtk_m_filter_ParticleAdvector_hxx
