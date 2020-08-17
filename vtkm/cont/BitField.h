@@ -31,6 +31,11 @@ namespace cont
 
 class BitField;
 
+namespace internal
+{
+struct StorageTagBitField;
+}
+
 namespace detail
 {
 
@@ -136,6 +141,15 @@ protected:
     VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
                            "Source portal must return a pointer from "
                            "GetIteratorBegin().");
+  }
+
+  friend class vtkm::cont::internal::Storage<bool, vtkm::cont::internal::StorageTagBitField>;
+
+  /// Construct a BitPortal from a raw array.
+  VTKM_CONT BitPortalBase(BufferType rawArray, vtkm::Id numberOfBits)
+    : Data{ rawArray }
+    , NumberOfBits{ numberOfBits }
+  {
   }
 
 public:

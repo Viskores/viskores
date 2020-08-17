@@ -74,104 +74,143 @@ class Storage<bool, StorageTagBitField>
   using BitPortalType = vtkm::cont::detail::BitPortal;
   using BitPortalConstType = vtkm::cont::detail::BitPortalConst;
 
-public:
-  using ValueType = bool;
-  using PortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalType>;
-  using PortalConstType = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstType>;
+  vtkm::Id NumberOfBits;
 
-  explicit VTKM_CONT Storage(const vtkm::cont::BitField& data)
-    : Data{ data }
-  {
-  }
-
-  explicit VTKM_CONT Storage(vtkm::cont::BitField&& data) noexcept
-    : Data{ std::move(data) }
-  {
-  }
-
-  VTKM_CONT Storage() = default;
-  VTKM_CONT Storage(const Storage&) = default;
-  VTKM_CONT Storage(Storage&&) noexcept = default;
-  VTKM_CONT Storage& operator=(const Storage&) = default;
-  VTKM_CONT Storage& operator=(Storage&&) noexcept = default;
-
-  VTKM_CONT
-  PortalType GetPortal() { return PortalType{ this->Data.WritePortal() }; }
-
-  VTKM_CONT
-  PortalConstType GetPortalConst() { return PortalConstType{ this->Data.ReadPortal() }; }
-
-  VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfBits(); }
-  VTKM_CONT void Allocate(vtkm::Id numberOfValues) { this->Data.Allocate(numberOfValues); }
-  VTKM_CONT void Shrink(vtkm::Id numberOfValues) { this->Data.Shrink(numberOfValues); }
-  VTKM_CONT void ReleaseResources() { this->Data.ReleaseResources(); }
-
-  VTKM_CONT vtkm::cont::BitField GetBitField() const { return this->Data; }
-
-private:
-  vtkm::cont::BitField Data;
-};
-
-template <typename Device>
-class ArrayTransfer<bool, StorageTagBitField, Device>
-{
-  using StorageType = Storage<bool, StorageTagBitField>;
-  using BitPortalExecution = vtkm::cont::detail::BitPortal;
-  using BitPortalConstExecution = vtkm::cont::detail::BitPortalConst;
+  using WordType = vtkm::WordTypeDefault;
+  static constexpr vtkm::Id BlockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
+  VTKM_STATIC_ASSERT(BlockSize >= static_cast<vtkm::Id>(sizeof(WordType)));
 
 public:
-  using ValueType = bool;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-  using PortalExecution = vtkm::cont::internal::ArrayPortalBitField<BitPortalExecution>;
-  using PortalConstExecution = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstExecution>;
+  using ReadPortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstType>;
+  using WritePortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalType>;
 
-  VTKM_CONT
-  explicit ArrayTransfer(StorageType* storage)
-    : Data{ storage->GetBitField() }
+  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const { return 1; }
+
+  VTKM_CONT Storage()
+    : NumberOfBits(0)
   {
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfBits(); }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
+  explicit VTKM_CONT Storage(vtkm::Id numberOfBits)
+    : NumberOfBits(numberOfBits)
   {
-    return PortalConstExecution{ this->Data.PrepareForInput(Device{}, token) };
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
+  VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
+                               vtkm::cont::internal::Buffer* buffers,
+                               vtkm::CopyFlag preserve,
+                               vtkm::cont::Token& token)
   {
-    return PortalExecution{ this->Data.PrepareForInPlace(Device{}, token) };
+    this->NumberOfBits = numValues;
+
+    const vtkm::Id bytesNeeded = (this->NumberOfBits + CHAR_BIT - 1) / CHAR_BIT;
+    const vtkm::Id blocksNeeded = (bytesNeeded + BlockSize - 1) / BlockSize;
+    const vtkm::Id numBytes = blocksNeeded * BlockSize;
+
+    buffers[0].SetNumberOfBytes(numBytes, preserve, token);
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::Token& token)
+  VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return PortalExecution{ this->Data.PrepareForOutput(numberOfValues, Device{}, token) };
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
+    (void)buffers;
+    return this->NumberOfBits;
   }
 
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  VTKM_CONT ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                            vtkm::cont::DeviceAdapterId device,
+                                            vtkm::cont::Token& token)
   {
-    // Implementation of this method should be unnecessary. The internal
-    // bitfield should automatically retrieve the output data as necessary.
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
+
+    return ReadPortalType(
+      BitPortalConstType(buffers[0].ReadPointerDevice(device, token), this->NumberOfBits));
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) { this->Data.Shrink(numberOfValues); }
+  VTKM_CONT WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
+                                              vtkm::cont::DeviceAdapterId device,
+                                              vtkm::cont::Token& token)
+  {
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
 
-  VTKM_CONT
-  void ReleaseResources() { this->Data.ReleaseResources(); }
-
-private:
-  vtkm::cont::BitField Data;
+    return WritePortalType(
+      BitPortalType(buffers[0].WritePointerDevice(device, token), this->NumberOfBits));
+  }
 };
 
 } // end namespace internal
 
+
+// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
+template <typename T>
+class VTKM_ALWAYS_EXPORT ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>
+  : public ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>
+{
+  using Superclass = ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>;
+
+public:
+  VTKM_CONT
+  ArrayHandle()
+    : Superclass()
+  {
+  }
+
+  VTKM_CONT
+  ArrayHandle(const ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& src)
+    : Superclass(src)
+  {
+  }
+
+  VTKM_CONT
+  ArrayHandle(ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
+    : Superclass(std::move(src))
+  {
+  }
+
+  VTKM_CONT
+  ArrayHandle(const ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>& src)
+    : Superclass(src)
+  {
+  }
+
+  VTKM_CONT
+  ArrayHandle(ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
+    : Superclass(std::move(src))
+  {
+  }
+
+  VTKM_CONT ArrayHandle(
+    const vtkm::cont::internal::Buffer* buffers,
+    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
+    : Superclass(buffers, storage)
+  {
+  }
+
+  VTKM_CONT ArrayHandle(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers,
+    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
+    : Superclass(buffers, storage)
+  {
+  }
+
+  VTKM_CONT
+  ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& operator=(
+    const ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& src)
+  {
+    this->Superclass::operator=(src);
+    return *this;
+  }
+
+  VTKM_CONT
+  ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& operator=(
+    ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
+  {
+    this->Superclass::operator=(std::move(src));
+    return *this;
+  }
+
+  VTKM_CONT ~ArrayHandle() {}
+};
 
 /// The ArrayHandleBitField class is a boolean-valued ArrayHandle that is backed
 /// by a BitField.
@@ -184,18 +223,9 @@ public:
 
   VTKM_CONT
   explicit ArrayHandleBitField(const vtkm::cont::BitField& bitField)
-    : Superclass{ StorageType{ bitField } }
+    : Superclass(bitField.GetData().GetBuffers(), StorageType(bitField.GetNumberOfBits()))
   {
   }
-
-  VTKM_CONT
-  explicit ArrayHandleBitField(vtkm::cont::BitField&& bitField) noexcept
-    : Superclass{ StorageType{ std::move(bitField) } }
-  {
-  }
-
-  VTKM_CONT
-  vtkm::cont::BitField GetBitField() const { return this->GetStorage().GetBitField(); }
 };
 
 VTKM_CONT inline vtkm::cont::ArrayHandleBitField make_ArrayHandleBitField(
