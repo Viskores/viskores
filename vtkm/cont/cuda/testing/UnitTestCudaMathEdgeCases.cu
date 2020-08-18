@@ -10,11 +10,11 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/testing/Testing.h>
-#include <vtkm/testing/TestingMath.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
+
+#include <vtkm/cont/testing/Testing.h>
 
 #include <cmath>
 #include <iostream>
@@ -164,15 +164,11 @@ void RunEdgeCases()
 
 } //namespace
 
-int UnitTestCudaMath(int argc, char* argv[])
+int UnitTestCudaMathEdgeCases(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
-  int tests_valid = vtkm::cont::testing::Testing::Run(
-    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 
-  tests_valid +=
-    vtkm::cont::testing::Testing::Run(RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
-
-  return tests_valid;
+  return vtkm::cont::testing::Testing::Run(
+    RunEdgeCases<vtkm::cont::DeviceAdapterTagCuda>, argc, argv);
 }

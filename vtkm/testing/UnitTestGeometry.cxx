@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_testing_TestingGeometry_h
-#define vtk_m_testing_TestingGeometry_h
 
 #include <vtkm/Geometry.h>
 #include <vtkm/Math.h>
@@ -18,7 +16,7 @@
 
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Algorithm.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -29,7 +27,7 @@
   }
 
 //-----------------------------------------------------------------------------
-namespace UnitTestGeometryNamespace
+namespace
 {
 
 class Coords
@@ -126,13 +124,12 @@ struct RayTests : public vtkm::exec::FunctorBase
   }
 };
 
-template <typename Device>
 struct TryRayTests
 {
   template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(RayTests<T>(), 1);
+    vtkm::cont::Algorithm::Schedule(RayTests<T>(), 1);
   }
 };
 
@@ -215,13 +212,12 @@ struct LineSegmentTests : public vtkm::exec::FunctorBase
   }
 };
 
-template <typename Device>
 struct TryLineSegmentTests
 {
   template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(LineSegmentTests<T>(), 1);
+    vtkm::cont::Algorithm::Schedule(LineSegmentTests<T>(), 1);
   }
 };
 
@@ -349,13 +345,12 @@ struct PlaneTests : public vtkm::exec::FunctorBase
   }
 };
 
-template <typename Device>
 struct TryPlaneTests
 {
   template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(PlaneTests<T>(), 1);
+    vtkm::cont::Algorithm::Schedule(PlaneTests<T>(), 1);
   }
 };
 
@@ -457,30 +452,31 @@ struct SphereTests : public vtkm::exec::FunctorBase
   }
 };
 
-template <typename Device>
 struct TrySphereTests
 {
   template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(SphereTests<T>(), 1);
+    vtkm::cont::Algorithm::Schedule(SphereTests<T>(), 1);
   }
 };
 
 //-----------------------------------------------------------------------------
-template <typename Device>
 void RunGeometryTests()
 {
   std::cout << "Tests for rays." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryRayTests<Device>(), vtkm::TypeListFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryRayTests(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for line segments." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryLineSegmentTests<Device>(), vtkm::TypeListFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryLineSegmentTests(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for planes." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryPlaneTests<Device>(), vtkm::TypeListFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryPlaneTests(), vtkm::TypeListFieldScalar());
   std::cout << "Tests for spheres." << std::endl;
-  vtkm::testing::Testing::TryTypes(TrySphereTests<Device>(), vtkm::TypeListFieldScalar());
+  vtkm::testing::Testing::TryTypes(TrySphereTests(), vtkm::TypeListFieldScalar());
 }
 
-} // namespace UnitTestGeometryNamespace
+} // anonymous namespace
 
-#endif //vtk_m_testing_TestingGeometry_h
+int UnitTestGeometry(int argc, char* argv[])
+{
+  return vtkm::cont::testing::Testing::Run(RunGeometryTests, argc, argv);
+}
