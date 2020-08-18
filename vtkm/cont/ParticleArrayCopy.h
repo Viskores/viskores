@@ -28,7 +28,8 @@ namespace cont
 template <typename ParticleType>
 VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   const vtkm::cont::ArrayHandle<ParticleType, vtkm::cont::StorageTagBasic>& inP,
-  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
+  bool CopyTerminatedOnly = false);
 
 /// \brief Copy all fields in vtkm::Particle to standard types.
 ///

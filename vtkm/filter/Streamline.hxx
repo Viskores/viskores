@@ -15,10 +15,11 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/cont/ParticleArrayCopy.h>
+
+#include <vtkm/filter/particleadvection/BoundsMap.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/particleadvection/ParticleAdvector.h>
 
 namespace vtkm
 {
@@ -39,49 +40,33 @@ inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massles
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+template <typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //Check for some basics.
   if (this->Seeds.GetNumberOfValues() == 0)
-  {
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-  }
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  const vtkm::cont::CoordinateSystem& coords =
-    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  std::string activeField = this->GetActiveFieldName();
+  vtkm::filter::particleadvection::BoundsMap boundsMap(input);
+  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+  std::vector<DataSetIntegratorType> dsi;
 
-  if (!fieldMeta.IsPointField())
+  for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
+    dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
   }
 
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  vtkm::filter::particleadvection::StreamlineAlgorithm sa(boundsMap, dsi);
+  sa.SetNumberOfSteps(this->NumberOfSteps);
+  sa.SetStepSize(this->StepSize);
+  sa.SetSeeds(this->Seeds);
 
-  FieldType velocities(field);
-  GridEvalType eval(coords, cells, velocities);
-  RK4Type rk4(eval, this->StepSize);
-
-  vtkm::worklet::StreamlineResult<vtkm::Massless> res;
-
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  vtkm::cont::ArrayCopy(this->Seeds, seedArray);
-  res = this->Worklet.Run(rk4, seedArray, this->NumberOfSteps);
-
-  vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.Positions);
-  outData.SetCellSet(res.PolyLines);
-  outData.AddCoordinateSystem(outputCoords);
-
-  return outData;
+  sa.Go();
+  vtkm::cont::PartitionedDataSet output = sa.GetOutput();
+  return output;
 }
 
 //-----------------------------------------------------------------------------

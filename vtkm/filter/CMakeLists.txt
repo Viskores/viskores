@@ -166,6 +166,9 @@ set(sources_device
   PointAverage.cxx
   Threshold.cxx
   VectorMagnitude.cxx
+  particleadvection/MemStream.cxx
+  particleadvection/Messenger.cxx
+  particleadvection/ParticleMessenger.cxx
 )
 
 set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
@@ -179,7 +182,12 @@ vtkm_library(
   )
 target_link_libraries(vtkm_filter PUBLIC vtkm_worklet)
 
+if (VTKm_ENABLE_MPI)
+  target_link_libraries(vtkm_filter PUBLIC MPI::MPI_CXX)
+endif()
+
 add_subdirectory(internal)
+add_subdirectory(particleadvection)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
