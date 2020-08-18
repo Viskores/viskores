@@ -228,34 +228,6 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
   return true;
 }
 
-VTKM_CONT
-template <typename P, template <typename, typename> class Container, typename Allocator>
-void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
-{
-  if (dst == this->Rank)
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Error. Sending a particle to yourself.");
-    return;
-  }
-  if (c.empty())
-    return;
-
-  vtkm::filter::particleadvection::MemStream* buff =
-    new vtkm::filter::particleadvection::MemStream();
-  vtkm::filter::particleadvection::write(*buff, this->Rank);
-  vtkm::filter::particleadvection::write(*buff, c);
-  this->SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
-}
-
-VTKM_CONT
-template <typename P, template <typename, typename> class Container, typename Allocator>
-void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator>>& m)
-{
-  for (auto mit = m.begin(); mit != m.end(); mit++)
-    if (!mit->second.empty())
-      this->SendParticles(mit->first, mit->second);
-}
-
 #endif
 }
 }

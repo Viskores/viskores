@@ -12,9 +12,6 @@
 
 #include <vtkm/filter/vtkm_filter_export.h>
 
-#include <vtkmstd/aligned_union.h>
-#include <vtkmstd/is_trivially_copyable.h>
-
 #include <cstring>
 #include <iostream>
 #include <list>
@@ -102,8 +99,10 @@ inline void MemStream::SetPos(std::size_t p)
 template <typename T>
 struct Serialization
 {
-  static_assert(vtkmstd::is_trivially_copyable<T>::value,
+#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
+  static_assert(std::is_trivially_copyable<T>::value,
                 "Default serialization works only for trivially copyable types");
+#endif
 
   static void write(MemStream& memstream, const T& data)
   {

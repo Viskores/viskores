@@ -69,13 +69,13 @@ protected:
   template <typename P,
             template <typename, typename> class Container,
             typename Allocator = std::allocator<P>>
-  void SendParticles(int dst, const Container<P, Allocator>& c);
+  inline void SendParticles(int dst, const Container<P, Allocator>& c);
 
   VTKM_CONT
   template <typename P,
             template <typename, typename> class Container,
             typename Allocator = std::allocator<P>>
-  void SendParticles(const std::map<int, Container<P, Allocator>>& m);
+  inline void SendParticles(const std::map<int, Container<P, Allocator>>& m);
 
   // Send/Recv messages.
   VTKM_CONT void SendMsg(int dst, const std::vector<int>& msg);
@@ -98,6 +98,37 @@ protected:
 
   static int CalcParticleBufferSize(int nParticles, int numBlockIds = 2);
 };
+
+
+#ifdef VTKM_ENABLE_MPI
+VTKM_CONT
+template <typename P, template <typename, typename> class Container, typename Allocator>
+inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
+{
+  if (dst == this->Rank)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Error. Sending a particle to yourself.");
+    return;
+  }
+  if (c.empty())
+    return;
+
+  vtkm::filter::particleadvection::MemStream* buff =
+    new vtkm::filter::particleadvection::MemStream();
+  vtkm::filter::particleadvection::write(*buff, this->Rank);
+  vtkm::filter::particleadvection::write(*buff, c);
+  this->SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
+}
+
+VTKM_CONT
+template <typename P, template <typename, typename> class Container, typename Allocator>
+inline void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator>>& m)
+{
+  for (auto mit = m.begin(); mit != m.end(); mit++)
+    if (!mit->second.empty())
+      this->SendParticles(mit->first, mit->second);
+}
+#endif
 
 
 template <>
