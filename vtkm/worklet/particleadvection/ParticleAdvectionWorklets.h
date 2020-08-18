@@ -22,9 +22,8 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-//#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
 
 #ifdef VTKM_CUDA
 #include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>

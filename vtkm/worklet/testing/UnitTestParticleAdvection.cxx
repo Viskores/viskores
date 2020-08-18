@@ -18,10 +18,12 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 #include <random>
 
