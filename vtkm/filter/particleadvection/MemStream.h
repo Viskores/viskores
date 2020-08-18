@@ -11,6 +11,8 @@
 #define vtk_m_filter_MemStream_h
 
 #include <vtkm/filter/vtkm_filter_export.h>
+
+#include <vtkmstd/aligned_union.h>
 #include <vtkmstd/is_trivially_copyable.h>
 
 #include <cstring>
