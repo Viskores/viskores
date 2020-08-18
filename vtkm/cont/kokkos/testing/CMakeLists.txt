@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestKokkosAlgorithms.cxx
   UnitTestKokkosArrayHandle.cxx
   UnitTestKokkosArrayHandleFancy.cxx
   UnitTestKokkosArrayHandleMultiplexer.cxx
@@ -23,7 +22,6 @@ set(unit_tests
   UnitTestKokkosDataSetExplicit.cxx
   UnitTestKokkosDataSetSingleType.cxx
   UnitTestKokkosDeviceAdapter.cxx
-  UnitTestKokkosGeometry.cxx
   UnitTestKokkosImplicitFunction.cxx
   UnitTestKokkosPointLocatorUniformGrid.cxx
   UnitTestKokkosVirtualObjectHandle.cxx
