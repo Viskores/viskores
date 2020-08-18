@@ -31,7 +31,7 @@ namespace filter
 namespace particleadvection
 {
 
-class VTKM_ALWAYS_EXPORT Messenger
+class VTKM_FILTER_EXPORT Messenger
 {
 public:
   VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm);

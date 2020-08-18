@@ -27,7 +27,7 @@ namespace filter
 namespace particleadvection
 {
 
-class VTKM_ALWAYS_EXPORT ParticleMessenger : public vtkm::filter::particleadvection::Messenger
+class VTKM_FILTER_EXPORT ParticleMessenger : public vtkm::filter::particleadvection::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;
