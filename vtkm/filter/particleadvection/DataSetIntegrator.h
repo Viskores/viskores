@@ -13,6 +13,7 @@
 
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 #include <memory>
 #include <vector>

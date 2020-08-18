@@ -17,7 +17,6 @@
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/ParticleArrayCopy.h>
-
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
 #include <vtkm/filter/particleadvection/ParticleAdvector.h>
