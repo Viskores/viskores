@@ -101,11 +101,6 @@ public:
   }
 };
 
-template <>
-class AtomicInterfaceExecution<DeviceAdapterTagTestAlgorithmGeneral> : public AtomicInterfaceControl
-{
-};
-
 template <typename TargetClass>
 struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>

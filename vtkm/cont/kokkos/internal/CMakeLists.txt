@@ -10,7 +10,6 @@
 
 set(headers
   ArrayManagerExecutionKokkos.h
-  AtomicInterfaceExecutionKokkos.h
   DeviceAdapterAlgorithmKokkos.h
   DeviceAdapterMemoryManagerKokkos.h
   DeviceAdapterRuntimeDetectorKokkos.h
