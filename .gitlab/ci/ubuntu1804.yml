@@ -198,7 +198,7 @@ build:ubuntu1804_kokkos:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "kokkos+static+64bit_floats"
+    VTKM_SETTINGS: "kokkos+turing+static+64bit_floats"
 
 test:ubuntu1804_kokkos:
   tags:
