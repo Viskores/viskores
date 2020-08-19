@@ -18,6 +18,24 @@
 #if defined(VTKM_ENABLE_KOKKOS)
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+// Superhack! Kokkos_Macros.hpp defines macros to include modifiers like __device__.
+// However, we don't want to actually use those if compiling this with a standard
+// C++ compiler (because this particular code does not run on a device). Thus,
+// we want to disable that behavior when not using the device compiler. To do that,
+// we are going to have to load the KokkosCore_config.h file (which you are not
+// supposed to do), then undefine the device enables if necessary, then load
+// Kokkos_Macros.hpp to finish the state.
+#ifndef KOKKOS_MACROS_HPP
+#define KOKKOS_MACROS_HPP
+#include <KokkosCore_config.h>
+#undef KOKKOS_MACROS_HPP
+#define KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
+
+#if defined(KOKKOS_ENABLE_CUDA) && !defined(VTKM_CUDA)
+#undef KOKKOS_ENABLE_CUDA
+#endif
+#endif //KOKKOS_MACROS_HPP not loaded
+
 #include <Kokkos_Core.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
