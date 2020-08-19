@@ -66,7 +66,7 @@ function(vtkm_generate_export_header lib_name)
 
   # Now generate a header that holds the macros needed to easily export
   # template classes. This
-  string(TOUPPER ${kit_name} BASE_NAME_UPPER)
+  string(TOUPPER ${lib_name} BASE_NAME_UPPER)
   set(EXPORT_MACRO_NAME "${BASE_NAME_UPPER}")
 
   set(EXPORT_IS_BUILT_STATIC 0)
@@ -81,17 +81,17 @@ function(vtkm_generate_export_header lib_name)
   if(NOT EXPORT_IMPORT_CONDITION)
     #set EXPORT_IMPORT_CONDITION to what the DEFINE_SYMBOL would be when
     #building shared
-    set(EXPORT_IMPORT_CONDITION ${kit_name}_EXPORTS)
+    set(EXPORT_IMPORT_CONDITION ${lib_name}_EXPORTS)
   endif()
 
 
   configure_file(
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
+      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
     @ONLY)
 
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-    install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
+    install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
       DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
       )
   endif()

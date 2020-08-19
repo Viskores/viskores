@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_VectorMagnitude_h
 #define vtk_m_filter_VectorMagnitude_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/Magnitude.h>
@@ -27,7 +27,7 @@ public:
   //currently the VectorMagnitude filter only works on vector data.
   using SupportedTypes = vtkm::TypeListVecCommon;
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_EXTRA_EXPORT
   VectorMagnitude();
 
   template <typename T, typename StorageType, typename DerivedPolicy>

@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_ClipWithImplicitFunction_h
 #define vtk_m_filter_ClipWithImplicitFunction_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/FilterDataSet.h>

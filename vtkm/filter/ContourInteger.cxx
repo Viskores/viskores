@@ -17,25 +17,25 @@ namespace vtkm
 {
 namespace filter
 {
-template VTKM_FILTER_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-template VTKM_FILTER_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-template VTKM_FILTER_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-template VTKM_FILTER_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,

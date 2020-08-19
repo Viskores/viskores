@@ -20,6 +20,7 @@
 #include <vtkm/filter/FieldSelection.h>
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyBase.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 
 namespace vtkm
@@ -304,11 +305,11 @@ private:
 } // namespace vtkm::filter
 
 #define VTKM_FILTER_EXPORT_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                                \
-  extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet                       \
+  extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::PartitionedDataSet                \
   vtkm::filter::Filter<Name>::Execute(vtkm::cont::PartitionedDataSet const&,                       \
                                       vtkm::filter::PolicyBase<Policy>)
 #define VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD_WITH_POLICY(Name, Policy)                           \
-  template VTKM_FILTER_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute(                \
+  template VTKM_FILTER_COMMON_EXPORT vtkm::cont::PartitionedDataSet Filter<Name>::Execute(         \
     vtkm::cont::PartitionedDataSet const&, vtkm::filter::PolicyBase<Policy>)
 
 #define VTKM_FILTER_EXPORT_EXECUTE_METHOD(Name)                                                    \
