@@ -87,7 +87,7 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T expected, T desired)
+VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T desired, T expected)
 {
   return Kokkos::atomic_compare_exchange(addr, expected, desired);
 }
@@ -163,7 +163,7 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T expected, T desired)
+VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T desired, T expected)
 {
   __threadfence();
   auto result = atomicCAS(addr, expected, desired);
@@ -300,7 +300,7 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr, vtkm::UInt64 val)
     return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }));                            \
   }                                                                                                \
   VTKM_EXEC_CONT inline vtkmType AtomicCompareAndSwapImpl(                                         \
-    vtkmType* addr, vtkmType expected, vtkmType desired)                                           \
+    vtkmType* addr, vtkmType desired, vtkmType expected)                                           \
   {                                                                                                \
     return BitCast<vtkmType>(                                                                      \
       _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),               \
@@ -373,7 +373,7 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T expected, T desired)
+VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T desired, T expected)
 {
   __atomic_compare_exchange_n(addr, &expected, desired, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
   return expected;
@@ -512,7 +512,7 @@ VTKM_EXEC_CONT inline T AtomicNot(T* pointer)
 
 /// \brief Atomic function that replaces a value given a condition.
 ///
-/// Given a pointer, an expected value, and a new desired value, replaces the value at the
+/// Given a pointer, a new desired value, and an expected value, replaces the value at the
 /// pointer if it is the same as the expected value with the new desired value. If the original
 /// value in the pointer does not equal the expected value, then the memory at the pointer
 /// remains unchanged. In either case, the function returns the _old_ original value that
@@ -523,10 +523,10 @@ VTKM_EXEC_CONT inline T AtomicNot(T* pointer)
 /// first).
 ///
 template <typename T, typename U, typename V>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwap(T* pointer, U expected, V desired)
+VTKM_EXEC_CONT inline T AtomicCompareAndSwap(T* pointer, V desired, U expected)
 {
   return detail::AtomicCompareAndSwapImpl(
-    pointer, static_cast<T>(expected), static_cast<V>(desired));
+    pointer, static_cast<V>(desired), static_cast<T>(expected));
 }
 
 } // namespace vtkm

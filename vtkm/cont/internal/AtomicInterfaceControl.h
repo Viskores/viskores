@@ -11,6 +11,7 @@
 #define vtk_m_cont_internal_AtomicInterfaceControl_h
 
 #include <vtkm/Atomic.h>
+#include <vtkm/Deprecated.h>
 
 namespace vtkm
 {
@@ -19,7 +20,7 @@ namespace cont
 namespace internal
 {
 
-struct AtomicInterfaceControl
+struct VTKM_DEPRECATED(1.6, "Use the functions in vtkm/Atomic.h.") AtomicInterfaceControl
 {
   using WordTypes = vtkm::AtomicTypesSupported;
   using WordTypePreferred = vtkm::AtomicTypePreferred;
@@ -69,7 +70,7 @@ struct AtomicInterfaceControl
   template <typename T>
   VTKM_EXEC_CONT static T CompareAndSwap(T* addr, T newWord, T expected)
   {
-    return vtkm::AtomicCompareAndSwap(addr, expected, newWord);
+    return vtkm::AtomicCompareAndSwap(addr, newWord, expected);
   }
 };
 }

@@ -11,12 +11,10 @@
 #ifndef vtk_m_cont_BitField_h
 #define vtk_m_cont_BitField_h
 
-#include <vtkm/cont/internal/AtomicInterfaceControl.h>
-#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/Atomic.h>
 #include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
 #include <vtkm/Types.h>
@@ -61,7 +59,7 @@ struct BitFieldTraits
 
   /// Require an unsigned integral type that is <= BlockSize bytes, and is
   /// is supported by the specified AtomicInterface.
-  template <typename WordType, typename AtomicInterface>
+  template <typename WordType>
   using IsValidWordTypeAtomic =
     std::integral_constant<bool,
                            /* is unsigned */
@@ -71,7 +69,7 @@ struct BitFieldTraits
                              /* BlockSize is a multiple of WordType */
                              static_cast<size_t>(BlockSize) % sizeof(WordType) == 0 &&
                              /* Supported by atomic interface */
-                             vtkm::ListHas<typename AtomicInterface::WordTypes, WordType>::value>;
+                             vtkm::ListHas<vtkm::AtomicTypesSupported, WordType>::value>;
 };
 
 /// Identifies a bit in a BitField by Word and BitOffset. Note that these
@@ -88,7 +86,7 @@ struct BitCoordinate
 /// Portal for performing bit or word operations on a BitField.
 ///
 /// This is the implementation used by BitPortal and BitPortalConst.
-template <typename AtomicInterface_, bool IsConst>
+template <bool IsConst>
 class BitPortalBase
 {
   // Checks if PortalType has a GetIteratorBegin() method that returns a
@@ -105,12 +103,8 @@ class BitPortalBase
   using BufferType = MaybeConstPointer<void>; // void* or void const*, as appropriate
 
 public:
-  /// The atomic interface used to carry out atomic operations. See
-  /// AtomicInterfaceExecution<Device> and AtomicInterfaceControl
-  using AtomicInterface = AtomicInterface_;
-
   /// The fastest word type for performing bitwise operations through AtomicInterface.
-  using WordTypePreferred = typename AtomicInterface::WordTypePreferred;
+  using WordTypePreferred = vtkm::AtomicTypePreferred;
 
   /// MPL check for whether a WordType may be used for non-atomic operations.
   template <typename WordType>
@@ -118,7 +112,7 @@ public:
 
   /// MPL check for whether a WordType may be used for atomic operations.
   template <typename WordType>
-  using IsValidWordTypeAtomic = BitFieldTraits::IsValidWordTypeAtomic<WordType, AtomicInterface>;
+  using IsValidWordTypeAtomic = BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
   VTKM_STATIC_ASSERT_MSG(IsValidWordType<WordTypeDefault>::value,
                          "Internal error: Default word type is invalid.");
@@ -281,7 +275,7 @@ public:
     VTKM_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
-    AtomicInterface::Store(this->GetWordAddress<WordType>(wordIdx), word);
+    vtkm::AtomicStore(this->GetWordAddress<WordType>(wordIdx), word);
   }
 
   /// Get the word (of type @a WordType) at @a wordIdx using non-atomic
@@ -300,7 +294,7 @@ public:
     VTKM_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
-    return AtomicInterface::Load(this->GetWordAddress<WordType>(wordIdx));
+    return vtkm::AtomicLoad(this->GetWordAddress<WordType>(wordIdx));
   }
 
   /// Toggle the bit at @a bitIdx, returning the original value. This method
@@ -326,7 +320,7 @@ public:
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return AtomicInterface::Not(addr);
+    return vtkm::AtomicNot(addr);
   }
 
   /// Perform an "and" operation between the bit at @a bitIdx and @a val,
@@ -356,7 +350,7 @@ public:
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return AtomicInterface::And(addr, wordmask);
+    return vtkm::AtomicAnd(addr, wordmask);
   }
 
   /// Perform an "of" operation between the bit at @a bitIdx and @a val,
@@ -386,7 +380,7 @@ public:
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return AtomicInterface::Or(addr, wordmask);
+    return vtkm::AtomicOr(addr, wordmask);
   }
 
   /// Perform an "xor" operation between the bit at @a bitIdx and @a val,
@@ -416,7 +410,7 @@ public:
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return AtomicInterface::Xor(addr, wordmask);
+    return vtkm::AtomicXor(addr, wordmask);
   }
 
   /// Perform an atomic compare-and-swap operation on the bit at @a bitIdx.
@@ -469,7 +463,7 @@ public:
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return AtomicInterface::CompareAndSwap(addr, newWord, expected);
+    return vtkm::AtomicCompareAndSwap(addr, newWord, expected);
   }
 
 private:
@@ -484,11 +478,24 @@ private:
   vtkm::Id NumberOfBits{ 0 };
 };
 
-template <typename AtomicOps>
-using BitPortal = BitPortalBase<AtomicOps, false>;
+using BitPortal = BitPortalBase<false>;
 
-template <typename AtomicOps>
-using BitPortalConst = BitPortalBase<AtomicOps, true>;
+using BitPortalConst = BitPortalBase<true>;
+
+template <typename WordType, typename Device>
+struct IsValidWordTypeDeprecated
+{
+  using type VTKM_DEPRECATED(
+    1.6,
+    "BitField::IsValidWordTypeAtomic no longer takes a second Device parameter.") =
+    detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
+};
+
+template <typename WordType>
+struct IsValidWordTypeDeprecated<WordType, void>
+{
+  using type = detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
+};
 
 } // end namespace detail
 
@@ -501,48 +508,42 @@ public:
   using ArrayHandleType = ArrayHandle<WordTypeDefault, StorageTagBasic>;
 
   /// The BitPortal used in the control environment.
-  using WritePortalType = detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using WritePortalType = detail::BitPortal;
 
   /// A read-only BitPortal used in the control environment.
-  using ReadPortalType = detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
+  using ReadPortalType = detail::BitPortalConst;
 
-  using PortalControl VTKM_DEPRECATED(1.6, "Use BitField::WritePortalType instead.") =
-    detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
+  using PortalControl VTKM_DEPRECATED(1.6,
+                                      "Use BitField::WritePortalType instead.") = detail::BitPortal;
   using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayBitField::ReadPortalType instead.") =
-    detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
+    detail::BitPortalConst;
 
   template <typename Device>
   struct ExecutionTypes
   {
-    /// The AtomicInterfaceExecution implementation used by the specified device.
-    using AtomicInterface = vtkm::cont::internal::AtomicInterfaceExecution<Device>;
-
     /// The preferred word type used by the specified device.
-    using WordTypePreferred = typename AtomicInterface::WordTypePreferred;
+    using WordTypePreferred = vtkm::AtomicTypePreferred;
 
     /// A BitPortal that is usable on the specified device.
-    using Portal = detail::BitPortal<AtomicInterface>;
+    using Portal = detail::BitPortal;
 
     /// A read-only BitPortal that is usable on the specified device.
-    using PortalConst = detail::BitPortalConst<AtomicInterface>;
+    using PortalConst = detail::BitPortalConst;
   };
 
   /// Check whether a word type is valid for non-atomic operations.
   template <typename WordType>
   using IsValidWordType = detail::BitFieldTraits::IsValidWordType<WordType>;
 
-  /// Check whether a word type is valid for atomic operations on a specific
-  /// device.
-  template <typename WordType, typename Device>
-  using IsValidWordTypeAtomic = detail::BitFieldTraits::
-    IsValidWordTypeAtomic<WordType, vtkm::cont::internal::AtomicInterfaceExecution<Device>>;
+  /// Check whether a word type is valid for atomic operations.
+  template <typename WordType, typename Device = void>
+  using IsValidWordTypeAtomic = detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
   /// Check whether a word type is valid for atomic operations from the control
   /// environment.
   template <typename WordType>
-  using IsValidWordTypeAtomicControl =
-    detail::BitFieldTraits::IsValidWordTypeAtomic<WordType,
-                                                  vtkm::cont::internal::AtomicInterfaceControl>;
+  using IsValidWordTypeAtomicControl VTKM_DEPRECATED(1.6, "Use IsValidWordTypeAtomic instead.") =
+    detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
   VTKM_CONT BitField()
     : Internals{ std::make_shared<InternalStruct>() }
@@ -652,11 +653,9 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use BitField::WritePortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl> GetPortalControl()
+  detail::BitPortal GetPortalControl()
   {
-    return detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>{
-      this->Internals->Data.WritePortal(), this->Internals->NumberOfBits
-    };
+    return detail::BitPortal{ this->Internals->Data.WritePortal(), this->Internals->NumberOfBits };
   }
 
   /// Get a read-only portal to the data that is usable from the control
@@ -665,11 +664,10 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use BitField::ReadPortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl> GetPortalConstControl() const
+  detail::BitPortalConst GetPortalConstControl() const
   {
-    return detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>{
-      this->Internals->Data.ReadPortal(), this->Internals->NumberOfBits
-    };
+    return detail::BitPortalConst{ this->Internals->Data.ReadPortal(),
+                                   this->Internals->NumberOfBits };
   }
 
   /// Prepares this BitField to be used as an input to an operation in the

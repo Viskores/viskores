@@ -288,7 +288,7 @@ struct AtomicTests
       bool success = false;
       for (T overlapIndex = 0; overlapIndex < static_cast<T>(OVERLAP); ++overlapIndex)
       {
-        T oldValue = vtkm::AtomicCompareAndSwap(data + arrayIndex, overlapIndex, overlapIndex + 1);
+        T oldValue = vtkm::AtomicCompareAndSwap(data + arrayIndex, overlapIndex + 1, overlapIndex);
         if (oldValue == overlapIndex)
         {
           success = true;

@@ -245,8 +245,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_STATIC_ASSERT(
       VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));
@@ -458,8 +457,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_CONT
     CountSetBitsFunctor(const BitsPortal& portal, GlobalPopCountType* globalPopCount)
