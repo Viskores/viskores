@@ -432,23 +432,7 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt8* addr,
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
-  switch (order)
-  {
-    case vtkm::MemoryOrder::Relaxed:
-      _InterlockedExchange8_nf(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
-      break;
-    case vtkm::MemoryOrder::Consume:
-    case vtkm::MemoryOrder::Acquire:
-      _InterlockedExchange8_acq(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
-      break;
-    case vtkm::MemoryOrder::Release:
-      _InterlockedExchange8_rel(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
-      break;
-    case vtkm::MemoryOrder::AcquireAndRelease:
-    case vtkm::MemoryOrder::SequentiallyConsistent:
-      _InterlockedExchange8(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
-      break;
-  }
+  _InterlockedExchange8(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
 }
 VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt16* addr,
                                            vtkm::UInt16 val,
@@ -456,23 +440,7 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt16* addr,
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
-  switch (order)
-  {
-    case vtkm::MemoryOrder::Relaxed:
-      _InterlockedExchange16_nf(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
-      break;
-    case vtkm::MemoryOrder::Consume:
-    case vtkm::MemoryOrder::Acquire:
-      _InterlockedExchange16_acq(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
-      break;
-    case vtkm::MemoryOrder::Release:
-      _InterlockedExchange16_rel(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
-      break;
-    case vtkm::MemoryOrder::AcquireAndRelease:
-    case vtkm::MemoryOrder::SequentiallyConsistent:
-      _InterlockedExchange16(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
-      break;
-  }
+  _InterlockedExchange16(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
 }
 VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt32* addr,
                                            vtkm::UInt32 val,
@@ -492,23 +460,8 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr,
 #define VTKM_ATOMIC_OP(vtkmName, winName, vtkmType, winType, suffix)                               \
   VTKM_EXEC_CONT inline vtkmType vtkmName(vtkmType* addr, vtkmType arg, vtkm::MemoryOrder order)   \
   {                                                                                                \
-    switch (order)                                                                                 \
-    {                                                                                              \
-      case vtkm::MemoryOrder::Relaxed:                                                             \
-        return BitCast<vtkmType>(                                                                  \
-          winName##suffix##_nf(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg))); \
-      case vtkm::MemoryOrder::Consume:                                                             \
-      case vtkm::MemoryOrder::Acquire:                                                             \
-        return BitCast<vtkmType>(winName##suffix##_acq(reinterpret_cast<volatile winType*>(addr),  \
-                                                       BitCast<winType>(arg)));                    \
-      case vtkm::MemoryOrder::Release:                                                             \
-        return BitCast<vtkmType>(winName##suffix##_rel(reinterpret_cast<volatile winType*>(addr),  \
-                                                       BitCast<winType>(arg)));                    \
-      case vtkm::MemoryOrder::AcquireAndRelease:                                                   \
-      case vtkm::MemoryOrder::SequentiallyConsistent:                                              \
-        return BitCast<vtkmType>(                                                                  \
-          winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));      \
-    }                                                                                              \
+    return BitCast<vtkmType>(                                                                      \
+      winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));          \
   }
 
 #define VTKM_ATOMIC_OPS_FOR_TYPE(vtkmType, winType, suffix)                                        \
@@ -523,31 +476,10 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr,
   VTKM_EXEC_CONT inline vtkmType AtomicCompareAndSwapImpl(                                         \
     vtkmType* addr, vtkmType desired, vtkmType expected, vtkm::MemoryOrder order)                  \
   {                                                                                                \
-    switch (order)                                                                                 \
-    {                                                                                              \
-      case vtkm::MemoryOrder::Relaxed:                                                             \
-        return BitCast<vtkmType>(                                                                  \
-          _InterlockedCompareExchange##suffix##_nf(reinterpret_cast<volatile winType*>(addr),      \
-                                                   BitCast<winType>(desired),                      \
-                                                   BitCast<winType>(expected)));                   \
-      case vtkm::MemoryOrder::Consume:                                                             \
-      case vtkm::MemoryOrder::Acquire:                                                             \
-        return BitCast<vtkmType>(                                                                  \
-          _InterlockedCompareExchange##suffix##acq(reinterpret_cast<volatile winType*>(addr),      \
-                                                   BitCast<winType>(desired),                      \
-                                                   BitCast<winType>(expected)));                   \
-      case vtkm::MemoryOrder::Release:                                                             \
-        return BitCast<vtkmType>(                                                                  \
-          _InterlockedCompareExchange##suffix##_rel(reinterpret_cast<volatile winType*>(addr),     \
-                                                    BitCast<winType>(desired),                     \
-                                                    BitCast<winType>(expected)));                  \
-      case vtkm::MemoryOrder::AcquireAndRelease:                                                   \
-      case vtkm::MemoryOrder::SequentiallyConsistent:                                              \
-        return BitCast<vtkmType>(                                                                  \
-          _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),           \
-                                              BitCast<winType>(desired),                           \
-                                              BitCast<winType>(expected)));                        \
-    }                                                                                              \
+    return BitCast<vtkmType>(                                                                      \
+      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),               \
+                                          BitCast<winType>(desired),                               \
+                                          BitCast<winType>(expected)));                            \
   }
 
 VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt8, CHAR, 8)
