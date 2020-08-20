@@ -262,14 +262,15 @@ VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
       return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_relaxed);
     case vtkm::MemoryOrder::Consume:
     case vtkm::MemoryOrder::Acquire:
+    case vtkm::MemoryOrder::Release:           // Release doesn't make sense. Use Acquire.
+    case vtkm::MemoryOrder::AcquireAndRelease: // Release doesn't make sense. Use Acquire.
       return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_acquire);
-    case vtkm::MemoryOrder::Release:
-      return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_release);
-    case vtkm::MemoryOrder::AcquireAndRelease:
-      return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_acq_rel);
     case vtkm::MemoryOrder::SequentiallyConsistent:
       return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_seq_cst);
   }
+
+  // Should never reach here, but avoid compiler warnings
+  return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_seq_cst);
 }
 
 template <typename T>
@@ -280,15 +281,11 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(T* addr, T value, vtkm::MemoryOrder o
     case vtkm::MemoryOrder::Relaxed:
       Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_relaxed);
       break;
-    case vtkm::MemoryOrder::Consume:
-    case vtkm::MemoryOrder::Acquire:
-      Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_acquire);
-      break;
+    case vtkm::MemoryOrder::Consume: // Consume doesn't make sense. Use Release.
+    case vtkm::MemoryOrder::Acquire: // Acquire doesn't make sense. Use Release.
     case vtkm::MemoryOrder::Release:
+    case vtkm::MemoryOrder::AcquireAndRelease: // Acquire doesn't make sense. Use Release.
       Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_release);
-      break;
-    case vtkm::MemoryOrder::AcquireAndRelease:
-      Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_acq_rel);
       break;
     case vtkm::MemoryOrder::SequentiallyConsistent:
       Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_seq_cst);
@@ -335,7 +332,7 @@ VTKM_EXEC_CONT inline T AtomicXorImpl(T* addr, T mask, vtkm::MemoryOrder order)
 template <typename T>
 VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
 {
-  return Kokkos::atomic_fetch_xor(addr, static_cast<T>(~T{ 0u }), order);
+  return AtomicXorImpl(addr, static_cast<T>(~T{ 0u }), order);
 }
 
 template <typename T>
@@ -347,6 +344,7 @@ VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
   AtomicStoreFence(order);
   T result = Kokkos::atomic_compare_exchange(addr, expected, desired);
   AtomicLoadFence(order);
+  return result;
 }
 }
 } // namespace vtkm::detail
