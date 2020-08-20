@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_MemStream_h
 #define vtk_m_filter_MemStream_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <cstring>
 #include <iostream>

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ExternalFaces_h
 #define vtk_m_filter_ExternalFaces_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/FilterDataSet.h>
@@ -34,7 +34,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 {
 public:
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_EXTRA_EXPORT
   ExternalFaces();
 
   // When CompactPoints is set, instead of copying the points and point fields
@@ -60,8 +60,8 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                       const vtkm::cont::Field& field);
+  VTKM_FILTER_EXTRA_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                             const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
@@ -75,8 +75,9 @@ private:
   bool CompactPoints;
   bool PassPolyData;
 
-  VTKM_FILTER_EXPORT vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& input,
-                                                        vtkm::cont::CellSetExplicit<>& outCellSet);
+  VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet GenerateOutput(
+    const vtkm::cont::DataSet& input,
+    vtkm::cont::CellSetExplicit<>& outCellSet);
 
   vtkm::filter::CleanGrid Compactor;
   vtkm::worklet::ExternalFaces Worklet;

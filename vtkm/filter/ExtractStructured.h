@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ExtractStructured_h
 #define vtk_m_filter_ExtractStructured_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractStructured.h>
@@ -39,7 +39,7 @@ namespace filter
 class VTKM_ALWAYS_EXPORT ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
 public:
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_COMMON_EXPORT
   ExtractStructured();
 
   // Set the bounding box for the volume of interest
@@ -87,8 +87,8 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                       const vtkm::cont::Field& field);
+  VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                              const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
@@ -99,8 +99,8 @@ public:
   }
 
 
-  VTKM_FILTER_EXPORT VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                                vtkm::cont::PartitionedDataSet&);
+  VTKM_FILTER_COMMON_EXPORT VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
+                                                       vtkm::cont::PartitionedDataSet&);
 
   template <typename DerivedPolicy>
   VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,

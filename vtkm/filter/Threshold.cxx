@@ -17,8 +17,8 @@ namespace vtkm
 namespace filter
 {
 
-VTKM_FILTER_EXPORT bool Threshold::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                      const vtkm::cont::Field& field)
+VTKM_FILTER_COMMON_EXPORT bool Threshold::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                             const vtkm::cont::Field& field)
 {
   if (field.IsFieldPoint() || field.IsFieldGlobal())
   {

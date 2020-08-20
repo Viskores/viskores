@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_CellAverage_h
 #define vtk_m_filter_CellAverage_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/filter/FilterField.h>

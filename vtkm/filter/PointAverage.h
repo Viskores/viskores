@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_PointAverage_h
 #define vtk_m_filter_PointAverage_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>

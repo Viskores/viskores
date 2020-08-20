@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_Gradient_h
 #define vtk_m_filter_Gradient_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_gradient_export.h>
 
 #include <vtkm/filter/FilterField.h>
 
@@ -111,55 +111,55 @@ private:
 
 #ifndef vtkm_filter_Gradient_cxx
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f_32>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f_64>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+extern template VTKM_FILTER_GRADIENT_TEMPLATE_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>&,
   const vtkm::filter::FieldMetadata&,

@@ -72,10 +72,11 @@ struct DoMapFieldPermutation
 
 } // anonymous namespace
 
-bool vtkm::filter::MapFieldPermutation(const vtkm::cont::Field& inputField,
-                                       const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                                       vtkm::cont::Field& outputField,
-                                       vtkm::Float64 invalidValue)
+VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+  const vtkm::cont::Field& inputField,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  vtkm::cont::Field& outputField,
+  vtkm::Float64 invalidValue)
 {
   vtkm::cont::VariantArrayHandle outputArray;
   DoMapFieldPermutation functor;
@@ -92,10 +93,11 @@ bool vtkm::filter::MapFieldPermutation(const vtkm::cont::Field& inputField,
   return functor.CalledMap;
 }
 
-bool vtkm::filter::MapFieldPermutation(const vtkm::cont::Field& inputField,
-                                       const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                                       vtkm::cont::DataSet& outputData,
-                                       vtkm::Float64 invalidValue)
+VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
+  const vtkm::cont::Field& inputField,
+  const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
+  vtkm::cont::DataSet& outputData,
+  vtkm::Float64 invalidValue)
 {
   vtkm::cont::Field outputField;
   bool success =
