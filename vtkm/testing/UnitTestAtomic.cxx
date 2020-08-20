@@ -155,7 +155,7 @@ struct AtomicTests
     {
       vtkm::Id arrayIndex = index % ARRAY_SIZE;
       vtkm::Id offsetIndex = index / ARRAY_SIZE;
-      vtkm::AtomicAnd(data + arrayIndex, ~(0x1u << offsetIndex));
+      vtkm::AtomicAnd(data + arrayIndex, ~(T(0x1u) << offsetIndex));
     }
   };
 

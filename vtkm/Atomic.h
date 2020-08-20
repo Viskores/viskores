@@ -93,6 +93,9 @@ VTKM_EXEC_CONT inline std::memory_order StdAtomicMemOrder(vtkm::MemoryOrder orde
     case vtkm::MemoryOrder::SequentiallyConsistent:
       return std::memory_order_seq_cst;
   }
+
+  // Should never reach here, but avoid compiler warnings
+  return std::memory_order_seq_cst;
 }
 
 } // namespace internal
@@ -520,6 +523,9 @@ VTKM_EXEC_CONT inline int GccAtomicMemOrder(vtkm::MemoryOrder order)
     case vtkm::MemoryOrder::SequentiallyConsistent:
       return __ATOMIC_SEQ_CST;
   }
+
+  // Should never reach here, but avoid compiler warnings
+  return __ATOMIC_SEQ_CST;
 }
 
 template <typename T>
