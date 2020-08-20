@@ -47,6 +47,9 @@ public:
     for (vtkm::Id offset = start; offset < start + degree; offset++)
     {
       vtkm::Id neighbor = conn.Get(offset);
+      // Note: comp.Get(index) == comp.Get(comp.Get(index)) applies for both the
+      // root of the tree and the first level vertices. To check for root, use
+      // index == comp.Get(index).
       if ((comp.Get(index) == comp.Get(comp.Get(index))) && (comp.Get(neighbor) < comp.Get(index)))
       {
         comp.Set(comp.Get(index), comp.Get(neighbor));

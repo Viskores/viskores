@@ -39,15 +39,17 @@ public:
 
   using ExecutionSignature = void(WorkIndex, _2, _3, _4, _5);
 
+  // This is the naive find() without path compaction in SV Jayanti et. al.
+  // Since the comp array is read-only there is no data race.
   template <typename Comp>
-  VTKM_EXEC vtkm::Id findRoot(Comp& comp, vtkm::Id index) const
+  VTKM_EXEC vtkm::Id findRoot(const Comp& comp, vtkm::Id index) const
   {
     while (comp.Get(index) != index)
       index = comp.Get(index);
     return index;
   }
 
-  // compOut is an alias of compIn such that we can update component labels
+  // compOut is an alias of neightborComp such that we can update component labels
   template <typename NeighborComp, typename NeighborColor, typename CompOut, typename AtomicInOut>
   VTKM_EXEC void operator()(const vtkm::Id index,
                             const NeighborComp& neighborComp,
@@ -57,9 +59,12 @@ public:
   {
     vtkm::Id myComp = neighborComp.Get(0, 0, 0);
     auto minComp = myComp;
-
     auto myColor = neighborColor.Get(0, 0, 0);
 
+    // FIXME: we are doing this "local conneivity finding" at each call of this
+    // worklet. This creates a large demand on the memory bandwidth.
+    // Is this necessary? It looks like we only need a local, partial spanning
+    // tree at the beginning. Is it true?
     for (int k = -1; k <= 1; k++)
     {
       for (int j = -1; j <= 1; j++)
@@ -73,19 +78,31 @@ public:
         }
       }
     }
+
+    /// FIXME: there is a data race between concurrent invocations of this operator().
+    /// The minComp in one invocation might hold old value that was modified by the
+    /// following compOut.Set() in some other invocations. The question is if this
+    /// data race is harmful or not.
+    /// FIXME: this might be bogus as well. This detach the node from its current
+    /// tree and reattach it to its neighbor
+    //compOut.Set(index, minComp);
+
     // I don't just only want to update the component label of this pixel, I actually
     // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
     // result.
-    compOut.Set(index, minComp);
-
     auto myRoot = findRoot(compOut, myComp);
     auto newRoot = findRoot(compOut, minComp);
 
+    // This "linking by index" as in SV Jayanti et.al. with less than as the total
+    // order.
+    // TODO: should be change to Compare and Swap, according to SV Janati et. al.
     if (myRoot < newRoot)
       compOut.Set(newRoot, myRoot);
     else if (myRoot > newRoot)
       compOut.Set(myRoot, newRoot);
+    // else, no need to do anything when they are the same set.
 
+    // FIXME: is this the right termination condition?
     // mark an update occurred if no other worklets have done so yet
     if (myComp != minComp && updated.Get(0) == 0)
     {
