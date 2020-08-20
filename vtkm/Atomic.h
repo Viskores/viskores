@@ -99,7 +99,111 @@ VTKM_EXEC_CONT inline std::memory_order StdAtomicMemOrder(vtkm::MemoryOrder orde
 
 } // namespace vtkm
 
-#if defined(VTKM_ENABLE_KOKKOS)
+
+#if defined(VTKM_CUDA_DEVICE_PASS)
+
+namespace vtkm
+{
+namespace detail
+{
+
+// Fence to ensure that previous non-atomic stores are visible to other threads.
+VTKM_EXEC_CONT inline void AtomicStoreFence(vtkm::MemoryOrder order)
+{
+  if ((order == vtkm::MemoryOrder::Release) || (order == vtkm::MemoryOrder::AcquireAndRelease) ||
+      (order == vtkm::MemoryOrder::SequentiallyConsistent))
+  {
+    __threadfence();
+  }
+}
+
+// Fence to ensure that previous non-atomic stores are visible to other threads.
+VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
+{
+  if ((order == vtkm::MemoryOrder::Consume) || (order == vtkm::MemoryOrder::Acquire) ||
+      (order == vtkm::MemoryOrder::AcquireAndRelease) ||
+      (order == vtkm::MemoryOrder::SequentiallyConsistent))
+  {
+    __threadfence();
+  }
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
+{
+  const volatile T* vaddr = addr; /* volatile to bypass cache*/
+  const T value = *vaddr;
+  /* fence to ensure that dependent reads are correctly ordered */
+  AtomicLoadFence(order);
+  return value;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline void AtomicStoreImpl(T* addr, T value, vtkm::MemoryOrder order)
+{
+  volatile T* vaddr = addr; /* volatile to bypass cache */
+  /* fence to ensure that previous non-atomic stores are visible to other threads */
+  AtomicStoreFence(order);
+  *vaddr = value;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAddImpl(T* addr, T arg, vtkm::MemoryOrder order)
+{
+  AtomicStoreFence(order);
+  auto result = atomicAdd(addr, arg);
+  AtomicLoadFence(order);
+  return result;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAndImpl(T* addr, T mask, vtkm::MemoryOrder order)
+{
+  AtomicStoreFence(order);
+  auto result = atomicAnd(addr, mask);
+  AtomicLoadFence(order);
+  return result;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicOrImpl(T* addr, T mask, vtkm::MemoryOrder order)
+{
+  AtomicStoreFence(order);
+  auto result = atomicOr(addr, mask);
+  AtomicLoadFence(order);
+  return result;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicXorImpl(T* addr, T mask, vtkm::MemoryOrder order)
+{
+  AtomicStoreFence(order);
+  auto result = atomicXor(addr, mask);
+  AtomicLoadFence(order);
+  return result;
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
+{
+  return AtomicXorImpl(addr, static_cast<T>(~T{ 0u }), order);
+}
+
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
+                                                 T desired,
+                                                 T expected,
+                                                 vtkm::MemoryOrder order)
+{
+  AtomicStoreFence(order);
+  auto result = atomicCAS(addr, expected, desired);
+  AtomicLoadFence(order);
+  return result;
+}
+}
+} // namespace vtkm::detail
+
+#elif defined(VTKM_ENABLE_KOKKOS)
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 // Superhack! Kokkos_Macros.hpp defines macros to include modifiers like __device__.
@@ -243,109 +347,6 @@ VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
   AtomicStoreFence(order);
   T result = Kokkos::atomic_compare_exchange(addr, expected, desired);
   AtomicLoadFence(order);
-}
-}
-} // namespace vtkm::detail
-
-#elif defined(VTKM_CUDA_DEVICE_PASS)
-
-namespace vtkm
-{
-namespace detail
-{
-
-// Fence to ensure that previous non-atomic stores are visible to other threads.
-VTKM_EXEC_CONT inline void AtomicStoreFence(vtkm::MemoryOrder order)
-{
-  if ((order == vtkm::MemoryOrder::Release) || (order == vtkm::MemoryOrder::AcquireAndRelease) ||
-      (order == vtkm::MemoryOrder::SequentiallyConsistent))
-  {
-    __threadfence();
-  }
-}
-
-// Fence to ensure that previous non-atomic stores are visible to other threads.
-VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
-{
-  if ((order == vtkm::MemoryOrder::Consume) || (order == vtkm::MemoryOrder::Acquire) ||
-      (order == vtkm::MemoryOrder::AcquireAndRelease) ||
-      (order == vtkm::MemoryOrder::SequentiallyConsistent))
-  {
-    __threadfence();
-  }
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
-{
-  const volatile T* vaddr = addr; /* volatile to bypass cache*/
-  const T value = *vaddr;
-  /* fence to ensure that dependent reads are correctly ordered */
-  AtomicLoadFence(order);
-  return value;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline void AtomicStoreImpl(T* addr, T value, vtkm::MemoryOrder order)
-{
-  volatile T* vaddr = addr; /* volatile to bypass cache */
-  /* fence to ensure that previous non-atomic stores are visible to other threads */
-  AtomicStoreFence(order);
-  *vaddr = value;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicAddImpl(T* addr, T arg, vtkm::MemoryOrder order)
-{
-  AtomicStoreFence(order);
-  auto result = atomicAdd(addr, arg);
-  AtomicLoadFence(order);
-  return result;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicAndImpl(T* addr, T mask, vtkm::MemoryOrder order)
-{
-  AtomicStoreFence(order);
-  auto result = atomicAnd(addr, mask);
-  AtomicLoadFence(order);
-  return result;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicOrImpl(T* addr, T mask, vtkm::MemoryOrder order)
-{
-  AtomicStoreFence(order);
-  auto result = atomicOr(addr, mask);
-  AtomicLoadFence(order);
-  return result;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicXorImpl(T* addr, T mask, vtkm::MemoryOrder order)
-{
-  AtomicStoreFence(order);
-  auto result = atomicXor(addr, mask);
-  AtomicLoadFence(order);
-  return result;
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
-{
-  return AtomicXorImpl(addr, static_cast<T>(~T{ 0u }), order);
-}
-
-template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
-                                                 T desired,
-                                                 T expected,
-                                                 vtkm::MemoryOrder order)
-{
-  AtomicStoreFence(order);
-  auto result = atomicCAS(addr, expected, desired);
-  AtomicLoadFence(order);
-  return result;
 }
 }
 } // namespace vtkm::detail
