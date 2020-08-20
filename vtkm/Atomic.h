@@ -21,17 +21,37 @@ namespace vtkm
 
 /// \brief Specifies memory order semantics for atomic operations.
 ///
-/// A memory order is given to each `vtkm::Atomic*` function to specify how the compiler
-/// should enforce the order in which different threads access. Compilers have the ability
-/// to reorder memory access, which can interfere with operations on atomic values.
+/// The memory order parameter controls how all other memory operations are
+/// ordered around a specific atomic instruction.
+///
+/// Memory access is complicated. Compilers can reorder instructions to optimize
+/// scheduling, processors can speculatively read memory, and caches make
+/// assumptions about coherency that we may not normally be aware of. Because of
+/// this complexity, the order in which multiple updates to shared memory become
+/// visible to other threads is not guaranteed, nor is it guaranteed that each
+/// thread will see memory updates occur in the same order as any other thread.
+/// This can lead to surprising behavior and cause problems when using atomics
+/// to communicate between threads.
+///
+/// These problems are solved by using a standard set of memory orderings which
+/// describe common access patterns used for shared memory programming. Their
+/// goal is to provide guarantees that changes made in one thread will be visible
+/// to another thread at a specific and predictable point in execution, regardless
+/// of any hardware or compiler optimizations.
+///
+/// If unsure, use `SequentiallyConsistent` memory orderings. It will "do the right
+/// thing", but at the cost of increased and possibly unnecessary memory ordering
+/// restrictions. The other orderings are optimizations that are only applicable
+/// in very specific situations.
+///
+/// See https://en.cppreference.com/w/cpp/atomic/memory_order for a detailed
+/// description of the different orderings and their usage.
 ///
 /// The memory order semantics follow those of other common atomic operations such as
 /// the `std::memory_order` identifiers used for `std::atomic`.
 ///
 /// Note that when a memory order is specified, the enforced memory order is guaranteed
-/// to be as good or better than that requested. For example, it is common for the `Consume`
-/// memory order to be implemented as an `Acquire` memory order as `Acquire` will
-/// guarantee any order of `Consume` (and then some).
+/// to be as good or better than that requested.
 ///
 enum class MemoryOrder
 {
@@ -40,13 +60,6 @@ enum class MemoryOrder
   /// variable may be moved to before or after an atomic operation with `Relaxed` memory order.
   ///
   Relaxed,
-
-  /// A load operation with `Consume` memory order will enforce that any local read or write
-  /// operations _that depend on the loaded value_ will happen in order. This is similar to
-  /// `Acquire` except that memory operations that do not depend on the loaded value may still be
-  /// reordered.
-  ///
-  Consume,
 
   /// A load operation with `Acquire` memory order will enforce that any local read or write
   /// operations listed in the program after the atomic will happen after the atomic.
@@ -82,8 +95,6 @@ VTKM_EXEC_CONT inline std::memory_order StdAtomicMemOrder(vtkm::MemoryOrder orde
   {
     case vtkm::MemoryOrder::Relaxed:
       return std::memory_order_relaxed;
-    case vtkm::MemoryOrder::Consume:
-      return std::memory_order_consume;
     case vtkm::MemoryOrder::Acquire:
       return std::memory_order_acquire;
     case vtkm::MemoryOrder::Release:
@@ -123,8 +134,7 @@ VTKM_EXEC_CONT inline void AtomicStoreFence(vtkm::MemoryOrder order)
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
 {
-  if ((order == vtkm::MemoryOrder::Consume) || (order == vtkm::MemoryOrder::Acquire) ||
-      (order == vtkm::MemoryOrder::AcquireAndRelease) ||
+  if ((order == vtkm::MemoryOrder::Acquire) || (order == vtkm::MemoryOrder::AcquireAndRelease) ||
       (order == vtkm::MemoryOrder::SequentiallyConsistent))
   {
     __threadfence();
@@ -135,6 +145,10 @@ template <typename T>
 VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
 {
   const volatile T* vaddr = addr; /* volatile to bypass cache*/
+  if (order == vtkm::MemoryOrder::SequentiallyConsistent)
+  {
+    __threadfence();
+  }
   const T value = *vaddr;
   /* fence to ensure that dependent reads are correctly ordered */
   AtomicLoadFence(order);
@@ -248,8 +262,7 @@ VTKM_EXEC_CONT inline void AtomicStoreFence(vtkm::MemoryOrder order)
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
 {
-  if ((order == vtkm::MemoryOrder::Consume) || (order == vtkm::MemoryOrder::Acquire) ||
-      (order == vtkm::MemoryOrder::AcquireAndRelease) ||
+  if ((order == vtkm::MemoryOrder::Acquire) || (order == vtkm::MemoryOrder::AcquireAndRelease) ||
       (order == vtkm::MemoryOrder::SequentiallyConsistent))
   {
     Kokkos::memory_fence();
@@ -263,7 +276,6 @@ VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
   {
     case vtkm::MemoryOrder::Relaxed:
       return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_relaxed);
-    case vtkm::MemoryOrder::Consume:
     case vtkm::MemoryOrder::Acquire:
     case vtkm::MemoryOrder::Release:           // Release doesn't make sense. Use Acquire.
     case vtkm::MemoryOrder::AcquireAndRelease: // Release doesn't make sense. Use Acquire.
@@ -284,7 +296,6 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(T* addr, T value, vtkm::MemoryOrder o
     case vtkm::MemoryOrder::Relaxed:
       Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_relaxed);
       break;
-    case vtkm::MemoryOrder::Consume: // Consume doesn't make sense. Use Release.
     case vtkm::MemoryOrder::Acquire: // Acquire doesn't make sense. Use Release.
     case vtkm::MemoryOrder::Release:
     case vtkm::MemoryOrder::AcquireAndRelease: // Acquire doesn't make sense. Use Release.
@@ -512,8 +523,6 @@ VTKM_EXEC_CONT inline int GccAtomicMemOrder(vtkm::MemoryOrder order)
   {
     case vtkm::MemoryOrder::Relaxed:
       return __ATOMIC_RELAXED;
-    case vtkm::MemoryOrder::Consume:
-      return __ATOMIC_CONSUME;
     case vtkm::MemoryOrder::Acquire:
       return __ATOMIC_ACQUIRE;
     case vtkm::MemoryOrder::Release:
