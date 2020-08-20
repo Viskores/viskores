@@ -383,9 +383,18 @@ VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr, T desired, T expected)
 
 #endif // gcc/clang
 
-
 namespace vtkm
 {
+
+namespace detail
+{
+
+template <typename T>
+using OppositeSign = typename std::conditional<std::is_signed<T>::value,
+                                               typename std::make_unsigned<T>::type,
+                                               typename std::make_signed<T>::type>::type;
+
+} // namespace detail
 
 /// \brief The preferred type to use for atomic operations.
 ///
@@ -412,6 +421,7 @@ VTKM_EXEC_CONT inline T AtomicLoad(const T* pointer)
   return detail::AtomicLoadImpl(pointer);
 }
 
+///@{
 /// \brief Atomic function to save a value to a shared memory location.
 ///
 /// Given a pointer and a value, stores that value at the pointer's location. If two
@@ -423,7 +433,14 @@ VTKM_EXEC_CONT inline void AtomicStore(T* pointer, T value)
 {
   detail::AtomicStoreImpl(pointer, value);
 }
+template <typename T>
+VTKM_EXEC_CONT inline void AtomicStore(T* pointer, detail::OppositeSign<T> value)
+{
+  detail::AtomicStoreImpl(pointer, static_cast<T>(value));
+}
+///@}
 
+///@{
 /// \brief Atomic function to add a value to a shared memory location.
 ///
 /// Given a pointer and an operand, adds the operand to the value at the given memory
@@ -436,12 +453,19 @@ VTKM_EXEC_CONT inline void AtomicStore(T* pointer, T value)
 /// each other. The result will be consistent as if one was called before the other
 /// (although it is indeterminate which will be applied first).
 ///
-template <typename T, typename U>
-VTKM_EXEC_CONT inline T AtomicAdd(T* pointer, U operand)
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAdd(T* pointer, T operand)
+{
+  return detail::AtomicAddImpl(pointer, operand);
+}
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAdd(T* pointer, detail::OppositeSign<T> operand)
 {
   return detail::AtomicAddImpl(pointer, static_cast<T>(operand));
 }
+///@}
 
+///@{
 /// \brief Atomic function to AND bits to a shared memory location.
 ///
 /// Given a pointer and an operand, performs a bitwise AND of the operand and thevalue at the given
@@ -454,12 +478,19 @@ VTKM_EXEC_CONT inline T AtomicAdd(T* pointer, U operand)
 /// each other. The result will be consistent as if one was called before the other
 /// (although it is indeterminate which will be applied first).
 ///
-template <typename T, typename U>
-VTKM_EXEC_CONT inline T AtomicAnd(T* pointer, U operand)
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAnd(T* pointer, T operand)
+{
+  return detail::AtomicAndImpl(pointer, operand);
+}
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicAnd(T* pointer, detail::OppositeSign<T> operand)
 {
   return detail::AtomicAndImpl(pointer, static_cast<T>(operand));
 }
+///@}
 
+///@{
 /// \brief Atomic function to OR bits to a shared memory location.
 ///
 /// Given a pointer and an operand, performs a bitwise OR of the operand and the value at the given
@@ -472,12 +503,19 @@ VTKM_EXEC_CONT inline T AtomicAnd(T* pointer, U operand)
 /// each other. The result will be consistent as if one was called before the other
 /// (although it is indeterminate which will be applied first).
 ///
-template <typename T, typename U>
-VTKM_EXEC_CONT inline T AtomicOr(T* pointer, U operand)
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicOr(T* pointer, T operand)
+{
+  return detail::AtomicOrImpl(pointer, operand);
+}
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicOr(T* pointer, detail::OppositeSign<T> operand)
 {
   return detail::AtomicOrImpl(pointer, static_cast<T>(operand));
 }
+///@}
 
+///@{
 /// \brief Atomic function to XOR bits to a shared memory location.
 ///
 /// Given a pointer and an operand, performs a bitwise exclusive-OR of the operand and the value at
@@ -489,11 +527,17 @@ VTKM_EXEC_CONT inline T AtomicOr(T* pointer, U operand)
 /// If multiple threads call `AtomicXor` simultaneously, they will not interfere with
 /// each other. The result will be consistent as if one was called before the other.
 ///
-template <typename T, typename U>
-VTKM_EXEC_CONT inline T AtomicXor(T* pointer, U operand)
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicXor(T* pointer, T operand)
+{
+  return detail::AtomicXorImpl(pointer, operand);
+}
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicXor(T* pointer, detail::OppositeSign<T> operand)
 {
   return detail::AtomicXorImpl(pointer, static_cast<T>(operand));
 }
+///@}
 
 /// \brief Atomic function to NOT bits to a shared memory location.
 ///
@@ -522,11 +566,10 @@ VTKM_EXEC_CONT inline T AtomicNot(T* pointer)
 /// as if one was called before the other (although it is indeterminate which will be applied
 /// first).
 ///
-template <typename T, typename U, typename V>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwap(T* pointer, V desired, U expected)
+template <typename T>
+VTKM_EXEC_CONT inline T AtomicCompareAndSwap(T* pointer, T desired, T expected)
 {
-  return detail::AtomicCompareAndSwapImpl(
-    pointer, static_cast<V>(desired), static_cast<T>(expected));
+  return detail::AtomicCompareAndSwapImpl(pointer, desired, expected);
 }
 
 } // namespace vtkm
