@@ -105,6 +105,14 @@ if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
   set_target_properties(vtkm::cuda PROPERTIES requires_static_builds TRUE)
 endif()
 
+if(VTKm_ENABLE_CUDA)
+  # If VTK-m is built with 3.18+ and the consumer is < 3.18 we need to drop
+  # these properties as they break the VTK-m cuda flag logic
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    set_target_properties(vtkm::cuda PROPERTIES INTERFACE_LINK_OPTIONS "")
+  endif()
+endif()
+
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
