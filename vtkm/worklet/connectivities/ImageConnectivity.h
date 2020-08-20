@@ -61,7 +61,7 @@ public:
     auto minComp = myComp;
     auto myColor = neighborColor.Get(0, 0, 0);
 
-    // FIXME: we are doing this "local conneivity finding" at each call of this
+    // FIXME: we are doing this "local connectivity finding" at each call of this
     // worklet. This creates a large demand on the memory bandwidth.
     // Is this necessary? It looks like we only need a local, partial spanning
     // tree at the beginning. Is it true?
@@ -83,17 +83,18 @@ public:
     /// The minComp in one invocation might hold old value that was modified by the
     /// following compOut.Set() in some other invocations. The question is if this
     /// data race is harmful or not.
-    /// FIXME: this might be bogus as well. This detach the node from its current
-    /// tree and reattach it to its neighbor
+    /// FIXME: this line might be bogus as well. This detach the node from its current
+    /// tree and reattach it to its neighbor. Later in the algorithm, the reset of the
+    /// component will join this new component via Union.
     //compOut.Set(index, minComp);
 
-    // I don't just only want to update the component label of this pixel, I actually
+    // I don't want to update the component label of this pixel, I actually
     // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
     // result.
     auto myRoot = findRoot(compOut, myComp);
     auto newRoot = findRoot(compOut, minComp);
 
-    // This "linking by index" as in SV Jayanti et.al. with less than as the total
+    // This is "linking by index" as in SV Jayanti et.al. with less than as the total
     // order.
     // TODO: should be change to Compare and Swap, according to SV Janati et. al.
     if (myRoot < newRoot)
@@ -103,6 +104,7 @@ public:
     // else, no need to do anything when they are the same set.
 
     // FIXME: is this the right termination condition?
+    // FIXME: should the Get()/Set() be replace with a CompareAnsSwap()?
     // mark an update occurred if no other worklets have done so yet
     if (myComp != minComp && updated.Get(0) == 0)
     {
