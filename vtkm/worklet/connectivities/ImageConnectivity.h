@@ -79,15 +79,6 @@ public:
       }
     }
 
-    /// FIXME: there is a data race between concurrent invocations of this operator().
-    /// The minComp in one invocation might hold old value that was modified by the
-    /// following compOut.Set() in some other invocations. The question is if this
-    /// data race is harmful or not.
-    /// FIXME: this line might be bogus as well. This detach the node from its current
-    /// tree and reattach it to its neighbor. Later in the algorithm, the reset of the
-    /// component will join this new component via Union.
-    //compOut.Set(index, minComp);
-
     // I don't want to update the component label of this pixel, I actually
     // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
     // result.
