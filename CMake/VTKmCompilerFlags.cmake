@@ -22,6 +22,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(VTKM_COMPILER_IS_CLANG 1)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(VTKM_COMPILER_IS_GNU 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XLClang")
+  set(VTKM_COMPILER_IS_XL 1)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -51,7 +53,7 @@ if(VTKM_COMPILER_IS_MSVC)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
   endif()
-elseif(NOT VTKM_COMPILER_IS_PGI) #can't find an equivalant PGI flag
+elseif(NOT (VTKM_COMPILER_IS_PGI OR VTKM_COMPILER_IS_XL)) #can't find an equivalant PGI/XL flag
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-ffunction-sections>)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffunction-sections>)
