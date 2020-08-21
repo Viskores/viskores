@@ -5,6 +5,7 @@ LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl \
       g++ \
+      clang-8 \
       git \
 
 
