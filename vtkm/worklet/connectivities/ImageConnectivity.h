@@ -95,8 +95,16 @@ public:
     auto newRoot = findRoot(compOut, minComp);
 
     // This is "linking by index" as in SV Jayanti et.al. with less than as the total
-    // order.
-    // TODO: should be change to Compare and Swap, according to SV Janati et. al.
+    // order. This avoids cycles in the resulting graph and maintains the rooted forest
+    // structure of UnionFind. It is possible for two threads to try to change the
+    // same old root to different new roots, e.g. threadA calls compOut.Set(root, rootB)
+    // while threadB calls compOut(root, rootB) where rootB < root and rootC < root (but
+    // the order of rootA and rootB is unspecified) and each thread assuming success
+    // while the outcome is actually unspecified. An atomic Compare and Swap is suggested in
+    // SV Janati et. al. to "resolve" data race. However, I don't see any
+    // need to use CAS, it looks like the data race will always correct itself by the
+    // algorithm if atomic Store of memory_order_release and Load of memory_order_acquire
+    // is used (also as provided by AtomicArrayInOut).
     if (myRoot < newRoot)
       compOut.Set(newRoot, myRoot);
     else if (myRoot > newRoot)
