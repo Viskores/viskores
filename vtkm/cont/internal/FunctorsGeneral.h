@@ -15,7 +15,6 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 
 #include <vtkm/exec/FunctorBase.h>
 

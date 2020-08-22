@@ -65,9 +65,8 @@ struct VTKM_ALWAYS_EXPORT StorageTagBitField
 template <>
 class Storage<bool, StorageTagBitField>
 {
-  using BitPortalType = vtkm::cont::detail::BitPortal<vtkm::cont::internal::AtomicInterfaceControl>;
-  using BitPortalConstType =
-    vtkm::cont::detail::BitPortalConst<vtkm::cont::internal::AtomicInterfaceControl>;
+  using BitPortalType = vtkm::cont::detail::BitPortal;
+  using BitPortalConstType = vtkm::cont::detail::BitPortalConst;
 
 public:
   using ValueType = bool;
@@ -107,10 +106,9 @@ private:
 template <typename Device>
 class ArrayTransfer<bool, StorageTagBitField, Device>
 {
-  using AtomicInterface = AtomicInterfaceExecution<Device>;
   using StorageType = Storage<bool, StorageTagBitField>;
-  using BitPortalExecution = vtkm::cont::detail::BitPortal<AtomicInterface>;
-  using BitPortalConstExecution = vtkm::cont::detail::BitPortalConst<AtomicInterface>;
+  using BitPortalExecution = vtkm::cont::detail::BitPortal;
+  using BitPortalConstExecution = vtkm::cont::detail::BitPortalConst;
 
 public:
   using ValueType = bool;
