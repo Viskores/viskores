@@ -34,56 +34,28 @@ public:
   using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood compIn,
                                 FieldInNeighborhood color,
-                                WholeArrayInOut compOut,
+                                AtomicArrayInOut compOut,
                                 AtomicArrayInOut changed);
 
-  using ExecutionSignature = void(WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(_2, _3, _4, _5);
 
   // This is the naive find() without path compaction in SV Jayanti et. al.
-  // Since the comp array is read-only there is no data race.
-  template <typename Comp>
-  VTKM_EXEC vtkm::Id findRoot(const Comp& comp, vtkm::Id index) const
+  // Since the parents array is read-only there is no data race.
+  // TODO: Since parents is now an AtomicArray with certain memory consistency,
+  // consider changing this to find with path compaction.
+  template <typename Parents>
+  VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index) const
   {
-    while (comp.Get(index) != index)
-      index = comp.Get(index);
+    while (parents.Get(index) != index)
+      index = parents.Get(index);
     return index;
   }
 
-  // compOut is an alias of neightborComp such that we can update component labels
-  template <typename NeighborComp, typename NeighborColor, typename CompOut, typename AtomicInOut>
-  VTKM_EXEC void operator()(const vtkm::Id index,
-                            const NeighborComp& neighborComp,
-                            const NeighborColor& neighborColor,
-                            CompOut& compOut,
-                            AtomicInOut& updated) const
+  template <typename Comp>
+  VTKM_EXEC void Unite(Comp& compOut, vtkm::Id u, vtkm::Id v) const
   {
-    vtkm::Id myComp = neighborComp.Get(0, 0, 0);
-    auto minComp = myComp;
-    auto myColor = neighborColor.Get(0, 0, 0);
-
-    // FIXME: we are doing this "local connectivity finding" at each call of this
-    // worklet. This creates a large demand on the memory bandwidth.
-    // Is this necessary? It looks like we only need a local, partial spanning
-    // tree at the beginning. Is it true?
-    for (int k = -1; k <= 1; k++)
-    {
-      for (int j = -1; j <= 1; j++)
-      {
-        for (int i = -1; i <= 1; i++)
-        {
-          if (myColor == neighborColor.Get(i, j, k))
-          {
-            minComp = vtkm::Min(minComp, neighborComp.Get(i, j, k));
-          }
-        }
-      }
-    }
-
-    // I don't want to update the component label of this pixel, I actually
-    // want to Union(FindRoot(myComponent), FindRoot(minComp)) and then Flatten the
-    // result.
-    auto myRoot = findRoot(compOut, myComp);
-    auto newRoot = findRoot(compOut, minComp);
+    auto thisRoot = findRoot(compOut, u);
+    auto thatRoot = findRoot(compOut, v);
 
     // This is "linking by index" as in SV Jayanti et.al. with less than as the total
     // order. This avoids cycles in the resulting graph and maintains the rooted forest
@@ -95,17 +67,52 @@ public:
     // SV Janati et. al. to "resolve" data race. However, I don't see any
     // need to use CAS, it looks like the data race will always correct itself by the
     // algorithm if atomic Store of memory_order_release and Load of memory_order_acquire
-    // is used (also as provided by AtomicArrayInOut).
-    if (myRoot < newRoot)
-      compOut.Set(newRoot, myRoot);
-    else if (myRoot > newRoot)
-      compOut.Set(myRoot, newRoot);
+    // is used (as provided by AtomicArrayInOut).
+    if (thisRoot < thatRoot)
+      compOut.Set(thatRoot, thisRoot);
+    else if (thisRoot > thatRoot)
+      compOut.Set(thisRoot, thatRoot);
     // else, no need to do anything when they are the same set.
+  }
+
+  // compOut is an alias of neightborComp such that we can update component labels
+  template <typename NeighborComp, typename NeighborColor, typename CompOut, typename AtomicInOut>
+  VTKM_EXEC void operator()(const NeighborComp& neighborComp,
+                            const NeighborColor& neighborColor,
+                            CompOut& compOut,
+                            AtomicInOut& updated) const
+  {
+    vtkm::Id thisComp = neighborComp.Get(0, 0, 0);
+    auto minComp = thisComp;
+    auto thisColor = neighborColor.Get(0, 0, 0);
+
+    // FIXME: we are doing this "local connectivity finding" at each call of this
+    // worklet. This creates a large demand on the memory bandwidth.
+    // Is this necessary? It looks like we only need a local, partial spanning
+    // tree at the beginning. Is it true?
+    for (int k = -1; k <= 1; k++)
+    {
+      for (int j = -1; j <= 1; j++)
+      {
+        for (int i = -1; i <= 1; i++)
+        {
+          if (thisColor == neighborColor.Get(i, j, k))
+          {
+            minComp = vtkm::Min(minComp, neighborComp.Get(i, j, k));
+          }
+        }
+      }
+    }
+
+    // I don't want to just update the component label of this pixel to the next, I
+    // actually want to merge the two gangs by Union(FindRoot(this), FindRoot(that))
+    // and then Flatten the result.
+    Unite(compOut, thisComp, minComp);
 
     // FIXME: is this the right termination condition?
-    // FIXME: should the Get()/Set() be replace with a CompareAnsSwap()?
+    // FIXME: should the Get()/Set() be replaced with a CompareAnsSwap()?
     // mark an update occurred if no other worklets have done so yet
-    if (myComp != minComp && updated.Get(0) == 0)
+    if (thisComp != minComp && updated.Get(0) == 0)
     {
       updated.Set(0, 1);
     }
