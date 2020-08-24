@@ -74,8 +74,6 @@ class Storage<bool, StorageTagBitField>
   using BitPortalType = vtkm::cont::detail::BitPortal;
   using BitPortalConstType = vtkm::cont::detail::BitPortalConst;
 
-  vtkm::Id NumberOfBits;
-
   using WordType = vtkm::WordTypeDefault;
   static constexpr vtkm::Id BlockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
   VTKM_STATIC_ASSERT(BlockSize >= static_cast<vtkm::Id>(sizeof(WordType)));
@@ -86,55 +84,53 @@ public:
 
   VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const { return 1; }
 
-  VTKM_CONT Storage()
-    : NumberOfBits(0)
-  {
-  }
+  VTKM_CONT Storage() {}
 
-  explicit VTKM_CONT Storage(vtkm::Id numberOfBits)
-    : NumberOfBits(numberOfBits)
-  {
-  }
-
-  VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
+  VTKM_CONT void ResizeBuffers(vtkm::Id numberOfBits,
                                vtkm::cont::internal::Buffer* buffers,
                                vtkm::CopyFlag preserve,
                                vtkm::cont::Token& token)
   {
-    this->NumberOfBits = numValues;
-
-    const vtkm::Id bytesNeeded = (this->NumberOfBits + CHAR_BIT - 1) / CHAR_BIT;
+    const vtkm::Id bytesNeeded = (numberOfBits + CHAR_BIT - 1) / CHAR_BIT;
     const vtkm::Id blocksNeeded = (bytesNeeded + BlockSize - 1) / BlockSize;
     const vtkm::Id numBytes = blocksNeeded * BlockSize;
 
+    VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
+               "BitField Allocation: %llu bits, blocked up to %s bytes.",
+               static_cast<unsigned long long>(numberOfBits),
+               vtkm::cont::GetSizeString(static_cast<vtkm::UInt64>(numBytes)).c_str());
+
     buffers[0].SetNumberOfBytes(numBytes, preserve, token);
+    vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits = numberOfBits;
   }
 
   VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
-    (void)buffers;
-    return this->NumberOfBits;
+    vtkm::Id numberOfBits = vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits;
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
+    return numberOfBits;
   }
 
   VTKM_CONT ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                             vtkm::cont::DeviceAdapterId device,
                                             vtkm::cont::Token& token)
   {
-    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
+    vtkm::Id numberOfBits = this->GetNumberOfValues(buffers);
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
 
     return ReadPortalType(
-      BitPortalConstType(buffers[0].ReadPointerDevice(device, token), this->NumberOfBits));
+      BitPortalConstType(buffers[0].ReadPointerDevice(device, token), numberOfBits));
   }
 
   VTKM_CONT WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
                                               vtkm::cont::DeviceAdapterId device,
                                               vtkm::cont::Token& token)
   {
-    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= this->NumberOfBits);
+    vtkm::Id numberOfBits = this->GetNumberOfValues(buffers);
+    VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
 
     return WritePortalType(
-      BitPortalType(buffers[0].WritePointerDevice(device, token), this->NumberOfBits));
+      BitPortalType(buffers[0].WritePointerDevice(device, token), numberOfBits));
   }
 };
 
@@ -223,7 +219,7 @@ public:
 
   VTKM_CONT
   explicit ArrayHandleBitField(const vtkm::cont::BitField& bitField)
-    : Superclass(bitField.GetData().GetBuffers(), StorageType(bitField.GetNumberOfBits()))
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>(1, bitField.GetBuffer()))
   {
   }
 };

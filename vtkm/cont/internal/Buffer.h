@@ -76,12 +76,12 @@ public:
   VTKM_CONT Buffer();
 
   VTKM_CONT Buffer(const Buffer& src);
-  VTKM_CONT Buffer(Buffer&& src);
+  VTKM_CONT Buffer(Buffer&& src) noexcept;
 
   VTKM_CONT ~Buffer();
 
   VTKM_CONT Buffer& operator=(const Buffer& src);
-  VTKM_CONT Buffer& operator=(Buffer&& src);
+  VTKM_CONT Buffer& operator=(Buffer&& src) noexcept;
 
   /// \brief Returns the number of bytes held by the buffer.
   ///
@@ -221,6 +221,18 @@ public:
   /// that is inconsistent with the size of this buffer, an exception will be thrown.
   ///
   VTKM_CONT void Reset(const vtkm::cont::internal::BufferInfo& buffer);
+
+  /// \brief Unallocates the buffer from all devices.
+  ///
+  /// This method preserves the data on the host even if the data must be transferred
+  /// there.
+  ///
+  /// Note that this method will not physically deallocate memory on a device that shares
+  /// a memory space with the host (since the data must be preserved on the host). This
+  /// is true even for memory spaces that page data between host and device. This method
+  /// will not attempt to unpage data from a device with shared memory.
+  ///
+  VTKM_CONT void ReleaseDeviceResources() const;
 
   /// \brief Gets the `BufferInfo` object to the memory allocated on the host.
   ///

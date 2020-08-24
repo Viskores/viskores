@@ -12,7 +12,7 @@
 #define vtk_m_cont_BitField_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/Atomic.h>
 #include <vtkm/Deprecated.h>
@@ -33,7 +33,18 @@ class BitField;
 
 namespace internal
 {
+
 struct StorageTagBitField;
+
+struct VTKM_CONT_EXPORT BitFieldMetaData : vtkm::cont::internal::BufferMetaData
+{
+  vtkm::Id NumberOfBits = 0;
+
+  VTKM_CONT ~BitFieldMetaData() override;
+
+  VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
+};
+
 }
 
 namespace detail
@@ -88,6 +99,9 @@ struct BitCoordinate
   vtkm::Int32 BitOffset; // [0, bitsInWord)
 };
 
+VTKM_CONT_EXPORT vtkm::cont::internal::BitFieldMetaData* GetBitFieldMetaData(
+  const vtkm::cont::internal::Buffer& buffer);
+
 /// Portal for performing bit or word operations on a BitField.
 ///
 /// This is the implementation used by BitPortal and BitPortalConst.
@@ -131,18 +145,6 @@ public:
 
 protected:
   friend class vtkm::cont::BitField;
-
-  /// Construct a BitPortal from an ArrayHandle with basic storage's portal.
-  template <typename PortalType>
-  VTKM_EXEC_CONT BitPortalBase(const PortalType& portal, vtkm::Id numberOfBits)
-    : Data{ portal.GetIteratorBegin() }
-    , NumberOfBits{ numberOfBits }
-  {
-    VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
-                           "Source portal must return a pointer from "
-                           "GetIteratorBegin().");
-  }
-
   friend class vtkm::cont::internal::Storage<bool, vtkm::cont::internal::StorageTagBitField>;
 
   /// Construct a BitPortal from a raw array.
@@ -513,13 +515,14 @@ struct IsValidWordTypeDeprecated<WordType, void>
 
 } // end namespace detail
 
-class BitField
+class VTKM_CONT_EXPORT BitField
 {
   static constexpr vtkm::Id BlockSize = detail::BitFieldTraits::BlockSize;
 
 public:
   /// The type array handle used to store the bit data internally:
-  using ArrayHandleType = ArrayHandle<WordTypeDefault, StorageTagBasic>;
+  using ArrayHandleType VTKM_DEPRECATED(1.6, "BitField now uses a Buffer to store data.") =
+    ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>;
 
   /// The BitPortal used in the control environment.
   using WritePortalType = detail::BitPortal;
@@ -559,10 +562,7 @@ public:
   using IsValidWordTypeAtomicControl VTKM_DEPRECATED(1.6, "Use IsValidWordTypeAtomic instead.") =
     detail::BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
-  VTKM_CONT BitField()
-    : Internals{ std::make_shared<InternalStruct>() }
-  {
-  }
+  VTKM_CONT BitField();
   VTKM_CONT BitField(const BitField&) = default;
   VTKM_CONT BitField(BitField&&) noexcept = default;
   VTKM_CONT ~BitField() = default;
@@ -570,22 +570,23 @@ public:
   VTKM_CONT BitField& operator=(BitField&&) noexcept = default;
 
   VTKM_CONT
-  bool operator==(const BitField& rhs) const { return this->Internals == rhs.Internals; }
+  bool operator==(const BitField& rhs) const { return this->Buffer == rhs.Buffer; }
 
   VTKM_CONT
-  bool operator!=(const BitField& rhs) const { return this->Internals != rhs.Internals; }
+  bool operator!=(const BitField& rhs) const { return this->Buffer != rhs.Buffer; }
+
+  /// Return the internal `Buffer` used to store the `BitField`.
+  VTKM_CONT vtkm::cont::internal::Buffer GetBuffer() const { return this->Buffer; }
 
   /// Return the internal ArrayHandle used to store the BitField.
-  VTKM_CONT
-  ArrayHandleType& GetData() { return this->Internals->Data; }
-
-  /// Return the internal ArrayHandle used to store the BitField.
-  VTKM_CONT
-  const ArrayHandleType& GetData() const { return this->Internals->Data; }
+  VTKM_CONT VTKM_DEPRECATED(1.6, "BitField now uses a Buffer to store data.")
+    ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic> GetData() const
+  {
+    return vtkm::cont::ArrayHandle<vtkm::WordTypeDefault, StorageTagBasic>(&this->Buffer);
+  }
 
   /// Return the number of bits stored by this BitField.
-  VTKM_CONT
-  vtkm::Id GetNumberOfBits() const { return this->Internals->NumberOfBits; }
+  VTKM_CONT vtkm::Id GetNumberOfBits() const;
 
   /// Return the number of words (of @a WordType) stored in this bit fields.
   ///
@@ -594,83 +595,69 @@ public:
   {
     VTKM_STATIC_ASSERT(IsValidWordType<WordType>::value);
     static constexpr vtkm::Id WordBits = static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
-    return (this->Internals->NumberOfBits + WordBits - 1) / WordBits;
+    return (this->GetNumberOfBits() + WordBits - 1) / WordBits;
   }
 
   /// Allocate the requested number of bits.
-  VTKM_CONT
-  void Allocate(vtkm::Id numberOfBits)
+  VTKM_CONT void Allocate(vtkm::Id numberOfBits,
+                          vtkm::CopyFlag preserve,
+                          vtkm::cont::Token& token) const;
+
+  /// Allocate the requested number of bits.
+  VTKM_CONT void Allocate(vtkm::Id numberOfBits,
+                          vtkm::CopyFlag preserve = vtkm::CopyFlag::Off) const
   {
-    const vtkm::Id numWords = this->BitsToAllocatedStorageWords(numberOfBits);
-
-    VTKM_LOG_F(vtkm::cont::LogLevel::MemCont,
-               "BitField Allocation: %llu bits, blocked up to %s.",
-               static_cast<unsigned long long>(numberOfBits),
-               vtkm::cont::GetSizeString(
-                 static_cast<vtkm::UInt64>(static_cast<size_t>(numWords) * sizeof(WordTypeDefault)))
-                 .c_str());
-
-    this->Internals->Data.Allocate(numWords);
-    this->Internals->NumberOfBits = numberOfBits;
+    vtkm::cont::Token token;
+    this->Allocate(numberOfBits, preserve, token);
   }
 
   /// Shrink the bit field to the requested number of bits.
-  VTKM_CONT
-  void Shrink(vtkm::Id numberOfBits)
+  VTKM_CONT VTKM_DEPRECATED(1.6,
+                            "Use Allocate with preserve = On.") void Shrink(vtkm::Id numberOfBits)
   {
-    const vtkm::Id numWords = this->BitsToAllocatedStorageWords(numberOfBits);
-    this->Internals->Data.Shrink(numWords);
-    this->Internals->NumberOfBits = numberOfBits;
+    this->Allocate(numberOfBits, vtkm::CopyFlag::On);
   }
 
   /// Release all execution-side resources held by this BitField.
-  VTKM_CONT
-  void ReleaseResourcesExecution() { this->Internals->Data.ReleaseResourcesExecution(); }
+  VTKM_CONT void ReleaseResourcesExecution();
 
   /// Release all resources held by this BitField and reset to empty.
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    this->Internals->Data.ReleaseResources();
-    this->Internals->NumberOfBits = 0;
-  }
+  VTKM_CONT void ReleaseResources();
 
   /// Force the control array to sync with the last-used device.
-  VTKM_CONT
-  void SyncControlArray() const { this->Internals->Data.SyncControlArray(); }
+  VTKM_CONT void SyncControlArray() const;
 
-  /// The id of the device where the most up-to-date copy of the data is
-  /// currently resident. If the data is on the host, DeviceAdapterTagUndefined
-  /// is returned.
-  VTKM_CONT
-  DeviceAdapterId GetDeviceAdapterId() const { return this->Internals->Data.GetDeviceAdapterId(); }
+  /// Returns true if the `BitField`'s data is on the given device. If the data are on the given
+  /// device, then preparing for that device should not require any data movement.
+  ///
+  VTKM_CONT bool IsOnDevice(vtkm::cont::DeviceAdapterId device) const;
+
+  /// Returns true if the `BitField`'s data is on the host. If the data are on the given
+  /// device, then calling `ReadPortal` or `WritePortal` should not require any data movement.
+  ///
+  VTKM_CONT bool IsOnHost() const
+  {
+    return this->IsOnDevice(vtkm::cont::DeviceAdapterTagUndefined{});
+  }
+
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Data can be on multiple devices. Use IsOnDevice.")
+    vtkm::cont::DeviceAdapterId GetDeviceAdapterId() const;
 
   /// \brief Get a portal to the data that is usable from the control environment.
   ///
   /// As long as this portal is in scope, no one else will be able to read or write the BitField.
-  VTKM_CONT WritePortalType WritePortal() const
-  {
-    auto dataPortal = this->Internals->Data.WritePortal();
-    return WritePortalType{ dataPortal, this->Internals->NumberOfBits };
-  }
+  VTKM_CONT WritePortalType WritePortal() const;
 
   /// \brief Get a read-only portal to the data that is usable from the control environment.
   ///
   /// As long as this portal is in scope, no one else will be able to write in the BitField.
-  VTKM_CONT ReadPortalType ReadPortal() const
-  {
-    auto dataPortal = this->Internals->Data.ReadPortal();
-    return ReadPortalType{ dataPortal, this->Internals->NumberOfBits };
-  }
+  VTKM_CONT ReadPortalType ReadPortal() const;
 
   VTKM_CONT
   VTKM_DEPRECATED(1.6,
                   "Use BitField::WritePortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortal GetPortalControl()
-  {
-    return detail::BitPortal{ this->Internals->Data.WritePortal(), this->Internals->NumberOfBits };
-  }
+  detail::BitPortal GetPortalControl() { return this->WritePortal(); }
 
   /// Get a read-only portal to the data that is usable from the control
   /// environment.
@@ -678,26 +665,15 @@ public:
   VTKM_DEPRECATED(1.6,
                   "Use BitField::ReadPortal() instead. "
                   "Note that the returned portal will lock the array while it is in scope.")
-  detail::BitPortalConst GetPortalConstControl() const
-  {
-    return detail::BitPortalConst{ this->Internals->Data.ReadPortal(),
-                                   this->Internals->NumberOfBits };
-  }
+  detail::BitPortalConst GetPortalConstControl() const { return this->ReadPortal(); }
 
   /// Prepares this BitField to be used as an input to an operation in the
   /// execution environment. If necessary, copies data to the execution
   /// environment. Can throw an exception if this BitField does not yet contain
   /// any data. Returns a portal that can be used in code running in the
   /// execution environment.
-  template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag device,
-    vtkm::cont::Token& token) const
-  {
-    using PortalType = typename ExecutionTypes<DeviceAdapterTag>::PortalConst;
-    return PortalType{ this->Internals->Data.PrepareForInput(device, token),
-                       this->Internals->NumberOfBits };
-  }
+  VTKM_CONT ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                           vtkm::cont::Token& token) const;
 
   template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
@@ -714,24 +690,9 @@ public:
   /// that the array will be filled soon (i.e. before any other methods of this
   /// object are called). Returns a portal that can be used in code running in
   /// the execution environment.
-  template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForOutput(vtkm::Id numBits, DeviceAdapterTag device, vtkm::cont::Token& token) const
-  {
-    using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
-    const vtkm::Id numWords = this->BitsToAllocatedStorageWords(numBits);
-
-    VTKM_LOG_F(vtkm::cont::LogLevel::MemExec,
-               "BitField Allocation: %llu bits, blocked up to %s.",
-               static_cast<unsigned long long>(numBits),
-               vtkm::cont::GetSizeString(
-                 static_cast<vtkm::UInt64>(static_cast<size_t>(numWords) * sizeof(WordTypeDefault)))
-                 .c_str());
-
-    auto portal = this->Internals->Data.PrepareForOutput(numWords, device, token);
-    this->Internals->NumberOfBits = numBits;
-    return PortalType{ portal, numBits };
-  }
+  VTKM_CONT WritePortalType PrepareForOutput(vtkm::Id numBits,
+                                             vtkm::cont::DeviceAdapterId device,
+                                             vtkm::cont::Token& token) const;
 
   template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
@@ -747,15 +708,8 @@ public:
   /// the execution environment. Can throw an exception if this BitField does
   /// not yet contain any data. Returns a portal that can be used in code
   /// running in the execution environment.
-  template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag device,
-    vtkm::cont::Token& token) const
-  {
-    using PortalType = typename ExecutionTypes<DeviceAdapterTag>::Portal;
-    return PortalType{ this->Internals->Data.PrepareForInPlace(device, token),
-                       this->Internals->NumberOfBits };
-  }
+  VTKM_CONT WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
+                                              vtkm::cont::Token& token) const;
 
   template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
@@ -767,27 +721,7 @@ public:
   }
 
 private:
-  /// Returns the number of words, padded out to respect BlockSize.
-  VTKM_CONT
-  static vtkm::Id BitsToAllocatedStorageWords(vtkm::Id numBits)
-  {
-    static constexpr vtkm::Id InternalWordSize = static_cast<vtkm::Id>(sizeof(WordTypeDefault));
-
-    // Round up to BlockSize bytes:
-    const vtkm::Id bytesNeeded = (numBits + CHAR_BIT - 1) / CHAR_BIT;
-    const vtkm::Id blocksNeeded = (bytesNeeded + BlockSize - 1) / BlockSize;
-    const vtkm::Id numBytes = blocksNeeded * BlockSize;
-    const vtkm::Id numWords = numBytes / InternalWordSize;
-    return numWords;
-  }
-
-  struct VTKM_ALWAYS_EXPORT InternalStruct
-  {
-    ArrayHandleType Data;
-    vtkm::Id NumberOfBits;
-  };
-
-  std::shared_ptr<InternalStruct> Internals;
+  mutable vtkm::cont::internal::Buffer Buffer;
 };
 }
 } // end namespace vtkm::cont

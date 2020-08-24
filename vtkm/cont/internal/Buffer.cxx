@@ -545,7 +545,7 @@ Buffer::Buffer(const Buffer& src)
 }
 
 // Defined to prevent issues with CUDA
-Buffer::Buffer(Buffer&& src)
+Buffer::Buffer(Buffer&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
@@ -561,7 +561,7 @@ Buffer& Buffer::operator=(const Buffer& src)
 }
 
 // Defined to prevent issues with CUDA
-Buffer& Buffer::operator=(Buffer&& src)
+Buffer& Buffer::operator=(Buffer&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;
@@ -814,6 +814,15 @@ void Buffer::Reset(const vtkm::cont::internal::BufferInfo& bufferInfo)
   }
 
   this->Internals->SetNumberOfBytes(lock, bufferInfo.GetSize());
+}
+
+void Buffer::ReleaseDeviceResources() const
+{
+  vtkm::cont::Token token;
+
+  // Getting a write host buffer will invalidate any device arrays and preserve data
+  // on the host (copying if necessary).
+  this->WritePointerHost(token);
 }
 
 vtkm::cont::internal::BufferInfo Buffer::GetHostBufferInfo() const

@@ -150,8 +150,7 @@ struct TestingBitField
 
     // NumBits should be rounded up to the nearest block of bytes, as defined in
     // the traits:
-    const vtkm::Id bytesInFieldData =
-      field.GetData().GetNumberOfValues() * static_cast<vtkm::Id>(sizeof(vtkm::WordTypeDefault));
+    const vtkm::Id bytesInFieldData = field.GetBuffer().GetNumberOfBytes();
 
     const vtkm::Id blockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
     const vtkm::Id numBytes = (NUM_BITS + CHAR_BIT - 1) / CHAR_BIT;
