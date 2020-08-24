@@ -22,7 +22,9 @@
 #include <random>
 #include <vector>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include "curand_kernel.h"
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace
 {
