@@ -20,10 +20,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/ComputeNDHistogram.h>
-#include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
-#include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
 #include <vtkm/worklet/histogram/MarginalizeNDHistogram.h>
 
 #include <vtkm/cont/Field.h>

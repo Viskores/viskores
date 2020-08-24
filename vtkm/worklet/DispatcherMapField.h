@@ -23,13 +23,11 @@ class WorkletMapField;
 ///
 template <typename WorkletType>
 class DispatcherMapField
-  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
-                                                   WorkletType,
-                                                   vtkm::worklet::WorkletMapField>
+  : public vtkm::worklet::internal::
+      DispatcherBase<DispatcherMapField<WorkletType>, WorkletType, vtkm::worklet::WorkletMapField>
 {
-  using Superclass = vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType>,
-                                                             WorkletType,
-                                                             vtkm::worklet::WorkletMapField>;
+  using Superclass = vtkm::worklet::internal::
+    DispatcherBase<DispatcherMapField<WorkletType>, WorkletType, vtkm::worklet::WorkletMapField>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

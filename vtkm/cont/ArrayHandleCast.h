@@ -135,14 +135,11 @@ struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>
 
 template <typename TargetT, typename SourceT, typename SourceStorage, typename Device>
 struct ArrayTransfer<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>, Device>
-  : detail::ArrayHandleCastTraits<TargetT,
-                                  SourceT,
-                                  SourceStorage>::template ArrayTransferSuperclass<Device>
+  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::
+      template ArrayTransferSuperclass<Device>
 {
-  using Superclass =
-    typename detail::ArrayHandleCastTraits<TargetT,
-                                           SourceT,
-                                           SourceStorage>::template ArrayTransferSuperclass<Device>;
+  using Superclass = typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::
+    template ArrayTransferSuperclass<Device>;
 
   using Superclass::Superclass;
 };

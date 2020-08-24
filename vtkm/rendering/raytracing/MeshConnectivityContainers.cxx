@@ -160,9 +160,7 @@ const MeshConnectivityBase* UnstructuredContainer::Construct(
 }
 
 VTKM_CONT
-UnstructuredSingleContainer::UnstructuredSingleContainer()
-{
-}
+UnstructuredSingleContainer::UnstructuredSingleContainer() {}
 
 VTKM_CONT
 UnstructuredSingleContainer::UnstructuredSingleContainer(

@@ -197,9 +197,7 @@ MapperWireframer::MapperWireframer()
 {
 }
 
-MapperWireframer::~MapperWireframer()
-{
-}
+MapperWireframer::~MapperWireframer() {}
 
 vtkm::rendering::Canvas* MapperWireframer::GetCanvas() const
 {

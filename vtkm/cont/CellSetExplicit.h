@@ -131,9 +131,8 @@ class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
   struct ConnectivityChooser
   {
   private:
-    using Chooser = typename detail::CellSetExplicitConnectivityChooser<Thisclass,
-                                                                        VisitTopology,
-                                                                        IncidentTopology>;
+    using Chooser = typename detail::
+      CellSetExplicitConnectivityChooser<Thisclass, VisitTopology, IncidentTopology>;
 
   public:
     using ConnectivityType = typename Chooser::ConnectivityType;

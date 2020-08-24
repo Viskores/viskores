@@ -74,8 +74,9 @@ namespace contourtree_augmented
 {
 
 template <typename T, typename StorageType>
-class Mesh_DEM_Triangulation_3D_Freudenthal : public Mesh_DEM_Triangulation_3D<T, StorageType>,
-                                              public vtkm::cont::ExecutionObjectBase
+class Mesh_DEM_Triangulation_3D_Freudenthal
+  : public Mesh_DEM_Triangulation_3D<T, StorageType>
+  , public vtkm::cont::ExecutionObjectBase
 { // class Mesh_DEM_Triangulation
 public:
   // Constants and case tables
@@ -98,7 +99,7 @@ public:
                            IdArrayType& boundarySortIndexArray, // output
                            MeshBoundary3DExec* meshBoundaryExecObj =
                              NULL // optional input, included for consistency with ContourTreeMesh
-                           ) const;
+  ) const;
 
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
@@ -168,7 +169,7 @@ void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,       // output
   IdArrayType& boundarySortIndexArray,    // output
   MeshBoundary3DExec* meshBoundaryExecObj // input
-  ) const
+) const
 {
   vtkm::Id numBoundary = 2 * this->NumRows * this->NumColumns // xy faces
     + 2 * this->NumRows * (this->NumSlices - 2)               // yz faces - excluding vertices on xy
@@ -182,7 +183,7 @@ void Mesh_DEM_Triangulation_3D_Freudenthal<T, StorageType>::GetBoundaryVertices(
                                              : *meshBoundaryExecObj, // input
                boundaryVertexArray,                                  // output
                boundarySortIndexArray                                // output
-               );
+  );
 }
 
 } // namespace contourtree_augmented

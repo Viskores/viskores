@@ -556,13 +556,13 @@ struct VTKM_NEVER_EXPORT VecTraits<vtkm::Pair<T, U>>
 
 } // anonymous namespace
 
-#define VTKM_BASIC_TYPE_VECTOR(type)                                                               \
-  namespace vtkm                                                                                   \
-  {                                                                                                \
-  template <>                                                                                      \
-  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type>           \
-  {                                                                                                \
-  };                                                                                               \
+#define VTKM_BASIC_TYPE_VECTOR(type)                                                     \
+  namespace vtkm                                                                         \
+  {                                                                                      \
+  template <>                                                                            \
+  struct VTKM_NEVER_EXPORT VecTraits<type> : public vtkm::internal::VecTraitsBasic<type> \
+  {                                                                                      \
+  };                                                                                     \
   }
 
 /// Allows you to treat basic types as if they were vectors.

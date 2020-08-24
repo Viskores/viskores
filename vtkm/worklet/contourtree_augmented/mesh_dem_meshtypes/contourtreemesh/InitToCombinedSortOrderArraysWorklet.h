@@ -84,7 +84,7 @@ public:
     FieldIn overallSortOrder,              // (input) overallSortOrder
     WholeArrayOut thisToCombinedSortOrder, // (output) thisToCombinedSortOrder
     WholeArrayOut otherToCombinedSortOrder // (output) otherToCombinedSortOrder
-    );
+  );
   typedef void ExecutionSignature(_1, _2, _3, _4);
   typedef _1 InputDomain;
 

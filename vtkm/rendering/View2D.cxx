@@ -34,9 +34,7 @@ View2D::View2D(const vtkm::rendering::Scene& scene,
 {
 }
 
-View2D::~View2D()
-{
-}
+View2D::~View2D() {}
 
 void View2D::Paint()
 {

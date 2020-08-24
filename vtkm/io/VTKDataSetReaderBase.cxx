@@ -132,8 +132,7 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    "Type " << vtkm::io::internal::DataTypeName<T>::Name()
                            << " is currently unsupported. Converting to "
-                           << vtkm::io::internal::DataTypeName<CommonType>::Name()
-                           << ".");
+                           << vtkm::io::internal::DataTypeName<CommonType>::Name() << ".");
       }
 
       vtkm::cont::ArrayHandle<CommonType> output;
@@ -160,13 +159,10 @@ vtkm::cont::VariantArrayHandle CreateVariantArrayHandle(const std::vector<T>& ve
       {
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                    "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
-                           << vtkm::VecTraits<T>::GetNumberOfComponents(T())
-                           << "] "
+                           << vtkm::VecTraits<T>::GetNumberOfComponents(T()) << "] "
                            << "is currently unsupported. Converting to "
-                           << vtkm::io::internal::DataTypeName<OutComponentType>::Name()
-                           << "["
-                           << numComps
-                           << "].");
+                           << vtkm::io::internal::DataTypeName<OutComponentType>::Name() << "["
+                           << numComps << "].");
       }
 
       vtkm::cont::ArrayHandle<CommonType> output;
@@ -216,9 +212,7 @@ VTKDataSetReaderBase::VTKDataSetReaderBase(const std::string& fileName)
   this->DataFile->FileName = fileName;
 }
 
-VTKDataSetReaderBase::~VTKDataSetReaderBase()
-{
-}
+VTKDataSetReaderBase::~VTKDataSetReaderBase() {}
 
 const vtkm::cont::DataSet& VTKDataSetReaderBase::ReadDataSet()
 {
@@ -418,10 +412,7 @@ void VTKDataSetReaderBase::ReadHeader()
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
                "Reader may not correctly read >v4.2 files. Reading version "
-                 << this->DataFile->Version[0]
-                 << "."
-                 << this->DataFile->Version[1]
-                 << ".\n");
+                 << this->DataFile->Version[0] << "." << this->DataFile->Version[1] << ".\n");
   }
 
   // Read title line

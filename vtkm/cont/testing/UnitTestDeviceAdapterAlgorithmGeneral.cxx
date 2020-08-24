@@ -82,9 +82,8 @@ class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGenera
 
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public vtkm::cont::internal::ArrayManagerExecution<T,
-                                                       StorageTag,
-                                                       vtkm::cont::DeviceAdapterTagSerial>
+  : public vtkm::cont::internal::
+      ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   using Superclass =

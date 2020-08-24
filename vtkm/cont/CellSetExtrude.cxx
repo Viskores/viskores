@@ -64,18 +64,18 @@ CellSetExtrude::CellSetExtrude(const CellSetExtrude& src)
 }
 
 CellSetExtrude::CellSetExtrude(CellSetExtrude&& src) noexcept
-  : CellSet(std::forward<CellSet>(src)),
-    IsPeriodic(src.IsPeriodic),
-    NumberOfPointsPerPlane(src.NumberOfPointsPerPlane),
-    NumberOfCellsPerPlane(src.NumberOfCellsPerPlane),
-    NumberOfPlanes(src.NumberOfPlanes),
-    Connectivity(std::move(src.Connectivity)),
-    NextNode(std::move(src.NextNode)),
-    ReverseConnectivityBuilt(src.ReverseConnectivityBuilt),
-    RConnectivity(std::move(src.RConnectivity)),
-    ROffsets(std::move(src.ROffsets)),
-    RCounts(std::move(src.RCounts)),
-    PrevNode(std::move(src.PrevNode))
+  : CellSet(std::forward<CellSet>(src))
+  , IsPeriodic(src.IsPeriodic)
+  , NumberOfPointsPerPlane(src.NumberOfPointsPerPlane)
+  , NumberOfCellsPerPlane(src.NumberOfCellsPerPlane)
+  , NumberOfPlanes(src.NumberOfPlanes)
+  , Connectivity(std::move(src.Connectivity))
+  , NextNode(std::move(src.NextNode))
+  , ReverseConnectivityBuilt(src.ReverseConnectivityBuilt)
+  , RConnectivity(std::move(src.RConnectivity))
+  , ROffsets(std::move(src.ROffsets))
+  , RCounts(std::move(src.RCounts))
+  , PrevNode(std::move(src.PrevNode))
 {
 }
 
@@ -117,9 +117,7 @@ CellSetExtrude& CellSetExtrude::operator=(CellSetExtrude&& src) noexcept
   return *this;
 }
 
-CellSetExtrude::~CellSetExtrude()
-{
-}
+CellSetExtrude::~CellSetExtrude() {}
 
 vtkm::Int32 CellSetExtrude::GetNumberOfPlanes() const
 {

@@ -74,7 +74,7 @@ public:
                                 ExecObject meshBoundary,        // (input)
                                 FieldOut boundaryVertexArray,   // output
                                 FieldOut boundarySortIndexArray // output
-                                );
+  );
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 

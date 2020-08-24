@@ -146,7 +146,6 @@
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -182,10 +181,10 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> activeSupernodes;
 
   // references to join & split trees
-  MergeTree<T, StorageType> &joinTree, &splitTree;
+  MergeTree<T, StorageType>&joinTree, &splitTree;
 
   // references to join & split graphs
-  ChainGraph<T, StorageType> &joinGraph, &splitGraph;
+  ChainGraph<T, StorageType>&joinGraph, &splitGraph;
 
   // vectors of up & down degree used during computation
   vtkm::cont::ArrayHandle<vtkm::Id> updegree, downdegree;

@@ -15,8 +15,9 @@
 //We always create the kokkos tag when included, but we only mark it as
 //a valid tag when VTKM_ENABLE_KOKKOS is true. This is for easier development
 //of multi-backend systems
-#if defined(VTKM_ENABLE_KOKKOS) && ((!defined(VTKM_KOKKOS_CUDA) || defined(VTKM_CUDA)) ||          \
-                                    !defined(VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG))
+#if defined(VTKM_ENABLE_KOKKOS) &&                       \
+  ((!defined(VTKM_KOKKOS_CUDA) || defined(VTKM_CUDA)) || \
+   !defined(VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG))
 VTKM_VALID_DEVICE_ADAPTER(Kokkos, VTKM_DEVICE_ADAPTER_KOKKOS);
 #else
 VTKM_INVALID_DEVICE_ADAPTER(Kokkos, VTKM_DEVICE_ADAPTER_KOKKOS);

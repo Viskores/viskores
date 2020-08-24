@@ -27,9 +27,7 @@ ImageReaderBase::ImageReaderBase(const std::string& filename)
 {
 }
 
-ImageReaderBase::~ImageReaderBase() noexcept
-{
-}
+ImageReaderBase::~ImageReaderBase() noexcept {}
 
 const vtkm::cont::DataSet& ImageReaderBase::ReadDataSet()
 {

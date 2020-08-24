@@ -77,7 +77,7 @@ public:
                                 WholeArrayIn meshSortOrder,       // input
                                 WholeArrayOut boundaryIndices,    //output
                                 WholeArrayOut bractVertexSuperset // output
-                                );
+  );
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 

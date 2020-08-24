@@ -434,10 +434,10 @@ namespace internal
 
 /// \cond
 /// Make doxygen ignore this section
-#define VTKM_STORAGE_EXPORT(Type)                                                                  \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;                  \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;    \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;    \
+#define VTKM_STORAGE_EXPORT(Type)                                                               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_STORAGE_EXPORT(char)
@@ -457,13 +457,13 @@ VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 } // namespace internal
 
-#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>;      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                         \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
+    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
+    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
     ArrayHandleNewStyle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_ARRAYHANDLE_EXPORT(char)

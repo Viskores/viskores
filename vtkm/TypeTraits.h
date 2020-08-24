@@ -82,26 +82,26 @@ struct TypeTraits<const T> : TypeTraits<T>
 {
 };
 
-#define VTKM_BASIC_REAL_TYPE(T)                                                                    \
-  template <>                                                                                      \
-  struct TypeTraits<T>                                                                             \
-  {                                                                                                \
-    using NumericTag = TypeTraitsRealTag;                                                          \
-    using DimensionalityTag = TypeTraitsScalarTag;                                                 \
-    VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }                                   \
+#define VTKM_BASIC_REAL_TYPE(T)                                  \
+  template <>                                                    \
+  struct TypeTraits<T>                                           \
+  {                                                              \
+    using NumericTag = TypeTraitsRealTag;                        \
+    using DimensionalityTag = TypeTraitsScalarTag;               \
+    VTKM_EXEC_CONT static T ZeroInitialization() { return T(); } \
   };
 
-#define VTKM_BASIC_INTEGER_TYPE(T)                                                                 \
-  template <>                                                                                      \
-  struct TypeTraits<T>                                                                             \
-  {                                                                                                \
-    using NumericTag = TypeTraitsIntegerTag;                                                       \
-    using DimensionalityTag = TypeTraitsScalarTag;                                                 \
-    VTKM_EXEC_CONT static T ZeroInitialization()                                                   \
-    {                                                                                              \
-      using ReturnType = T;                                                                        \
-      return ReturnType();                                                                         \
-    }                                                                                              \
+#define VTKM_BASIC_INTEGER_TYPE(T)                 \
+  template <>                                      \
+  struct TypeTraits<T>                             \
+  {                                                \
+    using NumericTag = TypeTraitsIntegerTag;       \
+    using DimensionalityTag = TypeTraitsScalarTag; \
+    VTKM_EXEC_CONT static T ZeroInitialization()   \
+    {                                              \
+      using ReturnType = T;                        \
+      return ReturnType();                         \
+    }                                              \
   };
 
 /// Traits for basic C++ types.

@@ -59,7 +59,11 @@ class VTKM_ALWAYS_EXPORT ArrayPortalWrapper final
   using T = typename PortalT::ValueType;
 
 public:
-  ArrayPortalWrapper(const PortalT& p) noexcept : ArrayPortalVirtual<T>(), Portal(p) {}
+  ArrayPortalWrapper(const PortalT& p) noexcept
+    : ArrayPortalVirtual<T>()
+    , Portal(p)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -101,12 +105,16 @@ public:
   using ValueType = T;
 
   VTKM_EXEC_CONT
-  ArrayPortalRef() noexcept : Portal(nullptr), NumberOfValues(0) {}
+  ArrayPortalRef() noexcept
+    : Portal(nullptr)
+    , NumberOfValues(0)
+  {
+  }
 
   VTKM_EXEC_CONT
   ArrayPortalRef(const ArrayPortalVirtual<T>* portal, vtkm::Id numValues) noexcept
-    : Portal(portal),
-      NumberOfValues(numValues)
+    : Portal(portal)
+    , NumberOfValues(numValues)
   {
   }
 

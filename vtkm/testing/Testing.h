@@ -61,8 +61,8 @@
 /// given, a generic message is given. In any case, the condition that failed
 /// is written out.
 
-#define VTKM_TEST_ASSERT(...)                                                                      \
-  ::vtkm::testing::Testing::Assert(                                                                \
+#define VTKM_TEST_ASSERT(...)       \
+  ::vtkm::testing::Testing::Assert( \
     VTKM_STRINGIFY_FIRST(__VA_ARGS__), __FILE__, __LINE__, __VA_ARGS__)
 
 /// \def VTKM_TEST_FAIL(messages..)
@@ -83,11 +83,11 @@ namespace testing
 template <typename T>
 struct TypeName;
 
-#define VTK_M_BASIC_TYPE(type, name)                                                               \
-  template <>                                                                                      \
-  struct TypeName<type>                                                                            \
-  {                                                                                                \
-    static std::string Name() { return #name; }                                                    \
+#define VTK_M_BASIC_TYPE(type, name)            \
+  template <>                                   \
+  struct TypeName<type>                         \
+  {                                             \
+    static std::string Name() { return #name; } \
   }
 
 VTK_M_BASIC_TYPE(vtkm::Float32, F32);
@@ -279,6 +279,7 @@ public:
     VTKM_CONT const std::string& GetFile() const { return this->File; }
     VTKM_CONT vtkm::Id GetLine() const { return this->Line; }
     VTKM_CONT const std::string& GetMessage() const { return this->Message; }
+
   private:
     template <typename T1>
     VTKM_CONT void AppendMessages(std::stringstream& messageStream, T1&& m1)

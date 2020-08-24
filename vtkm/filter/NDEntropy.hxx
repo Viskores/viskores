@@ -18,9 +18,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT NDEntropy::NDEntropy()
-{
-}
+inline VTKM_CONT NDEntropy::NDEntropy() {}
 
 void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 {

@@ -110,7 +110,7 @@ public:
       RunContourTree(false,                   // no marching cubes,
                      computeRegularStructure, // compute regular structure
                      2                        // use 2D mesh
-                     );
+      );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
@@ -158,7 +158,7 @@ public:
       RunContourTree(false,                   // no marching cubes,
                      computeRegularStructure, // compute regular structure
                      3                        // use 2D mesh
-                     );
+      );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
@@ -213,7 +213,7 @@ public:
       RunContourTree(true,                    // no marching cubes,
                      computeRegularStructure, // compute regular structure
                      3                        // use 3D mesh
-                     );
+      );
 
     // Compute the saddle peaks to make sure the contour tree is correct
     vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;

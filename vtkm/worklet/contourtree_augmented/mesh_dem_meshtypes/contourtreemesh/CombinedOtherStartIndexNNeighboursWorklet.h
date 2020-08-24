@@ -83,7 +83,7 @@ public:
     FieldIn otherToCombinedSortOrder,       // (input) otherToCombinedSortOrder
     WholeArrayInOut combinedNNeighbours,    // (input/output) combinedNNeighbours
     WholeArrayInOut combinedOtherStartIndex // (input/output) combinedOthertStartIndex
-    );
+  );
   typedef void ExecutionSignature(_1, _2, _3, _4);
   typedef _1 InputDomain;
 

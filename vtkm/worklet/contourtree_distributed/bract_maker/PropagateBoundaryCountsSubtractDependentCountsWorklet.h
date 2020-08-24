@@ -75,7 +75,7 @@ public:
                                 WholeArrayIn hypernodes,   // (input) contour tree hypernodes
                                 WholeArrayIn superarcDependentBoundaryCount,      // (input)
                                 WholeArrayInOut newSuperArcDependentBoundaryCount // (input/output)
-                                );
+  );
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 

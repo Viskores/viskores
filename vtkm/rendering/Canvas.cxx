@@ -234,9 +234,7 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   this->ResizeBuffers(width, height);
 }
 
-Canvas::~Canvas()
-{
-}
+Canvas::~Canvas() {}
 
 vtkm::rendering::Canvas* Canvas::NewCopy() const
 {

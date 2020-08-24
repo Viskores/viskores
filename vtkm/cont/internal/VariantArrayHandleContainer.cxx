@@ -31,9 +31,7 @@ VariantArrayHandleContainerBase::VariantArrayHandleContainerBase(const std::type
 {
 }
 
-VariantArrayHandleContainerBase::~VariantArrayHandleContainerBase()
-{
-}
+VariantArrayHandleContainerBase::~VariantArrayHandleContainerBase() {}
 }
 
 namespace detail

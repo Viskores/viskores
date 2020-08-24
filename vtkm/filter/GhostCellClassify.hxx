@@ -96,9 +96,7 @@ namespace vtkm
 namespace filter
 {
 
-inline VTKM_CONT GhostCellClassify::GhostCellClassify()
-{
-}
+inline VTKM_CONT GhostCellClassify::GhostCellClassify() {}
 
 template <typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet GhostCellClassify::DoExecute(const vtkm::cont::DataSet& input,

@@ -410,9 +410,9 @@ void TestEmplace()
 
   variant.Emplace<1>(TestValue(2, vtkm::Id{}), TestValue(3, vtkm::Id{}), TestValue(4, vtkm::Id{}));
   VTKM_TEST_ASSERT(variant.GetIndex() == 1);
-  VTKM_TEST_ASSERT(variant.Get<vtkm::Id3>() == vtkm::Id3{ TestValue(2, vtkm::Id{}),
-                                                          TestValue(3, vtkm::Id{}),
-                                                          TestValue(4, vtkm::Id{}) });
+  VTKM_TEST_ASSERT(
+    variant.Get<vtkm::Id3>() ==
+    vtkm::Id3{ TestValue(2, vtkm::Id{}), TestValue(3, vtkm::Id{}), TestValue(4, vtkm::Id{}) });
 
   variant.Emplace<2>(
     { TestValue(5, vtkm::Id{}), TestValue(6, vtkm::Id{}), TestValue(7, vtkm::Id{}) });

@@ -488,9 +488,7 @@ Camera::Camera()
 }
 
 VTKM_CONT
-Camera::~Camera()
-{
-}
+Camera::~Camera() {}
 
 VTKM_CONT
 void Camera::SetParameters(const vtkm::rendering::Camera& camera,

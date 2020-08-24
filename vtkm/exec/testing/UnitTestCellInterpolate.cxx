@@ -20,7 +20,7 @@
 
 #include <vtkm/testing/Testing.h>
 
-#define CHECK_CALL(call)                                                                           \
+#define CHECK_CALL(call) \
   VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
 
 namespace

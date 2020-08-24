@@ -483,10 +483,10 @@ struct DecoratorStorageTraits
   }
 
   // Static dispatch for calling AllocateSourceArrays on supported implementations:
-  VTKM_CONT[[noreturn]] static void CallAllocate(std::false_type,
-                                                 const DecoratorImplT&,
-                                                 vtkm::Id,
-                                                 ArrayTs&...)
+  VTKM_CONT [[noreturn]] static void CallAllocate(std::false_type,
+                                                  const DecoratorImplT&,
+                                                  vtkm::Id,
+                                                  ArrayTs&...)
   {
     throw vtkm::cont::ErrorBadType("Allocate not supported by this ArrayHandleDecorator.");
   }
@@ -500,10 +500,10 @@ struct DecoratorStorageTraits
   }
 
   // Static dispatch for calling ShrinkSourceArrays on supported implementations.
-  VTKM_CONT[[noreturn]] static void CallShrink(std::false_type,
-                                               const DecoratorImplT&,
-                                               vtkm::Id,
-                                               ArrayTs&...)
+  VTKM_CONT [[noreturn]] static void CallShrink(std::false_type,
+                                                const DecoratorImplT&,
+                                                vtkm::Id,
+                                                ArrayTs&...)
   {
     throw vtkm::cont::ErrorBadType("Shrink not supported by this ArrayHandleDecorator.");
   }

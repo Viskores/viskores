@@ -107,14 +107,12 @@ public:
 private:
   using AxisIndexArrayPoints =
     vtkm::cont::ArrayHandleImplicit<extractstructured::internal::SubArrayPermutePoints>;
-  using PointIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints,
-                                                                  AxisIndexArrayPoints>;
+  using PointIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayPoints, AxisIndexArrayPoints, AxisIndexArrayPoints>;
 
   using AxisIndexArrayCells = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
-  using CellIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells,
-                                                                 AxisIndexArrayCells>;
+  using CellIndexArray = vtkm::cont::
+    ArrayHandleCartesianProduct<AxisIndexArrayCells, AxisIndexArrayCells, AxisIndexArrayCells>;
 
   inline AxisIndexArrayPoints MakeAxisIndexArrayPoints(vtkm::Id count,
                                                        vtkm::Id first,

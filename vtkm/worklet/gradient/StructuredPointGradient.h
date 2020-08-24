@@ -65,11 +65,12 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood
   }
 
   template <typename FieldIn, typename GradientOutType>
-  VTKM_EXEC void operator()(const vtkm::exec::BoundaryState& boundary,
-                            const vtkm::exec::FieldNeighborhood<
-                              vtkm::internal::ArrayPortalUniformPointCoordinates>& inputPoints,
-                            const FieldIn& inputField,
-                            GradientOutType& outputGradient) const
+  VTKM_EXEC void operator()(
+    const vtkm::exec::BoundaryState& boundary,
+    const vtkm::exec::FieldNeighborhood<vtkm::internal::ArrayPortalUniformPointCoordinates>&
+      inputPoints,
+    const FieldIn& inputField,
+    GradientOutType& outputGradient) const
   {
     //When the points and cells are both structured we can achieve even better
     //performance by not doing the Jacobian, but instead do an image gradient

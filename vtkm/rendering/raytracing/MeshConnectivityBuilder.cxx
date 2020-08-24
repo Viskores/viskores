@@ -343,9 +343,8 @@ public:
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:
-  using ConnType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                                      vtkm::TopologyElementTagPoint,
-                                                      3>;
+  using ConnType = vtkm::exec::
+    ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>;
   ConnType Connectivity;
   vtkm::Id Segments[7];
   vtkm::Id3 CellDims;
@@ -652,12 +651,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
   return externalTriangles;
 }
 
-MeshConnectivityBuilder::MeshConnectivityBuilder()
-{
-}
-MeshConnectivityBuilder::~MeshConnectivityBuilder()
-{
-}
+MeshConnectivityBuilder::MeshConnectivityBuilder() {}
+MeshConnectivityBuilder::~MeshConnectivityBuilder() {}
 
 
 VTKM_CONT

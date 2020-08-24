@@ -25,10 +25,10 @@
 // write that image to a file. It then computes an isosurface on the input data set and renders
 // this output data set in a separate image file
 
-using vtkm::rendering::MapperVolume;
-using vtkm::rendering::MapperRayTracer;
-using vtkm::rendering::MapperWireframer;
 using vtkm::rendering::CanvasRayTracer;
+using vtkm::rendering::MapperRayTracer;
+using vtkm::rendering::MapperVolume;
+using vtkm::rendering::MapperWireframer;
 
 int main(int argc, char* argv[])
 {

@@ -105,7 +105,7 @@
 // http://stackoverflow.com/questions/24511376). These macros will silence the
 // warning for classes defined within them.
 #ifdef VTKM_CLANG
-#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START                                                     \
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START \
   _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wweak-vtables\"")
 #define VTKM_SILENCE_WEAK_VTABLE_WARNING_END _Pragma("clang diagnostic pop")
 #else // VTKM_CLANG

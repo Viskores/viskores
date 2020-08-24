@@ -12,7 +12,7 @@
 
 #include <vtkm/Assert.h>
 
-int UnitTestNoAssert(int, char* [])
+int UnitTestNoAssert(int, char*[])
 {
   VTKM_ASSERT(false);
   return 0;

@@ -72,7 +72,7 @@ public:
   using ControlSignature = void(FieldIn newVertexId,        // input
                                 WholeArrayOut upNeighbour,  // output
                                 WholeArrayOut downNeighbour // output
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _1, _2, _3);
   using InputDomain = _1;
 

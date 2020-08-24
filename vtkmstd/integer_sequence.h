@@ -48,8 +48,8 @@ using index_sequence = integer_sequence<std::size_t, Ns...>;
 
 #else // VTK_M_USE_STD_INTEGER_SEQUENCE
 
-using std::integer_sequence;
 using std::index_sequence;
+using std::integer_sequence;
 
 #endif // VTK_M_USE_STD_INTEGER_SEQUENCE
 
@@ -216,8 +216,8 @@ using make_index_sequence = make_integer_sequence<std::size_t, N>;
 
 #else // VTK_M_USE_STD_MAKE_INTEGER_SEQUENCE
 
-using std::make_integer_sequence;
 using std::make_index_sequence;
+using std::make_integer_sequence;
 
 #endif // VTK_M_USE_STD_MAKE_INTEGER_SEQUENCE
 

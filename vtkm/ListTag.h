@@ -103,8 +103,8 @@ struct VTKM_DEPRECATED(1.6, "VTKM_IS_LIST_TAG replaced with VTKM_IS_LIST.") List
 /// actually a device adapter tag. (You can get weird errors elsewhere in the
 /// code when a mistake is made.)
 ///
-#define VTKM_IS_LIST_TAG(tag)                                                                      \
-  VTKM_STATIC_ASSERT_MSG((::vtkm::detail::ListTagAssert<tag>::value),                              \
+#define VTKM_IS_LIST_TAG(tag)                                         \
+  VTKM_STATIC_ASSERT_MSG((::vtkm::detail::ListTagAssert<tag>::value), \
                          "Provided type is not a valid VTK-m list tag.")
 
 namespace internal

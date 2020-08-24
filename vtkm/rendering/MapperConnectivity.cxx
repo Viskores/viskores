@@ -30,9 +30,7 @@ MapperConnectivity::MapperConnectivity()
 }
 
 VTKM_CONT
-MapperConnectivity::~MapperConnectivity()
-{
-}
+MapperConnectivity::~MapperConnectivity() {}
 
 VTKM_CONT
 void MapperConnectivity::SetSampleDistance(const vtkm::Float32& distance)

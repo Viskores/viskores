@@ -21,9 +21,7 @@ namespace vtkm
 namespace io
 {
 
-ImageWriterPNG::~ImageWriterPNG() noexcept
-{
-}
+ImageWriterPNG::~ImageWriterPNG() noexcept {}
 
 void ImageWriterPNG::Write(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels)
 {

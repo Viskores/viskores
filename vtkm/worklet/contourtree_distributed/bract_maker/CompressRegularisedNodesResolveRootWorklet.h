@@ -71,7 +71,7 @@ class CompressRegularisedNodesResolveRootWorklet : public vtkm::worklet::Worklet
 public:
   using ControlSignature = void(FieldIn newIndex,           // input
                                 WholeArrayInOut newSuperarc // input/output
-                                );
+  );
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

@@ -28,13 +28,13 @@
 /// intrinsic used to provide optimization hints, the intrinsic is used to
 /// notify the compiler that this is a dead code path.
 ///
-#define VTKM_UNREACHABLE(msg)                                                                      \
-  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                                                                 \
-  {                                                                                                \
-    VTKM_UNREACHABLE_IMPL();                                                                       \
-    VTKM_UNREACHABLE_PRINT(msg);                                                                   \
-    VTKM_UNREACHABLE_ABORT();                                                                      \
-  }                                                                                                \
+#define VTKM_UNREACHABLE(msg)      \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  {                                \
+    VTKM_UNREACHABLE_IMPL();       \
+    VTKM_UNREACHABLE_PRINT(msg);   \
+    VTKM_UNREACHABLE_ABORT();      \
+  }                                \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_UNREACHABLE_IMPL is compiler-specific:
@@ -49,9 +49,9 @@
 
 #else // NDEBUG || VTKM_NO_ASSERT
 
-#define VTKM_UNREACHABLE_PRINT(msg)                                                                \
+#define VTKM_UNREACHABLE_PRINT(msg) \
   printf("Unreachable location reached: %s\nLocation: %s:%d\n", msg, __FILE__, __LINE__)
-#define VTKM_UNREACHABLE_ABORT()                                                                   \
+#define VTKM_UNREACHABLE_ABORT() \
   asm("trap;") /* Triggers kernel exit with CUDA error 73: Illegal inst */
 
 #endif // NDEBUG || VTKM_NO_ASSERT
@@ -68,7 +68,7 @@
 #define VTKM_UNREACHABLE_IMPL() __assume(false)
 #elif defined(VTKM_ICC) && !defined(__GNUC__)
 #define VTKM_UNREACHABLE_IMPL() __assume(false)
-#elif (defined(VTKM_GCC) || defined(VTKM_ICC)) &&                                                  \
+#elif (defined(VTKM_GCC) || defined(VTKM_ICC)) && \
   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 // Added in 4.5.0:
 #define VTKM_UNREACHABLE_IMPL() __builtin_unreachable()
@@ -81,8 +81,8 @@
 #else // NDEBUG || VTKM_NO_ASSERT
 
 #define VTKM_UNREACHABLE_IMPL() (void)0
-#define VTKM_UNREACHABLE_PRINT(msg)                                                                \
-  std::cerr << "Unreachable location reached: " << msg << "\n"                                     \
+#define VTKM_UNREACHABLE_PRINT(msg)                            \
+  std::cerr << "Unreachable location reached: " << msg << "\n" \
             << "Location: " << __FILE__ << ":" << __LINE__ << "\n"
 #define VTKM_UNREACHABLE_ABORT() abort()
 
