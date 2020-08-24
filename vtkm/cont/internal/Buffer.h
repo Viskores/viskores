@@ -35,6 +35,28 @@ struct BufferHelper;
 
 } // namespace detail
 
+/// \brief An object to hold metadata for a `Buffer` object.
+///
+/// A `Buffer` object can optionally hold a `BufferMetaData` object. The metadata object
+/// allows the buffer to hold state for the buffer that is not directly related to the
+/// memory allocated and its size. This allows you to completely encapsulate the state
+/// in the `Buffer` object and then pass the `Buffer` object to different object that
+/// provide different interfaces to the array.
+///
+/// To use `BufferMetaData`, create a subclass, and then provide that subclass as the
+/// metadata. The `Buffer` object will only remember it as the generic base class. You
+/// can then get the metadata and perform a `dynamic_cast` to check that the metadata
+/// is as expected and to get to the meta information
+///
+struct VTKM_CONT_EXPORT BufferMetaData
+{
+  virtual ~BufferMetaData();
+
+  /// Subclasses must provide a way to deep copy metadata.
+  ///
+  virtual std::unique_ptr<BufferMetaData> DeepCopy() const = 0;
+};
+
 /// \brief Manages a buffer data among the host and various devices.
 ///
 /// The `Buffer` class defines a contiguous section of memory of a specified number of bytes. The
@@ -81,6 +103,35 @@ public:
   VTKM_CONT void SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                                   vtkm::CopyFlag preserve,
                                   vtkm::cont::Token& token);
+
+  /// \brief Gets the metadata for the buffer.
+  ///
+  /// Holding metadata in a `Buffer` is optional. The metadata is held in a subclass of
+  /// `BufferMetaData`, and you will have to safely downcast the object to retrieve the
+  /// actual information.
+  ///
+  /// The metadata could be a `nullptr` if the metadata was never set.
+  ///
+  VTKM_CONT vtkm::cont::internal::BufferMetaData* GetMetaData() const;
+
+  /// \brief Sets the metadata for the buffer.
+  ///
+  /// This form of SetMetaData takes an rvalue to a unique_ptr holding the metadata to
+  /// ensure that the object is properly managed.
+  ///
+  VTKM_CONT void SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata);
+
+  /// \brief Sets the metadata for the buffer.
+  ///
+  /// This form of SetMetaData takes the metadata object value. The metadata object
+  /// must be a subclass of BufferMetaData or you will get a compile error.
+  ///
+  template <typename MetaDataType>
+  VTKM_CONT void SetMetaData(const MetaDataType& metadata)
+  {
+    this->SetMetaData(
+      std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new MetaDataType(metadata)));
+  }
 
   /// \brief Returns `true` if the buffer is allocated on the host.
   ///

@@ -21,6 +21,7 @@
 #include <cstring>
 #include <deque>
 #include <map>
+#include <memory>
 
 namespace
 {
@@ -88,6 +89,8 @@ namespace cont
 namespace internal
 {
 
+BufferMetaData::~BufferMetaData() {}
+
 class Buffer::InternalsStruct
 {
 public:
@@ -114,6 +117,8 @@ private:
 public:
   std::mutex Mutex;
   std::condition_variable ConditionVariable;
+
+  std::unique_ptr<vtkm::cont::internal::BufferMetaData> MetaData;
 
   LockType GetLock() { return LockType(this->Mutex); }
 
@@ -473,6 +478,11 @@ struct VTKM_NEVER_EXPORT BufferHelper
     std::memcpy(destInternals->GetHostBuffer(destLock).GetPointer(),
                 srcInternals->GetHostBuffer(srcLock).GetPointer(),
                 static_cast<std::size_t>(size));
+
+    if (srcInternals->MetaData)
+    {
+      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
+    }
   }
 
   static void CopyOnDevice(
@@ -513,6 +523,11 @@ struct VTKM_NEVER_EXPORT BufferHelper
     }
 
     destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
+
+    if (srcInternals->MetaData)
+    {
+      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
+    }
   }
 };
 
@@ -591,6 +606,16 @@ void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
     // Do nothing (other than resetting numberOfBytes). Buffers will get resized when you get the
     // pointer.
   }
+}
+
+vtkm::cont::internal::BufferMetaData* Buffer::GetMetaData() const
+{
+  return this->Internals->MetaData.get();
+}
+
+void Buffer::SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata)
+{
+  this->Internals->MetaData = std::move(metadata);
 }
 
 bool Buffer::IsAllocatedOnHost() const
