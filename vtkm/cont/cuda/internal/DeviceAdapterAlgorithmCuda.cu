@@ -207,8 +207,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
   const auto& params = cuda::internal::scheduling_1d_parameters[static_cast<size_t>(deviceId)];
-  blocks = params.first;
-  threadsPerBlock = params.second;
+  blocks = static_cast<vtkm::UInt32>(params.first);
+  threadsPerBlock = static_cast<vtkm::UInt32>(params.second);
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThreads(
@@ -223,13 +223,13 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
   if (size.z <= 1)
   { //2d images
     const auto& params = cuda::internal::scheduling_2d_parameters[static_cast<size_t>(deviceId)];
-    blocks = params.first;
+    blocks = static_cast<vtkm::UInt32>(params.first);
     threadsPerBlock = params.second;
   }
   else
   { //3d images
     const auto& params = cuda::internal::scheduling_3d_parameters[static_cast<size_t>(deviceId)];
-    blocks = params.first;
+    blocks = static_cast<vtkm::UInt32>(params.first);
     threadsPerBlock = params.second;
   }
 }
