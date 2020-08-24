@@ -1,5 +1,5 @@
 # Attributes used for formatting.
-[attr]our-c-style   whitespace=tab-in-indent  format.clang-format
+[attr]our-c-style   whitespace=tab-in-indent  format.clang-format=9
 
 *.cxx   our-c-style
 *.h     our-c-style
