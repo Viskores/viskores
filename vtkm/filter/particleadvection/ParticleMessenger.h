@@ -11,7 +11,10 @@
 #ifndef vtk_m_filter_ParticleMessenger_h
 #define vtk_m_filter_ParticleMessenger_h
 
+#include <vtkm/filter/vtkm_filter_extra_export.h>
+
 #include <vtkm/Particle.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/Messenger.h>
 
@@ -42,7 +45,8 @@ public:
   VTKM_CONT ParticleMessenger(vtkmdiy::mpi::communicator& comm,
                               const vtkm::filter::particleadvection::BoundsMap& bm,
                               int msgSz = 1,
-                              int numParticles = 128);
+                              int numParticles = 128,
+                              int numBlockIds = 2);
   VTKM_CONT ~ParticleMessenger() {}
 
   VTKM_CONT void Exchange(const std::vector<vtkm::Massless>& outData,
@@ -62,9 +66,9 @@ protected:
     PARTICLE_TAG = 0x42001
   };
 
-  VTKM_CONT void RegisterMessages(int msgSz, int nParticles);
+  VTKM_CONT void RegisterMessages(int msgSz, int nParticles, int numBlockIds);
 
-  // Send/Recv Integral curves.
+  // Send/Recv particles
   VTKM_CONT
   template <typename P,
             template <typename, typename>
@@ -98,7 +102,7 @@ protected:
                                 std::vector<vtkm::Massless>& inData,
                                 std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const;
 
-  static int CalcParticleBufferSize(int nParticles, int numBlockIds = 2);
+  static std::size_t CalcParticleBufferSize(std::size_t nParticles, std::size_t numBlockIds = 2);
 };
 
 
@@ -115,11 +119,10 @@ inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocat
   if (c.empty())
     return;
 
-  vtkm::filter::particleadvection::MemStream* buff =
-    new vtkm::filter::particleadvection::MemStream();
-  vtkm::filter::particleadvection::write(*buff, this->Rank);
-  vtkm::filter::particleadvection::write(*buff, c);
-  this->SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
+  vtkmdiy::MemoryBuffer bb;
+  vtkmdiy::save(bb, this->Rank);
+  vtkmdiy::save(bb, c);
+  this->SendData(dst, ParticleMessenger::PARTICLE_TAG, bb);
 }
 
 VTKM_CONT
@@ -131,34 +134,6 @@ inline void ParticleMessenger::SendParticles(const std::map<int, Container<P, Al
       this->SendParticles(mit->first, mit->second);
 }
 #endif
-
-
-template <>
-struct Serialization<vtkm::Massless>
-{
-  static void write(vtkm::filter::particleadvection::MemStream& memstream,
-                    const vtkm::Massless& data)
-  {
-    vtkm::filter::particleadvection::write(memstream, data.Pos[0]);
-    vtkm::filter::particleadvection::write(memstream, data.Pos[1]);
-    vtkm::filter::particleadvection::write(memstream, data.Pos[2]);
-    vtkm::filter::particleadvection::write(memstream, data.ID);
-    vtkm::filter::particleadvection::write(memstream, data.Status);
-    vtkm::filter::particleadvection::write(memstream, data.NumSteps);
-    vtkm::filter::particleadvection::write(memstream, data.Time);
-  }
-
-  static void read(vtkm::filter::particleadvection::MemStream& memstream, vtkm::Massless& data)
-  {
-    vtkm::filter::particleadvection::read(memstream, data.Pos[0]);
-    vtkm::filter::particleadvection::read(memstream, data.Pos[1]);
-    vtkm::filter::particleadvection::read(memstream, data.Pos[2]);
-    vtkm::filter::particleadvection::read(memstream, data.ID);
-    vtkm::filter::particleadvection::read(memstream, data.Status);
-    vtkm::filter::particleadvection::read(memstream, data.NumSteps);
-    vtkm::filter::particleadvection::read(memstream, data.Time);
-  }
-};
 }
 }
 } // namespace vtkm::filter::particleadvection

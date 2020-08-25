@@ -29,6 +29,7 @@ VTKM_CONT
 #ifdef VTKM_ENABLE_MPI
 Messenger::Messenger(vtkmdiy::mpi::communicator& comm)
   : MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
+  , MsgID(0)
   , NumRanks(comm.size())
   , Rank(comm.rank())
 #else
@@ -39,7 +40,7 @@ Messenger::Messenger(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
 
 #ifdef VTKM_ENABLE_MPI
 VTKM_CONT
-void Messenger::RegisterTag(int tag, int num_recvs, int size)
+void Messenger::RegisterTag(int tag, std::size_t num_recvs, std::size_t size)
 {
   if (this->MessageTagInfo.find(tag) != this->MessageTagInfo.end() || tag == TAG_ANY)
   {
@@ -47,28 +48,29 @@ void Messenger::RegisterTag(int tag, int num_recvs, int size)
     msg << "Invalid message tag: " << tag << std::endl;
     throw vtkm::cont::ErrorFilterExecution(msg.str());
   }
-  this->MessageTagInfo[tag] = std::pair<int, int>(num_recvs, size);
+  this->MessageTagInfo[tag] = std::pair<std::size_t, std::size_t>(num_recvs, size);
 }
 
-int Messenger::CalcMessageBufferSize(int msgSz)
+std::size_t Messenger::CalcMessageBufferSize(std::size_t msgSz)
 {
-  return static_cast<int>(sizeof(int)) // rank
+  return sizeof(int) // rank
     // std::vector<int> msg;
     // msg.size()
-    + static_cast<int>(sizeof(std::size_t))
+    + sizeof(std::size_t)
     // msgSz ints.
-    + msgSz * static_cast<int>(sizeof(int));
+    + msgSz * sizeof(int);
 }
 
 void Messenger::InitializeBuffers()
 {
   //Setup receive buffers.
-  std::map<int, std::pair<int, int>>::const_iterator it;
-  for (it = this->MessageTagInfo.begin(); it != this->MessageTagInfo.end(); it++)
+  for (const auto& it : this->MessageTagInfo)
   {
-    int tag = it->first, num = it->second.first;
-    for (int i = 0; i < num; i++)
-      this->PostRecv(tag);
+    int tag = it.first;
+    std::size_t num = it.second.first;
+    std::size_t sz = it.second.second;
+    for (std::size_t i = 0; i < num; i++)
+      this->PostRecv(tag, sz);
   }
 }
 
@@ -83,12 +85,11 @@ void Messenger::CleanupRequests(int tag)
 
   if (!delKeys.empty())
   {
-    std::vector<RequestTagPair>::const_iterator it;
-    for (it = delKeys.begin(); it != delKeys.end(); it++)
+    for (const auto& it : delKeys)
     {
-      RequestTagPair v = *it;
+      RequestTagPair v = it;
 
-      unsigned char* buff = this->RecvBuffers[v];
+      char* buff = this->RecvBuffers[v];
       MPI_Cancel(&(v.first));
       delete[] buff;
       this->RecvBuffers.erase(v);
@@ -103,10 +104,10 @@ void Messenger::PostRecv(int tag)
     this->PostRecv(tag, it->second.second);
 }
 
-void Messenger::PostRecv(int tag, int sz, int src)
+void Messenger::PostRecv(int tag, std::size_t sz, int src)
 {
   sz += sizeof(Messenger::Header);
-  unsigned char* buff = new unsigned char[sz];
+  char* buff = new char[sz];
   memset(buff, 0, sz);
 
   MPI_Request req;
@@ -139,9 +140,9 @@ void Messenger::CheckPendingSendRequests()
   MPI_Status* status = new MPI_Status[req.size()];
   int err = MPI_Testsome(req.size(), &req[0], &num, indices, status);
   if (err != MPI_SUCCESS)
-  {
-    std::cerr << "Err with MPI_Testsome in PARIC algorithm" << std::endl;
-  }
+    throw vtkm::cont::ErrorFilterExecution(
+      "Error iwth MPI_Testsome in Messenger::CheckPendingSendRequests");
+
   for (int i = 0; i < num; i++)
   {
     MPI_Request r = copy[indices[i]];
@@ -160,7 +161,7 @@ void Messenger::CheckPendingSendRequests()
   delete[] status;
 }
 
-bool Messenger::PacketCompare(const unsigned char* a, const unsigned char* b)
+bool Messenger::PacketCompare(const char* a, const char* b)
 {
   Messenger::Header ha, hb;
   memcpy(&ha, a, sizeof(ha));
@@ -169,7 +170,9 @@ bool Messenger::PacketCompare(const unsigned char* a, const unsigned char* b)
   return ha.packet < hb.packet;
 }
 
-void Messenger::PrepareForSend(int tag, MemStream* buff, std::vector<unsigned char*>& buffList)
+void Messenger::PrepareForSend(int tag,
+                               const vtkmdiy::MemoryBuffer& buff,
+                               std::vector<char*>& buffList)
 {
   auto it = this->MessageTagInfo.find(tag);
   if (it == this->MessageTagInfo.end())
@@ -179,24 +182,23 @@ void Messenger::PrepareForSend(int tag, MemStream* buff, std::vector<unsigned ch
     throw vtkm::cont::ErrorFilterExecution(msg.str());
   }
 
-  int bytesLeft = buff->GetLen();
-  int maxDataLen = it->second.second;
+  std::size_t bytesLeft = buff.size();
+  std::size_t maxDataLen = it->second.second;
   Messenger::Header header;
   header.tag = tag;
   header.rank = this->Rank;
-  header.id = this->MsgID;
+  header.id = this->GetMsgID();
   header.numPackets = 1;
-  if (buff->GetLen() > (unsigned int)maxDataLen)
-    header.numPackets += buff->GetLen() / maxDataLen;
+  if (buff.size() > maxDataLen)
+    header.numPackets += buff.size() / maxDataLen;
 
   header.packet = 0;
   header.packetSz = 0;
   header.dataSz = 0;
-  this->MsgID++;
 
   buffList.resize(header.numPackets);
-  size_t pos = 0;
-  for (int i = 0; i < header.numPackets; i++)
+  std::size_t pos = 0;
+  for (std::size_t i = 0; i < header.numPackets; i++)
   {
     header.packet = i;
     if (i == (header.numPackets - 1))
@@ -205,15 +207,15 @@ void Messenger::PrepareForSend(int tag, MemStream* buff, std::vector<unsigned ch
       header.dataSz = maxDataLen;
 
     header.packetSz = header.dataSz + sizeof(header);
-    unsigned char* b = new unsigned char[header.packetSz];
+    char* b = new char[header.packetSz];
 
     //Write the header.
-    unsigned char* bPtr = b;
+    char* bPtr = b;
     memcpy(bPtr, &header, sizeof(header));
     bPtr += sizeof(header);
 
     //Write the data.
-    memcpy(bPtr, &buff->GetData()[pos], header.dataSz);
+    memcpy(bPtr, &buff.buffer[pos], header.dataSz);
     pos += header.dataSz;
 
     buffList[i] = b;
@@ -221,50 +223,46 @@ void Messenger::PrepareForSend(int tag, MemStream* buff, std::vector<unsigned ch
   }
 }
 
-void Messenger::SendData(int dst, int tag, MemStream* buff)
+void Messenger::SendData(int dst, int tag, const vtkmdiy::MemoryBuffer& buff)
 {
-  std::vector<unsigned char*> bufferList;
+  std::vector<char*> bufferList;
 
   //Add headers, break into multiple buffers if needed.
   PrepareForSend(tag, buff, bufferList);
 
   Messenger::Header header;
-  for (size_t i = 0; i < bufferList.size(); i++)
+  for (std::size_t i = 0; i < bufferList.size(); i++)
   {
     memcpy(&header, bufferList[i], sizeof(header));
     MPI_Request req;
     int err = MPI_Isend(bufferList[i], header.packetSz, MPI_BYTE, dst, tag, this->MPIComm, &req);
     if (err != MPI_SUCCESS)
-    {
-      std::cerr << "Err with MPI_Isend in SendData algorithm" << std::endl;
-    }
+      throw vtkm::cont::ErrorFilterExecution("Error in MPI_Isend inside Messenger::SendData");
 
     //Add it to sendBuffers
     RequestTagPair entry(req, tag);
     this->SendBuffers[entry] = bufferList[i];
   }
-
-  delete buff;
 }
 
-bool Messenger::RecvData(int tag, std::vector<MemStream*>& buffers, bool blockAndWait)
+bool Messenger::RecvData(int tag, std::vector<vtkmdiy::MemoryBuffer>& buffers, bool blockAndWait)
 {
   std::set<int> setTag;
   setTag.insert(tag);
-  std::vector<std::pair<int, MemStream*>> b;
+  std::vector<std::pair<int, vtkmdiy::MemoryBuffer>> b;
   buffers.resize(0);
   if (RecvData(setTag, b, blockAndWait))
   {
     buffers.resize(b.size());
-    for (size_t i = 0; i < b.size(); i++)
-      buffers[i] = b[i].second;
+    for (std::size_t i = 0; i < b.size(); i++)
+      buffers[i] = std::move(b[i].second);
     return true;
   }
   return false;
 }
 
 bool Messenger::RecvData(std::set<int>& tags,
-                         std::vector<std::pair<int, MemStream*>>& buffers,
+                         std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                          bool blockAndWait)
 {
   buffers.resize(0);
@@ -299,7 +297,7 @@ bool Messenger::RecvData(std::set<int>& tags,
     return false;
   }
 
-  std::vector<unsigned char*> incomingBuffers(num);
+  std::vector<char*> incomingBuffers(num);
   for (int i = 0; i < num; i++)
   {
     RequestTagPair entry(copy[indices[i]], reqTags[indices[i]]);
@@ -326,12 +324,12 @@ bool Messenger::RecvData(std::set<int>& tags,
   return !buffers.empty();
 }
 
-void Messenger::ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuffers,
-                                       std::vector<std::pair<int, MemStream*>>& buffers)
+void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
+                                       std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers)
 {
-  for (size_t i = 0; i < incomingBuffers.size(); i++)
+  for (std::size_t i = 0; i < incomingBuffers.size(); i++)
   {
-    unsigned char* buff = incomingBuffers[i];
+    char* buff = incomingBuffers[i];
 
     //Grab the header.
     Messenger::Header header;
@@ -340,10 +338,12 @@ void Messenger::ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuff
     //Only 1 packet, strip off header and add to list.
     if (header.numPackets == 1)
     {
-      MemStream* b = new MemStream(header.dataSz, (buff + sizeof(header)));
-      b->Rewind();
-      std::pair<int, MemStream*> entry(header.tag, b);
-      buffers.push_back(entry);
+      std::pair<int, vtkmdiy::MemoryBuffer> entry;
+      entry.first = header.tag;
+      entry.second.save_binary((char*)(buff + sizeof(header)), header.dataSz);
+      entry.second.reset();
+      buffers.push_back(std::move(entry));
+
       delete[] buff;
     }
 
@@ -356,7 +356,7 @@ void Messenger::ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuff
       //First packet. Create a new list and add it.
       if (i2 == this->RecvPackets.end())
       {
-        std::list<unsigned char*> l;
+        std::list<char*> l;
         l.push_back(buff);
         this->RecvPackets[k] = l;
       }
@@ -365,33 +365,32 @@ void Messenger::ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuff
         i2->second.push_back(buff);
 
         // The last packet came in, merge into one MemStream.
-        if (i2->second.size() == (size_t)header.numPackets)
+        if (i2->second.size() == header.numPackets)
         {
           //Sort the packets into proper order.
           i2->second.sort(Messenger::PacketCompare);
 
-          MemStream* mergedBuff = new MemStream;
-          std::list<unsigned char*>::iterator listIt;
-
-          for (listIt = i2->second.begin(); listIt != i2->second.end(); listIt++)
+          std::pair<int, vtkmdiy::MemoryBuffer> entry;
+          entry.first = header.tag;
+          for (const auto& listIt : i2->second)
           {
-            unsigned char* bi = *listIt;
+            char* bi = listIt;
 
             Messenger::Header header2;
             memcpy(&header2, bi, sizeof(header2));
-            mergedBuff->WriteBinary((bi + sizeof(header2)), header2.dataSz);
+            entry.second.save_binary((char*)(bi + sizeof(header2)), header2.dataSz);
             delete[] bi;
           }
 
-          mergedBuff->Rewind();
-          std::pair<int, MemStream*> entry(header.tag, mergedBuff);
-          buffers.push_back(entry);
+          entry.second.reset();
+          buffers.push_back(std::move(entry));
           this->RecvPackets.erase(i2);
         }
       }
     }
   }
 }
+
 #endif
 }
 }

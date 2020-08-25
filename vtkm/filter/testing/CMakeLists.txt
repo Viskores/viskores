@@ -81,6 +81,7 @@ vtkm_unit_tests(
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
     UnitTestParticleAdvectionFilterMPI.cxx
+    UnitTestParticleMessengerMPI.cxx
     UnitTestStreamlineFilterMPI.cxx
   )
   vtkm_unit_tests(

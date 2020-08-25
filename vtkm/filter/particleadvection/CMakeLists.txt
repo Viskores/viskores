@@ -11,11 +11,10 @@
 set(headers
   BoundsMap.h
   DataSetIntegrator.h
-  MemStream.h
   Messenger.h
-  ParticleMessenger.h
   ParticleAdvector.h
   ParticleAdvector.hxx
+  ParticleMessenger.h
 )
 
 #-----------------------------------------------------------------------------

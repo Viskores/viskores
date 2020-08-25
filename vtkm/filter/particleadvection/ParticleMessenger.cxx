@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/particleadvection/MemStream.h>
 #include <vtkm/filter/particleadvection/ParticleMessenger.h>
 
 #include <iostream>
 #include <string.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Serialization.h>
 
 namespace vtkm
 {
@@ -26,36 +26,44 @@ VTKM_CONT
 ParticleMessenger::ParticleMessenger(vtkmdiy::mpi::communicator& comm,
                                      const vtkm::filter::particleadvection::BoundsMap& boundsMap,
                                      int msgSz,
-                                     int numParticles)
+                                     int numParticles,
+                                     int numBlockIds)
   : Messenger(comm)
 #ifdef VTKM_ENABLE_MPI
   , BoundsMap(boundsMap)
 #endif
 {
 #ifdef VTKM_ENABLE_MPI
-  this->RegisterMessages(msgSz, numParticles);
+  this->RegisterMessages(msgSz, numParticles, numBlockIds);
 #else
   (void)(boundsMap);
   (void)(msgSz);
   (void)(numParticles);
+  (void)(numBlockIds);
 #endif
 }
 
-int ParticleMessenger::CalcParticleBufferSize(int nParticles, int nBlockIds)
+std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, std::size_t nBlockIds)
 {
+  constexpr std::size_t pSize = sizeof(vtkm::Vec3f) // Pos
+    + sizeof(vtkm::Id)                              // ID
+    + sizeof(vtkm::Id)                              // NumSteps
+    + sizeof(vtkm::UInt8)                           // Status
+    + sizeof(vtkm::FloatDefault);                   // Time
+
   return
     // rank
-    static_cast<int>(sizeof(int))
+    sizeof(int)
     //std::vector<vtkm::Massless> p;
     //p.size()
-    + static_cast<int>(sizeof(std::size_t))
+    + sizeof(std::size_t)
     //nParticles of vtkm::Massless
-    + nParticles * static_cast<int>(sizeof(vtkm::Massless))
+    + nParticles * pSize
     // std::vector<vtkm::Id> blockIDs for each particle.
     // blockIDs.size() for each particle
-    + nParticles * static_cast<int>(sizeof(std::size_t))
+    + nParticles * sizeof(std::size_t)
     // nBlockIDs of vtkm::Id for each particle.
-    + nParticles * nBlockIds * static_cast<int>(sizeof(vtkm::Id));
+    + nParticles * nBlockIds * sizeof(vtkm::Id);
 }
 
 VTKM_CONT
@@ -93,7 +101,7 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
   //dstRank, vector of (particles,blockIDs)
   std::map<int, std::vector<ParticleCommType>> sendData;
 
-  for (auto& p : outData)
+  for (const auto& p : outData)
   {
     const auto& bids = outBlockIDsMap.find(p.ID)->second;
     int dstRank = this->BoundsMap.FindRank(bids[0]);
@@ -105,7 +113,7 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
   std::vector<MsgCommType> msgData;
   if (RecvAny(&msgData, &particleData, false))
   {
-    for (auto& it : particleData)
+    for (const auto& it : particleData)
       for (const auto& v : it.second)
       {
         const auto& p = v.first;
@@ -114,7 +122,7 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
         inDataBlockIDsMap[p.ID] = bids;
       }
 
-    for (auto& m : msgData)
+    for (const auto& m : msgData)
     {
       if (m.second[0] == MSG_TERMINATE)
         numTerminateMessages += static_cast<vtkm::Id>(m.second[1]);
@@ -123,10 +131,7 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
 
   //Do all the sending...
   if (numLocalTerm > 0)
-  {
-    std::vector<int> msg = { MSG_TERMINATE, static_cast<int>(numLocalTerm) };
-    SendAllMsg(msg);
-  }
+    SendAllMsg({ MSG_TERMINATE, static_cast<int>(numLocalTerm) });
 
   this->SendParticles(sendData);
   this->CheckPendingSendRequests();
@@ -136,11 +141,11 @@ void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
 #ifdef VTKM_ENABLE_MPI
 
 VTKM_CONT
-void ParticleMessenger::RegisterMessages(int msgSz, int nParticles)
+void ParticleMessenger::RegisterMessages(int msgSz, int nParticles, int numBlockIds)
 {
   //Determine buffer size for msg and particle tags.
-  int messageBuffSz = CalcMessageBufferSize(msgSz + 1);
-  int particleBuffSz = CalcParticleBufferSize(nParticles);
+  std::size_t messageBuffSz = CalcMessageBufferSize(msgSz + 1);
+  std::size_t particleBuffSz = CalcParticleBufferSize(nParticles, numBlockIds);
 
   int numRecvs = std::min(64, this->NumRanks - 1);
 
@@ -153,11 +158,11 @@ void ParticleMessenger::RegisterMessages(int msgSz, int nParticles)
 VTKM_CONT
 void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
 {
-  MemStream* buff = new MemStream();
+  vtkmdiy::MemoryBuffer buff;
 
   //Write data.
-  vtkm::filter::particleadvection::write(*buff, this->Rank);
-  vtkm::filter::particleadvection::write(*buff, msg);
+  vtkmdiy::save(buff, this->Rank);
+  vtkmdiy::save(buff, msg);
   this->SendData(dst, ParticleMessenger::MESSAGE_TAG, buff);
 }
 
@@ -189,7 +194,7 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
   if (tags.empty())
     return false;
 
-  std::vector<std::pair<int, MemStream*>> buffers;
+  std::vector<std::pair<int, vtkmdiy::MemoryBuffer>> buffers;
   if (!this->RecvData(tags, buffers, blockAndWait))
     return false;
 
@@ -199,30 +204,19 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
     {
       int sendRank;
       std::vector<int> m;
-      vtkm::filter::particleadvection::read(*buffers[i].second, sendRank);
-      vtkm::filter::particleadvection::read(*buffers[i].second, m);
-
+      vtkmdiy::load(buffers[i].second, sendRank);
+      vtkmdiy::load(buffers[i].second, m);
       msgs->push_back(std::make_pair(sendRank, m));
     }
     else if (buffers[i].first == ParticleMessenger::PARTICLE_TAG)
     {
       int sendRank;
-      std::size_t num;
-      vtkm::filter::particleadvection::read(*buffers[i].second, sendRank);
-      vtkm::filter::particleadvection::read(*buffers[i].second, num);
-      if (num > 0)
-      {
-        std::vector<ParticleCommType> particles(num);
-        for (std::size_t j = 0; j < num; j++)
-        {
-          vtkm::filter::particleadvection::read(*(buffers[i].second), particles[j].first);
-          vtkm::filter::particleadvection::read(*(buffers[i].second), particles[j].second);
-        }
-        recvParticles->push_back(std::make_pair(sendRank, particles));
-      }
-    }
+      std::vector<ParticleCommType> particles;
 
-    delete buffers[i].second;
+      vtkmdiy::load(buffers[i].second, sendRank);
+      vtkmdiy::load(buffers[i].second, particles);
+      recvParticles->push_back(std::make_pair(sendRank, particles));
+    }
   }
 
   return true;
