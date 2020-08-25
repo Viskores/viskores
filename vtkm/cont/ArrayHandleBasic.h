@@ -34,36 +34,36 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const { return 1; }
+  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
-  VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
-                               vtkm::cont::internal::Buffer* buffers,
-                               vtkm::CopyFlag preserve,
-                               vtkm::cont::Token& token)
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
     buffers[0].SetNumberOfBytes(
       vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
   }
 
-  VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     return static_cast<vtkm::Id>(buffers->GetNumberOfBytes()) / static_cast<vtkm::Id>(sizeof(T));
   }
 
-  VTKM_CONT ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                            vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
     return ReadPortalType(reinterpret_cast<const T*>(buffers[0].ReadPointerDevice(device, token)),
-                          this->GetNumberOfValues(buffers));
+                          GetNumberOfValues(buffers));
   }
 
-  VTKM_CONT WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                              vtkm::cont::DeviceAdapterId device,
-                                              vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
     return WritePortalType(reinterpret_cast<T*>(buffers[0].WritePointerDevice(device, token)),
-                           this->GetNumberOfValues(buffers));
+                           GetNumberOfValues(buffers));
   }
 };
 
