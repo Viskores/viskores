@@ -895,6 +895,86 @@ VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapt
 
 } // namespace detail
 
+// This macro is used to declare an ArrayHandle that uses the new style of Storage
+// that leverages Buffer objects. This macro will go away once ArrayHandle
+// is replaced with ArrayHandleNewStyle. To use this macro, first have a declaration
+// of the template and then put the macro like this:
+//
+// template <typename T>
+// VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagFoo);
+//
+// Don't forget to use VTKM_PASS_COMMAS if one of the macro arguments contains
+// a template with multiple parameters.
+#define VTKM_ARRAY_HANDLE_NEW_STYLE(ValueType_, StorageType_)                               \
+  class VTKM_ALWAYS_EXPORT ArrayHandle<ValueType_, StorageType_>                            \
+    : public ArrayHandleNewStyle<ValueType_, StorageType_>                                  \
+  {                                                                                         \
+    using Superclass = ArrayHandleNewStyle<ValueType_, StorageType_>;                       \
+                                                                                            \
+  public:                                                                                   \
+    VTKM_CONT                                                                               \
+    ArrayHandle()                                                                           \
+      : Superclass()                                                                        \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle(const ArrayHandle<ValueType_, StorageType_>& src)                           \
+      : Superclass(src)                                                                     \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle(ArrayHandle<ValueType_, StorageType_>&& src) noexcept                       \
+      : Superclass(std::move(src))                                                          \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle(const ArrayHandleNewStyle<ValueType_, StorageType_>& src)                   \
+      : Superclass(src)                                                                     \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle(ArrayHandleNewStyle<ValueType_, StorageType_>&& src) noexcept               \
+      : Superclass(std::move(src))                                                          \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT ArrayHandle(                                                                  \
+      const vtkm::cont::internal::Buffer* buffers,                                          \
+      const typename Superclass::StorageType& storage = typename Superclass::StorageType()) \
+      : Superclass(buffers, storage)                                                        \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT ArrayHandle(                                                                  \
+      const std::vector<vtkm::cont::internal::Buffer>& buffers,                             \
+      const typename Superclass::StorageType& storage = typename Superclass::StorageType()) \
+      : Superclass(buffers, storage)                                                        \
+    {                                                                                       \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle<ValueType_, StorageType_>& operator=(                                       \
+      const ArrayHandle<ValueType_, StorageType_>& src)                                     \
+    {                                                                                       \
+      this->Superclass::operator=(src);                                                     \
+      return *this;                                                                         \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT                                                                               \
+    ArrayHandle<ValueType_, StorageType_>& operator=(                                       \
+      ArrayHandle<ValueType_, StorageType_>&& src) noexcept                                 \
+    {                                                                                       \
+      this->Superclass::operator=(std::move(src));                                          \
+      return *this;                                                                         \
+    }                                                                                       \
+                                                                                            \
+    VTKM_CONT ~ArrayHandle() {}                                                             \
+  }
+
 /// This new style of ArrayHandle will eventually replace the classic ArrayHandle
 template <typename T, typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT ArrayHandleNewStyle : public internal::ArrayHandleBase

@@ -69,76 +69,8 @@ public:
 
 } // namespace internal
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
 template <typename T>
-class VTKM_ALWAYS_EXPORT ArrayHandle<T, vtkm::cont::StorageTagBasic>
-  : public ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>
-{
-  using Superclass = ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>;
-
-public:
-  VTKM_CONT
-  ArrayHandle()
-    : Superclass()
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandle<T, vtkm::cont::StorageTagBasic>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const vtkm::cont::internal::Buffer* buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const std::vector<vtkm::cont::internal::Buffer>& buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::StorageTagBasic>& operator=(
-    const ArrayHandle<T, vtkm::cont::StorageTagBasic>& src)
-  {
-    this->Superclass::operator=(src);
-    return *this;
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::StorageTagBasic>& operator=(
-    ArrayHandle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-  {
-    this->Superclass::operator=(std::move(src));
-    return *this;
-  }
-
-  VTKM_CONT ~ArrayHandle() {}
-};
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagBasic);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, vtkm::cont::StorageTagBasic>
