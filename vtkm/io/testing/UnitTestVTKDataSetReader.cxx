@@ -580,8 +580,7 @@ void TestReadingStructuredGridBin()
 
 void TestReadingFishTank()
 {
-  std::string fishtank =
-    vtkm::cont::testing::Testing::GetTestDataBasePath() + "/rectilinear/fishtank.vtk";
+  std::string fishtank = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
   vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
 
   // This is information you can glean by running 'strings' on fishtank.vtk:
@@ -662,8 +661,8 @@ void TestReadingFishTank()
 
 void TestReadingDoublePrecisionFishTank()
 {
-  std::string fishtank = vtkm::cont::testing::Testing::GetTestDataBasePath() +
-    "/rectilinear/fishtank_double_big_endian.vtk";
+  std::string fishtank =
+    vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank_double_big_endian.vtk");
   vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
 
   // This is information you can glean by running 'strings' on fishtank.vtk:
@@ -718,7 +717,7 @@ void TestReadingDoublePrecisionFishTank()
 void TestReadingASCIIFishTank()
 {
   std::string fishtank =
-    vtkm::cont::testing::Testing::GetTestDataBasePath() + "/rectilinear/fishtank_double_ascii.vtk";
+    vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank_double_ascii.vtk");
   vtkm::cont::DataSet ds = readVTKDataSet(fishtank.c_str());
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
                    "Incorrect cellset type");
@@ -764,8 +763,7 @@ void TestReadingASCIIFishTank()
 
 void TestReadingFusion()
 {
-  std::string fusion =
-    vtkm::cont::testing::Testing::GetTestDataBasePath() + "/rectilinear/fusion.vtk";
+  std::string fusion = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
   vtkm::cont::DataSet ds = readVTKDataSet(fusion.c_str());
 
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>(),
