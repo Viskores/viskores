@@ -139,6 +139,7 @@ set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
+  BitField.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx

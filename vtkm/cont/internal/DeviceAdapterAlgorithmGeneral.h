@@ -321,7 +321,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
@@ -376,7 +376,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
