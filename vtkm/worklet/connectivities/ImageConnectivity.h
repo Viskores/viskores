@@ -51,27 +51,55 @@ public:
     return index;
   }
 
-  template <typename Comp>
-  VTKM_EXEC void Unite(Comp& compOut, vtkm::Id u, vtkm::Id v) const
+  template <typename Parents>
+  VTKM_EXEC void Unite(Parents& parents, vtkm::Id u, vtkm::Id v) const
   {
-    auto thisRoot = findRoot(compOut, u);
-    auto thatRoot = findRoot(compOut, v);
+    // Data Race Resolutions
+    // Since this function modifies the Union-Find data structure, concurrent
+    // invocation of it by 2 or more threads cause potential data race. Here
+    // is a case analysis why the potential data race does no harm in the
+    // context of the iterative connected component algorithm.
 
-    // This is "linking by index" as in SV Jayanti et.al. with less than as the total
-    // order. This avoids cycles in the resulting graph and maintains the rooted forest
-    // structure of UnionFind. It is possible for two threads to try to change the
-    // same old root to different new roots, e.g. threadA calls compOut.Set(root, rootB)
-    // while threadB calls compOut(root, rootB) where rootB < root and rootC < root (but
-    // the order of rootA and rootB is unspecified) and each thread assuming success
-    // while the outcome is actually unspecified. An atomic Compare and Swap is suggested in
-    // SV Janati et. al. to "resolve" data race. However, I don't see any
-    // need to use CAS, it looks like the data race will always correct itself by the
-    // algorithm if atomic Store of memory_order_release and Load of memory_order_acquire
-    // is used (as provided by AtomicArrayInOut).
-    if (thisRoot < thatRoot)
-      compOut.Set(thatRoot, thisRoot);
-    else if (thisRoot > thatRoot)
-      compOut.Set(thisRoot, thatRoot);
+    // Case 1, Two threads calling Unite(u, v) concurrently.
+    // Problem: One thread might attach u to v while the other thread attach
+    // v to u, causing a cycle in the Union-Find data structure.
+    // Resolution: This is not necessary a data race issue. This is resolved by
+    // "linking by index" as in SV Jayanti et.al. with less than as the total order.
+    // The two threads will make the same decision on how to Unite the two tree
+    // (e.g. from root with larger id to root with smaller id.) This avoids cycles in
+    // the resulting graph and maintains the rooted forest structure of Union-Find.
+
+    // Case 2, T0 calling Unite(u, v) and T1 calling Unite(u, w) concurrently.
+    // Problem I: There is a potential write after read data race. After T0
+    // calls findRoot for u and v, T1 might have changed the root of u (root_u)
+    // to the root of w (root_w) thus making root_u "obsolete" before T0 calls
+    // parents.Set() on root_u/root_v. When the root of the tree to be attached to
+    // (i.e. root_u <  root_v) is changed, there is no hazard, since we are just
+    // attaching a tree to a non-root node (i.e. root_w <- root_u <- root_v).
+    // However, when the root of the attaching tree (root with larger id) is change,
+    // it means that the attaching tree has been attached to another root. If we are
+    // now attaching a non-root node to another tree while leaving the root
+    // behind and undoing previous work.
+    // Resolution:
+    auto root_u = findRoot(parents, u);
+    auto root_v = findRoot(parents, v);
+
+    // There is a potential concurrent write data race as it is possible for
+    // two threads to try to change the same old root to different new roots,
+    // e.g. threadA calls parents.Set(root, rootB) while threadB calls
+    // parents(root, rootB) where rootB < root and rootC < root (but the order
+    // of rootA and rootB is unspecified.) Each thread assumes success while
+    // the outcome is actually unspecified. An atomic Compare and Swap is
+    // suggested in SV Janati et. al. to "resolve" data race. However, I don't
+    // see any need to use CAS, it looks like the data race will always correct
+    // itself by the algorithm in later iterations as long as atomic Store of
+    // memory_order_release and Load of memory_order_acquire is used (as provided
+    // by AtomicArrayInOut.) This memory consistency model is the default mode
+    // for x86, thus having zero extra cost but might be required for CUDA and/or ARM.
+    if (root_u < root_v)
+      parents.Set(root_v, root_u);
+    else if (root_u > root_v)
+      parents.Set(root_u, root_v);
     // else, no need to do anything when they are the same set.
   }
 
@@ -133,10 +161,13 @@ public:
     {
       using Algorithm = vtkm::cont::Algorithm;
 
+      // Initialize the parent pointer to point it the pixel itself. There are other
+      // ways to initialize the parent points, for example, a smaller or the minimal
+      // neighbor. This can potentially reduce the number of iteration by 1.
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
                       components);
 
-      //used as an atomic bool, so we use Int32 as it the
+      //used as an atomic bool, so we use Int32 as  the
       //smallest type that VTK-m supports as atomics
       vtkm::cont::ArrayHandle<vtkm::Int32> updateRequired;
       updateRequired.Allocate(1);
@@ -150,6 +181,10 @@ public:
       } while (updateRequired.WritePortal().Get(0) > 0);
 
       // renumber connected component to the range of [0, number of components).
+      // FIXME: we should able to apply findRoot to each pixel and use some kind
+      // of atomic operation to get the number of unique components without the
+      // cost of copying and sorting. This might be able to be extended to also
+      // work for the renumbering (replacing InnerJoin) through atomic increment.
       vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
       Algorithm::Copy(components, uniqueComponents);
       Algorithm::Sort(uniqueComponents);

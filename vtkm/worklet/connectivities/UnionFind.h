@@ -32,7 +32,13 @@ public:
 
   // This is the naive find() without path compaction in SV Jayanti et. al.
   // Since the comp array is read-only there is no data race. However, this
-  // also makes the algorithm to have O(n) depth with O(n^2) of total work.
+  // also makes the algorithm to have O(n) depth with O(n^2) of total work
+  // on a Parallel Random Access Machine (PRAM). However, we don't live in
+  // a synchronous, infinite number of processor PRAM world. In reality, since we put
+  // "parent pointers" in a array and all the pointers are pointing from larger
+  // index to smaller, invocation for
+  // nodes with smaller ids are mostly likely be schedule before and complete
+  // earlier than larger ids
   template <typename Comp>
   VTKM_EXEC vtkm::Id findRoot(const Comp& comp, vtkm::Id index) const
   {
@@ -44,10 +50,9 @@ public:
   // This the find() with path compression. This guarantees that the output
   // trees will be rooted stars, i.e. they all have depth of 1.
   //
-  // There is a "seemly" data race
-  // between concurrent invocations of this operator(). The "root" returned
-  // by findRoot() in one invocation might become out of date if some other
-  // invocations change it while calling comp.Set(). However, the monotone
+  // There is a "seemly" data race between concurrent invocations of this
+  // operator(). The "root" returned by findRoot() in one invocation might
+  // become out of date if some other invocations change it while calling comp.Set(). However, the monotone
   // nature of the data structure and findRoot() makes it harmless as long as
   // the root of the tree does not change (such as by Union())
 
