@@ -59,7 +59,7 @@ void BenchParticleAdvection(::benchmark::State& state)
   vtkm::filter::ParticleAdvection particleAdvection;
 
   particleAdvection.SetStepSize(vtkm::FloatDefault(1) / state.range(0));
-  particleAdvection.SetNumberOfSteps(state.range(0));
+  particleAdvection.SetNumberOfSteps(static_cast<vtkm::Id>(state.range(0)));
   particleAdvection.SetSeeds(seedArray);
   particleAdvection.SetActiveField("vector");
   vtkm::cont::Timer timer{ device };

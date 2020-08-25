@@ -150,12 +150,12 @@ struct TestingBitField
 
     // NumBits should be rounded up to the nearest block of bytes, as defined in
     // the traits:
-    const vtkm::Id bytesInFieldData = field.GetBuffer().GetNumberOfBytes();
+    const vtkm::BufferSizeType bytesInFieldData = field.GetBuffer().GetNumberOfBytes();
 
-    const vtkm::Id blockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
-    const vtkm::Id numBytes = (NUM_BITS + CHAR_BIT - 1) / CHAR_BIT;
-    const vtkm::Id numBlocks = (numBytes + blockSize - 1) / blockSize;
-    const vtkm::Id expectedBytes = numBlocks * blockSize;
+    const vtkm::BufferSizeType blockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
+    const vtkm::BufferSizeType numBytes = (NUM_BITS + CHAR_BIT - 1) / CHAR_BIT;
+    const vtkm::BufferSizeType numBlocks = (numBytes + blockSize - 1) / blockSize;
+    const vtkm::BufferSizeType expectedBytes = numBlocks * blockSize;
 
     VTKM_TEST_ASSERT(bytesInFieldData == expectedBytes,
                      "The BitField allocation does not round up to the nearest "
