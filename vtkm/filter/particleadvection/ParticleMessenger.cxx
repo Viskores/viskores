@@ -149,10 +149,6 @@ void ParticleMessenger::RegisterMessages(int msgSz, int nParticles, int numBlock
 
   int numRecvs = std::min(64, this->NumRanks - 1);
 
-  if (this->Rank == 0)
-    std::cout << "RegisterMessages: np= " << nParticles << " " << numBlockIds
-              << " buffsz= " << particleBuffSz << std::endl;
-
   this->RegisterTag(ParticleMessenger::MESSAGE_TAG, numRecvs, messageBuffSz);
   this->RegisterTag(ParticleMessenger::PARTICLE_TAG, numRecvs, particleBuffSz);
 
