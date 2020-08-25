@@ -1352,6 +1352,19 @@ private:
     }
   };
   std::shared_ptr<InternalsStruct> Internals;
+
+protected:
+  VTKM_CONT void SetBuffer(vtkm::IdComponent index, const vtkm::cont::internal::Buffer& buffer)
+  {
+    this->Internals->Buffers[static_cast<std::size_t>(index)] = buffer;
+  }
+
+  // BufferContainer must be an iteratable container of Buffer objects.
+  template <typename BufferContainer>
+  VTKM_CONT void SetBuffers(const BufferContainer& buffers)
+  {
+    std::copy(buffers.begin(), buffers.end(), this->Iterators->Buffers.begin());
+  }
 };
 
 namespace detail

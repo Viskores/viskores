@@ -27,14 +27,6 @@ namespace cont
 namespace internal
 {
 
-namespace detail
-{
-
-VTKM_CONT_EXPORT VTKM_CONT vtkm::BufferSizeType NumberOfBytes(vtkm::Id numValues,
-                                                              std::size_t typeSize);
-
-} // namespace detail
-
 template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagBasic>
 {
@@ -49,7 +41,8 @@ public:
                                vtkm::CopyFlag preserve,
                                vtkm::cont::Token& token)
   {
-    buffers[0].SetNumberOfBytes(detail::NumberOfBytes(numValues, sizeof(T)), preserve, token);
+    buffers[0].SetNumberOfBytes(
+      vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
   }
 
   VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
@@ -160,13 +153,13 @@ public:
     vtkm::Id numberOfValues,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(vtkm::cont::DeviceAdapterTagUndefined{},
-                                         array,
-                                         array,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        vtkm::cont::DeviceAdapterTagUndefined{},
+        array,
+        array,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -176,13 +169,13 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(device,
-                                         array,
-                                         array,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        device,
+        array,
+        array,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -192,13 +185,13 @@ public:
     vtkm::Id numberOfValues,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(vtkm::cont::DeviceAdapterTagUndefined{},
-                                         array,
-                                         container,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        vtkm::cont::DeviceAdapterTagUndefined{},
+        array,
+        container,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -209,13 +202,13 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(device,
-                                         array,
-                                         container,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        device,
+        array,
+        container,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
