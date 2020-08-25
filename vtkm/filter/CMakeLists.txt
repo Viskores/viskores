@@ -160,7 +160,6 @@ set(extra_sources_device
   PointAverage.cxx
   VectorMagnitude.cxx
   ExternalFaces.cxx
-  particleadvection/MemStream.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
 )

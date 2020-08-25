@@ -13,6 +13,7 @@
 #include <vtkm/Bitset.h>
 #include <vtkm/VecVariable.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/Serialization.h>
 
 namespace vtkm
 {
@@ -257,5 +258,32 @@ private:
 };
 
 } //namespace vtkm
+
+
+namespace mangled_diy_namespace
+{
+template <>
+struct Serialization<vtkm::Massless>
+{
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::Massless& p)
+  {
+    vtkmdiy::save(bb, p.Pos);
+    vtkmdiy::save(bb, p.ID);
+    vtkmdiy::save(bb, p.NumSteps);
+    vtkmdiy::save(bb, p.Status);
+    vtkmdiy::save(bb, p.Time);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::Massless& p)
+  {
+    vtkmdiy::load(bb, p.Pos);
+    vtkmdiy::load(bb, p.ID);
+    vtkmdiy::load(bb, p.NumSteps);
+    vtkmdiy::load(bb, p.Status);
+    vtkmdiy::load(bb, p.Time);
+  }
+};
+}
 
 #endif // vtk_m_Particle_h

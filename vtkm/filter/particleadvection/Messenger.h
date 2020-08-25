@@ -11,8 +11,10 @@
 #ifndef vtk_m_filter_Messenger_h
 #define vtk_m_filter_Messenger_h
 
+#include <vtkm/filter/vtkm_filter_extra_export.h>
+
 #include <vtkm/Types.h>
-#include <vtkm/filter/particleadvection/MemStream.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/thirdparty/diy/diy.h>
 
 #include <list>
@@ -43,56 +45,54 @@ public:
   }
 
 #ifdef VTKM_ENABLE_MPI
-  VTKM_CONT void RegisterTag(int tag, int numRecvs, int size);
+  VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
 
 protected:
   void InitializeBuffers();
   void CleanupRequests(int tag = TAG_ANY);
   void CheckPendingSendRequests();
   void PostRecv(int tag);
-  void PostRecv(int tag, int sz, int src = -1);
-  void SendData(int dst, int tag, MemStream* buff);
+  void PostRecv(int tag, std::size_t sz, int src = -1);
+  void SendData(int dst, int tag, const vtkmdiy::MemoryBuffer& buff);
   bool RecvData(std::set<int>& tags,
-                std::vector<std::pair<int, MemStream*>>& buffers,
+                std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                 bool blockAndWait = false);
 
   //Message headers.
   typedef struct
   {
-    int rank, id, tag, numPackets, packet, packetSz, dataSz;
+    int rank, tag;
+    std::size_t id, numPackets, packet, packetSz, dataSz;
   } Header;
 
-  bool RecvData(int tag, std::vector<MemStream*>& buffers, bool blockAndWait = false);
-  void AddHeader(MemStream* buff);
-  void RemoveHeader(MemStream* input, MemStream* header, MemStream* buff);
+  bool RecvData(int tag, std::vector<vtkmdiy::MemoryBuffer>& buffers, bool blockAndWait = false);
 
-  template <typename P>
-  bool DoSendICs(int dst, std::vector<P>& ics);
-  void PrepareForSend(int tag, MemStream* buff, std::vector<unsigned char*>& buffList);
-  static bool PacketCompare(const unsigned char* a, const unsigned char* b);
-  void ProcessReceivedBuffers(std::vector<unsigned char*>& incomingBuffers,
-                              std::vector<std::pair<int, MemStream*>>& buffers);
+  void PrepareForSend(int tag, const vtkmdiy::MemoryBuffer& buff, std::vector<char*>& buffList);
+  vtkm::Id GetMsgID() { return this->MsgID++; }
+  static bool PacketCompare(const char* a, const char* b);
+  void ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
+                              std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers);
 
   // Send/Recv buffer management structures.
   using RequestTagPair = std::pair<MPI_Request, int>;
   using RankIdPair = std::pair<int, int>;
 
   //Member data
-  std::map<int, std::pair<int, int>> MessageTagInfo;
+  std::map<int, std::pair<std::size_t, std::size_t>> MessageTagInfo;
   MPI_Comm MPIComm;
-  vtkm::Id MsgID;
+  std::size_t MsgID;
   int NumRanks;
   int Rank;
-  std::map<RequestTagPair, unsigned char*> RecvBuffers;
-  std::map<RankIdPair, std::list<unsigned char*>> RecvPackets;
-  std::map<RequestTagPair, unsigned char*> SendBuffers;
+  std::map<RequestTagPair, char*> RecvBuffers;
+  std::map<RankIdPair, std::list<char*>> RecvPackets;
+  std::map<RequestTagPair, char*> SendBuffers;
   static constexpr int TAG_ANY = -1;
 #else
   static constexpr int NumRanks = 1;
   static constexpr int Rank = 0;
 #endif
 
-  static int CalcMessageBufferSize(int msgSz);
+  static std::size_t CalcMessageBufferSize(std::size_t msgSz);
 };
 }
 }
