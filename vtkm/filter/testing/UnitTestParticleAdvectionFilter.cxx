@@ -179,8 +179,6 @@ void TestParticleAdvectionFilter()
   TestBasic();
   TestPartitionedDataSet();
 
-  std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
-
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
@@ -191,7 +189,7 @@ void TestParticleAdvectionFilter()
   fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
   fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
   vtkm::FloatDefault fusionStep = 0.005f;
-  std::string fusionFile = basePath + "/rectilinear/fusion.vtk";
+  std::string fusionFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
 
   TestFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
 
@@ -205,7 +203,7 @@ void TestParticleAdvectionFilter()
   fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
   fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
   vtkm::FloatDefault fishStep = 0.001f;
-  std::string fishFile = basePath + "/rectilinear/fishtank.vtk";
+  std::string fishFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
 
   TestFile(fishFile, fishPts, fishStep, 100, fishEndPts);
 }
