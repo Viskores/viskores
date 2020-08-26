@@ -23,6 +23,34 @@ constexpr vtkm::Id ARRAY_SIZE = 20;
 using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<T*>;
 using PortalTypeConst = vtkm::cont::internal::ArrayPortalFromIterators<const T*>;
 
+struct BufferMetaDataTest : vtkm::cont::internal::BufferMetaData
+{
+  vtkm::Id Value;
+
+  std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override
+  {
+    return std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new BufferMetaDataTest(*this));
+  }
+};
+
+constexpr vtkm::Id METADATA_VALUE = 42;
+
+bool CheckMetaData(const vtkm::cont::internal::Buffer& buffer)
+{
+  vtkm::cont::internal::BufferMetaData* generalMetaData = buffer.GetMetaData();
+  if (!generalMetaData)
+  {
+    return false;
+  }
+  BufferMetaDataTest* metadata = dynamic_cast<BufferMetaDataTest*>(generalMetaData);
+  if (!metadata)
+  {
+    return false;
+  }
+
+  return metadata->Value == METADATA_VALUE;
+}
+
 PortalType MakePortal(void* buffer, vtkm::Id numValues)
 {
   return PortalType(static_cast<T*>(buffer),
@@ -79,14 +107,40 @@ void DoTest()
   constexpr vtkm::Id BUFFER_SIZE = ARRAY_SIZE * static_cast<vtkm::Id>(sizeof(T));
   constexpr vtkm::cont::DeviceAdapterTagSerial device;
 
-  std::cout << "Initialize buffer" << std::endl;
   vtkm::cont::internal::Buffer buffer;
+
+  {
+    BufferMetaDataTest metadata;
+    metadata.Value = METADATA_VALUE;
+    buffer.SetMetaData(metadata);
+    VTKM_TEST_ASSERT(CheckMetaData(buffer));
+  }
+
+  std::cout << "Copy uninitialized buffer" << std::endl;
+  {
+    vtkm::cont::internal::Buffer copy;
+    buffer.DeepCopy(copy);
+    VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == 0);
+    VTKM_TEST_ASSERT(CheckMetaData(copy));
+  }
+
+  std::cout << "Initialize buffer" << std::endl;
   {
     vtkm::cont::Token token;
     buffer.SetNumberOfBytes(BUFFER_SIZE, vtkm::CopyFlag::Off, token);
   }
 
   VTKM_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE);
+
+  std::cout << "Copy sized but uninitialized buffer" << std::endl;
+  {
+    vtkm::cont::internal::Buffer copy;
+    buffer.DeepCopy(copy);
+    VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
+    VTKM_TEST_ASSERT(CheckMetaData(copy));
+    VTKM_TEST_ASSERT(!copy.IsAllocatedOnHost());
+    VTKM_TEST_ASSERT(!copy.IsAllocatedOnDevice(device));
+  }
 
   std::cout << "Fill up values on host" << std::endl;
   {
@@ -96,12 +150,29 @@ void DoTest()
   VTKM_TEST_ASSERT(buffer.IsAllocatedOnHost());
   VTKM_TEST_ASSERT(!buffer.IsAllocatedOnDevice(device));
 
-  std::cout << "Check values" << std::endl;
+  std::cout << "Check values on host" << std::endl;
   {
     vtkm::cont::Token token;
-    std::cout << "  Host" << std::endl;
     CheckPortal(MakePortal(buffer.ReadPointerHost(token), ARRAY_SIZE));
-    std::cout << "  Device" << std::endl;
+  }
+  VTKM_TEST_ASSERT(buffer.IsAllocatedOnHost());
+  VTKM_TEST_ASSERT(!buffer.IsAllocatedOnDevice(device));
+
+  std::cout << "Copy buffer with host data" << std::endl;
+  {
+    vtkm::cont::Token token;
+    vtkm::cont::internal::Buffer copy;
+    buffer.DeepCopy(copy);
+    VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
+    VTKM_TEST_ASSERT(CheckMetaData(copy));
+    VTKM_TEST_ASSERT(copy.IsAllocatedOnHost());
+    VTKM_TEST_ASSERT(!copy.IsAllocatedOnDevice(device));
+    CheckPortal(MakePortal(buffer.ReadPointerHost(token), ARRAY_SIZE));
+  }
+
+  std::cout << "Check values on device" << std::endl;
+  {
+    vtkm::cont::Token token;
     CheckPortal(MakePortal(buffer.ReadPointerDevice(device, token), ARRAY_SIZE));
   }
   VTKM_TEST_ASSERT(buffer.IsAllocatedOnHost());
@@ -148,6 +219,18 @@ void DoTest()
   {
     vtkm::cont::Token token;
     VTKM_TEST_ASSERT(buffer.WritePointerDevice(device, token) == devicePointer);
+  }
+
+  std::cout << "Copy buffer with device data" << std::endl;
+  {
+    vtkm::cont::Token token;
+    vtkm::cont::internal::Buffer copy;
+    buffer.DeepCopy(copy);
+    VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
+    VTKM_TEST_ASSERT(CheckMetaData(copy));
+    VTKM_TEST_ASSERT(!copy.IsAllocatedOnHost());
+    VTKM_TEST_ASSERT(copy.IsAllocatedOnDevice(device));
+    CheckPortal(MakePortal(buffer.ReadPointerDevice(device, token), ARRAY_SIZE));
   }
 
   std::cout << "Pull data to host" << std::endl;
