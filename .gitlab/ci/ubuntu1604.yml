@@ -68,6 +68,8 @@ test:ubuntu1804_test_ubuntu1604_gcc5_2:
     - .ubuntu1804_cuda
     - .cmake_test_linux
     - .only-master
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
   dependencies:
     - build:ubuntu1604_gcc5_2
   needs:
