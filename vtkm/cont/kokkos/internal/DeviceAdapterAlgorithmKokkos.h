@@ -151,7 +151,7 @@ public:
                                                           ErrorMessageMaxLength);
     functor.SetErrorMessageBuffer(errorMessage);
 
-    Kokkos::parallel_for(numInstances, functor);
+    Kokkos::parallel_for(static_cast<std::size_t>(numInstances), functor);
 
     CheckForErrors(errorMessageStorage);
   }
