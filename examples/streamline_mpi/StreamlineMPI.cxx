@@ -101,11 +101,11 @@ int main(int argc, char** argv)
 
   vtkm::filter::ParticleAdvection pa;
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  std::vector<vtkm::Massless> seeds;
-  seeds.push_back(vtkm::Massless(vtkm::Vec3f(.1f, .1f, .9f), 0));
-  seeds.push_back(vtkm::Massless(vtkm::Vec3f(.1f, .6f, .6f), 1));
-  seeds.push_back(vtkm::Massless(vtkm::Vec3f(.1f, .9f, .1f), 2));
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  std::vector<vtkm::Particle> seeds;
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .1f, .9f), 0));
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .6f, .6f), 1));
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.1f, .9f, .1f), 2));
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
   pa.SetStepSize(0.001f);
   pa.SetNumberOfSteps(10000);

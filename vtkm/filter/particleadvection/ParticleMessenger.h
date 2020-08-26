@@ -36,7 +36,7 @@ class VTKM_FILTER_EXTRA_EXPORT ParticleMessenger : public vtkm::filter::particle
   using MsgCommType = std::pair<int, std::vector<int>>;
 
   //particle + blockIDs.
-  using ParticleCommType = std::pair<vtkm::Massless, std::vector<vtkm::Id>>;
+  using ParticleCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
 
   //sendRank, vector of ParticleCommType.
   using ParticleRecvCommType = std::pair<int, std::vector<ParticleCommType>>;
@@ -49,10 +49,10 @@ public:
                               int numBlockIds = 2);
   VTKM_CONT ~ParticleMessenger() {}
 
-  VTKM_CONT void Exchange(const std::vector<vtkm::Massless>& outData,
+  VTKM_CONT void Exchange(const std::vector<vtkm::Particle>& outData,
                           const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                           vtkm::Id numLocalTerm,
-                          std::vector<vtkm::Massless>& inData,
+                          std::vector<vtkm::Particle>& inData,
                           std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
                           vtkm::Id& numTerminateMessages);
 
@@ -96,10 +96,10 @@ protected:
 
 #endif
 
-  VTKM_CONT void SerialExchange(const std::vector<vtkm::Massless>& outData,
+  VTKM_CONT void SerialExchange(const std::vector<vtkm::Particle>& outData,
                                 const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                                 vtkm::Id numLocalTerm,
-                                std::vector<vtkm::Massless>& inData,
+                                std::vector<vtkm::Particle>& inData,
                                 std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const;
 
   static std::size_t CalcParticleBufferSize(std::size_t nParticles, std::size_t numBlockIds = 2);

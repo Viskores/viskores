@@ -38,10 +38,10 @@ void TestStreamline()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Streamline streamline;
 
@@ -72,10 +72,10 @@ void TestPathline()
   vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
   vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Pathline pathline;
 
@@ -120,9 +120,9 @@ void TestStreamlineFile(const std::string& fname,
   }
   vtkm::Id numPoints = static_cast<vtkm::Id>(pts.size());
 
-  std::vector<vtkm::Massless> seeds;
+  std::vector<vtkm::Particle> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
-    seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
+    seeds.push_back(vtkm::Particle(pts[static_cast<std::size_t>(i)], i));
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   vtkm::filter::Streamline streamline;

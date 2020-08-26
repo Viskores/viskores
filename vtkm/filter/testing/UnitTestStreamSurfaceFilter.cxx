@@ -38,11 +38,11 @@ void TestStreamSurface()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.1f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.1f, 2.0f, .1f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.1f, 3.0f, .3f), 2),
-                                   vtkm::Massless(vtkm::Vec3f(.1f, 3.5f, .2f), 3) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.1f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.1f, 2.0f, .1f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.1f, 3.0f, .3f), 2),
+                                   vtkm::Particle(vtkm::Vec3f(.1f, 3.5f, .2f), 3) });
 
   vtkm::filter::StreamSurface streamSrf;
 

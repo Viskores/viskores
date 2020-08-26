@@ -54,12 +54,12 @@ public:
   void SetStepSize(vtkm::FloatDefault stepSize) { this->StepSize = stepSize; }
   void SetNumberOfSteps(vtkm::Id numSteps) { this->NumberOfSteps = numSteps; }
 
-  virtual void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Massless>& seeds) = 0;
+  virtual void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) = 0;
   virtual void Go() = 0;
   virtual vtkm::cont::PartitionedDataSet GetOutput() = 0;
 
 protected:
-  virtual bool GetActiveParticles(std::vector<vtkm::Massless>& particles) = 0;
+  virtual bool GetActiveParticles(std::vector<vtkm::Particle>& particles) = 0;
 
   inline vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const;
 
@@ -68,9 +68,9 @@ protected:
 
   inline void UpdateResult(const ResultType& res,
                            vtkm::Id blockId,
-                           std::vector<vtkm::Massless>& I,
-                           std::vector<vtkm::Massless>& T,
-                           std::vector<vtkm::Massless>& A);
+                           std::vector<vtkm::Particle>& I,
+                           std::vector<vtkm::Particle>& T,
+                           std::vector<vtkm::Particle>& A);
 
   std::vector<DataSetIntegratorType> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
@@ -99,7 +99,7 @@ public:
   {
   }
 
-  void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Massless>& seeds) override
+  void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) override
   {
     this->ParticleBlockIDsMap.clear();
 
@@ -107,7 +107,7 @@ public:
     auto portal = seeds.ReadPortal();
     for (vtkm::Id i = 0; i < n; i++)
     {
-      vtkm::Massless p = portal.Get(i);
+      vtkm::Particle p = portal.Get(i);
       std::vector<vtkm::Id> blockIDs = this->BoundsMap.FindBlocks(p.Pos);
       if (!blockIDs.empty() && this->BoundsMap.FindRank(blockIDs[0]) == this->Rank)
       {
@@ -128,7 +128,7 @@ public:
     vtkm::Id N = 0;
     while (N < totalNumSeeds)
     {
-      std::vector<vtkm::Massless> v, I, T, A;
+      std::vector<vtkm::Particle> v, I, T, A;
 
       vtkm::Id blockId = -1;
       if (GetActiveParticles(v))
@@ -144,7 +144,7 @@ public:
           this->Active.insert(this->Active.end(), A.begin(), A.end());
       }
 
-      std::vector<vtkm::Massless> incoming;
+      std::vector<vtkm::Particle> incoming;
       std::map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDsMap;
       vtkm::Id myTerm = static_cast<vtkm::Id>(T.size());
       vtkm::Id numTermMessages = 0;
@@ -171,7 +171,7 @@ public:
   }
 
 protected:
-  bool GetActiveParticles(std::vector<vtkm::Massless>& particles) override
+  bool GetActiveParticles(std::vector<vtkm::Particle>& particles) override
   {
     particles.clear();
     if (this->Active.empty())
@@ -195,21 +195,21 @@ protected:
   }
 
 protected:
-  std::vector<vtkm::Massless> Active;
-  std::vector<vtkm::Massless> Inactive;
-  std::map<vtkm::Id, std::vector<vtkm::Massless>> Terminated;
+  std::vector<vtkm::Particle> Active;
+  std::vector<vtkm::Particle> Inactive;
+  std::map<vtkm::Id, std::vector<vtkm::Particle>> Terminated;
 };
 
 
 class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
-  : public PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>>
+  : public PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
 {
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
 public:
   ParticleAdvectionAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                              const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>>(bm, blocks)
+    : PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
   {
   }
 
@@ -251,14 +251,14 @@ protected:
 
 
 class VTKM_ALWAYS_EXPORT StreamlineAlgorithm
-  : public PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Massless>>
+  : public PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>
 {
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
 public:
   StreamlineAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                       const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Massless>>(bm, blocks)
+    : PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
   {
   }
 
@@ -350,13 +350,13 @@ public:
   }
 
 protected:
-  virtual void StoreResult(const vtkm::worklet::StreamlineResult<vtkm::Massless>& res,
+  virtual void StoreResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
                            vtkm::Id blockId) override
   {
     this->Results[blockId].push_back(res);
   }
 
-  std::map<vtkm::Id, std::vector<vtkm::worklet::StreamlineResult<vtkm::Massless>>> Results;
+  std::map<vtkm::Id, std::vector<vtkm::worklet::StreamlineResult<vtkm::Particle>>> Results;
 };
 }
 }

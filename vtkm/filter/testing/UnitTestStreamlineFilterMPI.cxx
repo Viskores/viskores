@@ -54,9 +54,9 @@ void TestPartitionedDataSet(vtkm::Id nPerRank)
     XPartitionRanges.push_back(vtkm::Range(x, x + 4));
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                             vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                             vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
   vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
   vtkm::filter::Streamline streamline;

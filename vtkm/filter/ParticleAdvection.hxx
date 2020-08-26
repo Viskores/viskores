@@ -34,7 +34,7 @@ inline VTKM_CONT ParticleAdvection::ParticleAdvection()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void ParticleAdvection::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds)
+inline VTKM_CONT void ParticleAdvection::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
 {
   this->Seeds = seeds;
 }

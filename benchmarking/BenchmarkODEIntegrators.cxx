@@ -51,10 +51,10 @@ void BenchParticleAdvection(::benchmark::State& state)
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
   ds.AddPointField("vector", vectorField);
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::ParticleAdvection particleAdvection;
 

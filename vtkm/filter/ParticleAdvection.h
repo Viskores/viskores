@@ -38,7 +38,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds);
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
 
   template <typename DerivedPolicy>
   vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -53,7 +53,7 @@ public:
 private:
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
-  vtkm::cont::ArrayHandle<vtkm::Massless> Seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
   vtkm::worklet::ParticleAdvection Worklet;
 };
 }

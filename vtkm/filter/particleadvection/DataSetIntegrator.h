@@ -55,7 +55,7 @@ public:
   vtkm::Id GetID() const { return this->ID; }
 
   template <typename ResultType>
-  void Advect(std::vector<vtkm::Massless>& v,
+  void Advect(std::vector<vtkm::Particle>& v,
               vtkm::FloatDefault stepSize,
               vtkm::Id maxSteps,
               ResultType& result) const
@@ -67,7 +67,7 @@ public:
 
 private:
   template <typename ResultType>
-  inline void DoAdvect(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds,
+  inline void DoAdvect(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
                        const RK4Type& rk4,
                        vtkm::Id maxSteps,
                        ResultType& result) const;
@@ -81,10 +81,10 @@ private:
 // Specialization for ParticleAdvection worklet
 template <>
 inline void DataSetIntegrator::DoAdvect(
-  vtkm::cont::ArrayHandle<vtkm::Massless>& seeds,
+  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
   const RK4Type& rk4,
   vtkm::Id maxSteps,
-  vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>& result) const
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& result) const
 {
   vtkm::worklet::ParticleAdvection Worklet;
   result = Worklet.Run(rk4, seeds, maxSteps);
@@ -94,10 +94,10 @@ inline void DataSetIntegrator::DoAdvect(
 // Specialization for Streamline worklet
 template <>
 inline void DataSetIntegrator::DoAdvect(
-  vtkm::cont::ArrayHandle<vtkm::Massless>& seeds,
+  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
   const RK4Type& rk4,
   vtkm::Id maxSteps,
-  vtkm::worklet::StreamlineResult<vtkm::Massless>& result) const
+  vtkm::worklet::StreamlineResult<vtkm::Particle>& result) const
 {
   vtkm::worklet::Streamline Worklet;
   result = Worklet.Run(rk4, seeds, maxSteps);

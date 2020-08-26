@@ -65,7 +65,7 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
 
   vtkm::worklet::Streamline streamline;
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   auto res = streamline.Run(rk4, seedArray, this->NumberOfSteps);
 

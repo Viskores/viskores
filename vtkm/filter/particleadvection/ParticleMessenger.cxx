@@ -54,10 +54,10 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
   return
     // rank
     sizeof(int)
-    //std::vector<vtkm::Massless> p;
+    //std::vector<vtkm::Particle> p;
     //p.size()
     + sizeof(std::size_t)
-    //nParticles of vtkm::Massless
+    //nParticles of vtkm::Particle
     + nParticles * pSize
     // std::vector<vtkm::Id> blockIDs for each particle.
     // blockIDs.size() for each particle
@@ -68,10 +68,10 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
 
 VTKM_CONT
 void ParticleMessenger::SerialExchange(
-  const std::vector<vtkm::Massless>& outData,
+  const std::vector<vtkm::Particle>& outData,
   const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id vtkmNotUsed(numLocalTerm),
-  std::vector<vtkm::Massless>& inData,
+  std::vector<vtkm::Particle>& inData,
   std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const
 {
   for (auto& p : outData)
@@ -83,10 +83,10 @@ void ParticleMessenger::SerialExchange(
 }
 
 VTKM_CONT
-void ParticleMessenger::Exchange(const std::vector<vtkm::Massless>& outData,
+void ParticleMessenger::Exchange(const std::vector<vtkm::Particle>& outData,
                                  const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                                  vtkm::Id numLocalTerm,
-                                 std::vector<vtkm::Massless>& inData,
+                                 std::vector<vtkm::Particle>& inData,
                                  std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
                                  vtkm::Id& numTerminateMessages)
 {
