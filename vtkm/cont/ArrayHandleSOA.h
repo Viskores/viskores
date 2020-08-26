@@ -142,12 +142,12 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalSOA<T, vtkm::internal::ArrayPortalBasicWrite<ComponentType>>;
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const { return NUM_COMPONENTS; }
+  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return NUM_COMPONENTS; }
 
-  VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
-                               vtkm::cont::internal::Buffer* buffers,
-                               vtkm::CopyFlag preserve,
-                               vtkm::cont::Token& token)
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
     vtkm::BufferSizeType numBytes =
       vtkm::internal::NumberOfValuesToNumberOfBytes<ComponentType>(numValues);
@@ -157,18 +157,18 @@ public:
     }
   }
 
-  VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     // Assume all buffers are the same size.
     return static_cast<vtkm::Id>(buffers[0].GetNumberOfBytes()) /
       static_cast<vtkm::Id>(sizeof(ComponentType));
   }
 
-  VTKM_CONT ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                            vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    vtkm::Id numValues = this->GetNumberOfValues(buffers);
+    vtkm::Id numValues = GetNumberOfValues(buffers);
     ReadPortalType portal(numValues);
     for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
     {
@@ -182,11 +182,11 @@ public:
     return portal;
   }
 
-  VTKM_CONT WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
-                                              vtkm::cont::DeviceAdapterId device,
-                                              vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    vtkm::Id numValues = this->GetNumberOfValues(buffers);
+    vtkm::Id numValues = GetNumberOfValues(buffers);
     WritePortalType portal(numValues);
     for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
     {
