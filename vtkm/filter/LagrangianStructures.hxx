@@ -36,7 +36,7 @@ public:
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
-  VTKM_EXEC void operator()(const vtkm::Massless& particle, vtkm::Vec3f& pt) const
+  VTKM_EXEC void operator()(const vtkm::Particle& particle, vtkm::Vec3f& pt) const
   {
     pt = particle.Pos;
   }
@@ -51,7 +51,7 @@ public:
 
   VTKM_EXEC void operator()(const vtkm::Id index,
                             const vtkm::Vec3f& seed,
-                            vtkm::Massless& particle) const
+                            vtkm::Particle& particle) const
   {
     particle.ID = index;
     particle.Pos = seed;
@@ -140,8 +140,8 @@ inline VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Integrator integrator(evaluator, stepSize);
     vtkm::worklet::ParticleAdvection particles;
-    vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> advectionResult;
-    vtkm::cont::ArrayHandle<vtkm::Massless> advectionPoints;
+    vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> advectionResult;
+    vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;
     invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
     advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
     invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);

@@ -18,9 +18,9 @@
 
 namespace
 {
-using PCommType = std::pair<vtkm::Massless, std::vector<vtkm::Id>>;
+using PCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
 using MCommType = std::pair<int, std::vector<int>>;
-using PCommType = std::pair<vtkm::Massless, std::vector<vtkm::Id>>;
+using PCommType = std::pair<vtkm::Particle, std::vector<vtkm::Id>>;
 using PRecvCommType = std::pair<int, std::vector<PCommType>>;
 
 class TestMessenger : public vtkm::filter::particleadvection::ParticleMessenger
@@ -46,7 +46,7 @@ public:
   }
 
   void SendP(int dst,
-             const std::vector<vtkm::Massless>& p,
+             const std::vector<vtkm::Particle>& p,
              const std::vector<std::vector<vtkm::Id>>& bids)
   {
     std::vector<PCommType> data;
@@ -71,7 +71,7 @@ public:
 void ValidateReceivedParticles(
   int sendRank,
   const std::vector<PCommType>& recvP,
-  const std::vector<std::vector<vtkm::Massless>>& particles,
+  const std::vector<std::vector<vtkm::Particle>>& particles,
   const std::vector<std::vector<std::vector<vtkm::Id>>>& particleBlockIds)
 {
   //Make sure the right number of particles were received from sender.
@@ -128,7 +128,7 @@ void TestParticleMessenger()
   TestMessenger messenger(comm, boundsMap, maxMsgSz / 2, maxNumParticles / 2, maxNumBlockIds / 2);
 
   //create some data.
-  std::vector<std::vector<vtkm::Massless>> particles(comm.size());
+  std::vector<std::vector<vtkm::Particle>> particles(comm.size());
   std::vector<std::vector<std::vector<vtkm::Id>>> particleBlockIds(comm.size());
   std::vector<std::vector<int>> messages(comm.size());
 
@@ -148,11 +148,11 @@ void TestParticleMessenger()
   for (std::size_t r = 0; r < numRanks; r++)
   {
     int nP = nPDist(generator);
-    std::vector<vtkm::Massless> pvec;
+    std::vector<vtkm::Particle> pvec;
     std::vector<std::vector<vtkm::Id>> blockIds;
     for (int p = 0; p < nP; p++)
     {
-      vtkm::Massless particle;
+      vtkm::Particle particle;
       particle.Pos[0] = floatDist(generator);
       particle.Pos[1] = floatDist(generator);
       particle.Pos[2] = floatDist(generator);
@@ -190,7 +190,7 @@ void TestParticleMessenger()
     int dst = rankDist(generator);
     if (dst != comm.rank())
     {
-      std::vector<vtkm::Massless> sendP = particles[rank];
+      std::vector<vtkm::Particle> sendP = particles[rank];
       std::vector<std::vector<vtkm::Id>> sendIds = particleBlockIds[rank];
       messenger.SendP(dst, sendP, sendIds);
     }
@@ -271,7 +271,7 @@ void TestBufferSizes()
         std::vector<PCommType> particleData;
         for (int i = 0; i < numP; i++)
         {
-          vtkm::Massless p;
+          vtkm::Particle p;
           std::vector<vtkm::Id> bids(nBids, 0);
           particleData.push_back(std::make_pair(p, bids));
         }

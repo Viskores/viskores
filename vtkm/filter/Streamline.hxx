@@ -34,7 +34,7 @@ inline VTKM_CONT Streamline::Streamline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds)
+inline VTKM_CONT void Streamline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
 {
   this->Seeds = seeds;
 }

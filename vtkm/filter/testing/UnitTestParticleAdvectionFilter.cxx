@@ -40,11 +40,11 @@ void TestBasic()
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f origin(0, 0, 0), spacing(1, 1, 1), vecX(1, 0, 0);
   vtkm::cont::DataSet ds = CreateDataSet(dims, origin, spacing, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.2f, .2f), 3) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.2f, .2f), 3) });
 
   vtkm::filter::ParticleAdvection particleAdvection;
 
@@ -79,11 +79,11 @@ void TestPartitionedDataSet()
   pds.AppendPartition(CreateDataSet(dims, o2, spacing, vecX));
   pds.AppendPartition(CreateDataSet(dims, o3, spacing, vecX));
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
-  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                             vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                             vtkm::Massless(vtkm::Vec3f(4.2f, 1.0f, .2f), 2),
-                                             vtkm::Massless(vtkm::Vec3f(8.2f, 1.0f, .2f), 3) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                             vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                             vtkm::Particle(vtkm::Vec3f(4.2f, 1.0f, .2f), 2),
+                                             vtkm::Particle(vtkm::Vec3f(8.2f, 1.0f, .2f), 3) });
 
   vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
@@ -145,9 +145,9 @@ void TestFile(const std::string& fname,
   }
   vtkm::Id numPoints = static_cast<vtkm::Id>(pts.size());
 
-  std::vector<vtkm::Massless> seeds;
+  std::vector<vtkm::Particle> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
-    seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
+    seeds.push_back(vtkm::Particle(pts[static_cast<std::size_t>(i)], i));
   auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::On);
 
   vtkm::filter::ParticleAdvection particleAdvection;

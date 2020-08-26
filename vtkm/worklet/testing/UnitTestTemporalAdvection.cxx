@@ -50,7 +50,7 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename EvaluatorType>
-  VTKM_EXEC void operator()(vtkm::Massless& pointIn,
+  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const EvaluatorType& evaluator,
                             vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
@@ -64,7 +64,7 @@ public:
 
 template <typename EvalType>
 void ValidateEvaluator(const EvalType& eval,
-                       const vtkm::cont::ArrayHandle<vtkm::Massless>& pointIns,
+                       const vtkm::cont::ArrayHandle<vtkm::Particle>& pointIns,
                        const vtkm::cont::ArrayHandle<vtkm::Vec3f>& validity,
                        const std::string& msg)
 {
@@ -119,13 +119,13 @@ vtkm::Vec3f RandomPt(const vtkm::Bounds& bounds)
 
 void GeneratePoints(const vtkm::Id numOfEntries,
                     const vtkm::Bounds& bounds,
-                    vtkm::cont::ArrayHandle<vtkm::Massless>& pointIns)
+                    vtkm::cont::ArrayHandle<vtkm::Particle>& pointIns)
 {
   pointIns.Allocate(numOfEntries);
   auto writePortal = pointIns.WritePortal();
   for (vtkm::Id index = 0; index < numOfEntries; index++)
   {
-    vtkm::Massless particle(RandomPt(bounds), index);
+    vtkm::Particle particle(RandomPt(bounds), index);
     writePortal.Set(index, particle);
   }
 }
@@ -174,7 +174,7 @@ void TestTemporalEvaluators()
 
   // Test data : populate with meaningful values
   vtkm::Id numValues = 10;
-  vtkm::cont::ArrayHandle<vtkm::Massless> pointIns;
+  vtkm::cont::ArrayHandle<vtkm::Particle> pointIns;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> validity;
   GeneratePoints(numValues, bounds, pointIns);
   GenerateValidity(numValues, validity, X, Z);

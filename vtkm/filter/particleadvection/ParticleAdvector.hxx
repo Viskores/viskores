@@ -42,16 +42,16 @@ ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) const
 template <typename ResultType>
 inline void ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType& res,
                                                            vtkm::Id blockId,
-                                                           std::vector<vtkm::Massless>& I,
-                                                           std::vector<vtkm::Massless>& T,
-                                                           std::vector<vtkm::Massless>& A)
+                                                           std::vector<vtkm::Particle>& I,
+                                                           std::vector<vtkm::Particle>& T,
+                                                           std::vector<vtkm::Particle>& A)
 {
   vtkm::Id n = res.Particles.GetNumberOfValues();
   auto portal = res.Particles.ReadPortal();
 
   for (vtkm::Id i = 0; i < n; i++)
   {
-    vtkm::Massless p = portal.Get(i);
+    vtkm::Particle p = portal.Get(i);
 
     if (p.Status.CheckTerminate())
     {

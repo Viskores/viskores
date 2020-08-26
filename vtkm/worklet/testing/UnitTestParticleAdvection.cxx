@@ -96,7 +96,7 @@ vtkm::FloatDefault vecData[125 * 3] = {
 };
 }
 
-void GenerateRandomParticles(std::vector<vtkm::Massless>& points,
+void GenerateRandomParticles(std::vector<vtkm::Particle>& points,
                              const std::size_t N,
                              const vtkm::Bounds& bounds,
                              const std::size_t seed = 314)
@@ -117,7 +117,7 @@ void GenerateRandomParticles(std::vector<vtkm::Massless>& points,
     p[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
     p[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
     p[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
-    points.push_back(vtkm::Massless(p, static_cast<vtkm::Id>(i)));
+    points.push_back(vtkm::Particle(p, static_cast<vtkm::Id>(i)));
   }
 }
 
@@ -295,7 +295,7 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename EvaluatorType>
-  VTKM_EXEC void operator()(vtkm::Massless& pointIn,
+  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const EvaluatorType& evaluator,
                             vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
@@ -308,7 +308,7 @@ public:
 
 template <typename EvalType>
 void ValidateEvaluator(const EvalType& eval,
-                       const std::vector<vtkm::Massless>& pointIns,
+                       const std::vector<vtkm::Particle>& pointIns,
                        const vtkm::Vec3f& vec,
                        const std::string& msg)
 {
@@ -317,7 +317,7 @@ void ValidateEvaluator(const EvalType& eval,
   using Status = vtkm::worklet::particleadvection::GridEvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
-  vtkm::cont::ArrayHandle<vtkm::Massless> pointsHandle =
+  vtkm::cont::ArrayHandle<vtkm::Particle> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> evalStatus;
@@ -345,7 +345,7 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename IntegratorType>
-  VTKM_EXEC void operator()(vtkm::Massless& pointIn,
+  VTKM_EXEC void operator()(vtkm::Particle& pointIn,
                             const IntegratorType* integrator,
                             vtkm::worklet::particleadvection::IntegratorStatus& status,
                             vtkm::Vec3f& pointOut) const
@@ -360,7 +360,7 @@ public:
 
 template <typename IntegratorType>
 void ValidateIntegrator(const IntegratorType& integrator,
-                        const std::vector<vtkm::Massless>& pointIns,
+                        const std::vector<vtkm::Particle>& pointIns,
                         const std::vector<vtkm::Vec3f>& expStepResults,
                         const std::string& msg)
 {
@@ -393,7 +393,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
 template <typename IntegratorType>
 void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
                                    const IntegratorType& integrator,
-                                   const std::vector<vtkm::Massless>& pointIns,
+                                   const std::vector<vtkm::Particle>& pointIns,
                                    const std::string& msg)
 {
   using IntegratorTester = TestIntegratorWorklet;
@@ -462,7 +462,7 @@ void TestEvaluators()
 
         //vtkm::FloatDefault stepSize = 0.01f;
         vtkm::FloatDefault stepSize = 0.1f;
-        std::vector<vtkm::Massless> pointIns;
+        std::vector<vtkm::Particle> pointIns;
         std::vector<vtkm::Vec3f> stepResult;
 
         //Generate points 2 steps inside the bounding box.
@@ -499,7 +499,7 @@ void TestEvaluators()
         // of the velocity field
         // All velocities are in the +ve direction.
 
-        std::vector<vtkm::Massless> boundaryPoints;
+        std::vector<vtkm::Particle> boundaryPoints;
         GenerateRandomParticles(boundaryPoints, 10, forBoundary, 919);
 
         for (auto& ds : dataSets)
@@ -517,7 +517,7 @@ void TestEvaluators()
 }
 
 void ValidateParticleAdvectionResult(
-  const vtkm::worklet::ParticleAdvectionResult<vtkm::Massless>& res,
+  const vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& res,
   vtkm::Id nSeeds,
   vtkm::Id maxSteps)
 {
@@ -537,7 +537,7 @@ void ValidateParticleAdvectionResult(
   }
 }
 
-void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult<vtkm::Massless>& res,
+void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
                               vtkm::Id nSeeds,
                               vtkm::Id maxSteps)
 {
@@ -577,11 +577,11 @@ void TestIntegrators()
   GridEvalType eval(dataset.GetCoordinateSystem(), dataset.GetCellSet(), velocities);
 
   //Generate three random points.
-  std::vector<vtkm::Massless> points;
+  std::vector<vtkm::Particle> points;
   GenerateRandomParticles(points, 3, bounds);
 
   vtkm::worklet::ParticleAdvection pa;
-  vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
   {
     auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -640,9 +640,9 @@ void TestParticleWorkletsWithDataSetTypes()
     dataSets.push_back(CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::EXPLICIT));
 
     //Generate three random points.
-    std::vector<vtkm::Massless> pts;
+    std::vector<vtkm::Particle> pts;
     GenerateRandomParticles(pts, 3, bound, 111);
-    std::vector<vtkm::Massless> pts2 = pts;
+    std::vector<vtkm::Particle> pts2 = pts;
 
     vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
     std::vector<vtkm::Id> stepsTaken = { 10, 20, 600 };
@@ -662,7 +662,7 @@ void TestParticleWorkletsWithDataSetTypes()
         if (i < 2)
         {
           vtkm::worklet::ParticleAdvection pa;
-          vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
+          vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
           if (i == 0)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -678,7 +678,7 @@ void TestParticleWorkletsWithDataSetTypes()
         else
         {
           vtkm::worklet::Streamline s;
-          vtkm::worklet::StreamlineResult<vtkm::Massless> res;
+          vtkm::worklet::StreamlineResult<vtkm::Particle> res;
           if (i == 2)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -723,9 +723,9 @@ void TestParticleStatus()
   RK4Type rk4(eval, stepSize);
 
   vtkm::worklet::ParticleAdvection pa;
-  std::vector<vtkm::Massless> pts;
-  pts.push_back(vtkm::Massless(vtkm::Vec3f(.5, .5, .5), 0));
-  pts.push_back(vtkm::Massless(vtkm::Vec3f(-1, -1, -1), 1));
+  std::vector<vtkm::Particle> pts;
+  pts.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
+  pts.push_back(vtkm::Particle(vtkm::Vec3f(-1, -1, -1), 1));
   auto seedsArray = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
   pa.Run(rk4, seedsArray, maxSteps);
   auto portal = seedsArray.ReadPortal();
@@ -768,7 +768,7 @@ void TestWorkletsBasic()
 
   for (auto w : workletTypes)
   {
-    std::vector<vtkm::Massless> particles;
+    std::vector<vtkm::Particle> particles;
     std::vector<vtkm::Vec3f> pts, samplePts, endPts;
     vtkm::FloatDefault X = static_cast<vtkm::FloatDefault>(.1);
     vtkm::FloatDefault Y = static_cast<vtkm::FloatDefault>(.1);
@@ -784,7 +784,7 @@ void TestWorkletsBasic()
     for (std::size_t i = 0; i < pts.size(); i++, id++)
     {
       vtkm::Vec3f p = pts[i];
-      particles.push_back(vtkm::Massless(p, id));
+      particles.push_back(vtkm::Particle(p, id));
       samplePts.push_back(p);
       for (vtkm::Id j = 0; j < maxSteps; j++)
       {
@@ -799,7 +799,7 @@ void TestWorkletsBasic()
     if (w == "particleAdvection")
     {
       vtkm::worklet::ParticleAdvection pa;
-      vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
+      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
       res = pa.Run(rk4, seedsArray, maxSteps);
 
@@ -823,7 +823,7 @@ void TestWorkletsBasic()
     else if (w == "streamline")
     {
       vtkm::worklet::Streamline s;
-      vtkm::worklet::StreamlineResult<vtkm::Massless> res;
+      vtkm::worklet::StreamlineResult<vtkm::Particle> res;
 
       res = s.Run(rk4, seedsArray, maxSteps);
 
@@ -940,15 +940,15 @@ void TestParticleAdvectionFile(const std::string& fname,
 
   for (int i = 0; i < 2; i++)
   {
-    std::vector<vtkm::Massless> seeds;
+    std::vector<vtkm::Particle> seeds;
     for (size_t j = 0; j < pts.size(); j++)
-      seeds.push_back(vtkm::Massless(pts[j], static_cast<vtkm::Id>(j)));
+      seeds.push_back(vtkm::Particle(pts[j], static_cast<vtkm::Id>(j)));
     auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
     if (i == 0)
     {
       vtkm::worklet::ParticleAdvection pa;
-      vtkm::worklet::ParticleAdvectionResult<vtkm::Massless> res;
+      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
       res = pa.Run(rk4, seedArray, maxSteps);
       ValidateResult(res, maxSteps, endPts);
@@ -956,7 +956,7 @@ void TestParticleAdvectionFile(const std::string& fname,
     else if (i == 1)
     {
       vtkm::worklet::Streamline s;
-      vtkm::worklet::StreamlineResult<vtkm::Massless> res;
+      vtkm::worklet::StreamlineResult<vtkm::Particle> res;
 
       res = s.Run(rk4, seedArray, maxSteps);
       ValidateResult(res, maxSteps, endPts);

@@ -26,18 +26,21 @@ namespace cont
 namespace detail
 {
 
+template <typename ParticleType>
 struct ExtractPositionFunctor
 {
   VTKM_EXEC_CONT
-  vtkm::Vec3f operator()(const vtkm::Massless& p) const { return p.Pos; }
+  vtkm::Vec3f operator()(const ParticleType& p) const { return p.Pos; }
 };
 
+template <typename ParticleType>
 struct ExtractTerminatedFunctor
 {
   VTKM_EXEC_CONT
-  bool operator()(const vtkm::Massless& p) const { return p.Status.CheckTerminate(); }
+  bool operator()(const ParticleType& p) const { return p.Status.CheckTerminate(); }
 };
 
+template <typename ParticleType>
 struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn inParticle,
@@ -47,7 +50,7 @@ struct CopyParticleAllWorklet : public vtkm::worklet::WorkletMapField
                                 FieldOut outStatus,
                                 FieldOut outTime);
 
-  VTKM_EXEC void operator()(const vtkm::Particle& inParticle,
+  VTKM_EXEC void operator()(const ParticleType& inParticle,
                             vtkm::Vec3f& outPos,
                             vtkm::Id& outID,
                             vtkm::Id& outSteps,
@@ -71,11 +74,13 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
   bool CopyTerminatedOnly)
 {
-  auto posTrn = vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractPositionFunctor());
+  auto posTrn =
+    vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractPositionFunctor<ParticleType>());
 
   if (CopyTerminatedOnly)
   {
-    auto termTrn = vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractTerminatedFunctor());
+    auto termTrn =
+      vtkm::cont::make_ArrayHandleTransform(inP, detail::ExtractTerminatedFunctor<ParticleType>());
     vtkm::cont::Algorithm::CopyIf(posTrn, termTrn, outPos);
   }
   else
@@ -99,7 +104,7 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   vtkm::cont::ArrayHandle<vtkm::FloatDefault, vtkm::cont::StorageTagBasic>& outTime)
 {
   vtkm::cont::Invoker invoke;
-  detail::CopyParticleAllWorklet worklet;
+  detail::CopyParticleAllWorklet<ParticleType> worklet;
 
   invoke(worklet, inP, outPos, outID, outSteps, outStatus, outTime);
 }
