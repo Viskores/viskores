@@ -36,11 +36,11 @@ namespace internal
 
 struct StorageTagBitField;
 
-struct VTKM_CONT_EXPORT BitFieldMetaData : vtkm::cont::internal::BufferMetaData
+struct VTKM_CONT_EXPORT BufferMetaDataBitField : vtkm::cont::internal::BufferMetaData
 {
   vtkm::Id NumberOfBits = 0;
 
-  VTKM_CONT ~BitFieldMetaData() override;
+  VTKM_CONT ~BufferMetaDataBitField() override;
 
   VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
 };
@@ -99,7 +99,7 @@ struct BitCoordinate
   vtkm::Int32 BitOffset; // [0, bitsInWord)
 };
 
-VTKM_CONT_EXPORT vtkm::cont::internal::BitFieldMetaData* GetBitFieldMetaData(
+VTKM_CONT_EXPORT vtkm::cont::internal::BufferMetaDataBitField* GetBitFieldMetaData(
   const vtkm::cont::internal::Buffer& buffer);
 
 /// Portal for performing bit or word operations on a BitField.

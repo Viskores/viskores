@@ -109,7 +109,6 @@ set(headers
   Serialization.h
   Storage.h
   StorageExtrude.h
-  StorageImplicit.h
   StorageList.h
   StorageListTag.h
   Timer.h
@@ -137,6 +136,7 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
+  ArrayHandleImplicit.cxx
   ArrayHandleSOA.cxx
   BitField.cxx
   ColorTablePresets.cxx

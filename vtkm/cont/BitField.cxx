@@ -41,7 +41,7 @@ namespace cont
 namespace detail
 {
 
-vtkm::cont::internal::BitFieldMetaData* GetBitFieldMetaData(
+vtkm::cont::internal::BufferMetaDataBitField* GetBitFieldMetaData(
   const vtkm::cont::internal::Buffer& buffer)
 {
   vtkm::cont::internal::BufferMetaData* generalMetaData = buffer.GetMetaData();
@@ -49,22 +49,22 @@ vtkm::cont::internal::BitFieldMetaData* GetBitFieldMetaData(
   {
     VTKM_LOG_F(vtkm::cont::LogLevel::Warn, "BitField has buffer with no metadata. Setting.");
     const_cast<vtkm::cont::internal::Buffer&>(buffer).SetMetaData(
-      vtkm::cont::internal::BitFieldMetaData{});
+      vtkm::cont::internal::BufferMetaDataBitField{});
     generalMetaData = buffer.GetMetaData();
     VTKM_ASSERT(generalMetaData != nullptr);
   }
 
-  vtkm::cont::internal::BitFieldMetaData* metadata =
-    dynamic_cast<vtkm::cont::internal::BitFieldMetaData*>(generalMetaData);
+  vtkm::cont::internal::BufferMetaDataBitField* metadata =
+    dynamic_cast<vtkm::cont::internal::BufferMetaDataBitField*>(generalMetaData);
   if (metadata == nullptr)
   {
     VTKM_LOG_F(vtkm::cont::LogLevel::Error,
                "BitField has a buffer with metadata of the wrong type. "
                "Replacing, but this will likely cause problems.");
     const_cast<vtkm::cont::internal::Buffer&>(buffer).SetMetaData(
-      vtkm::cont::internal::BitFieldMetaData{});
+      vtkm::cont::internal::BufferMetaDataBitField{});
     generalMetaData = buffer.GetMetaData();
-    metadata = dynamic_cast<vtkm::cont::internal::BitFieldMetaData*>(generalMetaData);
+    metadata = dynamic_cast<vtkm::cont::internal::BufferMetaDataBitField*>(generalMetaData);
     VTKM_ASSERT(metadata != nullptr);
   }
 
@@ -79,18 +79,18 @@ vtkm::cont::internal::BitFieldMetaData* GetBitFieldMetaData(
 namespace internal
 {
 
-BitFieldMetaData::~BitFieldMetaData() {}
+BufferMetaDataBitField::~BufferMetaDataBitField() {}
 
-std::unique_ptr<vtkm::cont::internal::BufferMetaData> BitFieldMetaData::DeepCopy() const
+std::unique_ptr<vtkm::cont::internal::BufferMetaData> BufferMetaDataBitField::DeepCopy() const
 {
-  return std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new BitFieldMetaData(*this));
+  return std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new BufferMetaDataBitField(*this));
 }
 
 } // namespace internal
 
 BitField::BitField()
 {
-  this->Buffer.SetMetaData(internal::BitFieldMetaData{});
+  this->Buffer.SetMetaData(internal::BufferMetaDataBitField{});
 }
 
 vtkm::Id BitField::GetNumberOfBits() const
