@@ -22,7 +22,7 @@ void* KokkosAllocate(vtkm::BufferSizeType size)
 {
   try
   {
-    return Kokkos::kokkos_malloc(size);
+    return Kokkos::kokkos_malloc(static_cast<std::size_t>(size));
   }
   catch (...) // the type of error thrown is not well documented
   {
@@ -47,7 +47,7 @@ void KokkosReallocate(void*& memory,
   {
     try
     {
-      memory = container = Kokkos::kokkos_realloc(memory, newSize);
+      memory = container = Kokkos::kokkos_realloc(memory, static_cast<std::size_t>(newSize));
     }
     catch (...)
     {
@@ -105,9 +105,9 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyHostToD
              size);
 
   vtkm::cont::kokkos::internal::KokkosViewConstCont<vtkm::UInt8> srcView(
-    static_cast<vtkm::UInt8*>(src.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewExec<vtkm::UInt8> destView(
-    static_cast<vtkm::UInt8*>(dest.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
   Kokkos::deep_copy(destView, srcView);
 }
 
@@ -137,9 +137,9 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceT
              size);
 
   vtkm::cont::kokkos::internal::KokkosViewConstExec<vtkm::UInt8> srcView(
-    static_cast<vtkm::UInt8*>(src.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewCont<vtkm::UInt8> destView(
-    static_cast<vtkm::UInt8*>(dest.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
   Kokkos::deep_copy(destView, srcView);
 }
 
@@ -160,9 +160,9 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceT
   vtkm::BufferSizeType size = vtkm::Min(src.GetSize(), dest.GetSize());
 
   vtkm::cont::kokkos::internal::KokkosViewConstExec<vtkm::UInt8> srcView(
-    static_cast<vtkm::UInt8*>(src.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewExec<vtkm::UInt8> destView(
-    static_cast<vtkm::UInt8*>(dest.GetPointer()), size);
+    static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
   Kokkos::deep_copy(destView, srcView);
 }
 }
