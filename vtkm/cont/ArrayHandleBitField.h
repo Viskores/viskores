@@ -137,76 +137,8 @@ public:
 } // end namespace internal
 
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
 template <typename T>
-class VTKM_ALWAYS_EXPORT ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>
-  : public ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>
-{
-  using Superclass = ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>;
-
-public:
-  VTKM_CONT
-  ArrayHandle()
-    : Superclass()
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandleNewStyle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const vtkm::cont::internal::Buffer* buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const std::vector<vtkm::cont::internal::Buffer>& buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& operator=(
-    const ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& src)
-  {
-    this->Superclass::operator=(src);
-    return *this;
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>& operator=(
-    ArrayHandle<T, vtkm::cont::internal::StorageTagBitField>&& src) noexcept
-  {
-    this->Superclass::operator=(std::move(src));
-    return *this;
-  }
-
-  VTKM_CONT ~ArrayHandle() {}
-};
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagBitField);
 
 /// The ArrayHandleBitField class is a boolean-valued ArrayHandle that is backed
 /// by a BitField.
