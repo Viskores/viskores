@@ -37,7 +37,7 @@ public:
                                 AtomicArrayInOut compOut,
                                 AtomicArrayInOut changed);
 
-  using ExecutionSignature = void(_2, _3, _4, _5);
+  using ExecutionSignature = void(Boundary, _2, _3, _4, _5);
 
   // This is the naive find() without path compaction in SV Jayanti et. al.
   // Since the parents array is read-only there is no data race.
@@ -107,43 +107,36 @@ public:
   }
 
   // compOut is an alias of neightborComp such that we can update component labels
-  template <typename NeighborComp, typename NeighborColor, typename CompOut, typename AtomicInOut>
-  VTKM_EXEC void operator()(const NeighborComp& neighborComp,
+  template <typename Boundary, typename NeighborComp, typename NeighborColor, typename CompOut>
+  VTKM_EXEC void operator()(Boundary boundary,
+                            const NeighborComp& neighborComp,
                             const NeighborColor& neighborColor,
-                            CompOut& compOut,
-                            AtomicInOut& updated) const
+                            CompOut& compOut) const
   {
-    vtkm::Id thisComp = neighborComp.Get(0, 0, 0);
-    auto minComp = thisComp;
     auto thisColor = neighborColor.Get(0, 0, 0);
 
-    // FIXME: we are doing this "local connectivity finding" at each call of this
-    // worklet. This creates a large demand on the memory bandwidth.
-    // Is this necessary? It looks like we only need a local, partial spanning
-    // tree at the beginning. Is it true?
-    for (int k = -1; k <= 1; k++)
+    auto minIndices = boundary.MinNeighborIndices(1);
+    auto maxIndices = boundary.MaxNeighborIndices(1);
+
+    for (int k = minIndices[2]; k <= maxIndices[2]; k++)
     {
-      for (int j = -1; j <= 1; j++)
+      for (int j = minIndices[1]; j <= maxIndices[1]; j++)
       {
-        for (int i = -1; i <= 1; i++)
+        for (int i = minIndices[0]; i <= maxIndices[0]; i++)
         {
+          // We need to reload thisComp and thatComp every iteration since
+          // they might be changed by Unite()
+          auto thisComp = neighborComp.Get(0, 0, 0);
+          auto thatComp = neighborComp.Get(i, j, k);
           if (thisColor == neighborColor.Get(i, j, k))
           {
-            minComp = vtkm::Min(minComp, neighborComp.Get(i, j, k));
+            // I don't want to just update the component label of this pixel to the next, I
+            // actually want to merge the two gangs by Union(FindRoot(this), FindRoot(that))
+            // and then Flatten the result.
+            Unite(compOut, thisComp, thatComp);
           }
         }
       }
-    }
-
-    // I don't want to just update the component label of this pixel to the next, I
-    // actually want to merge the two gangs by Union(FindRoot(this), FindRoot(that))
-    // and then Flatten the result.
-    Unite(compOut, thisComp, minComp);
-
-    // mark an update occurred if no other worklets have done so yet
-    if (thisComp != minComp && updated.Get(0) == 0)
-    {
-      updated.Set(0, 1);
     }
   }
 };
@@ -168,18 +161,9 @@ public:
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
                       components);
 
-      //used as an atomic bool, so we use Int32 as  the
-      //smallest type that VTK-m supports as atomics
-      vtkm::cont::ArrayHandle<vtkm::Int32> updateRequired;
-      updateRequired.Allocate(1);
-
       vtkm::cont::Invoker invoke;
-      do
-      {
-        updateRequired.WritePortal().Set(0, 0); //reset the atomic state
-        invoke(detail::ImageGraft{}, input, components, pixels, components, updateRequired);
-        invoke(PointerJumping{}, components);
-      } while (updateRequired.WritePortal().Get(0) > 0);
+      invoke(detail::ImageGraft{}, input, components, pixels, components);
+      invoke(PointerJumping{}, components);
 
       // renumber connected component to the range of [0, number of components).
       // FIXME: we should able to apply findRoot to each pixel and use some kind
