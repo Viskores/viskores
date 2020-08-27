@@ -31,6 +31,7 @@ namespace detail
 class ImageGraft : public vtkm::worklet::WorkletPointNeighborhood
 {
 public:
+  // TODO: give the reason that single pass algorithm works.
   using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood compIn,
                                 FieldInNeighborhood color,
@@ -124,14 +125,15 @@ public:
         for (int i = minIndices[0]; i <= maxIndices[0]; i++)
         {
           // We need to reload thisComp and thatComp every iteration since
-          // they might be changed by Unite()
+          // they might have been changed by Unite(), both as a result of
+          // attaching on tree to the other or as a result of path compression
+          // in findRoot().
           auto thisComp = neighborComp.Get(0, 0, 0);
           auto thatComp = neighborComp.Get(i, j, k);
           if (thisColor == neighborColor.Get(i, j, k))
           {
-            // I don't want to just update the component label of this pixel to the next, I
-            // actually want to merge the two gangs by Union(FindRoot(this), FindRoot(that))
-            // and then Flatten the result.
+            // Merge the two components one way or another, the order will
+            // be resolved by Unite().
             Unite(compOut, thisComp, thatComp);
           }
         }
@@ -160,6 +162,7 @@ public:
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
                       components);
 
+      // TODO: give the reason that single pass algorithm works.
       vtkm::cont::Invoker invoke;
       invoke(detail::ImageGraft{}, input, components, pixels, components);
       invoke(PointerJumping{}, components);

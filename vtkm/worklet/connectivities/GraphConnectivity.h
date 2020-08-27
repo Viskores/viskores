@@ -27,6 +27,7 @@ namespace detail
 class Graft : public vtkm::worklet::WorkletMapField
 {
 public:
+  // TODO: make sure AtomicArrayInOut is absolutely necessary
   using ControlSignature = void(FieldIn start,
                                 FieldIn degree,
                                 WholeArrayIn ids,
@@ -110,8 +111,14 @@ public:
     for (vtkm::Id offset = start; offset < start + degree; offset++)
     {
       vtkm::Id neighbor = conn.Get(offset);
+      // We need to reload thisComp and thatComp every iteration since
+      // they might have been changed by Unite() both as a result of
+      // attaching on tree to the other or as a result of path compression
+      // in findRoot().
       auto thisComp = comp.Get(index);
       auto thatComp = comp.Get(neighbor);
+      // We need to reload thisComp and thatComp every iteration since
+      // they might be changed by Unite()
       Unite(comp, thisComp, thatComp);
     }
   }
@@ -134,8 +141,8 @@ public:
       vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
       components);
 
+    // TODO: give the reason that single pass algorithm works.
     vtkm::cont::Invoker invoke;
-
     invoke(detail::Graft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
     invoke(PointerJumping{}, components);
 
