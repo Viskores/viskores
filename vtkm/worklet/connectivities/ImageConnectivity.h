@@ -34,10 +34,9 @@ public:
   using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood compIn,
                                 FieldInNeighborhood color,
-                                AtomicArrayInOut compOut,
-                                AtomicArrayInOut changed);
+                                AtomicArrayInOut compOut);
 
-  using ExecutionSignature = void(Boundary, _2, _3, _4, _5);
+  using ExecutionSignature = void(Boundary, _2, _3, _4);
 
   // This is the naive find() without path compaction in SV Jayanti et. al.
   // Since the parents array is read-only there is no data race.

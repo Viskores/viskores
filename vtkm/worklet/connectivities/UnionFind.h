@@ -68,29 +68,6 @@ public:
   }
 };
 
-class IsStar : public vtkm::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(WholeArrayIn comp, AtomicArrayInOut);
-  using ExecutionSignature = void(WorkIndex, _1, _2);
-  using InputDomain = _1;
-
-  template <typename InPortalType, typename AtomicInOut>
-  VTKM_EXEC void operator()(vtkm::Id index, const InPortalType& comp, AtomicInOut& hasStar) const
-  {
-    //hasStar emulates a LogicalAnd across all the values
-    //where we start with a value of 'true'|1.
-    // Note: comp.Get(index) == comp.Get(comp.Get(index)) applies for both the
-    // root of the tree and the first level vertices. If all vertices
-    // is either a root or first level vertices, it is a rooted star.
-    const bool isAStar = (comp.Get(index) == comp.Get(comp.Get(index)));
-    if (!isAStar && hasStar.Get(0) == 1)
-    {
-      hasStar.Set(0, 0);
-    }
-  }
-};
-
 } // connectivity
 } // worklet
 } // vtkm
