@@ -81,7 +81,7 @@ public:
     auto root_u = findRoot(parents, u);
     auto root_v = findRoot(parents, v);
 
-    // There is a potential concurrent write data race as it is possible for
+    // Case 3. There is a potential concurrent write data race as it is possible for
     // two threads to try to change the same old root to different new roots,
     // e.g. threadA calls parents.Set(root, rootB) while threadB calls
     // parents(root, rootB) where rootB < root and rootC < root (but the order

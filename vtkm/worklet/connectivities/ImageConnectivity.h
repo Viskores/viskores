@@ -63,11 +63,14 @@ public:
     // Case 1, Two threads calling Unite(u, v) concurrently.
     // Problem: One thread might attach u to v while the other thread attach
     // v to u, causing a cycle in the Union-Find data structure.
-    // Resolution: This is not necessary a data race issue. This is resolved by
-    // "linking by index" as in SV Jayanti et.al. with less than as the total order.
+    // Resolution: This is not so much a race condition as a problem with the
+    // consistency of the algorithm that can also happen in serial. This is
+    // resolved by "linking by index" as in SV Jayanti et.al. with less than
+    // as the total order.
     // The two threads will make the same decision on how to Unite the two tree
-    // (e.g. from root with larger id to root with smaller id.) This avoids cycles in
-    // the resulting graph and maintains the rooted forest structure of Union-Find.
+    // (e.g. from root with larger id to root with smaller id.) This avoids
+    // cycles in the resulting graph and maintains the rooted forest structure
+    // of Union-Find.
 
     // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
     // Unite(v, s) concurrently.
@@ -87,7 +90,7 @@ public:
     auto root_u = findRoot(parents, u);
     auto root_v = findRoot(parents, v);
 
-    // There is a potential concurrent write data race as it is possible for
+    // Case 3. There is a potential concurrent write data race as it is possible for
     // two threads to try to change the same old root to different new roots,
     // e.g. threadA calls parents.Set(root, rootB) while threadB calls
     // parents(root, rootB) where rootB < root and rootC < root (but the order
