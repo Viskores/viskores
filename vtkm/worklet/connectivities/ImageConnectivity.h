@@ -69,17 +69,20 @@ public:
     // (e.g. from root with larger id to root with smaller id.) This avoids cycles in
     // the resulting graph and maintains the rooted forest structure of Union-Find.
 
-    // Case 2, T0 calling Unite(u, v) and T1 calling Unite(u, w) concurrently.
+    // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
+    // Unite(v, s) concurrently.
     // Problem I: There is a potential write after read data race. After T0
-    // calls findRoot for u and v, T1 might have changed the root of u (root_u)
-    // to the root of w (root_w) thus making root_u "obsolete" before T0 calls
-    // parents.Set() on root_u/root_v. When the root of the tree to be attached to
-    // (i.e. root_u <  root_v) is changed, there is no hazard, since we are just
-    // attaching a tree to a non-root node (i.e. root_w <- root_u <- root_v).
-    // However, when the root of the attaching tree (root with larger id) is change,
-    // it means that the attaching tree has been attached to another root. If we are
-    // now attaching a non-root node to another tree while leaving the root
-    // behind and undoing previous work.
+    // calls findRoot for u and v, T1 might have called parents.Set(root_u, root_w)
+    // thus changed root_u to root_w thus making root_u "obsolete" before T0 calls
+    // parents.Set() on root_u/root_v.
+    // When the root of the tree to be attached to (e.g. root_u, when root_u <  root_v)
+    // is changed, there is no hazard, since we are just attaching a tree to a
+    // now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
+    // components merged.
+    // However, when the root of the attaching tree (root_v) is change, it
+    // means that the root_u has been attached to yet some other root_s and became
+    // a non-root node. If we are now attaching this non-root node to root_w we
+    // would leave root_s behind and undoing previous work.
     // Resolution:
     auto root_u = findRoot(parents, u);
     auto root_v = findRoot(parents, v);
@@ -137,8 +140,6 @@ public:
     // and then Flatten the result.
     Unite(compOut, thisComp, minComp);
 
-    // FIXME: is this the right termination condition?
-    // FIXME: should the Get()/Set() be replaced with a CompareAnsSwap()?
     // mark an update occurred if no other worklets have done so yet
     if (thisComp != minComp && updated.Get(0) == 0)
     {
