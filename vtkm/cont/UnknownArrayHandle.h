@@ -604,6 +604,18 @@ void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
   handle.CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
     std::forward<Functor>(f), std::forward<Args>(args)...);
 }
+
+namespace internal
+{
+
+template <>
+struct DynamicTransformTraits<vtkm::cont::UnknownArrayHandle>
+{
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 
