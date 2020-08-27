@@ -103,8 +103,8 @@ public:
                "Copying Kokkos dev --> host: %s",
                vtkm::cont::GetSizeString(this->DeviceArrayLength).c_str());
 
-    vtkm::cont::kokkos::internal::KokkosViewConstExec<T> deviceView(this->DeviceArray,
-                                                                    this->DeviceArrayLength);
+    vtkm::cont::kokkos::internal::KokkosViewConstExec<T> deviceView(
+      this->DeviceArray, static_cast<std::size_t>(this->DeviceArrayLength));
     auto hostView = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, deviceView);
 
     storage->Allocate(this->DeviceArrayLength);
@@ -139,7 +139,7 @@ private:
 
   void ReallocDeviceArray(vtkm::Id numberOfValues)
   {
-    size_t size = numberOfValues * sizeof(T);
+    size_t size = static_cast<std::size_t>(numberOfValues) * sizeof(T);
     try
     {
       if (!this->DeviceArray)
@@ -178,7 +178,7 @@ private:
   VTKM_CONT static void CopyToExecutionImpl(
     ArrayManagerExecution<T, S, vtkm::cont::DeviceAdapterTagKokkos>* self)
   {
-    std::vector<T> buffer(self->Storage->GetNumberOfValues());
+    std::vector<T> buffer(static_cast<std::size_t>(self->Storage->GetNumberOfValues()));
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(self->Storage->GetPortalConst()),
               vtkm::cont::ArrayPortalToIteratorEnd(self->Storage->GetPortalConst()),
               buffer.begin());
@@ -187,8 +187,8 @@ private:
     self->DeviceArrayLength = self->Storage->GetNumberOfValues();
 
     vtkm::cont::kokkos::internal::KokkosViewConstCont<T> hostView(buffer.data(), buffer.size());
-    vtkm::cont::kokkos::internal::KokkosViewExec<T> deviceView(self->DeviceArray,
-                                                               self->DeviceArrayLength);
+    vtkm::cont::kokkos::internal::KokkosViewExec<T> deviceView(
+      self->DeviceArray, static_cast<std::size_t>(self->DeviceArrayLength));
 
     Kokkos::deep_copy(deviceView, hostView);
   }
