@@ -24,7 +24,7 @@ namespace connectivity
 {
 namespace detail
 {
-class Graft : public vtkm::worklet::WorkletMapField
+class GraphGraft : public vtkm::worklet::WorkletMapField
 {
 public:
   // TODO: make sure AtomicArrayInOut is absolutely necessary
@@ -34,71 +34,6 @@ public:
                                 WholeArrayInOut comp);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
-
-  using InputDomain = _1;
-
-  template <typename Parents>
-  VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index) const
-  {
-    while (parents.Get(index) != index)
-      index = parents.Get(index);
-    return index;
-  }
-
-  template <typename Parents>
-  VTKM_EXEC void Unite(Parents& parents, vtkm::Id u, vtkm::Id v) const
-  {
-    // Data Race Resolutions
-    // Since this function modifies the Union-Find data structure, concurrent
-    // invocation of it by 2 or more threads cause potential data race. Here
-    // is a case analysis why the potential data race does no harm in the
-    // context of the iterative connected component algorithm.
-
-    // Case 1, Two threads calling Unite(u, v) concurrently.
-    // Problem: One thread might attach u to v while the other thread attach
-    // v to u, causing a cycle in the Union-Find data structure.
-    // Resolution: This is not necessary a data race issue. This is resolved by
-    // "linking by index" as in SV Jayanti et.al. with less than as the total order.
-    // The two threads will make the same decision on how to Unite the two tree
-    // (e.g. from root with larger id to root with smaller id.) This avoids cycles in
-    // the resulting graph and maintains the rooted forest structure of Union-Find.
-
-    // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
-    // Unite(v, s) concurrently.
-    // Problem I: There is a potential write after read data race. After T0
-    // calls findRoot for u and v, T1 might have called parents.Set(root_u, root_w)
-    // thus changed root_u to root_w thus making root_u "obsolete" before T0 calls
-    // parents.Set() on root_u/root_v.
-    // When the root of the tree to be attached to (e.g. root_u, when root_u <  root_v)
-    // is changed, there is no hazard, since we are just attaching a tree to a
-    // now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
-    // components merged.
-    // However, when the root of the attaching tree (root_v) is change, it
-    // means that the root_u has been attached to yet some other root_s and became
-    // a non-root node. If we are now attaching this non-root node to root_w we
-    // would leave root_s behind and undoing previous work.
-    // Resolution:
-    auto root_u = findRoot(parents, u);
-    auto root_v = findRoot(parents, v);
-
-    // Case 3. There is a potential concurrent write data race as it is possible for
-    // two threads to try to change the same old root to different new roots,
-    // e.g. threadA calls parents.Set(root, rootB) while threadB calls
-    // parents(root, rootB) where rootB < root and rootC < root (but the order
-    // of rootA and rootB is unspecified.) Each thread assumes success while
-    // the outcome is actually unspecified. An atomic Compare and Swap is
-    // suggested in SV Janati et. al. to "resolve" data race. However, I don't
-    // see any need to use CAS, it looks like the data race will always correct
-    // itself by the algorithm in later iterations as long as atomic Store of
-    // memory_order_release and Load of memory_order_acquire is used (as provided
-    // by AtomicArrayInOut.) This memory consistency model is the default mode
-    // for x86, thus having zero extra cost but might be required for CUDA and/or ARM.
-    if (root_u < root_v)
-      parents.Set(root_v, root_u);
-    else if (root_u > root_v)
-      parents.Set(root_u, root_v);
-    // else, no need to do anything when they are the same set.
-  }
 
   // TODO: Use Scatter?
   template <typename InPortalType, typename InOutPortalType>
@@ -111,20 +46,27 @@ public:
     for (vtkm::Id offset = start; offset < start + degree; offset++)
     {
       vtkm::Id neighbor = conn.Get(offset);
+
       // We need to reload thisComp and thatComp every iteration since
       // they might have been changed by Unite() both as a result of
       // attaching on tree to the other or as a result of path compression
       // in findRoot().
       auto thisComp = comp.Get(index);
       auto thatComp = comp.Get(neighbor);
-      // We need to reload thisComp and thatComp every iteration since
-      // they might be changed by Unite()
-      Unite(comp, thisComp, thatComp);
+
+      // Merge the two components one way or the other, the order will
+      // be resolved by Unite().
+      UnionFind::Unite(comp, thisComp, thatComp);
     }
   }
 };
 }
 
+// Single pass connected component algorithm from
+// Jaiganesh, Jayadharini, and Martin Burtscher.
+// "A high-performance connected components implementation for GPUs."
+// Proceedings of the 27th International Symposium on High-Performance
+// Parallel and Distributed Computing. 2018.
 class GraphConnectivity
 {
 public:
@@ -143,7 +85,7 @@ public:
 
     // TODO: give the reason that single pass algorithm works.
     vtkm::cont::Invoker invoke;
-    invoke(detail::Graft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
+    invoke(detail::GraphGraft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
     invoke(PointerJumping{}, components);
 
     // renumber connected component to the range of [0, number of components).
