@@ -101,12 +101,15 @@ public:
 
     while (root_u != root_v)
     {
+      // Nota Bene: VTKm's CompareAndSwap has different order of parameter
+      // than normal practice, it is (index, new, expected) rather than
+      // (index, expected, new).
       if (root_u < root_v)
-        parents.Set(root_v, root_u);
+        root_v = parents.CompareAndSwap(root_v, root_u, root_v);
       else if (root_u > root_v)
-        parents.Set(root_u, root_v);
-      root_u = UnionFind::findRoot(parents, u);
-      root_v = UnionFind::findRoot(parents, v);
+        root_u = parents.CompareAndSwap(root_u, root_v, root_u);
+      //root_u = UnionFind::findRoot(parents, u);
+      //root_v = UnionFind::findRoot(parents, v);
     }
 #endif
   }
