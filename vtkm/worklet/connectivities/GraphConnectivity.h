@@ -31,7 +31,7 @@ public:
   using ControlSignature = void(FieldIn start,
                                 FieldIn degree,
                                 WholeArrayIn ids,
-                                WholeArrayInOut comp);
+                                AtomicArrayInOut comp);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
 

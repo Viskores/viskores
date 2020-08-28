@@ -26,11 +26,10 @@ namespace connectivity
 class UnionFind
 {
 public:
-  // This is the naive find() without path compaction in SV Jayanti et. al.
+  // This is the naive findRoot() without path compaction in SV Jayanti et. al.
   // Since the parents array is read-only there is no data race.
-  // TODO: figure out if AtomicArrayInOut is absolutely necessary
-  // TODO: Since parents is now an AtomicArray with certain memory consistency,
-  // consider changing this to find with path compaction.
+  // TODO: figure out if AtomicArrayInOut is absolutely necessary and what
+  // it takes to change this to be a safe findRoot() with path compaction.
   template <typename Parents>
   static VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index)
   {
@@ -51,14 +50,14 @@ public:
     // Case 1, Two threads calling Unite(u, v) (and/or Unite(v, u)) concurrently.
     // Problem: One thread might attach u to v while the other thread attach
     // v to u, causing a cycle in the Union-Find data structure.
-    // Resolution: This is not so much a race condition as a problem with the
-    // consistency of the algorithm that can also happen in serial. This is
-    // resolved by "linking by index" as in SV Jayanti et.al. with less than
-    // as the total order.
-    // The two threads will make the same decision on how to Unite the two tree
-    // (e.g. from root with larger id to root with smaller id.) This avoids
-    // cycles in the resulting graph and maintains the rooted forest structure
-    // of Union-Find at the expense of duplicated (but benign) work.
+    // Resolution: This is not so much of a race condition but a problem with
+    // the consistency of the algorithm. This can also happen in serial.
+    // This is resolved by "linking by index" as in SV Jayanti et.al. with less
+    // than as the total order. The two threads will make the same decision on
+    // how to Unite the two trees (e.g. from root with larger id to root with
+    // smaller id.) This avoids cycles in the resulting graph and maintains the
+    // rooted forest structure of Union-Find at the expense of duplicated (but
+    // benign) work.
 
     // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
     // Unite(v, s) concurrently.
@@ -97,19 +96,36 @@ public:
     // else, no need to do anything when they are the same set.
   }
 
-  // Since the current findRoot does not do path compaction, this algorithm
+  // This compresses the path from each node to its root thus flattening the
+  // trees and guarantees that the output trees will be rooted stars, i.e.
+  // they all have depth of 1.
+
+  // There is a "seemly" data race for this function. The root returned by
+  // findRoot() in one thread might become out of date if some other
+  // thread changed it before this function calls parents.Set() making the
+  // result tree not "short" enough and thus calls for a CompareAndSwap retry
+  // loop. However, this data race does not happen for the following reasons:
+  // 1. Since the only way for a root of a tree to be changed is through Unite(),
+  // as long as there is no concurrent invocation of Unite() and Flatten() there
+  // is no data race. This applies even for a compacting findRoot() which can
+  // still only change the parents of non-root nodes.
+  // 2. By the same token, since findRoot() does not change root and most
+  // "damage" parents.Set() can do is resetting root's parent to itself,
+  // the root of a tree can never be changed by this function. Thus, here
+  // is no data race between concurrent invocations of this function.
+
+  // Since the current findRoot() does not do path compaction, this algorithm
   // has O(n) depth with O(n^2) of total work on a Parallel Random Access
   // Machine (PRAM). However, we don't live in a synchronous, infinite number
   // of processor PRAM world. In reality, since we put "parent pointers" in a
-  // array and all the pointers are pointing from larger index to smaller,
-  // invocation for nodes with smaller ids are mostly likely be scheduled
+  // array and all the pointers are pointing from larger indices to smaller
+  // ones, invocation for nodes with smaller ids are mostly likely be scheduled
   // before and completes earlier than nodes with larger ids. This makes
   // the "effective" path length shorter for nodes with larger ids.
   // In this way, concurrency actually helps with algorithm complexity.
   template <typename Parents>
   static VTKM_EXEC void Flatten(Parents& parents, vtkm::Id index)
   {
-    // There a data race between findRoot and comp.Set.
     auto root = findRoot(parents, index);
     parents.Set(index, root);
   }
@@ -122,18 +138,6 @@ public:
   using ExecutionSignature = void(WorkIndex, _1);
   using InputDomain = _1;
 
-  // This compresses the path from each node to its root, guarantees that the
-  // output trees will be rooted stars, i.e. they all have depth of 1.
-
-  // There is a "seemly" data race between concurrent invocations of this
-  // operator(). The "root" returned by findRoot() in one invocation might
-  // become out of date if some other invocations change it while calling comp.Set().
-  // However, the monotone nature of the data structure and findRoot() makes it harmless
-  // as long as the root of the tree does not change (such as by Unite())
-
-  // There is a data race between this operator() and some form of Unite(), which
-  // update the parent point of the root and make its value out of date.
-  // TODO: is the data race harmful? can we do something about it?
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(vtkm::Id index, InOutPortalType& comps) const
   {
