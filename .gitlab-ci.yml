@@ -172,10 +172,10 @@ stages:
     - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
 
 include:
-#  - local: '/.gitlab/ci/centos7.yml'
-#  - local: '/.gitlab/ci/centos8.yml'
-#  - local: '/.gitlab/ci/doxygen.yml'
-#  - local: '/.gitlab/ci/rhel8.yml'
-#  - local: '/.gitlab/ci/ubuntu1604.yml'
+  - local: '/.gitlab/ci/centos7.yml'
+  - local: '/.gitlab/ci/centos8.yml'
+  - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/rhel8.yml'
+  - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
-#  - local: '/.gitlab/ci/windows10.yml'
+  - local: '/.gitlab/ci/windows10.yml'

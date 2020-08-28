@@ -41,42 +41,39 @@ public:
   template <typename Parents>
   static VTKM_EXEC void Unite(Parents& parents, vtkm::Id u, vtkm::Id v)
   {
-// Data Race Resolutions
-// Since this function modifies the Union-Find data structure, concurrent
-// invocation of it by 2 or more threads causes potential data race. Here
-// is a case analysis why the potential data race does no harm in the
-// context of the single pass connected component algorithm.
+    // Data Race Resolutions
+    // Since this function modifies the Union-Find data structure, concurrent
+    // invocation of it by 2 or more threads causes potential data race. Here
+    // is a case analysis why the potential data race does no harm in the
+    // context of the single pass connected component algorithm.
 
-// Case 1, Two threads calling Unite(u, v) (and/or Unite(v, u)) concurrently.
-// Problem: One thread might attach u to v while the other thread attach
-// v to u, causing a cycle in the Union-Find data structure.
-// Resolution: This is not so much of a race condition but a problem with
-// the consistency of the algorithm. This can also happen in serial.
-// This is resolved by "linking by index" as in SV Jayanti et.al. with less
-// than as the total order. The two threads will make the same decision on
-// how to Unite the two trees (e.g. from root with larger id to root with
-// smaller id.) This avoids cycles in the resulting graph and maintains the
-// rooted forest structure of Union-Find at the expense of duplicated (but
-// benign) work.
+    // Case 1, Two threads calling Unite(u, v) (and/or Unite(v, u)) concurrently.
+    // Problem: One thread might attach u to v while the other thread attach
+    // v to u, causing a cycle in the Union-Find data structure.
+    // Resolution: This is not so much of a race condition but a problem with
+    // the consistency of the algorithm. This can also happen in serial.
+    // This is resolved by "linking by index" as in SV Jayanti et.al. with less
+    // than as the total order. The two threads will make the same decision on
+    // how to Unite the two trees (e.g. from root with larger id to root with
+    // smaller id.) This avoids cycles in the resulting graph and maintains the
+    // rooted forest structure of Union-Find at the expense of duplicated (but
+    // benign) work.
 
-// Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
-// Unite(v, s) concurrently.
-// Problem I: There is a potential write after read data race. After T0
-// calls findRoot for u and v, T1 might have called parents.Set(root_u, root_w)
-// thus changed root_u to root_w thus making root_u "obsolete" before T0 calls
-// parents.Set() on root_u/root_v.
-// When the root of the tree to be attached to (e.g. root_u, when root_u <  root_v)
-// is changed, there is no hazard, since we are just attaching a tree to a
-// now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
-// components merged.
-// However, when the root of the attaching tree (root_v) is change, it
-// means that the root_u has been attached to yet some other root_s and became
-// a non-root node. If we are now attaching this non-root node to root_w we
-// would leave root_s behind and undoing previous work.
-// Resolution:
-#if 0
-    auto root_u = UnionFind::findRoot(parents, u);
-    auto root_v = UnionFind::findRoot(parents, v);
+    // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
+    // Unite(v, s) concurrently.
+    // Problem I: There is a potential write after read data race. After T0
+    // calls findRoot for u and v, T1 might have called parents.Set(root_u, root_w)
+    // thus changed root_u to root_w thus making root_u "obsolete" before T0 calls
+    // parents.Set() on root_u/root_v.
+    // When the root of the tree to be attached to (e.g. root_u, when root_u <  root_v)
+    // is changed, there is no hazard, since we are just attaching a tree to a
+    // now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
+    // components merged.
+    // However, when the root of the attaching tree (root_v) is change, it
+    // means that the root_u has been attached to yet some other root_s and became
+    // a non-root node. If we are now attaching this non-root node to root_w we
+    // would leave root_s behind and undoing previous work.
+    // Resolution: TDB, mostly some reason for CompareAndSwap
 
     // Case 3. There is a potential concurrent write data race as it is possible for
     // two threads to try to change the same old root to different new roots,
@@ -90,28 +87,21 @@ public:
     // memory_order_release and Load of memory_order_acquire is used (as provided
     // by AtomicArrayInOut.) This memory consistency model is the default mode
     // for x86, thus having zero extra cost but might be required for CUDA and/or ARM.
-    if (root_u < root_v)
-      parents.Set(root_v, root_u);
-    else if (root_u > root_v)
-      parents.Set(root_u, root_v);
-    // else, no need to do anything when they are the same set.
-#else
+    // Experiments show that we do need CompareAndSwap, simple Load/Store are not
+    // sufficient, find out the reason why.
     auto root_u = UnionFind::findRoot(parents, u);
     auto root_v = UnionFind::findRoot(parents, v);
 
     while (root_u != root_v)
     {
-      // Nota Bene: VTKm's CompareAndSwap has different order of parameter
+      // Nota Bene: VTKm's CompareAndSwap has a different order of parameters
       // than normal practice, it is (index, new, expected) rather than
       // (index, expected, new).
       if (root_u < root_v)
         root_v = parents.CompareAndSwap(root_v, root_u, root_v);
       else if (root_u > root_v)
         root_u = parents.CompareAndSwap(root_u, root_v, root_u);
-      //root_u = UnionFind::findRoot(parents, u);
-      //root_v = UnionFind::findRoot(parents, v);
     }
-#endif
   }
 
   // This compresses the path from each node to its root thus flattening the
