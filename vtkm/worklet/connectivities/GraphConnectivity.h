@@ -27,7 +27,6 @@ namespace detail
 class GraphGraft : public vtkm::worklet::WorkletMapField
 {
 public:
-  // TODO: make sure AtomicArrayInOut is absolutely necessary
   using ControlSignature = void(FieldIn start,
                                 FieldIn degree,
                                 WholeArrayIn ids,
@@ -36,12 +35,12 @@ public:
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
 
   // TODO: Use Scatter?
-  template <typename InPortalType, typename InOutPortalType>
+  template <typename InPortalType, typename AtomicCompInOut>
   VTKM_EXEC void operator()(vtkm::Id index,
                             vtkm::Id start,
                             vtkm::Id degree,
                             const InPortalType& conn,
-                            InOutPortalType& comp) const
+                            AtomicCompInOut& comp) const
   {
     for (vtkm::Id offset = start; offset < start + degree; offset++)
     {

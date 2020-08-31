@@ -27,9 +27,9 @@ class UnionFind
 {
 public:
   // This is the naive findRoot() without path compaction in SV Jayanti et. al.
-  // Since the parents array is read-only there is no data race.
-  // TODO: figure out if AtomicArrayInOut is absolutely necessary and what
-  // it takes to change this to be a safe findRoot() with path compaction.
+  // Since the parents array is read-only there is no data race, we can just
+  // call Get() which actually calls Load() with memory_order_acquire ordering
+  // which in turn ensure writes by other threads are reflected.
   template <typename Parents>
   static VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index)
   {
@@ -75,25 +75,31 @@ public:
     // would leave root_s behind and undoing previous work.
     // Resolution: TDB, mostly some reason for CompareAndSwap
 
-    // Case 3. There is a potential concurrent write data race as it is possible for
-    // two threads to try to change the same old root to different new roots,
-    // e.g. threadA calls parents.Set(root, rootB) while threadB calls
-    // parents(root, rootB) where rootB < root and root < rootB (but the order
+    // Case 3. There is a potential concurrent write data race as it is possible
+    // for two threads to try to change the same old root to different new roots,
+    // e.g. threadA calls parents.Set(root, rootA) while threadB calls
+    // parents(root, rootB) where rootB < root and rootA < root (but the order
     // of rootA and rootB is unspecified.) Each thread assumes success while
-    // the outcome is actually unspecified. An atomic Compare and Swap is
-    // suggested in SV Janati et. al. to "resolve" data race. However, I don't
-    // see any need to use CAS, it looks like the data race will always correct
-    // itself by the algorithm in later iterations as long as atomic Store of
-    // memory_order_release and Load of memory_order_acquire is used (as provided
-    // by AtomicArrayInOut.) This memory consistency model is the default mode
-    // for x86, thus having zero extra cost but might be required for CUDA and/or ARM.
-    // Experiments show that we do need CompareAndSwap, simple Load/Store are not
-    // sufficient, find out the reason why.
+    // the outcome is actually unspecified.
+    // Resolution: An atomic Compare and Swap is suggested in SV Janati et. al.
+    // as well as J. Jaiganesht et. al. to resolve the data race. The CAS
+    // checks if the old root is the same as what we expected. If so, there is
+    // no data race, CAS will set the root to the desired value. The return value
+    // from CAS will equal to our expected old root and signifies a successful
+    // write which terminates the while loop.
+    // If the old root is not what we expected, it was updated by some other
+    // thread and the update by this thread fails. The root as updated by
+    // the other thread is returned. This returned value would not equal to our desired new
+    // root, signifying the need to retry with the while loop. On the other
+    // hand,
+    // Why simple Load/Store as provide by AtomicArray Get/Set do not work.
+
     auto root_u = UnionFind::findRoot(parents, u);
     auto root_v = UnionFind::findRoot(parents, v);
 
     while (root_u != root_v)
     {
+      // FIXME: we might be executing the loop one extra time.
       // Nota Bene: VTKm's CompareAndSwap has a different order of parameters
       // than normal practice, it is (index, new, expected) rather than
       // (index, expected, new).

@@ -40,11 +40,14 @@ public:
 
 
   // compOut is a "linear" alias of neightborComp such that we can update component labels
-  template <typename Boundary, typename NeighborComp, typename NeighborColor, typename CompOut>
+  template <typename Boundary,
+            typename NeighborComp,
+            typename NeighborColor,
+            typename AtomicCompOut>
   VTKM_EXEC void operator()(Boundary boundary,
                             const NeighborComp& neighborComp,
                             const NeighborColor& neighborColor,
-                            CompOut& compOut) const
+                            AtomicCompOut& compOut) const
   {
     auto thisColor = neighborColor.Get(0, 0, 0);
 
