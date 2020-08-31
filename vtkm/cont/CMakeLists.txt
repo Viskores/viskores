@@ -116,6 +116,8 @@ set(headers
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  UncertainArrayHandle.h
+  UnknownArrayHandle.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
@@ -191,6 +193,7 @@ set(sources
   RuntimeDeviceInformation.cxx
   StorageVirtual.cxx
   Timer.cxx
+  UnknownArrayHandle.cxx
   )
 
 #-----------------------------------------------------------------------------
