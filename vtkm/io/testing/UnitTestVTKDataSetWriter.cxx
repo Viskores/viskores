@@ -20,7 +20,7 @@
 namespace
 {
 
-#define WRITE_FILE(MakeTestDataMethod)                                                             \
+#define WRITE_FILE(MakeTestDataMethod) \
   TestVTKWriteTestData(#MakeTestDataMethod, tds.MakeTestDataMethod())
 
 struct CheckSameField

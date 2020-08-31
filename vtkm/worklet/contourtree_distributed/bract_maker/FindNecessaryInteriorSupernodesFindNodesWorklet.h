@@ -75,7 +75,7 @@ public:
   using ControlSignature = void(FieldIn superarc,                       // (input) superarcs
                                 FieldIn superarcDependentBoundaryCount, // (input)
                                 WholeArrayOut isNecessary               // (output)
-                                );
+  );
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   // Use the coordinate system as seeds for performing advection
   vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
   vtkm::cont::ArrayCopy(ds1.GetCoordinateSystem().GetData(), pts);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seeds;
 
   vtkm::Id numPts = pts.GetNumberOfValues();
   seeds.Allocate(numPts);
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
   auto seedPortal = seeds.WritePortal();
   for (vtkm::Id i = 0; i < numPts; i++)
   {
-    vtkm::Massless p;
+    vtkm::Particle p;
     p.Pos = ptsPortal.Get(i);
     p.ID = i;
     seedPortal.Set(i, p);

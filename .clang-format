@@ -1,17 +1,19 @@
 ---
-# This configuration requires clang-format 3.8 or higher.
+# This configuration requires clang-format 9 or higher.
 BasedOnStyle: Mozilla
 AlignAfterOpenBracket: Align
+AlignEscapedNewlines: true
 AlignOperands: false
-AlwaysBreakAfterReturnType: None
+AllowAllParametersOfDeclarationOnNextLine: false
 AlwaysBreakAfterDefinitionReturnType: None
-BreakBeforeBraces: Allman
+AlwaysBreakAfterReturnType: None
 BinPackArguments: false
 BinPackParameters: false
+BreakBeforeBraces: Allman
 ColumnLimit: 100
+# FixNamespaceComments: true
 MaxEmptyLinesToKeep: 4
-Standard: Cpp11
-# This requires clang-format 4.0 (at least).
-#FixNamespaceComments: true
 ReflowComments: false
+SpaceAfterTemplateKeyword: true
+Standard: Cpp11
 ...

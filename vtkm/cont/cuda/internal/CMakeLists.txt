@@ -10,7 +10,6 @@
 
 set(headers
   ArrayManagerExecutionCuda.h
-  AtomicInterfaceExecutionCuda.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterMemoryManagerCuda.h
@@ -18,6 +17,7 @@ set(headers
   DeviceAdapterTagCuda.h
   DeviceAdapterTimerImplementationCuda.h
   MakeThrustIterator.h
+  ScopedCudaStackSize.h
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
   )

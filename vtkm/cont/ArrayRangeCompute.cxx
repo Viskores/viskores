@@ -20,22 +20,22 @@ void ThrowArrayRangeComputeFailed()
   throw vtkm::cont::ErrorExecution("Failed to run ArrayRangeComputation on any device.");
 }
 
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                                \
-  VTKM_CONT                                                                                        \
-  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
-    const vtkm::cont::ArrayHandle<T, Storage>& input, vtkm::cont::DeviceAdapterId device)          \
-  {                                                                                                \
-    return detail::ArrayRangeComputeImpl(input, device);                                           \
-  }                                                                                                \
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                       \
+  VTKM_CONT                                                                               \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                 \
+    const vtkm::cont::ArrayHandle<T, Storage>& input, vtkm::cont::DeviceAdapterId device) \
+  {                                                                                       \
+    return detail::ArrayRangeComputeImpl(input, device);                                  \
+  }                                                                                       \
   struct SwallowSemicolon
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(T, N, Storage)                                           \
-  VTKM_CONT                                                                                        \
-  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input,                                \
-    vtkm::cont::DeviceAdapterId device)                                                            \
-  {                                                                                                \
-    return detail::ArrayRangeComputeImpl(input, device);                                           \
-  }                                                                                                \
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(T, N, Storage)            \
+  VTKM_CONT                                                         \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input, \
+    vtkm::cont::DeviceAdapterId device)                             \
+  {                                                                 \
+    return detail::ArrayRangeComputeImpl(input, device);            \
+  }                                                                 \
   struct SwallowSemicolon
 
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, vtkm::cont::StorageTagBasic);

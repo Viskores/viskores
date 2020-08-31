@@ -15,7 +15,7 @@
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/StreamSurface.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 
 namespace vtkm
 {
@@ -40,7 +40,7 @@ public:
   void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
   VTKM_CONT
-  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds) { this->Seeds = seeds; }
+  void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) { this->Seeds = seeds; }
 
   template <typename T, typename StorageType, typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(
@@ -56,7 +56,7 @@ public:
 
 private:
   vtkm::Id NumberOfSteps;
-  vtkm::cont::ArrayHandle<vtkm::Massless> Seeds;
+  vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
   vtkm::FloatDefault StepSize;
   vtkm::worklet::StreamSurface Worklet;
 };

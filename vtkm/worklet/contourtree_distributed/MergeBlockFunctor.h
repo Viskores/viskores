@@ -89,7 +89,7 @@ void MergeBlockFunctor(
   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>* block, // local Block.
   const vtkmdiy::ReduceProxy& rp,               // communication proxy
   const vtkmdiy::RegularMergePartners& partners // partners of the current block
-  )
+)
 {                 //MergeBlockFunctor
   (void)partners; // Avoid unused parameter warning
 
@@ -184,7 +184,7 @@ void MergeBlockFunctor(
                                                             globalSize[1],   // totalNCols
                                                             currBlockOrigin, // minIdx
                                                             maxIdx           // maxIdx
-                                                            );
+          );
         worklet.Run(
           contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep the API happy
           contourTreeMeshOut,

@@ -78,7 +78,7 @@ public:
     using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint coords,
                                   WholeArrayIn points,
-                                  WholeArrayOut cellIds,
+                                  WholeArrayInOut cellIds,
                                   WholeArrayOut parametricCoords);
     using ExecutionSignature = void(InputIndex, CellShape, _2, _3, _4, _5);
     using InputDomain = _1;

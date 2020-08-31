@@ -14,7 +14,6 @@ set(headers
   DeviceAdapterMemoryManagerOpenMP.h
   DeviceAdapterRuntimeDetectorOpenMP.h
   DeviceAdapterTagOpenMP.h
-  AtomicInterfaceExecutionOpenMP.h
   FunctorsOpenMP.h
   ParallelQuickSortOpenMP.h
   ParallelRadixSortOpenMP.h

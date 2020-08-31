@@ -198,13 +198,8 @@ vtkm::cont::DataSet ContourTreeUniformDistributed::DoExecute(
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
              std::endl
-               << "    "
-               << std::setw(38)
-               << std::left
-               << "Contour Tree Filter DoExecute"
-               << ": "
-               << timer.GetElapsedTime()
-               << " seconds");
+               << "    " << std::setw(38) << std::left << "Contour Tree Filter DoExecute"
+               << ": " << timer.GetElapsedTime() << " seconds");
 
   // Construct the expected result for serial execution. Note, in serial the result currently
   // not actually being used, but in parallel we need the sorted mesh values as output
@@ -309,7 +304,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   vtkmdiy::Master master(comm,
                          1, // Use 1 thread, VTK-M will do the treading
                          -1 // All block in memory
-                         );
+  );
 
   // Compute the gids for our local blocks
   const vtkm::worklet::contourtree_distributed::SpatialDecomposition& spatialDecomp =
@@ -364,7 +359,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     decomposer, // domain decomposition
     2,          // raix of k-ary reduction. TODO check this value
     true        // contiguous: true=distance doubling , false=distnace halving TODO check this value
-    );
+  );
   // reduction
   vtkmdiy::reduce(
     master, assigner, partners, &vtkm::worklet::contourtree_distributed::MergeBlockFunctor<T>);
@@ -474,13 +469,8 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
     this->MultiBlockTreeHelper.reset();
     VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
                std::endl
-                 << "    "
-                 << std::setw(38)
-                 << std::left
-                 << "Contour Tree Filter PostExecute"
-                 << ": "
-                 << timer.GetElapsedTime()
-                 << " seconds");
+                 << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
+                 << ": " << timer.GetElapsedTime() << " seconds");
   }
 }
 

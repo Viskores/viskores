@@ -64,10 +64,10 @@ void TestCellMeasureWorklet(vtkm::cont::DataSet& dataset,
 
 void TestCellMeasure()
 {
+  using vtkm::AllMeasures;
   using vtkm::ArcLength;
   using vtkm::Area;
   using vtkm::Volume;
-  using vtkm::AllMeasures;
 
   TestCellMeasureUniform3D();
 

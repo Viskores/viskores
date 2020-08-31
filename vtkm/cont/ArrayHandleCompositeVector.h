@@ -500,9 +500,9 @@ public:
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
-  using PortalExecution = ArrayPortalCompositeVector<
-    typename vtkm::cont::ArrayHandle<T,
-                                     StorageTags>::template ExecutionTypes<DeviceTag>::Portal...>;
+  using PortalExecution =
+    ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
+                                 template ExecutionTypes<DeviceTag>::Portal...>;
   using PortalConstExecution =
     ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
                                  template ExecutionTypes<DeviceTag>::PortalConst...>;

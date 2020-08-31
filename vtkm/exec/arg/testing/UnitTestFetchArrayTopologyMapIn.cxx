@@ -126,10 +126,9 @@ struct FetchArrayTopologyMapInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(vtkm::Id3(2, 2, 2));
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                       vtkm::TopologyElementTagPoint,
-                                       3>
-      connectivity(connectivityInternals);
+    vtkm::exec::
+      ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
+        connectivity(connectivityInternals);
 
     using NullType = vtkm::internal::NullType;
     auto baseFunctionInterface = vtkm::internal::make_FunctionInterface<void>(

@@ -108,16 +108,12 @@ struct TryWholeArrayType
   {
     using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
 
-    using InTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
-                                                       ArrayHandleType,
-                                                       Device>;
-    using InOutTransportType =
-      vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
-                                 ArrayHandleType,
-                                 Device>;
-    using OutTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
-                                                        ArrayHandleType,
-                                                        Device>;
+    using InTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ArrayHandleType, Device>;
+    using InOutTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayInOut, ArrayHandleType, Device>;
+    using OutTransportType = vtkm::cont::arg::
+      Transport<vtkm::cont::arg::TransportTagWholeArrayOut, ArrayHandleType, Device>;
 
     ArrayHandleType array;
     array.Allocate(ARRAY_SIZE);

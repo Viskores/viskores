@@ -146,8 +146,4 @@ private:
 }
 } // vtkm::cont::internal
 
-#define VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(DerivedType)                                          \
-  template class vtkm::cont::internal::VirtualObjectTransfer<DerivedType,                          \
-                                                             vtkm::cont::DeviceAdapterTagCuda>
-
 #endif // vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h

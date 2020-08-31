@@ -122,6 +122,10 @@
   _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
   _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
   _Pragma("GCC diagnostic ignored \"-Wunused-template\"")
+#elif defined(VTKM_CLANG) && defined(__ibmxl__)
+#define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
+  _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
+  _Pragma("GCC diagnostic ignored \"-Wdeprecated\"")
 #elif defined(VTKM_CLANG)
 #define VTK_M_THIRDPARTY_CLANG_WARNING_PRAGMAS \
   _Pragma("GCC diagnostic ignored \"-Wnon-virtual-dtor\"") \
@@ -265,6 +269,14 @@
 //Mark if we are building with OpenMP enabled
 #ifndef VTKM_ENABLE_OPENMP
 #cmakedefine VTKM_ENABLE_OPENMP
+#endif
+//Mark if we are building with Kokkos enabled
+#ifndef VTKM_ENABLE_KOKKOS
+#cmakedefine VTKM_ENABLE_KOKKOS
+#endif
+//Mark if Kokkos has Cuda backend enabled
+#ifndef VTKM_KOKKOS_CUDA
+#cmakedefine VTKM_KOKKOS_CUDA
 #endif
 
 //Mark if we are building with MPI enabled.

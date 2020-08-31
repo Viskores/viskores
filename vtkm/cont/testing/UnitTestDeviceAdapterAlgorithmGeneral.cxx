@@ -17,8 +17,6 @@
 // this one.
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/internal/AtomicInterfaceControl.h>
-#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -84,9 +82,8 @@ class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGenera
 
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public vtkm::cont::internal::ArrayManagerExecution<T,
-                                                       StorageTag,
-                                                       vtkm::cont::DeviceAdapterTagSerial>
+  : public vtkm::cont::internal::
+      ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   using Superclass =
@@ -99,11 +96,6 @@ public:
     : Superclass(storage)
   {
   }
-};
-
-template <>
-class AtomicInterfaceExecution<DeviceAdapterTagTestAlgorithmGeneral> : public AtomicInterfaceControl
-{
 };
 
 template <typename TargetClass>

@@ -75,3 +75,19 @@ vtkm_unit_tests(
   ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )
+
+# add distributed tests i.e. test to run with MPI
+# if MPI is enabled.
+if (VTKm_ENABLE_MPI)
+  set(mpi_unit_tests
+    UnitTestParticleAdvectionFilterMPI.cxx
+    UnitTestParticleMessengerMPI.cxx
+    UnitTestStreamlineFilterMPI.cxx
+  )
+  vtkm_unit_tests(
+    MPI SOURCES ${mpi_unit_tests}
+    LIBRARIES vtkm_filter vtkm_source vtkm_io
+    ALL_BACKENDS
+    USE_VTKM_JOB_POOL
+  )
+endif()

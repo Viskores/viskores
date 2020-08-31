@@ -22,7 +22,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 template <typename IntegrationType>
 inline VTKM_CONT CellMeasures<IntegrationType>::CellMeasures()
-  : vtkm::filter::FilterCell<CellMeasures<IntegrationType>>()
+  : vtkm::filter::FilterField<CellMeasures<IntegrationType>>()
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetCellMeasureName("measure");

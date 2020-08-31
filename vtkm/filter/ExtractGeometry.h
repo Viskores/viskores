@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ExtractGeometry_h
 #define vtk_m_filter_ExtractGeometry_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/FilterDataSet.h>
@@ -43,7 +43,7 @@ public:
   //currently the ExtractGeometry filter only works on scalar data.
   using SupportedTypes = TypeListScalarAll;
 
-  VTKM_FILTER_EXPORT VTKM_CONT ExtractGeometry();
+  VTKM_FILTER_COMMON_EXPORT VTKM_CONT ExtractGeometry();
 
   // Set the volume of interest to extract
   void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
@@ -84,8 +84,8 @@ public:
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-  VTKM_FILTER_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                       const vtkm::cont::Field& field);
+  VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                              const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,

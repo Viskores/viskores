@@ -24,9 +24,7 @@ ColorBarAnnotation::ColorBarAnnotation()
 {
 }
 
-ColorBarAnnotation::~ColorBarAnnotation()
-{
-}
+ColorBarAnnotation::~ColorBarAnnotation() {}
 
 void ColorBarAnnotation::SetFieldName(const std::string& fieldName)
 {

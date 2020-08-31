@@ -23,6 +23,32 @@
 
 namespace vtkm
 {
+
+namespace internal
+{
+
+///@{
+/// \brief Convert the number of values of a type to the number of bytes needed to store it.
+///
+/// A convenience function that takes the number of values in an array and either the type or the
+/// size of the type and safely converts that to the number of bytes required to store the array.
+///
+/// This function can throw an `vtkm::cont::ErrorBadAllocation` if the number of bytes cannot be
+/// stored in the returned `vtkm::BufferSizeType`. (That would be a huge array and probably
+/// indicative of an error.)
+///
+VTKM_CONT_EXPORT vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues,
+                                                                    std::size_t typeSize);
+
+template <typename T>
+vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues)
+{
+  return NumberOfValuesToNumberOfBytes(numValues, sizeof(T));
+}
+///@}
+
+} // namespace internal
+
 namespace cont
 {
 namespace internal
@@ -34,6 +60,28 @@ namespace detail
 struct BufferHelper;
 
 } // namespace detail
+
+/// \brief An object to hold metadata for a `Buffer` object.
+///
+/// A `Buffer` object can optionally hold a `BufferMetaData` object. The metadata object
+/// allows the buffer to hold state for the buffer that is not directly related to the
+/// memory allocated and its size. This allows you to completely encapsulate the state
+/// in the `Buffer` object and then pass the `Buffer` object to different object that
+/// provide different interfaces to the array.
+///
+/// To use `BufferMetaData`, create a subclass, and then provide that subclass as the
+/// metadata. The `Buffer` object will only remember it as the generic base class. You
+/// can then get the metadata and perform a `dynamic_cast` to check that the metadata
+/// is as expected and to get to the meta information
+///
+struct VTKM_CONT_EXPORT BufferMetaData
+{
+  virtual ~BufferMetaData();
+
+  /// Subclasses must provide a way to deep copy metadata.
+  ///
+  virtual std::unique_ptr<BufferMetaData> DeepCopy() const = 0;
+};
 
 /// \brief Manages a buffer data among the host and various devices.
 ///
@@ -54,12 +102,12 @@ public:
   VTKM_CONT Buffer();
 
   VTKM_CONT Buffer(const Buffer& src);
-  VTKM_CONT Buffer(Buffer&& src);
+  VTKM_CONT Buffer(Buffer&& src) noexcept;
 
   VTKM_CONT ~Buffer();
 
   VTKM_CONT Buffer& operator=(const Buffer& src);
-  VTKM_CONT Buffer& operator=(Buffer&& src);
+  VTKM_CONT Buffer& operator=(Buffer&& src) noexcept;
 
   /// \brief Returns the number of bytes held by the buffer.
   ///
@@ -81,6 +129,35 @@ public:
   VTKM_CONT void SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                                   vtkm::CopyFlag preserve,
                                   vtkm::cont::Token& token);
+
+  /// \brief Gets the metadata for the buffer.
+  ///
+  /// Holding metadata in a `Buffer` is optional. The metadata is held in a subclass of
+  /// `BufferMetaData`, and you will have to safely downcast the object to retrieve the
+  /// actual information.
+  ///
+  /// The metadata could be a `nullptr` if the metadata was never set.
+  ///
+  VTKM_CONT vtkm::cont::internal::BufferMetaData* GetMetaData() const;
+
+  /// \brief Sets the metadata for the buffer.
+  ///
+  /// This form of SetMetaData takes an rvalue to a unique_ptr holding the metadata to
+  /// ensure that the object is properly managed.
+  ///
+  VTKM_CONT void SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata);
+
+  /// \brief Sets the metadata for the buffer.
+  ///
+  /// This form of SetMetaData takes the metadata object value. The metadata object
+  /// must be a subclass of BufferMetaData or you will get a compile error.
+  ///
+  template <typename MetaDataType>
+  VTKM_CONT void SetMetaData(const MetaDataType& metadata)
+  {
+    this->SetMetaData(
+      std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new MetaDataType(metadata)));
+  }
 
   /// \brief Returns `true` if the buffer is allocated on the host.
   ///
@@ -170,6 +247,18 @@ public:
   /// that is inconsistent with the size of this buffer, an exception will be thrown.
   ///
   VTKM_CONT void Reset(const vtkm::cont::internal::BufferInfo& buffer);
+
+  /// \brief Unallocates the buffer from all devices.
+  ///
+  /// This method preserves the data on the host even if the data must be transferred
+  /// there.
+  ///
+  /// Note that this method will not physically deallocate memory on a device that shares
+  /// a memory space with the host (since the data must be preserved on the host). This
+  /// is true even for memory spaces that page data between host and device. This method
+  /// will not attempt to unpage data from a device with shared memory.
+  ///
+  VTKM_CONT void ReleaseDeviceResources() const;
 
   /// \brief Gets the `BufferInfo` object to the memory allocated on the host.
   ///

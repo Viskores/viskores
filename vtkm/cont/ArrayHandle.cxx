@@ -24,9 +24,7 @@ VTKM_CONT void ArrayHandleReleaseResourcesExecution(
 
   for (auto&& buf : buffers)
   {
-    // Getting a write host buffer should invalidate any execution arrays.
-    // Might want to make something more explicit in Buffer.
-    buf.WritePointerHost(token);
+    buf.ReleaseDeviceResources();
   }
 }
 

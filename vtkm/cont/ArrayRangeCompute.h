@@ -43,17 +43,17 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
 // Precompiled versions of ArrayRangeCompute
-#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(T, Storage)                                             \
-  VTKM_CONT_EXPORT                                                                                 \
-  VTKM_CONT                                                                                        \
-  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
-    const vtkm::cont::ArrayHandle<T, Storage>& input,                                              \
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(T, Storage)    \
+  VTKM_CONT_EXPORT                                        \
+  VTKM_CONT                                               \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute( \
+    const vtkm::cont::ArrayHandle<T, Storage>& input,     \
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
-#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(T, N, Storage)                                        \
-  VTKM_CONT_EXPORT                                                                                 \
-  VTKM_CONT                                                                                        \
-  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input,                                \
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(T, N, Storage)         \
+  VTKM_CONT_EXPORT                                                  \
+  VTKM_CONT                                                         \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(           \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input, \
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(char, vtkm::cont::StorageTagBasic);

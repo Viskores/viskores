@@ -74,7 +74,7 @@ public:
                                 WholeArrayIn superparents, // (input)
                                 WholeArrayIn superarcs,    // (input)
                                 WholeArrayOut isNecessary  // (output)
-                                );
+  );
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

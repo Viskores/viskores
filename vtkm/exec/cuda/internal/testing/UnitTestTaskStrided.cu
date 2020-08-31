@@ -241,25 +241,25 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
 // Check behavior of InvocationToFetch helper class.
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagInput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagOutput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagOutput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 template <typename DeviceAdapter>
 void TestNormalFunctorInvoke()

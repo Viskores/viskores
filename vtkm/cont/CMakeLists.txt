@@ -139,6 +139,7 @@ set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
+  BitField.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
@@ -239,6 +240,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 set(backends )
 if(TARGET vtkm::tbb)
@@ -249,6 +251,9 @@ if(TARGET vtkm::cuda)
 endif()
 if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
+endif()
+if(TARGET vtkm::kokkos)
+  list(APPEND backends vtkm::kokkos)
 endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})

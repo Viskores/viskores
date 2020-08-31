@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_Contour_h
 #define vtk_m_filter_Contour_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_contour_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/MapFieldPermutation.h>
@@ -34,25 +34,25 @@ class VTKM_ALWAYS_EXPORT Contour : public vtkm::filter::FilterDataSetWithField<C
 public:
   using SupportedTypes = vtkm::List<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>;
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   Contour();
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   void SetNumberOfIsoValues(vtkm::Id num);
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   vtkm::Id GetNumberOfIsoValues() const;
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   void SetIsoValue(vtkm::Float64 v) { this->SetIsoValue(0, v); }
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   void SetIsoValue(vtkm::Id index, vtkm::Float64);
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   void SetIsoValues(const std::vector<vtkm::Float64>& values);
 
-  VTKM_FILTER_EXPORT
+  VTKM_FILTER_CONTOUR_EXPORT
   vtkm::Float64 GetIsoValue(vtkm::Id index) const;
 
   /// Set/Get whether the points generated should be unique for every triangle
@@ -175,49 +175,49 @@ private:
 
 #ifndef vtkm_filter_ContourExecute_cxx
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int8>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
-extern template VTKM_FILTER_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
+extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,

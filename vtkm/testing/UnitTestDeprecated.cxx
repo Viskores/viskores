@@ -17,19 +17,19 @@ namespace
 
 struct NewClass
 {
-  VTKM_EXEC_CONT
+  VTKM_CONT
   void ImportantMethod(double x, double tolerance)
   {
     std::cout << "Using " << x << " with tolerance " << tolerance << std::endl;
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   VTKM_DEPRECATED(1.7, "You must now specify a tolerance.") void ImportantMethod(double x)
   {
     this->ImportantMethod(x, 1e-6);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   VTKM_DEPRECATED(1.6, "You must now specify both a value and tolerance.")
   void ImportantMethod()
   {
@@ -91,9 +91,10 @@ static void DoTest()
   std::cout << "Deprecation is: " << VTKM_STRINGIFY_FIRST(VTKM_DEPRECATED(X.Y, "Message."))
             << std::endl;
 
-  VTKM_TEST_ASSERT(test_equal(VTK_M_DEPRECATED_MAKE_MESSAGE(X.Y), " Deprecated in version X.Y."));
-  VTKM_TEST_ASSERT(test_equal(VTK_M_DEPRECATED_MAKE_MESSAGE(X.Y.Z, "Use feature foo instead."),
-                              "Use feature foo instead. Deprecated in version X.Y.Z."));
+  VTKM_TEST_ASSERT(VTK_M_DEPRECATED_MAKE_MESSAGE(X.Y) ==
+                   std::string(" Deprecated in version X.Y."));
+  VTKM_TEST_ASSERT(VTK_M_DEPRECATED_MAKE_MESSAGE(X.Y.Z, "Use feature foo instead.") ==
+                   std::string("Use feature foo instead. Deprecated in version X.Y.Z."));
 
   // Using valid classes with unused deprecated parts should be fine.
   NewClass useIt;
@@ -101,8 +102,8 @@ static void DoTest()
   useIt.ImportantMethod(1.1, 1e-8);
   DoSomethingWithObject(NewEnum::NEW_VALUE);
 
-// These should each give compiler warnings.
-#if 0
+  // These should each give compiler warnings without the suppressions.
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   OldClass useOldClass;
   DoSomethingWithObject(useOldClass);
   OldAlias useOldAlias;
@@ -114,7 +115,7 @@ static void DoTest()
   DoSomethingWithObject(OldEnum::OLD_VALUE);
   DoSomethingWithObject(NewEnum::OLD_VALUE1);
   DoSomethingWithObject(NewEnum::OLD_VALUE2);
-#endif
+  VTKM_DEPRECATED_SUPPRESS_END
 }
 
 } // anonymous namespace

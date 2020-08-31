@@ -75,9 +75,10 @@ void VTKRectilinearGridReader::Read()
     vtkm::cont::Field::Association::ANY, fileStorageDataType, numPoints[2], 1);
 
 
-  if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
-                       static_cast<vtkm::Id>(numPoints[1]),
-                       static_cast<vtkm::Id>(numPoints[2])))
+  if (dim !=
+      vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
+                static_cast<vtkm::Id>(numPoints[1]),
+                static_cast<vtkm::Id>(numPoints[2])))
     throw vtkm::io::ErrorIO("DIMENSIONS not equal to number of points");
 
   vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,

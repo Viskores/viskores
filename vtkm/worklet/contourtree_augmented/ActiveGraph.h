@@ -556,7 +556,7 @@ void ActiveGraph::CompactActiveEdges()
                this->Outdegree,      // (input)
                this->Hyperarcs,      // (input/output)
                newOutdegree          // (output)
-               );
+  );
 
   // now we do a reduction to compute the offsets of each vertex
   vtkm::cont::ArrayHandle<vtkm::Id> newPosition;
@@ -590,7 +590,7 @@ void ActiveGraph::CompactActiveEdges()
                this->FirstEdge,   // (input/output)
                this->Outdegree,   // (input/output)
                this->Hyperarcs    // (input/output)
-               );
+  );
 
   // resize the original array and recopy
   //vtkm::cont::Algorithm::::Copy(newActiveEdges, this-ActiveEdges);
@@ -769,7 +769,7 @@ void ActiveGraph::SetSuperArcs(MergeTree& tree)
                this->HyperID,       // (input)
                tree.Superarcs,      // (output)
                tree.FirstSuperchild // (output)
-               );
+  );
 
   // 6.   Now we can reset the supernodes to mesh IDs
   PermutedIdArrayType permuteGlobalIndex(tree.Supernodes, this->GlobalIndex);

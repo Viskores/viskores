@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ImageMedian_h
 #define vtk_m_filter_ImageMedian_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 /// \brief Median algorithm for general image blur
 ///

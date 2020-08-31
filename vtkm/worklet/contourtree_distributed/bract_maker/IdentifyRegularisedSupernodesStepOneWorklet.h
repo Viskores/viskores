@@ -76,7 +76,7 @@ public:
                                 WholeArrayIn downNeighbour,       // input
                                 WholeArrayOut newVertexId         // output
 
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _2, _1, _3, _4, _5, _6);
   using InputDomain = _1;
 

@@ -13,6 +13,7 @@
 #include <vtkm/Bitset.h>
 #include <vtkm/VecVariable.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/Serialization.h>
 
 namespace vtkm
 {
@@ -64,24 +65,24 @@ inline VTKM_CONT std::ostream& operator<<(std::ostream& s, const vtkm::ParticleS
   return s;
 }
 
-class Particle
+class ParticleBase
 {
 public:
   VTKM_EXEC_CONT
-  Particle() {}
+  ParticleBase() {}
 
-  VTKM_EXEC_CONT virtual ~Particle() noexcept
+  VTKM_EXEC_CONT virtual ~ParticleBase() noexcept
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.
   }
 
   VTKM_EXEC_CONT
-  Particle(const vtkm::Vec3f& p,
-           const vtkm::Id& id,
-           const vtkm::Id& numSteps = 0,
-           const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
-           const vtkm::FloatDefault& time = 0)
+  ParticleBase(const vtkm::Vec3f& p,
+               const vtkm::Id& id,
+               const vtkm::Id& numSteps = 0,
+               const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
+               const vtkm::FloatDefault& time = 0)
     : Pos(p)
     , ID(id)
     , NumSteps(numSteps)
@@ -91,7 +92,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  Particle(const vtkm::Particle& p)
+  ParticleBase(const vtkm::ParticleBase& p)
     : Pos(p.Pos)
     , ID(p.ID)
     , NumSteps(p.NumSteps)
@@ -100,7 +101,7 @@ public:
   {
   }
 
-  vtkm::Particle& operator=(const vtkm::Particle&) = default;
+  vtkm::ParticleBase& operator=(const vtkm::ParticleBase&) = default;
 
   // The basic particle is only meant to be advected in a velocity
   // field. In that case it is safe to assume that the velocity value
@@ -122,13 +123,13 @@ public:
   vtkm::FloatDefault Time = 0;
 };
 
-class Massless : public vtkm::Particle
+class Particle : public vtkm::ParticleBase
 {
 public:
   VTKM_EXEC_CONT
-  Massless() {}
+  Particle() {}
 
-  VTKM_EXEC_CONT ~Massless() noexcept override
+  VTKM_EXEC_CONT ~Particle() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
     // troublesome with CUDA __host__ __device__ markup.
@@ -136,20 +137,14 @@ public:
 
 
   VTKM_EXEC_CONT
-  Massless(const vtkm::Vec3f& p,
+  Particle(const vtkm::Vec3f& p,
            const vtkm::Id& id,
            const vtkm::Id& numSteps = 0,
            const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
            const vtkm::FloatDefault& time = 0)
-    : Particle(p, id, numSteps, status, time)
+    : ParticleBase(p, id, numSteps, status, time)
   {
   }
-
-  /*VTKM_EXEC_CONT
-  Massless(const vtkm::Massless& p)
-    : Particle(p)
-  {
-  }*/
 
   VTKM_EXEC_CONT
   vtkm::Vec3f Next(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
@@ -170,7 +165,7 @@ public:
   }
 };
 
-class Electron : public vtkm::Particle
+class Electron : public vtkm::ParticleBase
 {
 public:
   VTKM_EXEC_CONT
@@ -186,7 +181,7 @@ public:
            const vtkm::Id& numSteps = 0,
            const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
            const vtkm::FloatDefault& time = 0)
-    : Particle(position, id, numSteps, status, time)
+    : ParticleBase(position, id, numSteps, status, time)
     , Mass(mass)
     , Charge(charge)
     , Weighting(weighting)
@@ -254,8 +249,68 @@ private:
   vtkm::Vec3f Momentum;
   constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
     static_cast<vtkm::FloatDefault>(2.99792458e8);
+
+  friend struct mangled_diy_namespace::Serialization<vtkm::Electron>;
 };
 
 } //namespace vtkm
+
+
+namespace mangled_diy_namespace
+{
+template <>
+struct Serialization<vtkm::Particle>
+{
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::Particle& p)
+  {
+    vtkmdiy::save(bb, p.Pos);
+    vtkmdiy::save(bb, p.ID);
+    vtkmdiy::save(bb, p.NumSteps);
+    vtkmdiy::save(bb, p.Status);
+    vtkmdiy::save(bb, p.Time);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::Particle& p)
+  {
+    vtkmdiy::load(bb, p.Pos);
+    vtkmdiy::load(bb, p.ID);
+    vtkmdiy::load(bb, p.NumSteps);
+    vtkmdiy::load(bb, p.Status);
+    vtkmdiy::load(bb, p.Time);
+  }
+};
+
+template <>
+struct Serialization<vtkm::Electron>
+{
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::Electron& e)
+  {
+    vtkmdiy::save(bb, e.Pos);
+    vtkmdiy::save(bb, e.ID);
+    vtkmdiy::save(bb, e.NumSteps);
+    vtkmdiy::save(bb, e.Status);
+    vtkmdiy::save(bb, e.Time);
+    vtkmdiy::save(bb, e.Mass);
+    vtkmdiy::save(bb, e.Charge);
+    vtkmdiy::save(bb, e.Weighting);
+    vtkmdiy::save(bb, e.Momentum);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::Electron& e)
+  {
+    vtkmdiy::load(bb, e.Pos);
+    vtkmdiy::load(bb, e.ID);
+    vtkmdiy::load(bb, e.NumSteps);
+    vtkmdiy::load(bb, e.Status);
+    vtkmdiy::load(bb, e.Time);
+    vtkmdiy::load(bb, e.Mass);
+    vtkmdiy::load(bb, e.Charge);
+    vtkmdiy::load(bb, e.Weighting);
+    vtkmdiy::load(bb, e.Momentum);
+  }
+};
+}
 
 #endif // vtk_m_Particle_h

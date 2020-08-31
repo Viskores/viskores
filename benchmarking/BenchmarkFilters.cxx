@@ -165,8 +165,8 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 }
 
-#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                                \
-  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); }              \
+#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                   \
+  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); } \
   VTKM_BENCHMARK(BenchGradient##Name)
 
 VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);

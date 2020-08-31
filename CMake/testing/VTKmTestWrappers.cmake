@@ -27,7 +27,6 @@ function(vtkm_create_test_executable
   # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
   if (is_mpi_test)
     set(extraArgs EXTRA_INCLUDE "vtkm/thirdparty/diy/environment.h")
-    set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "vtkmdiy::mpi::environment env(ac, av);")
 
     if (use_mpi)
       vtkm_diy_use_mpi(ON)
@@ -50,7 +49,7 @@ function(vtkm_create_test_executable
 
   #if all backends are enabled, we can use cuda compiler to handle all possible backends.
   set(device_sources)
-  if(TARGET vtkm::cuda AND enable_all_backends)
+  if(((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)) AND enable_all_backends)
     set(device_sources ${sources})
   endif()
   vtkm_add_target_information(${prog} DEVICE_SOURCES ${device_sources})
@@ -152,6 +151,13 @@ function(vtkm_unit_tests)
       #explosion which causes the tests to run slower than when run
       #serially
       list(APPEND per_device_serial TRUE)
+    endif()
+    if (VTKm_ENABLE_KOKKOS)
+      list(APPEND per_device_command_line_arguments --device=kokkos)
+      list(APPEND per_device_suffix "KOKKOS")
+      #may require more time because of kernel generation.
+      list(APPEND per_device_timeout 1500)
+      list(APPEND per_device_serial FALSE)
     endif()
   endif()
 

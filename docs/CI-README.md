@@ -60,14 +60,14 @@ Current gitlab runner tags for VTK-m are:
         Used to state that we require a linux based gitlab-runner
     - large-memory
         Used to state that this step will require a machine that has lots of memory.
-        This is currently used for cuda `build` requests
+        This is currently used for CUDA `build` requests
     - cuda-rt
-        Used to state that the runner is required to have the cuda runtime enviornment.
-        This isn't required to `build` VTK-m, only `test`
+        Used to state that the runner is required to have the CUDA runtime environment.
+        This is required to `build` and `test` VTK-m when using CUDA 
     - maxwell
     - pascal
     - turing
-        Only used on a `test` stage to signifiy which GPU hardware is required to
+        Only used on a `test` stage to signify which GPU hardware is required to
         run the VTK-m tests
 
 # How to use docker builders locally

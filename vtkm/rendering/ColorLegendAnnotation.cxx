@@ -21,9 +21,7 @@ ColorLegendAnnotation::ColorLegendAnnotation()
   this->LabelColor = vtkm::rendering::Color::white;
 }
 
-ColorLegendAnnotation::~ColorLegendAnnotation()
-{
-}
+ColorLegendAnnotation::~ColorLegendAnnotation() {}
 
 void ColorLegendAnnotation::Clear()
 {

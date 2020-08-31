@@ -89,9 +89,8 @@ struct sort_tag_type<T, vtkm::cont::StorageTagBasic, BinaryCompare>
   using PrimT = std::is_arithmetic<T>;
   using LongDT = std::is_same<T, long double>;
   using BComp = is_valid_compare_type<BinaryCompare>;
-  using type = typename std::conditional<PrimT::value && BComp::value && !LongDT::value,
-                                         RadixSortTag,
-                                         PSortTag>::type;
+  using type = typename std::
+    conditional<PrimT::value && BComp::value && !LongDT::value, RadixSortTag, PSortTag>::type;
 };
 
 template <typename KeyType,
@@ -120,33 +119,33 @@ struct sortbykey_tag_type<KeyType,
                                          PSortTag>::type;
 };
 
-#define VTKM_INTERNAL_RADIX_SORT_DECLARE(key_type)                                                 \
-  VTKM_CONT_EXPORT void parallel_radix_sort(                                                       \
-    key_type* data, size_t num_elems, const std::greater<key_type>& comp);                         \
-  VTKM_CONT_EXPORT void parallel_radix_sort(                                                       \
-    key_type* data, size_t num_elems, const std::less<key_type>& comp);                            \
-  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                            \
-    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::greater<key_type>& comp);         \
-  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                            \
+#define VTKM_INTERNAL_RADIX_SORT_DECLARE(key_type)                                         \
+  VTKM_CONT_EXPORT void parallel_radix_sort(                                               \
+    key_type* data, size_t num_elems, const std::greater<key_type>& comp);                 \
+  VTKM_CONT_EXPORT void parallel_radix_sort(                                               \
+    key_type* data, size_t num_elems, const std::less<key_type>& comp);                    \
+  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                    \
+    key_type* keys, vtkm::Id* vals, size_t num_elems, const std::greater<key_type>& comp); \
+  VTKM_CONT_EXPORT void parallel_radix_sort_key_values(                                    \
     key_type* keys, vtkm::Id* vals, size_t num_elems, const std::less<key_type>& comp);
 
 // Generate radix sort interfaces for key and key value sorts.
-#define VTKM_DECLARE_RADIX_SORT()                                                                  \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(short int)                                                      \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned short int)                                             \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(int)                                                            \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned int)                                                   \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(long int)                                                       \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned long int)                                              \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(long long int)                                                  \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned long long int)                                         \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned char)                                                  \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(signed char)                                                    \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(char)                                                           \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(char16_t)                                                       \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(char32_t)                                                       \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(wchar_t)                                                        \
-  VTKM_INTERNAL_RADIX_SORT_DECLARE(float)                                                          \
+#define VTKM_DECLARE_RADIX_SORT()                          \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(short int)              \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned short int)     \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(int)                    \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned int)           \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(long int)               \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned long int)      \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(long long int)          \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned long long int) \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(unsigned char)          \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(signed char)            \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(char)                   \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(char16_t)               \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(char32_t)               \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(wchar_t)                \
+  VTKM_INTERNAL_RADIX_SORT_DECLARE(float)                  \
   VTKM_INTERNAL_RADIX_SORT_DECLARE(double)
 }
 }

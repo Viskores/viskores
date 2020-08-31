@@ -17,9 +17,7 @@ namespace vtkm
 namespace rendering
 {
 
-Mapper::~Mapper()
-{
-}
+Mapper::~Mapper() {}
 
 void Mapper::SetActiveColorTable(const vtkm::cont::ColorTable& colorTable)
 {

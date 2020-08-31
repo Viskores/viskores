@@ -77,7 +77,7 @@ public:
                                 WholeArrayOut isNecessaryAndInterior // output
 
 
-                                );
+  );
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 

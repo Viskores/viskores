@@ -19,8 +19,8 @@
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 namespace vtkm
 {
@@ -65,7 +65,7 @@ inline VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(
 
   vtkm::worklet::Streamline streamline;
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   auto res = streamline.Run(rk4, seedArray, this->NumberOfSteps);
 

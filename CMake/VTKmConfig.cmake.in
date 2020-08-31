@@ -39,6 +39,7 @@
 #  VTKm_ENABLE_CUDA           Will be enabled if VTK-m was built with CUDA support
 #  VTKm_ENABLE_TBB            Will be enabled if VTK-m was built with TBB support
 #  VTKm_ENABLE_OPENMP         Will be enabled if VTK-m was built with OpenMP support
+#  VTKm_ENABLE_KOKKOS         Will be enabled if VTK-m was built with Kokkos support
 #  VTKm_ENABLE_LOGGING        Will be enabled if VTK-m was built with logging support
 #  VTKm_ENABLE_MPI            Will be enabled if VTK-m was built with MPI support
 #  VTKm_ENABLE_RENDERING      Will be enabled if VTK-m was built with rendering support
@@ -69,6 +70,7 @@ set(VTKm_BUILD_SHARED_LIBS "@VTKm_BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_OPENMP "@VTKm_ENABLE_OPENMP@")
+set(VTKm_ENABLE_KOKKOS "@VTKm_ENABLE_KOKKOS@")
 set(VTKm_ENABLE_LOGGING "@VTKm_ENABLE_LOGGING@")
 set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
 set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
@@ -101,6 +103,12 @@ endif()
 if(VTKm_ENABLE_CUDA AND VTKM_FROM_INSTALL_DIR)
   set_target_properties(vtkm::cuda PROPERTIES cuda_architecture_flags "@VTKm_CUDA_Architecture_Flags@")
   set_target_properties(vtkm::cuda PROPERTIES requires_static_builds TRUE)
+
+  # If VTK-m is built with 3.18+ and the consumer is < 3.18 we need to drop
+  # these properties as they break the VTK-m cuda flag logic
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    set_target_properties(vtkm::cuda PROPERTIES INTERFACE_LINK_OPTIONS "")
+  endif()
 endif()
 
 # VTKm requires some CMake Find modules not included with CMake, so

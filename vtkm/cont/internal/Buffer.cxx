@@ -21,6 +21,27 @@
 #include <cstring>
 #include <deque>
 #include <map>
+#include <memory>
+
+namespace vtkm
+{
+namespace internal
+{
+
+vtkm::BufferSizeType NumberOfValuesToNumberOfBytes(vtkm::Id numValues, std::size_t typeSize)
+{
+  VTKM_ASSERT(numValues >= 0);
+
+  if (numValues > (std::numeric_limits<vtkm::BufferSizeType>::max() /
+                   static_cast<vtkm::BufferSizeType>(typeSize)))
+  {
+    throw vtkm::cont::ErrorBadAllocation("Asking for a buffer too big to represent.");
+  }
+
+  return numValues * static_cast<vtkm::BufferSizeType>(typeSize);
+}
+}
+} // namespace vtkm::internal
 
 namespace
 {
@@ -88,6 +109,8 @@ namespace cont
 namespace internal
 {
 
+BufferMetaData::~BufferMetaData() {}
+
 class Buffer::InternalsStruct
 {
 public:
@@ -114,6 +137,8 @@ private:
 public:
   std::mutex Mutex;
   std::condition_variable ConditionVariable;
+
+  std::unique_ptr<vtkm::cont::internal::BufferMetaData> MetaData;
 
   LockType GetLock() { return LockType(this->Mutex); }
 
@@ -297,6 +322,42 @@ struct VTKM_NEVER_EXPORT BufferHelper
     }
   }
 
+  static void SetNumberOfBytes(const std::shared_ptr<Buffer::InternalsStruct>& internals,
+                               std::unique_lock<std::mutex>& lock,
+                               vtkm::BufferSizeType numberOfBytes,
+                               vtkm::CopyFlag preserve,
+                               vtkm::cont::Token& token)
+  {
+    VTKM_ASSUME(numberOfBytes >= 0);
+
+    if (internals->GetNumberOfBytes(lock) == numberOfBytes)
+    {
+      // Allocation has not changed. Just return.
+      // Note, if you set the size to the old size and then try to get the buffer on a different
+      // place, a copy might happen.
+      return;
+    }
+
+    // We are altering the array, so make sure we can write to it.
+    BufferHelper::WaitToWrite(internals, lock, token);
+
+    internals->SetNumberOfBytes(lock, numberOfBytes);
+    if ((preserve == vtkm::CopyFlag::Off) || (numberOfBytes == 0))
+    {
+      // No longer need these buffers. Just release them.
+      internals->GetHostBuffer(lock).Release();
+      for (auto&& deviceBuffer : internals->GetDeviceBuffers(lock))
+      {
+        deviceBuffer.second.Release();
+      }
+    }
+    else
+    {
+      // Do nothing (other than resetting numberOfBytes). Buffers will get resized when you get the
+      // pointer.
+    }
+  }
+
   static void AllocateOnHost(const std::shared_ptr<Buffer::InternalsStruct>& internals,
                              std::unique_lock<std::mutex>& lock,
                              vtkm::cont::Token& token,
@@ -473,6 +534,11 @@ struct VTKM_NEVER_EXPORT BufferHelper
     std::memcpy(destInternals->GetHostBuffer(destLock).GetPointer(),
                 srcInternals->GetHostBuffer(srcLock).GetPointer(),
                 static_cast<std::size_t>(size));
+
+    if (srcInternals->MetaData)
+    {
+      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
+    }
   }
 
   static void CopyOnDevice(
@@ -513,6 +579,11 @@ struct VTKM_NEVER_EXPORT BufferHelper
     }
 
     destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
+
+    if (srcInternals->MetaData)
+    {
+      destInternals->MetaData = srcInternals->MetaData->DeepCopy();
+    }
   }
 };
 
@@ -530,15 +601,13 @@ Buffer::Buffer(const Buffer& src)
 }
 
 // Defined to prevent issues with CUDA
-Buffer::Buffer(Buffer&& src)
+Buffer::Buffer(Buffer&& src) noexcept
   : Internals(std::move(src.Internals))
 {
 }
 
 // Defined to prevent issues with CUDA
-Buffer::~Buffer()
-{
-}
+Buffer::~Buffer() {}
 
 // Defined to prevent issues with CUDA
 Buffer& Buffer::operator=(const Buffer& src)
@@ -548,7 +617,7 @@ Buffer& Buffer::operator=(const Buffer& src)
 }
 
 // Defined to prevent issues with CUDA
-Buffer& Buffer::operator=(Buffer&& src)
+Buffer& Buffer::operator=(Buffer&& src) noexcept
 {
   this->Internals = std::move(src.Internals);
   return *this;
@@ -564,35 +633,18 @@ void Buffer::SetNumberOfBytes(vtkm::BufferSizeType numberOfBytes,
                               vtkm::CopyFlag preserve,
                               vtkm::cont::Token& token)
 {
-  VTKM_ASSUME(numberOfBytes >= 0);
-
   LockType lock = this->Internals->GetLock();
-  if (this->Internals->GetNumberOfBytes(lock) == numberOfBytes)
-  {
-    // Allocation has not changed. Just return.
-    // Note, if you set the size to the old size and then try to get the buffer on a different
-    // place, a copy might happen.
-    return;
-  }
+  detail::BufferHelper::SetNumberOfBytes(this->Internals, lock, numberOfBytes, preserve, token);
+}
 
-  // We are altering the array, so make sure we can write to it.
-  detail::BufferHelper::WaitToWrite(this->Internals, lock, token);
+vtkm::cont::internal::BufferMetaData* Buffer::GetMetaData() const
+{
+  return this->Internals->MetaData.get();
+}
 
-  this->Internals->SetNumberOfBytes(lock, numberOfBytes);
-  if ((preserve == vtkm::CopyFlag::Off) || (numberOfBytes == 0))
-  {
-    // No longer need these buffers. Just release them.
-    this->Internals->GetHostBuffer(lock).Release();
-    for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(lock))
-    {
-      deviceBuffer.second.Release();
-    }
-  }
-  else
-  {
-    // Do nothing (other than resetting numberOfBytes). Buffers will get resized when you get the
-    // pointer.
-  }
+void Buffer::SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata)
+{
+  this->Internals->MetaData = std::move(metadata);
 }
 
 bool Buffer::IsAllocatedOnHost() const
@@ -747,7 +799,15 @@ void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest) const
     else
     {
       // Nothing actually allocated. Just create allocation for dest. (Allocation happens lazily.)
-      dest.SetNumberOfBytes(this->GetNumberOfBytes(), vtkm::CopyFlag::Off, token);
+      detail::BufferHelper::SetNumberOfBytes(dest.Internals,
+                                             destLock,
+                                             this->Internals->GetNumberOfBytes(srcLock),
+                                             vtkm::CopyFlag::Off,
+                                             token);
+      if (this->Internals->MetaData)
+      {
+        dest.Internals->MetaData = this->Internals->MetaData->DeepCopy();
+      }
     }
   }
 }
@@ -791,6 +851,15 @@ void Buffer::Reset(const vtkm::cont::internal::BufferInfo& bufferInfo)
   }
 
   this->Internals->SetNumberOfBytes(lock, bufferInfo.GetSize());
+}
+
+void Buffer::ReleaseDeviceResources() const
+{
+  vtkm::cont::Token token;
+
+  // Getting a write host buffer will invalidate any device arrays and preserve data
+  // on the host (copying if necessary).
+  this->WritePointerHost(token);
 }
 
 vtkm::cont::internal::BufferInfo Buffer::GetHostBufferInfo() const

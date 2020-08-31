@@ -55,8 +55,8 @@ struct ExecutionSignatureTagCheck
 /// that a template argument is actually an \c ExecutionSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag)                                                       \
-  VTKM_STATIC_ASSERT_MSG(::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid,      \
+#define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag)                                                  \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
                          "Provided a type that is not a valid ExecutionSignature tag.")
 }
 }

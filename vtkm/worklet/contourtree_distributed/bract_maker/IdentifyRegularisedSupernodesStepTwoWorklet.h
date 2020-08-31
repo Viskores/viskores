@@ -76,7 +76,7 @@ public:
                                 ExecObject meshBoundary,     // input
                                 WholeArrayOut newVertexId    // output
 
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
   using InputDomain = _1;
 

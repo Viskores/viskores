@@ -22,9 +22,12 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-//#include <vtkm/worklet/particleadvection/ParticlesAOS.h>
+
+#ifdef VTKM_CUDA
+#include <vtkm/cont/cuda/internal/ScopedCudaStackSize.h>
+#endif
 
 namespace vtkm
 {
@@ -124,7 +127,7 @@ public:
 
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
     (void)stack;
 #endif // VTKM_CUDA
 
@@ -199,7 +202,7 @@ public:
 
 #ifdef VTKM_CUDA
     // This worklet needs some extra space on CUDA.
-    vtkm::cont::cuda::ScopedCudaStackSize stack(16 * 1024);
+    vtkm::cont::cuda::internal::ScopedCudaStackSize stack(16 * 1024);
     (void)stack;
 #endif // VTKM_CUDA
 

@@ -358,6 +358,10 @@ void TestArrayHandleSerialization()
 //-----------------------------------------------------------------------------
 int UnitTestSerializationArrayHandle(int argc, char* argv[])
 {
+  // Normally VTK-m `Testing::Run` would setup the diy MPI env,
+  // but since we need to access it before execution we have
+  // to manually set it  up
+  vtkmdiy::mpi::environment env(argc, argv);
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
   decltype(generator)::result_type seed = 0;

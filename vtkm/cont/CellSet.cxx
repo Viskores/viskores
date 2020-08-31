@@ -15,8 +15,6 @@ namespace vtkm
 namespace cont
 {
 
-CellSet::~CellSet()
-{
-}
+CellSet::~CellSet() {}
 }
 } // namespace vtkm::cont

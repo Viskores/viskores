@@ -425,9 +425,7 @@ CylinderIntersector::CylinderIntersector()
 {
 }
 
-CylinderIntersector::~CylinderIntersector()
-{
-}
+CylinderIntersector::~CylinderIntersector() {}
 
 void CylinderIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
                                   vtkm::cont::ArrayHandle<vtkm::Id3> cylIds,

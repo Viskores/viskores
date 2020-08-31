@@ -72,7 +72,7 @@ public:
   typedef void ControlSignature(FieldIn nodeIndex,       // (input)
                                 ExecObject meshBoundary, // (input)
                                 FieldOut isOnBoundary    // (output)
-                                );
+  );
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 

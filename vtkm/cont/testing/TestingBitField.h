@@ -23,32 +23,32 @@
 
 #include <cstdio>
 
-#define DEVICE_ASSERT_MSG(cond, message)                                                           \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(cond))                                                                                   \
-    {                                                                                              \
-      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n\t- Subtest: %s\n",               \
-             __FILE__,                                                                             \
-             __LINE__,                                                                             \
-             #cond,                                                                                \
-             message);                                                                             \
-      return false;                                                                                \
-    }                                                                                              \
+#define DEVICE_ASSERT_MSG(cond, message)                                             \
+  do                                                                                 \
+  {                                                                                  \
+    if (!(cond))                                                                     \
+    {                                                                                \
+      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n\t- Subtest: %s\n", \
+             __FILE__,                                                               \
+             __LINE__,                                                               \
+             #cond,                                                                  \
+             message);                                                               \
+      return false;                                                                  \
+    }                                                                                \
   } while (false)
 
-#define DEVICE_ASSERT(cond)                                                                        \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(cond))                                                                                   \
-    {                                                                                              \
-      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n", __FILE__, __LINE__, #cond);    \
-      return false;                                                                                \
-    }                                                                                              \
+#define DEVICE_ASSERT(cond)                                                                     \
+  do                                                                                            \
+  {                                                                                             \
+    if (!(cond))                                                                                \
+    {                                                                                           \
+      printf("Testing assert failed at %s:%d\n\t- Condition: %s\n", __FILE__, __LINE__, #cond); \
+      return false;                                                                             \
+    }                                                                                           \
   } while (false)
 
 // Test with some trailing bits in partial last word:
-#define NUM_BITS                                                                                   \
+#define NUM_BITS \
   vtkm::Id { 7681 }
 
 using vtkm::cont::BitField;
@@ -100,10 +100,8 @@ template <class DeviceAdapterTag>
 struct TestingBitField
 {
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-  using AtomicInterface = vtkm::cont::internal::AtomicInterfaceExecution<DeviceAdapterTag>;
   using Traits = vtkm::cont::detail::BitFieldTraits;
-  using WordTypes = typename AtomicInterface::WordTypes;
-  using WordTypesControl = vtkm::cont::internal::AtomicInterfaceControl::WordTypes;
+  using WordTypes = vtkm::AtomicTypesSupported;
 
   VTKM_EXEC_CONT
   static bool RandomBitFromIndex(vtkm::Id idx) noexcept
@@ -152,13 +150,12 @@ struct TestingBitField
 
     // NumBits should be rounded up to the nearest block of bytes, as defined in
     // the traits:
-    const vtkm::Id bytesInFieldData =
-      field.GetData().GetNumberOfValues() * static_cast<vtkm::Id>(sizeof(vtkm::WordTypeDefault));
+    const vtkm::BufferSizeType bytesInFieldData = field.GetBuffer().GetNumberOfBytes();
 
-    const vtkm::Id blockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
-    const vtkm::Id numBytes = (NUM_BITS + CHAR_BIT - 1) / CHAR_BIT;
-    const vtkm::Id numBlocks = (numBytes + blockSize - 1) / blockSize;
-    const vtkm::Id expectedBytes = numBlocks * blockSize;
+    const vtkm::BufferSizeType blockSize = vtkm::cont::detail::BitFieldTraits::BlockSize;
+    const vtkm::BufferSizeType numBytes = (NUM_BITS + CHAR_BIT - 1) / CHAR_BIT;
+    const vtkm::BufferSizeType numBlocks = (numBytes + blockSize - 1) / blockSize;
+    const vtkm::BufferSizeType expectedBytes = numBlocks * blockSize;
 
     VTKM_TEST_ASSERT(bytesInFieldData == expectedBytes,
                      "The BitField allocation does not round up to the nearest "
@@ -314,7 +311,7 @@ struct TestingBitField
     }
 
     HelpTestWordOpsControl<Portal> test(portal);
-    vtkm::ListForEach(test, typename Portal::AtomicInterface::WordTypes{});
+    vtkm::ListForEach(test, vtkm::AtomicTypesSupported{});
   }
 
   VTKM_CONT
@@ -423,7 +420,7 @@ struct TestingBitField
 
 
     HelpTestWordOpsExecution<Portal> test(portal);
-    vtkm::ListForEach(test, typename Portal::AtomicInterface::WordTypes{});
+    vtkm::ListForEach(test, vtkm::AtomicTypesSupported{});
   }
 
   VTKM_CONT

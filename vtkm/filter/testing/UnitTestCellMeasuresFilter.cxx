@@ -65,8 +65,8 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
 
 void TestCellMeasures()
 {
-  using vtkm::Volume;
   using vtkm::AllMeasures;
+  using vtkm::Volume;
 
   vtkm::cont::testing::MakeTestDataSet factory;
   vtkm::cont::DataSet data;

@@ -150,8 +150,9 @@ public:
     return *this;
   }
 
-  CellSetStructured(CellSetStructured&& src) noexcept : CellSet(),
-                                                        Structure(std::move(src.Structure))
+  CellSetStructured(CellSetStructured&& src) noexcept
+    : CellSet()
+    , Structure(std::move(src.Structure))
   {
   }
 

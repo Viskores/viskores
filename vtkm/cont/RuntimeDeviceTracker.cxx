@@ -44,9 +44,7 @@ RuntimeDeviceTracker::RuntimeDeviceTracker(detail::RuntimeDeviceTrackerInternals
 }
 
 VTKM_CONT
-RuntimeDeviceTracker::~RuntimeDeviceTracker()
-{
-}
+RuntimeDeviceTracker::~RuntimeDeviceTracker() {}
 
 VTKM_CONT
 void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId) const

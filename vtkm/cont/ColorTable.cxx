@@ -110,9 +110,7 @@ ColorTable::ColorTable(const std::string& name,
 }
 
 //----------------------------------------------------------------------------
-ColorTable::~ColorTable()
-{
-}
+ColorTable::~ColorTable() {}
 
 //----------------------------------------------------------------------------
 const std::string& ColorTable::GetName() const

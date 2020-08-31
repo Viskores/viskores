@@ -100,14 +100,30 @@ struct Testing
 public:
   static VTKM_CONT const std::string GetTestDataBasePath() { return SetAndGetTestDataBasePath(); }
 
+  static VTKM_CONT const std::string DataPath(const std::string& filename)
+  {
+    return GetTestDataBasePath() + filename;
+  }
+
   static VTKM_CONT const std::string GetRegressionTestImageBasePath()
   {
     return SetAndGetRegressionImageBasePath();
   }
 
+  static VTKM_CONT const std::string RegressionImagePath(const std::string& filename)
+  {
+    return GetRegressionTestImageBasePath() + filename;
+  }
+
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
+    std::unique_ptr<vtkmdiy::mpi::environment> env_diy = nullptr;
+    if (!vtkmdiy::mpi::environment::initialized())
+    {
+      env_diy.reset(new vtkmdiy::mpi::environment(argc, argv));
+    }
+
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
@@ -182,7 +198,13 @@ private:
     static std::string TestDataBasePath;
 
     if (path != "")
+    {
       TestDataBasePath = path;
+      if ((TestDataBasePath.back() != '/') && (TestDataBasePath.back() != '\\'))
+      {
+        TestDataBasePath = TestDataBasePath + "/";
+      }
+    }
 
     return TestDataBasePath;
   }
@@ -192,7 +214,14 @@ private:
     static std::string RegressionTestImageBasePath;
 
     if (path != "")
+    {
       RegressionTestImageBasePath = path;
+      if ((RegressionTestImageBasePath.back() != '/') &&
+          (RegressionTestImageBasePath.back() != '\\'))
+      {
+        RegressionTestImageBasePath = RegressionTestImageBasePath + '/';
+      }
+    }
 
     return RegressionTestImageBasePath;
   }

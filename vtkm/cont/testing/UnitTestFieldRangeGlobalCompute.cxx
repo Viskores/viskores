@@ -25,10 +25,10 @@ static unsigned int uid = 1;
 
 #define PRINT_INFO(msg) std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl;
 
-#define PRINT_INFO_0(msg)                                                                          \
-  if (comm.rank() == 0)                                                                            \
-  {                                                                                                \
-    std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl;                   \
+#define PRINT_INFO_0(msg)                                                        \
+  if (comm.rank() == 0)                                                          \
+  {                                                                              \
+    std::cout << "[" << comm.rank() << ":" << __LINE__ << "] " msg << std::endl; \
   }
 
 template <typename T>
@@ -90,8 +90,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   auto portal = ranges.ReadPortal();
   auto range = portal.Get(0);
   PRINT_INFO(<< "  expecting [" << min << ", " << max << "], got [" << range.Min << ", "
-             << range.Max
-             << "]");
+             << range.Max << "]");
   VTKM_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<ValueType>(min) &&
                      range.Max <= static_cast<ValueType>(max),
                    "Got wrong range.");
@@ -110,10 +109,7 @@ void Validate(const vtkm::cont::ArrayHandle<vtkm::Range>& ranges,
   {
     auto range = portal.Get(cc);
     PRINT_INFO(<< "  [" << cc << "] expecting [" << min[cc] << ", " << max[cc] << "], got ["
-               << range.Min
-               << ", "
-               << range.Max
-               << "]");
+               << range.Min << ", " << range.Max << "]");
     VTKM_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<T>(min[cc]) &&
                        range.Max <= static_cast<T>(max[cc]),
                      "Got wrong range.");

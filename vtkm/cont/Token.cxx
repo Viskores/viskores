@@ -52,9 +52,7 @@ struct vtkm::cont::Token::HeldReference
   }
 };
 
-vtkm::cont::Token::Token()
-{
-}
+vtkm::cont::Token::Token() {}
 
 vtkm::cont::Token::Token(Token&& rhs)
   : Internals(std::move(rhs.Internals))

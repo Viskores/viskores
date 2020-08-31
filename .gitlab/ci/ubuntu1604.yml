@@ -7,6 +7,7 @@ build:ubuntu1604_gcc5:
     - vtkm
     - docker
     - linux
+    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1604_cuda
@@ -18,39 +19,22 @@ build:ubuntu1604_gcc5:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     VTKM_SETTINGS: "cuda+pascal"
 
-# Temporarily disabled as we don't have a pascal hw gitlab-runner
-# test:ubuntu1604_gcc5:
-#   tags:
-#     - test
-#     - cuda-rt
-#     - pascal
-#     - vtkm
-#     - docker
-#     - linux
-#   extends:
-#     - .ubuntu1604_cuda
-#     - .cmake_test_linux
-#     - .only-default
-#   dependencies:
-#     - build:ubuntu1604_gcc5
-#   needs:
-#     - build:ubuntu1604_gcc5
-# test:ubuntu1804_test_ubuntu1604_gcc5:
-#   tags:
-#     - test
-#     - cuda-rt
-#     - pascal
-#     - vtkm
-#     - docker
-#     - linux
-#   extends:
-#     - .ubuntu1804_cuda
-#     - .cmake_test_linux
-#     - .only-default
-#   dependencies:
-#     - build:ubuntu1604_gcc5
-#   needs:
-#     - build:ubuntu1604_gcc5
+test:ubuntu1604_gcc5:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - pascal
+  extends:
+    - .ubuntu1604_cuda
+    - .cmake_test_linux
+    - .only-default
+  dependencies:
+    - build:ubuntu1604_gcc5
+  needs:
+    - build:ubuntu1604_gcc5
 
 # Build on ubuntu1704 with OpenMP + CUDA
 # Runs only on nightlies
@@ -60,6 +44,7 @@ build:ubuntu1604_gcc5_2:
     - vtkm
     - docker
     - linux
+    - cuda-rt
     - large-memory
   extends:
     - .ubuntu1604_cuda
@@ -70,6 +55,25 @@ build:ubuntu1604_gcc5_2:
     CXX: "g++-5"
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "openmp+cuda+pascal+examples"
+
+test:ubuntu1804_test_ubuntu1604_gcc5_2:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux
+    - cuda-rt
+    - pascal
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_test_linux
+    - .only-master
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
+  dependencies:
+    - build:ubuntu1604_gcc5_2
+  needs:
+    - build:ubuntu1604_gcc5_2
 
 # Build on ubuntu1604 with mpi + tbb and test on ubuntu1604
 # Uses gcc 4.8

@@ -478,9 +478,8 @@ class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermutedVisitCellsWithPoi
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
                                        vtkm::TopologyElementTagPoint,
                                        Dimension>>;
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                                              vtkm::TopologyElementTagPoint,
-                                                              Dimension>;
+  using ConnectivityType = vtkm::exec::
+    ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, Dimension>;
 
 public:
   using IndicesIncidentType = typename ConnectivityType::IndicesType;

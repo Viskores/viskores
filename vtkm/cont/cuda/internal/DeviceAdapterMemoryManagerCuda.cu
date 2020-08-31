@@ -145,8 +145,11 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyHostToDev
                vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
                size);
 
-    VTKM_CUDA_CALL(cudaMemcpyAsync(
-      dest.GetPointer(), src.GetPointer(), size, cudaMemcpyHostToDevice, cudaStreamPerThread));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
+                                   src.GetPointer(),
+                                   static_cast<std::size_t>(size),
+                                   cudaMemcpyHostToDevice,
+                                   cudaStreamPerThread));
   }
 }
 
@@ -203,8 +206,11 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToH
                vtkm::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
                size);
 
-    VTKM_CUDA_CALL(cudaMemcpyAsync(
-      dest.GetPointer(), src.GetPointer(), size, cudaMemcpyDeviceToHost, cudaStreamPerThread));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
+                                   src.GetPointer(),
+                                   static_cast<std::size_t>(size),
+                                   cudaMemcpyDeviceToHost,
+                                   cudaStreamPerThread));
   }
 
   //In all cases we have possibly multiple async calls queued up in

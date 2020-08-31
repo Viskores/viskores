@@ -11,10 +11,10 @@
 #ifndef vtk_m_filter_CellAverage_h
 #define vtk_m_filter_CellAverage_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_common_export.h>
 
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/CellAverage.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace filter
 /// The method of transformation is based on averaging the data
 /// values of all points used by particular cell.
 ///
-class VTKM_ALWAYS_EXPORT CellAverage : public vtkm::filter::FilterCell<CellAverage>
+class VTKM_ALWAYS_EXPORT CellAverage : public vtkm::filter::FilterField<CellAverage>
 {
 public:
   template <typename T, typename StorageType, typename DerivedPolicy>

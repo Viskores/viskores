@@ -20,7 +20,6 @@ endif ()
 string(REPLACE "+" ";" options "$ENV{VTKM_SETTINGS}")
 
 foreach(option IN LISTS options)
-
   if(static STREQUAL option)
     set(BUILD_SHARED_LIBS "OFF" CACHE STRING "")
 
@@ -71,6 +70,9 @@ foreach(option IN LISTS options)
   elseif(cuda STREQUAL option)
     set(VTKm_ENABLE_CUDA "ON" CACHE STRING "")
 
+  elseif(kokkos STREQUAL option)
+    set(VTKm_ENABLE_KOKKOS "ON" CACHE STRING "")
+
   elseif(maxwell STREQUAL option)
     set(VTKm_CUDA_Architecture "maxwell" CACHE STRING "")
 
@@ -95,7 +97,10 @@ find_program(SCCACHE_COMMAND NAMES sccache)
 if(SCCACHE_COMMAND)
   set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
-  if(VTKm_ENABLE_CUDA)
+
+  # Use VTKm_CUDA_Architecture to determine if we need CUDA sccache setup
+  # since this will also capture when kokkos is being used with CUDA backing
+  if(DEFINED VTKm_CUDA_Architecture)
     set(CMAKE_CUDA_COMPILER_LAUNCHER "${SCCACHE_COMMAND}" CACHE STRING "")
   endif()
 endif()

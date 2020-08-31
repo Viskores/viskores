@@ -412,9 +412,7 @@ QuadIntersector::QuadIntersector()
 {
 }
 
-QuadIntersector::~QuadIntersector()
-{
-}
+QuadIntersector::~QuadIntersector() {}
 
 
 void QuadIntersector::IntersectRays(Ray<vtkm::Float32>& rays, bool returnCellIndex)

@@ -27,125 +27,50 @@ namespace cont
 namespace internal
 {
 
-namespace detail
-{
-
-VTKM_CONT_EXPORT VTKM_CONT vtkm::BufferSizeType NumberOfBytes(vtkm::Id numValues,
-                                                              std::size_t typeSize);
-
-} // namespace detail
-
 template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagBasic>
 {
 public:
-  static constexpr vtkm::IdComponent NUMBER_OF_BUFFERS = 1;
-
   using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  VTKM_CONT void ResizeBuffers(vtkm::Id numValues,
-                               vtkm::cont::internal::Buffer* buffers,
-                               vtkm::CopyFlag preserve,
-                               vtkm::cont::Token& token)
+  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag preserve,
+                                      vtkm::cont::Token& token)
   {
-    buffers[0].SetNumberOfBytes(detail::NumberOfBytes(numValues, sizeof(T)), preserve, token);
+    buffers[0].SetNumberOfBytes(
+      vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
   }
 
-  VTKM_CONT vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     return static_cast<vtkm::Id>(buffers->GetNumberOfBytes()) / static_cast<vtkm::Id>(sizeof(T));
   }
 
-  VTKM_CONT ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
-                                            vtkm::cont::DeviceAdapterId device,
-                                            vtkm::cont::Token& token)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
     return ReadPortalType(reinterpret_cast<const T*>(buffers[0].ReadPointerDevice(device, token)),
-                          this->GetNumberOfValues(buffers));
+                          GetNumberOfValues(buffers));
   }
 
-  VTKM_CONT WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer* buffers,
-                                              vtkm::cont::DeviceAdapterId device,
-                                              vtkm::cont::Token& token)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
     return WritePortalType(reinterpret_cast<T*>(buffers[0].WritePointerDevice(device, token)),
-                           this->GetNumberOfValues(buffers));
+                           GetNumberOfValues(buffers));
   }
 };
 
 } // namespace internal
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
 template <typename T>
-class VTKM_ALWAYS_EXPORT ArrayHandle<T, vtkm::cont::StorageTagBasic>
-  : public ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>
-{
-  using Superclass = ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>;
-
-public:
-  VTKM_CONT
-  ArrayHandle()
-    : Superclass()
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandle<T, vtkm::cont::StorageTagBasic>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(const ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>& src)
-    : Superclass(src)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle(ArrayHandleNewStyle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-    : Superclass(std::move(src))
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const vtkm::cont::internal::Buffer* buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT ArrayHandle(
-    const std::vector<vtkm::cont::internal::Buffer>& buffers,
-    const typename Superclass::StorageType& storage = typename Superclass::StorageType())
-    : Superclass(buffers, storage)
-  {
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::StorageTagBasic>& operator=(
-    const ArrayHandle<T, vtkm::cont::StorageTagBasic>& src)
-  {
-    this->Superclass::operator=(src);
-    return *this;
-  }
-
-  VTKM_CONT
-  ArrayHandle<T, vtkm::cont::StorageTagBasic>& operator=(
-    ArrayHandle<T, vtkm::cont::StorageTagBasic>&& src) noexcept
-  {
-    this->Superclass::operator=(std::move(src));
-    return *this;
-  }
-
-  VTKM_CONT ~ArrayHandle() {}
-};
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagBasic);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, vtkm::cont::StorageTagBasic>
@@ -160,13 +85,13 @@ public:
     vtkm::Id numberOfValues,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(vtkm::cont::DeviceAdapterTagUndefined{},
-                                         array,
-                                         array,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        vtkm::cont::DeviceAdapterTagUndefined{},
+        array,
+        array,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -176,13 +101,13 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(device,
-                                         array,
-                                         array,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        device,
+        array,
+        array,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -192,13 +117,13 @@ public:
     vtkm::Id numberOfValues,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(vtkm::cont::DeviceAdapterTagUndefined{},
-                                         array,
-                                         container,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        vtkm::cont::DeviceAdapterTagUndefined{},
+        array,
+        container,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -209,13 +134,13 @@ public:
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::internal::BufferInfo::Deleter deleter,
     vtkm::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<vtkm::cont::internal::Buffer>{
-        vtkm::cont::internal::MakeBuffer(device,
-                                         array,
-                                         container,
-                                         internal::detail::NumberOfBytes(numberOfValues, sizeof(T)),
-                                         deleter,
-                                         reallocater) })
+    : Superclass(std::vector<vtkm::cont::internal::Buffer>{ vtkm::cont::internal::MakeBuffer(
+        device,
+        array,
+        container,
+        vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+        deleter,
+        reallocater) })
   {
   }
 
@@ -434,10 +359,10 @@ namespace internal
 
 /// \cond
 /// Make doxygen ignore this section
-#define VTKM_STORAGE_EXPORT(Type)                                                                  \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;                  \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;    \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;    \
+#define VTKM_STORAGE_EXPORT(Type)                                                               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;               \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_STORAGE_EXPORT(char)
@@ -457,13 +382,13 @@ VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 } // namespace internal
 
-#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>;      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                         \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
+    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
+    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
     ArrayHandleNewStyle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_ARRAYHANDLE_EXPORT(char)

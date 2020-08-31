@@ -398,7 +398,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
                  tempSupernodesIndex,                               // loopindex
                  this->ContourTreeResult.WhenTransferred,           // input
                  this->ContourTreeResult.FirstSupernodePerIteration // output
-                 );
+    );
   }
 
   // TODO The following loop should be safe in parallel since there should never be two zeros in sequence, i.e., the next
@@ -432,7 +432,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
                                         0,                                     // start index
                                         this->ContourTreeResult.NumIterations, // stop index
                                         this->ContourTreeResult.FirstHypernodePerIteration // target
-                                        );
+    );
   }
 
   this->ContourTreeResult.FirstHypernodePerIteration.WritePortal().Set(
@@ -926,7 +926,7 @@ void ContourTreeMaker::CompressTrees()
                  this->ContourTreeResult.Superarcs, // (input)
                  this->AugmentedJoinSuperarcs,      // (input/output)
                  this->AugmentedSplitSuperarcs      // (input/output)
-                 );
+    );
 
   } // iteration log times
 

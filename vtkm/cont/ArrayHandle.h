@@ -135,7 +135,7 @@ struct ArrayHandleCheck
   using type = typename std::is_base_of<::vtkm::cont::internal::ArrayHandleBase, U>::type;
 };
 
-#define VTKM_IS_ARRAY_HANDLE(T)                                                                    \
+#define VTKM_IS_ARRAY_HANDLE(T) \
   VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>::type::value)
 
 } // namespace internal
@@ -173,7 +173,10 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
-  classname(Thisclass&& src) noexcept : Superclass(std::move(src)) {}                              \
+  classname(Thisclass&& src) noexcept                                                              \
+    : Superclass(std::move(src))                                                                   \
+  {                                                                                                \
+  }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
@@ -227,7 +230,7 @@ struct GetTypeInParentheses<void(T)>
 /// templated. For ArrayHandle sublcasses that are not templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS_NT.
 ///
-#define VTKM_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass)                           \
+#define VTKM_ARRAY_HANDLE_SUBCLASS(classname, fullclasstype, superclass) \
   VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename)
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
@@ -250,7 +253,7 @@ struct GetTypeInParentheses<void(T)>
 /// templated. For ArrayHandle sublcasses that are templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS.
 ///
-#define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass)                                       \
+#define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass) \
   VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, (classname), superclass, )
 
 /// \brief Manages an array-worth of data.
@@ -892,6 +895,87 @@ VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapt
 
 } // namespace detail
 
+// This macro is used to declare an ArrayHandle that uses the new style of Storage
+// that leverages Buffer objects. This macro will go away once ArrayHandle
+// is replaced with ArrayHandleNewStyle. To use this macro, first have a declaration
+// of the template and then put the macro like this:
+//
+// template <typename T>
+// VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagFoo);
+//
+// Don't forget to use VTKM_PASS_COMMAS if one of the macro arguments contains
+// a template with multiple parameters.
+#define VTKM_ARRAY_HANDLE_NEW_STYLE(ValueType_, StorageType_)                       \
+  class VTKM_ALWAYS_EXPORT ArrayHandle<ValueType_, StorageType_>                    \
+    : public ArrayHandleNewStyle<ValueType_, StorageType_>                          \
+  {                                                                                 \
+    using Superclass = ArrayHandleNewStyle<ValueType_, StorageType_>;               \
+                                                                                    \
+  public:                                                                           \
+    VTKM_CONT                                                                       \
+    ArrayHandle()                                                                   \
+      : Superclass()                                                                \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle(const ArrayHandle<ValueType_, StorageType_>& src)                   \
+      : Superclass(src)                                                             \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle(ArrayHandle<ValueType_, StorageType_>&& src) noexcept               \
+      : Superclass(std::move(src))                                                  \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle(const ArrayHandleNewStyle<ValueType_, StorageType_>& src)           \
+      : Superclass(src)                                                             \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle(ArrayHandleNewStyle<ValueType_, StorageType_>&& src) noexcept       \
+      : Superclass(std::move(src))                                                  \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT ArrayHandle(const vtkm::cont::internal::Buffer* buffers)              \
+      : Superclass(buffers)                                                         \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT ArrayHandle(const std::vector<vtkm::cont::internal::Buffer>& buffers) \
+      : Superclass(buffers)                                                         \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT ArrayHandle(std::vector<vtkm::cont::internal::Buffer>&& buffers)      \
+      : Superclass(std::move(buffers))                                              \
+    {                                                                               \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle<ValueType_, StorageType_>& operator=(                               \
+      const ArrayHandle<ValueType_, StorageType_>& src)                             \
+    {                                                                               \
+      this->Superclass::operator=(src);                                             \
+      return *this;                                                                 \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT                                                                       \
+    ArrayHandle<ValueType_, StorageType_>& operator=(                               \
+      ArrayHandle<ValueType_, StorageType_>&& src) noexcept                         \
+    {                                                                               \
+      this->Superclass::operator=(std::move(src));                                  \
+      return *this;                                                                 \
+    }                                                                               \
+                                                                                    \
+    VTKM_CONT ~ArrayHandle() {}                                                     \
+  }
+
 /// This new style of ArrayHandle will eventually replace the classic ArrayHandle
 template <typename T, typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT ArrayHandleNewStyle : public internal::ArrayHandleBase
@@ -903,9 +987,6 @@ public:
 
   using ReadPortalType = typename StorageType::ReadPortalType;
   using WritePortalType = typename StorageType::WritePortalType;
-
-  static constexpr vtkm::IdComponent NUMBER_OF_BUFFERS = StorageType::NUMBER_OF_BUFFERS;
-  static constexpr vtkm::IdComponent GetNumberOfBuffers() { return NUMBER_OF_BUFFERS; }
 
   // TODO: Deprecate this
   template <typename Device>
@@ -923,7 +1004,7 @@ public:
   /// Constructs an empty ArrayHandle.
   ///
   VTKM_CONT ArrayHandleNewStyle()
-    : Internals(std::make_shared<InternalsStruct>())
+    : Buffers(static_cast<std::size_t>(StorageType::GetNumberOfBuffers()))
   {
   }
 
@@ -935,7 +1016,7 @@ public:
   /// created for all devices, and it would not be valid for all devices.
   ///
   VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& src)
-    : Internals(src.Internals)
+    : Buffers(src.Buffers)
   {
   }
 
@@ -948,7 +1029,7 @@ public:
   ///
   VTKM_CONT ArrayHandleNewStyle(
     vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>&& src) noexcept
-    : Internals(std::move(src.Internals))
+    : Buffers(std::move(src.Buffers))
   {
   }
 
@@ -956,17 +1037,20 @@ public:
   /// Special constructor for subclass specializations that need to set the
   /// initial state array. Used when pulling data from other sources.
   ///
-  VTKM_CONT ArrayHandleNewStyle(const std::vector<vtkm::cont::internal::Buffer>& buffers,
-                                const StorageType& storage = StorageType())
-    : Internals(std::make_shared<InternalsStruct>(buffers.data(), storage))
+  VTKM_CONT ArrayHandleNewStyle(const std::vector<vtkm::cont::internal::Buffer>& buffers)
+    : Buffers(buffers)
   {
-    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Internals->Buffers.size()) ==
-                GetNumberOfBuffers());
+    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Buffers.size()) == this->GetNumberOfBuffers());
   }
 
-  VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::internal::Buffer* buffers,
-                                const StorageType& storage = StorageType())
-    : Internals(std::make_shared<InternalsStruct>(buffers, storage))
+  VTKM_CONT ArrayHandleNewStyle(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept
+    : Buffers(std::move(buffers))
+  {
+    VTKM_ASSERT(static_cast<vtkm::IdComponent>(this->Buffers.size()) == this->GetNumberOfBuffers());
+  }
+
+  VTKM_CONT ArrayHandleNewStyle(const vtkm::cont::internal::Buffer* buffers)
+    : Buffers(buffers, buffers + StorageType::GetNumberOfBuffers())
   {
   }
   ///@}
@@ -986,7 +1070,7 @@ public:
   vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& operator=(
     const vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& src)
   {
-    this->Internals = src.Internals;
+    this->Buffers = src.Buffers;
     return *this;
   }
 
@@ -996,7 +1080,7 @@ public:
   vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& operator=(
     vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>&& src) noexcept
   {
-    this->Internals = std::move(src.Internals);
+    this->Buffers = std::move(src.Buffers);
     return *this;
   }
 
@@ -1006,13 +1090,13 @@ public:
   VTKM_CONT
   bool operator==(const ArrayHandle<ValueType, StorageTag>& rhs) const
   {
-    return this->Internals == rhs.Internals;
+    return this->Buffers == rhs.Buffers;
   }
 
   VTKM_CONT
   bool operator!=(const ArrayHandle<ValueType, StorageTag>& rhs) const
   {
-    return this->Internals != rhs.Internals;
+    return this->Buffers != rhs.Buffers;
   }
 
   template <typename VT, typename ST>
@@ -1027,9 +1111,14 @@ public:
     return true; // different valuetype and/or storage
   }
 
+  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const
+  {
+    return StorageType::GetNumberOfBuffers();
+  }
+
   /// Get the storage.
   ///
-  VTKM_CONT const StorageType& GetStorage() const { return this->Internals->Storage; }
+  VTKM_CONT StorageType GetStorage() const { return StorageType{}; }
 
   /// Get the array portal of the control array.
   /// Since worklet invocations are asynchronous and this routine is a synchronization point,
@@ -1073,7 +1162,7 @@ public:
   VTKM_CONT ReadPortalType ReadPortal() const
   {
     vtkm::cont::Token token;
-    return this->Internals->Storage.CreateReadPortal(
+    return StorageType::CreateReadPortal(
       this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
   }
 
@@ -1090,7 +1179,7 @@ public:
   {
     vtkm::cont::Token token;
 
-    return this->Internals->Storage.CreateWritePortal(
+    return StorageType::CreateWritePortal(
       this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
   }
 
@@ -1098,7 +1187,7 @@ public:
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const
   {
-    return this->Internals->Storage.GetNumberOfValues(this->GetBuffers());
+    return StorageType::GetNumberOfValues(this->GetBuffers());
   }
 
   ///@{
@@ -1117,7 +1206,7 @@ public:
                           vtkm::CopyFlag preserve,
                           vtkm::cont::Token& token)
   {
-    this->Internals->Storage.ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
+    StorageType::ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
   }
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::CopyFlag preserve = vtkm::CopyFlag::Off)
@@ -1138,7 +1227,7 @@ public:
   ///
   VTKM_CONT void ReleaseResourcesExecution()
   {
-    detail::ArrayHandleReleaseResourcesExecution(this->Internals->Buffers);
+    detail::ArrayHandleReleaseResourcesExecution(this->Buffers);
   }
 
   /// Releases all resources in both the control and execution environments.
@@ -1161,7 +1250,7 @@ public:
   VTKM_CONT ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device,
                                            vtkm::cont::Token& token) const
   {
-    return this->Internals->Storage.CreateReadPortal(this->GetBuffers(), device, token);
+    return StorageType::CreateReadPortal(this->GetBuffers(), device, token);
   }
 
   /// Prepares this array to be used in an in-place operation (both as input
@@ -1180,7 +1269,7 @@ public:
   VTKM_CONT WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
                                               vtkm::cont::Token& token) const
   {
-    return this->Internals->Storage.CreateWritePortal(this->GetBuffers(), device, token);
+    return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
   }
 
   /// Prepares (allocates) this array to be used as an output from an operation
@@ -1202,7 +1291,7 @@ public:
                                              vtkm::cont::Token& token)
   {
     this->Allocate(numberOfValues, vtkm::CopyFlag::Off, token);
-    return this->Internals->Storage.CreateWritePortal(this->GetBuffers(), device, token);
+    return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
   }
 
   template <typename DeviceAdapterTag>
@@ -1233,7 +1322,7 @@ public:
   ///
   VTKM_CONT bool IsOnDevice(vtkm::cont::DeviceAdapterId device) const
   {
-    return detail::ArrayHandleIsOnDevice(this->Internals->Buffers, device);
+    return detail::ArrayHandleIsOnDevice(this->Buffers, device);
   }
 
   /// Returns true if the ArrayHandle's data is on the host. If the data are on the given
@@ -1256,7 +1345,7 @@ public:
   VTKM_CONT
   DeviceAdapterId GetDeviceAdapterId() const
   {
-    return detail::ArrayHandleGetDeviceAdapterId(this->Internals->Buffers);
+    return detail::ArrayHandleGetDeviceAdapterId(this->Buffers);
   }
 
   /// Synchronizes the control array with the execution array. If either the
@@ -1294,39 +1383,46 @@ public:
   ///
   VTKM_CONT void Enqueue(const vtkm::cont::Token& token) const
   {
-    for (auto&& buffer : this->Internals->Buffers)
+    for (auto&& buffer : this->Buffers)
     {
       buffer.Enqueue(token);
     }
   }
 
-  /// Returns the internal `Buffer` structures that hold the data.
+  /// \brief Deep copies the data in the array.
   ///
-  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
+  /// Takes the data that is in this array and copies that data into the provided
+  /// \a destination.
+  ///
+  VTKM_CONT void DeepCopy(vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& destination) const
   {
-    return this->Internals->Buffers.data();
+    VTKM_ASSERT(this->Buffers.size() == destination.Buffers.size());
+
+    for (std::size_t bufferIndex = 0; bufferIndex < this->Buffers.size(); ++bufferIndex)
+    {
+      this->Buffers[bufferIndex].DeepCopy(destination.Buffers[bufferIndex]);
+    }
   }
 
+  /// Returns the internal `Buffer` structures that hold the data.
+  ///
+  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const { return this->Buffers.data(); }
+
 private:
-  struct InternalsStruct
+  mutable std::vector<vtkm::cont::internal::Buffer> Buffers;
+
+protected:
+  VTKM_CONT void SetBuffer(vtkm::IdComponent index, const vtkm::cont::internal::Buffer& buffer)
   {
-    mutable std::vector<vtkm::cont::internal::Buffer> Buffers;
-    mutable StorageType Storage;
+    this->Buffers[static_cast<std::size_t>(index)] = buffer;
+  }
 
-    VTKM_CONT InternalsStruct()
-      : Buffers(GetNumberOfBuffers())
-    {
-    }
-
-    VTKM_CONT InternalsStruct(const vtkm::cont::internal::Buffer* buffers,
-                              const StorageType& storage)
-      : Buffers(GetNumberOfBuffers())
-      , Storage(storage)
-    {
-      std::copy(buffers, buffers + GetNumberOfBuffers(), this->Buffers.begin());
-    }
-  };
-  std::shared_ptr<InternalsStruct> Internals;
+  // BufferContainer must be an iteratable container of Buffer objects.
+  template <typename BufferContainer>
+  VTKM_CONT void SetBuffers(const BufferContainer& buffers)
+  {
+    std::copy(buffers.begin(), buffers.end(), this->Iterators->Buffers.begin());
+  }
 };
 
 namespace detail

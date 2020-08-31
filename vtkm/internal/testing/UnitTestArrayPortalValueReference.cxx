@@ -117,8 +117,8 @@ void TryOperatorsInt(vtkm::Id index,
 
   scratch = ValueType(7);
   const ValueType operand = ValueType(7);
-#define RESET                                                                                      \
-  ref = TestValue(index, ValueType());                                                             \
+#define RESET                          \
+  ref = TestValue(index, ValueType()); \
   expected = TestValue(index, ValueType());
 
   RESET;
@@ -218,8 +218,8 @@ void TryOperators(vtkm::Id index,
 
   scratch = ValueType(7);
   const ValueType operand = ValueType(7);
-#define RESET                                                                                      \
-  ref = TestValue(index, ValueType());                                                             \
+#define RESET                          \
+  ref = TestValue(index, ValueType()); \
   expected = TestValue(index, ValueType());
 
   RESET;

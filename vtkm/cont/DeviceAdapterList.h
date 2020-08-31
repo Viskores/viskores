@@ -17,6 +17,7 @@
 #include <vtkm/List.h>
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
+#include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
@@ -29,6 +30,7 @@ namespace cont
 using DeviceAdapterListCommon = vtkm::List<vtkm::cont::DeviceAdapterTagCuda,
                                            vtkm::cont::DeviceAdapterTagTBB,
                                            vtkm::cont::DeviceAdapterTagOpenMP,
+                                           vtkm::cont::DeviceAdapterTagKokkos,
                                            vtkm::cont::DeviceAdapterTagSerial>;
 }
 } // namespace vtkm::cont

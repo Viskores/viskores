@@ -83,11 +83,11 @@ struct HasPrepareForExecutionDeprecated
 
 /// Checks that the argument is a proper execution object.
 ///
-#define VTKM_IS_EXECUTION_OBJECT(execObject)                                                       \
-  static_assert(::vtkm::cont::internal::IsExecutionObjectBase<execObject>::value,                  \
-                "Provided type is not a subclass of vtkm::cont::ExecutionObjectBase.");            \
-  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value ||               \
-                  ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value,     \
+#define VTKM_IS_EXECUTION_OBJECT(execObject)                                                   \
+  static_assert(::vtkm::cont::internal::IsExecutionObjectBase<execObject>::value,              \
+                "Provided type is not a subclass of vtkm::cont::ExecutionObjectBase.");        \
+  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value ||           \
+                  ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value, \
                 "Provided type does not have requisite PrepareForExecution method.")
 
 /// \brief Gets the object to use in the execution environment from an ExecutionObject.

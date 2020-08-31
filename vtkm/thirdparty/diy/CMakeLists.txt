@@ -45,6 +45,7 @@ mark_as_advanced(FORCE caliper log profile wrapped_mpi)
 
 set(diy_prefix "vtkmdiy")
 set(diy_install_include_dir ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/vtkmdiy/include)
+set(diy_install_bin_dir ${VTKm_INSTALL_BIN_DIR})
 set(diy_install_lib_dir ${VTKm_INSTALL_LIB_DIR})
 set(diy_export_name ${VTKm_EXPORT_NAME})
 if (VTKm_INSTALL_ONLY_LIBRARIES)

@@ -37,11 +37,19 @@ if(NOT GENERATED_FILE)
   return()
 endif()
 
-execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
-  RESULT_VARIABLE pyexpander_result
-  OUTPUT_VARIABLE pyexpander_output
+if(MSVC)
+  execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
+    RESULT_VARIABLE pyexpander_result
+    OUTPUT_VARIABLE pyexpander_output
   )
+else()
+  execute_process(
+    COMMAND ${PYEXPANDER_COMMAND} ${SOURCE_FILE}.in
+    RESULT_VARIABLE pyexpander_result
+    OUTPUT_VARIABLE pyexpander_output
+  )
+endif()
 
 if(pyexpander_result)
   # If pyexpander returned non-zero, it failed.

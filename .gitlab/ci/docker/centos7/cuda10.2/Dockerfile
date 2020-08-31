@@ -1,7 +1,7 @@
 FROM nvidia/cuda:10.2-devel-centos7
 LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
 
-RUN yum install cmake make gcc gcc-c++ -y
+RUN yum install make gcc gcc-c++ curl cuda-compat-10-2 -y
 
 
 

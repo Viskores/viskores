@@ -38,10 +38,10 @@ void TestStreamline()
   const vtkm::Vec3f vecX(1, 0, 0);
 
   vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Streamline streamline;
 
@@ -72,10 +72,10 @@ void TestPathline()
   vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
   vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Massless(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Massless(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
   vtkm::filter::Pathline pathline;
 
@@ -120,10 +120,10 @@ void TestStreamlineFile(const std::string& fname,
   }
   vtkm::Id numPoints = static_cast<vtkm::Id>(pts.size());
 
-  std::vector<vtkm::Massless> seeds;
+  std::vector<vtkm::Particle> seeds;
   for (vtkm::Id i = 0; i < numPoints; i++)
-    seeds.push_back(vtkm::Massless(pts[static_cast<std::size_t>(i)], i));
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::On);
+    seeds.push_back(vtkm::Particle(pts[static_cast<std::size_t>(i)], i));
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
 
   vtkm::filter::Streamline streamline;
   streamline.SetStepSize(stepSize);
@@ -160,8 +160,6 @@ void TestStreamlineFilters()
   TestStreamline();
   TestPathline();
 
-  std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
-
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;
   fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
@@ -172,7 +170,7 @@ void TestStreamlineFilters()
   fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
   fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
   vtkm::FloatDefault fusionStep = 0.005f;
-  std::string fusionFile = basePath + "/rectilinear/fusion.vtk";
+  std::string fusionFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
   TestStreamlineFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
 
   //Fishtank test.
@@ -185,12 +183,15 @@ void TestStreamlineFilters()
   fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
   fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
   vtkm::FloatDefault fishStep = 0.001f;
-  std::string fishFile = basePath + "/rectilinear/fishtank.vtk";
+  std::string fishFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
   TestStreamlineFile(fishFile, fishPts, fishStep, 100, fishEndPts);
 }
 }
 
 int UnitTestStreamlineFilter(int argc, char* argv[])
 {
+  // Setup MPI environment: This test is not intendent to be run in parallel
+  // but filter does make MPI calls
+  vtkmdiy::mpi::environment env(argc, argv);
   return vtkm::cont::testing::Testing::Run(TestStreamlineFilters, argc, argv);
 }

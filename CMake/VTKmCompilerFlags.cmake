@@ -22,6 +22,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(VTKM_COMPILER_IS_CLANG 1)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(VTKM_COMPILER_IS_GNU 1)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "XLClang")
+  set(VTKM_COMPILER_IS_XL 1)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -51,7 +53,7 @@ if(VTKM_COMPILER_IS_MSVC)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Gy">)
   endif()
-elseif(NOT VTKM_COMPILER_IS_PGI) #can't find an equivalant PGI flag
+elseif(NOT (VTKM_COMPILER_IS_PGI OR VTKM_COMPILER_IS_XL)) #can't find an equivalant PGI/XL flag
   target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-ffunction-sections>)
   if(TARGET vtkm::cuda)
     target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-ffunction-sections>)
@@ -122,8 +124,8 @@ elseif(VTKM_COMPILER_IS_ICC)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
-  set(cxx_flags -Wall -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused -fno-common)
-  set(cuda_flags -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wcast-align,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused,-fno-common)
+  set(cxx_flags -Wall -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused -fno-common -Wno-unused-function)
+  set(cuda_flags -Xcompiler=-Wall,-Wcast-align,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-fno-common,-Wunused,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-function)
 
   #Only add float-conversion warnings for gcc as the integer warnigns in GCC
   #include the implicit casting of all types smaller than int to ints.
@@ -161,17 +163,21 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   endif()
 endif()
 
-#common warnings for all platforms when building cuda
-if(TARGET vtkm::cuda)
+function(setup_cuda_flags)
   if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
     #nvcc 9 introduced specific controls to disable the stack size warning
     #otherwise we let the warning occur. We have to set this in CMAKE_CUDA_FLAGS
     #as it is passed to the device link step, unlike compile_options
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xnvlink=--suppress-stack-size-warning")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xnvlink=--suppress-stack-size-warning" PARENT_SCOPE)
   endif()
 
   set(display_error_nums -Xcudafe=--display_error_number)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${display_error_nums}>)
+endfunction()
+
+#common warnings for all platforms when building cuda
+if ((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+  setup_cuda_flags()
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

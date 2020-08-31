@@ -1309,7 +1309,9 @@ public:
       vtkm::cont::make_ArrayHandle(makeSplitTreeHyperparentsArr, 3, vtkm::CopyFlag::On);
 
     vtkm::Id makeSplitTreeHypernodesArr[3] = {
-      2, 1, 0,
+      2,
+      1,
+      0,
     };
     vtkm::worklet::contourtree_augmented::IdArrayType makeSplitTreeHypernodes =
       vtkm::cont::make_ArrayHandle(makeSplitTreeHypernodesArr, 3, vtkm::CopyFlag::On);

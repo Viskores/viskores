@@ -36,8 +36,7 @@ void RenderTests()
   colorTable.AddPointAlpha(1.0, .01f);
 
   vtkm::cont::DataSet rectDS, unsDS;
-  std::string basePath = vtkm::cont::testing::Testing::GetTestDataBasePath();
-  std::string rectfname = basePath + "/rectilinear/noise.vtk";
+  std::string rectfname = vtkm::cont::testing::Testing::DataPath("rectilinear/noise.vtk");
   vtkm::io::VTKDataSetReader rectReader(rectfname);
 
   try

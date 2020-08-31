@@ -104,6 +104,9 @@ endif()
 if (NOT DEFINED diy_install_include_dir)
     set(diy_install_include_dir "include")
 endif()
+if (NOT DEFINED diy_install_bin_dir)
+    set(diy_install_bin_dir "bin")
+endif()
 if (NOT DEFINED diy_install_lib_dir)
     set(diy_install_lib_dir "lib")
 endif()
@@ -249,7 +252,10 @@ if (NOT DEFINED diy_install_only_libraries) # defined by parent project if build
     endif()
 endif()
 
-install(TARGETS ${diy_targets} EXPORT ${diy_export_name} DESTINATION ${diy_install_lib_dir})
+install(TARGETS ${diy_targets} EXPORT ${diy_export_name}
+    ARCHIVE DESTINATION ${diy_install_lib_dir}
+    LIBRARY DESTINATION ${diy_install_lib_dir}
+    RUNTIME DESTINATION ${diy_install_bin_dir})
 
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) # Only generate these files when diy is the main project
   export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")

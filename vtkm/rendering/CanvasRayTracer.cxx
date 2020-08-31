@@ -126,9 +126,7 @@ CanvasRayTracer::CanvasRayTracer(vtkm::Id width, vtkm::Id height)
 {
 }
 
-CanvasRayTracer::~CanvasRayTracer()
-{
-}
+CanvasRayTracer::~CanvasRayTracer() {}
 
 void CanvasRayTracer::WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                                     const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,

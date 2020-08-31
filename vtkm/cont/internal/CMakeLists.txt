@@ -35,6 +35,7 @@ set(headers
   TransferInfo.h
   VariantArrayHandleContainer.h
   VirtualObjectTransfer.h
+  VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h
   )
 

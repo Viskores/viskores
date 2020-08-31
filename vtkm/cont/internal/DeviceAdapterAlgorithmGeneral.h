@@ -241,10 +241,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -320,7 +321,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
@@ -375,7 +376,7 @@ public:
 
     if (numBits == 0)
     {
-      bits.Shrink(0);
+      bits.Allocate(0);
       return;
     }
 
@@ -824,6 +825,22 @@ public:
     return DerivedAlgorithm::ScanInclusive(input, output, vtkm::Add());
   }
 
+private:
+  template <typename T1, typename S1, typename T2, typename S2>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T1, S1>&,
+                                            const vtkm::cont::ArrayHandle<T2, S2>&)
+  {
+    return false;
+  }
+
+  template <typename T, typename S>
+  VTKM_CONT static bool ArrayHandlesAreSame(const vtkm::cont::ArrayHandle<T, S>& a1,
+                                            const vtkm::cont::ArrayHandle<T, S>& a2)
+  {
+    return a1 == a2;
+  }
+
+public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
@@ -831,7 +848,10 @@ public:
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    DerivedAlgorithm::Copy(input, output);
+    if (!ArrayHandlesAreSame(input, output))
+    {
+      DerivedAlgorithm::Copy(input, output);
+    }
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)

@@ -140,8 +140,7 @@ public:
 
   void TestContourWedges() const
   {
-    auto pathname =
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "/unstructured/wedge_cells.vtk";
+    auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/wedge_cells.vtk");
     vtkm::io::VTKDataSetReader reader(pathname);
 
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();

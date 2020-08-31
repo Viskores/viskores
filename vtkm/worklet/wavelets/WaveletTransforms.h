@@ -219,8 +219,7 @@ public:
     }
 
     if (sigPretendX == sigPretendDimX || // decides to pad a zero
-        sigPretendY == sigPretendDimY ||
-        sigPretendZ == sigPretendDimZ)
+        sigPretendY == sigPretendDimY || sigPretendZ == sigPretendDimZ)
     {
       portalOut.Set(workIndex, 0.0);
     }
@@ -2408,13 +2407,14 @@ public:
                      vtkm::Id pretendy2, // pretend dims of signal
                      vtkm::Id x3,
                      vtkm::Id y3) // dims of right/bottom extension
-    : filterLen(filter_len),
-      approxLen(approx_len),
-      outDimX(pretendx2),
-      //outDimY(pretendy2),
-      oddlow(odd_low),
-      modeLR(mode_lr),
-      translator(x1, y1, x2, y2, startx2, starty2, pretendx2, pretendy2, x3, y3, mode_lr)
+    : filterLen(filter_len)
+    , approxLen(approx_len)
+    , outDimX(pretendx2)
+    ,
+    //outDimY(pretendy2),
+    oddlow(odd_low)
+    , modeLR(mode_lr)
+    , translator(x1, y1, x2, y2, startx2, starty2, pretendx2, pretendy2, x3, y3, mode_lr)
   {
     this->SetStartPosition();
   }

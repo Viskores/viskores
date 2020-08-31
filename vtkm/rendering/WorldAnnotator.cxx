@@ -22,9 +22,7 @@ WorldAnnotator::WorldAnnotator(const vtkm::rendering::Canvas* canvas)
 {
 }
 
-WorldAnnotator::~WorldAnnotator()
-{
-}
+WorldAnnotator::~WorldAnnotator() {}
 
 void WorldAnnotator::AddLine(const vtkm::Vec3f_64& point0,
                              const vtkm::Vec3f_64& point1,

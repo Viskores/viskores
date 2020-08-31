@@ -7,6 +7,7 @@ build:centos7_gcc48:
     - vtkm
     - docker
     - linux
+    - cuda-rt
     - large-memory
   extends:
     - .centos7
@@ -20,15 +21,17 @@ build:centos7_gcc48:
 test:centos7_gcc48:
   tags:
     - test
-    - cuda-rt
-    - turing
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - turing
   extends:
     - .centos7
     - .cmake_test_linux
     - .only-default
+  variables:
+      CTEST_EXCLUSIONS: "UnitTestContourTreeUniformAugmentedFilterCUDA|UnitTestContourTreeUniformAugmentedCUDA"
   dependencies:
     - build:centos7_gcc48
   needs:
@@ -37,17 +40,17 @@ test:centos7_gcc48:
 test:rhel8_test_centos7:
   tags:
     - test
-    - cuda-rt
-    - turing
     - vtkm
     - docker
     - linux
+    - cuda-rt
+    - turing
   extends:
     - .rhel8
     - .cmake_test_linux
     - .only-default
   variables:
-      CTEST_EXCLUSIONS: "built_against_test_install"
+      CTEST_EXCLUSIONS: "built_against_test_install|UnitTestContourTreeUniformAugmentedFilterCUDA|UnitTestContourTreeUniformAugmentedCUDA"
   dependencies:
     - build:centos7_gcc48
   needs:

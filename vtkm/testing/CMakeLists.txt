@@ -10,16 +10,12 @@
 
 set(headers
   Testing.h
-  TestingAlgorithms.h
-  TestingMath.h
-  TestingGeometry.h
   VecTraitsTests.h
   )
 
 VTKM_declare_headers(${headers})
 
 set(unit_tests
-  UnitTestAlgorithms.cxx
   UnitTestBinaryPredicates.cxx
   UnitTestBinaryOperators.cxx
   UnitTestBounds.cxx
@@ -29,7 +25,6 @@ set(unit_tests
   UnitTestHash.cxx
   UnitTestList.cxx
   UnitTestListTag.cxx
-  UnitTestMath.cxx
   UnitTestMatrix.cxx
   UnitTestNewtonsMethod.cxx
   UnitTestNoAssert.cxx
@@ -51,6 +46,14 @@ set(unit_tests
   UnitTestVecVariable.cxx
   )
 
+# Unit tests that have device-specific code to be tested
+set(unit_tests_device
+  UnitTestAlgorithms.cxx
+  UnitTestAtomic.cxx
+  UnitTestGeometry.cxx
+  UnitTestMath.cxx
+  )
+
 
 #suppress gcc note:
 #variable tracking size limit exceeded with -fvar-tracking-assignments, retrying without
@@ -59,3 +62,5 @@ if (VTKM_COMPILER_IS_GNU)
 endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests})
+
+vtkm_unit_tests(NAME UnitTests_vtkm_testing_device SOURCES ${unit_tests_device} ALL_BACKENDS)

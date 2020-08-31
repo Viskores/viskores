@@ -89,6 +89,13 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   return "cuda";
 }
 
+template <>
+inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagKokkos>(
+  vtkm::cont::DeviceAdapterTagKokkos)
+{
+  return "kokkos";
+}
+
 struct DeviceStringFunctor
 {
   std::string result;

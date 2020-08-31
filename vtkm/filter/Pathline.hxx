@@ -16,8 +16,9 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 #include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 namespace vtkm
@@ -33,7 +34,7 @@ inline VTKM_CONT Pathline::Pathline()
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Massless>& seeds)
+inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
 {
   this->Seeds = seeds;
 }
@@ -79,9 +80,9 @@ inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
   RK4Type rk4(eval, this->StepSize);
 
   vtkm::worklet::Streamline streamline;
-  vtkm::worklet::StreamlineResult<vtkm::Massless> res;
+  vtkm::worklet::StreamlineResult<vtkm::Particle> res;
 
-  vtkm::cont::ArrayHandle<vtkm::Massless> seedArray;
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds, seedArray);
   res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
 

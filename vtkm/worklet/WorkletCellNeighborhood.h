@@ -49,7 +49,7 @@ public:
     const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                              vtkm::TopologyElementTagCell,
                                              Dimension>& inputDomain //this should be explicit
-    ) const
+  ) const
   {
     const vtkm::Id outIndex = threadToOut.Get(threadIndex);
     return vtkm::exec::arg::ThreadIndicesCellNeighborhood(
