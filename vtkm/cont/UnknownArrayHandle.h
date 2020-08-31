@@ -402,7 +402,7 @@ public:
     }
     else
     {
-      out << "null array" << std::endl;
+      out << "null UnknownArrayHandle" << std::endl;
     }
   }
 };
