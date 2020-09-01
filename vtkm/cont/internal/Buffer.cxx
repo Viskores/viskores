@@ -768,61 +768,64 @@ void Buffer::Enqueue(const vtkm::cont::Token& token) const
   detail::BufferHelper::Enqueue(this->Internals, lock, token);
 }
 
-void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest) const
+void Buffer::DeepCopyFrom(const vtkm::cont::internal::Buffer& src) const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
   // it will attempt to aquire the lock, which is undefined behavior of the thread already has
   // the lock.
   vtkm::cont::Token token;
   {
-    LockType srcLock = this->Internals->GetLock();
+    const vtkm::cont::internal::Buffer& dest = *this;
+
+    LockType srcLock = src.Internals->GetLock();
     LockType destLock = dest.Internals->GetLock();
 
-    detail::BufferHelper::WaitToRead(this->Internals, srcLock, token);
+    detail::BufferHelper::WaitToRead(src.Internals, srcLock, token);
 
     // If we are on a device, copy there.
-    for (auto&& deviceBuffer : this->Internals->GetDeviceBuffers(srcLock))
+    for (auto&& deviceBuffer : src.Internals->GetDeviceBuffers(srcLock))
     {
       if (deviceBuffer.second.UpToDate)
       {
         detail::BufferHelper::CopyOnDevice(
-          deviceBuffer.first, this->Internals, srcLock, dest.Internals, destLock, token);
+          deviceBuffer.first, src.Internals, srcLock, dest.Internals, destLock, token);
         return;
       }
     }
 
     // If we are here, there were no devices to copy on. Copy on host if possible.
-    if (this->Internals->GetHostBuffer(srcLock).UpToDate)
+    if (src.Internals->GetHostBuffer(srcLock).UpToDate)
     {
-      detail::BufferHelper::CopyOnHost(this->Internals, srcLock, dest.Internals, destLock, token);
+      detail::BufferHelper::CopyOnHost(src.Internals, srcLock, dest.Internals, destLock, token);
     }
     else
     {
       // Nothing actually allocated. Just create allocation for dest. (Allocation happens lazily.)
       detail::BufferHelper::SetNumberOfBytes(dest.Internals,
                                              destLock,
-                                             this->Internals->GetNumberOfBytes(srcLock),
+                                             src.Internals->GetNumberOfBytes(srcLock),
                                              vtkm::CopyFlag::Off,
                                              token);
-      if (this->Internals->MetaData)
+      if (src.Internals->MetaData)
       {
-        dest.Internals->MetaData = this->Internals->MetaData->DeepCopy();
+        dest.Internals->MetaData = src.Internals->MetaData->DeepCopy();
       }
     }
   }
 }
 
-void Buffer::DeepCopy(vtkm::cont::internal::Buffer& dest, vtkm::cont::DeviceAdapterId device) const
+void Buffer::DeepCopyFrom(const vtkm::cont::internal::Buffer& src,
+                          vtkm::cont::DeviceAdapterId device) const
 {
   // A Token should not be declared within the scope of a lock. when the token goes out of scope
   // it will attempt to aquire the lock, which is undefined behavior of the thread already has
   // the lock.
   vtkm::cont::Token token;
   {
-    LockType srcLock = this->Internals->GetLock();
-    LockType destLock = dest.Internals->GetLock();
+    LockType srcLock = src.Internals->GetLock();
+    LockType destLock = this->Internals->GetLock();
     detail::BufferHelper::CopyOnDevice(
-      device, this->Internals, srcLock, dest.Internals, destLock, token);
+      device, this->Internals, srcLock, this->Internals, destLock, token);
   }
 }
 

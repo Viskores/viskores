@@ -108,7 +108,7 @@ VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T, S>& source,
                              vtkm::cont::ArrayHandle<T, S>& destination,
                              std::true_type /* New style */)
 {
-  source.DeepCopy(destination);
+  destination.DeepCopyFrom(source);
 }
 
 } // namespace detail

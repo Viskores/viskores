@@ -226,15 +226,15 @@ public:
   VTKM_CONT void Enqueue(const vtkm::cont::Token& token) const;
 
   /// @{
-  /// \brief Copies the data from this buffer to the target buffer.
+  /// \brief Copies the data from the provided buffer into this buffer.
   ///
   /// If a device is given, then the copy will be preferred for that device. Otherwise, a device
   /// already containing the data will be used for the copy. If no such device exists, the host
   /// will be used.
   ///
-  VTKM_CONT void DeepCopy(vtkm::cont::internal::Buffer& dest) const;
-  VTKM_CONT void DeepCopy(vtkm::cont::internal::Buffer& dest,
-                          vtkm::cont::DeviceAdapterId device) const;
+  VTKM_CONT void DeepCopyFrom(const vtkm::cont::internal::Buffer& source) const;
+  VTKM_CONT void DeepCopyFrom(const vtkm::cont::internal::Buffer& source,
+                              vtkm::cont::DeviceAdapterId device) const;
   /// @}
 
   /// \brief Resets the `Buffer` to the memory allocated at the `BufferInfo`.
