@@ -17,7 +17,7 @@ namespace vtkm
 {
 namespace filter
 {
-class ComputeMoments : public vtkm::filter::FilterCell<ComputeMoments>
+class ComputeMoments : public vtkm::filter::FilterField<ComputeMoments>
 {
 public:
   using SupportedTypes = vtkm::List<vtkm::Float32,
