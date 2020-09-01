@@ -210,6 +210,15 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
 
 inline bool IsSingleShape(const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes)
 {
+  if (shapes.GetNumberOfValues() < 1)
+  {
+    // If the data has no cells, is it single shape? That would make sense, but having
+    // a single shape cell set requires you to slect a shape, and there are no cells to
+    // make that selection from. We could get around that, but it's easier just to treat
+    // it as a general explicit grid.
+    return false;
+  }
+
   auto shapesPortal = shapes.ReadPortal();
   vtkm::UInt8 shape0 = shapesPortal.Get(0);
   for (vtkm::Id i = 1; i < shapes.GetNumberOfValues(); ++i)

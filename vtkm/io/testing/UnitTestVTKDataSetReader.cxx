@@ -62,6 +62,17 @@ void TestReadingPolyData(Format format)
                    "Incorrect cellset type");
 }
 
+void TestReadingPolyDataEmpty()
+{
+  vtkm::cont::DataSet data =
+    readVTKDataSet(vtkm::cont::testing::Testing::DataPath("unstructured/empty_poly.vtk"));
+
+  VTKM_TEST_ASSERT(data.GetNumberOfPoints() == 8);
+  VTKM_TEST_ASSERT(data.GetNumberOfCells() == 0);
+  VTKM_TEST_ASSERT(data.GetCellSet().GetNumberOfPoints() == 8);
+  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 1);
+}
+
 void TestReadingStructuredPoints(Format format)
 {
   std::string testFileName = (format == FORMAT_ASCII)
@@ -112,6 +123,17 @@ void TestReadingUnstructuredGrid(Format format)
   VTKM_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                    "Incorrect cellset type");
+}
+
+void TestReadingUnstructuredGridEmpty()
+{
+  vtkm::cont::DataSet data =
+    readVTKDataSet(vtkm::cont::testing::Testing::DataPath("unstructured/empty_unstructured.vtk"));
+
+  VTKM_TEST_ASSERT(data.GetNumberOfPoints() == 26);
+  VTKM_TEST_ASSERT(data.GetNumberOfCells() == 0);
+  VTKM_TEST_ASSERT(data.GetCellSet().GetNumberOfPoints() == 26);
+  VTKM_TEST_ASSERT(data.GetNumberOfFields() == 2);
 }
 
 void TestReadingUnstructuredGridVisIt(Format format)
@@ -452,6 +474,8 @@ void TestReadingVTKDataSet()
   TestReadingPolyData(FORMAT_ASCII);
   std::cout << "Test reading VTK Polydata file in BINARY" << std::endl;
   TestReadingPolyData(FORMAT_BINARY);
+  std::cout << "Test reading VTK Polydata with no cells" << std::endl;
+  TestReadingPolyDataEmpty();
   std::cout << "Test reading VTK StructuredPoints file in ASCII" << std::endl;
   TestReadingStructuredPoints(FORMAT_ASCII);
 
@@ -461,6 +485,8 @@ void TestReadingVTKDataSet()
   TestReadingUnstructuredGrid(FORMAT_ASCII);
   std::cout << "Test reading VTK UnstructuredGrid file in BINARY" << std::endl;
   TestReadingUnstructuredGrid(FORMAT_BINARY);
+  std::cout << "Test reading VTK UnstructuredGrid with no cells" << std::endl;
+  TestReadingUnstructuredGridEmpty();
 
   std::cout << "Test reading VTK RectilinearGrid file in ASCII" << std::endl;
   TestReadingRectilinearGrid1(FORMAT_ASCII);
