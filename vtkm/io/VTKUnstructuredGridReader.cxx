@@ -65,8 +65,7 @@ void VTKUnstructuredGridReader::Read()
   vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
   this->SetCellsPermutation(permutation);
 
-  //DRP
-  if (false) //vtkm::io::internal::IsSingleShape(shapes))
+  if (vtkm::io::internal::IsSingleShape(shapes))
   {
     vtkm::cont::CellSetSingleType<> cellSet;
     cellSet.Fill(
