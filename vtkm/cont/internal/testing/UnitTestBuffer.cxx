@@ -119,7 +119,7 @@ void DoTest()
   std::cout << "Copy uninitialized buffer" << std::endl;
   {
     vtkm::cont::internal::Buffer copy;
-    buffer.DeepCopy(copy);
+    copy.DeepCopyFrom(buffer);
     VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == 0);
     VTKM_TEST_ASSERT(CheckMetaData(copy));
   }
@@ -135,7 +135,7 @@ void DoTest()
   std::cout << "Copy sized but uninitialized buffer" << std::endl;
   {
     vtkm::cont::internal::Buffer copy;
-    buffer.DeepCopy(copy);
+    copy.DeepCopyFrom(buffer);
     VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
     VTKM_TEST_ASSERT(CheckMetaData(copy));
     VTKM_TEST_ASSERT(!copy.IsAllocatedOnHost());
@@ -162,7 +162,7 @@ void DoTest()
   {
     vtkm::cont::Token token;
     vtkm::cont::internal::Buffer copy;
-    buffer.DeepCopy(copy);
+    copy.DeepCopyFrom(buffer);
     VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
     VTKM_TEST_ASSERT(CheckMetaData(copy));
     VTKM_TEST_ASSERT(copy.IsAllocatedOnHost());
@@ -225,7 +225,7 @@ void DoTest()
   {
     vtkm::cont::Token token;
     vtkm::cont::internal::Buffer copy;
-    buffer.DeepCopy(copy);
+    copy.DeepCopyFrom(buffer);
     VTKM_TEST_ASSERT(copy.GetNumberOfBytes() == BUFFER_SIZE);
     VTKM_TEST_ASSERT(CheckMetaData(copy));
     VTKM_TEST_ASSERT(!copy.IsAllocatedOnHost());
