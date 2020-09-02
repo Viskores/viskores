@@ -111,6 +111,14 @@ public:
   {
   }
 
+  // MSVC will issue deprecation warnings here if this template is instantiated with
+  // a deprecated class even if the template is used from a section of code where
+  // deprecation warnings are suppressed. This is annoying behavior since this template
+  // has no control over what class it is used with. To get around it, we have to
+  // suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
   /// ErrorBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
@@ -120,6 +128,9 @@ public:
   {
     return this->AsArrayHandle<ArrayHandleType>();
   }
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
 
   /// \brief Call a functor using the underlying array type.
   ///
