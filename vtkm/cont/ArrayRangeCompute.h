@@ -87,10 +87,12 @@ VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBas
 #undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T
 #undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
-  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual no longer supported.")
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
+    vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
+VTKM_DEPRECATED_SUPPRESS_END
 
 VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<vtkm::Vec3f,

@@ -303,7 +303,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
       currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     //const vtkm::cont::ArrayHandle<T,StorageType> &fieldData = currField.GetData().Cast<vtkm::cont::ArrayHandle<T,StorageType> >();
     vtkm::cont::ArrayHandle<T> fieldData;
-    vtkm::cont::ArrayCopy(currField.GetData().template AsVirtual<T>(), fieldData);
+    vtkm::cont::ArrayCopy(currField.GetData().template ResetTypes<vtkm::List<T>>(), fieldData);
     auto currContourTreeMesh = vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper::
       ComputeLocalContourTreeMesh<T>(
         this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal()

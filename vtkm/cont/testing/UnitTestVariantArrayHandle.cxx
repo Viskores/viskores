@@ -264,6 +264,7 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
 
   VariantArrayType arrayVariant = array;
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   {
     auto testArray = arrayVariant.template AsVirtual<ValueType, StorageList>();
     VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == array.GetNumberOfValues(),
@@ -319,6 +320,7 @@ void CheckCastToVirtualArrayHandle(const ArrayType& array)
   VTKM_TEST_ASSERT(threw,
                    "Casting to different vector width did not throw expected "
                    "ErrorBadType exception.");
+  VTKM_DEPRECATED_SUPPRESS_END
 }
 
 template <typename T, typename ArrayVariantType>

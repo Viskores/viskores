@@ -64,6 +64,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
   }
 };
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
@@ -99,6 +100,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     return obj.PrepareForExecution(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::arg

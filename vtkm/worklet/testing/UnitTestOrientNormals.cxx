@@ -82,8 +82,8 @@ vtkm::cont::DataSet CreateDataSet(bool pointNormals, bool cellNormals)
 struct ValidateNormals
 {
   using CellSetType = vtkm::cont::CellSetSingleType<>;
-  using NormalType = vtkm::Vec<vtkm::FloatDefault, 3>;
-  using NormalsArrayType = vtkm::cont::ArrayHandleVirtual<NormalType>;
+  using NormalType = vtkm::Vec3f;
+  using NormalsArrayType = vtkm::cont::ArrayHandle<NormalType>;
   using NormalsPortalType = decltype(std::declval<NormalsArrayType>().ReadPortal());
   using PointsType = decltype(std::declval<vtkm::cont::CoordinateSystem>().GetDataAsMultiplexer());
 
@@ -154,12 +154,12 @@ struct ValidateNormals
 
     if (this->CheckPoints)
     {
-      this->PointNormalsArray = pointNormalsField.GetData().AsVirtual<NormalType>();
+      pointNormalsField.GetData().AsArrayHandle(this->PointNormalsArray);
       this->PointNormals = this->PointNormalsArray.ReadPortal();
     }
     if (this->CheckCells)
     {
-      this->CellNormalsArray = cellNormalsField.GetData().AsVirtual<NormalType>();
+      cellNormalsField.GetData().AsArrayHandle(this->CellNormalsArray);
       this->CellNormals = this->CellNormalsArray.ReadPortal();
     }
   }

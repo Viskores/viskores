@@ -25,6 +25,8 @@
 
 #include <algorithm>
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 namespace UnitTestArrayHandleVirtualDetail
 {
 
@@ -245,6 +247,8 @@ void TestArrayHandleVirtual()
 }
 
 } // end namespace UnitTestArrayHandleVirtualDetail
+
+VTKM_DEPRECATED_SUPPRESS_END
 
 int UnitTestArrayHandleVirtual(int argc, char* argv[])
 {

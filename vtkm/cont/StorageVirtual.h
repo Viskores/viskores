@@ -58,7 +58,7 @@ namespace vtkm
 namespace cont
 {
 
-struct VTKM_ALWAYS_EXPORT StorageTagVirtual
+struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6) StorageTagVirtual
 {
 };
 
@@ -256,6 +256,7 @@ private:
 
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
 {
@@ -315,6 +316,7 @@ private:
   {
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace internal
 }

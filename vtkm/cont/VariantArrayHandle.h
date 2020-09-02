@@ -36,6 +36,7 @@ namespace internal
 namespace variant
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 struct ForceCastToVirtual
 {
   template <typename SrcValueType, typename Storage, typename DstValueType>
@@ -84,6 +85,7 @@ private:
     throw vtkm::cont::ErrorBadType(str.str());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 }
 } // namespace internal::variant
@@ -155,10 +157,12 @@ public:
   /// the CastAndCall. You can also specify a list of types to try as the optional
   /// third template argument.
   ///
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T,
             typename StorageList = VTKM_DEFAULT_STORAGE_LIST,
             typename TypeList = vtkm::List<T>>
-  VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
+  VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual is no longer supported.")
+    vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
     VTKM_IS_LIST(StorageList);
     VTKM_IS_LIST(TypeList);
@@ -167,6 +171,7 @@ public:
     this->CastAndCall<TypeList, StorageList>(caster, output);
     return output;
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   /// Returns this array cast to a `ArrayHandleMultiplexer` of the given type.
   /// This will attempt to cast the internal array to each supported type of
@@ -311,11 +316,14 @@ public:
   /// be specified in the second template parameter, which will be passed to
   /// the CastAndCall.
   ///
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T, typename StorageList = VTKM_DEFAULT_STORAGE_LIST>
-  VTKM_CONT vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
+  VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual is no longer suported.")
+    vtkm::cont::ArrayHandleVirtual<T> AsVirtual() const
   {
     return this->Superclass::AsVirtual<T, StorageList, TypeList>();
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   /// Changes the types to try casting to when resolving this variant array,
   /// which is specified with a list tag like those in TypeList.h. Since C++

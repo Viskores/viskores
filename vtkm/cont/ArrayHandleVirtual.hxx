@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/TryExecute.h>
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace vtkm
 {
 namespace cont
@@ -37,6 +38,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
 }
 }
 } // namespace vtkm::cont
+VTKM_DEPRECATED_SUPPRESS_END
 
 
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -45,6 +47,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
 //=============================================================================
 // Specializations of serialization related classes
 /// @cond SERIALIZATION
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace mangled_diy_namespace
 {
 
@@ -178,5 +181,6 @@ struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 };
 
 } // mangled_diy_namespace
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif

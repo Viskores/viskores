@@ -44,11 +44,13 @@ struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont:
   static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 {
   static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::arg
