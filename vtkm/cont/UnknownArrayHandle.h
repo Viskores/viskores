@@ -220,12 +220,15 @@ class VTKM_CONT_EXPORT UnknownArrayHandle
 
 public:
   VTKM_CONT UnknownArrayHandle() = default;
+  UnknownArrayHandle(const UnknownArrayHandle&) = default;
 
   template <typename T, typename S>
   VTKM_CONT UnknownArrayHandle(const vtkm::cont::ArrayHandle<T, S>& array)
     : Container(detail::UnknownAHContainer::Make(array))
   {
   }
+
+  UnknownArrayHandle& operator=(const vtkm::cont::UnknownArrayHandle&) = default;
 
   /// \brief Create a new array of the same type as this array.
   ///
@@ -476,8 +479,17 @@ struct UnknownArrayHandleMultplexerCastTry
     bool& converted) const
   {
     using ArrayType = vtkm::cont::ArrayHandle<T, S>;
-    if (!converted && unknownArray.CanConvert<ArrayType>())
+    if (unknownArray.CanConvert<ArrayType>())
     {
+      if (converted && !unknownArray.IsType<ArrayType>())
+      {
+        // The array has already been converted and pushed in the multiplexer. It is
+        // possible that multiple array types can be put in the ArrayHandleMultiplexer
+        // (for example, and ArrayHandle or an ArrayHandle that has been cast). Exact
+        // matches will override other matches (hence, the second part of the condition),
+        // but at this point we have already found a better array to put inside.
+        return;
+      }
       outputArray.GetStorage().SetArray(unknownArray.AsArrayHandle<ArrayType>());
       converted = true;
     }

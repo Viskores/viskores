@@ -183,7 +183,6 @@ set(sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  internal/VariantArrayHandleContainer.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
