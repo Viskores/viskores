@@ -20,6 +20,10 @@
 
 #include <typeinfo>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtual is removed. Do not include StorageVirtual.h"
+#endif
+
 namespace vtkm
 {
 namespace cont

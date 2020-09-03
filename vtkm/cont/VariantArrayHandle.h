@@ -17,7 +17,6 @@
 
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/DefaultTypes.h>
 #include <vtkm/cont/ErrorBadType.h>
@@ -26,11 +25,16 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/ArrayHandleVirtual.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 namespace vtkm
 {
 namespace cont
 {
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 namespace internal
 {
 namespace variant
@@ -89,6 +93,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 
 }
 } // namespace internal::variant
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 /// \brief VariantArrayHandle superclass holding common operations.
 ///
@@ -148,6 +153,7 @@ public:
                                                      std::forward<Args>(args)...);
   }
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   /// Returns this array cast to a `ArrayHandleVirtual` of the given type.
   /// This will perform type conversions as necessary, and will log warnings
   /// if the conversion is lossy.
@@ -172,6 +178,7 @@ public:
     return output;
   }
   VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Returns this array cast to a `ArrayHandleMultiplexer` of the given type.
   /// This will attempt to cast the internal array to each supported type of
@@ -308,6 +315,7 @@ public:
   }
 
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   /// Returns this array cast to a \c ArrayHandleVirtual of the given type.
   /// This will perform type conversions as necessary, and will log warnings
   /// if the conversion is lossy.
@@ -324,6 +332,7 @@ public:
     return this->Superclass::AsVirtual<T, StorageList, TypeList>();
   }
   VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   /// Changes the types to try casting to when resolving this variant array,
   /// which is specified with a list tag like those in TypeList.h. Since C++

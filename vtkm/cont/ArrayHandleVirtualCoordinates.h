@@ -22,6 +22,10 @@
 #include <memory>
 #include <type_traits>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtualCoordiantes is removed. Do not include ArrayHandleVirtualCoordinates.h"
+#endif
+
 namespace vtkm
 {
 namespace cont

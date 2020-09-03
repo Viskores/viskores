@@ -15,9 +15,11 @@
 #include <vtkm/List.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageVirtual.h>
-
 #include <vtkm/cont/AtomicArray.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/StorageVirtual.h>
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 namespace vtkm
 {
@@ -44,6 +46,7 @@ struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont:
   static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
@@ -51,6 +54,7 @@ struct TypeCheck<TypeCheckTagAtomicArray, vtkm::cont::ArrayHandle<T, vtkm::cont:
   static constexpr bool value = vtkm::ListHas<vtkm::cont::AtomicArrayTypeList, T>::value;
 };
 VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 }
 }
 } // namespace vtkm::cont::arg

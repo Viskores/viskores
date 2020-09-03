@@ -20,6 +20,10 @@
 
 #include <memory>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtual is removed. Do not include ArrayHandleVirtual.h"
+#endif
+
 namespace vtkm
 {
 namespace cont

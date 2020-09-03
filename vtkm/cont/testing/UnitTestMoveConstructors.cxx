@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
@@ -136,7 +135,7 @@ void TestContDataTypesHaveMoveSemantics()
 
   vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, ::vtkmComplexCustomTypes{});
 
-  //verify the DataSet, Field, CoordinateSystem, and ArrayHandleVirtualCoordinates
+  //verify the DataSet, Field, and CoordinateSystem
   //all have efficient storage in containers such as std::vector
   is_noexcept_movable<vtkm::cont::DataSet>();
   is_noexcept_movable<vtkm::cont::Field>();

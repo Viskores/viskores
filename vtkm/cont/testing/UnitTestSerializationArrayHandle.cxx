@@ -25,7 +25,6 @@
 #include <vtkm/cont/ArrayHandleSwizzle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 
 #include <vtkm/cont/UncertainArrayHandle.h>

@@ -26,7 +26,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleBitField.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetSingleType.h>

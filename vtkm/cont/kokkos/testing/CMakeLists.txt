@@ -12,7 +12,6 @@ set(unit_tests
   UnitTestKokkosArrayHandle.cxx
   UnitTestKokkosArrayHandleFancy.cxx
   UnitTestKokkosArrayHandleMultiplexer.cxx
-  UnitTestKokkosArrayHandleVirtualCoordinates.cxx
   UnitTestKokkosBitField.cxx
   UnitTestKokkosCellLocatorRectilinearGrid.cxx
   UnitTestKokkosCellLocatorUniformBins.cxx

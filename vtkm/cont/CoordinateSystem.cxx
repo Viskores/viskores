@@ -16,6 +16,7 @@ namespace vtkm
 namespace cont
 {
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 namespace detail
 {
 
@@ -27,6 +28,7 @@ vtkm::cont::ArrayHandleVirtualCoordinates CoordDataDepWrapper::ToArray() const
 VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace detail
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 VTKM_CONT CoordinateSystem::CoordinateSystem()
   : Superclass()
@@ -52,10 +54,19 @@ CoordinateSystem::CoordinateSystem(std::string name,
 {
 }
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 VTKM_CONT vtkm::cont::detail::CoordDataDepWrapper CoordinateSystem::GetData() const
 {
   return vtkm::cont::detail::CoordDataDepWrapper(this->Superclass::GetData());
 }
+#else  //!VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> CoordinateSystem::GetData()
+  const
+{
+  return vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>(this->Superclass::GetData());
+}
+#endif //!VTKM_NO_DEPRECATED_VIRTUAL
+
 
 VTKM_CONT vtkm::cont::CoordinateSystem::MultiplexerArrayType
 CoordinateSystem::GetDataAsMultiplexer() const

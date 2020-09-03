@@ -44,12 +44,14 @@ struct CheckSameCoordinateSystem
     CheckSameField{}(originalArray, fileCoords);
   }
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   template <typename T>
   void operator()(const vtkm::cont::ArrayHandleVirtual<T>& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
   {
     CheckSameField{}(originalArray, fileCoords);
   }
+#endif
 
   void operator()(const vtkm::cont::ArrayHandleUniformPointCoordinates& originalArray,
                   const vtkm::cont::CoordinateSystem& fileCoords) const
