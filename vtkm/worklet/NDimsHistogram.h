@@ -66,6 +66,29 @@ public:
     }
   }
 
+  // Add a field and the bin number for this field along with specific range of the data
+  // Return: binDelta is delta of a bin
+  template <typename HandleType>
+  void AddField(const HandleType& fieldArray,
+                vtkm::Id numberOfBins,
+                vtkm::Range& rangeOfValues,
+                vtkm::Float64& binDelta,
+                bool rangeProvided)
+  {
+    NumberOfBins.push_back(numberOfBins);
+
+    if (fieldArray.GetNumberOfValues() != NumDataPoints)
+    {
+      throw vtkm::cont::ErrorBadValue("Array lengths does not match");
+    }
+    else
+    {
+      CastAndCall(fieldArray.ResetTypes(vtkm::TypeListScalarAll()),
+                  vtkm::worklet::histogram::ComputeBins(
+                    Bin1DIndex, numberOfBins, rangeOfValues, binDelta, rangeProvided));
+    }
+  }
+
   // Execute N-Dim histogram worklet to get N-Dims histogram from input fields
   // Input arguments:
   //   binId: returned bin id of NDims-histogram, binId has n arrays, if length of fieldName is n
