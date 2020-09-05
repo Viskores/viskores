@@ -157,27 +157,86 @@ vtkm::cont::UnknownArrayHandle CreateArrayUnknown(T t)
 }
 
 template <typename ArrayHandleType>
-void CheckCastToArrayHandle(const ArrayHandleType& array)
+void CheckAsArrayHandle(const ArrayHandleType& array)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+  using T = typename ArrayHandleType::ValueType;
 
   vtkm::cont::UnknownArrayHandle arrayUnknown = array;
   VTKM_TEST_ASSERT(!arrayUnknown.IsType<vtkm::cont::ArrayHandle<UnusualType>>(),
                    "Dynamic array reporting is wrong type.");
 
-  ArrayHandleType castArray1;
-  arrayUnknown.AsArrayHandle(castArray1);
-  VTKM_TEST_ASSERT(arrayUnknown.CanConvert<ArrayHandleType>(), "Did not query handle correctly.");
-  VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
+  {
+    std::cout << "    Normal get ArrayHandle" << std::endl;
+    ArrayHandleType retreivedArray1;
+    arrayUnknown.AsArrayHandle(retreivedArray1);
+    VTKM_TEST_ASSERT(arrayUnknown.CanConvert<ArrayHandleType>(), "Did not query handle correctly.");
+    VTKM_TEST_ASSERT(array == retreivedArray1, "Did not get back same array.");
 
-  ArrayHandleType castArray2 = arrayUnknown.AsArrayHandle<ArrayHandleType>();
-  VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
+    ArrayHandleType retreivedArray2 = arrayUnknown.AsArrayHandle<ArrayHandleType>();
+    VTKM_TEST_ASSERT(array == retreivedArray2, "Did not get back same array.");
+  }
 
-  vtkm::cont::UnknownArrayHandle arrayUnknown2 = vtkm::cont::ArrayHandleMultiplexer<
-    ArrayHandleType,
-    vtkm::cont::ArrayHandleConstant<typename ArrayHandleType::ValueType>>(array);
-  VTKM_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>(),
-                   "Putting in multiplexer did not pull out array.");
+  {
+    std::cout << "    Put in cast array, get actual array" << std::endl;
+    auto castArray = vtkm::cont::make_ArrayHandleCast<vtkm::Float64>(array);
+    vtkm::cont::UnknownArrayHandle arrayUnknown2(castArray);
+    VTKM_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>());
+    ArrayHandleType retrievedArray = arrayUnknown2.AsArrayHandle<ArrayHandleType>();
+    VTKM_TEST_ASSERT(array == retrievedArray);
+  }
+
+  {
+    std::cout << "    Get array as cast" << std::endl;
+    vtkm::cont::ArrayHandleCast<vtkm::Float64, ArrayHandleType> castArray;
+    arrayUnknown.AsArrayHandle(castArray);
+    VTKM_TEST_ASSERT(test_equal_portals(array.ReadPortal(), castArray.ReadPortal()));
+  }
+
+  {
+    std::cout << "    Put in multiplexer, get actual array" << std::endl;
+    vtkm::cont::UnknownArrayHandle arrayUnknown2 = vtkm::cont::ArrayHandleMultiplexer<
+      ArrayHandleType,
+      vtkm::cont::ArrayHandleConstant<typename ArrayHandleType::ValueType>>(array);
+    VTKM_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>(),
+                     "Putting in multiplexer did not pull out array.");
+  }
+
+  {
+    std::cout << "    Make sure multiplex array prefers direct array (1st arg)" << std::endl;
+    using MultiplexerType =
+      vtkm::cont::ArrayHandleMultiplexer<ArrayHandleType,
+                                         vtkm::cont::ArrayHandleCast<T, ArrayHandleType>>;
+    MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
+  }
+
+  {
+    std::cout << "    Make sure multiplex array prefers direct array (2nd arg)" << std::endl;
+    using MultiplexerType =
+      vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandleCast<T, vtkm::cont::ArrayHandle<T>>,
+                                         ArrayHandleType>;
+    MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
+
+    VTKM_TEST_ASSERT(multiplexArray.IsValid());
+    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
+    VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
+  }
+
+  {
+    std::cout << "    Make sure adding arrays follows nesting of special arrays" << std::endl;
+    vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Int64>,
+                                       vtkm::cont::ArrayHandleCast<vtkm::Int64, ArrayHandleType>>
+      multiplexer(vtkm::cont::make_ArrayHandleCast<vtkm::Int64>(array));
+    auto crazyArray = vtkm::cont::make_ArrayHandleCast<vtkm::Float64>(multiplexer);
+    vtkm::cont::UnknownArrayHandle arrayUnknown2(crazyArray);
+    VTKM_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>());
+    ArrayHandleType retrievedArray = arrayUnknown2.AsArrayHandle<ArrayHandleType>();
+    VTKM_TEST_ASSERT(array == retrievedArray);
+  }
 }
 
 // A vtkm::Vec if NumComps > 1, otherwise a scalar
@@ -320,12 +379,12 @@ void TryUnusualType()
 }
 
 template <typename ArrayHandleType>
-void TryCastToArrayHandle(const ArrayHandleType& array)
+void TryAsArrayHandle(const ArrayHandleType& array)
 {
-  CheckCastToArrayHandle(array);
+  CheckAsArrayHandle(array);
 }
 
-void TryCastToArrayHandle()
+void TryAsArrayHandle()
 {
   std::cout << "  Normal array handle." << std::endl;
   vtkm::Id buffer[ARRAY_SIZE];
@@ -336,10 +395,10 @@ void TryCastToArrayHandle()
 
   vtkm::cont::ArrayHandle<vtkm::Id> array =
     vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, vtkm::CopyFlag::On);
-  TryCastToArrayHandle(array);
+  TryAsArrayHandle(array);
 
   std::cout << "  Constant array handle." << std::endl;
-  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
+  TryAsArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
 }
 
 void TrySetCastArray()
@@ -386,8 +445,8 @@ void TestUnknownArrayHandle()
   std::cout << "Try unusual type." << std::endl;
   TryUnusualType();
 
-  std::cout << "Try CastToArrayHandle" << std::endl;
-  TryCastToArrayHandle();
+  std::cout << "Try AsArrayHandle" << std::endl;
+  TryAsArrayHandle();
 
   std::cout << "Try setting ArrayHandleCast" << std::endl;
   TrySetCastArray();

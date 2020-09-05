@@ -11,6 +11,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ArrayHandleVirtual.hxx>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
