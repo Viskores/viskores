@@ -440,10 +440,12 @@ VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesStatic, ValueTypes);
 template <typename ValueType>
 void BenchBlackScholesDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchBlackScholesImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.StockPrice),
            vtkm::cont::make_ArrayHandleVirtual(impl.OptionStrike),
            vtkm::cont::make_ArrayHandleVirtual(impl.OptionYears));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesDynamic, ValueTypes);
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
@@ -546,10 +548,12 @@ VTKM_BENCHMARK_TEMPLATES(BenchMathStatic, ValueTypes);
 template <typename ValueType>
 void BenchMathDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchMathImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle1),
            vtkm::cont::make_ArrayHandleVirtual(impl.TempHandle2));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchMathDynamic, ValueTypes);
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
@@ -647,8 +651,10 @@ VTKM_BENCHMARK_TEMPLATES(BenchFusedMathStatic, ValueTypes);
 template <typename ValueType>
 void BenchFusedMathDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchFusedMathImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.InputHandle));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchFusedMathDynamic, ValueTypes);
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
@@ -769,10 +775,12 @@ VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpStatic, InterpValueTypes);
 template <typename ValueType>
 void BenchEdgeInterpDynamic(::benchmark::State& state)
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   BenchEdgeInterpImpl<ValueType> impl{ state };
   impl.Run(vtkm::cont::make_ArrayHandleVirtual(impl.EdgePairHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.WeightHandle),
            vtkm::cont::make_ArrayHandleVirtual(impl.FieldHandle));
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpDynamic, InterpValueTypes);
 #endif //VTKM_NO_DEPRECATED_VIRTUAL

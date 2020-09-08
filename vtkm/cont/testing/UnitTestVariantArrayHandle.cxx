@@ -118,6 +118,7 @@ struct CheckFunctor
   }
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T>
   void operator()(const vtkm::cont::ArrayHandleVirtual<T>& array,
                   bool& vtkmNotUsed(calledBasic),
@@ -128,6 +129,7 @@ struct CheckFunctor
 
     CheckArray(array);
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
   template <typename T, typename S>

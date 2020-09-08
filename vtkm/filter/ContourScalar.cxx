@@ -24,11 +24,13 @@ template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
 #endif
 
 template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
@@ -38,11 +40,13 @@ template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_CONTOUR_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
 #endif
 }
 }
