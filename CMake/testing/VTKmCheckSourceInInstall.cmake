@@ -112,6 +112,14 @@ function(do_verify root_dir prefix)
   set(file_exceptions
     cont/ColorTablePrivate.hxx
     thirdparty/diy/vtkmdiy/cmake/mpi_types.h
+
+    # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL
+    # is on). These exceptions can be removed when these files are completely removed.
+    cont/ArrayHandleVirtual.h
+    cont/ArrayHandleVirtual.hxx
+    cont/ArrayHandleVirtualCoordinates.h
+    cont/StorageVirtual.h
+    cont/StorageVirtual.hxx
     )
 
   #by default every header in a testing directory doesn't need to be installed
