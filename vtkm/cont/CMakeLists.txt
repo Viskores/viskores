@@ -37,6 +37,7 @@ set(headers
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
   ArrayHandleSOA.h
+  ArrayHandleStride.h
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
@@ -137,6 +138,7 @@ set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
+  ArrayHandleStride.cxx
   BitField.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx

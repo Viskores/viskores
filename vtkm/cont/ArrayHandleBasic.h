@@ -47,7 +47,8 @@ public:
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return static_cast<vtkm::Id>(buffers->GetNumberOfBytes()) / static_cast<vtkm::Id>(sizeof(T));
+    return static_cast<vtkm::Id>(buffers->GetNumberOfBytes() /
+                                 static_cast<vtkm::BufferSizeType>(sizeof(T)));
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
