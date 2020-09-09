@@ -379,9 +379,9 @@ struct ReduceHelper
   // This gives faster code for floats and non-trivial types.
   template <typename ReturnType, typename IterType, typename FunctorType>
   static ReturnType DoParallelReduction(IterType data,
-                                        vtkm::Id numVals,
-                                        int tid,
-                                        int numThreads,
+                                        const vtkm::Id& numVals,
+                                        const int& tid,
+                                        const int& numThreads,
                                         FunctorType f,
                                         std::false_type /* isIntegral */)
   {
@@ -389,18 +389,24 @@ struct ReduceHelper
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
     const vtkm::Id offset = numThreads * 2;
-    const vtkm::Id end = std::max(vtkm::Id(((numVals / 4) * 4) - 4), offset);
+    const vtkm::Id end = std::max(((numVals / 4) * 4) - 4, offset);
     const vtkm::Id unrollEnd = end - ((end - offset) % 4);
-
     vtkm::Id i = offset;
+
+// When initializing the looping iterator to a non integral type, intel compilers will
+// convert the iterator type to an unsigned value
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
     for (i = offset; i < unrollEnd; i += 4)
+#pragma GCC diagnostic pop
     {
       const auto t1 = f(data[i], data[i + 1]);
       const auto t2 = f(data[i + 2], data[i + 3]);
       accum = f(accum, t1);
       accum = f(accum, t2);
     }
+
     // Let the last thread mop up any remaining values as it would
     // have just accessed the adjacent data
     if (tid == numThreads - 1)
@@ -418,18 +424,21 @@ struct ReduceHelper
   // hurt performance.
   template <typename ReturnType, typename IterType, typename FunctorType>
   static ReturnType DoParallelReduction(IterType data,
-                                        vtkm::Id numVals,
-                                        int tid,
-                                        int numThreads,
+                                        const vtkm::Id& numVals,
+                                        const int& tid,
+                                        const int& numThreads,
                                         FunctorType f,
                                         std::true_type /* isIntegral */)
   {
     // Use the first (numThreads*2) values for initializing:
     ReturnType accum = f(data[2 * tid], data[2 * tid + 1]);
 
-    // Assign each thread chunks of the remaining values for local reduction
+// Assign each thread chunks of the remaining values for local reduction
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
     VTKM_OPENMP_DIRECTIVE(for schedule(static))
     for (vtkm::Id i = numThreads * 2; i < numVals; i++)
+#pragma GCC diagnostic pop
     {
       accum = f(accum, data[i]);
     }

@@ -354,11 +354,18 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
   {
     return vtkm::Vec3f(
       this->Origin[0] +
-        this->Spacing[0] * static_cast<vtkm::FloatDefault>(ijk0[0] + t * (ijk1[0] - ijk0[0])),
+        this->Spacing[0] *
+          (static_cast<vtkm::FloatDefault>(ijk0[0]) +
+           static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[0] - ijk0[0])),
       this->Origin[1] +
-        this->Spacing[1] * static_cast<vtkm::FloatDefault>(ijk0[1] + t * (ijk1[1] - ijk0[1])),
+        this->Spacing[1] *
+          (static_cast<vtkm::FloatDefault>(ijk0[1]) +
+           static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[1] - ijk0[1])),
       this->Origin[2] +
-        this->Spacing[2] * static_cast<vtkm::FloatDefault>(ijk0[2] + t * (ijk1[2] - ijk0[2])));
+        this->Spacing[2] *
+          (static_cast<vtkm::FloatDefault>(ijk0[2]) +
+           static_cast<vtkm::FloatDefault>(t) *
+             static_cast<vtkm::FloatDefault>(ijk1[2] - ijk0[2])));
   }
 
   //----------------------------------------------------------------------------
