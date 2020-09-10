@@ -116,8 +116,20 @@ VTKM_CONT vtkm::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>
 {
   return vtkm::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>(*this);
 }
+
+namespace internal
+{
+
+template <typename ValueTypeList, typename StorageTypeList>
+struct DynamicTransformTraits<vtkm::cont::UncertainArrayHandle<ValueTypeList, StorageTypeList>>
+{
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
+};
+
+} // namespace internal
+
 }
-}
+} // namespace vtkm::cont
 
 //=============================================================================
 // Specializations of serialization related classes

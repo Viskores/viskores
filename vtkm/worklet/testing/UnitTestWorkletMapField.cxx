@@ -10,7 +10,8 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -122,25 +123,26 @@ struct DoVariantTestWorklet
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
 
-    std::cout << "Create and run dispatcher with variant arrays." << std::endl;
+    std::cout << "Create and run dispatcher with unknown arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::VariantArrayHandle inputVariant(inputHandle);
+    vtkm::cont::UnknownArrayHandle inputVariant(inputHandle);
 
     { //Verify we can pass by value
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
-      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
-      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
-      dispatcher.Invoke(inputVariant.ResetTypes(vtkm::List<T>{}),
-                        outputVariant.ResetTypes(vtkm::List<T>{}),
-                        inoutVariant.ResetTypes(vtkm::List<T>{}));
+      vtkm::cont::UnknownArrayHandle outputVariant(outputHandle);
+      vtkm::cont::UnknownArrayHandle inoutVariant(inoutHandle);
+      dispatcher.Invoke(
+        inputVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+        outputVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+        inoutVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>());
       CheckPortal(outputHandle.ReadPortal());
       CheckPortal(inoutHandle.ReadPortal());
     }
 
     { //Verify we can pass by pointer
-      vtkm::cont::VariantArrayHandle outputVariant(outputHandle);
-      vtkm::cont::VariantArrayHandle inoutVariant(inoutHandle);
+      vtkm::cont::UnknownArrayHandle outputVariant(outputHandle);
+      vtkm::cont::UnknownArrayHandle inoutVariant(inoutHandle);
 
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);
