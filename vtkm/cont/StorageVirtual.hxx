@@ -235,6 +235,7 @@ void StorageVirtualImpl<T, S>::TransferPortalForOutput(
 }
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagVirtual>::Allocate(vtkm::Id numberOfValues)
 {
@@ -433,6 +434,7 @@ struct ArrayTransfer<T, vtkm::cont::StorageTagVirtual, Device> : detail::ArrayTr
     return this->Superclass::PrepareForInPlace(Device());
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 }
 }
 } // namespace vtkm::cont::internal

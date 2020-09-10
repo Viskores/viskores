@@ -17,10 +17,6 @@
   template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
     const vtkm::cont::ArrayHandle<T>& keys,                                        \
     vtkm::worklet::KeysSortType sort,                                              \
-    vtkm::cont::DeviceAdapterId device);                                           \
-  template VTKM_WORKLET_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
-    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                 \
-    vtkm::worklet::KeysSortType sort,                                              \
     vtkm::cont::DeviceAdapterId device)
 
 VTK_M_KEYS_EXPORT(vtkm::Id);

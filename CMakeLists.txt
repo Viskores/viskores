@@ -132,6 +132,13 @@ vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful w
 # Some application might need not to install those, hence this option.
 vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
+# We are in the process of deprecating the use of virtual methods because they
+# are not well supported on many accelerators. Turn this option on to remove
+# the code entirely. Note that the deprecation of virtual methods is work in
+# progress, so not all use of virtual methods may be done. In VTK-m 2.0
+# virtual methods should be removed entirely and this option will be removed.
+vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -140,6 +147,7 @@ mark_as_advanced(
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
+  VTKm_NO_DEPRECATED_VIRTUAL
   )
 
 #-----------------------------------------------------------------------------

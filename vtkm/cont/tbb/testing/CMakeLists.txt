@@ -12,7 +12,6 @@ set(unit_tests
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
   UnitTestTBBArrayHandleMultiplexer.cxx
-  UnitTestTBBArrayHandleVirtualCoordinates.cxx
   UnitTestTBBBitField.cxx
   UnitTestTBBCellLocatorRectilinearGrid.cxx
   UnitTestTBBCellLocatorUniformBins.cxx

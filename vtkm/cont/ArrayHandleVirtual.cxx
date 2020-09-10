@@ -15,6 +15,8 @@ namespace vtkm
 namespace cont
 {
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+
 #define VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(T)                                  \
   template class VTKM_CONT_EXPORT ArrayHandle<T, StorageTagVirtual>;               \
   template class VTKM_CONT_EXPORT ArrayHandleVirtual<T>;                           \
@@ -38,5 +40,8 @@ VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(vtkm::Float32);
 VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE(vtkm::Float64);
 
 #undef VTK_M_ARRAY_HANDLE_VIRTUAL_INSTANTIATE
+
+VTKM_DEPRECATED_SUPPRESS_END
+
 }
 } //namespace vtkm::cont

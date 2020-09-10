@@ -14,7 +14,6 @@ set(headers
   Testing.h
   TestingArrayHandles.h
   TestingArrayHandleMultiplexer.h
-  TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorRectilinearGrid.h
   TestingCellLocatorUniformBins.h
   TestingCellLocatorUniformGrid.h

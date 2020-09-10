@@ -41,8 +41,6 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
-  ArrayHandleVirtual.h
-  ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
@@ -111,7 +109,6 @@ set(headers
   StorageImplicit.h
   StorageList.h
   StorageListTag.h
-  StorageVirtual.h
   Timer.h
   Token.h
   TryExecute.h
@@ -124,7 +121,6 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetExtrude.hxx
@@ -133,7 +129,6 @@ set(template_sources
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
   ParticleArrayCopy.hxx
-  StorageVirtual.hxx
   VirtualObjectHandle.hxx
   )
 
@@ -162,7 +157,6 @@ set(sources
   # This list of sources has code that uses devices and so might need to be
   # compiled with a device-specific compiler (like CUDA).
   set(device_sources
-  ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
@@ -190,10 +184,27 @@ set(sources
   PointLocator.cxx
   PointLocatorUniformGrid.cxx
   RuntimeDeviceInformation.cxx
-  StorageVirtual.cxx
   Timer.cxx
   UnknownArrayHandle.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    ArrayHandleVirtual.h
+    ArrayHandleVirtualCoordinates.h
+    StorageVirtual.h
+    )
+
+  set(template_sources ${template_sources}
+    ArrayHandleVirtual.hxx
+    StorageVirtual.hxx
+    )
+
+  set(device_sources ${device_sources}
+    ArrayHandleVirtual.cxx
+    StorageVirtual.cxx
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.
