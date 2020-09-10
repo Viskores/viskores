@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleSOA_h
 #define vtk_m_cont_ArrayHandleSOA_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/Math.h>
@@ -524,6 +525,35 @@ VTKM_CONT ArrayHandleSOA<
     vtkm::Vec<ComponentType, vtkm::IdComponent(sizeof...(RemainingArrays) + 1)>>(
     length, array0, componentArrays...);
 }
+
+namespace internal
+{
+
+template <>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagSOA>
+{
+  template <typename T>
+  auto operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagSOA>& src,
+                  vtkm::IdComponent componentIndex,
+                  vtkm::CopyFlag allowCopy) const
+    -> decltype(
+      ArrayExtractComponentImpl<vtkm::cont::StorageTagBasic>{}(vtkm::cont::ArrayHandleBasic<T>{},
+                                                               componentIndex,
+                                                               allowCopy))
+  {
+    using FirstLevelComponentType = typename vtkm::VecTraits<T>::ComponentType;
+    vtkm::cont::ArrayHandleSOA<T> array(src);
+    constexpr vtkm::IdComponent NUM_SUB_COMPONENTS =
+      vtkm::VecFlat<FirstLevelComponentType>::NUM_COMPONENTS;
+    return ArrayExtractComponentImpl<vtkm::cont::StorageTagBasic>{}(
+      array.GetArray(componentIndex / NUM_SUB_COMPONENTS),
+      componentIndex % NUM_SUB_COMPONENTS,
+      allowCopy);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

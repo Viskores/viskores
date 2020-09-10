@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleGroupVec_h
 #define vtk_m_cont_ArrayHandleGroupVec_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ErrorBadValue.h>
@@ -236,6 +237,45 @@ VTKM_CONT vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_
 {
   return vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>(array);
 }
+
+//--------------------------------------------------------------------------------
+// Specialization of ArrayExtractComponent
+namespace internal
+{
+
+template <typename ComponentsStorageTag, vtkm::IdComponent NUM_COMPONENTS>
+struct ArrayExtractComponentImpl<
+  vtkm::cont::StorageTagGroupVec<ComponentsStorageTag, NUM_COMPONENTS>>
+{
+  template <typename T>
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
+    const vtkm::cont::ArrayHandle<
+      vtkm::Vec<T, NUM_COMPONENTS>,
+      vtkm::cont::StorageTagGroupVec<ComponentsStorageTag, NUM_COMPONENTS>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<T, ComponentsStorageTag>,
+                                    NUM_COMPONENTS>
+      srcArray(src);
+    constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
+    vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> dest =
+      ArrayExtractComponentImpl<ComponentsStorageTag>{}(
+        srcArray.GetComponentsArray(), componentIndex % NUM_SUB_COMPONENTS, allowCopy);
+
+    // Adjust stride and offset to expectations of grouped values
+    return vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>(
+      dest.GetBasicArray(),
+      dest.GetNumberOfValues() / NUM_COMPONENTS,
+      dest.GetStride() * NUM_COMPONENTS,
+      dest.GetOffset() + (dest.GetStride() * (componentIndex / NUM_SUB_COMPONENTS)),
+      dest.GetModulo(),
+      dest.GetDivisor());
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

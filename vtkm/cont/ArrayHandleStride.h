@@ -44,15 +44,16 @@ struct ArrayStrideInfo
 
   VTKM_EXEC_CONT vtkm::Id ArrayIndex(vtkm::Id index) const
   {
-    vtkm::Id arrayIndex = (index * this->Stride) + this->Offset;
-    if (this->Modulo > 0)
-    {
-      arrayIndex = arrayIndex % this->Modulo;
-    }
+    vtkm::Id arrayIndex = index;
     if (this->Divisor > 1)
     {
       arrayIndex = arrayIndex / this->Divisor;
     }
+    if (this->Modulo > 0)
+    {
+      arrayIndex = arrayIndex % this->Modulo;
+    }
+    arrayIndex = (arrayIndex * this->Stride) + this->Offset;
     return arrayIndex;
   }
 };
@@ -123,12 +124,12 @@ public:
     return detail::ArrayPortalBasicWriteGet(this->Array + this->Info.ArrayIndex(index));
   }
 
-  VTKM_EXEC_CONT ValueType Set(vtkm::Id index, const ValueType& value) const
+  VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());
 
-    return detail::ArrayPortalBasicWriteSet(this->Array + this->Info.ArrayIndex(index), value);
+    detail::ArrayPortalBasicWriteSet(this->Array + this->Info.ArrayIndex(index), value);
   }
 
   VTKM_EXEC_CONT ValueType* GetArray() const { return this->Array; }
@@ -229,6 +230,11 @@ public:
   {
     return vtkm::cont::internal::CreateBuffers(info, sourceBuffer);
   }
+
+  static vtkm::cont::ArrayHandleBasic<T> GetBasicArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>(buffers + 1);
+  }
 };
 
 } // namespace internal
@@ -248,7 +254,7 @@ VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagStride);
 /// Optionally, you can also specify a modulo and divisor. If they are specified, the index
 /// mangling becomes:
 ///
-/// (((index * stride) + offset) % modulo) / divisor
+/// (((index / divisor) % modulo) * stride) + offset
 ///
 /// You can "disable" any of the aforementioned operations by setting them to the following
 /// values (most of which are arithmetic identities):
@@ -275,6 +281,7 @@ public:
                              (ArrayHandleStride<T>),
                              (ArrayHandle<T, vtkm::cont::StorageTagStride>));
 
+private:
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
@@ -313,6 +320,11 @@ public:
   vtkm::Id GetOffset() const { return StorageType::GetInfo(this->GetBuffers()).Offset; }
   vtkm::Id GetModulo() const { return StorageType::GetInfo(this->GetBuffers()).Modulo; }
   vtkm::Id GetDivisor() const { return StorageType::GetInfo(this->GetBuffers()).Divisor; }
+
+  vtkm::cont::ArrayHandleBasic<T> GetBasicArray() const
+  {
+    return StorageType::GetBasicArray(this->GetBuffers());
+  }
 };
 
 }

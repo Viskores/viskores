@@ -10,7 +10,9 @@
 #ifndef vtk_m_cont_ArrayHandleExtractComponent_h
 #define vtk_m_cont_ArrayHandleExtractComponent_h
 
+#include <vtkm/StaticAssert.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm
@@ -228,6 +230,32 @@ VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractCo
 {
   return ArrayHandleExtractComponent<ArrayHandleType>(array, component);
 }
+
+namespace internal
+{
+
+template <typename ArrayHandleType>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagExtractComponent<ArrayHandleType>>
+{
+  auto operator()(const vtkm::cont::ArrayHandleExtractComponent<ArrayHandleType>& src,
+                  vtkm::IdComponent componentIndex,
+                  vtkm::CopyFlag allowCopy) const
+    -> decltype(ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>{}(
+      std::declval<ArrayHandleType>(),
+      componentIndex,
+      allowCopy))
+  {
+    using ValueType = typename ArrayHandleType::ValueType;
+    using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+    using FlatComponent = vtkm::VecFlat<ComponentType>;
+    constexpr vtkm::IdComponent FLAT_SUB_COMPONENTS = FlatComponent::NUM_COMPONENTS;
+    return ArrayExtractComponentImpl<typename ArrayHandleType::StorageTag>{}(
+      src.GetArray(), (src.GetComponent() * FLAT_SUB_COMPONENTS) + componentIndex, allowCopy);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 
