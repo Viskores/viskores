@@ -22,8 +22,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ColorTable.hxx>
-
 #include <fstream>
 #include <iostream>
 

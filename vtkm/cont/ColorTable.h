@@ -663,9 +663,9 @@ public:
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ColorTableSamplesRGBA& samples,
-                     vtkm::Float64 tolerance = 0.002) const;
+  bool Sample(vtkm::Int32 numSamples,
+              vtkm::cont::ColorTableSamplesRGBA& samples,
+              vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate a sample lookup table using regular spaced samples along the range.
   ///
@@ -678,9 +678,9 @@ public:
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ColorTableSamplesRGB& samples,
-                     vtkm::Float64 tolerance = 0.002) const;
+  bool Sample(vtkm::Int32 numSamples,
+              vtkm::cont::ColorTableSamplesRGB& samples,
+              vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate RGBA colors using regular spaced samples along the range.
   ///
@@ -693,9 +693,9 @@ public:
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
-                     vtkm::Float64 tolerance = 0.002) const;
+  bool Sample(vtkm::Int32 numSamples,
+              vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
+              vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate RGB colors using regular spaced samples along the range.
   ///
@@ -708,9 +708,9 @@ public:
   /// - ((max-min) / numSamples) * numSamples
   ///
   /// Note: This will return false if the number of samples is less than 2
-  inline bool Sample(vtkm::Int32 numSamples,
-                     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
-                     vtkm::Float64 tolerance = 0.002) const;
+  bool Sample(vtkm::Int32 numSamples,
+              vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
+              vtkm::Float64 tolerance = 0.002) const;
 
 
   /// \brief returns a virtual object pointer of the exec color table

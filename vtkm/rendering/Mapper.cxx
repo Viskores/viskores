@@ -10,8 +10,6 @@
 
 #include <vtkm/rendering/Mapper.h>
 
-#include <vtkm/cont/ColorTable.hxx>
-
 namespace vtkm
 {
 namespace rendering
