@@ -11,6 +11,12 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#include <vtkm/cont/ArrayHandleCast.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
+
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -236,6 +242,25 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     VTKM_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>());
     ArrayHandleType retrievedArray = arrayUnknown2.AsArrayHandle<ArrayHandleType>();
     VTKM_TEST_ASSERT(array == retrievedArray);
+  }
+
+  {
+    std::cout << "    Try adding arrays with variable amounts of components" << std::endl;
+    // There might be some limited functionality, but you should still be able
+    // to get arrays in and out.
+
+    // Note, this is a bad way to implement this array. You should something like
+    // ArrayHandleGroupVec instead.
+    using VariableVecArrayType =
+      vtkm::cont::ArrayHandleGroupVecVariable<ArrayHandleType,
+                                              vtkm::cont::ArrayHandleCounting<vtkm::Id>>;
+    VariableVecArrayType inArray = vtkm::cont::make_ArrayHandleGroupVecVariable(
+      array, vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 2, ARRAY_SIZE / 2 + 1));
+    VTKM_TEST_ASSERT(inArray.GetNumberOfValues() == ARRAY_SIZE / 2);
+    vtkm::cont::UnknownArrayHandle arrayUnknown2 = inArray;
+    VTKM_TEST_ASSERT(arrayUnknown2.IsType<VariableVecArrayType>());
+    VariableVecArrayType retrievedArray = arrayUnknown2.AsArrayHandle<VariableVecArrayType>();
+    VTKM_TEST_ASSERT(retrievedArray == inArray);
   }
 }
 

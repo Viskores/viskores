@@ -51,10 +51,23 @@ static vtkm::Id UnknownAHNumberOfValues(void* mem)
   return arrayHandle->GetNumberOfValues();
 }
 
+template <typename T, typename StaticSize = typename vtkm::VecTraits<T>::IsSizeStatic>
+struct UnknownAHNumberOfComponentsImpl;
+template <typename T>
+struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeStatic>
+{
+  static constexpr vtkm::IdComponent Value = vtkm::VecTraits<T>::NUM_COMPONENTS;
+};
+template <typename T>
+struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
+{
+  static constexpr vtkm::IdComponent Value = 0;
+};
+
 template <typename T>
 static vtkm::IdComponent UnknownAHNumberOfComponents()
 {
-  return vtkm::VecTraits<T>::NUM_COMPONENTS;
+  return UnknownAHNumberOfComponentsImpl<T>::Value;
 }
 
 template <typename T, typename S>
@@ -303,6 +316,8 @@ public:
   ///
   /// If the array holds `vtkm::Vec` objects, this will return the number of components
   /// in each value. If the array holds a basic C type (such as `float`), this will return 1.
+  /// If the array holds `Vec`-like objects that have the number of components that can vary
+  /// at runtime, this method will return 0 (because there is no consistent answer).
   ///
   VTKM_CONT vtkm::IdComponent GetNumberOfComponents() const
   {
