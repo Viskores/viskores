@@ -361,6 +361,8 @@ vtkm::Vec3f_32 ColorTable::MapThroughColorSpace(const vtkm::Vec3f_32& rgb1,
     case vtkm::ColorSpace::Diverging:
       return this->MapThroughColorSpaceDiverging(rgb1, rgb2, weight);
   }
+  // Should not get here, but some compilers give a warning if this is not here.
+  return vtkm::Vec3f_32{};
 }
 
 //---------------------------------------------------------------------------
