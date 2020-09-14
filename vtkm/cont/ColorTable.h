@@ -17,43 +17,35 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ColorTableSamples.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
+
+#include <vtkm/exec/ColorTable.h>
 
 #include <set>
 
 namespace vtkm
 {
-
-namespace exec
-{
-//forward declare exec objects
-class ColorTableBase;
-}
-
 namespace cont
 {
-
-template <typename T>
-class VirtualObjectHandle;
-
 
 namespace detail
 {
 struct ColorTableInternals;
 }
 
-enum struct ColorSpace
+struct VTKM_DEPRECATED(1.6, "Use vtkm::ColorSpace.") ColorSpace
 {
-  RGB,
-  HSV,
-  HSV_WRAP,
-  LAB,
-  DIVERGING
+  static constexpr vtkm::ColorSpace RGB = vtkm::ColorSpace::RGB;
+  static constexpr vtkm::ColorSpace HSV = vtkm::ColorSpace::HSV;
+  static constexpr vtkm::ColorSpace HSV_WRAP = vtkm::ColorSpace::HSVWrap;
+  static constexpr vtkm::ColorSpace LAB = vtkm::ColorSpace::Lab;
+  static constexpr vtkm::ColorSpace DIVERGING = vtkm::ColorSpace::Diverging;
 };
 
 /// \brief Color Table for coloring arbitrary fields
 ///
 ///
-/// The vtkm::cont::ColorTable allows for color mapping in RGB or HSV space and
+/// The `vtkm::cont::ColorTable` allows for color mapping in RGB or HSV space and
 /// uses a piecewise hermite functions to allow opacity interpolation that can be
 /// piecewise constant, piecewise linear, or somewhere in-between
 /// (a modified piecewise hermite function that squishes the function
@@ -76,51 +68,77 @@ enum struct ColorSpace
 /// will default to to Midpoint = 0.5 (halfway between the control points) and
 /// Sharpness = 0.0 (linear).
 ///
-/// ColorTable also contains which ColorSpace should be used for interpolation
+/// ColorTable also contains which ColorSpace should be used for interpolation.
+/// The color space is selected with the `vtkm::ColorSpace` enumeration.
 /// Currently the valid ColorSpaces are:
-/// - RGB
-/// - HSV
-/// - HSV_WRAP
-/// - LAB
-/// - Diverging
+/// - `RGB`
+/// - `HSV`
+/// - `HSVWrap`
+/// - `Lab`
+/// - `Diverging`
 ///
-/// In HSV_WRAP mode, it will take the shortest path
+/// In `HSVWrap` mode, it will take the shortest path
 /// in Hue (going back through 0 if that is the shortest way around the hue
-/// circle) whereas HSV will not go through 0 (in order the
-/// match the current functionality of vtkLookupTable). In Lab mode,
+/// circle) whereas HSV will not go through 0 (in order to
+/// match the current functionality of `vtkLookupTable`). In `Lab` mode,
 /// it will take the shortest path in the Lab color space with respect to the
-/// CIE Delta E 2000 color distance measure. Diverging is a special
+/// CIE Delta E 2000 color distance measure. `Diverging` is a special
 /// mode where colors will pass through white when interpolating between two
 /// saturated colors.
 ///
-/// To map a field from a vtkm::cont::DataSet through the color and opacity transfer
-/// functions and into a RGB or RGBA array you should use vtkm::filter::FieldToColor.
+/// To map a field from a `vtkm::cont::DataSet` through the color and opacity transfer
+/// functions and into a RGB or RGBA array you should use `vtkm::filter::FieldToColor`.
 ///
-class VTKM_CONT_EXPORT ColorTable
+/// Note that modifications of `vtkm::cont::ColorTable` are not thread safe. You should
+/// not modify a `ColorTable` simultaneously in 2 or more threads. Also, you should not
+/// modify a `ColorTable` that might be used in the execution environment. However,
+/// the `ColorTable` can be used in multiple threads and on multiple devices as long
+/// as no modifications are made.
+///
+class VTKM_CONT_EXPORT ColorTable : public vtkm::cont::ExecutionObjectBase
 {
-  std::shared_ptr<detail::ColorTableInternals> Impl;
+  std::shared_ptr<detail::ColorTableInternals> Internals;
 
 public:
   enum struct Preset
   {
-    DEFAULT,
-    COOL_TO_WARM,
-    COOL_TO_WARM_EXTENDED,
-    VIRIDIS,
-    INFERNO,
-    PLASMA,
-    BLACK_BODY_RADIATION,
-    X_RAY,
-    GREEN,
-    BLACK_BLUE_WHITE,
-    BLUE_TO_ORANGE,
-    GRAY_TO_RED,
-    COLD_AND_HOT,
-    BLUE_GREEN_ORANGE,
-    YELLOW_GRAY_BLUE,
-    RAINBOW_UNIFORM,
-    JET,
-    RAINBOW_DESATURATED
+    Default,
+    CoolToWarm,
+    CoolToWarmExtended,
+    Viridis,
+    Inferno,
+    Plasma,
+    BlackBodyRadiation,
+    XRay,
+    Green,
+    BlackBlueWhite,
+    BlueToOrange,
+    GrayToRed,
+    ColdAndHot,
+    BlueGreenOrange,
+    YellowGrayBlue,
+    RainbowUniform,
+    Jet,
+    RainbowDesaturated,
+
+    DEFAULT VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Default."),
+    COOL_TO_WARM VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::CoolToWarm."),
+    COOL_TO_WARM_EXTENDED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::CoolToWarmExtended."),
+    VIRIDIS VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Viridis."),
+    INFERNO VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Inferno."),
+    PLASMA VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Plasma."),
+    BLACK_BODY_RADIATION VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlackBodyRadiation."),
+    X_RAY VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::XRay."),
+    GREEN VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Green."),
+    BLACK_BLUE_WHITE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlackBlueWhite."),
+    BLUE_TO_ORANGE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlueToOrange."),
+    GRAY_TO_RED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::GrayToRed."),
+    COLD_AND_HOT VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::ColdAndHot."),
+    BLUE_GREEN_ORANGE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::BlueGreenOrange."),
+    YELLOW_GRAY_BLUE VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::YellowGrayBlue."),
+    RAINBOW_UNIFORM VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::RainbowUniform."),
+    JET VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::Jet."),
+    RAINBOW_DESATURATED VTKM_DEPRECATED(1.6, "Use vtkm::ColorTable::Preset::RainbowDesaturated.")
   };
 
   /// \brief Construct a color table from a preset
@@ -130,7 +148,7 @@ public:
   ///
   /// Note: these are a select set of the presets you can get by providing a string identifier.
   ///
-  ColorTable(vtkm::cont::ColorTable::Preset preset = vtkm::cont::ColorTable::Preset::DEFAULT);
+  ColorTable(vtkm::cont::ColorTable::Preset preset = vtkm::cont::ColorTable::Preset::Default);
 
   /// \brief Construct a color table from a preset color table
   ///
@@ -165,41 +183,42 @@ public:
   ///
   /// Note: The color table will have 0 entries
   /// Note: The alpha table will have 0 entries
-  explicit ColorTable(ColorSpace space);
+  explicit ColorTable(vtkm::ColorSpace space);
 
   /// Construct a color table with a 2 positions
   ///
   /// Note: The color table will have 2 entries of rgb = {1.0,1.0,1.0}
   /// Note: The alpha table will have 2 entries of alpha = 1.0 with linear
   ///       interpolation
-  ColorTable(const vtkm::Range& range, ColorSpace space = ColorSpace::LAB);
+  ColorTable(const vtkm::Range& range, vtkm::ColorSpace space = vtkm::ColorSpace::Lab);
 
   /// Construct a color table with 2 positions
   //
   /// Note: The alpha table will have 2 entries of alpha = 1.0 with linear
   ///       interpolation
   ColorTable(const vtkm::Range& range,
-             const vtkm::Vec<float, 3>& rgb1,
-             const vtkm::Vec<float, 3>& rgb2,
-             ColorSpace space = ColorSpace::LAB);
+             const vtkm::Vec3f_32& rgb1,
+             const vtkm::Vec3f_32& rgb2,
+             vtkm::ColorSpace space = vtkm::ColorSpace::Lab);
 
   /// Construct color and alpha and table with 2 positions
   ///
   /// Note: The alpha table will use linear interpolation
   ColorTable(const vtkm::Range& range,
-             const vtkm::Vec<float, 4>& rgba1,
-             const vtkm::Vec<float, 4>& rgba2,
-             ColorSpace space = ColorSpace::LAB);
+             const vtkm::Vec4f_32& rgba1,
+             const vtkm::Vec4f_32& rgba2,
+             vtkm::ColorSpace space = vtkm::ColorSpace::Lab);
 
   /// Construct a color table with a list of colors and alphas. For this version you must also
   /// specify a name.
   ///
   /// This constructor is mostly used for presets.
-  ColorTable(const std::string& name,
-             vtkm::cont::ColorSpace colorSpace,
-             const vtkm::Vec<double, 3>& nanColor,
-             const std::vector<double>& rgbPoints,
-             const std::vector<double>& alphaPoints = { 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0 });
+  ColorTable(
+    const std::string& name,
+    vtkm::ColorSpace colorSpace,
+    const vtkm::Vec3f_64& nanColor,
+    const std::vector<vtkm::Float64>& rgbPoints,
+    const std::vector<vtkm::Float64>& alphaPoints = { 0.0, 1.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0 });
 
 
   ~ColorTable();
@@ -257,8 +276,8 @@ public:
   ColorTable MakeDeepCopy();
 
   ///
-  ColorSpace GetColorSpace() const;
-  void SetColorSpace(ColorSpace space);
+  vtkm::ColorSpace GetColorSpace() const;
+  void SetColorSpace(vtkm::ColorSpace space);
 
   /// If clamping is disabled values that lay out side
   /// the color table range are colored based on Below
@@ -274,19 +293,19 @@ public:
   /// that is below the given range
   ///
   /// Default value is {0,0,0}
-  void SetBelowRangeColor(const vtkm::Vec<float, 3>& c);
-  const vtkm::Vec<float, 3>& GetBelowRangeColor() const;
+  void SetBelowRangeColor(const vtkm::Vec3f_32& c);
+  const vtkm::Vec3f_32& GetBelowRangeColor() const;
 
   /// Color to use when clamping is disabled for any value
   /// that is above the given range
   ///
   /// Default value is {0,0,0}
-  void SetAboveRangeColor(const vtkm::Vec<float, 3>& c);
-  const vtkm::Vec<float, 3>& GetAboveRangeColor() const;
+  void SetAboveRangeColor(const vtkm::Vec3f_32& c);
+  const vtkm::Vec3f_32& GetAboveRangeColor() const;
 
   ///
-  void SetNaNColor(const vtkm::Vec<float, 3>& c);
-  const vtkm::Vec<float, 3>& GetNaNColor() const;
+  void SetNaNColor(const vtkm::Vec3f_32& c);
+  const vtkm::Vec3f_32& GetNaNColor() const;
 
   /// Remove all existing values in both color and alpha tables.
   /// Does not remove the clamping, below, and above range state or colors.
@@ -321,40 +340,40 @@ public:
   ///
   /// Note: rgb values need to be between 0 and 1.0 (inclusive).
   /// Return the index of the point (0 based), or -1 osn error.
-  vtkm::Int32 AddPoint(double x, const vtkm::Vec<float, 3>& rgb);
+  vtkm::Int32 AddPoint(vtkm::Float64 x, const vtkm::Vec3f_32& rgb);
 
   /// Adds a point to the color function. If the point already exists, it
   /// will be updated to the new value.
   ///
   /// Note: hsv values need to be between 0 and 1.0 (inclusive).
   /// Return the index of the point (0 based), or -1 on error.
-  vtkm::Int32 AddPointHSV(double x, const vtkm::Vec<float, 3>& hsv);
+  vtkm::Int32 AddPointHSV(vtkm::Float64 x, const vtkm::Vec3f_32& hsv);
 
   /// Add a line segment to the color function. All points which lay between x1 and x2
   /// (inclusive) are removed from the function.
   ///
   /// Note: rgb1, and rgb2 values need to be between 0 and 1.0 (inclusive).
   /// Return the index of the point x1 (0 based), or -1 on error.
-  vtkm::Int32 AddSegment(double x1,
-                         const vtkm::Vec<float, 3>& rgb1,
-                         double x2,
-                         const vtkm::Vec<float, 3>& rgb2);
+  vtkm::Int32 AddSegment(vtkm::Float64 x1,
+                         const vtkm::Vec3f_32& rgb1,
+                         vtkm::Float64 x2,
+                         const vtkm::Vec3f_32& rgb2);
 
   /// Add a line segment to the color function. All points which lay between x1 and x2
   /// (inclusive) are removed from the function.
   ///
   /// Note: hsv1, and hsv2 values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
-  vtkm::Int32 AddSegmentHSV(double x1,
-                            const vtkm::Vec<float, 3>& hsv1,
-                            double x2,
-                            const vtkm::Vec<float, 3>& hsv2);
+  vtkm::Int32 AddSegmentHSV(vtkm::Float64 x1,
+                            const vtkm::Vec3f_32& hsv1,
+                            vtkm::Float64 x2,
+                            const vtkm::Vec3f_32& hsv2);
 
   /// Get the location, and rgb information for an existing point in the opacity function.
   ///
   /// Note: components 1-3 are rgb and will have values between 0 and 1.0 (inclusive)
   /// Return the index of the point (0 based), or -1 on error.
-  bool GetPoint(vtkm::Int32 index, vtkm::Vec<double, 4>&) const;
+  bool GetPoint(vtkm::Int32 index, vtkm::Vec4f_64&) const;
 
   /// Update the location, and rgb information for an existing point in the color function.
   /// If the location value for the index is modified the point is removed from
@@ -362,12 +381,12 @@ public:
   ///
   /// Note: components 1-3 are rgb and must have values between 0 and 1.0 (inclusive).
   /// Return the new index of the updated point (0 based), or -1 on error.
-  vtkm::Int32 UpdatePoint(vtkm::Int32 index, const vtkm::Vec<double, 4>&);
+  vtkm::Int32 UpdatePoint(vtkm::Int32 index, const vtkm::Vec4f_64&);
 
   /// Remove the Color function point that exists at exactly x
   ///
   /// Return true if the point x exists and has been removed
-  bool RemovePoint(double x);
+  bool RemovePoint(vtkm::Float64 x);
 
   /// Remove the Color function point n
   ///
@@ -385,14 +404,20 @@ public:
   ///
   /// Note: alpha needs to be a value between 0 and 1.0 (inclusive).
   /// Return the index of the point (0 based), or -1 on error.
-  vtkm::Int32 AddPointAlpha(double x, float alpha) { return AddPointAlpha(x, alpha, 0.5f, 0.0f); }
+  vtkm::Int32 AddPointAlpha(vtkm::Float64 x, vtkm::Float32 alpha)
+  {
+    return AddPointAlpha(x, alpha, 0.5f, 0.0f);
+  }
 
   /// Adds a point to the opacity function. If the point already exists, it
   /// will be updated to the new value.
   ///
   /// Note: alpha, midpoint, and sharpness values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point (0 based), or -1 on error.
-  vtkm::Int32 AddPointAlpha(double x, float alpha, float midpoint, float sharpness);
+  vtkm::Int32 AddPointAlpha(vtkm::Float64 x,
+                            vtkm::Float32 alpha,
+                            vtkm::Float32 midpoint,
+                            vtkm::Float32 sharpness);
 
   /// Add a line segment to the opacity function. All points which lay between x1 and x2
   /// (inclusive) are removed from the function. Uses a midpoint of
@@ -400,9 +425,12 @@ public:
   ///
   /// Note: alpha values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
-  vtkm::Int32 AddSegmentAlpha(double x1, float alpha1, double x2, float alpha2)
+  vtkm::Int32 AddSegmentAlpha(vtkm::Float64 x1,
+                              vtkm::Float32 alpha1,
+                              vtkm::Float64 x2,
+                              vtkm::Float32 alpha2)
   {
-    vtkm::Vec<float, 2> mid_sharp(0.5f, 0.0f);
+    vtkm::Vec2f_32 mid_sharp(0.5f, 0.0f);
     return AddSegmentAlpha(x1, alpha1, x2, alpha2, mid_sharp, mid_sharp);
   }
 
@@ -411,19 +439,19 @@ public:
   ///
   /// Note: alpha, midpoint, and sharpness values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
-  vtkm::Int32 AddSegmentAlpha(double x1,
-                              float alpha1,
-                              double x2,
-                              float alpha2,
-                              const vtkm::Vec<float, 2>& mid_sharp1,
-                              const vtkm::Vec<float, 2>& mid_sharp2);
+  vtkm::Int32 AddSegmentAlpha(vtkm::Float64 x1,
+                              vtkm::Float32 alpha1,
+                              vtkm::Float64 x2,
+                              vtkm::Float32 alpha2,
+                              const vtkm::Vec2f_32& mid_sharp1,
+                              const vtkm::Vec2f_32& mid_sharp2);
 
   /// Get the location, alpha, midpoint and sharpness information for an existing
   /// point in the opacity function.
   ///
   /// Note: alpha, midpoint, and sharpness values all will be between 0 and 1.0 (inclusive)
   /// Return the index of the point (0 based), or -1 on error.
-  bool GetPointAlpha(vtkm::Int32 index, vtkm::Vec<double, 4>&) const;
+  bool GetPointAlpha(vtkm::Int32 index, vtkm::Vec4f_64&) const;
 
   /// Update the location, alpha, midpoint and sharpness information for an existing
   /// point in the opacity function.
@@ -432,12 +460,12 @@ public:
   ///
   /// Note: alpha, midpoint, and sharpness values need to be between 0 and 1.0 (inclusive)
   /// Return the new index of the updated point (0 based), or -1 on error.
-  vtkm::Int32 UpdatePointAlpha(vtkm::Int32 index, const vtkm::Vec<double, 4>&);
+  vtkm::Int32 UpdatePointAlpha(vtkm::Int32 index, const vtkm::Vec4f_64&);
 
   /// Remove the Opacity function point that exists at exactly x
   ///
   /// Return true if the point x exists and has been removed
-  bool RemovePointAlpha(double x);
+  bool RemovePointAlpha(vtkm::Float64 x);
 
   /// Remove the Opacity function point n
   ///
@@ -447,9 +475,9 @@ public:
   /// Returns the number of points in the alpha function
   vtkm::Int32 GetNumberOfPointsAlpha() const;
 
-  /// Fill the Color table from a double pointer
+  /// Fill the Color table from a vtkm::Float64 pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, R1,
+  /// The vtkm::Float64 pointer is required to have the layout out of [X1, R1,
   /// G1, B1, X2, R2, G2, B2, ..., Xn, Rn, Gn, Bn] where n is the
   /// number of nodes.
   /// This will remove any existing color control points.
@@ -458,11 +486,11 @@ public:
   ///
   /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
-  bool FillColorTableFromDataPointer(vtkm::Int32 n, const double* ptr);
+  bool FillColorTableFromDataPointer(vtkm::Int32 n, const vtkm::Float64* ptr);
 
-  /// Fill the Color table from a float pointer
+  /// Fill the Color table from a vtkm::Float32 pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, R1,
+  /// The vtkm::Float64 pointer is required to have the layout out of [X1, R1,
   /// G1, B1, X2, R2, G2, B2, ..., Xn, Rn, Gn, Bn] where n is the
   /// number of nodes.
   /// This will remove any existing color control points.
@@ -471,11 +499,11 @@ public:
   ///
   /// Note: This is provided as a interoperability method with VTK
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
-  bool FillColorTableFromDataPointer(vtkm::Int32 n, const float* ptr);
+  bool FillColorTableFromDataPointer(vtkm::Int32 n, const vtkm::Float32* ptr);
 
-  /// Fill the Opacity table from a double pointer
+  /// Fill the Opacity table from a vtkm::Float64 pointer
   ///
-  /// The double pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// The vtkm::Float64 pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
   /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
   /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
   /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
@@ -486,11 +514,11 @@ public:
   /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
-  bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* ptr);
+  bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const vtkm::Float64* ptr);
 
-  /// Fill the Opacity table from a float pointer
+  /// Fill the Opacity table from a vtkm::Float32 pointer
   ///
-  /// The float pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
+  /// The vtkm::Float32 pointer is required to have the layout out of [X1, A1, M1, S1, X2, A2, M2, S2,
   /// ..., Xn, An, Mn, Sn] where n is the number of nodes. The Xi values represent the value to
   /// map, the Ai values represent alpha (opacity) value, the Mi values represent midpoints, and
   /// the Si values represent sharpness. Use 0.5 for midpoint and 0.0 for sharpness to have linear
@@ -501,7 +529,7 @@ public:
   /// Note: n represents the length of the array, so ( n/4 == number of control points )
   ///
   /// Will return false and not modify anything if n is <= 0 or ptr == nullptr
-  bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr);
+  bool FillOpacityTableFromDataPointer(vtkm::Int32 n, const vtkm::Float32* ptr);
 
 
   /// \brief Sample each value through an intermediate lookup/sample table to generate RGBA colors
@@ -628,8 +656,8 @@ public:
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
-  /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is within float space and the following are within a tolerance:
+  /// Will use vtkm::Float32 space when the difference between the vtkm::Float32 and vtkm::Float64
+  /// values when the range is within vtkm::Float32 space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -637,14 +665,14 @@ public:
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
                      vtkm::cont::ColorTableSamplesRGBA& samples,
-                     double tolerance = 0.002) const;
+                     vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate a sample lookup table using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
-  /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is within float space and the following are within a tolerance:
+  /// Will use vtkm::Float32 space when the difference between the vtkm::Float32 and vtkm::Float64
+  /// values when the range is within vtkm::Float32 space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -652,14 +680,14 @@ public:
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
                      vtkm::cont::ColorTableSamplesRGB& samples,
-                     double tolerance = 0.002) const;
+                     vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate RGBA colors using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
-  /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is within float space and the following are within a tolerance:
+  /// Will use vtkm::Float32 space when the difference between the vtkm::Float32 and vtkm::Float64
+  /// values when the range is within vtkm::Float32 space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -667,14 +695,14 @@ public:
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
                      vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
-                     double tolerance = 0.002) const;
+                     vtkm::Float64 tolerance = 0.002) const;
 
   /// \brief generate RGB colors using regular spaced samples along the range.
   ///
   /// Will use the current range of the color table to generate evenly spaced
   /// values using either vtkm::Float32 or vtkm::Float64 space.
-  /// Will use vtkm::Float32 space when the difference between the float and double
-  /// values when the range is within float space and the following are within a tolerance:
+  /// Will use vtkm::Float32 space when the difference between the vtkm::Float32 and vtkm::Float64
+  /// values when the range is within vtkm::Float32 space and the following are within a tolerance:
   ///
   /// - (max-min) / numSamples
   /// - ((max-min) / numSamples) * numSamples
@@ -682,48 +710,30 @@ public:
   /// Note: This will return false if the number of samples is less than 2
   inline bool Sample(vtkm::Int32 numSamples,
                      vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
-                     double tolerance = 0.002) const;
+                     vtkm::Float64 tolerance = 0.002) const;
 
 
   /// \brief returns a virtual object pointer of the exec color table
   ///
   /// This pointer is only valid as long as the ColorTable is unmodified
-  inline const vtkm::exec::ColorTableBase* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
-                                                               vtkm::cont::Token& token) const;
+  vtkm::exec::ColorTable PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+                                             vtkm::cont::Token& token) const;
 
   VTKM_DEPRECATED(1.6, "PrepareForExecution now requires a vtkm::cont::Token object")
-  inline const vtkm::exec::ColorTableBase* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId deviceId) const;
+  inline vtkm::exec::ColorTable PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId) const;
 
-  /// \brief returns the modified count for the virtual object handle of the exec color table
+  /// \brief Returns the modified count for changes of the color table
   ///
+  /// The `ModifiedCount` of the color table starts at 1 and gets incremented
+  /// every time a change is made to the color table.
   /// The modified count allows consumers of a shared color table to keep track
   /// if the color table has been modified since the last time they used it.
+  /// This is important for consumers that need to sample the color table.
+  /// You only want to resample the color table if changes have been made.
   vtkm::Id GetModifiedCount() const;
 
-  struct TransferState
-  {
-    bool NeedsTransfer;
-    vtkm::exec::ColorTableBase* Portal;
-    const vtkm::cont::ArrayHandle<double>& ColorPosHandle;
-    const vtkm::cont::ArrayHandle<vtkm::Vec<float, 3>>& ColorRGBHandle;
-    const vtkm::cont::ArrayHandle<double>& OpacityPosHandle;
-    const vtkm::cont::ArrayHandle<float>& OpacityAlphaHandle;
-    const vtkm::cont::ArrayHandle<vtkm::Vec<float, 2>>& OpacityMidSharpHandle;
-  };
-
 private:
-  bool NeedToCreateExecutionColorTable() const;
-
-  //takes ownership of the pointer passed in
-  void UpdateExecutionColorTable(
-    vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>*) const;
-
-  ColorTable::TransferState GetExecutionDataForTransfer() const;
-
-  vtkm::exec::ColorTableBase* GetControlRepresentation() const;
-
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase> const* GetExecutionHandle() const;
+  void UpdateArrayHandles() const;
 };
 }
 } //namespace vtkm::cont

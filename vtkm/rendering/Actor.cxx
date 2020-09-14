@@ -44,7 +44,7 @@ struct Actor::InternalsType
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
-                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::DEFAULT)
+                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::Default)
     : Cells(cells)
     , Coordinates(coordinates)
     , ScalarField(scalarField)

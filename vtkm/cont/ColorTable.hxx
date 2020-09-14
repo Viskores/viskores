@@ -29,52 +29,6 @@ namespace cont
 namespace detail
 {
 
-template <typename T>
-inline T* get_ptr(T* t)
-{
-  return t;
-}
-#if defined(VTKM_MSVC)
-//ArrayPortalToIteratorBegin could be returning a checked_array_iterator so
-//we need to grab the underlying pointer
-template <typename T>
-inline T* get_ptr(stdext::checked_array_iterator<T*> t)
-{
-  return t.base();
-}
-#endif
-
-struct transfer_color_table_to_device
-{
-
-  template <typename DeviceAdapter>
-  inline bool operator()(DeviceAdapter device,
-                         vtkm::cont::ColorTable::TransferState&& state,
-                         vtkm::cont::Token& token) const
-  {
-    auto p1 = state.ColorPosHandle.PrepareForInput(device, token);
-    auto p2 = state.ColorRGBHandle.PrepareForInput(device, token);
-    auto p3 = state.OpacityPosHandle.PrepareForInput(device, token);
-    auto p4 = state.OpacityAlphaHandle.PrepareForInput(device, token);
-    auto p5 = state.OpacityMidSharpHandle.PrepareForInput(device, token);
-
-    //The rest of the data member on portal are set when-ever the user
-    //modifies the ColorTable instance and don't need to specified here
-
-    state.Portal->ColorSize = static_cast<vtkm::Int32>(state.ColorPosHandle.GetNumberOfValues());
-    state.Portal->OpacitySize =
-      static_cast<vtkm::Int32>(state.OpacityPosHandle.GetNumberOfValues());
-
-    state.Portal->ColorNodes = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p1));
-    state.Portal->RGB = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p2));
-    state.Portal->ONodes = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p3));
-    state.Portal->Alpha = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p4));
-    state.Portal->MidSharp = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p5));
-    state.Portal->Modified();
-    return true;
-  }
-};
-
 struct map_color_table
 {
   template <typename DeviceAdapter, typename ColorTable, typename... Args>
@@ -348,77 +302,6 @@ bool ColorTable::Sample(vtkm::Int32 numSamples,
     return false;
   }
   return sampleColorTable(this, numSamples, colors, tolerance, false);
-}
-
-//---------------------------------------------------------------------------
-const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device,
-  vtkm::cont::Token& token) const
-{
-  //Build the ColorTable instance that is needed for execution
-  if (this->NeedToCreateExecutionColorTable())
-  {
-    auto space = this->GetColorSpace();
-    auto hostPortal = this->GetControlRepresentation();
-    //Remove any existing host and execution data. The allocation of the
-    //virtual object handle needs to occur in the .hxx so that it happens
-    //in the same library as the user and will be a valid virtual object
-    using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>;
-    switch (space)
-    {
-      case vtkm::cont::ColorSpace::RGB:
-      {
-        this->UpdateExecutionColorTable(
-          new HandleType(static_cast<vtkm::exec::ColorTableRGB*>(hostPortal), false));
-        break;
-      }
-      case vtkm::cont::ColorSpace::HSV:
-      {
-        this->UpdateExecutionColorTable(
-          new HandleType(static_cast<vtkm::exec::ColorTableHSV*>(hostPortal), false));
-        break;
-      }
-      case vtkm::cont::ColorSpace::HSV_WRAP:
-      {
-        this->UpdateExecutionColorTable(
-          new HandleType(static_cast<vtkm::exec::ColorTableHSVWrap*>(hostPortal), false));
-        break;
-      }
-      case vtkm::cont::ColorSpace::LAB:
-      {
-        this->UpdateExecutionColorTable(
-          new HandleType(static_cast<vtkm::exec::ColorTableLab*>(hostPortal), false));
-        break;
-      }
-      case vtkm::cont::ColorSpace::DIVERGING:
-      {
-        this->UpdateExecutionColorTable(
-          new HandleType(static_cast<vtkm::exec::ColorTableDiverging*>(hostPortal), false));
-        break;
-      }
-    }
-  }
-
-
-  //transfer ColorTable and all related data
-  auto&& info = this->GetExecutionDataForTransfer();
-  if (info.NeedsTransfer)
-  {
-    bool transfered = vtkm::cont::TryExecuteOnDevice(
-      device, detail::transfer_color_table_to_device{}, std::move(info), token);
-    if (!transfered)
-    {
-      throwFailedRuntimeDeviceTransfer("ColorTable", device);
-    }
-  }
-  return this->GetExecutionHandle()->PrepareForExecution(device, token);
-}
-
-const vtkm::exec::ColorTableBase* ColorTable::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device) const
-{
-  vtkm::cont::Token token;
-  return this->PrepareForExecution(device, token);
 }
 }
 }

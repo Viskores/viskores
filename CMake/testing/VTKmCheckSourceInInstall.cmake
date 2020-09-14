@@ -110,7 +110,6 @@ function(do_verify root_dir prefix)
     )
 
   set(file_exceptions
-    cont/ColorTablePrivate.hxx
     thirdparty/diy/vtkmdiy/cmake/mpi_types.h
 
     # Ignore deprecated virtual classes (which are not installed if VTKm_NO_DEPRECATED_VIRTUAL

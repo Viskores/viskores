@@ -13,15 +13,281 @@
 
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ColorTable.hxx>
-#include <vtkm/cont/ColorTablePrivate.hxx>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/TryExecute.h>
 
+
+namespace
+{
+
+template <typename T>
+struct MinDelta
+{
+};
+// This value seems to work well for float ranges we have tested
+template <>
+struct MinDelta<float>
+{
+  static constexpr int value = 2048;
+};
+template <>
+struct MinDelta<double>
+{
+  static constexpr vtkm::Int64 value = 2048L;
+};
+
+// Reperesents the following:
+// T m = std::numeric_limits<T>::min();
+// EquivSizeIntT im;
+// std::memcpy(&im, &m, sizeof(T));
+//
+template <typename EquivSizeIntT>
+struct MinRepresentable
+{
+};
+template <>
+struct MinRepresentable<float>
+{
+  static constexpr int value = 8388608;
+};
+template <>
+struct MinRepresentable<double>
+{
+  static constexpr vtkm::Int64 value = 4503599627370496L;
+};
+
+inline bool rangeAlmostEqual(const vtkm::Range& r)
+{
+  vtkm::Int64 irange[2];
+  // needs to be a memcpy to avoid strict aliasing issues, doing a count
+  // of 2*sizeof(T) to couple both values at the same time
+  std::memcpy(irange, &r.Min, sizeof(vtkm::Int64));
+  std::memcpy(irange + 1, &r.Max, sizeof(vtkm::Int64));
+  // determine the absolute delta between these two numbers.
+  const vtkm::Int64 delta = std::abs(irange[1] - irange[0]);
+  // If the numbers are not nearly equal, we don't touch them. This avoids running into
+  // pitfalls like BUG PV #17152.
+  return (delta < 1024) ? true : false;
+}
+
+template <typename T>
+inline double expandRange(T r[2])
+{
+  constexpr bool is_float32_type = std::is_same<T, vtkm::Float32>::value;
+  using IRange = typename std::conditional<is_float32_type, vtkm::Int32, vtkm::Int64>::type;
+  IRange irange[2];
+  // needs to be a memcpy to avoid strict aliasing issues, doing a count
+  // of 2*sizeof(T) to couple both values at the same time
+  std::memcpy(irange, r, sizeof(T) * 2);
+
+  const bool denormal = !std::isnormal(r[0]);
+  const IRange minInt = MinRepresentable<T>::value;
+  const IRange minDelta = denormal ? minInt + MinDelta<T>::value : MinDelta<T>::value;
+
+  // determine the absolute delta between these two numbers.
+  const vtkm::Int64 delta = std::abs(irange[1] - irange[0]);
+
+  // if our delta is smaller than the min delta push out the max value
+  // so that it is equal to minRange + minDelta. When our range is entirely
+  // negative we should instead subtract from our max, to max a larger negative
+  // value
+  if (delta < minDelta)
+  {
+    if (irange[0] < 0)
+    {
+      irange[1] = irange[0] - minDelta;
+    }
+    else
+    {
+      irange[1] = irange[0] + minDelta;
+    }
+
+    T result;
+    std::memcpy(&result, irange + 1, sizeof(T));
+    return static_cast<double>(result);
+  }
+  return static_cast<double>(r[1]);
+}
+
+inline vtkm::Range adjustRange(const vtkm::Range& r)
+{
+  const bool spans_zero_boundary = r.Min < 0 && r.Max > 0;
+  if (spans_zero_boundary)
+  { // nothing needs to be done, but this check is required.
+    // if we convert into integer space the delta difference will overflow
+    // an integer
+    return r;
+  }
+  if (rangeAlmostEqual(r))
+  {
+    return r;
+  }
+
+  // range should be left untouched as much as possible to
+  // to avoid loss of precision whenever possible. That is why
+  // we only modify the Max value
+  vtkm::Range result = r;
+  if (r.Min > static_cast<double>(std::numeric_limits<float>::lowest()) &&
+      r.Max < static_cast<double>(std::numeric_limits<float>::max()))
+  { //We've found it best to offset it in float space if the numbers
+    //lay inside that representable range
+    float frange[2] = { static_cast<float>(r.Min), static_cast<float>(r.Max) };
+    result.Max = expandRange(frange);
+  }
+  else
+  {
+    double drange[2] = { r.Min, r.Max };
+    result.Max = expandRange(drange);
+  }
+  return result;
+}
+
+
+inline vtkm::Vec<float, 3> hsvTorgb(const vtkm::Vec<float, 3>& hsv)
+{
+  vtkm::Vec<float, 3> rgb;
+  constexpr float onethird = 1.0f / 3.0f;
+  constexpr float onesixth = 1.0f / 6.0f;
+  constexpr float twothird = 2.0f / 3.0f;
+  constexpr float fivesixth = 5.0f / 6.0f;
+
+  // compute RGB from HSV
+  if (hsv[0] > onesixth && hsv[0] <= onethird) // green/red
+  {
+    rgb[1] = 1.0f;
+    rgb[0] = (onethird - hsv[0]) * 6.0f;
+    rgb[2] = 0.0f;
+  }
+  else if (hsv[0] > onethird && hsv[0] <= 0.5f) // green/blue
+  {
+    rgb[1] = 1.0f;
+    rgb[2] = (hsv[0] - onethird) * 6.0f;
+    rgb[0] = 0.0f;
+  }
+  else if (hsv[0] > 0.5 && hsv[0] <= twothird) // blue/green
+  {
+    rgb[2] = 1.0f;
+    rgb[1] = (twothird - hsv[0]) * 6.0f;
+    rgb[0] = 0.0f;
+  }
+  else if (hsv[0] > twothird && hsv[0] <= fivesixth) // blue/red
+  {
+    rgb[2] = 1.0f;
+    rgb[0] = (hsv[0] - twothird) * 6.0f;
+    rgb[1] = 0.0f;
+  }
+  else if (hsv[0] > fivesixth && hsv[0] <= 1.0) // red/blue
+  {
+    rgb[0] = 1.0f;
+    rgb[2] = (1.0f - hsv[0]) * 6.0f;
+    rgb[1] = 0.0f;
+  }
+  else // red/green
+  {
+    rgb[0] = 1.0f;
+    rgb[1] = hsv[0] * 6;
+    rgb[2] = 0.0f;
+  }
+
+  // add Saturation to the equation.
+  rgb[0] = (hsv[1] * rgb[0] + (1.0f - hsv[1]));
+  rgb[1] = (hsv[1] * rgb[1] + (1.0f - hsv[1]));
+  rgb[2] = (hsv[1] * rgb[2] + (1.0f - hsv[1]));
+
+  rgb[0] *= hsv[2];
+  rgb[1] *= hsv[2];
+  rgb[2] *= hsv[2];
+  return rgb;
+}
+
+// clang-format off
+inline bool outside_vrange(double x) { return x < 0.0 || x > 1.0; }
+inline bool outside_vrange(const vtkm::Vec<double, 2>& x)
+  { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0; }
+inline bool outside_vrange(const vtkm::Vec<double, 3>& x)
+  { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0 || x[2] < 0.0 || x[2] > 1.0; }
+inline bool outside_vrange(float x) { return x < 0.0f || x > 1.0f; }
+inline bool outside_vrange(const vtkm::Vec<float, 2>& x)
+  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f; }
+inline bool outside_vrange(const vtkm::Vec<float, 3>& x)
+  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f || x[2] < 0.0f || x[2] > 1.0f; }
+
+inline bool outside_range() { return false; }
+
+template <typename T>
+inline bool outside_range(T&& t) { return outside_vrange(t); }
+
+template <typename T, typename U>
+inline bool outside_range(T&& t, U&& u) { return outside_vrange(t) || outside_vrange(u); }
+
+template <typename T, typename U, typename V, typename... Args>
+inline bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
+{
+  return outside_vrange(t) || outside_vrange(u) || outside_vrange(v) ||
+         outside_range(std::forward<Args>(args)...);
+}
+// clang-format on
+}
 
 namespace vtkm
 {
 namespace cont
 {
+
+namespace detail
+{
+
+struct ColorTableInternals
+{
+  std::string Name;
+
+  vtkm::ColorSpace Space = vtkm::ColorSpace::Lab;
+  vtkm::Range TableRange = { 1.0, 0.0 };
+
+  vtkm::Vec3f_32 NaNColor = { 0.5f, 0.0f, 0.0f };
+  vtkm::Vec3f_32 BelowRangeColor = { 0.0f, 0.0f, 0.0f };
+  vtkm::Vec3f_32 AboveRangeColor = { 0.0f, 0.0f, 0.0f };
+
+  bool UseClamping = true;
+
+  std::vector<vtkm::Float64> ColorNodePos;
+  std::vector<vtkm::Vec3f_32> ColorRGB;
+
+  std::vector<vtkm::Float64> OpacityNodePos;
+  std::vector<vtkm::Float32> OpacityAlpha;
+  std::vector<vtkm::Vec2f_32> OpacityMidSharp;
+
+  vtkm::cont::ArrayHandle<vtkm::Float64> ColorPosHandle;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> ColorRGBHandle;
+  vtkm::cont::ArrayHandle<vtkm::Float64> OpacityPosHandle;
+  vtkm::cont::ArrayHandle<vtkm::Float32> OpacityAlphaHandle;
+  vtkm::cont::ArrayHandle<vtkm::Vec2f_32> OpacityMidSharpHandle;
+  bool ColorArraysChanged = true;
+  bool OpacityArraysChanged = true;
+
+  vtkm::Id ModifiedCount = 1;
+  void Modified() { ++this->ModifiedCount; }
+
+  void RecalculateRange()
+  {
+    vtkm::Range r;
+    if (this->ColorNodePos.size() > 0)
+    {
+      r.Include(this->ColorNodePos.front());
+      r.Include(this->ColorNodePos.back());
+    }
+
+    if (this->OpacityNodePos.size() > 0)
+    {
+      r.Include(this->OpacityNodePos.front());
+      r.Include(this->OpacityNodePos.back());
+    }
+
+    this->TableRange = r;
+  }
+};
+
+} // namespace detail
 
 namespace internal
 {
@@ -32,7 +298,7 @@ bool LoadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
   const bool loaded = this->LoadPreset(preset);
   if (!loaded)
@@ -40,14 +306,15 @@ ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
     //so that the internal host side cache is constructed and we leave
     //the constructor in a valid state. We use LAB as it is the default
     //when the no parameter constructor is called
-    this->SetColorSpace(ColorSpace::LAB);
+    this->SetColorSpace(vtkm::ColorSpace::Lab);
   }
-  this->AddSegmentAlpha(this->Impl->TableRange.Min, 1.0f, this->Impl->TableRange.Max, 1.0f);
+  this->AddSegmentAlpha(
+    this->Internals->TableRange.Min, 1.0f, this->Internals->TableRange.Max, 1.0f);
 }
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(const std::string& name)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
   const bool loaded = this->LoadPreset(name);
   if (!loaded)
@@ -55,24 +322,25 @@ ColorTable::ColorTable(const std::string& name)
     //so that the internal host side cache is constructed and we leave
     //the constructor in a valid state. We use LAB as it is the default
     //when the no parameter constructor is called
-    this->SetColorSpace(ColorSpace::LAB);
+    this->SetColorSpace(vtkm::ColorSpace::Lab);
   }
-  this->AddSegmentAlpha(this->Impl->TableRange.Min, 1.0f, this->Impl->TableRange.Max, 1.0f);
+  this->AddSegmentAlpha(
+    this->Internals->TableRange.Min, 1.0f, this->Internals->TableRange.Max, 1.0f);
 }
 
 //----------------------------------------------------------------------------
-ColorTable::ColorTable(ColorSpace space)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+ColorTable::ColorTable(vtkm::ColorSpace space)
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
   this->SetColorSpace(space);
 }
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(const vtkm::Range& range,
-                       const vtkm::Vec<float, 3>& rgb1,
-                       const vtkm::Vec<float, 3>& rgb2,
-                       ColorSpace space)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+                       const vtkm::Vec3f_32& rgb1,
+                       const vtkm::Vec3f_32& rgb2,
+                       vtkm::ColorSpace space)
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
   this->AddSegment(range.Min, rgb1, range.Max, rgb2);
   this->AddSegmentAlpha(range.Min, 1.0f, range.Max, 1.0f);
@@ -81,13 +349,13 @@ ColorTable::ColorTable(const vtkm::Range& range,
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(const vtkm::Range& range,
-                       const vtkm::Vec<float, 4>& rgba1,
-                       const vtkm::Vec<float, 4>& rgba2,
-                       ColorSpace space)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+                       const vtkm::Vec4f_32& rgba1,
+                       const vtkm::Vec4f_32& rgba2,
+                       vtkm::ColorSpace space)
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
-  vtkm::Vec<float, 3> rgb1(rgba1[0], rgba1[1], rgba1[2]);
-  vtkm::Vec<float, 3> rgb2(rgba2[0], rgba2[1], rgba2[2]);
+  vtkm::Vec3f_32 rgb1(rgba1[0], rgba1[1], rgba1[2]);
+  vtkm::Vec3f_32 rgb2(rgba2[0], rgba2[1], rgba2[2]);
   this->AddSegment(range.Min, rgb1, range.Max, rgb2);
   this->AddSegmentAlpha(range.Min, rgba1[3], range.Max, rgba2[3]);
   this->SetColorSpace(space);
@@ -95,11 +363,11 @@ ColorTable::ColorTable(const vtkm::Range& range,
 
 //----------------------------------------------------------------------------
 ColorTable::ColorTable(const std::string& name,
-                       vtkm::cont::ColorSpace colorSpace,
-                       const vtkm::Vec<double, 3>& nanColor,
-                       const std::vector<double>& rgbPoints,
-                       const std::vector<double>& alphaPoints)
-  : Impl(std::make_shared<detail::ColorTableInternals>())
+                       vtkm::ColorSpace colorSpace,
+                       const vtkm::Vec3f_64& nanColor,
+                       const std::vector<vtkm::Float64>& rgbPoints,
+                       const std::vector<vtkm::Float64>& alphaPoints)
+  : Internals(std::make_shared<detail::ColorTableInternals>())
 {
   this->SetName(name);
   this->SetColorSpace(colorSpace);
@@ -115,13 +383,13 @@ ColorTable::~ColorTable() {}
 //----------------------------------------------------------------------------
 const std::string& ColorTable::GetName() const
 {
-  return this->Impl->Name;
+  return this->Internals->Name;
 }
 
 //----------------------------------------------------------------------------
 void ColorTable::SetName(const std::string& name)
 {
-  this->Impl->Name = name;
+  this->Internals->Name = name;
 }
 
 //----------------------------------------------------------------------------
@@ -145,129 +413,88 @@ bool ColorTable::LoadPreset(const std::string& name)
 //----------------------------------------------------------------------------
 ColorTable ColorTable::MakeDeepCopy()
 {
-  ColorTable dcopy(this->Impl->CSpace);
+  ColorTable dcopy(this->Internals->Space);
 
-  dcopy.Impl->TableRange = this->Impl->TableRange;
+  dcopy.Internals->TableRange = this->Internals->TableRange;
 
-  dcopy.Impl->HostSideCache->NaNColor = this->Impl->HostSideCache->NaNColor;
-  dcopy.Impl->HostSideCache->BelowRangeColor = this->Impl->HostSideCache->BelowRangeColor;
-  dcopy.Impl->HostSideCache->AboveRangeColor = this->Impl->HostSideCache->AboveRangeColor;
+  dcopy.Internals->NaNColor = this->Internals->NaNColor;
+  dcopy.Internals->BelowRangeColor = this->Internals->BelowRangeColor;
+  dcopy.Internals->AboveRangeColor = this->Internals->AboveRangeColor;
 
-  dcopy.Impl->HostSideCache->UseClamping = this->Impl->HostSideCache->UseClamping;
+  dcopy.Internals->UseClamping = this->Internals->UseClamping;
 
-  dcopy.Impl->ColorNodePos = this->Impl->ColorNodePos;
-  dcopy.Impl->ColorRGB = this->Impl->ColorRGB;
+  dcopy.Internals->ColorNodePos = this->Internals->ColorNodePos;
+  dcopy.Internals->ColorRGB = this->Internals->ColorRGB;
 
-  dcopy.Impl->OpacityNodePos = this->Impl->OpacityNodePos;
-  dcopy.Impl->OpacityAlpha = this->Impl->OpacityAlpha;
-  dcopy.Impl->OpacityMidSharp = this->Impl->OpacityMidSharp;
+  dcopy.Internals->OpacityNodePos = this->Internals->OpacityNodePos;
+  dcopy.Internals->OpacityAlpha = this->Internals->OpacityAlpha;
+  dcopy.Internals->OpacityMidSharp = this->Internals->OpacityMidSharp;
   return dcopy;
 }
 
 //----------------------------------------------------------------------------
-ColorSpace ColorTable::GetColorSpace() const
+vtkm::ColorSpace ColorTable::GetColorSpace() const
 {
-  return this->Impl->CSpace;
+  return this->Internals->Space;
 }
 
 //----------------------------------------------------------------------------
-void ColorTable::SetColorSpace(ColorSpace space)
+void ColorTable::SetColorSpace(vtkm::ColorSpace space)
 {
-
-  if (this->Impl->CSpace != space || this->Impl->HostSideCache.get() == nullptr)
-  {
-    this->Impl->HostSideCacheChanged = true;
-    this->Impl->CSpace = space;
-    //Remove any existing host information
-
-    switch (space)
-    {
-      case vtkm::cont::ColorSpace::RGB:
-      {
-        auto* hostPortal = new vtkm::exec::ColorTableRGB();
-        this->Impl->HostSideCache.reset(hostPortal);
-        break;
-      }
-      case vtkm::cont::ColorSpace::HSV:
-      {
-        auto* hostPortal = new vtkm::exec::ColorTableHSV();
-        this->Impl->HostSideCache.reset(hostPortal);
-        break;
-      }
-      case vtkm::cont::ColorSpace::HSV_WRAP:
-      {
-        auto* hostPortal = new vtkm::exec::ColorTableHSVWrap();
-        this->Impl->HostSideCache.reset(hostPortal);
-        break;
-      }
-      case vtkm::cont::ColorSpace::LAB:
-      {
-        auto* hostPortal = new vtkm::exec::ColorTableLab();
-        this->Impl->HostSideCache.reset(hostPortal);
-        break;
-      }
-      case vtkm::cont::ColorSpace::DIVERGING:
-      {
-        auto* hostPortal = new vtkm::exec::ColorTableDiverging();
-        this->Impl->HostSideCache.reset(hostPortal);
-        break;
-      }
-      default:
-        throw vtkm::cont::ErrorBadType("unknown vtkm::cont::ColorType requested");
-    }
-  }
+  this->Internals->Space = space;
+  this->Internals->Modified();
 }
 
 //----------------------------------------------------------------------------
 void ColorTable::SetClamping(bool state)
 {
-  this->Impl->HostSideCache->UseClamping = state;
-  this->Impl->HostSideCache->Modified();
+  this->Internals->UseClamping = state;
+  this->Internals->Modified();
 }
 
 //----------------------------------------------------------------------------
 bool ColorTable::GetClamping() const
 {
-  return this->Impl->HostSideCache->UseClamping;
+  return this->Internals->UseClamping;
 }
 
 //----------------------------------------------------------------------------
-void ColorTable::SetBelowRangeColor(const vtkm::Vec<float, 3>& c)
+void ColorTable::SetBelowRangeColor(const vtkm::Vec3f_32& c)
 {
-  this->Impl->HostSideCache->BelowRangeColor = c;
-  this->Impl->HostSideCache->Modified();
+  this->Internals->BelowRangeColor = c;
+  this->Internals->Modified();
 }
 
 //----------------------------------------------------------------------------
-const vtkm::Vec<float, 3>& ColorTable::GetBelowRangeColor() const
+const vtkm::Vec3f_32& ColorTable::GetBelowRangeColor() const
 {
-  return this->Impl->HostSideCache->BelowRangeColor;
+  return this->Internals->BelowRangeColor;
 }
 
 //----------------------------------------------------------------------------
-void ColorTable::SetAboveRangeColor(const vtkm::Vec<float, 3>& c)
+void ColorTable::SetAboveRangeColor(const vtkm::Vec3f_32& c)
 {
-  this->Impl->HostSideCache->AboveRangeColor = c;
-  this->Impl->HostSideCache->Modified();
+  this->Internals->AboveRangeColor = c;
+  this->Internals->Modified();
 }
 
 //----------------------------------------------------------------------------
-const vtkm::Vec<float, 3>& ColorTable::GetAboveRangeColor() const
+const vtkm::Vec3f_32& ColorTable::GetAboveRangeColor() const
 {
-  return this->Impl->HostSideCache->AboveRangeColor;
+  return this->Internals->AboveRangeColor;
 }
 
 //----------------------------------------------------------------------------
-void ColorTable::SetNaNColor(const vtkm::Vec<float, 3>& c)
+void ColorTable::SetNaNColor(const vtkm::Vec3f_32& c)
 {
-  this->Impl->HostSideCache->NaNColor = c;
-  this->Impl->HostSideCache->Modified();
+  this->Internals->NaNColor = c;
+  this->Internals->Modified();
 }
 
 //----------------------------------------------------------------------------
-const vtkm::Vec<float, 3>& ColorTable::GetNaNColor() const
+const vtkm::Vec3f_32& ColorTable::GetNaNColor() const
 {
-  return this->Impl->HostSideCache->NaNColor;
+  return this->Internals->NaNColor;
 }
 
 //----------------------------------------------------------------------------
@@ -280,40 +507,45 @@ void ColorTable::Clear()
 //---------------------------------------------------------------------------
 void ColorTable::ClearColors()
 {
-  this->Impl->ColorNodePos.clear();
-  this->Impl->ColorRGB.clear();
-  this->Impl->ColorArraysChanged = true;
+  this->Internals->ColorNodePos.clear();
+  this->Internals->ColorRGB.clear();
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->Modified();
 }
 
 //---------------------------------------------------------------------------
 void ColorTable::ClearAlpha()
 {
-  this->Impl->OpacityNodePos.clear();
-  this->Impl->OpacityAlpha.clear();
-  this->Impl->OpacityMidSharp.clear();
-  this->Impl->OpacityArraysChanged = true;
+  this->Internals->OpacityNodePos.clear();
+  this->Internals->OpacityAlpha.clear();
+  this->Internals->OpacityMidSharp.clear();
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->Modified();
 }
 
 //---------------------------------------------------------------------------
 void ColorTable::ReverseColors()
 {
-  std::reverse(this->Impl->ColorRGB.begin(), this->Impl->ColorRGB.end());
-  this->Impl->ColorArraysChanged = true;
+  std::reverse(this->Internals->ColorRGB.begin(), this->Internals->ColorRGB.end());
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->Modified();
 }
 
 //---------------------------------------------------------------------------
 void ColorTable::ReverseAlpha()
 {
-  std::reverse(this->Impl->OpacityAlpha.begin(), this->Impl->OpacityAlpha.end());
+  std::reverse(this->Internals->OpacityAlpha.begin(), this->Internals->OpacityAlpha.end());
   //To keep the shape correct the mid and sharp values of the last node are not included in the reversal
-  std::reverse(this->Impl->OpacityMidSharp.begin(), this->Impl->OpacityMidSharp.end() - 1);
-  this->Impl->OpacityArraysChanged = true;
+  std::reverse(this->Internals->OpacityMidSharp.begin(),
+               this->Internals->OpacityMidSharp.end() - 1);
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->Modified();
 }
 
 //---------------------------------------------------------------------------
 const vtkm::Range& ColorTable::GetRange() const
 {
-  return this->Impl->TableRange;
+  return this->Internals->TableRange;
 }
 
 //---------------------------------------------------------------------------
@@ -327,29 +559,32 @@ void ColorTable::RescaleToRange(const vtkm::Range& r)
   auto newRange = adjustRange(r);
 
   //slam control points down to 0.0 - 1.0, and than rescale to new range
-  const double minv = this->GetRange().Min;
-  const double oldScale = this->GetRange().Length();
-  const double newScale = newRange.Length();
+  const vtkm::Float64 minv = this->GetRange().Min;
+  const vtkm::Float64 oldScale = this->GetRange().Length();
+  const vtkm::Float64 newScale = newRange.Length();
   VTKM_ASSERT(oldScale > 0);
   VTKM_ASSERT(newScale > 0);
-  for (auto i = this->Impl->ColorNodePos.begin(); i != this->Impl->ColorNodePos.end(); ++i)
+  for (auto i = this->Internals->ColorNodePos.begin(); i != this->Internals->ColorNodePos.end();
+       ++i)
   {
     const auto t = (*i - minv) / oldScale;
     *i = (t * newScale) + newRange.Min;
   }
-  for (auto i = this->Impl->OpacityNodePos.begin(); i != this->Impl->OpacityNodePos.end(); ++i)
+  for (auto i = this->Internals->OpacityNodePos.begin(); i != this->Internals->OpacityNodePos.end();
+       ++i)
   {
     const auto t = (*i - minv) / oldScale;
     *i = (t * newScale) + newRange.Min;
   }
 
-  this->Impl->ColorArraysChanged = true;
-  this->Impl->OpacityArraysChanged = true;
-  this->Impl->TableRange = newRange;
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->TableRange = newRange;
+  this->Internals->Modified();
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddPoint(double x, const vtkm::Vec<float, 3>& rgb)
+vtkm::Int32 ColorTable::AddPoint(vtkm::Float64 x, const vtkm::Vec3f_32& rgb)
 {
   if (outside_range(rgb))
   {
@@ -357,50 +592,52 @@ vtkm::Int32 ColorTable::AddPoint(double x, const vtkm::Vec<float, 3>& rgb)
   }
 
   std::size_t index = 0;
-  if (this->Impl->ColorNodePos.size() == 0 || this->Impl->ColorNodePos.back() < x)
+  if (this->Internals->ColorNodePos.size() == 0 || this->Internals->ColorNodePos.back() < x)
   {
-    this->Impl->ColorNodePos.emplace_back(x);
-    this->Impl->ColorRGB.emplace_back(rgb);
-    index = this->Impl->ColorNodePos.size();
+    this->Internals->ColorNodePos.emplace_back(x);
+    this->Internals->ColorRGB.emplace_back(rgb);
+    index = this->Internals->ColorNodePos.size();
   }
   else
   {
-    auto begin = this->Impl->ColorNodePos.begin();
-    auto pos = std::lower_bound(begin, this->Impl->ColorNodePos.end(), x);
+    auto begin = this->Internals->ColorNodePos.begin();
+    auto pos = std::lower_bound(begin, this->Internals->ColorNodePos.end(), x);
     index = static_cast<std::size_t>(std::distance(begin, pos));
 
     if (*pos == x)
     {
-      this->Impl->ColorRGB[index] = rgb;
+      this->Internals->ColorRGB[index] = rgb;
     }
     else
     {
-      this->Impl->ColorRGB.emplace(this->Impl->ColorRGB.begin() + std::distance(begin, pos), rgb);
-      this->Impl->ColorNodePos.emplace(pos, x);
+      this->Internals->ColorRGB.emplace(
+        this->Internals->ColorRGB.begin() + std::distance(begin, pos), rgb);
+      this->Internals->ColorNodePos.emplace(pos, x);
     }
   }
-  this->Impl->TableRange.Include(x); //update range to include x
-  this->Impl->ColorArraysChanged = true;
+  this->Internals->TableRange.Include(x); //update range to include x
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->Modified();
   return static_cast<vtkm::Int32>(index);
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddPointHSV(double x, const vtkm::Vec<float, 3>& hsv)
+vtkm::Int32 ColorTable::AddPointHSV(vtkm::Float64 x, const vtkm::Vec3f_32& hsv)
 {
   return this->AddPoint(x, hsvTorgb(hsv));
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddSegment(double x1,
-                                   const vtkm::Vec<float, 3>& rgb1,
-                                   double x2,
-                                   const vtkm::Vec<float, 3>& rgb2)
+vtkm::Int32 ColorTable::AddSegment(vtkm::Float64 x1,
+                                   const vtkm::Vec3f_32& rgb1,
+                                   vtkm::Float64 x2,
+                                   const vtkm::Vec3f_32& rgb2)
 {
   if (outside_range(rgb1, rgb2))
   {
     return -1;
   }
-  if (this->Impl->ColorNodePos.size() > 0)
+  if (this->Internals->ColorNodePos.size() > 0)
   {
     //Todo:
     // - This could be optimized so we do 2 less lower_bound calls when
@@ -408,10 +645,10 @@ vtkm::Int32 ColorTable::AddSegment(double x1,
 
     //When we add a segment we remove all points that are inside the line
 
-    auto nodeBegin = this->Impl->ColorNodePos.begin();
-    auto nodeEnd = this->Impl->ColorNodePos.end();
+    auto nodeBegin = this->Internals->ColorNodePos.begin();
+    auto nodeEnd = this->Internals->ColorNodePos.end();
 
-    auto rgbBegin = this->Impl->ColorRGB.begin();
+    auto rgbBegin = this->Internals->ColorRGB.begin();
 
     auto nodeStart = std::lower_bound(nodeBegin, nodeEnd, x1);
     auto nodeStop = std::lower_bound(nodeBegin, nodeEnd, x2);
@@ -421,8 +658,8 @@ vtkm::Int32 ColorTable::AddSegment(double x1,
 
     //erase is exclusive so if end->x == x2 it will be kept around, and
     //than we will update it in AddPoint
-    this->Impl->ColorNodePos.erase(nodeStart, nodeStop);
-    this->Impl->ColorRGB.erase(rgbStart, rgbStop);
+    this->Internals->ColorNodePos.erase(nodeStart, nodeStop);
+    this->Internals->ColorRGB.erase(rgbStart, rgbStop);
   }
   vtkm::Int32 pos = this->AddPoint(x1, rgb1);
   this->AddPoint(x2, rgb2);
@@ -430,26 +667,26 @@ vtkm::Int32 ColorTable::AddSegment(double x1,
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddSegmentHSV(double x1,
-                                      const vtkm::Vec<float, 3>& hsv1,
-                                      double x2,
-                                      const vtkm::Vec<float, 3>& hsv2)
+vtkm::Int32 ColorTable::AddSegmentHSV(vtkm::Float64 x1,
+                                      const vtkm::Vec3f_32& hsv1,
+                                      vtkm::Float64 x2,
+                                      const vtkm::Vec3f_32& hsv2)
 {
   return this->AddSegment(x1, hsvTorgb(hsv1), x2, hsvTorgb(hsv2));
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::GetPoint(vtkm::Int32 index, vtkm::Vec<double, 4>& data) const
+bool ColorTable::GetPoint(vtkm::Int32 index, vtkm::Vec4f_64& data) const
 {
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->ColorNodePos.size();
+  const std::size_t size = this->Internals->ColorNodePos.size();
   if (index < 0 || i >= size)
   {
     return false;
   }
 
-  const auto& pos = this->Impl->ColorNodePos[i];
-  const auto& rgb = this->Impl->ColorRGB[i];
+  const auto& pos = this->Internals->ColorNodePos[i];
+  const auto& rgb = this->Internals->ColorRGB[i];
 
   data[0] = pos;
   data[1] = rgb[0];
@@ -459,7 +696,7 @@ bool ColorTable::GetPoint(vtkm::Int32 index, vtkm::Vec<double, 4>& data) const
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::UpdatePoint(vtkm::Int32 index, const vtkm::Vec<double, 4>& data)
+vtkm::Int32 ColorTable::UpdatePoint(vtkm::Int32 index, const vtkm::Vec4f_64& data)
 {
   //skip data[0] as we don't care about position
   if (outside_range(data[1], data[2], data[3]))
@@ -468,7 +705,7 @@ vtkm::Int32 ColorTable::UpdatePoint(vtkm::Int32 index, const vtkm::Vec<double, 4
   }
 
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->ColorNodePos.size();
+  const std::size_t size = this->Internals->ColorNodePos.size();
   if (index < 0 || i >= size)
   {
     return -1;
@@ -476,33 +713,35 @@ vtkm::Int32 ColorTable::UpdatePoint(vtkm::Int32 index, const vtkm::Vec<double, 4
 
   //When updating the first question is has the relative position of the point changed?
   //If it hasn't we can quickly just update the RGB value
-  auto oldPos = this->Impl->ColorNodePos.begin() + index;
-  auto newPos =
-    std::lower_bound(this->Impl->ColorNodePos.begin(), this->Impl->ColorNodePos.end(), data[0]);
+  auto oldPos = this->Internals->ColorNodePos.begin() + index;
+  auto newPos = std::lower_bound(
+    this->Internals->ColorNodePos.begin(), this->Internals->ColorNodePos.end(), data[0]);
   if (oldPos == newPos)
   { //node's relative location hasn't changed
-    this->Impl->ColorArraysChanged = true;
-    auto& rgb = this->Impl->ColorRGB[i];
+    this->Internals->ColorArraysChanged = true;
+    auto& rgb = this->Internals->ColorRGB[i];
     *newPos = data[0];
-    rgb[0] = static_cast<float>(data[1]);
-    rgb[1] = static_cast<float>(data[2]);
-    rgb[2] = static_cast<float>(data[3]);
+    rgb[0] = static_cast<vtkm::Float32>(data[1]);
+    rgb[1] = static_cast<vtkm::Float32>(data[2]);
+    rgb[2] = static_cast<vtkm::Float32>(data[3]);
+    this->Internals->Modified();
     return index;
   }
   else
   { //remove the point, and add the new values as the relative location is different
     this->RemovePoint(index);
-    vtkm::Vec<float, 3> newrgb(
-      static_cast<float>(data[1]), static_cast<float>(data[2]), static_cast<float>(data[3]));
+    vtkm::Vec3f_32 newrgb(static_cast<vtkm::Float32>(data[1]),
+                          static_cast<vtkm::Float32>(data[2]),
+                          static_cast<vtkm::Float32>(data[3]));
     return this->AddPoint(data[0], newrgb);
   }
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::RemovePoint(double x)
+bool ColorTable::RemovePoint(vtkm::Float64 x)
 {
-  auto begin = this->Impl->ColorNodePos.begin();
-  auto pos = std::lower_bound(begin, this->Impl->ColorNodePos.end(), x);
+  auto begin = this->Internals->ColorNodePos.begin();
+  auto pos = std::lower_bound(begin, this->Internals->ColorNodePos.end(), x);
   return this->RemovePoint(static_cast<vtkm::Int32>(std::distance(begin, pos)));
 }
 
@@ -510,80 +749,85 @@ bool ColorTable::RemovePoint(double x)
 bool ColorTable::RemovePoint(vtkm::Int32 index)
 {
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->ColorNodePos.size();
+  const std::size_t size = this->Internals->ColorNodePos.size();
   if (index < 0 || i >= size)
   {
     return false;
   }
 
-  this->Impl->ColorNodePos.erase(this->Impl->ColorNodePos.begin() + index);
-  this->Impl->ColorRGB.erase(this->Impl->ColorRGB.begin() + index);
-  this->Impl->ColorArraysChanged = true;
-  this->Impl->RecalculateRange();
+  this->Internals->ColorNodePos.erase(this->Internals->ColorNodePos.begin() + index);
+  this->Internals->ColorRGB.erase(this->Internals->ColorRGB.begin() + index);
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->RecalculateRange();
+  this->Internals->Modified();
   return true;
 }
 
 //---------------------------------------------------------------------------
 vtkm::Int32 ColorTable::GetNumberOfPoints() const
 {
-  return static_cast<vtkm::Int32>(this->Impl->ColorNodePos.size());
+  return static_cast<vtkm::Int32>(this->Internals->ColorNodePos.size());
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddPointAlpha(double x, float alpha, float midpoint, float sharpness)
+vtkm::Int32 ColorTable::AddPointAlpha(vtkm::Float64 x,
+                                      vtkm::Float32 alpha,
+                                      vtkm::Float32 midpoint,
+                                      vtkm::Float32 sharpness)
 {
   if (outside_range(alpha, midpoint, sharpness))
   {
     return -1;
   }
 
-  const vtkm::Vec<float, 2> midsharp(midpoint, sharpness);
+  const vtkm::Vec2f_32 midsharp(midpoint, sharpness);
   std::size_t index = 0;
-  if (this->Impl->OpacityNodePos.size() == 0 || this->Impl->OpacityNodePos.back() < x)
+  if (this->Internals->OpacityNodePos.size() == 0 || this->Internals->OpacityNodePos.back() < x)
   {
-    this->Impl->OpacityNodePos.emplace_back(x);
-    this->Impl->OpacityAlpha.emplace_back(alpha);
-    this->Impl->OpacityMidSharp.emplace_back(midsharp);
-    index = this->Impl->OpacityNodePos.size();
+    this->Internals->OpacityNodePos.emplace_back(x);
+    this->Internals->OpacityAlpha.emplace_back(alpha);
+    this->Internals->OpacityMidSharp.emplace_back(midsharp);
+    index = this->Internals->OpacityNodePos.size();
   }
   else
   {
-    auto begin = this->Impl->OpacityNodePos.begin();
-    auto pos = std::lower_bound(begin, this->Impl->OpacityNodePos.end(), x);
+    auto begin = this->Internals->OpacityNodePos.begin();
+    auto pos = std::lower_bound(begin, this->Internals->OpacityNodePos.end(), x);
     index = static_cast<std::size_t>(std::distance(begin, pos));
     if (*pos == x)
     {
-      this->Impl->OpacityAlpha[index] = alpha;
-      this->Impl->OpacityMidSharp[index] = midsharp;
+      this->Internals->OpacityAlpha[index] = alpha;
+      this->Internals->OpacityMidSharp[index] = midsharp;
     }
     else
     {
-      this->Impl->OpacityAlpha.emplace(this->Impl->OpacityAlpha.begin() + std::distance(begin, pos),
-                                       alpha);
-      this->Impl->OpacityMidSharp.emplace(
-        this->Impl->OpacityMidSharp.begin() + std::distance(begin, pos), midsharp);
-      this->Impl->OpacityNodePos.emplace(pos, x);
+      this->Internals->OpacityAlpha.emplace(
+        this->Internals->OpacityAlpha.begin() + std::distance(begin, pos), alpha);
+      this->Internals->OpacityMidSharp.emplace(
+        this->Internals->OpacityMidSharp.begin() + std::distance(begin, pos), midsharp);
+      this->Internals->OpacityNodePos.emplace(pos, x);
     }
   }
-  this->Impl->OpacityArraysChanged = true;
-  this->Impl->TableRange.Include(x); //update range to include x
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->TableRange.Include(x); //update range to include x
+  this->Internals->Modified();
   return static_cast<vtkm::Int32>(index);
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::AddSegmentAlpha(double x1,
-                                        float alpha1,
-                                        double x2,
-                                        float alpha2,
-                                        const vtkm::Vec<float, 2>& mid_sharp1,
-                                        const vtkm::Vec<float, 2>& mid_sharp2)
+vtkm::Int32 ColorTable::AddSegmentAlpha(vtkm::Float64 x1,
+                                        vtkm::Float32 alpha1,
+                                        vtkm::Float64 x2,
+                                        vtkm::Float32 alpha2,
+                                        const vtkm::Vec2f_32& mid_sharp1,
+                                        const vtkm::Vec2f_32& mid_sharp2)
 {
   if (outside_range(alpha1, alpha2, mid_sharp1, mid_sharp2))
   {
     return -1;
   }
 
-  if (this->Impl->OpacityNodePos.size() > 0)
+  if (this->Internals->OpacityNodePos.size() > 0)
   {
     //Todo:
     // - This could be optimized so we do 2 less lower_bound calls when
@@ -591,11 +835,11 @@ vtkm::Int32 ColorTable::AddSegmentAlpha(double x1,
 
     //When we add a segment we remove all points that are inside the line
 
-    auto nodeBegin = this->Impl->OpacityNodePos.begin();
-    auto nodeEnd = this->Impl->OpacityNodePos.end();
+    auto nodeBegin = this->Internals->OpacityNodePos.begin();
+    auto nodeEnd = this->Internals->OpacityNodePos.end();
 
-    auto alphaBegin = this->Impl->OpacityAlpha.begin();
-    auto midBegin = this->Impl->OpacityMidSharp.begin();
+    auto alphaBegin = this->Internals->OpacityAlpha.begin();
+    auto midBegin = this->Internals->OpacityMidSharp.begin();
 
     auto nodeStart = std::lower_bound(nodeBegin, nodeEnd, x1);
     auto nodeStop = std::lower_bound(nodeBegin, nodeEnd, x2);
@@ -607,9 +851,9 @@ vtkm::Int32 ColorTable::AddSegmentAlpha(double x1,
 
     //erase is exclusive so if end->x == x2 it will be kept around, and
     //than we will update it in AddPoint
-    this->Impl->OpacityNodePos.erase(nodeStart, nodeStop);
-    this->Impl->OpacityAlpha.erase(alphaStart, alphaStop);
-    this->Impl->OpacityMidSharp.erase(midStart, midStop);
+    this->Internals->OpacityNodePos.erase(nodeStart, nodeStop);
+    this->Internals->OpacityAlpha.erase(alphaStart, alphaStop);
+    this->Internals->OpacityMidSharp.erase(midStart, midStop);
   }
 
   vtkm::Int32 pos = this->AddPointAlpha(x1, alpha1, mid_sharp1[0], mid_sharp1[1]);
@@ -618,18 +862,18 @@ vtkm::Int32 ColorTable::AddSegmentAlpha(double x1,
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::GetPointAlpha(vtkm::Int32 index, vtkm::Vec<double, 4>& data) const
+bool ColorTable::GetPointAlpha(vtkm::Int32 index, vtkm::Vec4f_64& data) const
 {
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->OpacityNodePos.size();
+  const std::size_t size = this->Internals->OpacityNodePos.size();
   if (index < 0 || i >= size)
   {
     return false;
   }
 
-  const auto& pos = this->Impl->OpacityNodePos[i];
-  const auto& alpha = this->Impl->OpacityAlpha[i];
-  const auto& midsharp = this->Impl->OpacityMidSharp[i];
+  const auto& pos = this->Internals->OpacityNodePos[i];
+  const auto& alpha = this->Internals->OpacityAlpha[i];
+  const auto& midsharp = this->Internals->OpacityMidSharp[i];
 
   data[0] = pos;
   data[1] = alpha;
@@ -639,7 +883,7 @@ bool ColorTable::GetPointAlpha(vtkm::Int32 index, vtkm::Vec<double, 4>& data) co
 }
 
 //---------------------------------------------------------------------------
-vtkm::Int32 ColorTable::UpdatePointAlpha(vtkm::Int32 index, const vtkm::Vec<double, 4>& data)
+vtkm::Int32 ColorTable::UpdatePointAlpha(vtkm::Int32 index, const vtkm::Vec4f_64& data)
 {
   //skip data[0] as we don't care about position
   if (outside_range(data[1], data[2], data[3]))
@@ -648,42 +892,43 @@ vtkm::Int32 ColorTable::UpdatePointAlpha(vtkm::Int32 index, const vtkm::Vec<doub
   }
 
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->OpacityNodePos.size();
+  const std::size_t size = this->Internals->OpacityNodePos.size();
   if (index < 0 || i >= size)
   {
     return -1;
   }
   //When updating the first question is has the relative position of the point changed?
   //If it hasn't we can quickly just update the RGB value
-  auto oldPos = this->Impl->OpacityNodePos.begin() + index;
-  auto newPos =
-    std::lower_bound(this->Impl->OpacityNodePos.begin(), this->Impl->OpacityNodePos.end(), data[0]);
+  auto oldPos = this->Internals->OpacityNodePos.begin() + index;
+  auto newPos = std::lower_bound(
+    this->Internals->OpacityNodePos.begin(), this->Internals->OpacityNodePos.end(), data[0]);
   if (oldPos == newPos)
   { //node's relative location hasn't changed
-    this->Impl->OpacityArraysChanged = true;
-    auto& alpha = this->Impl->OpacityAlpha[i];
-    auto& midsharp = this->Impl->OpacityMidSharp[i];
+    this->Internals->OpacityArraysChanged = true;
+    auto& alpha = this->Internals->OpacityAlpha[i];
+    auto& midsharp = this->Internals->OpacityMidSharp[i];
     *newPos = data[0];
-    alpha = static_cast<float>(data[1]);
-    midsharp[0] = static_cast<float>(data[2]);
-    midsharp[1] = static_cast<float>(data[3]);
+    alpha = static_cast<vtkm::Float32>(data[1]);
+    midsharp[0] = static_cast<vtkm::Float32>(data[2]);
+    midsharp[1] = static_cast<vtkm::Float32>(data[3]);
+    this->Internals->Modified();
     return index;
   }
   else
   { //remove the point, and add the new values as the relative location is different
     this->RemovePointAlpha(index);
     return this->AddPointAlpha(data[0],
-                               static_cast<float>(data[1]),
-                               static_cast<float>(data[2]),
-                               static_cast<float>(data[3]));
+                               static_cast<vtkm::Float32>(data[1]),
+                               static_cast<vtkm::Float32>(data[2]),
+                               static_cast<vtkm::Float32>(data[3]));
   }
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::RemovePointAlpha(double x)
+bool ColorTable::RemovePointAlpha(vtkm::Float64 x)
 {
-  auto begin = this->Impl->OpacityNodePos.begin();
-  auto pos = std::lower_bound(begin, this->Impl->OpacityNodePos.end(), x);
+  auto begin = this->Internals->OpacityNodePos.begin();
+  auto pos = std::lower_bound(begin, this->Internals->OpacityNodePos.end(), x);
   return this->RemovePointAlpha(static_cast<vtkm::Int32>(std::distance(begin, pos)));
 }
 
@@ -691,28 +936,29 @@ bool ColorTable::RemovePointAlpha(double x)
 bool ColorTable::RemovePointAlpha(vtkm::Int32 index)
 {
   std::size_t i = static_cast<std::size_t>(index);
-  const std::size_t size = this->Impl->OpacityNodePos.size();
+  const std::size_t size = this->Internals->OpacityNodePos.size();
   if (index < 0 || i >= size)
   {
     return false;
   }
 
-  this->Impl->OpacityNodePos.erase(this->Impl->OpacityNodePos.begin() + index);
-  this->Impl->OpacityAlpha.erase(this->Impl->OpacityAlpha.begin() + index);
-  this->Impl->OpacityMidSharp.erase(this->Impl->OpacityMidSharp.begin() + index);
-  this->Impl->OpacityArraysChanged = true;
-  this->Impl->RecalculateRange();
+  this->Internals->OpacityNodePos.erase(this->Internals->OpacityNodePos.begin() + index);
+  this->Internals->OpacityAlpha.erase(this->Internals->OpacityAlpha.begin() + index);
+  this->Internals->OpacityMidSharp.erase(this->Internals->OpacityMidSharp.begin() + index);
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->RecalculateRange();
+  this->Internals->Modified();
   return true;
 }
 
 //---------------------------------------------------------------------------
 vtkm::Int32 ColorTable::GetNumberOfPointsAlpha() const
 {
-  return static_cast<vtkm::Int32>(this->Impl->OpacityNodePos.size());
+  return static_cast<vtkm::Int32>(this->Internals->OpacityNodePos.size());
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const double* ptr)
+bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const vtkm::Float64* ptr)
 {
   if (n <= 0 || ptr == nullptr)
   {
@@ -721,22 +967,24 @@ bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const double* ptr)
   this->ClearColors();
 
   std::size_t size = static_cast<std::size_t>(n / 4);
-  this->Impl->ColorNodePos.reserve(size);
-  this->Impl->ColorRGB.reserve(size);
+  this->Internals->ColorNodePos.reserve(size);
+  this->Internals->ColorRGB.reserve(size);
   for (std::size_t i = 0; i < size; ++i)
   { //allows us to support unsorted arrays
-    vtkm::Vec<float, 3> rgb(
-      static_cast<float>(ptr[1]), static_cast<float>(ptr[2]), static_cast<float>(ptr[3]));
+    vtkm::Vec3f_32 rgb(static_cast<vtkm::Float32>(ptr[1]),
+                       static_cast<vtkm::Float32>(ptr[2]),
+                       static_cast<vtkm::Float32>(ptr[3]));
     this->AddPoint(ptr[0], rgb);
     ptr += 4;
   }
-  this->Impl->ColorArraysChanged = true;
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->Modified();
 
   return true;
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const float* ptr)
+bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const vtkm::Float32* ptr)
 {
   if (n <= 0 || ptr == nullptr)
   {
@@ -745,20 +993,21 @@ bool ColorTable::FillColorTableFromDataPointer(vtkm::Int32 n, const float* ptr)
   this->ClearColors();
 
   std::size_t size = static_cast<std::size_t>(n / 4);
-  this->Impl->ColorNodePos.reserve(size);
-  this->Impl->ColorRGB.reserve(size);
+  this->Internals->ColorNodePos.reserve(size);
+  this->Internals->ColorRGB.reserve(size);
   for (std::size_t i = 0; i < size; ++i)
   { //allows us to support unsorted arrays
-    vtkm::Vec<float, 3> rgb(ptr[1], ptr[2], ptr[3]);
+    vtkm::Vec3f_32 rgb(ptr[1], ptr[2], ptr[3]);
     this->AddPoint(ptr[0], rgb);
     ptr += 4;
   }
-  this->Impl->ColorArraysChanged = true;
+  this->Internals->ColorArraysChanged = true;
+  this->Internals->Modified();
   return true;
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* ptr)
+bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const vtkm::Float64* ptr)
 {
   if (n <= 0 || ptr == nullptr)
   {
@@ -767,22 +1016,25 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const double* pt
   this->ClearAlpha();
 
   std::size_t size = static_cast<std::size_t>(n / 4);
-  this->Impl->OpacityNodePos.reserve(size);
-  this->Impl->OpacityAlpha.reserve(size);
-  this->Impl->OpacityMidSharp.reserve(size);
+  this->Internals->OpacityNodePos.reserve(size);
+  this->Internals->OpacityAlpha.reserve(size);
+  this->Internals->OpacityMidSharp.reserve(size);
   for (std::size_t i = 0; i < size; ++i)
   { //allows us to support unsorted arrays
-    this->AddPointAlpha(
-      ptr[0], static_cast<float>(ptr[1]), static_cast<float>(ptr[2]), static_cast<float>(ptr[3]));
+    this->AddPointAlpha(ptr[0],
+                        static_cast<vtkm::Float32>(ptr[1]),
+                        static_cast<vtkm::Float32>(ptr[2]),
+                        static_cast<vtkm::Float32>(ptr[3]));
     ptr += 4;
   }
 
-  this->Impl->OpacityArraysChanged = true;
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->Modified();
   return true;
 }
 
 //---------------------------------------------------------------------------
-bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr)
+bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const vtkm::Float32* ptr)
 {
   if (n <= 0 || ptr == nullptr)
   {
@@ -792,87 +1044,95 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const float* ptr
 
 
   std::size_t size = static_cast<std::size_t>(n / 4);
-  this->Impl->OpacityNodePos.reserve(size);
-  this->Impl->OpacityAlpha.reserve(size);
-  this->Impl->OpacityMidSharp.reserve(size);
+  this->Internals->OpacityNodePos.reserve(size);
+  this->Internals->OpacityAlpha.reserve(size);
+  this->Internals->OpacityMidSharp.reserve(size);
   for (std::size_t i = 0; i < size; ++i)
   { //allows us to support unsorted arrays
     this->AddPointAlpha(ptr[0], ptr[1], ptr[2], ptr[3]);
     ptr += 4;
   }
-  this->Impl->OpacityArraysChanged = true;
+  this->Internals->OpacityArraysChanged = true;
+  this->Internals->Modified();
   return true;
+}
+
+//----------------------------------------------------------------------------
+void ColorTable::UpdateArrayHandles() const
+{
+  //Only rebuild the array handles that have changed since the last time
+  //we have modified or color / opacity information
+
+  if (this->Internals->ColorArraysChanged)
+  {
+    this->Internals->ColorPosHandle =
+      vtkm::cont::make_ArrayHandle(this->Internals->ColorNodePos, vtkm::CopyFlag::Off);
+    this->Internals->ColorRGBHandle =
+      vtkm::cont::make_ArrayHandle(this->Internals->ColorRGB, vtkm::CopyFlag::Off);
+    this->Internals->ColorArraysChanged = false;
+  }
+
+  if (this->Internals->OpacityArraysChanged)
+  {
+    this->Internals->OpacityPosHandle =
+      vtkm::cont::make_ArrayHandle(this->Internals->OpacityNodePos, vtkm::CopyFlag::Off);
+    this->Internals->OpacityAlphaHandle =
+      vtkm::cont::make_ArrayHandle(this->Internals->OpacityAlpha, vtkm::CopyFlag::Off);
+    this->Internals->OpacityMidSharpHandle =
+      vtkm::cont::make_ArrayHandle(this->Internals->OpacityMidSharp, vtkm::CopyFlag::Off);
+    this->Internals->OpacityArraysChanged = false;
+  }
+}
+
+//---------------------------------------------------------------------------
+vtkm::exec::ColorTable ColorTable::PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                       vtkm::cont::Token& token) const
+{
+  this->UpdateArrayHandles();
+
+  vtkm::exec::ColorTable execTable;
+
+  execTable.Space = this->Internals->Space;
+  execTable.NaNColor = this->Internals->NaNColor;
+  execTable.BelowRangeColor = this->Internals->BelowRangeColor;
+  execTable.AboveRangeColor = this->Internals->AboveRangeColor;
+  execTable.UseClamping = this->Internals->UseClamping;
+
+  VTKM_ASSERT(static_cast<vtkm::Id>(this->Internals->ColorNodePos.size()) ==
+              this->Internals->ColorPosHandle.GetNumberOfValues());
+  execTable.ColorSize =
+    static_cast<vtkm::Int32>(this->Internals->ColorPosHandle.GetNumberOfValues());
+  VTKM_ASSERT(static_cast<vtkm::Id>(execTable.ColorSize) ==
+              this->Internals->ColorRGBHandle.GetNumberOfValues());
+  execTable.ColorNodes = this->Internals->ColorPosHandle.PrepareForInput(device, token).GetArray();
+  execTable.RGB = this->Internals->ColorRGBHandle.PrepareForInput(device, token).GetArray();
+
+  VTKM_ASSERT(static_cast<vtkm::Id>(this->Internals->OpacityNodePos.size()) ==
+              this->Internals->OpacityPosHandle.GetNumberOfValues());
+  execTable.OpacitySize =
+    static_cast<vtkm::Int32>(this->Internals->OpacityPosHandle.GetNumberOfValues());
+  VTKM_ASSERT(static_cast<vtkm::Id>(execTable.OpacitySize) ==
+              this->Internals->OpacityAlphaHandle.GetNumberOfValues());
+  VTKM_ASSERT(static_cast<vtkm::Id>(execTable.OpacitySize) ==
+              this->Internals->OpacityMidSharpHandle.GetNumberOfValues());
+  execTable.ONodes = this->Internals->OpacityPosHandle.PrepareForInput(device, token).GetArray();
+  execTable.Alpha = this->Internals->OpacityAlphaHandle.PrepareForInput(device, token).GetArray();
+  execTable.MidSharp =
+    this->Internals->OpacityMidSharpHandle.PrepareForInput(device, token).GetArray();
+
+  return execTable;
+}
+
+vtkm::exec::ColorTable ColorTable::PrepareForExecution(vtkm::cont::DeviceAdapterId device) const
+{
+  vtkm::cont::Token token;
+  return this->PrepareForExecution(device, token);
 }
 
 //---------------------------------------------------------------------------
 vtkm::Id ColorTable::GetModifiedCount() const
 {
-  return this->Impl->HostSideCache->GetModifiedCount();
-}
-
-//----------------------------------------------------------------------------
-bool ColorTable::NeedToCreateExecutionColorTable() const
-{
-  return this->Impl->HostSideCacheChanged;
-}
-
-//----------------------------------------------------------------------------
-void ColorTable::UpdateExecutionColorTable(
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* handle) const
-{
-  this->Impl->ExecHandle.reset(handle);
-}
-
-//----------------------------------------------------------------------------
-ColorTable::TransferState ColorTable::GetExecutionDataForTransfer() const
-{
-  //Only rebuild the array handles that have changed since the last time
-  //we have modified or color / opacity information
-
-  if (this->Impl->ColorArraysChanged)
-  {
-    this->Impl->ColorPosHandle =
-      vtkm::cont::make_ArrayHandle(this->Impl->ColorNodePos, vtkm::CopyFlag::Off);
-    this->Impl->ColorRGBHandle =
-      vtkm::cont::make_ArrayHandle(this->Impl->ColorRGB, vtkm::CopyFlag::Off);
-  }
-
-  if (this->Impl->OpacityArraysChanged)
-  {
-    this->Impl->OpacityPosHandle =
-      vtkm::cont::make_ArrayHandle(this->Impl->OpacityNodePos, vtkm::CopyFlag::Off);
-    this->Impl->OpacityAlphaHandle =
-      vtkm::cont::make_ArrayHandle(this->Impl->OpacityAlpha, vtkm::CopyFlag::Off);
-    this->Impl->OpacityMidSharpHandle =
-      vtkm::cont::make_ArrayHandle(this->Impl->OpacityMidSharp, vtkm::CopyFlag::Off);
-  }
-
-  TransferState state = { (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged ||
-                           this->Impl->HostSideCacheChanged),
-                          this->Impl->HostSideCache.get(),
-                          this->Impl->ColorPosHandle,
-                          this->Impl->ColorRGBHandle,
-                          this->Impl->OpacityPosHandle,
-                          this->Impl->OpacityAlphaHandle,
-                          this->Impl->OpacityMidSharpHandle };
-
-  this->Impl->ColorArraysChanged = false;
-  this->Impl->OpacityArraysChanged = false;
-  this->Impl->HostSideCacheChanged = false;
-  return state;
-}
-
-//----------------------------------------------------------------------------
-vtkm::exec::ColorTableBase* ColorTable::GetControlRepresentation() const
-{
-  return this->Impl->HostSideCache.get();
-}
-
-//----------------------------------------------------------------------------
-vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase> const* ColorTable::GetExecutionHandle()
-  const
-{
-  return this->Impl->ExecHandle.get();
+  return this->Internals->ModifiedCount;
 }
 }
 } //namespace vtkm::cont

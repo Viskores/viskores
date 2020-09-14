@@ -59,9 +59,9 @@ public:
     vtkm::Range range{ 0.0, 1.0 };
     vtkm::Vec<float, 3> rgb1{ 0.0f, 0.0f, 0.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 1.0f, 1.0f };
-    auto rgbspace = vtkm::cont::ColorSpace::RGB;
-    auto hsvspace = vtkm::cont::ColorSpace::HSV;
-    auto diverging = vtkm::cont::ColorSpace::DIVERGING;
+    auto rgbspace = vtkm::ColorSpace::RGB;
+    auto hsvspace = vtkm::ColorSpace::HSV;
+    auto diverging = vtkm::ColorSpace::Diverging;
 
     vtkm::cont::ColorTable table(rgbspace);
     VTKM_TEST_ASSERT(table.GetColorSpace() == rgbspace, "color space not saved");
@@ -90,10 +90,10 @@ public:
   static void TestLoadPresets()
   {
     vtkm::Range range{ 0.0, 1.0 };
-    auto rgbspace = vtkm::cont::ColorSpace::RGB;
-    auto hsvspace = vtkm::cont::ColorSpace::HSV;
-    auto labspace = vtkm::cont::ColorSpace::LAB;
-    auto diverging = vtkm::cont::ColorSpace::DIVERGING;
+    auto rgbspace = vtkm::ColorSpace::RGB;
+    auto hsvspace = vtkm::ColorSpace::HSV;
+    auto labspace = vtkm::ColorSpace::Lab;
+    auto diverging = vtkm::ColorSpace::Diverging;
 
     {
       vtkm::cont::ColorTable table(rgbspace);
@@ -103,7 +103,7 @@ public:
       VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
       VTKM_TEST_ASSERT(table.GetNumberOfPoints() == 3);
 
-      VTKM_TEST_ASSERT(table.LoadPreset(vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED));
+      VTKM_TEST_ASSERT(table.LoadPreset(vtkm::cont::ColorTable::Preset::CoolToWarmExtended));
       VTKM_TEST_ASSERT(table.GetColorSpace() == labspace,
                        "color space not switched when loading preset");
       VTKM_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
@@ -140,24 +140,24 @@ public:
       VTKM_TEST_ASSERT(table.GetNumberOfPoints() > 0, "Issue loading preset ", name);
     }
 
-    auto presetEnum = { vtkm::cont::ColorTable::Preset::DEFAULT,
-                        vtkm::cont::ColorTable::Preset::COOL_TO_WARM,
-                        vtkm::cont::ColorTable::Preset::COOL_TO_WARM_EXTENDED,
-                        vtkm::cont::ColorTable::Preset::VIRIDIS,
-                        vtkm::cont::ColorTable::Preset::INFERNO,
-                        vtkm::cont::ColorTable::Preset::PLASMA,
-                        vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION,
-                        vtkm::cont::ColorTable::Preset::X_RAY,
-                        vtkm::cont::ColorTable::Preset::GREEN,
-                        vtkm::cont::ColorTable::Preset::BLACK_BLUE_WHITE,
-                        vtkm::cont::ColorTable::Preset::BLUE_TO_ORANGE,
-                        vtkm::cont::ColorTable::Preset::GRAY_TO_RED,
-                        vtkm::cont::ColorTable::Preset::COLD_AND_HOT,
-                        vtkm::cont::ColorTable::Preset::BLUE_GREEN_ORANGE,
-                        vtkm::cont::ColorTable::Preset::YELLOW_GRAY_BLUE,
-                        vtkm::cont::ColorTable::Preset::RAINBOW_UNIFORM,
-                        vtkm::cont::ColorTable::Preset::JET,
-                        vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED };
+    auto presetEnum = { vtkm::cont::ColorTable::Preset::Default,
+                        vtkm::cont::ColorTable::Preset::CoolToWarm,
+                        vtkm::cont::ColorTable::Preset::CoolToWarmExtended,
+                        vtkm::cont::ColorTable::Preset::Viridis,
+                        vtkm::cont::ColorTable::Preset::Inferno,
+                        vtkm::cont::ColorTable::Preset::Plasma,
+                        vtkm::cont::ColorTable::Preset::BlackBodyRadiation,
+                        vtkm::cont::ColorTable::Preset::XRay,
+                        vtkm::cont::ColorTable::Preset::Green,
+                        vtkm::cont::ColorTable::Preset::BlackBlueWhite,
+                        vtkm::cont::ColorTable::Preset::BlueToOrange,
+                        vtkm::cont::ColorTable::Preset::GrayToRed,
+                        vtkm::cont::ColorTable::Preset::ColdAndHot,
+                        vtkm::cont::ColorTable::Preset::BlueGreenOrange,
+                        vtkm::cont::ColorTable::Preset::YellowGrayBlue,
+                        vtkm::cont::ColorTable::Preset::RainbowUniform,
+                        vtkm::cont::ColorTable::Preset::Jet,
+                        vtkm::cont::ColorTable::Preset::RainbowDesaturated };
     for (vtkm::cont::ColorTable::Preset preset : presetEnum)
     {
       vtkm::cont::ColorTable table(preset);
@@ -172,7 +172,7 @@ public:
     vtkm::Range range{ 0.0, 1.0 };
     vtkm::Vec<float, 3> rgb1{ 0.0f, 1.0f, 0.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 0.0f, 1.0f };
-    auto rgbspace = vtkm::cont::ColorSpace::RGB;
+    auto rgbspace = vtkm::ColorSpace::RGB;
 
     vtkm::cont::ColorTable table(range, rgb1, rgb2, rgbspace);
     VTKM_TEST_ASSERT(table.GetClamping() == true, "clamping not setup properly");
@@ -194,7 +194,7 @@ public:
     vtkm::Range range{ -1.0, 2.0 };
     vtkm::Vec<float, 3> rgb1{ 0.0f, 1.0f, 0.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 0.0f, 1.0f };
-    auto rgbspace = vtkm::cont::ColorSpace::RGB;
+    auto rgbspace = vtkm::ColorSpace::RGB;
 
     vtkm::cont::ColorTable table(range, rgb1, rgb2, rgbspace);
     table.SetClampingOff();
@@ -228,7 +228,7 @@ public:
     //implement a blue2yellow color table
     vtkm::Vec<float, 3> rgb1{ 0.0f, 0.0f, 1.0f };
     vtkm::Vec<float, 3> rgb2{ 1.0f, 1.0f, 0.0f };
-    auto lab = vtkm::cont::ColorSpace::LAB;
+    auto lab = vtkm::ColorSpace::Lab;
 
     vtkm::cont::ColorTable table(range, rgb1, rgb2, lab);
     table.AddPoint(0.0, vtkm::Vec<float, 3>{ 0.5f, 0.5f, 0.5f });
@@ -266,7 +266,7 @@ public:
     std::cout << "Test Add Points" << std::endl;
 
     vtkm::Range range{ -20, 20.0 };
-    auto rgbspace = vtkm::cont::ColorSpace::RGB;
+    auto rgbspace = vtkm::ColorSpace::RGB;
 
     vtkm::cont::ColorTable table(rgbspace);
     table.AddPoint(-10.0, vtkm::Vec<float, 3>{ 0.0f, 1.0f, 1.0f });
@@ -291,9 +291,9 @@ public:
     std::cout << "Test Add Segments" << std::endl;
 
     vtkm::Range range{ 0.0, 50.0 };
-    auto diverging = vtkm::cont::ColorSpace::DIVERGING;
+    auto diverging = vtkm::ColorSpace::Diverging;
 
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::CoolToWarm);
     VTKM_TEST_ASSERT(table.GetColorSpace() == diverging,
                      "color space not switched when loading preset");
 
@@ -332,7 +332,7 @@ public:
   {
     std::cout << "Test Remove Points" << std::endl;
 
-    auto hsv = vtkm::cont::ColorSpace::HSV;
+    auto hsv = vtkm::ColorSpace::HSV;
 
     vtkm::cont::ColorTable table(hsv);
     //implement Blue to Red Rainbow color table
@@ -370,7 +370,7 @@ public:
 
     std::cout << "  Change Color Space" << std::endl;
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors_rgb;
-    table.SetColorSpace(vtkm::cont::ColorSpace::RGB);
+    table.SetColorSpace(vtkm::ColorSpace::RGB);
     table.Map(field, colors_rgb);
 
     CheckColors(colors_rgb,
@@ -386,7 +386,7 @@ public:
   {
     std::cout << "Test Opacity Only Points" << std::endl;
 
-    auto hsv = vtkm::cont::ColorSpace::HSV;
+    auto hsv = vtkm::ColorSpace::HSV;
 
     vtkm::cont::ColorTable table(hsv);
     //implement only a color table
@@ -430,7 +430,7 @@ public:
 
     using namespace vtkm::worklet::colorconversion;
 
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::Green);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
                      "loading linear green table failed with wrong range");
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
@@ -454,7 +454,7 @@ public:
   {
     std::cout << "Test Sampling" << std::endl;
 
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::GREEN);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::Green);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
                      "loading linear green table failed with wrong range");
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
@@ -473,7 +473,7 @@ public:
 
     //build a color table with clamping off and verify that sampling works
     vtkm::Range range{ 0.0, 50.0 };
-    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::CoolToWarm);
     table.RescaleToRange(range);
     table.SetClampingOff();
     table.SetAboveRangeColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red
