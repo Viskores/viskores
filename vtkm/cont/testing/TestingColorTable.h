@@ -439,13 +439,8 @@ public:
     auto samples = vtkm::cont::make_ArrayHandle({ 0.0, 0.5, 1.0 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
-    {
-      vtkm::cont::Token token;
-      TransferFunction transfer(table.PrepareForExecution(DeviceAdapterTag{}, token));
-      vtkm::worklet::DispatcherMapField<TransferFunction> dispatcher(transfer);
-      dispatcher.SetDevice(DeviceAdapterTag());
-      dispatcher.Invoke(samples, colors);
-    }
+    vtkm::cont::Invoker invoke;
+    invoke(TransferFunction{}, samples, table, colors);
 
     CheckColors(colors, { { 14, 28, 31, 255 }, { 21, 150, 21, 255 }, { 255, 251, 230, 255 } });
   }

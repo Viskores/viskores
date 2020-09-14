@@ -26,23 +26,6 @@ namespace vtkm
 {
 namespace cont
 {
-namespace detail
-{
-
-struct map_color_table
-{
-  template <typename DeviceAdapter, typename ColorTable, typename... Args>
-  inline bool operator()(DeviceAdapter device, ColorTable&& colors, Args&&... args) const
-  {
-    vtkm::cont::Token token;
-    vtkm::worklet::colorconversion::TransferFunction transfer(
-      colors->PrepareForExecution(device, token));
-    vtkm::cont::Invoker invoke(device);
-    invoke(transfer, std::forward<Args>(args)...);
-    return true;
-  }
-};
-}
 
 //---------------------------------------------------------------------------
 template <typename T, typename S>
@@ -123,14 +106,18 @@ template <typename T, typename S>
 bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
                      vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& rgbaOut) const
 {
-  return vtkm::cont::TryExecute(detail::map_color_table{}, this, values, rgbaOut);
+  vtkm::cont::Invoker invoke;
+  invoke(vtkm::worklet::colorconversion::TransferFunction{}, values, *this, rgbaOut);
+  return true;
 }
 //---------------------------------------------------------------------------
 template <typename T, typename S>
 bool ColorTable::Map(const vtkm::cont::ArrayHandle<T, S>& values,
                      vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut) const
 {
-  return vtkm::cont::TryExecute(detail::map_color_table{}, this, values, rgbOut);
+  vtkm::cont::Invoker invoke;
+  invoke(vtkm::worklet::colorconversion::TransferFunction{}, values, *this, rgbOut);
+  return true;
 }
 //---------------------------------------------------------------------------
 template <typename T, int N, typename S>
