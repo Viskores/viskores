@@ -12,7 +12,7 @@
 #include <memory>
 
 #include <vtkm/cont/ColorTable.h>
-#include <vtkm/cont/ColorTable.hxx>
+#include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -316,13 +316,13 @@ inline bool sampleColorTable(const vtkm::cont::ColorTable* self,
     {
       auto handle =
         buildSampleHandle((numSamples - 1), f_start, f_end, f_delta, appendNanAndRangeColors);
-      return self->Map(handle, colors);
+      return vtkm::cont::ColorTableMap(handle, *self, colors);
     }
   }
 
   //otherwise we need to use Float64 space
   auto handle = buildSampleHandle((numSamples - 1), r.Min, r.Max, d_delta, appendNanAndRangeColors);
-  return self->Map(handle, colors);
+  return vtkm::cont::ColorTableMap(handle, *self, colors);
 }
 } // anonymous namespace
 

@@ -66,6 +66,7 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   ColorTable.h
+  ColorTableMap.h
   ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
@@ -125,7 +126,6 @@ set(template_sources
   CellSetExplicit.hxx
   CellSetExtrude.hxx
   CellSetStructured.hxx
-  ColorTable.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
   ParticleArrayCopy.hxx
