@@ -200,33 +200,48 @@ inline vtkm::Vec<float, 3> hsvTorgb(const vtkm::Vec<float, 3>& hsv)
   return rgb;
 }
 
-// clang-format off
-inline bool outside_vrange(double x) { return x < 0.0 || x > 1.0; }
-inline bool outside_vrange(const vtkm::Vec<double, 2>& x)
-  { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0; }
-inline bool outside_vrange(const vtkm::Vec<double, 3>& x)
-  { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0 || x[2] < 0.0 || x[2] > 1.0; }
-inline bool outside_vrange(float x) { return x < 0.0f || x > 1.0f; }
-inline bool outside_vrange(const vtkm::Vec<float, 2>& x)
-  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f; }
-inline bool outside_vrange(const vtkm::Vec<float, 3>& x)
-  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f || x[2] < 0.0f || x[2] > 1.0f; }
+inline bool outside_vrange(double x)
+{
+  return x < 0.0 || x > 1.0;
+}
+inline bool outside_vrange(float x)
+{
+  return x < 0.0f || x > 1.0f;
+}
+template <typename T>
+inline bool outside_vrange(const vtkm::Vec<T, 2>& x)
+{
+  return outside_vrange(x[0]) || outside_vrange(x[1]);
+}
+template <typename T>
+inline bool outside_vrange(const vtkm::Vec<T, 3>& x)
+{
+  return outside_vrange(x[0]) || outside_vrange(x[1]) || outside_vrange(x[2]);
+}
 
-inline bool outside_range() { return false; }
+inline bool outside_range()
+{
+  return false;
+}
 
 template <typename T>
-inline bool outside_range(T&& t) { return outside_vrange(t); }
+inline bool outside_range(T&& t)
+{
+  return outside_vrange(t);
+}
 
 template <typename T, typename U>
-inline bool outside_range(T&& t, U&& u) { return outside_vrange(t) || outside_vrange(u); }
+inline bool outside_range(T&& t, U&& u)
+{
+  return outside_vrange(t) || outside_vrange(u);
+}
 
 template <typename T, typename U, typename V, typename... Args>
 inline bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
 {
   return outside_vrange(t) || outside_vrange(u) || outside_vrange(v) ||
-         outside_range(std::forward<Args>(args)...);
+    outside_range(std::forward<Args>(args)...);
 }
-// clang-format on
 }
 
 namespace vtkm
