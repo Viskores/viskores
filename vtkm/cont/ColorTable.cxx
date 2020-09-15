@@ -12,7 +12,7 @@
 #include <memory>
 
 #include <vtkm/cont/ColorTable.h>
-#include <vtkm/cont/ColorTable.hxx>
+#include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -24,14 +24,14 @@ template <typename T>
 struct MinDelta
 {
 };
-// This value seems to work well for float ranges we have tested
+// This value seems to work well for vtkm::Float32 ranges we have tested
 template <>
-struct MinDelta<float>
+struct MinDelta<vtkm::Float32>
 {
   static constexpr int value = 2048;
 };
 template <>
-struct MinDelta<double>
+struct MinDelta<vtkm::Float64>
 {
   static constexpr vtkm::Int64 value = 2048L;
 };
@@ -46,12 +46,12 @@ struct MinRepresentable
 {
 };
 template <>
-struct MinRepresentable<float>
+struct MinRepresentable<vtkm::Float32>
 {
   static constexpr int value = 8388608;
 };
 template <>
-struct MinRepresentable<double>
+struct MinRepresentable<vtkm::Float64>
 {
   static constexpr vtkm::Int64 value = 4503599627370496L;
 };
@@ -71,7 +71,7 @@ inline bool rangeAlmostEqual(const vtkm::Range& r)
 }
 
 template <typename T>
-inline double expandRange(T r[2])
+inline vtkm::Float64 expandRange(T r[2])
 {
   constexpr bool is_float32_type = std::is_same<T, vtkm::Float32>::value;
   using IRange = typename std::conditional<is_float32_type, vtkm::Int32, vtkm::Int64>::type;
@@ -104,9 +104,9 @@ inline double expandRange(T r[2])
 
     T result;
     std::memcpy(&result, irange + 1, sizeof(T));
-    return static_cast<double>(result);
+    return static_cast<vtkm::Float64>(result);
   }
-  return static_cast<double>(r[1]);
+  return static_cast<vtkm::Float64>(r[1]);
 }
 
 inline vtkm::Range adjustRange(const vtkm::Range& r)
@@ -127,29 +127,30 @@ inline vtkm::Range adjustRange(const vtkm::Range& r)
   // to avoid loss of precision whenever possible. That is why
   // we only modify the Max value
   vtkm::Range result = r;
-  if (r.Min > static_cast<double>(std::numeric_limits<float>::lowest()) &&
-      r.Max < static_cast<double>(std::numeric_limits<float>::max()))
-  { //We've found it best to offset it in float space if the numbers
+  if (r.Min > static_cast<vtkm::Float64>(std::numeric_limits<vtkm::Float32>::lowest()) &&
+      r.Max < static_cast<vtkm::Float64>(std::numeric_limits<vtkm::Float32>::max()))
+  { //We've found it best to offset it in vtkm::Float32 space if the numbers
     //lay inside that representable range
-    float frange[2] = { static_cast<float>(r.Min), static_cast<float>(r.Max) };
+    vtkm::Float32 frange[2] = { static_cast<vtkm::Float32>(r.Min),
+                                static_cast<vtkm::Float32>(r.Max) };
     result.Max = expandRange(frange);
   }
   else
   {
-    double drange[2] = { r.Min, r.Max };
+    vtkm::Float64 drange[2] = { r.Min, r.Max };
     result.Max = expandRange(drange);
   }
   return result;
 }
 
 
-inline vtkm::Vec<float, 3> hsvTorgb(const vtkm::Vec<float, 3>& hsv)
+inline vtkm::Vec3f_32 hsvTorgb(const vtkm::Vec3f_32& hsv)
 {
-  vtkm::Vec<float, 3> rgb;
-  constexpr float onethird = 1.0f / 3.0f;
-  constexpr float onesixth = 1.0f / 6.0f;
-  constexpr float twothird = 2.0f / 3.0f;
-  constexpr float fivesixth = 5.0f / 6.0f;
+  vtkm::Vec3f_32 rgb;
+  constexpr vtkm::Float32 onethird = 1.0f / 3.0f;
+  constexpr vtkm::Float32 onesixth = 1.0f / 6.0f;
+  constexpr vtkm::Float32 twothird = 2.0f / 3.0f;
+  constexpr vtkm::Float32 fivesixth = 5.0f / 6.0f;
 
   // compute RGB from HSV
   if (hsv[0] > onesixth && hsv[0] <= onethird) // green/red
@@ -200,11 +201,11 @@ inline vtkm::Vec<float, 3> hsvTorgb(const vtkm::Vec<float, 3>& hsv)
   return rgb;
 }
 
-inline bool outside_vrange(double x)
+inline bool outside_vrange(vtkm::Float64 x)
 {
   return x < 0.0 || x > 1.0;
 }
-inline bool outside_vrange(float x)
+inline bool outside_vrange(vtkm::Float32 x)
 {
   return x < 0.0f || x > 1.0f;
 }
@@ -242,7 +243,88 @@ inline bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
   return outside_vrange(t) || outside_vrange(u) || outside_vrange(v) ||
     outside_range(std::forward<Args>(args)...);
 }
+
+template <typename T>
+inline vtkm::cont::ArrayHandle<T> buildSampleHandle(vtkm::Int32 numSamples,
+                                                    T start,
+                                                    T end,
+                                                    T inc,
+                                                    bool appendNanAndRangeColors)
+{
+
+  //number of samples + end + appendNanAndRangeColors
+  vtkm::Int32 allocationSize = (appendNanAndRangeColors) ? numSamples + 5 : numSamples + 1;
+
+  vtkm::cont::ArrayHandle<T> handle;
+  handle.Allocate(allocationSize);
+
+  auto portal = handle.WritePortal();
+  vtkm::Id index = 0;
+
+  //Insert the below range first
+  if (appendNanAndRangeColors)
+  {
+    portal.Set(index++, std::numeric_limits<T>::lowest()); //below
+  }
+
+  //add number of samples which doesn't account for the end
+  T value = start;
+  for (vtkm::Int32 i = 0; i < numSamples; ++i, ++index, value += inc)
+  {
+    portal.Set(index, value);
+  }
+  portal.Set(index++, end);
+
+  if (appendNanAndRangeColors)
+  {
+    //push back the last value again so that when lookups near the max value
+    //occur we don't need to clamp as if they are out-of-bounds they will
+    //land in the extra 'end' color
+    portal.Set(index++, end);
+    portal.Set(index++, std::numeric_limits<T>::max()); //above
+    portal.Set(index++, vtkm::Nan<T>());                //nan
+  }
+
+  return handle;
 }
+
+template <typename OutputColors>
+inline bool sampleColorTable(const vtkm::cont::ColorTable* self,
+                             vtkm::Int32 numSamples,
+                             OutputColors& colors,
+                             vtkm::Float64 tolerance,
+                             bool appendNanAndRangeColors)
+{
+  vtkm::Range r = self->GetRange();
+  //We want the samples to start at Min, and end at Max so that means
+  //we want actually to interpolate numSample - 1 values. For example
+  //for range 0 - 1, we want the values 0, 0.5, and 1.
+  const vtkm::Float64 d_samples = static_cast<vtkm::Float64>(numSamples - 1);
+  const vtkm::Float64 d_delta = r.Length() / d_samples;
+
+  if (r.Min > static_cast<vtkm::Float64>(std::numeric_limits<vtkm::Float32>::lowest()) &&
+      r.Max < static_cast<vtkm::Float64>(std::numeric_limits<vtkm::Float32>::max()))
+  {
+    //we can try and see if Float32 space has enough resolution
+    const vtkm::Float32 f_samples = static_cast<vtkm::Float32>(numSamples - 1);
+    const vtkm::Float32 f_start = static_cast<vtkm::Float32>(r.Min);
+    const vtkm::Float32 f_delta = static_cast<vtkm::Float32>(r.Length()) / f_samples;
+    const vtkm::Float32 f_end = f_start + (f_delta * f_samples);
+
+    if (vtkm::Abs(static_cast<vtkm::Float64>(f_end) - r.Max) <= tolerance &&
+        vtkm::Abs(static_cast<vtkm::Float64>(f_delta) - d_delta) <= tolerance)
+    {
+      auto handle =
+        buildSampleHandle((numSamples - 1), f_start, f_end, f_delta, appendNanAndRangeColors);
+      return vtkm::cont::ColorTableMap(handle, *self, colors);
+    }
+  }
+
+  //otherwise we need to use Float64 space
+  auto handle = buildSampleHandle((numSamples - 1), r.Min, r.Max, d_delta, appendNanAndRangeColors);
+  return vtkm::cont::ColorTableMap(handle, *self, colors);
+}
+} // anonymous namespace
 
 namespace vtkm
 {
@@ -1070,6 +1152,58 @@ bool ColorTable::FillOpacityTableFromDataPointer(vtkm::Int32 n, const vtkm::Floa
   this->Internals->OpacityArraysChanged = true;
   this->Internals->Modified();
   return true;
+}
+
+//---------------------------------------------------------------------------
+bool ColorTable::Sample(vtkm::Int32 numSamples,
+                        vtkm::cont::ColorTableSamplesRGBA& samples,
+                        vtkm::Float64 tolerance) const
+{
+  if (numSamples <= 1)
+  {
+    return false;
+  }
+  samples.NumberOfSamples = numSamples;
+  samples.SampleRange = this->GetRange();
+  return sampleColorTable(this, numSamples, samples.Samples, tolerance, true);
+}
+
+//---------------------------------------------------------------------------
+bool ColorTable::Sample(vtkm::Int32 numSamples,
+                        vtkm::cont::ColorTableSamplesRGB& samples,
+                        vtkm::Float64 tolerance) const
+{
+  if (numSamples <= 1)
+  {
+    return false;
+  }
+  samples.NumberOfSamples = numSamples;
+  samples.SampleRange = this->GetRange();
+  return sampleColorTable(this, numSamples, samples.Samples, tolerance, true);
+}
+
+//---------------------------------------------------------------------------
+bool ColorTable::Sample(vtkm::Int32 numSamples,
+                        vtkm::cont::ArrayHandle<vtkm::Vec4ui_8>& colors,
+                        vtkm::Float64 tolerance) const
+{
+  if (numSamples <= 1)
+  {
+    return false;
+  }
+  return sampleColorTable(this, numSamples, colors, tolerance, false);
+}
+
+//---------------------------------------------------------------------------
+bool ColorTable::Sample(vtkm::Int32 numSamples,
+                        vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& colors,
+                        vtkm::Float64 tolerance) const
+{
+  if (numSamples <= 1)
+  {
+    return false;
+  }
+  return sampleColorTable(this, numSamples, colors, tolerance, false);
 }
 
 //----------------------------------------------------------------------------

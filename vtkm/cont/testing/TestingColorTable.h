@@ -12,14 +12,12 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ColorTable.h>
+#include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ColorTableSamples.h>
 #include <vtkm/cont/testing/Testing.h>
 
 // Required for implementation of ArrayRangeCompute for "odd" arrays
 #include <vtkm/cont/ArrayRangeCompute.hxx>
-
-// Required for implementation of ColorTable
-#include <vtkm/cont/ColorTable.hxx>
 
 #include <algorithm>
 #include <iostream>
@@ -180,7 +178,7 @@ public:
     auto field = vtkm::cont::make_ArrayHandle({ -1, 0, 1, 2 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //verify that we clamp the values to the expected range
@@ -203,7 +201,7 @@ public:
     auto field = vtkm::cont::make_ArrayHandle({ -2, -1, 2, 3 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //verify that both the above and below range colors are used,
@@ -215,7 +213,7 @@ public:
     //verify that we can specify custom above and below range colors
     table.SetAboveRangeColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red
     table.SetBelowRangeColor(vtkm::Vec<float, 3>{ 0.0f, 0.0f, 1.0f }); //green
-    const bool ran2 = table.Map(field, colors);
+    const bool ran2 = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran2, "color table failed to execute");
     CheckColors(colors, { { 0, 0, 255 }, { 0, 255, 0 }, { 255, 0, 255 }, { 255, 0, 0 } });
   }
@@ -248,7 +246,7 @@ public:
     auto field = vtkm::cont::make_ArrayHandle({ 0, 10, 20, 30, 40, 50 });
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
-    const bool ran = newTable.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, newTable, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
@@ -280,7 +278,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle({ 10.0f, -5.0f, -15.0f });
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     CheckColors(colors, { { 0, 0, 128 }, { 0, 128, 255 }, { 128, 255, 255 } });
@@ -315,7 +313,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle({ 0, 10, 20, 30, 40, 50 });
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
@@ -356,7 +354,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle({ 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f });
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
@@ -371,7 +369,7 @@ public:
     std::cout << "  Change Color Space" << std::endl;
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors_rgb;
     table.SetColorSpace(vtkm::ColorSpace::RGB);
-    table.Map(field, colors_rgb);
+    vtkm::cont::ColorTableMap(field, table, colors_rgb);
 
     CheckColors(colors_rgb,
                 { { 0, 0, 255 },
@@ -411,7 +409,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle({ 0.0f, 10.0f, 20.0f, 30.0f, 40.0f, 50.0f });
-    const bool ran = table.Map(field, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, table, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4
@@ -480,7 +478,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> colors;
     auto field = vtkm::cont::make_ArrayHandle({ -1, 0, 10, 20, 30, 40, 50, 60 });
-    const bool ran = table.Map(field, samples, colors);
+    const bool ran = vtkm::cont::ColorTableMap(field, samples, colors);
     VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
     //values confirmed with ParaView 5.4

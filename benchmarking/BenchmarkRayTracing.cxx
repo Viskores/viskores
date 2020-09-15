@@ -26,8 +26,6 @@
 
 #include <vtkm/exec/FunctorBase.h>
 
-#include <vtkm/cont/ColorTable.hxx>
-
 #include <sstream>
 #include <string>
 #include <vector>
