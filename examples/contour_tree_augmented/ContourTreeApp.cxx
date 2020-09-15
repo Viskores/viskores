@@ -514,11 +514,7 @@ int main(int argc, char* argv[])
     prevTime = currTime;
 
     // swap dims order
-    {
-      vtkm::Id temp = dims[0];
-      dims[0] = dims[1];
-      dims[1] = temp;
-    }
+    std::swap(dims[0], dims[1]);
 
 #ifndef WITH_MPI // We only need the inDataSet if are not using MPI otherwise we'll constructe a multi-block dataset
     // build the input dataset
