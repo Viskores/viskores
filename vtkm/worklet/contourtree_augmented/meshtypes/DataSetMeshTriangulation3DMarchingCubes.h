@@ -194,13 +194,14 @@ void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
     + 2 * (this->MeshSize[0] - 2) * (this->MeshSize[2] - 2); // xz face interiors
   auto boundaryId = vtkm::cont::ArrayHandleIndex(numBoundary);
   ComputeMeshBoundary3D computeMeshBoundary3dWorklet;
-  this->Invoke(computeMeshBoundary3dWorklet,
-               boundaryId,        // input
-               this->SortIndices, // input
-               (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
-                                             : *meshBoundaryExecObj, // input
-               boundaryVertexArray,                                  // output
-               boundarySortIndexArray                                // output
+  vtkm::cont::Invoker invoke;
+  invoke(computeMeshBoundary3dWorklet,
+         boundaryId,        // input
+         this->SortIndices, // input
+         (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
+                                       : *meshBoundaryExecObj, // input
+         boundaryVertexArray,                                  // output
+         boundarySortIndexArray                                // output
   );
 }
 

@@ -145,13 +145,14 @@ void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(
   vtkm::Id numBoundary = 2 * this->MeshSize[1] + 2 * this->MeshSize[0] - 4;
   auto boundaryId = vtkm::cont::ArrayHandleIndex(numBoundary);
   ComputeMeshBoundary2D computeMeshBoundary2dWorklet;
-  this->Invoke(computeMeshBoundary2dWorklet,
-               boundaryId,        // input
-               this->SortIndices, // input
-               (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
-                                             : *meshBoundaryExecObj, // input
-               boundaryVertexArray,                                  // output
-               boundarySortIndexArray                                // output
+  vtkm::cont::Invoker invoke;
+  invoke(computeMeshBoundary2dWorklet,
+         boundaryId,        // input
+         this->SortIndices, // input
+         (meshBoundaryExecObj == NULL) ? this->GetMeshBoundaryExecutionObject()
+                                       : *meshBoundaryExecObj, // input
+         boundaryVertexArray,                                  // output
+         boundarySortIndexArray                                // output
   );
 }
 
