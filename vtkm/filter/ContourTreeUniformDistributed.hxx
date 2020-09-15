@@ -59,14 +59,20 @@
 // single-node augmented contour tree includes
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
 #include <vtkm/worklet/ContourTreeUniformAugmented.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 // distributed contour tree includes
-#include <vtkm/worklet/contourtree_distributed/BoundaryRestrictedAugmentedContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/BoundaryRestrictedAugmentedContourTreeMaker.h>
-#include <vtkm/worklet/contourtree_distributed/ContourTreeBlockData.h>
-#include <vtkm/worklet/contourtree_distributed/MergeBlockFunctor.h>
+#include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
+#include <vtkm/worklet/contourtree_distributed/BoundaryTreeMaker.h>
+#include <vtkm/worklet/contourtree_distributed/ComputeDistributedContourTreeFunctor.h>
+#include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/worklet/contourtree_distributed/PrintGraph.h>
 #include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
+#include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
 
 // DIY includes
 // clang-format off
@@ -82,6 +88,20 @@ namespace filter
 {
 namespace contourtree_distributed_detail
 {
+struct ComputeLocalTree
+{
+  template <typename T, typename Storage, typename DerivedPolicy>
+  void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field,
+                  ContourTreeUniformDistributed* self,
+                  const vtkm::Id blockIndex,
+                  const vtkm::cont::DataSet& inputData,
+                  const vtkm::filter::FieldMetadata& fieldMeta,
+                  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  {
+    self->ComputeLocalTree(blockIndex, inputData, field, fieldMeta, policy);
+  }
+};
+
 //----Helper struct to call DoPostExecute. This is used to be able to
 //    wrap the PostExecute work in a functor so that we can use VTK-M's
 //    vtkm::cont::CastAndCall to infer the FieldType template parameters
@@ -104,42 +124,71 @@ struct PostExecuteCaller
 
 
 //-----------------------------------------------------------------------------
-ContourTreeUniformDistributed::ContourTreeUniformDistributed(bool useMarchingCubes)
-  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
-  , UseMarchingCubes(useMarchingCubes)
-  , MultiBlockTreeHelper(nullptr)
-{
-  this->SetOutputFieldName("resultData");
-}
-
-void ContourTreeUniformDistributed::SetSpatialDecomposition(
+ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   vtkm::Id3 blocksPerDim,
   vtkm::Id3 globalSize,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes)
+  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+  bool useMarchingCubes)
+  : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
+  , UseMarchingCubes(useMarchingCubes)
+  , MultiBlockSpatialDecomposition(blocksPerDim,
+                                   globalSize,
+                                   localBlockIndices,
+                                   localBlockOrigins,
+                                   localBlockSizes)
+  , LocalMeshes(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalContourTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalBoundaryTrees(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
+  , LocalInteriorForests(static_cast<std::size_t>(localBlockSizes.GetNumberOfValues()))
 {
-  if (this->MultiBlockTreeHelper)
+  this->SetOutputFieldName("resultData");
+}
+
+template <typename DerivedPolicy>
+vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  // Time execution
+  vtkm::cont::Timer timer;
+  timer.Start();
+
+  for (vtkm::Id blockNo = 0; blockNo < input.GetNumberOfPartitions(); ++blockNo)
   {
-    this->MultiBlockTreeHelper.reset();
+    auto dataset = input.GetPartition(blockNo);
+    auto field = dataset.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    vtkm::filter::FieldMetadata metaData(field);
+
+    vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
+    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
+                            vtkm::filter::contourtree_distributed_detail::ComputeLocalTree{},
+                            this,
+                            blockNo,
+                            dataset,
+                            metaData,
+                            policy);
   }
-  this->MultiBlockTreeHelper =
-    std::unique_ptr<vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper>(
-      new vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper(
-        blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes));
+
+  // Print timing statistics
+  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+             std::endl
+               << "    " << std::setw(38) << std::left << "Contour Tree Filter PrepareForExecution"
+               << ": " << timer.GetElapsedTime() << " seconds");
+
+  return input; // TODO/FIXME: What to return?
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-vtkm::cont::DataSet ContourTreeUniformDistributed::DoExecute(
+void ContourTreeUniformDistributed::ComputeLocalTree(
+  const vtkm::Id blockIndex,
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  vtkm::cont::Timer timer;
-  timer.Start();
-
   // Check that the field is Ok
   if (fieldMeta.IsPointField() == false)
   {
@@ -151,58 +200,159 @@ vtkm::cont::DataSet ContourTreeUniformDistributed::DoExecute(
   const auto& cells = input.GetCellSet();
   vtkm::filter::ApplyPolicyCellSet(cells, policy, *this)
     .CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(), meshSize);
-  // TODO blockIndex needs to change if we have multiple blocks per MPI rank and DoExecute is called for multiple blocks
-  std::size_t blockIndex = 0;
 
-  // We always need to compute the fully augemented contour tree for our local data block
-  unsigned int compRegularStruct = 1;
+  // Create the mesh we need for the contour tree computation so that we have access to it
+  // afterwards to compute the BRACT for each data block as well
+  if (meshSize[2] == 1) // 2D mesh
+  {
+    vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation2DFreudenthal mesh(
+      vtkm::Id2{ meshSize[0], meshSize[1] });
+    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
+    this->ComputeLocalTreeImpl(
+      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+  }
+  else if (this->UseMarchingCubes) // 3D marching cubes mesh
+  {
+    vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
+    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
+    this->ComputeLocalTreeImpl(
+      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+  }
+  else // Regular 3D mesh
+  {
+    vtkm::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
+    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
+    this->ComputeLocalTreeImpl(
+      blockIndex, input, field, fieldMeta, policy, mesh, meshBoundaryExecObject);
+  }
+} // ContourTreeUniformDistributed::ComputeLocalTree
 
-  // Run the worklet
+//-----------------------------------------------------------------------------
+template <typename T,
+          typename StorageType,
+          typename DerivedPolicy,
+          typename MeshType,
+          typename MeshBoundaryExecType>
+void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
+  const vtkm::Id blockIndex,
+  const vtkm::cont::DataSet&, // input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata&,      // fieldMeta,
+  vtkm::filter::PolicyBase<DerivedPolicy>, // policy,
+  MeshType& mesh,
+  MeshBoundaryExecType& meshBoundaryExecObject)
+{
+  // We always need to compute the fully augmented contour tree for our local data block
+  const unsigned int compRegularStruct = 1;
+
+  // Set up the worklet
   vtkm::worklet::ContourTreeAugmented worklet;
   worklet.Run(field,
-              MultiBlockTreeHelper ? MultiBlockTreeHelper->LocalContourTrees[blockIndex]
-                                   : this->ContourTreeData,
-              MultiBlockTreeHelper ? MultiBlockTreeHelper->LocalSortOrders[blockIndex]
-                                   : this->MeshSortOrder,
+              mesh,
+              this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+              this->LocalMeshes[static_cast<std::size_t>(blockIndex)].SortOrder,
               this->NumIterations,
-              meshSize,
-              this->UseMarchingCubes,
-              compRegularStruct);
+              compRegularStruct,
+              meshBoundaryExecObject);
 
-  // If we run in parallel but with only one global block, then we need set our outputs correctly
-  // here to match the expected behavior in parallel
-  if (this->MultiBlockTreeHelper)
-  {
-    if (this->MultiBlockTreeHelper->GetGlobalNumberOfBlocks() == 1)
-    {
-      // Copy the contour tree and mesh sort order to the output
-      this->ContourTreeData = this->MultiBlockTreeHelper->LocalContourTrees[0];
-      this->MeshSortOrder = this->MultiBlockTreeHelper->LocalSortOrders[0];
-      // In parallel we need the sorted values as output resulti
-      // Construct the sorted values by permutting the input field
-      auto fieldPermutted = vtkm::cont::make_ArrayHandlePermutation(this->MeshSortOrder, field);
-      vtkm::cont::ArrayHandle<T> sortedValues;
-      vtkm::cont::Algorithm::Copy(fieldPermutted, sortedValues);
-      // Create the result object
-      vtkm::cont::DataSet result;
-      vtkm::cont::Field rfield(
-        this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, sortedValues);
-      result.AddField(rfield);
-      return result;
-    }
-  }
+  // Now we compute the BRACT for our data block. We do this here because we know the MeshType
+  // here and we don't need to store the mesh separately any more since it is stored in the BRACT
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Contour Tree Filter DoExecute"
-               << ": " << timer.GetElapsedTime() << " seconds");
+  // Get the mesh information needed to create an IdRelabeler to relable local to global ids
+  // Create an IdRelabeler since we are using a DataSetMesh type here, we don't need
+  // the IdRelabeler for the BRACT construction when we are using a ContourTreeMesh.
+  auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
+    this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockIndex),
+    this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockIndex),
+    this->MultiBlockSpatialDecomposition.GlobalSize);
+  // Initialize the BoundaryTreeMaker
+  auto boundaryTreeMaker =
+    vtkm::worklet::contourtree_distributed::BoundaryTreeMaker<MeshType, MeshBoundaryExecType>(
+      &mesh,                                                         // The input mesh
+      meshBoundaryExecObject,                                        // The mesh boundary
+      this->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // The contour tree
+      &this->LocalBoundaryTrees[static_cast<std::size_t>(
+        blockIndex)], // The boundary tree (a.k.a BRACT) to be computed
+      &this->LocalInteriorForests[static_cast<std::size_t>(
+        blockIndex)] // The interior forest (a.k.a. Residue) to be computed
+    );
+  // Execute the BRACT construction, including the compute of the InteriorForest
+  boundaryTreeMaker.Construct(&localToGlobalIdRelabeler);
 
-  // Construct the expected result for serial execution. Note, in serial the result currently
-  // not actually being used, but in parallel we need the sorted mesh values as output
-  // This part is being hit when we run in serial or parallel with more then one rank
-  return CreateResultFieldPoint(input, ContourTreeData.Arcs, this->GetOutputFieldName());
-} // ContourTreeUniformDistributed::DoExecute
 
+  // Print BRACT for debug
+  vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
+  char buffer[256];
+  std::snprintf(buffer,
+                sizeof(buffer),
+                "Rank_%d_Block_%d_Initial_BRACT.gv",
+                static_cast<int>(rank),
+                static_cast<int>(blockIndex));
+  std::ofstream os(buffer);
+  os << this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)].PrintGlobalDot(
+          "Before Fan In",
+          mesh,
+          field,
+          this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockIndex),
+          this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockIndex),
+          this->MultiBlockSpatialDecomposition.GlobalSize)
+     << std::endl;
+
+  // TODO: Fix calling conventions so dot print works here
+  // At this point, I'm reasonably certain that the contour tree has been computed regardless of data push/pull
+  // So although it might be logical to print things out earlier, I'll do it here
+  // save the regular structure
+  // TODO: Oliver Fix and renable the following print calls
+  /*
+	std::string regularStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + std::string("_Initial_Step_0_Contour_Tree_Regular_Structure.gv");
+	std::ofstream regularStructureFile(regularStructureFileName);
+	regularStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint<T, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType>
+																	(	std::string("Block ") + std::to_string(static_cast<std::size_t>(blockIndex)) + " Initial Step 0 Contour Tree Regular Structure", 
+																		this->LocalMeshes[static_cast<std::size_t>(blockIndex)],			
+																		this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+																		worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS);
+*/
+  /*
+	std::string superStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + std::string("_Initial_Step_1_Contour_Tree_Super_Structure.gv");
+	std::ofstream superStructureFile(superStructureFileName);
+  vtkm::Id ctPrintSettings = worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS|worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
+  std::string ctPrintLabel = std::string("Block ") + std::to_string(static_cast<size_t>(blockIndex)) + " Initial Step 1 Contour Tree Super Structure";
+	superStructureFile << vtkm::worklet::contourtree_distributed::ContourTreeDotGraphPrint<T, StorageType, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType>
+																	(	ctPrintLabel,
+																		dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+                                    &localToGlobalIdRelabeler,
+                                    field,
+																		this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+                                    ctPrintSettings);
+                                    
+	// save the Boundary Tree as a dot file
+	std::string boundaryTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<size_t>(blockIndex)) + std::string("_Initial_Step_3_Boundary_Tree.gv");
+	std::ofstream boundaryTreeFile(boundaryTreeFileName);
+	boundaryTreeFile << vtkm::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint
+																	(	std::string("Block ") + std::to_string(static_cast<size_t>(blockIndex)) + std::string(" Initial Step 3 Boundary Tree"),
+																		dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+                                    meshBoundaryExecObject,
+                                    this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+                                    &localToGlobalIdRelabeler,
+                                    field);
+
+	// and save the Interior Forest as another dot file
+	std::string interiorForestFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + std::string("_Initial_Step_4_Interior_Forest.gv");
+	std::ofstream interiorForestFile(interiorForestFileName);
+	interiorForestFile << worklet::contourtree_distributed::InteriorForestDotGraphPrint
+																	(	std::string("Block ") + std::to_string(rank) + " Initial Step 4 Interior Forest", 
+																		this->LocalInteriorForests[static_cast<std::size_t>(blockIndex)], 
+																		this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+																		this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+																		dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+                                    meshBoundaryExecObject,
+                                    &localToGlobalIdRelabeler,
+                                    field);
+*/
+}
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
@@ -210,93 +360,109 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
   const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  if (this->MultiBlockTreeHelper)
+  if (vtkm::worklet::contourtree_distributed::SpatialDecomposition::GetGlobalNumberOfBlocks(
+        input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
   {
-    if (this->MultiBlockTreeHelper->GetGlobalNumberOfBlocks(input) !=
-        this->MultiBlockTreeHelper->GetGlobalNumberOfBlocks())
-    {
-      throw vtkm::cont::ErrorFilterExecution(
-        "Global number of block in MultiBlock dataset does not match the SpatialDecomposition");
-    }
-    if (this->MultiBlockTreeHelper->GetLocalNumberOfBlocks() != input.GetNumberOfPartitions())
-    {
-      throw vtkm::cont::ErrorFilterExecution(
-        "Global number of block in MultiBlock dataset does not match the SpatialDecomposition");
-    }
+    throw vtkm::cont::ErrorFilterExecution(
+      "Global number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
+  }
+  if (this->MultiBlockSpatialDecomposition.GetLocalNumberOfBlocks() !=
+      input.GetNumberOfPartitions())
+  {
+    throw vtkm::cont::ErrorFilterExecution(
+      "Local number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
   }
 }
 
-
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
+template <typename FieldType, typename StorageType, typename DerivedPolicy>
 VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   const vtkm::cont::PartitionedDataSet& input,
-  vtkm::cont::PartitionedDataSet& output,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::cont::ArrayHandle<T, StorageType>&, // dummy parameter to get the type
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+  vtkm::cont::PartitionedDataSet&,                        // temporarily commented out: output,
+  const vtkm::filter::FieldMetadata&,                     // dummy parameter for field meta data
+  const vtkm::cont::ArrayHandle<FieldType, StorageType>&, // dummy parameter to get the type
+  vtkm::filter::PolicyBase<DerivedPolicy>)                // dummy parameter for policy
 {
-  (void)fieldMeta; // avoid unused parameter warning
-  (void)policy;    // avoid unused parameter warning
-
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id size = comm.size();
   vtkm::Id rank = comm.rank();
 
-  std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>*> localContourTreeMeshes;
-  localContourTreeMeshes.resize(static_cast<std::size_t>(input.GetNumberOfPartitions()));
-  // TODO need to allocate and free these ourselves. May need to update detail::MultiBlockContourTreeHelper::ComputeLocalContourTreeMesh
-  std::vector<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<T>*> localDataBlocks;
-  localDataBlocks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
-  std::vector<vtkmdiy::Link*> localLinks; // dummy links needed to make DIY happy
-  localLinks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
-  // TODO Check setting. In parallel we should need to augment the tree in order to be able to do the merging
-  unsigned int compRegularStruct = 1;
+  std::vector<vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*>
+    localDataBlocks(static_cast<size_t>(input.GetNumberOfPartitions()), nullptr);
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
-    // create the local contour tree mesh
-    localLinks[bi] = new vtkmdiy::Link;
+    // Create the local data block structure and set extents
+    localDataBlocks[bi] =
+      new vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>();
+    localDataBlocks[bi]->BlockIndex = static_cast<vtkm::Id>(bi);
+    localDataBlocks[bi]->BlockOrigin =
+      this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
+        static_cast<vtkm::Id>(bi));
+    localDataBlocks[bi]->BlockSize =
+      this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+        static_cast<vtkm::Id>(bi));
+
+    // Save local tree information for fan out FIXME: Try to avoid copy
+    localDataBlocks[bi]->ContourTrees.push_back(this->LocalContourTrees[bi]);
+    localDataBlocks[bi]->InteriorForests.push_back(this->LocalInteriorForests[bi]);
+
+    // ... Compute arrays needed for constructing contour tree mesh
+    const auto sortOrder = this->LocalMeshes[bi].SortOrder;
+    // ... Compute the global mesh index for the partially augmented contour tree. I.e., here we
+    // don't need the global mesh index for all nodes, but only for the augmented nodes from the
+    // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
+    // GlobalMeshIndex by tranforming those indices with our IdRelabler
+    vtkm::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
+    vtkm::cont::ArrayHandlePermutation<vtkm::worklet::contourtree_augmented::IdArrayType,
+                                       vtkm::worklet::contourtree_augmented::IdArrayType>
+      permutedSortOrder(this->LocalBoundaryTrees[bi].VertexIndex, sortOrder);
+    auto transformedIndex = vtkm::cont::make_ArrayHandleTransform(
+      permutedSortOrder,
+      vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
+        this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
+          static_cast<vtkm::Id>(bi)),
+        this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
+          static_cast<vtkm::Id>(bi)),
+        this->MultiBlockSpatialDecomposition.GlobalSize));
+    vtkm::cont::Algorithm::Copy(transformedIndex, localGlobalMeshIndex);
+
+    // ... get data values
     auto currBlock = input.GetPartition(static_cast<vtkm::Id>(bi));
     auto currField =
       currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    //const vtkm::cont::ArrayHandle<T,StorageType> &fieldData = currField.GetData().Cast<vtkm::cont::ArrayHandle<T,StorageType> >();
-    vtkm::cont::ArrayHandle<T> fieldData;
-    vtkm::cont::ArrayCopy(currField.GetData().AsVirtual<T>(), fieldData);
-    auto currContourTreeMesh = vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper::
-      ComputeLocalContourTreeMesh<T>(
-        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal()
-          .Get(static_cast<vtkm::Id>(bi)),
-        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
-          static_cast<vtkm::Id>(bi)),
-        this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize,
-        fieldData,
-        MultiBlockTreeHelper->LocalContourTrees[bi],
-        MultiBlockTreeHelper->LocalSortOrders[bi],
-        compRegularStruct);
-    localContourTreeMeshes[bi] = currContourTreeMesh;
-    // create the local data block structure
-    localDataBlocks[bi] = new vtkm::worklet::contourtree_distributed::ContourTreeBlockData<T>();
-    localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
-    // FIXME: Commented out to avoid compile error, full fix to follow in subsequent merge request
-    // localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
-    localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
-    localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->GlobalMeshIndex;
-    localDataBlocks[bi]->Neighbours = currContourTreeMesh->Neighbours;
-    localDataBlocks[bi]->FirstNeighbour = currContourTreeMesh->FirstNeighbour;
-    localDataBlocks[bi]->MaxNeighbours = currContourTreeMesh->MaxNeighbours;
-    localDataBlocks[bi]->BlockOrigin =
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
-        static_cast<vtkm::Id>(bi));
-    localDataBlocks[bi]->BlockSize =
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(
-        static_cast<vtkm::Id>(bi));
-    localDataBlocks[bi]->GlobalSize =
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;
-    // We need to augment at least with the boundary vertices when running in parallel
-    localDataBlocks[bi]->ComputeRegularStructure = compRegularStruct;
-  }
-  // Setup vtkmdiy to do global binary reduction of neighbouring blocks. See also RecuctionOperation struct for example
+    vtkm::cont::ArrayHandle<FieldType> fieldData;
+    vtkm::cont::ArrayCopy(currField.GetData().template AsVirtual<FieldType>(), fieldData);
 
+    // ... compute and store the actual mesh
+    localDataBlocks[bi]->ContourTreeMeshes.emplace_back(this->LocalBoundaryTrees[bi].VertexIndex,
+                                                        this->LocalBoundaryTrees[bi].Superarcs,
+                                                        sortOrder,
+                                                        fieldData,
+                                                        localGlobalMeshIndex);
+
+    // ... save for debugging in text and .gv/.dot format
+    char buffer[256];
+    std::snprintf(buffer,
+                  sizeof(buffer),
+                  "Rank_%d_Block_%d_Initial_Step_3_BRACT_Mesh.txt",
+                  static_cast<int>(rank),
+                  static_cast<int>(bi));
+    localDataBlocks[bi]->ContourTreeMeshes.back().Save(buffer);
+
+    // save the corresponding .gv file
+    std::string boundaryTreeMeshFileName = std::string("Rank_") +
+      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+      std::to_string(static_cast<int>(bi)) + std::string("_Initial_Step_5_BRACT_Mesh.gv");
+    std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
+    boundaryTreeMeshFile
+      << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
+           std::string("Block ") + std::to_string(static_cast<int>(rank)) +
+             std::string(" Initial Step 5 BRACT Mesh"),
+           localDataBlocks[bi]->ContourTreeMeshes.back(),
+           worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
+  }
+
+  // Setup vtkmdiy to do global binary reduction of neighbouring blocks. See also RecuctionOperation struct for example
   // Create the vtkmdiy master
   vtkmdiy::Master master(comm,
                          1, // Use 1 thread, VTK-M will do the treading
@@ -305,7 +471,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // Compute the gids for our local blocks
   const vtkm::worklet::contourtree_distributed::SpatialDecomposition& spatialDecomp =
-    this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition;
+    this->MultiBlockSpatialDecomposition;
   auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
   std::vector<vtkm::Id> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
@@ -325,9 +491,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>::coords_to_gid(tempCoords, tempDivisions);
   }
 
+  std::vector<vtkmdiy::Link*> localLinks(static_cast<std::vector<vtkmdiy::Link>::size_type>(
+    input.GetNumberOfPartitions())); // dummy links needed to make DIY happy
   // Add my local blocks to the vtkmdiy master.
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
+    localLinks[bi] = new vtkmdiy::Link;
     master.add(static_cast<int>(vtkmdiyLocalBlockGids[bi]), // block id
                localDataBlocks[bi],
                localLinks[bi]);
@@ -348,87 +517,168 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                       static_cast<int>(vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]));
   }
 
-  // Fix the vtkmdiy links. TODO Remove changes to the vtkmdiy in VTKM when we update to the new VTK-M
+  // Fix the vtkmdiy links.
   vtkmdiy::fix_links(master, assigner);
 
   // partners for merge over regular block grid
-  vtkmdiy::RegularMergePartners partners(
+  vtkmdiy::RegularSwapPartners partners(
     decomposer, // domain decomposition
     2,          // raix of k-ary reduction. TODO check this value
     true        // contiguous: true=distance doubling , false=distnace halving TODO check this value
   );
   // reduction
-  vtkmdiy::reduce(
-    master, assigner, partners, &vtkm::worklet::contourtree_distributed::MergeBlockFunctor<T>);
+  const vtkm::worklet::contourtree_distributed::ComputeDistributedContourTreeFunctor<FieldType>
+    computeDistributedContourTreeFunctor{ this->MultiBlockSpatialDecomposition.GlobalSize };
+  vtkmdiy::reduce(master, assigner, partners, computeDistributedContourTreeFunctor);
 
   comm.barrier(); // Be safe!
 
-  if (rank == 0)
-  {
-    // Now run the contour tree algorithm on the last block to compute the final tree
-    vtkm::Id currNumIterations;
-    vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
-    vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
-    vtkm::worklet::ContourTreeAugmented worklet;
-    vtkm::cont::ArrayHandle<T> currField;
-    // Construct the contour tree mesh from the last block
-    vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
-    contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
-    // FIXME: Commented out to avoid compile error, full fix to follow in subsequent merge request
-    // contourTreeMeshOut.SortOrder = localDataBlocks[0]->SortOrder;
-    contourTreeMeshOut.SortedValues = localDataBlocks[0]->SortedValue;
-    contourTreeMeshOut.GlobalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
-    contourTreeMeshOut.Neighbours = localDataBlocks[0]->Neighbours;
-    contourTreeMeshOut.FirstNeighbour = localDataBlocks[0]->FirstNeighbour;
-    contourTreeMeshOut.MaxNeighbours = localDataBlocks[0]->MaxNeighbours;
-    // Construct the mesh boundary exectuion object needed for boundary augmentation
-    vtkm::Id3 minIdx(0, 0, 0);
-    vtkm::Id3 maxIdx = this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;
-    maxIdx[0] = maxIdx[0] - 1;
-    maxIdx[1] = maxIdx[1] - 1;
-    maxIdx[2] = maxIdx[2] > 0 ? (maxIdx[2] - 1) : 0;
-    auto meshBoundaryExecObj = contourTreeMeshOut.GetMeshBoundaryExecutionObject(
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize, minIdx, maxIdx);
-    // Run the worklet to compute the final contour tree
-    worklet.Run(
-      contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep API happy
-      contourTreeMeshOut,
-      this->ContourTreeData,
-      this->MeshSortOrder,
-      currNumIterations,
-      compRegularStruct,
-      meshBoundaryExecObj);
+  master.foreach ([&](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<
+                        FieldType>* b,
+                      const vtkmdiy::Master::ProxyWithLink&) {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Fan In Complete" << std::endl
+                                 << "# of CTs: " << b->ContourTrees.size() << std::endl
+                                 << "# of CTMs: " << b->ContourTreeMeshes.size() << std::endl
+                                 << "# of IFs: " << b->InteriorForests.size() << std::endl);
 
-    // Set the final mesh sort order we need to use
-    this->MeshSortOrder = contourTreeMeshOut.GlobalMeshIndex;
-    // Remeber the number of iterations for the output
-    this->NumIterations = currNumIterations;
+    char buffer[256];
+    std::snprintf(buffer,
+                  sizeof(buffer),
+                  "AfterFanInResults_Rank%d_Block%d.txt",
+                  static_cast<int>(rank),
+                  static_cast<int>(b->BlockIndex));
+    std::ofstream os(buffer);
+    os << "Contour Trees" << std::endl;
+    os << "=============" << std::endl;
+    for (const auto& ct : b->ContourTrees)
+      ct.PrintContent(os);
+    os << std::endl;
+    os << "Contour Tree Meshes" << std::endl;
+    os << "===================" << std::endl;
+    for (const auto& cm : b->ContourTreeMeshes)
+      cm.PrintContent(os);
+    os << std::endl;
+    os << "Interior Forests" << std::endl;
+    os << "===================" << std::endl;
+    for (const auto& info : b->InteriorForests)
+      info.PrintContent(os);
+    os << std::endl;
 
-    // Return the sorted values of the contour tree as the result
-    // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
-    vtkm::cont::DataSet temp;
-    vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                             vtkm::cont::Field::Association::WHOLE_MESH,
-                             contourTreeMeshOut.SortedValues);
-    temp.AddField(rfield);
-    output = vtkm::cont::PartitionedDataSet(temp);
-  }
-  else
-  {
-    this->ContourTreeData = MultiBlockTreeHelper->LocalContourTrees[0];
-    this->MeshSortOrder = MultiBlockTreeHelper->LocalSortOrders[0];
+    // Fan out
+    auto nRounds = b->ContourTrees.size() - 1;
 
-    // Free allocated temporary pointers
-    for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Fan out. nRounds=" << nRounds);
+    vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> hierarchicalTree;
+    hierarchicalTree.Initialize(
+      static_cast<vtkm::Id>(nRounds), b->ContourTrees[nRounds], b->ContourTreeMeshes[nRounds - 1]);
+
+    // TODO: GET THIS COMPILING
+    // save the corresponding .gv file
+    // 		std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
+    // 		std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
+    // 		hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
+    // 								(	std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
+    //  								vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
+    // 								);
+
+    for (auto round = nRounds - 1; round > 0; round--)
     {
-      delete localContourTreeMeshes[bi];
-      delete localDataBlocks[bi];
-      // delete localLinks[bi];
+      vtkm::worklet::contourtree_distributed::
+        TreeGrafter<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>, FieldType>
+          grafter(&(b->ContourTreeMeshes[round - 1]),
+                  b->ContourTrees[round],
+                  &(b->InteriorForests[round]));
+      grafter.GraftInteriorForests(static_cast<vtkm::Id>(round),
+                                   hierarchicalTree,
+                                   b->ContourTreeMeshes[round - 1].SortedValues);
+      // TODO: GET THIS COMPILING
+      // save the corresponding .gv file
+      // 		std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
+      // 		std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
+      // 		hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
+      // 								(	std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
+      //  								vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
+      // 								);
     }
-  }
-  localContourTreeMeshes.clear();
-  localDataBlocks.clear();
-  localLinks.clear();
+
+    // bottom level
+    vtkm::worklet::contourtree_distributed::
+      TreeGrafter<vtkm::worklet::contourtree_augmented::DataSetMesh, FieldType>
+        grafter(&(this->LocalMeshes[static_cast<std::size_t>(b->BlockIndex)]),
+                b->ContourTrees[0],
+                &(b->InteriorForests[0]));
+    auto currBlock = input.GetPartition(b->BlockIndex);
+    auto currField =
+      currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    vtkm::cont::ArrayHandle<FieldType> fieldData;
+    vtkm::cont::ArrayCopy(currField.GetData().template AsVirtual<FieldType>(), fieldData);
+    auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
+      this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(b->BlockIndex),
+      this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(b->BlockIndex),
+      this->MultiBlockSpatialDecomposition.GlobalSize);
+    grafter.GraftInteriorForests(0, hierarchicalTree, fieldData, &localToGlobalIdRelabeler);
+
+    // TODO: GET THIS COMPILING
+    // save the corresponding .gv file
+    // 		std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
+    // 		std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
+    // 		hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
+    // 								(	std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
+    //  								vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
+    // 								);
+  });
+
+  // FIXME: The following is still old code and needs to be changed!!!
+
+#if 0
+  // Now run the contour tree algorithm on the last block to compute the final tree
+  vtkm::Id currNumIterations;
+  vtkm::worklet::contourtree_augmented::ContourTree currContourTree;
+  vtkm::worklet::contourtree_augmented::IdArrayType currSortOrder;
+  vtkm::worklet::ContourTreeAugmented worklet;
+  vtkm::cont::ArrayHandle<T> currField;
+  // Construct the mesh boundary exectuion object needed for boundary augmentation
+  vtkm::Id3 minIdx(0, 0, 0);
+  vtkm::Id3 maxIdx = this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize;
+  maxIdx[0] = maxIdx[0] - 1;
+  maxIdx[1] = maxIdx[1] - 1;
+  maxIdx[2] = maxIdx[2] > 0 ? (maxIdx[2] - 1) : 0;
+  // TODO Check setting. In parallel we should need to augment the tree in order to be able to do the merging
+  const unsigned int computeRegularStructure = 1;
+  auto meshBoundaryExecObj = localDataBlocks[0]->ContourTreeMeshes.back().GetMeshBoundaryExecutionObject(
+    this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize[0],
+    this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize[1],
+    minIdx,
+    maxIdx);
+  // Run the worklet to compute the final contour tree
+  worklet.Run(
+    localDataBlocks[0]->ContourTreeMeshes.back().SortedValues, // Unused param. Provide something to keep API happy
+    localDataBlocks[0]->ContourTreeMeshes.back(),
+    this->ContourTreeData,
+    this->MeshSortOrder,
+    currNumIterations,
+    computeRegularStructure,
+    meshBoundaryExecObj);
+
+  // Set the final mesh sort order we need to use
+  this->MeshSortOrder = localDataBlocks[0]->ContourTreeMeshes.back().GlobalMeshIndex;
+  // Remeber the number of iterations for the output
+  this->NumIterations = currNumIterations;
+
+  // Return the sorted values of the contour tree as the result
+  // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
+  vtkm::cont::DataSet temp;
+  vtkm::cont::Field rfield(this->GetOutputFieldName(),
+                           vtkm::cont::Field::Association::WHOLE_MESH,
+                           localDataBlocks[0]->ContourTreeMeshes.back().SortedValues);
+  temp.AddField(rfield);
+  output = vtkm::cont::PartitionedDataSet(temp);
+  /* Not necessary?
+  this->ContourTreeData = MultiBlockTreeHelper->LocalContourTrees[0];
+  this->MeshSortOrder = MultiBlockTreeHelper->LocalSortOrders[0];
+  */
+#endif
 }
 
 
@@ -439,36 +689,32 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
   vtkm::cont::PartitionedDataSet& result,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  if (this->MultiBlockTreeHelper)
+  vtkm::cont::Timer timer;
+  timer.Start();
+  // We are running in parallel and need to merge the contour tree in PostExecute
+  // TODO/FIXME: Make sure this still makes sense
+  if (this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks() == 1)
   {
-    vtkm::cont::Timer timer;
-    timer.Start();
-    // We are running in parallel and need to merge the contour tree in PostExecute
-    if (MultiBlockTreeHelper->GetGlobalNumberOfBlocks() == 1)
-    {
-      return;
-    }
-    auto field =
-      input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    vtkm::filter::FieldMetadata metaData(field);
-
-    vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
-                            vtkm::filter::contourtree_distributed_detail::PostExecuteCaller{},
-                            this,
-                            input,
-                            result,
-                            metaData,
-                            policy);
-
-    this->MultiBlockTreeHelper.reset();
-    VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-               std::endl
-                 << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
-                 << ": " << timer.GetElapsedTime() << " seconds");
+    return;
   }
-}
+  auto field = // TODO/FIXME: Correct for more than one block per rank?
+    input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+  vtkm::filter::FieldMetadata metaData(field);
 
+  vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
+                          vtkm::filter::contourtree_distributed_detail::PostExecuteCaller{},
+                          this,
+                          input,
+                          result,
+                          metaData,
+                          policy);
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+             std::endl
+               << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
+               << ": " << timer.GetElapsedTime() << " seconds");
+}
 
 } // namespace filter
 } // namespace vtkm::filter

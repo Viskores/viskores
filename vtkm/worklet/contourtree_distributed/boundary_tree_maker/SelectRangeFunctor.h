@@ -50,18 +50,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_select_range_functor_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_select_range_functor_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
 
 namespace vtkm
 {
@@ -69,73 +62,38 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct ContourTreeBlockData
+namespace bract_maker
 {
-  static void* create() { return new ContourTreeBlockData<FieldType>; }
-  static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
 
-  // ContourTreeMesh data
-  vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
-  vtkm::cont::ArrayHandle<FieldType> SortedValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
+//Simple functor to subset a VTKm ArrayHandle
+class SelectRangeFunctor
+{
+public:
+  VTKM_EXEC_CONT
+  SelectRangeFunctor() {}
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin;                // Origin of the data block
-  vtkm::Id3 BlockSize;                  // Extends of the data block
-  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
-  unsigned int ComputeRegularStructure; // pass through augmentation setting
+  VTKM_EXEC_CONT
+  SelectRangeFunctor(const vtkm::worklet::contourtree_augmented::IdArrayType& dataArray,
+                     vtkm::Id startIndex)
+    : DataArray(dataArray)
+    , StartIndex(startIndex)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(const vtkm::Id index) const
+  {
+    return this->DataArray.ReadPortal().Get(this->StartIndex + index);
+  }
+
+private:
+  vtkm::worklet::contourtree_augmented::IdArrayType DataArray;
+  vtkm::Id StartIndex;
 };
+
+} // namespace bract_maker
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>>
-{
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortedValue);
-    vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
-    vtkmdiy::save(bb, block.BlockOrigin);
-    vtkmdiy::save(bb, block.BlockSize);
-    vtkmdiy::save(bb, block.GlobalSize);
-    vtkmdiy::save(bb, block.ComputeRegularStructure);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortedValue);
-    vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
-    vtkmdiy::load(bb, block.BlockOrigin);
-    vtkmdiy::load(bb, block.BlockSize);
-    vtkmdiy::load(bb, block.GlobalSize);
-    vtkmdiy::load(bb, block.ComputeRegularStructure);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
 
 #endif

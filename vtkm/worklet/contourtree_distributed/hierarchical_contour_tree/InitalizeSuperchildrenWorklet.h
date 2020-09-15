@@ -50,18 +50,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_initialize_superchildren_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_contour_tree_initialize_superchildren_worklet_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
 
 namespace vtkm
 {
@@ -69,73 +62,61 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct ContourTreeBlockData
+
+/// Compute the superarc "to" for every bract node
+/// Part of the BoundaryRestrictedAugmentedContourTree.FindBractSuperarcs function
+class InitalizeSuperchildrenWorklet : public vtkm::worklet::WorkletMapField
 {
-  static void* create() { return new ContourTreeBlockData<FieldType>; }
-  static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
+public:
+  using ControlSignature = void(FieldIn hyperarcs,       // input
+                                WholeArrayIn hypernodes, // input
+                                FieldOut superchildren   // output
+  );
+  using ExecutionSignature = _3(InputIndex, _1, _2);
+  using InputDomain = _1;
 
-  // ContourTreeMesh data
-  vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
-  vtkm::cont::ArrayHandle<FieldType> SortedValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
+  // Default Constructor
+  VTKM_EXEC_CONT
+  InitalizeSuperchildrenWorklet() {}
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin;                // Origin of the data block
-  vtkm::Id3 BlockSize;                  // Extends of the data block
-  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
-  unsigned int ComputeRegularStructure; // pass through augmentation setting
-};
+  template <typename InFieldPortalType>
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& hyperarc,
+                                const vtkm::Id& hyperarcVal,
+                                const InFieldPortalType& hypernodesPortal) const
+  {
+    // per hyperarc
+    // test for root element
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(hyperarcVal))
+    {
+      // root has one superchild: the root supernode
+      return static_cast<vtkm::Id>(1);
+    }
+    else
+    {
+      // otherwise, compute a delta
+      return hypernodesPortal.Get(hyperarc + 1) - hypernodesPortal.Get(hyperarc);
+    }
+
+    // In serial this worklet implements the following operation
+    /*
+     for (indexType hyperarc = 0; hyperarc < hyperarcs.size(); hyperarc++)
+      { // per hyperarc
+      // test for root element
+      if (noSuchElement(hyperarcs[hyperarc]))
+        // root has one superchild: the root supernode
+        superchildren[hyperarc] = 1;
+      else
+        // otherwise, compute a delta
+        superchildren[hyperarc] = hypernodes[hyperarc+1] - hypernodes[hyperarc];
+      } // per hyperarc
+    */
+  } // operator()()
+
+}; // InitalizeSuperchildrenWorklet
+
+
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>>
-{
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortedValue);
-    vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
-    vtkmdiy::save(bb, block.BlockOrigin);
-    vtkmdiy::save(bb, block.BlockSize);
-    vtkmdiy::save(bb, block.GlobalSize);
-    vtkmdiy::save(bb, block.ComputeRegularStructure);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortedValue);
-    vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
-    vtkmdiy::load(bb, block.BlockOrigin);
-    vtkmdiy::load(bb, block.BlockSize);
-    vtkmdiy::load(bb, block.GlobalSize);
-    vtkmdiy::load(bb, block.ComputeRegularStructure);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
 
 #endif

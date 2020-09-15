@@ -854,7 +854,7 @@ int main(int argc, char* argv[])
     ctaug_ns::EdgePairArray saddlePeak;
     ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(
       filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
-    ctaug_ns::PrintEdgePairArray(saddlePeak);
+    ctaug_ns::PrintEdgePairArrayColumnLayout(saddlePeak, std::cout);
   }
 
 #ifdef WITH_MPI

@@ -55,6 +55,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -70,26 +71,22 @@ namespace worklet
 namespace contourtree_distributed
 {
 template <typename FieldType>
-struct ContourTreeBlockData
+struct DistributedContourTreeBlockData
 {
-  static void* create() { return new ContourTreeBlockData<FieldType>; }
-  static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
+  static void* create() { return new DistributedContourTreeBlockData<FieldType>; }
+  static void destroy(void* b)
+  {
+    delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
+  }
 
-  // ContourTreeMesh data
-  vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
-  vtkm::cont::ArrayHandle<FieldType> SortedValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
+  vtkm::Id BlockIndex;
+  std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
+  std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
+  std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> InteriorForests;
 
   // Block metadata
-  vtkm::Id3 BlockOrigin;                // Origin of the data block
-  vtkm::Id3 BlockSize;                  // Extends of the data block
-  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
-  unsigned int ComputeRegularStructure; // pass through augmentation setting
+  vtkm::Id3 BlockOrigin; // Origin of the data block
+  vtkm::Id3 BlockSize;   // Extends of the data block
 };
 } // namespace contourtree_distributed
 } // namespace worklet
@@ -99,39 +96,32 @@ struct ContourTreeBlockData
 namespace vtkmdiy
 {
 
-// Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
+// Struct to serialize ContourTreeMesh objects (i.e., load/save) needed in parralle for DIY
 template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>>
+struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>>
 {
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
+  static void save(vtkmdiy::BinaryBuffer& bb,
+                   const vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
   {
-    vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortedValue);
-    vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
-    vtkmdiy::save(bb, block.BlockOrigin);
-    vtkmdiy::save(bb, block.BlockSize);
-    vtkmdiy::save(bb, block.GlobalSize);
-    vtkmdiy::save(bb, block.ComputeRegularStructure);
+    vtkmdiy::save(bb, ctm.NumVertices);
+    //vtkmdiy::save(bb, ctm.SortOrder);
+    vtkmdiy::save(bb, ctm.SortedValues);
+    vtkmdiy::save(bb, ctm.GlobalMeshIndex);
+    vtkmdiy::save(bb, ctm.Neighbours);
+    vtkmdiy::save(bb, ctm.FirstNeighbour);
+    vtkmdiy::save(bb, ctm.MaxNeighbours);
   }
 
   static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
+                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
   {
-    vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortedValue);
-    vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
-    vtkmdiy::load(bb, block.BlockOrigin);
-    vtkmdiy::load(bb, block.BlockSize);
-    vtkmdiy::load(bb, block.GlobalSize);
-    vtkmdiy::load(bb, block.ComputeRegularStructure);
+    vtkmdiy::load(bb, ctm.NumVertices);
+    //vtkmdiy::load(bb, ctm.SortOrder);
+    vtkmdiy::load(bb, ctm.SortedValues);
+    vtkmdiy::load(bb, ctm.GlobalMeshIndex);
+    vtkmdiy::load(bb, ctm.Neighbours);
+    vtkmdiy::load(bb, ctm.FirstNeighbour);
+    vtkmdiy::load(bb, ctm.MaxNeighbours);
   }
 };
 

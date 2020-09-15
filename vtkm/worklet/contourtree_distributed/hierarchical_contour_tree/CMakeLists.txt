@@ -9,23 +9,10 @@
 ##============================================================================
 
 set(headers
-  ContourTreeBlockData.h
-  SpatialDecomposition.h
-  MultiBlockContourTreeHelper.h
-  MergeBlockFunctor.h
-  InteriorForest.h
-  BoundaryTree.h
-  BoundaryTreeMaker.h
-  HierarchicalContourTree.h
-  HierarchicalContourTreeDeviceData.h
-  TreeGrafter.h
-  ComputeDistributedContourTreeFunctor.h
-  DistributedContourTreeBlockData.h
-  PrintGraph.h
+  FindRegularByGlobal.h
+  FindSuperArcForUnknownNode.h
+  PermuteComparator.h
+  InitalizeSuperchildrenWorklet.h
 )
 
 vtkm_declare_headers(${headers})
-
-add_subdirectory(boundary_tree_maker)
-add_subdirectory(tree_grafter)
-add_subdirectory(hierarchical_contour_tree)

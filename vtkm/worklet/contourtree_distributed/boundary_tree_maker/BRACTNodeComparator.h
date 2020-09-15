@@ -50,17 +50,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_bract_node_comparator_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_bract_node_comparator_h
 
-#include <vtkm/Types.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
 
 
 namespace vtkm
@@ -69,73 +65,89 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct ContourTreeBlockData
+namespace bract_maker
 {
-  static void* create() { return new ContourTreeBlockData<FieldType>; }
-  static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
 
-  // ContourTreeMesh data
-  vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
-  vtkm::cont::ArrayHandle<FieldType> SortedValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin;                // Origin of the data block
-  vtkm::Id3 BlockSize;                  // Extends of the data block
-  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
-  unsigned int ComputeRegularStructure; // pass through augmentation setting
-};
+/// device implementation of the comparator used for sorting hyperarcs
+template <typename DeviceAdapter>
+class BRACTNodeComparatorImpl
+{
+public:
+  using IdArrayPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
+  using SortIndexPortalType = typename vtkm::cont::ArrayHandleVirtual<
+    vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  BRACTNodeComparatorImpl(const IdArrayPortalType& regularIdPortal,
+                          const SortIndexPortalType& meshSortIndexPortal)
+    : RegularIdPortal(regularIdPortal)
+    , MeshSortIndexPortal(meshSortIndexPortal)
+  { // constructor
+  } // constructor
+
+  // () operator - gets called to do comparison
+  VTKM_EXEC
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+  { // operator()
+    // retrieve the sort order
+    vtkm::Id sortIndexI = MeshSortIndexPortal.Get(RegularIdPortal.Get(i));
+    vtkm::Id sortIndexJ = MeshSortIndexPortal.Get(RegularIdPortal.Get(j));
+
+    // now test on that
+    if (sortIndexI < sortIndexJ)
+    {
+      return true;
+    }
+    else if (sortIndexJ < sortIndexI)
+    {
+      return false;
+    }
+
+    // fallback out of paranoia
+    return false;
+
+  } // operator()
+
+private:
+  IdArrayPortalType RegularIdPortal;
+  SortIndexPortalType MeshSortIndexPortal;
+}; // BRACTNodeComparatorImpl
+
+/// comparator used to compare hyperarcs for sort
+class BRACTNodeComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor - takes vectors as parameters
+  VTKM_CONT
+  BRACTNodeComparator(const vtkm::worklet::contourtree_augmented::IdArrayType& regularId,
+                      const vtkm::cont::ArrayHandleVirtual<vtkm::Id>& meshSortIndex)
+    : RegularId(regularId)
+    , MeshSortIndex(meshSortIndex)
+  { // constructor
+  } // constructor
+
+  template <typename DeviceAdapter>
+  VTKM_CONT BRACTNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+    DeviceAdapter device,
+    vtkm::cont::Token& token) const
+  {
+    return BRACTNodeComparatorImpl<DeviceAdapter>(
+      this->RegularId.PrepareForInput(device, token),
+      this->MeshSortIndex.PrepareForInput(device, token));
+  }
+
+private:
+  vtkm::worklet::contourtree_augmented::IdArrayType RegularId;
+  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
+  vtkm::cont::ArrayHandleVirtual<vtkm::Id> MeshSortIndex;
+}; // BRACTNodeComparator
+
+} // namespace bract_maker
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>>
-{
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortedValue);
-    vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
-    vtkmdiy::save(bb, block.BlockOrigin);
-    vtkmdiy::save(bb, block.BlockSize);
-    vtkmdiy::save(bb, block.GlobalSize);
-    vtkmdiy::save(bb, block.ComputeRegularStructure);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortedValue);
-    vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
-    vtkmdiy::load(bb, block.BlockOrigin);
-    vtkmdiy::load(bb, block.BlockSize);
-    vtkmdiy::load(bb, block.GlobalSize);
-    vtkmdiy::load(bb, block.ComputeRegularStructure);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
 
 #endif

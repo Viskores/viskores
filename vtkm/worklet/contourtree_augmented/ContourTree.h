@@ -166,10 +166,10 @@ public:
   inline void Init(vtkm::Id dataSize);
 
   // debug routine
-  inline void DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  inline std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
 
   // print contents
-  inline void PrintContent() const;
+  inline void PrintContent(std::ostream& outStream = std::cout) const;
 
   // print routines
   inline void PrintDotSuperStructure() const;
@@ -201,49 +201,47 @@ void ContourTree::Init(vtkm::Id dataSize)
 } // Init()
 
 
-inline void ContourTree::PrintContent() const
+inline void ContourTree::PrintContent(std::ostream& outStream /*= std::cout*/) const
 {
-  PrintHeader(this->Arcs.GetNumberOfValues());
-  PrintIndices("Arcs", this->Arcs);
-  PrintIndices("Superparents", this->Superparents);
-  std::cout << std::endl;
-  PrintHeader(this->Supernodes.GetNumberOfValues());
-  PrintIndices("Supernodes", this->Supernodes);
-  PrintIndices("Superarcs", this->Superarcs);
-  PrintIndices("Hyperparents", this->Hyperparents);
-  PrintIndices("When Xferred", this->WhenTransferred);
-  std::cout << std::endl;
-  PrintHeader(this->Hypernodes.GetNumberOfValues());
-  PrintIndices("Hypernodes", this->Hypernodes);
-  PrintIndices("Hyperarcs", this->Hyperarcs);
-  PrintHeader(Augmentnodes.GetNumberOfValues());
-  PrintIndices("Augmentnodes", Augmentnodes);
-  PrintIndices("Augmentarcs", this->Augmentarcs);
-  std::cout << std::endl;
-  std::cout << "NumIterations: " << this->NumIterations << std::endl;
-  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues());
-  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration);
-  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration);
+  PrintHeader(this->Arcs.GetNumberOfValues(), outStream);
+  PrintIndices("Arcs", this->Arcs, -1, outStream); // -1 -> thisArcs.size()
+  PrintIndices("Superparents", this->Superparents, -1, outStream);
+  outStream << std::endl;
+  PrintHeader(this->Supernodes.GetNumberOfValues(), outStream);
+  PrintIndices("Supernodes", this->Supernodes, -1, outStream);
+  PrintIndices("Superarcs", this->Superarcs, -1, outStream);
+  PrintIndices("Hyperparents", this->Hyperparents, -1, outStream);
+  PrintIndices("When Xferred", this->WhenTransferred, -1, outStream);
+  outStream << std::endl;
+  PrintHeader(this->Hypernodes.GetNumberOfValues(), outStream);
+  PrintIndices("Hypernodes", this->Hypernodes, -1, outStream);
+  PrintIndices("Hyperarcs", this->Hyperarcs, -1, outStream);
+  PrintHeader(Augmentnodes.GetNumberOfValues(), outStream);
+  PrintIndices("Augmentnodes", Augmentnodes, -1, outStream);
+  PrintIndices("Augmentarcs", this->Augmentarcs, -1, outStream);
+  outStream << std::endl;
+  outStream << "NumIterations: " << this->NumIterations << std::endl;
+  PrintHeader(this->FirstSupernodePerIteration.GetNumberOfValues(), outStream);
+  PrintIndices("First SN Per Iter", this->FirstSupernodePerIteration, -1, outStream);
+  PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration, -1, outStream);
 }
 
-void ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const
+std::string ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const
 { // DebugPrint()
-#ifdef DEBUG_PRINT
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
-            << lineNum << std::endl;
-  std::cout << std::left << std::string(message) << std::endl;
-  std::cout << "Contour Tree Contains:     " << std::endl;
-  std::cout << "---------------------------" << std::endl;
-  std::cout << std::endl;
+  std::stringstream resultStream;
+  resultStream << std::endl;
+  resultStream << "---------------------------" << std::endl;
+  resultStream << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
+               << lineNum << std::endl;
+  resultStream << std::left << std::string(message) << std::endl;
+  resultStream << "Contour Tree Contains:     " << std::endl;
+  resultStream << "---------------------------" << std::endl;
+  resultStream << std::endl;
 
-  this->PrintContent();
-#else
-  // Avoid unused parameter warnings
-  (void)message;
-  (void)fileName;
-  (void)lineNum;
-#endif
+  this->PrintContent(resultStream);
+
+  return resultStream.str();
+
 } // DebugPrint()
 
 void ContourTree::PrintDotSuperStructure() const

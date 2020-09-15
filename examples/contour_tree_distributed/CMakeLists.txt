@@ -50,7 +50,7 @@
 ##  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 ##  Oliver Ruebel (LBNL)
 ##==============================================================================
-cmake_minimum_required(VERSION 3.8...3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 
 # Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
@@ -60,11 +60,11 @@ find_package(VTKm REQUIRED QUIET)
 ####################################
 if (VTKm_ENABLE_MPI)
   add_executable(ContourTree_Distributed ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Distributed vtkm_filter MPI::MPI_CXX)
+  target_link_libraries(ContourTree_Distributed vtkm_filter vtkm_io MPI::MPI_CXX)
   vtkm_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
-  target_compile_definitions(ContourTree_Distributed PRIVATE)
+  target_compile_definitions(ContourTree_Distributed PRIVATE "WITH_MPI")
 
   option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
   mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)

@@ -1051,7 +1051,7 @@ void ContourTreeMaker::DebugPrint(const char* message, const char* fileName, lon
 
   // this->JoinTree.DebugPrint((childString + std::string(": Join Tree")).c_str(), fileName, lineNum);
   // this->SplitTree.DebugPrint((childString + std::string(": Split Tree")).c_str(), fileName, lineNum);
-  this->ContourTreeResult.DebugPrint(
+  std::cout << this->ContourTreeResult.DebugPrint(
     (childString + std::string(": Contour Tree")).c_str(), fileName, lineNum);
   std::cout
     << "==========================================================================================="

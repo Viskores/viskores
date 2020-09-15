@@ -50,18 +50,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
-#define vtk_m_worklet_contourtree_distributed_contourtreeblockdata_h
+#ifndef vtk_m_worklet_contourtree_distributed_tree_grafter_graft_interior_forests_set_trandfer_iteration_worklet_h
+#define vtk_m_worklet_contourtree_distributed_tree_grafter_graft_interior_forests_set_trandfer_iteration_worklet_h
 
-#include <vtkm/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
 
 namespace vtkm
 {
@@ -69,73 +62,65 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-template <typename FieldType>
-struct ContourTreeBlockData
+namespace tree_grafter
 {
-  static void* create() { return new ContourTreeBlockData<FieldType>; }
-  static void destroy(void* b) { delete static_cast<ContourTreeBlockData<FieldType>*>(b); }
 
-  // ContourTreeMesh data
-  vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
-  vtkm::cont::ArrayHandle<FieldType> SortedValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
-  vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
-  vtkm::worklet::contourtree_augmented::IdArrayType FirstNeighbour;
-  vtkm::Id MaxNeighbours;
+/// Now set the transfer iteration for all attachment points
+/// If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
+class GraftInteriorForestsSetTransferIterationWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  // NOTE: supernodeType is sized to ContourTree.Supernodes.GetNumberOfValues() so we can use it for our iteration
+  // NOTE: for whenTransferred we neeed need FieldInOut type to avoid overwrite of existing value as not all values will be updated
+  using ControlSignature = void(FieldIn supernodeType,       // input
+                                FieldIn hierarchicalSuperId, // input
+                                FieldInOut whenTransferred   // output
+  );
 
-  // Block metadata
-  vtkm::Id3 BlockOrigin;                // Origin of the data block
-  vtkm::Id3 BlockSize;                  // Extends of the data block
-  vtkm::Id3 GlobalSize;                 // Extends of the global mesh
-  unsigned int ComputeRegularStructure; // pass through augmentation setting
-};
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  // Default Constructor
+  VTKM_EXEC_CONT
+  GraftInteriorForestsSetTransferIterationWorklet(const vtkm::Id& numTransferIterations)
+    : NumTransferIterations(numTransferIterations)
+  {
+  }
+
+  VTKM_EXEC void operator()(const vtkm::Id& supernodeType,
+                            const vtkm::Id& hierarchicalSuperId,
+                            vtkm::Id& whenTransferred) const
+  { // operator ()
+    if ((supernodeType == vtkm::worklet::contourtree_augmented::IS_ATTACHMENT) &&
+        vtkm::worklet::contourtree_augmented::NoSuchElement(hierarchicalSuperId))
+    { // not a supernode in the hierarchical tree yet
+      whenTransferred =
+        (this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
+    } // not a supernode in the hierarchical tree yet
+
+    // In serial this worklet implements the following operation
+    /*
+    //  Now set the transfer iteration for all attachment points
+    //  If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
+    #pragma omp parallel for
+    for (indexType supernode = 0; supernode < contourTree->supernodes.size(); supernode++)
+      { // per supernode
+      // std::cout << "Supernode " << supernode << std::endl;
+      if ((supernodeType[supernode] == IS_ATTACHMENT) && noSuchElement(hierarchicalSuperID[supernode]))
+        { // not a supernode in the hierarchical tree yet
+        whenTransferred[supernode] = nTransferIterations | IS_SUPERNODE;
+        } // not a supernode in the hierarchical tree yet
+      } // per supernode
+    */
+  } // operator ()
+
+private:
+  vtkm::Id NumTransferIterations;
+}; // BoundaryVerticiesPerSuperArcStepOneWorklet
+
+} // namespace tree_grafter
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace vtkm
-
-
-namespace vtkmdiy
-{
-
-// Struct to serialize ContourBlockData objects (i.e., load/save) needed in parralle for DIY
-template <typename FieldType>
-struct Serialization<vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>>
-{
-  static void save(
-    vtkmdiy::BinaryBuffer& bb,
-    const vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::save(bb, block.NumVertices);
-    vtkmdiy::save(bb, block.SortedValue);
-    vtkmdiy::save(bb, block.GlobalMeshIndex);
-    vtkmdiy::save(bb, block.Neighbours);
-    vtkmdiy::save(bb, block.FirstNeighbour);
-    vtkmdiy::save(bb, block.MaxNeighbours);
-    vtkmdiy::save(bb, block.BlockOrigin);
-    vtkmdiy::save(bb, block.BlockSize);
-    vtkmdiy::save(bb, block.GlobalSize);
-    vtkmdiy::save(bb, block.ComputeRegularStructure);
-  }
-
-  static void load(vtkmdiy::BinaryBuffer& bb,
-                   vtkm::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
-  {
-    vtkmdiy::load(bb, block.NumVertices);
-    vtkmdiy::load(bb, block.SortedValue);
-    vtkmdiy::load(bb, block.GlobalMeshIndex);
-    vtkmdiy::load(bb, block.Neighbours);
-    vtkmdiy::load(bb, block.FirstNeighbour);
-    vtkmdiy::load(bb, block.MaxNeighbours);
-    vtkmdiy::load(bb, block.BlockOrigin);
-    vtkmdiy::load(bb, block.BlockSize);
-    vtkmdiy::load(bb, block.GlobalSize);
-    vtkmdiy::load(bb, block.ComputeRegularStructure);
-  }
-};
-
-} // namespace mangled_vtkmdiy_namespace
-
 
 #endif
