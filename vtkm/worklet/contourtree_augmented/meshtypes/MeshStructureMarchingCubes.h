@@ -50,16 +50,16 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureMarchingCubes_h
+#ifndef vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureMarchingCubes_h
+#define vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureMarchingCubes_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure3D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/marchingcubes_3D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/MeshStructure3D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/marchingcubes_3D/Types.h>
 
 namespace vtkm
 {
@@ -70,7 +70,7 @@ namespace contourtree_augmented
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class MeshStructureMarchingCubes : public mesh_dem::MeshStructure3D<DeviceAdapter>
+class MeshStructureMarchingCubes : public data_set_mesh::MeshStructure3D<DeviceAdapter>
 {
 public:
   // EdgeBoundaryDetectionMasks types
@@ -100,16 +100,14 @@ public:
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
-    : mesh_dem::MeshStructure3D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure3D<DeviceAdapter>()
     , GetMax(false)
   {
   }
 
   // Main constructore used in the code
   MeshStructureMarchingCubes(
-    vtkm::Id ncols,
-    vtkm::Id nrows,
-    vtkm::Id nslices,
+    vtkm::Id3 meshSize,
     bool getmax,
     const IdArrayType& sortIndices,
     const IdArrayType& sortOrder,
@@ -120,7 +118,7 @@ public:
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsSixIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn,
     vtkm::cont::Token& token)
-    : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
+    : data_set_mesh::MeshStructure3D<DeviceAdapter>(meshSize)
     , GetMax(getmax)
   {
     this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
@@ -150,84 +148,69 @@ public:
   {
     using namespace m3d_marchingcubes;
     vtkm::Id meshIndex = this->SortOrderPortal.Get(sortIndex);
+    const vtkm::Id3 strides{ 1, this->MeshSize[0], this->MeshSize[0] * this->MeshSize[1] };
+
     // GetNeighbourIndex
     switch (nbrNo)
     {
       // Edge connected neighbours
-      case 0:
-        return SortIndicesPortal.Get(meshIndex -
-                                     (this->NumRows * this->NumColumns)); // { -1,  0,  0 }
-      case 1:
-        return SortIndicesPortal.Get(meshIndex - this->NumColumns); // {  0, -1,  0 }
-      case 2:
-        return SortIndicesPortal.Get(meshIndex - 1); // {  0,  0, -1 }
-      case 3:
-        return SortIndicesPortal.Get(meshIndex + 1); // {  0,  0,  1 }
-      case 4:
-        return SortIndicesPortal.Get(meshIndex + this->NumColumns); // {  0,  1,  0 }
+      case 0: // {  0,  0, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2]);
+      case 1: // {  0, -1,  0 }
+        return SortIndicesPortal.Get(meshIndex - strides[1]);
+      case 2: // { -1,  0,  0 }
+        return SortIndicesPortal.Get(meshIndex - strides[0]);
+      case 3: // {  1,  0,  0 }
+        return SortIndicesPortal.Get(meshIndex + strides[0]);
+      case 4: // {  0,  1,  0 }
+        return SortIndicesPortal.Get(meshIndex + strides[1]);
+      case 5: // {  0,  0,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2]);
       // Face connected neighbours
-      case 5:
-        return SortIndicesPortal.Get(meshIndex +
-                                     (this->NumRows * this->NumColumns)); // {  1,  0,  0 }
-      case 6:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
-                                     this->NumColumns); // { -1, -1,  0 }
-      case 7:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
-                                     1); // { -1,  0, -1 }
-      case 8:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
-                                     1); // { -1,  0,  1 }
-      case 9:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
-                                     this->NumColumns); // { -1,  1,  0 }
-      case 10:
-        return SortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // {  0, -1, -1 }
-      case 11:
-        return SortIndicesPortal.Get(meshIndex - this->NumColumns + 1); // {  0, -1,  1 }
-      case 12:
-        return SortIndicesPortal.Get(meshIndex + this->NumColumns - 1); // {  0,  1, -1 }
-      case 13:
-        return SortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // {  0,  1,  1 }
-      case 14:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
-                                     this->NumColumns); // {  1, -1,  0 }
-      case 15:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
-                                     1); // {  1,  0, -1 }
-      case 16:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
-                                     1); // {  1,  0,  1 }
-      case 17:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
-                                     this->NumColumns); // {  1,  1,  0 }
+      case 6: // {  0, -1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] - strides[1]);
+      case 7: // { -1,  0, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] - strides[0]);
+      case 8: // {  1,  0, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] + strides[0]);
+      case 9: // {  0,  1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] + strides[1]);
+      case 10: // { -1, -1,  0 }
+        return SortIndicesPortal.Get(meshIndex - strides[1] - strides[0]);
+      case 11: // {  1, -1,  0 }
+        return SortIndicesPortal.Get(meshIndex - strides[1] + strides[0]);
+      case 12: // { -1,  1,  0 }
+        return SortIndicesPortal.Get(meshIndex + strides[1] - strides[0]);
+      case 13: // {  1,  1,  0 }
+        return SortIndicesPortal.Get(meshIndex + strides[1] + strides[0]);
+      case 14: // {  0, -1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] - strides[1]);
+      case 15: // { -1,  0,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] - 1);
+      case 16: // {  1,  0,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] + 1);
+      case 17: // {  0,  1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] + strides[1]);
       // Diagonal connected neighbours
-      case 18:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
-                                     this->NumColumns - 1); // { -1, -1, -1 }
-      case 19:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) -
-                                     this->NumColumns + 1); // { -1, -1,  1 }
-      case 20:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
-                                     this->NumColumns - 1); // { -1,  1, -1 }
-      case 21:
-        return SortIndicesPortal.Get(meshIndex - (this->NumRows * this->NumColumns) +
-                                     this->NumColumns + 1); // { -1,  1,  1 }
-      case 22:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
-                                     this->NumColumns - 1); // {  1, -1, -1 }
-      case 23:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) -
-                                     this->NumColumns + 1); // {  1, -1,  1 }
-      case 24:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
-                                     this->NumColumns - 1); // {  1,  1, -1 }
-      case 25:
-        return SortIndicesPortal.Get(meshIndex + (this->NumRows * this->NumColumns) +
-                                     this->NumColumns + 1); // {  1,  1,  1 }
+      case 18: // { -1, -1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] - strides[1] - strides[0]);
+      case 19: // {  1, -1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] - strides[1] + strides[0]);
+      case 20: // { -1,  1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] + strides[1] - strides[0]);
+      case 21: // {  1,  1, -1 }
+        return SortIndicesPortal.Get(meshIndex - strides[2] + strides[1] + strides[0]);
+      case 22: // { -1, -1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] - strides[1] - strides[0]);
+      case 23: // {  1, -1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] - strides[1] + strides[0]);
+      case 24: // { -1,  1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] + strides[1] - strides[0]);
+      case 25: // {  1,  1,  1 }
+        return SortIndicesPortal.Get(meshIndex + strides[2] + strides[1] + strides[0]);
       default:
-        assert(false);
+        VTKM_ASSERT(false);
+        // TODO/FIXME: Should probaly return an invalid value or throw an exception instead
         return meshIndex; // Need to error out here
     }
   } // GetNeighbourIndex
@@ -251,13 +234,11 @@ public:
     // convert to a sort index
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->VertexSlice(meshIndex);
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
-      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id3 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0) | ((pos[2] == 0) ? FrontBit : 0) |
+      ((pos[2] == this->MeshSize[2] - 1) ? BackBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     // loop downwards so that we pick the same edges as previous versions
@@ -289,13 +270,11 @@ public:
     // convert to a sort index
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->VertexSlice(meshIndex);
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
-      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id3 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0) | ((pos[2] == 0) ? FrontBit : 0) |
+      ((pos[2] == this->MeshSize[2] - 1) ? BackBit : 0);
 
     // Initialize "union find"
     int parentId[N_ALL_NEIGHBOURS];

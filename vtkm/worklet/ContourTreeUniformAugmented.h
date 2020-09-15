@@ -71,14 +71,14 @@
 #include <vtkm/worklet/contourtree_augmented/ActiveGraph.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTreeMaker.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_augmented/MergeTree.h>
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
-#include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary2D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary3D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundary2D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
 
 namespace vtkm
 {
@@ -109,15 +109,17 @@ public:
   *                 the full regular strucuture this is not needed because all vertices
   *                 (including the boundary) will be addded to the tree anyways.
   */
-  template <typename FieldType, typename StorageType>
-  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType>
-             fieldArray, // TODO: We really should not need this
-           contourtree_augmented::ContourTreeMesh<FieldType>& mesh,
+  template <typename FieldType,
+            typename StorageType,
+            typename MeshType,
+            typename MeshBoundaryMeshExecType>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
+           MeshType& mesh,
            contourtree_augmented::ContourTree& contourTree,
-           contourtree_augmented::IdArrayType sortOrder,
+           contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
            unsigned int computeRegularStructure,
-           const contourtree_augmented::MeshBoundaryContourTreeMeshExec& meshBoundary)
+           const MeshBoundaryMeshExecType& meshBoundary)
   {
     RunContourTree(
       fieldArray, // Just a place-holder to fill the required field. Used when calling SortData on the contour tree which is a no-op
@@ -157,18 +159,16 @@ public:
            contourtree_augmented::ContourTree& contourTree,
            contourtree_augmented::IdArrayType& sortOrder,
            vtkm::Id& nIterations,
-           const vtkm::Id nRows,
-           const vtkm::Id nCols,
-           const vtkm::Id nSlices = 1,
+           const vtkm::Id3 meshSize,
            bool useMarchingCubes = false,
            unsigned int computeRegularStructure = 1)
   {
     using namespace vtkm::worklet::contourtree_augmented;
     // 2D Contour Tree
-    if (nSlices == 1)
+    if (meshSize[2] == 1)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_2D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols);
+      DataSetMeshTriangulation2DFreudenthal mesh(vtkm::Id2{ meshSize[0], meshSize[1] });
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -183,7 +183,7 @@ public:
     else if (useMarchingCubes)
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_MarchingCubes<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -198,7 +198,7 @@ public:
     else
     {
       // Build the mesh and fill in the values
-      Mesh_DEM_Triangulation_3D_Freudenthal<FieldType, StorageType> mesh(nRows, nCols, nSlices);
+      DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
       // Run the contour tree on the mesh
       RunContourTree(fieldArray,
                      contourTree,
@@ -355,7 +355,10 @@ private:
 
     // Collect the output data
     nIterations = treeMaker.ContourTreeResult.NumIterations;
-    sortOrder = mesh.SortOrder;
+    //  Need to make a copy of sortOrder since ContourTreeMesh uses a smart array handle
+    // TODO: Check if we can just make sortOrder a return array with variable type or if we can make the SortOrder return optional
+    vtkm::cont::Algorithm::Copy(mesh.SortOrder, sortOrder);
+    // sortOrder = mesh.SortOrder;
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.SortOrder);
     // contourTree.PrintDotSuperStructure();

@@ -51,8 +51,8 @@
 //==============================================================================
 
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_3d_marchingcubes_h
+#ifndef vtk_m_worklet_contourtree_augmented_data_set_mesh_triangulation_3d_marchingcubes_h
+#define vtk_m_worklet_contourtree_augmented_data_set_mesh_triangulation_3d_marchingcubes_h
 
 #include <cstdlib>
 #include <vtkm/Types.h>
@@ -60,11 +60,11 @@
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 
-#include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MeshStructureMarchingCubes.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/marchingcubes_3D/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/ComputeMeshBoundary3D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/mesh_boundary/MeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/MeshStructureMarchingCubes.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/marchingcubes_3D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/ComputeMeshBoundary3D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundary3D.h>
 
 namespace vtkm
 {
@@ -73,11 +73,10 @@ namespace worklet
 namespace contourtree_augmented
 {
 
-template <typename T, typename StorageType>
-class Mesh_DEM_Triangulation_3D_MarchingCubes
-  : public Mesh_DEM_Triangulation_3D<T, StorageType>
+class DataSetMeshTriangulation3DMarchingCubes
+  : public DataSetMesh
   , public vtkm::cont::ExecutionObjectBase
-{ // class Mesh_DEM_Triangulation
+{ // class DataSetMeshTriangulation3DMarchingCubes
 public:
   //Constants and case tables
 
@@ -87,6 +86,7 @@ public:
   m3d_marchingcubes::LinkVertexConnectionsType LinkVertexConnectionsEighteen;
   m3d_marchingcubes::InCubeConnectionsType InCubeConnectionsSix;
   m3d_marchingcubes::InCubeConnectionsType InCubeConnectionsEighteen;
+  static constexpr int MAX_OUTDEGREE = 6; // True for Freudenthal and Marching Cubes
 
   // mesh depended helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
@@ -95,27 +95,24 @@ public:
   MeshStructureMarchingCubes<DeviceTag> PrepareForExecution(DeviceTag,
                                                             vtkm::cont::Token& token) const;
 
-  Mesh_DEM_Triangulation_3D_MarchingCubes(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices);
+  DataSetMeshTriangulation3DMarchingCubes(vtkm::Id3 meshSize);
 
   MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
 
-  void GetBoundaryVertices(IdArrayType& boundaryVertexArray,    // output
-                           IdArrayType& boundarySortIndexArray, // output
-                           MeshBoundary3DExec* meshBoundaryExecObj =
-                             NULL // optional input, included for consistency with ContourTreeMesh
+  void GetBoundaryVertices(
+    IdArrayType& boundaryVertexArray,    // output
+    IdArrayType& boundarySortIndexArray, // output
+    MeshBoundary3DExec* meshBoundaryExecObj =
+      nullptr // optional input, included for consistency with ContourTreeMesh
   ) const;
 
 private:
   bool UseGetMax; // Define the behavior ofr the PrepareForExecution function
-};                // class Mesh_DEM_Triangulation
+};                // class DataSetMesh_Triangulation
 
 // creates input mesh
-template <typename T, typename StorageType>
-Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_3D_MarchingCubes(
-  vtkm::Id ncols,
-  vtkm::Id nrows,
-  vtkm::Id nslices)
-  : Mesh_DEM_Triangulation_3D<T, StorageType>(ncols, nrows, nslices)
+DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchingCubes(vtkm::Id3 meshSize)
+  : DataSetMesh(meshSize)
 
 {
   // Initialize the case tables in vtkm
@@ -157,24 +154,18 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::Mesh_DEM_Triangulation_
                                  vtkm::CopyFlag::Off);
 }
 
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::SetPrepareForExecutionBehavior(
-  bool getMax)
+void DataSetMeshTriangulation3DMarchingCubes::SetPrepareForExecutionBehavior(bool getMax)
 {
   this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename T, typename StorageType>
 template <typename DeviceTag>
-MeshStructureMarchingCubes<DeviceTag>
-Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::PrepareForExecution(
+MeshStructureMarchingCubes<DeviceTag> DataSetMeshTriangulation3DMarchingCubes::PrepareForExecution(
   DeviceTag,
   vtkm::cont::Token& token) const
 {
-  return MeshStructureMarchingCubes<DeviceTag>(this->NumColumns,
-                                               this->NumRows,
-                                               this->NumSlices,
+  return MeshStructureMarchingCubes<DeviceTag>(this->MeshSize,
                                                this->UseGetMax,
                                                this->SortIndices,
                                                this->SortOrder,
@@ -187,23 +178,20 @@ Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::PrepareForExecution(
                                                token);
 }
 
-template <typename T, typename StorageType>
-MeshBoundary3DExec
-Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::GetMeshBoundaryExecutionObject() const
+MeshBoundary3DExec DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->NumColumns, this->NumRows, this->NumSlices, this->SortOrder);
+  return MeshBoundary3DExec(this->MeshSize, this->SortOrder);
 }
 
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_3D_MarchingCubes<T, StorageType>::GetBoundaryVertices(
+void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,       // output
   IdArrayType& boundarySortIndexArray,    // output
   MeshBoundary3DExec* meshBoundaryExecObj // input
 ) const
 {
-  vtkm::Id numBoundary = 2 * this->NumRows * this->NumColumns // xy faces
-    + 2 * this->NumRows * (this->NumSlices - 2)               // yz faces - excluding vertices on xy
-    + 2 * (this->NumColumns - 2) * (this->NumSlices - 2);     // xz face interiors
+  vtkm::Id numBoundary = 2 * this->MeshSize[1] * this->MeshSize[0] // xy faces
+    + 2 * this->MeshSize[1] * (this->MeshSize[2] - 2)        // yz faces - excluding vertices on xy
+    + 2 * (this->MeshSize[0] - 2) * (this->MeshSize[2] - 2); // xz face interiors
   auto boundaryId = vtkm::cont::ArrayHandleIndex(numBoundary);
   ComputeMeshBoundary3D computeMeshBoundary3dWorklet;
   this->Invoke(computeMeshBoundary3dWorklet,

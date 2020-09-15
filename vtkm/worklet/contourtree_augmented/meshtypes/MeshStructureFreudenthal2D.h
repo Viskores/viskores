@@ -50,15 +50,15 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal2D_h
+#ifndef vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureFreudenthal2D_h
+#define vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureFreudenthal2D_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure2D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_2D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/MeshStructure2D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/freudenthal_2D/Types.h>
 
 
 namespace vtkm
@@ -70,7 +70,7 @@ namespace contourtree_augmented
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class MeshStructureFreudenthal2D : public mesh_dem::MeshStructure2D<DeviceAdapter>
+class MeshStructureFreudenthal2D : public data_set_mesh::MeshStructure2D<DeviceAdapter>
 {
 public:
   using SortIndicesPortalType =
@@ -82,7 +82,7 @@ public:
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
   MeshStructureFreudenthal2D()
-    : mesh_dem::MeshStructure2D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure2D<DeviceAdapter>()
     , GetMax(false)
     , NumIncidentEdges(m2d_freudenthal::N_INCIDENT_EDGES)
   {
@@ -90,15 +90,14 @@ public:
 
   // Main constructor used in the code
   MeshStructureFreudenthal2D(
-    vtkm::Id ncols,
-    vtkm::Id nrows,
+    vtkm::Id2 meshSize,
     vtkm::Int32 nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
     const IdArrayType& SortOrder,
     const m2d_freudenthal::EdgeBoundaryDetectionMasksType& EdgeBoundaryDetectionMasksIn,
     vtkm::cont::Token& token)
-    : mesh_dem::MeshStructure2D<DeviceAdapter>(ncols, nrows)
+    : data_set_mesh::MeshStructure2D<DeviceAdapter>(meshSize)
     , GetMax(getmax)
     , NumIncidentEdges(nincident_edges)
   {
@@ -118,17 +117,17 @@ public:
     switch (edgeNo)
     {
       case 0:
-        return this->SortIndicesPortal.Get(meshIndex + 1); // row    , col + 1
+        return this->SortIndicesPortal.Get(meshIndex + 1); // [1]    , [0] + 1
       case 1:
-        return this->SortIndicesPortal.Get(meshIndex + this->NumColumns + 1); // row + 1, col + 1
+        return this->SortIndicesPortal.Get(meshIndex + this->MeshSize[0] + 1); // [1] + 1, [0] + 1
       case 2:
-        return this->SortIndicesPortal.Get(meshIndex + this->NumColumns); // row + 1, col
+        return this->SortIndicesPortal.Get(meshIndex + this->MeshSize[0]); // [1] + 1, [0]
       case 3:
-        return this->SortIndicesPortal.Get(meshIndex - 1); // row    , col - 1
+        return this->SortIndicesPortal.Get(meshIndex - 1); // [1]    , [0] - 1
       case 4:
-        return this->SortIndicesPortal.Get(meshIndex - this->NumColumns - 1); // row - 1, col - 1
+        return this->SortIndicesPortal.Get(meshIndex - this->MeshSize[0] - 1); // [1] - 1, [0] - 1
       case 5:
-        return this->SortIndicesPortal.Get(meshIndex - this->NumColumns); // row - 1, col
+        return this->SortIndicesPortal.Get(meshIndex - this->MeshSize[0]); // [1] - 1, [0]
       default:
         return -1; // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
     }
@@ -154,11 +153,10 @@ public:
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id2 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     for (vtkm::Id edgeNo = 0; edgeNo < this->NumIncidentEdges; edgeNo++)
@@ -194,11 +192,10 @@ public:
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id2 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0);
 
     // and initialise the mask
     vtkm::Id neighbourhoodMask = 0;

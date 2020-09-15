@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -60,11 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
-#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
+#ifndef vtk_m_worklet_contourtree_augmented_data_set_mesh_execution_object_mesh_3d_h
+#define vtk_m_worklet_contourtree_augmented_data_set_mesh_execution_object_mesh_3d_h
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
@@ -72,61 +61,55 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace data_set_mesh
 {
 
-
-class IdRelabeler
+// Worklet for computing the sort indices from the sort order
+template <typename DeviceAdapter>
+class MeshStructure3D
 {
 public:
   VTKM_EXEC_CONT
-  IdRelabeler()
-    : InputStartRow(0)
-    , InputStartCol(0)
-    , InputStartSlice(0)
-    , InputNumRows(1)
-    , InputNumCols(1)
-    , OutputNumRows(1)
-    , OutputNumCol(1)
+  MeshStructure3D()
+    : MeshSize{ 0, 0, 0 }
   {
   }
 
   VTKM_EXEC_CONT
-  IdRelabeler(vtkm::Id iSR,
-              vtkm::Id iSC,
-              vtkm::Id iSS,
-              vtkm::Id iNR,
-              vtkm::Id iNC,
-              vtkm::Id oNR,
-              vtkm::Id oNC)
-    : InputStartRow(iSR)
-    , InputStartCol(iSC)
-    , InputStartSlice(iSS)
-    , InputNumRows(iNR)
-    , InputNumCols(iNC)
-    , OutputNumRows(oNR)
-    , OutputNumCol(oNC)
+  MeshStructure3D(vtkm::Id3 meshSize)
+    : MeshSize(meshSize)
   {
   }
 
+  // number of mesh vertices
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id v) const
+  vtkm::Id GetNumberOfVertices() const
   {
-    vtkm::Id r = InputStartRow + ((v % (InputNumRows * InputNumCols)) / InputNumCols);
-    vtkm::Id c = InputStartCol + (v % InputNumCols);
-    vtkm::Id s = InputStartSlice + v / (InputNumRows * InputNumCols);
-
-    return (s * OutputNumRows + r) * OutputNumCol + c;
+    return (this->MeshSize[0] * this->MeshSize[1] * this->MeshSize[2]);
   }
 
-private:
-  vtkm::Id InputStartRow, InputStartCol, InputStartSlice;
-  vtkm::Id InputNumRows, InputNumCols;
-  vtkm::Id OutputNumRows, OutputNumCol;
-};
+  VTKM_EXEC
+  vtkm::Id3 VertexPos(vtkm::Id v) const
+  {
+    return vtkm::Id3{
+      v % this->MeshSize[0],                                             // column
+      (v % (this->MeshSize[1] * this->MeshSize[0])) / this->MeshSize[0], // row
+      v / (this->MeshSize[1] * this->MeshSize[0])                        // slice
+    };
+  }
 
+  //vertex ID - row * ncols + col
+  VTKM_EXEC
+  vtkm::Id VertexId(vtkm::Id3 pos) const
+  {
+    return (pos[2] * this->MeshSize[1] + pos[1]) * this->MeshSize[0] + pos[0];
+  }
 
-} // namespace mesh_dem
+  vtkm::Id3 MeshSize;
+
+}; // Mesh_DEM_2D_ExecutionObject
+
+} // namespace mesh_dem_triangulation_worklets
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

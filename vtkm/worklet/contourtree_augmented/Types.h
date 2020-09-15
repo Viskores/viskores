@@ -249,44 +249,29 @@ public:
 /// to determine the rows, cols, slices parameters from the
 /// datasets so we can call the contour tree worklet properly.
 ///
-struct GetRowsColsSlices
+struct GetPointDimensions
 {
   //@{
   /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
   /// @param[in] cells  The input vtkm::cont::CellSetStructured
-  /// @param[out] nRows  Number of rows (x) in the cell set
-  /// @param[out[ nCols  Number of columns (y) in the cell set
-  /// @param[out] nSlices Number of slices (z) in the cell set
-  void operator()(const vtkm::cont::CellSetStructured<2>& cells,
-                  vtkm::Id& nRows,
-                  vtkm::Id& nCols,
-                  vtkm::Id& nSlices) const
+  /// @param[out] pointDimensions mesh size (#cols, #rows #slices in old notation) with last dimension having a value of 1 for 2D data
+  void operator()(const vtkm::cont::CellSetStructured<2>& cells, vtkm::Id3& pointDimensions) const
   {
-    vtkm::Id2 pointDimensions = cells.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = 1;
+    vtkm::Id2 pointDimensions2D = cells.GetPointDimensions();
+    pointDimensions[0] = pointDimensions2D[0];
+    pointDimensions[1] = pointDimensions2D[1];
+    pointDimensions[2] = 1;
   }
-  void operator()(const vtkm::cont::CellSetStructured<3>& cells,
-                  vtkm::Id& nRows,
-                  vtkm::Id& nCols,
-                  vtkm::Id& nSlices) const
+  void operator()(const vtkm::cont::CellSetStructured<3>& cells, vtkm::Id3& pointDimensions) const
   {
-    vtkm::Id3 pointDimensions = cells.GetPointDimensions();
-    nRows = pointDimensions[0];
-    nCols = pointDimensions[1];
-    nSlices = pointDimensions[2];
+    pointDimensions = cells.GetPointDimensions();
   }
   //@}
 
   ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>
   template <typename T>
-  void operator()(const T& cells, vtkm::Id& nRows, vtkm::Id& nCols, vtkm::Id& nSlices) const
+  void operator()(const T&, vtkm::Id3&) const
   {
-    (void)nRows;
-    (void)nCols;
-    (void)nSlices;
-    (void)cells;
     throw vtkm::cont::ErrorBadValue("Expected 2D or 3D structured cell cet! ");
   }
 };

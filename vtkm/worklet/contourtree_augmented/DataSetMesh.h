@@ -68,10 +68,8 @@
 //
 //==============================================================================
 
-
-
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_triangulation_h
+#ifndef vtk_m_worklet_contourtree_augmented_data_set_mesh_h
+#define vtk_m_worklet_contourtree_augmented_data_set_mesh_h
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
@@ -82,12 +80,11 @@
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/SimulatedSimplicityComperator.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/SortIndices.h>
-
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/SimulatedSimplicityComperator.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/SortIndices.h>
 
 //Define namespace alias for the freudenthal types to make the code a bit more readable
-namespace mesh_dem_ns = vtkm::worklet::contourtree_augmented::mesh_dem;
 
 namespace vtkm
 {
@@ -95,16 +92,14 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-
-template <typename T, typename StorageType>
-class Mesh_DEM_Triangulation
+class DataSetMesh
 {
 public:
-  // common mesh size parameters
+  // common mesh size parameter, use all three dimensions ofr MeshSize with third determining if 2D or 3D
+  // (convention: MeshSize[2] is always >= 1, even for empty data set, so that we can detect 2D
+  // data as MeshSize[2] == 1)
+  vtkm::Id3 MeshSize;
   vtkm::Id NumVertices, NumLogSteps;
-
-  // Define dimensionality of the mesh
-  vtkm::Id NumDims;
 
   // Array with the sorted order of the mesh vertices
   IdArrayType SortOrder;
@@ -114,152 +109,146 @@ public:
   IdArrayType SortIndices;
 
   //empty constructor
-  Mesh_DEM_Triangulation()
-    : NumVertices(0)
-    , NumLogSteps(0)
-    , NumDims(2)
+  DataSetMesh()
+    : MeshSize{ 0, 0, 1 } // Always set third dimension to 1 for easy detection of 2D vs 3D
+    , NumVertices(0)
+    , NumLogSteps(1)
   {
   }
+
+  // base constructor
+  DataSetMesh(vtkm::Id3 meshSize)
+    : MeshSize{ meshSize }
+    , NumVertices{ meshSize[0] * meshSize[1] * meshSize[2] }
+    // per convention meshSize[2] == 1 for 2D
+    , NumLogSteps(1)
+
+  {
+    // Per convention the third dimension should be 1 (even for an empty
+    // mesh) or higher to make it easier to check for 2D vs. 3D data)
+    VTKM_ASSERT(MeshSize[2] >= 1);
+    // TODO/FIXME: An empty mesh will likely cause a crash down the
+    // road anyway, so we may want to detect that case and handle
+    // it appropriately.
+
+    // Compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
+    // this->NumLogSteps = 1; // already set in initializer list
+    for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
+      this->NumLogSteps++;
+  }
+
+  virtual ~DataSetMesh() {}
 
   // Getter function for NumVertices
   vtkm::Id GetNumberOfVertices() const { return this->NumVertices; }
 
-  // sorts the data and initializes the sortIndex & indexReverse
+  // Sorts the data and initializes SortOrder & SortIndices
+  template <typename T, typename StorageType>
   void SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values);
+
+  /// Routine to return the global IDs for a set of vertices
+  /// We here return a fancy array handle to convert values on-the-fly without requiring additional memory
+  /// @param[in] meshIds Array with sort Ids to be converted from local to global Ids
+  /// @param[in] localToGlobalIdRelabeler This parameter is the IdRelabeler
+  ///            used to transform local to global Ids. The relabeler relies on the
+  ///            decomposition of the global mesh which is not know by this block.
+  inline vtkm::cont::ArrayHandleTransform<
+    vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>,
+    mesh_dem::IdRelabeler>
+  GetGlobalIdsFromSortIndices(const IdArrayType& sortIds,
+                              const mesh_dem::IdRelabeler* localToGlobalIdRelabeler) const
+  { // GetGlobalIDsFromSortIndices()
+    auto permutedSortOrder = vtkm::cont::make_ArrayHandlePermutation(sortIds, this->SortOrder);
+    return vtkm::cont::ArrayHandleTransform<
+      vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>,
+      mesh_dem::IdRelabeler>(permutedSortOrder, *localToGlobalIdRelabeler);
+  } // GetGlobalIDsFromSortIndices()
+
+  /// Routine to return the global IDs for a set of vertices
+  /// We here return a fancy array handle to convert values on-the-fly without requiring additional memory
+  /// @param[in] meshIds Array with mesh Ids to be converted from local to global Ids
+  /// @param[in] localToGlobalIdRelabeler This parameter is the IdRelabeler
+  ///            used to transform local to global Ids. The relabeler relies on the
+  ///            decomposition of the global mesh which is not know by this block.
+  inline vtkm::cont::ArrayHandleTransform<IdArrayType, mesh_dem::IdRelabeler>
+  GetGlobalIdsFromMeshIndices(const IdArrayType& meshIds,
+                              const mesh_dem::IdRelabeler* localToGlobalIdRelabeler) const
+  { // GetGlobalIDsFromMeshIndices()
+    return vtkm::cont::ArrayHandleTransform<IdArrayType, mesh_dem::IdRelabeler>(
+      meshIds, *localToGlobalIdRelabeler);
+  } // GetGlobalIDsFromMeshIndices()
 
   //routine that dumps out the contents of the mesh
   void DebugPrint(const char* message, const char* fileName, long lineNum);
 
 protected:
-  virtual void DebugPrintExtends() = 0;
-  virtual void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values) = 0;
-}; // class Mesh_DEM_Triangulation
-
-template <typename T, typename StorageType>
-class Mesh_DEM_Triangulation_2D : public Mesh_DEM_Triangulation<T, StorageType>
-{
-public:
-  // 2D mesh size parameters
-  vtkm::Id NumColumns, NumRows;
-
-  // Maximum outdegree
-  static constexpr int MAX_OUTDEGREE = 3;
-
-  // empty constructor
-  Mesh_DEM_Triangulation_2D()
-    : Mesh_DEM_Triangulation<T, StorageType>()
-    , NumColumns(0)
-    , NumRows(0)
-  {
-    this->NumDims = 2;
-  }
-
-  // base constructor
-  Mesh_DEM_Triangulation_2D(vtkm::Id ncols, vtkm::Id nrows)
-    : Mesh_DEM_Triangulation<T, StorageType>()
-    , NumColumns(ncols)
-    , NumRows(nrows)
-  {
-    this->NumDims = 2;
-    this->NumVertices = NumRows * NumColumns;
-
-    // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
-    this->NumLogSteps = 1;
-    for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
-      this->NumLogSteps++;
-  }
-
-protected:
   virtual void DebugPrintExtends();
-  virtual void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values);
-}; // class Mesh_DEM_Triangulation_2D
+  template <typename T, typename StorageType>
+  void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values);
+}; // class DataSetMesh
 
+// Sorts the data and initialises the SortIndices & SortOrder
 template <typename T, typename StorageType>
-class Mesh_DEM_Triangulation_3D : public Mesh_DEM_Triangulation<T, StorageType>
-{
-public:
-  // 2D mesh size parameters
-  vtkm::Id NumColumns, NumRows, NumSlices;
-
-  // Maximum outdegree
-  static constexpr int MAX_OUTDEGREE = 6; // True for Freudenthal and Marching Cubes
-
-  // empty constructor
-  Mesh_DEM_Triangulation_3D()
-    : Mesh_DEM_Triangulation<T, StorageType>()
-    , NumColumns(0)
-    , NumRows(0)
-    , NumSlices(0)
-  {
-    this->NumDims = 3;
-  }
-
-  // base constructor
-  Mesh_DEM_Triangulation_3D(vtkm::Id ncols, vtkm::Id nrows, vtkm::Id nslices)
-    : Mesh_DEM_Triangulation<T, StorageType>()
-    , NumColumns(ncols)
-    , NumRows(nrows)
-    , NumSlices(nslices)
-  {
-    this->NumDims = 3;
-    this->NumVertices = NumRows * NumColumns * NumSlices;
-
-    // compute the number of log-jumping steps (i.e. lg_2 (NumVertices))
-    this->NumLogSteps = 1;
-    for (vtkm::Id shifter = this->NumVertices; shifter > 0; shifter >>= 1)
-      this->NumLogSteps++;
-  }
-
-protected:
-  virtual void DebugPrintExtends();
-  virtual void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values);
-}; // class Mesh_DEM_Triangulation_3D
-
-
-// sorts the data and initialises the SortIndices & SortOrder
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation<T, StorageType>::SortData(
-  const vtkm::cont::ArrayHandle<T, StorageType>& values)
+void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
   namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem;
 
   // Make sure that the values have the correct size
-  assert(values.GetNumberOfValues() == NumVertices);
+  VTKM_ASSERT(values.GetNumberOfValues() == this->NumVertices);
+
+  // Make sure that we are not running on an empty mesh
+  VTKM_ASSERT(this->NumVertices > 0);
 
   // Just in case, make sure that everything is cleaned up
-  SortIndices.ReleaseResources();
-  SortOrder.ReleaseResources();
+  this->SortIndices.ReleaseResources();
+  this->SortOrder.ReleaseResources();
 
   // allocate memory for the sort arrays
-  SortOrder.Allocate(NumVertices);
-  SortIndices.Allocate(NumVertices);
+  SortOrder.Allocate(this->NumVertices);
+  SortIndices.Allocate(this->NumVertices);
 
   // now sort the sort order vector by the values, i.e,. initialize the SortOrder member variable
-  vtkm::cont::ArrayHandleIndex initVertexIds(NumVertices); // create sequence 0, 1, .. NumVertices
-  vtkm::cont::ArrayCopy(initVertexIds, SortOrder);
+  vtkm::cont::ArrayHandleIndex initVertexIds(
+    this->NumVertices); // create sequence 0, 1, .. NumVertices
+  vtkm::cont::ArrayCopy(initVertexIds, this->SortOrder);
 
-  vtkm::cont::Algorithm::Sort(SortOrder,
+  vtkm::cont::Algorithm::Sort(this->SortOrder,
                               mesh_dem::SimulatedSimplicityIndexComparator<T, StorageType>(values));
 
   // now set the index lookup, i.e., initialize the SortIndices member variable
   // In serial this would be
   //  for (indexType vertex = 0; vertex < NumVertices; vertex++)
   //            SortIndices[SortOrder[vertex]] = vertex;
-  mesh_dem_worklets::SortIndices sortIndicesWorklet;
+  data_set_mesh::SortIndices sortIndicesWorklet;
   vtkm::cont::Invoker invoke;
-  invoke(sortIndicesWorklet, SortOrder, SortIndices);
+  invoke(sortIndicesWorklet, this->SortOrder, this->SortIndices);
 
   // Debug print statement
   DebugPrint("Data Sorted", __FILE__, __LINE__);
   DebugPrintValues(values);
 } // SortData()
 
+// Print mesh extends
+void DataSetMesh::DebugPrintExtends()
+{
+  // For compatibility with the output of the original PPP Implementation, print size
+  // as NumRows, NumColumns and NumSlices (if applicable)
+  PrintLabel("NumRows");
+  PrintIndexType(this->MeshSize[1]);
+  std::cout << std::endl;
+  PrintLabel("NumColumns");
+  PrintIndexType(this->MeshSize[0]);
+  std::cout << std::endl;
+  if (MeshSize[2] > 1)
+  {
+    PrintLabel("NumSlices");
+    PrintIndexType(this->MeshSize[2]);
+    std::cout << std::endl;
+  }
+} // DebugPrintExtends
 
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
-                                                        const char* fileName,
-                                                        long lineNum)
+void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "------------------------------------------------------" << std::endl;
@@ -270,13 +259,13 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
   std::cout << "------------------------------------------------------" << std::endl;
   //DebugPrintExtents();
   PrintLabel("NumVertices");
-  PrintIndexType(NumVertices);
+  PrintIndexType(this->NumVertices);
   std::cout << std::endl;
   PrintLabel("NumLogSteps");
   PrintIndexType(this->NumLogSteps);
   std::cout << std::endl;
-  PrintIndices("Sort Indices", SortIndices);
-  PrintIndices("Sort Order", SortOrder);
+  PrintIndices("Sort Indices", this->SortIndices);
+  PrintIndices("Sort Order", this->SortOrder);
   std::cout << std::endl;
 #else
   // Avoid unused parameter warning
@@ -286,58 +275,14 @@ void Mesh_DEM_Triangulation<T, StorageType>::DebugPrint(const char* message,
 #endif
 } // DebugPrint()
 
-// print mesh extends for 2D mesh
 template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintExtends()
-{
-  PrintLabel("NumRows");
-  PrintIndexType(NumRows);
-  std::cout << std::endl;
-  PrintLabel("NumColumns");
-  PrintIndexType(NumColumns);
-  std::cout << std::endl;
-} // DebugPrintExtends for 2D
-
-// print mesh extends for 3D mesh
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintExtends()
-{
-  PrintLabel("NumRows");
-  PrintIndexType(NumRows);
-  std::cout << std::endl;
-  PrintLabel("NumColumns");
-  PrintIndexType(NumColumns);
-  std::cout << std::endl;
-  PrintLabel("NumSlices");
-  PrintIndexType(NumSlices);
-  std::cout << std::endl;
-}
-
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_2D<T, StorageType>::DebugPrintValues(
-  const vtkm::cont::ArrayHandle<T, StorageType>& values)
+void DataSetMesh::DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
-  if (NumColumns > 0)
+  if (MeshSize[0] > 0)
   {
-    PrintLabelledDataBlock<T, StorageType>("Value", values, NumColumns);
+    PrintLabelledDataBlock<T, StorageType>("Value", values, MeshSize[0]);
     PrintSortedValues("Sorted Values", values, this->SortOrder);
-  }
-  PrintHeader(values.GetNumberOfValues());
-#else
-  // Avoid unused parameter warning
-  (void)values;
-#endif
-} // DebugPrintValues
-
-template <typename T, typename StorageType>
-void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
-  const vtkm::cont::ArrayHandle<T, StorageType>& values)
-{
-#ifdef DEBUG_PRINT
-  if (NumColumns > 0)
-  {
-    PrintLabelledDataBlock<T, StorageType>("Value", values, NumColumns);
   }
   PrintHeader(values.GetNumberOfValues());
 #else
@@ -350,8 +295,9 @@ void Mesh_DEM_Triangulation_3D<T, StorageType>::DebugPrintValues(
 } // worklet
 } // vtkm
 
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_2D_Triangulation.h> // include Mesh_DEM_Triangulation_2D_Freudenthal
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/Freudenthal_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_Freudenthal
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/MarchingCubes_3D_Triangulation.h> // include Mesh_DEM_Triangulation_3D_MarchinCubes
+// Include specialized mesh classes providing triangulation/connectivity information
+#include <vtkm/worklet/contourtree_augmented/meshtypes/DataSetMeshTriangulation2DFreudenthal.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/DataSetMeshTriangulation3DFreudenthal.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/DataSetMeshTriangulation3DMarchingCubes.h>
 
 #endif

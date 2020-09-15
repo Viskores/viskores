@@ -62,7 +62,7 @@
 #include <cstdlib>
 
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure2D.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/MeshStructure2D.h>
 
 #include <vtkm/cont/ExecutionObjectBase.h>
 
@@ -79,55 +79,96 @@ class MeshBoundary2D
 {
 public:
   // Sort indicies types
-  using SortOrderPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortIndicesPortalType =
+    typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
 
   VTKM_EXEC_CONT
   MeshBoundary2D()
-    : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(0, 0))
+    : MeshStructure(0, 0)
   {
   }
 
   VTKM_CONT
-  MeshBoundary2D(vtkm::Id nrows,
-                 vtkm::Id ncols,
-                 const IdArrayType& sortOrder,
-                 vtkm::cont::Token& token)
-    : MeshStructure(mesh_dem::MeshStructure2D<DeviceTag>(nrows, ncols))
+  MeshBoundary2D(vtkm::Id2 meshSize, const IdArrayType& sortIndices, vtkm::cont::Token& token)
+    : MeshStructure(meshSize)
   {
-    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceTag(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceTag(), token);
   }
 
   VTKM_EXEC_CONT
-  bool liesOnBoundary(const vtkm::Id index) const
+  bool LiesOnBoundary(const vtkm::Id meshIndex) const
   {
-    vtkm::Id meshSortOrderValue = this->SortOrderPortal.Get(index);
-    const vtkm::Id row = this->MeshStructure.VertexRow(meshSortOrderValue);
-    const vtkm::Id col = this->MeshStructure.VertexColumn(meshSortOrderValue);
-
-    return (row == 0) || (col == 0) || (row == this->MeshStructure.NumRows - 1) ||
-      (col == this->MeshStructure.NumColumns - 1);
+    const vtkm::Id2 pos{ this->MeshStructure.VertexPos(meshIndex) };
+    return (pos[0] == 0) || (pos[1] == 0) || (pos[0] == this->MeshStructure.MeshSize[0] - 1) ||
+      (pos[1] == this->MeshStructure.MeshSize[1] - 1);
   }
 
   VTKM_EXEC_CONT
-  const mesh_dem::MeshStructure2D<DeviceTag>& GetMeshStructure() const
+  bool IsNecessary(const vtkm::Id meshIndex) const
+  {
+    vtkm::Id sortIndex = this->SortIndicesPortal.Get(meshIndex);
+    const vtkm::Id2 pos{ this->MeshStructure.VertexPos(meshIndex) };
+
+    // Keep only when lying on boundary
+    if ((pos[0] == 0) || (pos[1] == 0) || (pos[0] == this->MeshStructure.MeshSize[0] - 1) ||
+        (pos[1] == this->MeshStructure.MeshSize[1] - 1))
+    {
+      // If vertex lies on boundary, keep all corners in any case
+      if (((pos[1] == 0) && ((pos[0] == 0) || (pos[0] == this->MeshStructure.MeshSize[0] - 1))) ||
+          ((pos[1] == this->MeshStructure.MeshSize[1] - 1) &&
+           ((pos[0] == 0) || (pos[0] == this->MeshStructure.MeshSize[0] - 1))))
+      {
+        return true;
+      }
+      else
+      {
+        // if not a corner, keeep only vertices that are local extrema
+        vtkm::Id sp, sn;
+        if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
+        {
+          assert(pos[0] > 0 && pos[0] < this->MeshStructure.MeshSize[0] - 1);
+          assert(meshIndex >= 1);
+          sp = this->SortIndicesPortal.Get(meshIndex - 1);
+          assert(meshIndex + 1 < this->SortIndicesPortal.GetNumberOfValues());
+          sn = this->SortIndicesPortal.Get(meshIndex + 1);
+        }
+        else if (pos[0] == 0 || pos[0] == this->MeshStructure.MeshSize[0] - 1)
+        {
+          assert(pos[1] > 0 && pos[1] < this->MeshStructure.MeshSize[1] - 1);
+          assert(meshIndex >= this->MeshStructure.MeshSize[0]);
+          sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
+          assert(meshIndex + this->MeshStructure.MeshSize[0] <
+                 this->SortIndices.GetNumberOfValues());
+          sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
+        }
+        return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+      }
+    }
+    else
+    {
+      // Discard vertices in the interior
+      return false;
+    }
+  }
+  VTKM_EXEC_CONT
+  const data_set_mesh::MeshStructure2D<DeviceTag>& GetMeshStructure() const
   {
     return this->MeshStructure;
   }
 
 private:
   // 2D Mesh size parameters
-  mesh_dem::MeshStructure2D<DeviceTag> MeshStructure;
-  SortOrderPortalType SortOrderPortal;
+  data_set_mesh::MeshStructure2D<DeviceTag> MeshStructure;
+  SortIndicesPortalType SortIndicesPortal;
 };
 
 class MeshBoundary2DExec : public vtkm::cont::ExecutionObjectBase
 {
 public:
   VTKM_EXEC_CONT
-  MeshBoundary2DExec(vtkm::Id nrows, vtkm::Id ncols, const IdArrayType& inSortOrder)
-    : NumRows(nrows)
-    , NumColumns(ncols)
-    , SortOrder(inSortOrder)
+  MeshBoundary2DExec(vtkm::Id2 inMeshSize, const IdArrayType& inSortIndices)
+    : MeshSize(inMeshSize)
+    , SortIndices(inSortIndices)
   {
   }
 
@@ -135,14 +176,13 @@ public:
   template <typename DeviceTag>
   MeshBoundary2D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
   {
-    return MeshBoundary2D<DeviceTag>(this->NumRows, this->NumColumns, this->SortOrder, token);
+    return MeshBoundary2D<DeviceTag>(this->MeshSize, this->SortIndices, token);
   }
 
 private:
   // 2D Mesh size parameters
-  vtkm::Id NumRows;
-  vtkm::Id NumColumns;
-  const IdArrayType& SortOrder;
+  vtkm::Id2 MeshSize;
+  const IdArrayType& SortIndices;
 };
 
 

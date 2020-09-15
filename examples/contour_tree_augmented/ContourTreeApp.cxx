@@ -387,8 +387,8 @@ int main(int argc, char* argv[])
 #ifdef WITH_MPI
 #ifdef DEBUG_PRINT
   // From https://www.unix.com/302983597-post2.html
-  char* cstr_filename = new char[15];
-  snprintf(cstr_filename, sizeof(filename), "cout_%d.log", rank);
+  char cstr_filename[32];
+  snprintf(cstr_filename, sizeof(cstr_filename), "cout_%d.log", rank);
   int out = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
   if (-1 == out)
   {
@@ -417,8 +417,6 @@ int main(int argc, char* argv[])
     perror("cannot redirect stderr");
     return 255;
   }
-
-  delete[] cstr_filename;
 #endif
 #endif
 
@@ -444,12 +442,12 @@ int main(int argc, char* argv[])
     // Copy the data into the values array so we can construct a multiblock dataset
     // TODO All we should need to do to implement BOV support is to copy the values
     // in the values vector and copy the dimensions in the dims vector
-    vtkm::Id nRows, nCols, nSlices;
-    vtkm::worklet::contourtree_augmented::GetRowsColsSlices temp;
-    temp(inDataSet.GetCellSet(), nRows, nCols, nSlices);
-    dims[0] = nRows;
-    dims[1] = nCols;
-    dims[2] = nSlices;
+    vtkm::Id3 meshSize;
+    vtkm::worklet::contourtree_augmented::GetPointDimensions temp;
+    temp(inDataSet.GetCellSet(), meshSize);
+    dims[0] = meshSize[0];
+    dims[1] = meshSize[1];
+    dims[2] = meshSize[2];
     auto tempField = inDataSet.GetField("values").GetData();
     values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
     auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
@@ -515,6 +513,13 @@ int main(int argc, char* argv[])
     dataReadTime = currTime - prevTime;
     prevTime = currTime;
 
+    // swap dims order
+    {
+      vtkm::Id temp = dims[0];
+      dims[0] = dims[1];
+      dims[1] = temp;
+    }
+
 #ifndef WITH_MPI // We only need the inDataSet if are not using MPI otherwise we'll constructe a multi-block dataset
     // build the input dataset
     vtkm::cont::DataSetBuilderUniform dsb;
@@ -522,16 +527,16 @@ int main(int argc, char* argv[])
     if (nDims == 2)
     {
       vtkm::Id2 vdims;
-      vdims[0] = static_cast<vtkm::Id>(dims[1]);
-      vdims[1] = static_cast<vtkm::Id>(dims[0]);
+      vdims[0] = static_cast<vtkm::Id>(dims[0]);
+      vdims[1] = static_cast<vtkm::Id>(dims[1]);
       inDataSet = dsb.Create(vdims);
     }
     // 3D data
     else
     {
       vtkm::Id3 vdims;
-      vdims[0] = static_cast<vtkm::Id>(dims[1]);
-      vdims[1] = static_cast<vtkm::Id>(dims[0]);
+      vdims[0] = static_cast<vtkm::Id>(dims[0]);
+      vdims[1] = static_cast<vtkm::Id>(dims[1]);
       vdims[2] = static_cast<vtkm::Id>(dims[2]);
       inDataSet = dsb.Create(vdims);
     }
@@ -594,8 +599,8 @@ int main(int argc, char* argv[])
     {
       VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
                     rank == 0,
-                    "Number of ranks to large for data. Use " << lastDimSize / 2
-                                                              << "or fewer ranks");
+                    "Number of ranks too large for data. Use " << lastDimSize / 2
+                                                               << "or fewer ranks");
       MPI_Finalize();
       return EXIT_FAILURE;
     }
@@ -629,8 +634,8 @@ int main(int argc, char* argv[])
       if (nDims == 2)
       {
         vtkm::Id2 vdims;
-        vdims[0] = static_cast<vtkm::Id>(currBlockSize);
-        vdims[1] = static_cast<vtkm::Id>(dims[0]);
+        vdims[0] = static_cast<vtkm::Id>(dims[0]);
+        vdims[1] = static_cast<vtkm::Id>(currBlockSize);
         vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
         vtkm::Vec<ValueType, 2> spacing(1, 1);
         ds = dsb.Create(vdims, origin, spacing);
@@ -645,8 +650,8 @@ int main(int argc, char* argv[])
       else
       {
         vtkm::Id3 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[0]);
-        vdims[1] = static_cast<vtkm::Id>(dims[1]);
+        vdims[0] = static_cast<vtkm::Id>(dims[1]);
+        vdims[1] = static_cast<vtkm::Id>(dims[0]);
         vdims[2] = static_cast<vtkm::Id>(currBlockSize);
         vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
         vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
@@ -689,6 +694,21 @@ int main(int argc, char* argv[])
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
   prevTime = currTime;
+
+#ifdef WITH_MPI
+#ifdef DEBUG_PRINT
+  std::cout << std::flush;
+  close(out);
+  std::cerr << std::flush;
+  close(err);
+
+  dup2(save_out, fileno(stdout));
+  dup2(save_err, fileno(stderr));
+
+  close(save_out);
+  close(save_err);
+#endif
+#endif
 
   ////////////////////////////////////////////
   // Compute the branch decomposition

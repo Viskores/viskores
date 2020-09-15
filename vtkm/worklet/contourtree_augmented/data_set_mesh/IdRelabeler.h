@@ -60,12 +60,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_simulated_simplicity_index_comparator_h
+#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
+#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -73,87 +72,49 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_contourtree_mesh_inc
+namespace mesh_dem
 {
 
-
-// comparator used for initial sort of data values
-template <typename FieldType, typename DeviceAdapter>
-class CombinedSimulatedSimplicityIndexComparator
+/// A utility class that converts Ids from local to global given a mesh
+class IdRelabeler
 {
 public:
-  typedef CombinedVector<FieldType, DeviceAdapter> CombinedDataVector;
-  typedef CombinedVector<vtkm::Id, DeviceAdapter> CombinedIndexVector;
-
-  VTKM_CONT
-  CombinedSimulatedSimplicityIndexComparator(const CombinedDataVector& val,
-                                             const CombinedIndexVector& idx)
-    : Values(val)
-    , Indices(idx)
+  VTKM_EXEC_CONT
+  IdRelabeler()
+    : LocalBlockOrigin{ 0, 0, 0 }
+    , LocalBlockSize{ 1, 1, 1 }
+    , GlobalSize{ 1, 1, 1 }
   {
   }
 
   VTKM_EXEC_CONT
-  bool operator()(vtkm::Id i, vtkm::Id j) const
-  { // operator()
-    // get values
-    FieldType val_i = this->Values[i];
-    FieldType val_j = this->Values[j];
+  IdRelabeler(vtkm::Id3 lBO, vtkm::Id3 lBS, vtkm::Id3 gS)
+    : LocalBlockOrigin(lBO)
+    , LocalBlockSize(lBS)
+    , GlobalSize(gS)
+  {
+  }
 
-    // value comparison
-    if (val_i < val_j)
-      return true;
-    if (val_j < val_i)
-      return false;
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(vtkm::Id v) const
+  {
+    // Translate v into mesh coordinates and add offset
+    vtkm::Id3 pos{ LocalBlockOrigin[0] + (v % LocalBlockSize[0]),
+                   LocalBlockOrigin[1] +
+                     (v % (LocalBlockSize[1] * LocalBlockSize[0]) / LocalBlockSize[0]),
+                   LocalBlockOrigin[2] + (v / (LocalBlockSize[1] * LocalBlockSize[0])) };
 
-    // get indices
-    vtkm::Id idx_i = this->Indices[i];
-    vtkm::Id idx_j = this->Indices[j];
-    // index comparison for simulated simplicity
-    if (idx_i < idx_j)
-      return true;
-    if (idx_j < idx_i)
-      return false;
-
-    // fallback - always false
-    return false;
-
-    /** //Original code
-          { // operator()
-            // get Values
-            dataType val_i = Values[i];
-            dataType val_j = Values[j];
-
-            // value comparison
-            if (val_i < val_j)
-                return true;
-            if (val_j < val_i)
-                return false;
-
-            // get Indices
-            indexType idx_i = Indices[i];
-            indexType idx_j = Indices[j];
-            // index comparison for simulated simplicity
-            if (idx_i < idx_j)
-                return true;
-            if (idx_j < idx_i)
-                return false;
-
-            // fallback - always false
-            return false;
-        } // operator()
-
-          */
-
-
-  } // operator()
+    // Translate mesh coordinates into global Id
+    return (pos[2] * GlobalSize[1] + pos[1]) * GlobalSize[0] + pos[0];
+  }
 
 private:
-  const CombinedDataVector& Values;
-  const CombinedIndexVector& Indices;
+  vtkm::Id3 LocalBlockOrigin;
+  vtkm::Id3 LocalBlockSize;
+  vtkm::Id3 GlobalSize;
 };
 
-} // namespace mesh_dem_contourtree_mesh_inc
+} // namespace mesh_dem
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

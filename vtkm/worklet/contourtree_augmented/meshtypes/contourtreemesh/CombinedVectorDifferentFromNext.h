@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,19 +60,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-// This header contains a collection of classes used to describe the boundary
-// of a mesh, for each main mesh type (i.e., 2D, 3D, and ContourTreeMesh).
-// For each mesh type, there are two classes, the actual boundary desriptor
-// class and an ExectionObject class with the PrepareForInput function that
-// VTKm expects to generate the object for the execution environment.
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_contour_tree_mesh_h
-#define vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_contour_tree_mesh_h
-
-#include <cstdlib>
-
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -70,100 +74,50 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
+namespace mesh_dem_contourtree_mesh_inc
+{
 
-
-
-template <typename DeviceTag>
-class MeshBoundaryContourTreeMesh
+// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
+// be 1 element shorter than the input arrays
+template <typename T, typename DeviceAdapter>
+class CombinedVectorDifferentFromNext
 {
 public:
-  using IndicesPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
+    DeviceAdapter>::PortalConst SortOrderPortalType;
 
   VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMesh() {}
-
-  VTKM_CONT
-  MeshBoundaryContourTreeMesh(const IdArrayType& globalMeshIndex,
-                              vtkm::Id totalNRows,
-                              vtkm::Id totalNCols,
-                              vtkm::Id3 minIdx,
-                              vtkm::Id3 maxIdx,
-                              vtkm::cont::Token& token)
-    : TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
-  {
-    assert(this->TotalNRows > 0 && this->TotalNCols > 0);
-    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag(), token);
-  }
-
-  VTKM_EXEC_CONT
-  bool liesOnBoundary(const vtkm::Id index) const
-  {
-    vtkm::Id idx = this->GlobalMeshIndexPortal.Get(index);
-    vtkm::Id3 rcs;
-    rcs[0] = vtkm::Id((idx % (this->TotalNRows * this->TotalNCols)) / this->TotalNCols);
-    rcs[1] = vtkm::Id(idx % this->TotalNCols);
-    rcs[2] = vtkm::Id(idx / (this->TotalNRows * this->TotalNCols));
-    for (int d = 0; d < 3; ++d)
-    {
-      if (this->MinIdx[d] != this->MaxIdx[d] &&
-          (rcs[d] == this->MinIdx[d] || rcs[d] == this->MaxIdx[d]))
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-private:
-  // mesh block parameters
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
-  IndicesPortalType GlobalMeshIndexPortal;
-};
-
-
-class MeshBoundaryContourTreeMeshExec : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMeshExec(const IdArrayType& globalMeshIndex,
-                                  vtkm::Id totalNRows,
-                                  vtkm::Id totalNCols,
-                                  vtkm::Id3 minIdx,
-                                  vtkm::Id3 maxIdx)
-    : GlobalMeshIndex(globalMeshIndex)
-    , TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
+  CombinedVectorDifferentFromNext()
+    : DataArray()
   {
   }
 
   VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag,
-                                                             vtkm::cont::Token& token) const
+  CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
+                                  const IdArrayType& sortOrder,
+                                  vtkm::cont::Token& token)
+    : DataArray(inDataArray)
   {
-    return MeshBoundaryContourTreeMesh<DeviceTag>(
-      this->GlobalMeshIndex, this->TotalNRows, this->TotalNCols, this->MinIdx, this->MaxIdx, token);
+    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(vtkm::Id i) const
+  {
+    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
+    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
+    return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
   }
 
 private:
-  const IdArrayType& GlobalMeshIndex;
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
+  SortOrderPortalType OverallSortOrderPortal;
+  const CombinedVector<T, DeviceAdapter>* DataArray;
 };
 
 
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
-} // worklet
-} // vtkm
+} // namespace worklet
+} // namespace vtkm
 
 #endif
