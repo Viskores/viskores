@@ -534,26 +534,21 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
   // for (indexType supernode = 0; supernode < this->ContourTreeResult.Supernodes.size(); supernode++)
   //    superparents[this->ContourTreeResult.Supernodes[supernode]] = supernode;
 
-  IdArrayType sortOrder; // TODO/FIX: Why is this copy necessary?
-  vtkm::cont::Algorithm::Copy(mesh.SortOrder, sortOrder);
-
   // Second step - for all remaining (regular) nodes, locate the superarc to which they belong
   contourtree_maker_inc_ns::ComputeRegularStructure_LocateSuperarcsOnBoundary
     locateSuperarcsOnBoundaryWorklet(this->ContourTreeResult.Hypernodes.GetNumberOfValues(),
                                      this->ContourTreeResult.Supernodes.GetNumberOfValues());
-  this->Invoke(
-    locateSuperarcsOnBoundaryWorklet,
-    superparents,                            // (input/output)
-    this->ContourTreeResult.WhenTransferred, // (input)
-    this->ContourTreeResult.Hyperparents,    // (input)
-    this->ContourTreeResult.Hyperarcs,       // (input)
-    this->ContourTreeResult.Hypernodes,      // (input)
-    this->ContourTreeResult.Supernodes,      // (input)
-    meshExtrema.Peaks,                       // (input)
-    meshExtrema.Pits,                        // (input)
-    sortOrder,                               // (input)
-    //mesh.SortOrder,                          // (input) // TODO/FIXME: Why can't I just pass this?
-    meshBoundaryExecObj); // (input)
+  this->Invoke(locateSuperarcsOnBoundaryWorklet,
+               superparents,                            // (input/output)
+               this->ContourTreeResult.WhenTransferred, // (input)
+               this->ContourTreeResult.Hyperparents,    // (input)
+               this->ContourTreeResult.Hyperarcs,       // (input)
+               this->ContourTreeResult.Hypernodes,      // (input)
+               this->ContourTreeResult.Supernodes,      // (input)
+               meshExtrema.Peaks,                       // (input)
+               meshExtrema.Pits,                        // (input)
+               mesh.SortOrder,                          // (input)
+               meshBoundaryExecObj);                    // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
   // DAVID "ContourTreeMaker.h" line 338
