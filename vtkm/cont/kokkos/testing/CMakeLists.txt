@@ -29,4 +29,6 @@ vtkm_unit_tests(SOURCES ${unit_tests} LABEL "KOKKOS" LIBRARIES vtkm_worklet)
 
 if (TARGET vtkm::kokkos_cuda)
   set_source_files_properties(${unit_tests} PROPERTIES LANGUAGE CUDA)
+elseif(TARGET vtkm::kokkos_hip)
+  set_source_files_properties(${unit_tests} PROPERTIES LANGUAGE HIP)
 endif()

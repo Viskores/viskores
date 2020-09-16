@@ -344,6 +344,12 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm::kokkos)
     message(STATUS "Detected Cuda arch from Kokkos: ${cuda_arch}")
 
     add_library(vtkm::kokkos_cuda INTERFACE IMPORTED GLOBAL)
+  elseif(HIP IN_LIST Kokkos_DEVICES)
+    cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+    enable_language(HIP)
+    add_library(vtkm::kokkos_hip INTERFACE IMPORTED GLOBAL)
+    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_COMPILE_OPTIONS "")
+    set_property(TARGET Kokkos::kokkoscore PROPERTY INTERFACE_LINK_OPTIONS "")
   endif()
 
   add_library(vtkm::kokkos INTERFACE IMPORTED GLOBAL)

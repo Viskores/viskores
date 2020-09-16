@@ -47,9 +47,15 @@ function(vtkm_create_test_executable
   vtkm_add_drop_unused_function_flags(${prog})
   target_compile_definitions(${prog} PRIVATE ${defines})
 
-  #if all backends are enabled, we can use cuda compiler to handle all possible backends.
+  #determine if we have a device that requires a separate compiler enabled
+  set(device_lang_enabled FALSE)
+  if( (TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda) OR (TARGET vtkm::kokkos_hip))
+    set(device_lang_enabled TRUE)
+  endif()
+
+  #if all backends are enabled, we can use the device compiler to handle all possible backends.
   set(device_sources)
-  if(((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda)) AND enable_all_backends)
+  if(device_lang_enabled AND enable_all_backends)
     set(device_sources ${sources})
   endif()
   vtkm_add_target_information(${prog} DEVICE_SOURCES ${device_sources})
