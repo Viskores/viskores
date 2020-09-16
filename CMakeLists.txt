@@ -108,6 +108,12 @@ vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 # for CUDA devices.
 vtkm_option(VTKm_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
 
+# The HIP compiler (as of ROCm 3.7) takes a surprising long time to compile
+# kernels with assert in them they generate `printf` calls which are very
+# slow ( cause massive register spillage). By default we turn off asserts when
+# compiling for HIP devices.
+vtkm_option(VTKm_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
+
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.

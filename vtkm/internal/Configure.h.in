@@ -71,6 +71,10 @@
 #cmakedefine VTKM_NO_ASSERT_CUDA
 #endif
 
+#if !defined(VTKM_NO_ASSERT_HIP)
+#cmakedefine VTKM_NO_ASSERT_HIP
+#endif
+
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
 #cmakedefine VTKM_USE_DOUBLE_PRECISION
 #endif
