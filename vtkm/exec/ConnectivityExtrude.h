@@ -194,7 +194,7 @@ ConnectivityExtrude<Device>::ConnectivityExtrude(const ConnectivityPortalType& c
 }
 
 template <typename Device>
-typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::GetIndices(
+VTKM_EXEC typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::GetIndices(
   const vtkm::Id2& index) const
 {
   vtkm::Id tr = index[0];
@@ -217,13 +217,14 @@ typename ConnectivityExtrude<Device>::IndicesType ConnectivityExtrude<Device>::G
 
 
 template <typename Device>
-ReverseConnectivityExtrude<Device>::ReverseConnectivityExtrude(const ConnectivityPortalType& conn,
-                                                               const OffsetsPortalType& offsets,
-                                                               const CountsPortalType& counts,
-                                                               const PrevNodePortalType& prevNode,
-                                                               vtkm::Int32 cellsPerPlane,
-                                                               vtkm::Int32 pointsPerPlane,
-                                                               vtkm::Int32 numPlanes)
+VTKM_EXEC ReverseConnectivityExtrude<Device>::ReverseConnectivityExtrude(
+  const ConnectivityPortalType& conn,
+  const OffsetsPortalType& offsets,
+  const CountsPortalType& counts,
+  const PrevNodePortalType& prevNode,
+  vtkm::Int32 cellsPerPlane,
+  vtkm::Int32 pointsPerPlane,
+  vtkm::Int32 numPlanes)
   : Connectivity(conn)
   , Offsets(offsets)
   , Counts(counts)
@@ -235,7 +236,7 @@ ReverseConnectivityExtrude<Device>::ReverseConnectivityExtrude(const Connectivit
 }
 
 template <typename Device>
-typename ReverseConnectivityExtrude<Device>::IndicesType
+VTKM_EXEC typename ReverseConnectivityExtrude<Device>::IndicesType
 ReverseConnectivityExtrude<Device>::GetIndices(const vtkm::Id2& index) const
 {
   auto ptCur = index[0];
