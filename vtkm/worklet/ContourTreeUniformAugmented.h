@@ -357,8 +357,9 @@ private:
     nIterations = treeMaker.ContourTreeResult.NumIterations;
     //  Need to make a copy of sortOrder since ContourTreeMesh uses a smart array handle
     // TODO: Check if we can just make sortOrder a return array with variable type or if we can make the SortOrder return optional
+    // TODO/FIXME: According to Ken Moreland the short answer is no. We may need to go back and refactor this when we
+    // improve the contour tree API. https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2263#note_831128 for more details.
     vtkm::cont::Algorithm::Copy(mesh.SortOrder, sortOrder);
-    // sortOrder = mesh.SortOrder;
     // ProcessContourTree::CollectSortedSuperarcs<DeviceAdapter>(contourTree, mesh.SortOrder, saddlePeak);
     // contourTree.SortedArcPrint(mesh.SortOrder);
     // contourTree.PrintDotSuperStructure();
