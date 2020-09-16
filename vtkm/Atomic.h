@@ -239,9 +239,14 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #if defined(KOKKOS_ENABLE_CUDA) && !defined(VTKM_CUDA)
 #undef KOKKOS_ENABLE_CUDA
 #endif
+
+#if defined(KOKKOS_ENABLE_HIP) && !defined(VTKM_HIP)
+#undef KOKKOS_ENABLE_HIP
+#endif
+
 #endif //KOKKOS_MACROS_HPP not loaded
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Atomic.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
