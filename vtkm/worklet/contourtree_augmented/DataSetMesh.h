@@ -205,8 +205,8 @@ void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values
   this->SortOrder.ReleaseResources();
 
   // allocate memory for the sort arrays
-  SortOrder.Allocate(this->NumVertices);
-  SortIndices.Allocate(this->NumVertices);
+  this->SortOrder.Allocate(this->NumVertices);
+  this->SortIndices.Allocate(this->NumVertices);
 
   // now sort the sort order vector by the values, i.e,. initialize the SortOrder member variable
   vtkm::cont::ArrayHandleIndex initVertexIds(

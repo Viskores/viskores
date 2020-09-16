@@ -99,13 +99,15 @@ public:
   vtkm::Id operator()(vtkm::Id v) const
   {
     // Translate v into mesh coordinates and add offset
-    vtkm::Id3 pos{ LocalBlockOrigin[0] + (v % LocalBlockSize[0]),
-                   LocalBlockOrigin[1] +
-                     (v % (LocalBlockSize[1] * LocalBlockSize[0]) / LocalBlockSize[0]),
-                   LocalBlockOrigin[2] + (v / (LocalBlockSize[1] * LocalBlockSize[0])) };
+    vtkm::Id3 pos{
+      this->LocalBlockOrigin[0] + (v % this->LocalBlockSize[0]),
+      this->LocalBlockOrigin[1] +
+        (v % (this->LocalBlockSize[1] * this->LocalBlockSize[0]) / this->LocalBlockSize[0]),
+      this->LocalBlockOrigin[2] + (v / (this->LocalBlockSize[1] * this->LocalBlockSize[0]))
+    };
 
     // Translate mesh coordinates into global Id
-    return (pos[2] * GlobalSize[1] + pos[1]) * GlobalSize[0] + pos[0];
+    return (pos[2] * this->GlobalSize[1] + pos[1]) * this->GlobalSize[0] + pos[0];
   }
 
 private:
