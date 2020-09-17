@@ -19,7 +19,7 @@ set(headers
   FindCriticalPointsFindTerminalElementsWorklet.h
   CollapseRegularChainsWorklet.h
   IdentifyLeafHyperarcsWorklet.h
-  SuperarcWasTransferredPredicate.h
+  SuperarcWasNotTransferredPredicate.h
   NewHypernodePredicate.h
   HyperNodeWhenComparator.h
   SuperNodeWhenComparator.h

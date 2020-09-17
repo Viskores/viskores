@@ -74,9 +74,9 @@ public:
     FieldIn
       activeSuperarcs, // input iteration index. loop to one less than ContourTree->Supernodes.GetNumberOfValues()
     WholeArrayIn interiorForstIsNecessary, // input
-    WholeArrayOut upNeighbour,             // output
-    WholeArrayOut downNeighbour,           // output
-    WholeArrayOut supernodeType            // output
+    WholeArrayInOut upNeighbour,           // output  (Need In/Out to prevent overwrite?)
+    WholeArrayInOut downNeighbour,         // output  (Need In/Out to prevent overwrite?)
+    WholeArrayInOut supernodeType          // output   (Need In/Out to prevent overwrite?)
   );
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);

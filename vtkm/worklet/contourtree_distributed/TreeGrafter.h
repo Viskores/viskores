@@ -88,7 +88,7 @@
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/NewNodePredicate.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/PermuteComparator.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/SuperNodeWhenComparator.h>
-#include <vtkm/worklet/contourtree_distributed/tree_grafter/SuperarcWasTransferredPredicate.h>
+#include <vtkm/worklet/contourtree_distributed/tree_grafter/SuperarcWasNotTransferredPredicate.h>
 
 #include <sstream>
 #include <string>
@@ -342,11 +342,7 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
   //          whether it is already present, saving the regular and super IDs if it is, NO_SUCH_ELEMENT otherwise
 
 #ifdef DEBUG_PRINT
-  {
-    std::stringstream tempResultStream;
-    tempResultStream << "theRound: " << theRound << std::endl;
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, tempResultStream.str());
-  }
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "theRound: " << theRound);
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("Before GraftResidue()", __FILE__, __LINE__));
   VTKM_LOG_S(
@@ -389,7 +385,6 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
     //  7.   Update the iteration count
     this->NumTransferIterations++;
   } // loop to transfer
-
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -647,22 +642,18 @@ template <typename MeshType, typename FieldType>
 void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
 { // FindCriticalPoints()
   // allocate memory for type of supernode
+  this->resizeIndexVector(this->SupernodeType,
+                          this->ContourTree.Supernodes.GetNumberOfValues(),
+                          vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  // Reset the UpNeighbour and DownNeighbour array
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->SupernodeType);
-  // TODO: Hamish: I removed the code below to set UpNeighbour and DownNeighbour. According to the orginal code,
-  //      this could be removed later for performance, since we always reset the ones we use. Also
-  //      UpNeighbour and DownNeighbour are already initalized in InitializeActiveSuperarcs() so we
-  //      should not need to do this again here.
-  /*vtkm::cont::Algorithm::Copy(
-      vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                          this->UpNeighbour.GetNumberOfValues()),
-      this->UpNeighbour);
+                                         this->UpNeighbour.GetNumberOfValues()),
+    this->UpNeighbour);
   vtkm::cont::Algorithm::Copy(
-     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                          this->DownNeighbour.GetNumberOfValues()),
-     this->DownNeighbour);*/
+    vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                         this->DownNeighbour.GetNumberOfValues()),
+    this->DownNeighbour);
 
 #ifdef DEBUG_PRINT
   // TODO: Hamish: I don't think we need this DebugPrint here.
@@ -828,8 +819,10 @@ void TreeGrafter<MeshType, FieldType>::CompressActiveArrays()
   // create an array where we can put the compressed array
   vtkm::worklet::contourtree_augmented::EdgePairArray compressedActiveSuperarcs;
   // prediate for deciding which active superarcs to keep
+  // NOTE: The original PPP used std::remove_if instead of CopyIf so the predicate inverts the logic, i.e, the predicate indictes
+  //       which values to keep rather than which ones to remove
   auto superarcWasTransferredPredicate =
-    vtkm::worklet::contourtree_distributed::tree_grafter::SuperarcWasTransferredPredicate(
+    vtkm::worklet::contourtree_distributed::tree_grafter::SuperarcWasNotTransferredPredicate(
       this->WhenTransferred);
   // compress the array
   vtkm::cont::Algorithm::CopyIf(
@@ -846,7 +839,6 @@ void TreeGrafter<MeshType, FieldType>::CompressActiveArrays()
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              DebugPrint("CompressActiveArrays() Complete", __FILE__, __LINE__));
 #endif
-
 } // CompressActiveArrays()
 
 

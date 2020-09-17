@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_tree_grafter_superarc_was_transferred_predicate_h
-#define vtk_m_worklet_contourtree_distributed_tree_grafter_superarc_was_transferred_predicate_h
+#ifndef vtk_m_worklet_contourtree_distributed_tree_grafter_superarc_was_not_transferred_predicate_h
+#define vtk_m_worklet_contourtree_distributed_tree_grafter_superarc_was_not_transferred_predicate_h
 
 
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -68,7 +68,7 @@ namespace tree_grafter
 
 // Uniary predicate used in TreeGrafter.CompressActiveArrays to decide which active superarcs to keep
 template <typename DeviceAdapter>
-class SuperarcWasTransferredPredicateImpl : public vtkm::worklet::WorkletMapField
+class SuperarcWasNotTransferredPredicateImpl : public vtkm::worklet::WorkletMapField
 {
 public:
   using IdArrayPortalType =
@@ -77,7 +77,7 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  SuperarcWasTransferredPredicateImpl(const IdArrayPortalType& whenTransferredPortal)
+  SuperarcWasNotTransferredPredicateImpl(const IdArrayPortalType& whenTransferredPortal)
     : WhenTransferredPortal(whenTransferredPortal)
   {
   }
@@ -85,10 +85,10 @@ public:
   VTKM_EXEC bool operator()(const vtkm::worklet::contourtree_augmented::EdgePair& superarc) const
   { // operator ()
     // if either end is marked as transferred, the arc must be gone already
-    return ((!vtkm::worklet::contourtree_augmented::NoSuchElement(
-              this->WhenTransferredPortal.Get(superarc.first))) ||
-            (!vtkm::worklet::contourtree_augmented::NoSuchElement(
-              this->WhenTransferredPortal.Get(superarc.second))));
+    return !((!vtkm::worklet::contourtree_augmented::NoSuchElement(
+               this->WhenTransferredPortal.Get(superarc.first))) ||
+             (!vtkm::worklet::contourtree_augmented::NoSuchElement(
+               this->WhenTransferredPortal.Get(superarc.second))));
 
   } // operator ()
 
@@ -96,25 +96,25 @@ private:
   IdArrayPortalType WhenTransferredPortal;
 
 
-}; // SuperarcWasTransferredPredicate
+}; // SuperarcWasNotTransferredPredicate
 
 
-class SuperarcWasTransferredPredicate : public vtkm::cont::ExecutionObjectBase
+class SuperarcWasNotTransferredPredicate : public vtkm::cont::ExecutionObjectBase
 {
 public:
   VTKM_CONT
-  SuperarcWasTransferredPredicate(
+  SuperarcWasNotTransferredPredicate(
     const vtkm::worklet::contourtree_augmented::IdArrayType& whenTransferred)
     : WhenTransferred(whenTransferred)
   {
   }
 
   template <typename DeviceAdapter>
-  VTKM_CONT SuperarcWasTransferredPredicateImpl<DeviceAdapter> PrepareForExecution(
+  VTKM_CONT SuperarcWasNotTransferredPredicateImpl<DeviceAdapter> PrepareForExecution(
     DeviceAdapter device,
     vtkm::cont::Token& token) const
   {
-    return SuperarcWasTransferredPredicateImpl<DeviceAdapter>(
+    return SuperarcWasNotTransferredPredicateImpl<DeviceAdapter>(
       this->WhenTransferred.PrepareForInput(device, token));
   }
 
