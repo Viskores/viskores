@@ -90,15 +90,15 @@ public:
     ExecObject findSuperArcForUnknownNode,
 
     // output (write-only) arrays
-    // NOTE: hierarchicalSuperId and hierarchicalHyperId are not always updated in the operator.
+    // NOTE: not all fileds are always updated in the operator.
     //       We, therfore, need to use FieldInOut to make sure the original value (typical NO_SUCH_ELEMTENT)
     //       is not being overwritten (when just using FieldOut VTKm sets the value to 0)
     // TODO: We could potentially avoid the need for FieldInOut by always setting hierarchicalSuperId and hierarchicalHyperId to NO_SUCH_ELEMENT at the beginning
-    FieldOut hierarchicalRegularId,
+    FieldInOut hierarchicalRegularId,
     FieldInOut hierarchicalSuperId,
     FieldInOut hierarchicalHyperId,
-    FieldOut hierarchicalSuperparent,
-    FieldOut hierarchicalHyperparent);
+    FieldInOut hierarchicalSuperparent,
+    FieldInOut hierarchicalHyperparent);
 
   using ExecutionSignature =
     void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18);
