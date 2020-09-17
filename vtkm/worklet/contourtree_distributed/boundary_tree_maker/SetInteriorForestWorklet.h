@@ -76,8 +76,8 @@ public:
                                 WholeArrayIn meshGlobalIdsFromMeshIndices,   // input
                                 WholeArrayIn boundaryTreeMakerUpNeighbour,   // input
                                 WholeArrayIn boundaryTreeMakerDownNeighbour, // input
-                                FieldOut interiorForestAbove,                // output
-                                FieldOut interiorForestBelow                 // output
+                                FieldInOut interiorForestAbove,              // output
+                                FieldInOut interiorForestBelow               // output
   );
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
