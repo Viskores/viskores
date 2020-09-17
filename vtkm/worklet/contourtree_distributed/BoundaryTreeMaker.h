@@ -1239,7 +1239,6 @@ std::string BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::DebugPrint(con
                                                                              long lineNum) const
 { // DebugPrint
   std::stringstream resultStream;
-#ifdef DEBUG_PRINT
   resultStream << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
                << lineNum << " ";
   resultStream << std::left << std::string(message) << std::endl;
@@ -1317,11 +1316,6 @@ std::string BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::DebugPrint(con
   resultStream << "------------------------------------------------------" << std::endl;
   resultStream << std::endl;
   resultStream << std::flush;
-#else
-  (void)message;
-  (void)fileName;
-  (void)lineNum;
-#endif
   return resultStream.str();
 } // DebugPrint
 
