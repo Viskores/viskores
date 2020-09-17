@@ -278,22 +278,20 @@ inline void PrintEdgePairArray(std::string label,
   // now print them out
   auto edgePairArrayConstPortal = edgePairArray.ReadPortal();
 
-  // print the high end
-  PrintLabel(label + " First", outStream);
-  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
-  { // per edge
-    outStream << std::right << std::setw(PRINT_WIDTH)
-              << edgePairArrayConstPortal.Get(superarc).first << " ";
-  }
-  outStream << std::endl;
-
   // print the low end
-  PrintLabel(label + " Second", outStream);
+  PrintLabel(label + " High", outStream);
   for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
   { // per superarc
-    outStream << std::right << std::setw(PRINT_WIDTH)
-              << edgePairArrayConstPortal.Get(superarc).second << std::endl;
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).second, outStream);
   } // per superarc
+  outStream << std::endl;
+
+  // print the high end
+  PrintLabel(label + " Low", outStream);
+  for (vtkm::Id superarc = 0; superarc < nIndices; superarc++)
+  { // per edge
+    PrintIndexType(edgePairArrayConstPortal.Get(superarc).first, outStream);
+  }
   outStream << std::endl;
 } // PrintEdgePairArray()
 
