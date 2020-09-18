@@ -448,17 +448,21 @@ int main(int argc, char* argv[])
     dims[0] = meshSize[0];
     dims[1] = meshSize[1];
     dims[2] = meshSize[2];
-    auto tempField = inDataSet.GetField("values").GetData();
-    values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
-    auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
-    for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
-    {
-      values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
-    }
+    // TODO/FIXME: The following is commented out since it creates a a warning that
+    // AsVirtual() will no longer be supported. Since this implementation is
+    // incomplete anyway, it currently makes more sense to comment it out than
+    // to fix the warning.
+    // auto tempField = inDataSet.GetField("values").GetData();
+    // values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
+    // auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
+    // for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
+    // {
+    //   values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
+    // }
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                "BOV reader not yet support in MPI mode by this example");
     MPI_Finalize();
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 #endif
   }
   else // Read ASCII data input
