@@ -31,7 +31,7 @@ set(headers
   FunctorBase.h
   ParametricCoordinates.h
   PointLocator.h
-  PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   TaskBase.h
   )
 

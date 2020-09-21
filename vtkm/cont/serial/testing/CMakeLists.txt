@@ -22,7 +22,7 @@ set(unit_tests
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
   UnitTestSerialImplicitFunction.cxx
-  UnitTestSerialPointLocatorUniformGrid.cxx
+  UnitTestSerialPointLocatorSparseGrid.cxx
   UnitTestSerialVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests}

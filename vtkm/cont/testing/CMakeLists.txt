@@ -24,7 +24,7 @@ set(headers
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
-  TestingPointLocatorUniformGrid.h
+  TestingPointLocatorSparseGrid.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
   )

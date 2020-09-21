@@ -22,7 +22,7 @@ set(unit_tests
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
-  UnitTestTBBPointLocatorUniformGrid.cxx
+  UnitTestTBBPointLocatorSparseGrid.cxx
   UnitTestTBBVirtualObjectHandle.cxx
   )
 

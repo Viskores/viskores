@@ -25,7 +25,7 @@ set(unit_tests
   UnitTestCudaIterators.cu
   UnitTestCudaMathEdgeCases.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaPointLocatorUniformGrid.cu
+  UnitTestCudaPointLocatorSparseGrid.cu
   UnitTestCudaVirtualObjectHandle.cu
   )
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "CUDA" LIBRARIES vtkm_worklet)

@@ -102,6 +102,7 @@ set(headers
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
@@ -182,7 +183,7 @@ set(sources
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
-  PointLocatorUniformGrid.cxx
+  PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
   Timer.cxx
   UnknownArrayHandle.cxx
