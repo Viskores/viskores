@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
+#include <vtkm/cont/testing/TestingCellLocatorTwoLevel.h>
 
-int UnitTestTBBCellLocatorUniformBins(int argc, char* argv[])
+int UnitTestTBBCellLocatorTwoLevel(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagTBB>, argc, argv);
+    TestingCellLocatorTwoLevel<vtkm::cont::DeviceAdapterTagTBB>, argc, argv);
 }

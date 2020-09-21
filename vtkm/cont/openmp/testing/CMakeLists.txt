@@ -14,7 +14,7 @@ set(unit_tests
   UnitTestOpenMPArrayHandleMultiplexer.cxx
   UnitTestOpenMPBitField.cxx
   UnitTestOpenMPCellLocatorRectilinearGrid.cxx
-  UnitTestOpenMPCellLocatorUniformBins.cxx
+  UnitTestOpenMPCellLocatorTwoLevel.cxx
   UnitTestOpenMPCellLocatorUniformGrid.cxx
   UnitTestOpenMPColorTable.cxx
   UnitTestOpenMPComputeRange.cxx

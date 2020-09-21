@@ -9,12 +9,12 @@
 //============================================================================
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
+#include <vtkm/cont/testing/TestingCellLocatorTwoLevel.h>
 
-int UnitTestSerialCellLocatorUniformBins(int argc, char* argv[])
+int UnitTestSerialCellLocatorTwoLevel(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
+    TestingCellLocatorTwoLevel<vtkm::cont::DeviceAdapterTagSerial>, argc, argv);
 }

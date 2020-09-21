@@ -14,7 +14,7 @@ set(unit_tests
   UnitTestCudaArrayHandleMultiplexer.cu
   UnitTestCudaBitField.cu
   UnitTestCudaCellLocatorRectilinearGrid.cu
-  UnitTestCudaCellLocatorUniformBins.cu
+  UnitTestCudaCellLocatorTwoLevel.cu
   UnitTestCudaCellLocatorUniformGrid.cu
   UnitTestCudaComputeRange.cu
   UnitTestCudaColorTable.cu

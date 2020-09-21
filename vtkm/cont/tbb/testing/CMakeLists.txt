@@ -14,7 +14,7 @@ set(unit_tests
   UnitTestTBBArrayHandleMultiplexer.cxx
   UnitTestTBBBitField.cxx
   UnitTestTBBCellLocatorRectilinearGrid.cxx
-  UnitTestTBBCellLocatorUniformBins.cxx
+  UnitTestTBBCellLocatorTwoLevel.cxx
   UnitTestTBBCellLocatorUniformGrid.cxx
   UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx

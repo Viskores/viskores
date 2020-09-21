@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
+#include <vtkm/cont/testing/TestingCellLocatorTwoLevel.h>
 
-int UnitTestOpenMPCellLocatorUniformBins(int argc, char* argv[])
+int UnitTestOpenMPCellLocatorTwoLevel(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagOpenMP>, argc, argv);
+    TestingCellLocatorTwoLevel<vtkm::cont::DeviceAdapterTagOpenMP>, argc, argv);
 }

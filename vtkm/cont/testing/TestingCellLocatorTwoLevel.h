@@ -7,11 +7,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingCellLocatorUniformBins_h
-#define vtk_m_cont_testing_TestingCellLocatorUniformBins_h
+#ifndef vtk_m_cont_testing_TestingCellLocatorTwoLevel_h
+#define vtk_m_cont_testing_TestingCellLocatorTwoLevel_h
 
 #include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -188,7 +188,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 
   std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetNumberOfCells() << " cells\n";
 
-  vtkm::cont::CellLocatorUniformBins locator;
+  vtkm::cont::CellLocatorTwoLevel locator;
   locator.SetDensityL1(64.0f);
   locator.SetDensityL2(1.0f);
   locator.SetCellSet(ds.GetCellSet());
@@ -222,7 +222,7 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim, vtkm::Id number
 } // anonymous
 
 template <typename DeviceAdapter>
-void TestingCellLocatorUniformBins()
+void TestingCellLocatorTwoLevel()
 {
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(DeviceAdapter());
 
@@ -234,4 +234,4 @@ void TestingCellLocatorUniformBins()
   TestCellLocator(vtkm::Id2(18), 512); // 2D dataset
 }
 
-#endif // vtk_m_cont_testing_TestingCellLocatorUniformBins_h
+#endif // vtk_m_cont_testing_TestingCellLocatorTwoLevel_h

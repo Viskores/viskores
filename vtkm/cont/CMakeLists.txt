@@ -55,6 +55,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
@@ -166,7 +167,7 @@ set(sources
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
-  CellLocatorUniformBins.cxx
+  CellLocatorTwoLevel.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx

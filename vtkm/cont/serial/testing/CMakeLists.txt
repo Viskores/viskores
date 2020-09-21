@@ -14,7 +14,7 @@ set(unit_tests
   UnitTestSerialArrayHandleMultiplexer.cxx
   UnitTestSerialBitField.cxx
   UnitTestSerialCellLocatorRectilinearGrid.cxx
-  UnitTestSerialCellLocatorUniformBins.cxx
+  UnitTestSerialCellLocatorTwoLevel.cxx
   UnitTestSerialCellLocatorUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
   UnitTestSerialColorTable.cxx
