@@ -58,9 +58,9 @@
 // local includes
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_augmented/MergeTree.h>
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
-#include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -547,6 +547,7 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
                this->ContourTreeResult.Supernodes,      // (input)
                meshExtrema.Peaks,                       // (input)
                meshExtrema.Pits,                        // (input)
+               mesh.SortOrder,                          // (input)
                meshBoundaryExecObj);                    // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs

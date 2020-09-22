@@ -50,16 +50,16 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal3D_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_MeshStructureFreudenthal3D_h
+#ifndef vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureFreudenthal3D_h
+#define vtk_m_worklet_contourtree_augmented_meshtypes_MeshStructureFreudenthal3D_h
 
 #include <vtkm/Pair.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/MeshStructure3D.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/freudenthal_3D/Types.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/MeshStructure3D.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/freudenthal_3D/Types.h>
 
 
 namespace vtkm
@@ -71,7 +71,7 @@ namespace contourtree_augmented
 
 // Worklet for computing the sort indices from the sort order
 template <typename DeviceAdapter>
-class MeshStructureFreudenthal3D : public mesh_dem::MeshStructure3D<DeviceAdapter>
+class MeshStructureFreudenthal3D : public data_set_mesh::MeshStructure3D<DeviceAdapter>
 {
 public:
   using SortIndicesPortalType =
@@ -92,7 +92,7 @@ public:
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureFreudenthal3D()
-    : mesh_dem::MeshStructure3D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure3D<DeviceAdapter>()
     , GetMax(false)
     , NumIncidentEdge(m3d_freudenthal::N_INCIDENT_EDGES)
   {
@@ -100,9 +100,7 @@ public:
 
   // Main constructore used in the code
   MeshStructureFreudenthal3D(
-    vtkm::Id ncols,
-    vtkm::Id nrows,
-    vtkm::Id nslices,
+    vtkm::Id3 meshSize,
     vtkm::Id nincident_edges,
     bool getmax,
     const IdArrayType& sortIndices,
@@ -111,7 +109,7 @@ public:
     const m3d_freudenthal::NeighbourOffsetsType& neighbourOffsetsIn,
     const m3d_freudenthal::LinkComponentCaseTableType& linkComponentCaseTableIn,
     vtkm::cont::Token& token)
-    : mesh_dem::MeshStructure3D<DeviceAdapter>(ncols, nrows, nslices)
+    : data_set_mesh::MeshStructure3D<DeviceAdapter>(meshSize)
     , GetMax(getmax)
     , NumIncidentEdge(nincident_edges)
   {
@@ -132,10 +130,12 @@ public:
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const
   { // GetNeighbourIndex
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
+    // NOTE: Offsets are stored in "reversed" zyx [2][1][0] order (remaining artifact from
+    // using slices, rows, columns instead of xyz/[0][1][2])
     return SortIndicesPortal.Get(meshIndex +
-                                 (NeighbourOffsetsPortal.Get(edgeNo)[0] * this->NumRows +
+                                 (NeighbourOffsetsPortal.Get(edgeNo)[0] * this->MeshSize[1] +
                                   NeighbourOffsetsPortal.Get(edgeNo)[1]) *
-                                   this->NumColumns +
+                                   this->MeshSize[0] +
                                  NeighbourOffsetsPortal.Get(edgeNo)[2]);
   } // GetNeighbourIndex
 
@@ -159,14 +159,11 @@ public:
     using namespace m3d_freudenthal;
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
-    vtkm::Id slice = this->VertexSlice(meshIndex);
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
-      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id3 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0) | ((pos[2] == 0) ? FrontBit : 0) |
+      ((pos[2] == this->MeshSize[2] - 1) ? BackBit : 0);
 
     // in what follows, the boundary conditions always reset wasAscent
     // loop downwards so that we pick the same edges as previous versions
@@ -199,13 +196,11 @@ public:
     vtkm::Id meshIndex = SortOrderPortal.Get(sortIndex);
 
     // get the row and column
-    vtkm::Id slice = this->VertexSlice(meshIndex);
-    vtkm::Id row = this->VertexRow(meshIndex);
-    vtkm::Id col = this->VertexColumn(meshIndex);
-    vtkm::Int8 boundaryConfig = ((slice == 0) ? FrontBit : 0) |
-      ((slice == this->NumSlices - 1) ? BackBit : 0) | ((col == 0) ? LeftBit : 0) |
-      ((col == this->NumColumns - 1) ? RightBit : 0) | ((row == 0) ? TopBit : 0) |
-      ((row == this->NumRows - 1) ? BottomBit : 0);
+    vtkm::Id3 pos = this->VertexPos(meshIndex);
+    vtkm::Int8 boundaryConfig = ((pos[0] == 0) ? LeftBit : 0) |
+      ((pos[0] == this->MeshSize[0] - 1) ? RightBit : 0) | ((pos[1] == 0) ? TopBit : 0) |
+      ((pos[1] == this->MeshSize[1] - 1) ? BottomBit : 0) | ((pos[2] == 0) ? FrontBit : 0) |
+      ((pos[2] == this->MeshSize[2] - 1) ? BackBit : 0);
 
     // Initialize "union find"
     vtkm::Id caseNo = 0;

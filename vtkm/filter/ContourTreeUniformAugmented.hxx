@@ -57,7 +57,7 @@
 
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/ContourTreeUniformAugmented.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -161,14 +161,12 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
     throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  // Use the GetRowsColsSlices struct defined in the header to collect the nRows, nCols, and nSlices information
+  // Use the GetPointDimensions struct defined in the header to collect the meshSize information
   vtkm::worklet::ContourTreeAugmented worklet;
-  vtkm::Id nRows;
-  vtkm::Id nCols;
-  vtkm::Id nSlices = 1;
+  vtkm::Id3 meshSize;
   const auto& cells = input.GetCellSet();
   vtkm::filter::ApplyPolicyCellSet(cells, policy, *this)
-    .CastAndCall(vtkm::worklet::contourtree_augmented::GetRowsColsSlices(), nRows, nCols, nSlices);
+    .CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(), meshSize);
   // TODO blockIndex needs to change if we have multiple blocks per MPI rank and DoExecute is called for multiple blocks
   std::size_t blockIndex = 0;
 
@@ -193,9 +191,7 @@ vtkm::cont::DataSet ContourTreeAugmented::DoExecute(
               MultiBlockTreeHelper ? MultiBlockTreeHelper->LocalSortOrders[blockIndex]
                                    : this->MeshSortOrder,
               this->NumIterations,
-              nRows,
-              nCols,
-              nSlices,
+              meshSize,
               this->UseMarchingCubes,
               compRegularStruct);
 
@@ -319,7 +315,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // create the local data block structure
     localDataBlocks[bi] = new vtkm::worklet::contourtree_distributed::ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
-    localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
+    // localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
     localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
     localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->GlobalMeshIndex;
     localDataBlocks[bi]->Neighbours = currContourTreeMesh->Neighbours;
@@ -411,7 +407,9 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     // Construct the contour tree mesh from the last block
     vtkm::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
-    contourTreeMeshOut.SortOrder = localDataBlocks[0]->SortOrder;
+    // contourTreeMeshOut.SortOrder = localDataBlocks[0]->SortOrder;
+    contourTreeMeshOut.SortOrder = vtkm::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
+    contourTreeMeshOut.SortIndices = vtkm::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
     contourTreeMeshOut.SortedValues = localDataBlocks[0]->SortedValue;
     contourTreeMeshOut.GlobalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
     contourTreeMeshOut.Neighbours = localDataBlocks[0]->Neighbours;
@@ -424,10 +422,7 @@ VTKM_CONT void ContourTreeAugmented::DoPostExecute(
     maxIdx[1] = maxIdx[1] - 1;
     maxIdx[2] = maxIdx[2] > 0 ? (maxIdx[2] - 1) : 0;
     auto meshBoundaryExecObj = contourTreeMeshOut.GetMeshBoundaryExecutionObject(
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize[0],
-      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize[1],
-      minIdx,
-      maxIdx);
+      this->MultiBlockTreeHelper->MultiBlockSpatialDecomposition.GlobalSize, minIdx, maxIdx);
     // Run the worklet to compute the final contour tree
     worklet.Run(
       contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep API happy

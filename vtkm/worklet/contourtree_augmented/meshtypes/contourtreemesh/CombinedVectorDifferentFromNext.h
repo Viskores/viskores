@@ -60,11 +60,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
-#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -72,61 +74,48 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
+namespace mesh_dem_contourtree_mesh_inc
 {
 
-
-class IdRelabeler
+// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
+// be 1 element shorter than the input arrays
+template <typename T, typename DeviceAdapter>
+class CombinedVectorDifferentFromNext
 {
 public:
+  typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
+    DeviceAdapter>::PortalConst SortOrderPortalType;
+
   VTKM_EXEC_CONT
-  IdRelabeler()
-    : InputStartRow(0)
-    , InputStartCol(0)
-    , InputStartSlice(0)
-    , InputNumRows(1)
-    , InputNumCols(1)
-    , OutputNumRows(1)
-    , OutputNumCol(1)
+  CombinedVectorDifferentFromNext()
+    : DataArray()
   {
   }
 
-  VTKM_EXEC_CONT
-  IdRelabeler(vtkm::Id iSR,
-              vtkm::Id iSC,
-              vtkm::Id iSS,
-              vtkm::Id iNR,
-              vtkm::Id iNC,
-              vtkm::Id oNR,
-              vtkm::Id oNC)
-    : InputStartRow(iSR)
-    , InputStartCol(iSC)
-    , InputStartSlice(iSS)
-    , InputNumRows(iNR)
-    , InputNumCols(iNC)
-    , OutputNumRows(oNR)
-    , OutputNumCol(oNC)
+  VTKM_CONT
+  CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
+                                  const IdArrayType& sortOrder,
+                                  vtkm::cont::Token& token)
+    : DataArray(inDataArray)
   {
+    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id v) const
+  vtkm::Id operator()(vtkm::Id i) const
   {
-    vtkm::Id r = InputStartRow + ((v % (InputNumRows * InputNumCols)) / InputNumCols);
-    vtkm::Id c = InputStartCol + (v % InputNumCols);
-    vtkm::Id s = InputStartSlice + v / (InputNumRows * InputNumCols);
-
-    return (s * OutputNumRows + r) * OutputNumCol + c;
+    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
+    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
+    return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
   }
 
 private:
-  vtkm::Id InputStartRow, InputStartCol, InputStartSlice;
-  vtkm::Id InputNumRows, InputNumCols;
-  vtkm::Id OutputNumRows, OutputNumCol;
+  SortOrderPortalType OverallSortOrderPortal;
+  const CombinedVector<T, DeviceAdapter>* DataArray;
 };
 
 
-} // namespace mesh_dem
+} // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

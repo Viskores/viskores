@@ -59,7 +59,7 @@
 // local includes
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 
 //VTKM includes
@@ -250,16 +250,17 @@ inline void MergeTree::DebugPrintTree(const char* message,
     {
       std::cout << mesh.SortOrder.ReadPortal().Get(arc) << std::endl;
     }
-    if (mesh.NumDims == 2)
-    {
-      if ((entry % mesh.NumColumns) == (mesh.NumColumns - 1))
+    if (mesh.MeshSize[2] == 1)
+    { // 2D Mesh
+      if ((entry % mesh.MeshSize[0]) == (mesh.MeshSize[0] - 1))
       {
         std::cout << std::endl;
       }
     }
-    else if (mesh.NumDims == 3)
-    {
-      if ((entry % (mesh.NumColumns * mesh.NumRows)) == (mesh.NumColumns * mesh.NumRows - 1))
+    else
+    { // 3D Mesh
+      if ((entry % (mesh.MeshSize[0] * mesh.MeshSize[1])) ==
+          (mesh.MeshSize[0] * mesh.MeshSize[1] - 1))
       {
         std::cout << std::endl;
       }

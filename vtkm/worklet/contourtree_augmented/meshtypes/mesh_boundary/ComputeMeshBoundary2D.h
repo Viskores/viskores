@@ -88,34 +88,34 @@ public:
                             const InFieldPortalType sortIndicesPortal,
                             const MeshBoundaryType& meshBoundary,
                             vtkm::Id& boundaryVertex,
-                            vtkm::Id& boundarySortIndex)
+                            vtkm::Id& boundarySortIndex) const
   {
     auto meshStructure2D = meshBoundary.GetMeshStructure();
-    vtkm::Id numBoundary = 2 * meshStructure2D.NumRows + 2 * meshStructure2D.NumColumns - 4;
+    vtkm::Id numBoundary = 2 * meshStructure2D.MeshSize[1] + 2 * meshStructure2D.MeshSize[0] - 4;
 
+    // For comments: [0] -> column, [1] -> row
     // Define the boundaryVertex result
-    if (boundaryId < meshStructure2D->NumColumns)
+    if (boundaryId < meshStructure2D.MeshSize[0])
     {
-      boundaryVertex = meshStructure2D.VertexId(0, boundaryId);
+      boundaryVertex = meshStructure2D.VertexId(vtkm::Id2{ boundaryId, 0 });
     }
     // then bottom row
-    else if (boundaryId > numBoundary - meshStructure2D.NumColumns - 1)
+    else if (boundaryId > numBoundary - meshStructure2D.MeshSize[0] - 1)
     {
-      boundaryVertex = meshStructure2D.VertexId(
-        meshStructure2D.NumRows - 1, boundaryId + meshStructure2D.NumColumns - numBoundary);
+      boundaryVertex = meshStructure2D.VertexId(vtkm::Id2{
+        boundaryId + meshStructure2D.MeshSize[0] - numBoundary, meshStructure2D.MeshSize[1] - 1 });
     }
     // then the row ends
     else
     { // row ends
-      vtkm::Id row = ((boundaryId - meshStructure2D.NumColumns) / 2) + 1;
-      vtkm::Id col =
-        ((boundaryId - meshStructure2D.NumColumns) % 2) ? (meshStructure2D.NumColumnsn - 1) : 0;
-      boundaryVertex = meshStructure2D.VertexId(row, col);
+      boundaryVertex = meshStructure2D.VertexId(vtkm::Id2{
+        ((boundaryId - meshStructure2D.MeshSize[0]) % 2) ? (meshStructure2D.MeshSize[0] - 1) : 0,
+        ((boundaryId - meshStructure2D.MeshSize[0]) / 2) + 1 });
     } // row ends
     // and fill in the sort index array as well
     boundarySortIndex = sortIndicesPortal.Get(boundaryVertex);
 
-    /*
+    /* TODO/FIXME: Delete this comment after code review and tests
     // compute how many elements are needed
     indexType nBoundary = 2 * nRows + 2 * nCols - 4;
 

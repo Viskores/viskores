@@ -2,20 +2,10 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
+//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//
-//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
-//
-//  Under the terms of Contract DE-NA0003525 with NTESS,
-//  the U.S. Government retains certain rights in this software.
-//
-//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
-//  Laboratory (LANL), the U.S. Government retains certain rights in
-//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -60,13 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ExecutionObjectBase.h>
-#include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/contourtreemesh/CombinedVector.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -74,48 +61,32 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem_contourtree_mesh_inc
+namespace data_set_mesh
 {
 
-// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
-// be 1 element shorter than the input arrays
-template <typename T, typename DeviceAdapter>
-class CombinedVectorDifferentFromNext
+// Worklet for computing the sort indices from the sort order
+class SortIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-    DeviceAdapter>::PortalConst SortOrderPortalType;
+  typedef void ControlSignature(WholeArrayIn sortOrder,     // (input) index into active vertices
+                                WholeArrayOut sortIndices); // (output) whether critical
+  typedef void ExecutionSignature(_1, InputIndex, _2);
+  using InputDomain = _1;
 
+  // Constructor
   VTKM_EXEC_CONT
-  CombinedVectorDifferentFromNext()
-    : DataArray()
+  SortIndices() {}
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const InFieldPortalType& sortOrder,
+                            const vtkm::Id vertexIndex,
+                            const OutFieldPortalType& sortIndices) const
   {
+    sortIndices.Set(sortOrder.Get(vertexIndex), vertexIndex);
   }
+}; // Mesh2D_DEM_VertexStarter
 
-  VTKM_CONT
-  CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
-                                  const IdArrayType& sortOrder,
-                                  vtkm::cont::Token& token)
-    : DataArray(inDataArray)
-  {
-    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id i) const
-  {
-    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
-    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
-    return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
-  }
-
-private:
-  SortOrderPortalType OverallSortOrderPortal;
-  const CombinedVector<T, DeviceAdapter>* DataArray;
-};
-
-
-} // namespace mesh_dem_contourtree_mesh_inc
+} // namespace data_set_mesh
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

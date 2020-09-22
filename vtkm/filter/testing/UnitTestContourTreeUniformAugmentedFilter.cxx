@@ -78,19 +78,29 @@ private:
   //
   //  Internal helper function to execute the contour tree and save repeat code in tests
   //
+  // datSets: 0 -> 5x5.txt (2D), 1 -> 8x9test.txt (2D), 2-> 5b.txt (3D)
   vtkm::filter::ContourTreeAugmented RunContourTree(bool useMarchingCubes,
                                                     unsigned int computeRegularStructure,
-                                                    unsigned int numDims = 2) const
+                                                    unsigned int dataSetNo) const
   {
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet dataSet;
-    if (numDims == 2)
+    switch (dataSetNo)
     {
-      dataSet = MakeTestDataSet().Make2DUniformDataSet1();
-    }
-    else if (numDims == 3)
-    {
-      dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+      case 0:
+        dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+        break;
+      case 1:
+        dataSet = MakeTestDataSet().Make2DUniformDataSet3();
+        break;
+      case 2:
+        dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+        break;
+      case 3:
+        dataSet = MakeTestDataSet().Make3DUniformDataSet4();
+        break;
+      default:
+        VTKM_TEST_ASSERT(false);
     }
     vtkm::filter::ContourTreeAugmented filter(useMarchingCubes, computeRegularStructure);
     filter.SetActiveField("pointvar");
@@ -102,14 +112,15 @@ public:
   //
   // Create a uniform 2D structured cell set as input with values for contours
   //
-  void TestContourTree_Mesh2D_Freudenthal(unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh2D_Freudenthal_SquareExtents(
+    unsigned int computeRegularStructure = 1) const
   {
     std::cout << "Testing ContourTree_Augmented 2D Mesh. computeRegularStructure="
               << computeRegularStructure << std::endl;
     vtkm::filter::ContourTreeAugmented filter =
       RunContourTree(false,                   // no marching cubes,
                      computeRegularStructure, // compute regular structure
-                     2                        // use 2D mesh
+                     0                        // use 5x5.txt
       );
 
     // Compute the saddle peaks to make sure the contour tree is correct
@@ -148,7 +159,58 @@ public:
                      "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_Freudenthal(unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(
+    unsigned int computeRegularStructure = 1) const
+  {
+    std::cout << "Testing ContourTree_Augmented 2D Mesh. computeRegularStructure="
+              << computeRegularStructure << std::endl;
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(false,                   // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     1                        // use 8x9test.txt
+      );
+
+    // Compute the saddle peaks to make sure the contour tree is correct
+    vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
+      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    // Print the expected contour tree
+    std::cout << "Expected Contour Tree" << std::endl;
+    std::cout << "          10           20" << std::endl;
+    std::cout << "          20           34" << std::endl;
+    std::cout << "          20           38" << std::endl;
+    std::cout << "          20           61" << std::endl;
+    std::cout << "          23           34" << std::endl;
+    std::cout << "          24           34" << std::endl;
+    std::cout << "          50           61" << std::endl;
+    std::cout << "          61           71" << std::endl;
+
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 8),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(10, 20)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(20, 34)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(20, 38)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(20, 61)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(23, 34)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(24, 34)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(50, 61)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(61, 71)),
+                     "Wrong result for ContourTree filter");
+  }
+
+  void TestContourTree_Mesh3D_Freudenthal_CubicExtents(
+    unsigned int computeRegularStructure = 1) const
   {
     std::cout << "Testing ContourTree_Augmented 3D Mesh. computeRegularStructure="
               << computeRegularStructure << std::endl;
@@ -157,7 +219,7 @@ public:
     vtkm::filter::ContourTreeAugmented filter =
       RunContourTree(false,                   // no marching cubes,
                      computeRegularStructure, // compute regular structure
-                     3                        // use 2D mesh
+                     2                        // use 5b.txt (3D) mesh
       );
 
     // Compute the saddle peaks to make sure the contour tree is correct
@@ -203,7 +265,64 @@ public:
                      "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_MarchingCubes(unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(
+    unsigned int computeRegularStructure = 1) const
+  {
+    std::cout << "Testing ContourTree_Augmented 3D Mesh. computeRegularStructure="
+              << computeRegularStructure << std::endl;
+
+    // Execute the filter
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(false,                   // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     3                        // use 5b.txt (3D) upsampled to 5x6x7 mesh
+      );
+
+    // Compute the saddle peaks to make sure the contour tree is correct
+    vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
+      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    // Print the expected contour tree
+    std::cout << "Expected Contour Tree" << std::endl;
+    std::cout << "           0          112" << std::endl;
+    std::cout << "          71           72" << std::endl;
+    std::cout << "          72           78" << std::endl;
+    std::cout << "          72          101" << std::endl;
+    std::cout << "         101          112" << std::endl;
+    std::cout << "         101          132" << std::endl;
+    std::cout << "         107          112" << std::endl;
+    std::cout << "         131          132" << std::endl;
+    std::cout << "         132          138" << std::endl;
+
+    // Make sure the contour tree is correct
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 112)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(71, 72)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(72, 78)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(72, 101)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(101, 112)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(101, 132)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(107, 112)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(131, 132)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), vtkm::make_Pair(132, 138)),
+                     "Wrong result for ContourTree filter");
+  }
+
+  void TestContourTree_Mesh3D_MarchingCubes_CubicExtents(
+    unsigned int computeRegularStructure = 1) const
   {
     std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. computeRegularStructure="
               << computeRegularStructure << std::endl;
@@ -212,7 +331,7 @@ public:
     vtkm::filter::ContourTreeAugmented filter =
       RunContourTree(true,                    // no marching cubes,
                      computeRegularStructure, // compute regular structure
-                     3                        // use 3D mesh
+                     2                        // use 5b.txt (3D) mesh
       );
 
     // Compute the saddle peaks to make sure the contour tree is correct
@@ -263,28 +382,110 @@ public:
                      "Wrong result for ContourTree filter");
   }
 
+  void TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(
+    unsigned int computeRegularStructure = 1) const
+  {
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. computeRegularStructure="
+              << computeRegularStructure << std::endl;
+
+    // Execute the filter
+    vtkm::filter::ContourTreeAugmented filter =
+      RunContourTree(true,                    // no marching cubes,
+                     computeRegularStructure, // compute regular structure
+                     3                        // use 5b.txt (3D) upsampled to 5x6x7 mesh
+      );
+
+    // Compute the saddle peaks to make sure the contour tree is correct
+    vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
+      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArray(saddlePeak);
+    // Print the expected contour tree
+    std::cout << "Expected Contour Tree" << std::endl;
+    std::cout << "           0          203" << std::endl;
+    std::cout << "          71           72" << std::endl;
+    std::cout << "          72           78" << std::endl;
+    std::cout << "          72          101" << std::endl;
+    std::cout << "         101          112" << std::endl;
+    std::cout << "         101          132" << std::endl;
+    std::cout << "         107          112" << std::endl;
+    std::cout << "         112          203" << std::endl;
+    std::cout << "         131          132" << std::endl;
+    std::cout << "         132          138" << std::endl;
+    std::cout << "         203          209" << std::endl;
+
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 11),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), vtkm::make_Pair(0, 203)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), vtkm::make_Pair(71, 72)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), vtkm::make_Pair(72, 78)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), vtkm::make_Pair(72, 101)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), vtkm::make_Pair(101, 112)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), vtkm::make_Pair(101, 132)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), vtkm::make_Pair(107, 112)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), vtkm::make_Pair(112, 203)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), vtkm::make_Pair(131, 132)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(9), vtkm::make_Pair(132, 138)),
+                     "Wrong result for ContourTree filter");
+    VTKM_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(10), vtkm::make_Pair(203, 209)),
+                     "Wrong result for ContourTree filter");
+  }
+
   void operator()() const
   {
     // Test 2D Freudenthal with augmentation
-    this->TestContourTree_Mesh2D_Freudenthal(1);
+    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(1);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh2D_Freudenthal(0);
+    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(0);
     // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh2D_Freudenthal(2);
+    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(2);
+
+    // Test 2D Freudenthal with augmentation
+    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(2);
 
     // Test 3D Freudenthal with augmentation
-    this->TestContourTree_Mesh3D_Freudenthal(1);
+    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(1);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_Freudenthal(0);
+    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(0);
     // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_Freudenthal(2);
+    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(2);
+
+    // Test 3D Freudenthal with augmentation
+    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(2);
 
     // Test 3D marching cubes with augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes(1);
+    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(1);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes(0);
+    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(0);
     // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes(2);
+    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(2);
+
+    // Test 3D marching cubes with augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(1);
+    // Make sure the contour tree does not change when we disable augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(0);
+    // Make sure the contour tree does not change when we use boundary augmentation
+    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(2);
   }
 };
 }

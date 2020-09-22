@@ -8,9 +8,9 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(headers
-  Freudenthal_2D_Triangulation.h
-  Freudenthal_3D_Triangulation.h
-  MarchingCubes_3D_Triangulation.h
+  DataSetMeshTriangulation2DFreudenthal.h
+  DataSetMeshTriangulation3DFreudenthal.h
+  DataSetMeshTriangulation3DMarchingCubes.h
   ContourTreeMesh.h
   MeshStructureFreudenthal2D.h
   MeshStructureFreudenthal3D.h

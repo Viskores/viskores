@@ -56,7 +56,7 @@
 #include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/BoundsCompute.h>
@@ -64,7 +64,7 @@
 //#include <vtkm/cont/AssignerPartitionedDataSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/IdRelabeler.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
 
 namespace vtkm
@@ -153,13 +153,6 @@ public:
                               unsigned int computeRegularStructure)
 
   {
-    vtkm::Id startRow = localBlockOrigin[0];
-    vtkm::Id startCol = localBlockOrigin[1];
-    vtkm::Id startSlice = localBlockOrigin[2];
-    vtkm::Id numRows = localBlockSize[0];
-    vtkm::Id numCols = localBlockSize[1];
-    vtkm::Id totalNumRows = globalSize[0];
-    vtkm::Id totalNumCols = globalSize[1];
     // compute the global mesh index and initalize the local contour tree mesh
     if (computeRegularStructure == 1)
     {
@@ -170,7 +163,7 @@ public:
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler>(
         sortOrder,
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
-          startRow, startCol, startSlice, numRows, numCols, totalNumRows, totalNumCols));
+          localBlockOrigin, localBlockSize, globalSize));
       vtkm::cont::Algorithm::Copy(transformedIndex, localGlobalMeshIndex);
       // Compute the local contour tree mesh
       auto localContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>(
@@ -190,7 +183,7 @@ public:
       auto transformedIndex = vtkm::cont::make_ArrayHandleTransform(
         permutedSortOrder,
         vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
-          startRow, startCol, startSlice, numRows, numCols, totalNumRows, totalNumCols));
+          localBlockOrigin, localBlockSize, globalSize));
       vtkm::cont::Algorithm::Copy(transformedIndex, localGlobalMeshIndex);
       // Compute the local contour tree mesh
       auto localContourTreeMesh = new vtkm::worklet::contourtree_augmented::ContourTreeMesh<T>(

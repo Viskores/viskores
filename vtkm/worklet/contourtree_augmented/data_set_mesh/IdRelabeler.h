@@ -2,10 +2,20 @@
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
-//
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
 //============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
@@ -50,18 +60,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-// This header contains a collection of classes used to describe the boundary
-// of a mesh, for each main mesh type (i.e., 2D, 3D, and ContourTreeMesh).
-// For each mesh type, there are two classes, the actual boundary desriptor
-// class and an ExectionObject class with the PrepareForInput function that
-// VTKm expects to generate the object for the execution environment.
+#ifndef vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
+#define vtk_m_worklet_contourtree_ppp2_contourtree_mesh_inc_id_relabeler_h
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_contour_tree_mesh_h
-#define vtk_m_worklet_contourtree_augmented_mesh_boundary_mesh_boundary_contour_tree_mesh_h
-
-#include <cstdlib>
-
-#include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
@@ -70,100 +72,53 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-
-
-
-template <typename DeviceTag>
-class MeshBoundaryContourTreeMesh
+namespace mesh_dem
 {
-public:
-  using IndicesPortalType = typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
 
-  VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMesh() {}
-
-  VTKM_CONT
-  MeshBoundaryContourTreeMesh(const IdArrayType& globalMeshIndex,
-                              vtkm::Id totalNRows,
-                              vtkm::Id totalNCols,
-                              vtkm::Id3 minIdx,
-                              vtkm::Id3 maxIdx,
-                              vtkm::cont::Token& token)
-    : TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
-  {
-    assert(this->TotalNRows > 0 && this->TotalNCols > 0);
-    this->GlobalMeshIndexPortal = globalMeshIndex.PrepareForInput(DeviceTag(), token);
-  }
-
-  VTKM_EXEC_CONT
-  bool liesOnBoundary(const vtkm::Id index) const
-  {
-    vtkm::Id idx = this->GlobalMeshIndexPortal.Get(index);
-    vtkm::Id3 rcs;
-    rcs[0] = vtkm::Id((idx % (this->TotalNRows * this->TotalNCols)) / this->TotalNCols);
-    rcs[1] = vtkm::Id(idx % this->TotalNCols);
-    rcs[2] = vtkm::Id(idx / (this->TotalNRows * this->TotalNCols));
-    for (int d = 0; d < 3; ++d)
-    {
-      if (this->MinIdx[d] != this->MaxIdx[d] &&
-          (rcs[d] == this->MinIdx[d] || rcs[d] == this->MaxIdx[d]))
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-private:
-  // mesh block parameters
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
-  IndicesPortalType GlobalMeshIndexPortal;
-};
-
-
-class MeshBoundaryContourTreeMeshExec : public vtkm::cont::ExecutionObjectBase
+/// A utility class that converts Ids from local to global given a mesh
+class IdRelabeler
 {
 public:
   VTKM_EXEC_CONT
-  MeshBoundaryContourTreeMeshExec(const IdArrayType& globalMeshIndex,
-                                  vtkm::Id totalNRows,
-                                  vtkm::Id totalNCols,
-                                  vtkm::Id3 minIdx,
-                                  vtkm::Id3 maxIdx)
-    : GlobalMeshIndex(globalMeshIndex)
-    , TotalNRows(totalNRows)
-    , TotalNCols(totalNCols)
-    , MinIdx(minIdx)
-    , MaxIdx(maxIdx)
+  IdRelabeler()
+    : LocalBlockOrigin{ 0, 0, 0 }
+    , LocalBlockSize{ 1, 1, 1 }
+    , GlobalSize{ 1, 1, 1 }
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundaryContourTreeMesh<DeviceTag> PrepareForExecution(DeviceTag,
-                                                             vtkm::cont::Token& token) const
+  VTKM_EXEC_CONT
+  IdRelabeler(vtkm::Id3 lBO, vtkm::Id3 lBS, vtkm::Id3 gS)
+    : LocalBlockOrigin(lBO)
+    , LocalBlockSize(lBS)
+    , GlobalSize(gS)
   {
-    return MeshBoundaryContourTreeMesh<DeviceTag>(
-      this->GlobalMeshIndex, this->TotalNRows, this->TotalNCols, this->MinIdx, this->MaxIdx, token);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id operator()(vtkm::Id v) const
+  {
+    // Translate v into mesh coordinates and add offset
+    vtkm::Id3 pos{
+      this->LocalBlockOrigin[0] + (v % this->LocalBlockSize[0]),
+      this->LocalBlockOrigin[1] +
+        (v % (this->LocalBlockSize[1] * this->LocalBlockSize[0]) / this->LocalBlockSize[0]),
+      this->LocalBlockOrigin[2] + (v / (this->LocalBlockSize[1] * this->LocalBlockSize[0]))
+    };
+
+    // Translate mesh coordinates into global Id
+    return (pos[2] * this->GlobalSize[1] + pos[1]) * this->GlobalSize[0] + pos[0];
   }
 
 private:
-  const IdArrayType& GlobalMeshIndex;
-  vtkm::Id TotalNRows;
-  vtkm::Id TotalNCols;
-  vtkm::Id3 MinIdx;
-  vtkm::Id3 MaxIdx;
+  vtkm::Id3 LocalBlockOrigin;
+  vtkm::Id3 LocalBlockSize;
+  vtkm::Id3 GlobalSize;
 };
 
-
+} // namespace mesh_dem
 } // namespace contourtree_augmented
-} // worklet
-} // vtkm
+} // namespace worklet
+} // namespace vtkm
 
 #endif

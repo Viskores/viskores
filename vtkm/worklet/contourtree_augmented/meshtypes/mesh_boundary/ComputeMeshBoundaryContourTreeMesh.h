@@ -50,10 +50,11 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_sort_indices_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_mesh_types_mesh_boundary_compute_mesh_boundary_contour_tree_mesh_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_mesh_types_mesh_boundary_compute_mesh_boundary_contour_tree_mesh_h
 
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/contourtree_augmented/Types.h>
 
 namespace vtkm
 {
@@ -61,32 +62,40 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
-namespace mesh_dem
-{
 
-// Worklet for computing the sort indices from the sort order
-class SortIndices : public vtkm::worklet::WorkletMapField
+// Worklet to collapse past regular vertices by updating inbound and outbound as part
+// loop to find the now-regular vertices and collapse past them without altering
+// the existing join & split arcs
+class ComputeMeshBoundaryContourTreeMesh : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn sortOrder,     // (input) index into active vertices
-                                WholeArrayOut sortIndices); // (output) whether critical
-  typedef void ExecutionSignature(_1, InputIndex, _2);
+  typedef void ControlSignature(FieldIn nodeIndex,       // (input)
+                                ExecObject meshBoundary, // (input)
+                                FieldOut isOnBoundary    // (output)
+  );
+  typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
-  // Constructor
+
+  // Default Constructor
   VTKM_EXEC_CONT
-  SortIndices() {}
+  ComputeMeshBoundaryContourTreeMesh() {}
 
-  template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const InFieldPortalType& sortOrder,
-                            const vtkm::Id vertexIndex,
-                            const OutFieldPortalType& sortIndices) const
+  template <typename MeshBoundaryType>
+  VTKM_EXEC void operator()(const vtkm::Id& nodeIndex,
+                            const MeshBoundaryType& meshBoundary,
+                            bool& isOnBoundary) const
   {
-    sortIndices.Set(sortOrder.Get(vertexIndex), vertexIndex);
+    isOnBoundary = meshBoundary.LiesOnBoundary(nodeIndex);
+    /*
+    indexVector isOnBoundary(globalMeshIndex.size());
+    for (indexType node = 0; node < globalMeshIndex.size(); node++)
+      isOnBoundary[node] = liesOnBoundary(node);
+    */
   }
-}; // Mesh2D_DEM_VertexStarter
 
-} // namespace mesh_dem_triangulation_worklets
+}; // ComputeMeshBoundaryContourTreeMesh
+
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

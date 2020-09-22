@@ -88,33 +88,32 @@ public:
                             const InFieldPortalType sortIndicesPortal,
                             const MeshBoundaryType& meshBoundary,
                             vtkm::Id& boundaryVertex,
-                            vtkm::Id& boundarySortIndex)
+                            vtkm::Id& boundarySortIndex) const
   {
     auto meshStructure3D = meshBoundary.GetMeshStructure();
-    vtkm::Id nRows = meshStructure3D.NumRows;
-    vtkm::Id nCols = meshStructure3D.NumCols;
-    vtkm::Id nSlices = meshStructure3D.NumSlices;
+    vtkm::Id3 meshSize = meshStructure3D.MeshSize;
+    // for comments [0]/x -> column, [1]/y -> row, [2]/z -> slice
     // calculate the number of boundary elements - all of the two xy faces
-    vtkm::Id nBoundary = 2 * nRows * nCols // xy faces
-      + 2 * nRows * (nSlices - 2)          // yz faces - excluding vertices on xy
-      + 2 * (nCols - 2) * (nSlices - 2);   // xz face interiors
+    vtkm::Id nBoundary = 2 * meshSize[1] * meshSize[0] // xy faces
+      + 2 * meshSize[1] * (meshSize[2] - 2)            // yz faces - excluding vertices on xy
+      + 2 * (meshSize[0] - 2) * (meshSize[2] - 2);     // xz face interiors
 
-    vtkm::Id row = 0, col = 0, slice = 0;
-    vtkm::Id sliceSize = nRows * nCols;
-    vtkm::Id sliceBoundarySize = 2 * nRows + 2 * nCols - 4;
+    vtkm::Id3 pos{ 0, 0, 0 };
+    vtkm::Id sliceSize = meshSize[1] * meshSize[0];
+    vtkm::Id sliceBoundarySize = 2 * meshSize[1] + 2 * meshSize[0] - 4;
     // do top plane first
     if (boundaryId < sliceSize)
     { // top plane
-      row = boundaryId / nCols;
-      col = boundaryId % nCols;
-      slice = 0;
+      pos[0] = boundaryId % meshSize[0];
+      pos[1] = boundaryId / meshSize[0];
+      pos[2] = 0;
     } // top plane
     // then bottom plane
     else if (boundaryId >= nBoundary - sliceSize)
     { // bottom plane
-      row = (boundaryId - (nBoundary - sliceSize)) / nCols;
-      col = (boundaryId - (nBoundary - sliceSize)) % nCols;
-      slice = nSlices - 1;
+      pos[0] = (boundaryId - (nBoundary - sliceSize)) % meshSize[0];
+      pos[1] = (boundaryId - (nBoundary - sliceSize)) / meshSize[0];
+      pos[2] = meshSize[2] - 1;
     } // bottom plane
     // now we have to deal with the exterior of the remaining slices
     else
@@ -122,28 +121,28 @@ public:
       // first we subtract the size of the first slice
       vtkm::Id offsetBoundaryid = boundaryId - sliceSize;
       // now we can compute the slice id
-      slice = 1 + offsetBoundaryid / sliceBoundarySize;
+      pos[2] = 1 + offsetBoundaryid / sliceBoundarySize;
       // compute the local id on the slice
-      vtkm::Id sliceBoundaryid = offsetBoundaryid % sliceBoundarySize;
-      // now test for the first and last row
-      if (sliceBoundaryid < nCols)
+      vtkm::Id sliceBoundaryId = offsetBoundaryid % sliceBoundarySize;
+      // now test for the first and last pos[1]
+      if (sliceBoundaryId < meshSize[0])
       { // first row
-        row = 0;
-        col = sliceBoundaryid;
+        pos[0] = sliceBoundaryId;
+        pos[1] = 0;
       } // first row
-      else if (sliceBoundaryid >= (sliceBoundarySize - nCols))
+      else if (sliceBoundaryId >= (sliceBoundarySize - meshSize[0]))
       { // last row
-        row = nRows - 1;
-        col = sliceBoundaryid - (sliceBoundarySize - nCols);
+        pos[0] = sliceBoundaryId - (sliceBoundarySize - meshSize[0]);
+        pos[1] = meshSize[1] - 1;
       } // last row
       else
       { // any other row
-        row = ((sliceBoundaryid - nCols) / 2) + 1;
-        col = ((sliceBoundaryid - nCols) % 2) ? (nCols - 1) : 0;
+        pos[0] = ((sliceBoundaryId - meshSize[0]) % 2) ? (meshSize[0] - 1) : 0;
+        pos[1] = ((sliceBoundaryId - meshSize[0]) / 2) + 1;
       } // any other row
     }   // slice exteriors
     // now we have row, col, slice all set, compute the actual ID
-    boundaryVertex = meshStructure3D.VertexId(slice, row, col);
+    boundaryVertex = meshStructure3D.VertexId(pos);
     // and fill in the index array as well
     boundarySortIndex = sortIndicesPortal.Get(boundaryVertex);
 
