@@ -466,6 +466,22 @@ int main(int argc, char* argv[])
     std::swap(offset[0], offset[1]);
 
     getline(inFile, line);
+    std::istringstream bpd_stream(line);
+    bpd_stream >> tag;
+    if (tag != "#BLOCKS_PER_DIM")
+    {
+      std::cerr << "Error: Expected #BLOCKS_PER_DIM, got " << tag << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+    std::vector<vtkm::Id> bpd;
+    while (bpd_stream >> dimVertices)
+      bpd.push_back(dimVertices);
+    // Swap dimensions so that they are from fastest to slowest growing
+    // dims[0] -> col; dims[1] -> row, dims[2] ->slice
+    std::swap(bpd[0], bpd[1]);
+
+    getline(inFile, line);
     std::istringstream linestream(line);
     std::vector<vtkm::Id> dims;
     while (linestream >> dimVertices)
@@ -473,7 +489,6 @@ int main(int argc, char* argv[])
       dims.push_back(dimVertices);
     }
 
-    std::cout << dims.size() << " " << global_extents.size() << " " << offset.size() << std::endl;
     if (dims.size() != global_extents.size() || dims.size() != offset.size())
     {
       std::cerr << "Error: Dimension mismatch" << std::endl;
@@ -586,16 +601,9 @@ int main(int argc, char* argv[])
 
     if (blockNo == 0)
     {
-      // FIXME: Hack: Approximate blocks per dim
-      blocksPerDim = vtkm::Id3{
-        static_cast<vtkm::Id>(
-          std::ceil(static_cast<float>(global_extents[0]) / static_cast<float>(dims[0]))),
-        static_cast<vtkm::Id>(
-          std::ceil(static_cast<float>(global_extents[1]) / static_cast<float>(dims[1]))),
-        static_cast<vtkm::Id>(nDims == 3 ? std::ceil(static_cast<float>(global_extents[2]) /
-                                                     static_cast<float>(dims[2]))
-                                         : 1)
-      };
+      blocksPerDim = vtkm::Id3{ static_cast<vtkm::Id>(bpd[0]),
+                                static_cast<vtkm::Id>(bpd[1]),
+                                static_cast<vtkm::Id>(nDims == 3 ? bpd[2] : 1) };
 #ifdef DEBUG_PRINT_CTUD
       std::cout << "blocksPerDim: " << blocksPerDim << std::endl;
 #endif
