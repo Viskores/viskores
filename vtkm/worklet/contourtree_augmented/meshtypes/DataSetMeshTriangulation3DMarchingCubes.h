@@ -111,7 +111,8 @@ private:
 };                // class DataSetMesh_Triangulation
 
 // creates input mesh
-DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchingCubes(vtkm::Id3 meshSize)
+inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchingCubes(
+  vtkm::Id3 meshSize)
   : DataSetMesh(meshSize)
 
 {
@@ -154,16 +155,16 @@ DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchingCubes
                                  vtkm::CopyFlag::Off);
 }
 
-void DataSetMeshTriangulation3DMarchingCubes::SetPrepareForExecutionBehavior(bool getMax)
+inline void DataSetMeshTriangulation3DMarchingCubes::SetPrepareForExecutionBehavior(bool getMax)
 {
   this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename DeviceTag>
-MeshStructureMarchingCubes<DeviceTag> DataSetMeshTriangulation3DMarchingCubes::PrepareForExecution(
-  DeviceTag,
-  vtkm::cont::Token& token) const
+inline MeshStructureMarchingCubes<DeviceTag>
+DataSetMeshTriangulation3DMarchingCubes::PrepareForExecution(DeviceTag,
+                                                             vtkm::cont::Token& token) const
 {
   return MeshStructureMarchingCubes<DeviceTag>(this->MeshSize,
                                                this->UseGetMax,
@@ -178,12 +179,13 @@ MeshStructureMarchingCubes<DeviceTag> DataSetMeshTriangulation3DMarchingCubes::P
                                                token);
 }
 
-MeshBoundary3DExec DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject() const
+inline MeshBoundary3DExec DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject()
+  const
 {
   return MeshBoundary3DExec(this->MeshSize, this->SortOrder);
 }
 
-void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
+inline void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,       // output
   IdArrayType& boundarySortIndexArray,    // output
   MeshBoundary3DExec* meshBoundaryExecObj // input

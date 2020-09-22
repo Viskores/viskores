@@ -189,7 +189,7 @@ protected:
 
 // Sorts the data and initialises the SortIndices & SortOrder
 template <typename T, typename StorageType>
-void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values)
+inline void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
   // Define namespace alias for mesh dem worklets
   namespace mesh_dem_worklets = vtkm::worklet::contourtree_augmented::mesh_dem;
@@ -230,7 +230,7 @@ void DataSetMesh::SortData(const vtkm::cont::ArrayHandle<T, StorageType>& values
 } // SortData()
 
 // Print mesh extends
-void DataSetMesh::DebugPrintExtends()
+inline void DataSetMesh::DebugPrintExtends()
 {
   // For compatibility with the output of the original PPP Implementation, print size
   // as NumRows, NumColumns and NumSlices (if applicable)
@@ -248,7 +248,7 @@ void DataSetMesh::DebugPrintExtends()
   }
 } // DebugPrintExtends
 
-void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lineNum)
+inline void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lineNum)
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "------------------------------------------------------" << std::endl;
@@ -276,7 +276,7 @@ void DataSetMesh::DebugPrint(const char* message, const char* fileName, long lin
 } // DebugPrint()
 
 template <typename T, typename StorageType>
-void DataSetMesh::DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values)
+inline void DataSetMesh::DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values)
 {
 #ifdef DEBUG_PRINT
   if (MeshSize[0] > 0)

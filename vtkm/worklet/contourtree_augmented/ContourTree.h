@@ -179,7 +179,7 @@ public:
 
 
 
-ContourTree::ContourTree()
+inline ContourTree::ContourTree()
   : Arcs()
   , Superparents()
   , Supernodes()
@@ -192,7 +192,7 @@ ContourTree::ContourTree()
 
 
 // initialises contour tree arrays - rest is done by another class
-void ContourTree::Init(vtkm::Id dataSize)
+inline void ContourTree::Init(vtkm::Id dataSize)
 { // Init()
   vtkm::cont::ArrayHandleConstant<vtkm::Id> noSuchElementArray(
     static_cast<vtkm::Id>(NO_SUCH_ELEMENT), dataSize);
@@ -226,7 +226,9 @@ inline void ContourTree::PrintContent(std::ostream& outStream /*= std::cout*/) c
   PrintIndices("First HN Per Iter", this->FirstHypernodePerIteration, -1, outStream);
 }
 
-std::string ContourTree::DebugPrint(const char* message, const char* fileName, long lineNum) const
+inline std::string ContourTree::DebugPrint(const char* message,
+                                           const char* fileName,
+                                           long lineNum) const
 { // DebugPrint()
   std::stringstream resultStream;
   resultStream << std::endl;
@@ -244,7 +246,7 @@ std::string ContourTree::DebugPrint(const char* message, const char* fileName, l
 
 } // DebugPrint()
 
-void ContourTree::PrintDotSuperStructure() const
+inline void ContourTree::PrintDotSuperStructure() const
 { // PrintDotSuperStructure()
   // print the header information
   printf("digraph G\n\t{\n");
@@ -331,7 +333,7 @@ void ContourTree::PrintDotSuperStructure() const
   printf("\t}\n");
 } // PrintDotSuperStructure()
 
-std::string ContourTree::PrintHyperStructureStatistics(bool print) const
+inline std::string ContourTree::PrintHyperStructureStatistics(bool print) const
 { // PrintHyperStructureStatistics()
   // arrays for collecting statistics
   std::vector<vtkm::Id> minPath;

@@ -101,7 +101,8 @@ private:
 };                // class DataSetMeshTriangulation
 
 // creates input mesh
-DataSetMeshTriangulation2DFreudenthal::DataSetMeshTriangulation2DFreudenthal(vtkm::Id2 meshSize)
+inline DataSetMeshTriangulation2DFreudenthal::DataSetMeshTriangulation2DFreudenthal(
+  vtkm::Id2 meshSize)
   : DataSetMesh(vtkm::Id3{ meshSize[0], meshSize[1], 1 })
   , EdgeBoundaryDetectionMasks{ vtkm::cont::make_ArrayHandle(
       m2d_freudenthal::EdgeBoundaryDetectionMasks,
@@ -110,16 +111,16 @@ DataSetMeshTriangulation2DFreudenthal::DataSetMeshTriangulation2DFreudenthal(vtk
 {
 }
 
-void DataSetMeshTriangulation2DFreudenthal::SetPrepareForExecutionBehavior(bool getMax)
+inline void DataSetMeshTriangulation2DFreudenthal::SetPrepareForExecutionBehavior(bool getMax)
 {
   this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename DeviceTag>
-MeshStructureFreudenthal2D<DeviceTag> DataSetMeshTriangulation2DFreudenthal::PrepareForExecution(
-  DeviceTag,
-  vtkm::cont::Token& token) const
+inline MeshStructureFreudenthal2D<DeviceTag>
+DataSetMeshTriangulation2DFreudenthal::PrepareForExecution(DeviceTag,
+                                                           vtkm::cont::Token& token) const
 {
   return MeshStructureFreudenthal2D<DeviceTag>(vtkm::Id2{ this->MeshSize[0], this->MeshSize[1] },
                                                m2d_freudenthal::N_INCIDENT_EDGES,
@@ -130,12 +131,13 @@ MeshStructureFreudenthal2D<DeviceTag> DataSetMeshTriangulation2DFreudenthal::Pre
                                                token);
 }
 
-MeshBoundary2DExec DataSetMeshTriangulation2DFreudenthal::GetMeshBoundaryExecutionObject() const
+inline MeshBoundary2DExec DataSetMeshTriangulation2DFreudenthal::GetMeshBoundaryExecutionObject()
+  const
 {
   return MeshBoundary2DExec(vtkm::Id2{ this->MeshSize[0], this->MeshSize[1] }, this->SortIndices);
 }
 
-void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(
+inline void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,    // output
   IdArrayType& boundarySortIndexArray, // output
   MeshBoundary2DExec*

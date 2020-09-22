@@ -278,7 +278,7 @@ private:
 
 // print content
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::PrintContent(std::ostream& outStream /*= std::cout*/) const
+inline void ContourTreeMesh<FieldType>::PrintContent(std::ostream& outStream /*= std::cout*/) const
 { // PrintContent()
   PrintHeader(this->NumVertices, outStream);
   //PrintIndices("SortOrder", SortOrder, outStream);
@@ -292,9 +292,9 @@ void ContourTreeMesh<FieldType>::PrintContent(std::ostream& outStream /*= std::c
 
 // debug routine
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::DebugPrint(const char* message,
-                                            const char* fileName,
-                                            long lineNum) const
+inline void ContourTreeMesh<FieldType>::DebugPrint(const char* message,
+                                                   const char* fileName,
+                                                   long lineNum) const
 { // DebugPrint()
 #ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
@@ -342,11 +342,11 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
 
 
 template <typename FieldType>
-ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
-                                            const IdArrayType& arcs,
-                                            const IdArrayType& inSortOrder,
-                                            const vtkm::cont::ArrayHandle<FieldType>& values,
-                                            const IdArrayType& inGlobalMeshIndex)
+inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
+                                                   const IdArrayType& arcs,
+                                                   const IdArrayType& inSortOrder,
+                                                   const vtkm::cont::ArrayHandle<FieldType>& values,
+                                                   const IdArrayType& inGlobalMeshIndex)
   : GlobalMeshIndex(inGlobalMeshIndex)
   , Neighbours()
   , FirstNeighbour()
@@ -369,8 +369,8 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 }
 
 template <typename FieldType>
-ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
-                                            const ContourTreeMesh<FieldType>& mesh)
+inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
+                                                   const ContourTreeMesh<FieldType>& mesh)
   : SortedValues(mesh.SortedValues)
   , GlobalMeshIndex(mesh.GlobalMeshIndex)
   , Neighbours()
@@ -389,9 +389,9 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
 
 
 template <typename FieldType>
-ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
-                                            const IdArrayType& arcs,
-                                            const ContourTreeMesh<FieldType>& mesh)
+inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
+                                                   const IdArrayType& arcs,
+                                                   const ContourTreeMesh<FieldType>& mesh)
   : Neighbours()
   , FirstNeighbour()
 {
@@ -416,7 +416,7 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
 
 // Initalize the contour tree from the arcs array and sort order
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType& arcs)
+inline void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType& arcs)
 {
   // Find target indices for valid arcs in neighbours array ...
   IdArrayType arcTargetIndex;
@@ -483,7 +483,7 @@ void ContourTreeMesh<FieldType>::InitialiseNeighboursFromArcs(const IdArrayType&
 }
 
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::ComputeNNeighboursVector(IdArrayType& nNeighbours) const
+inline void ContourTreeMesh<FieldType>::ComputeNNeighboursVector(IdArrayType& nNeighbours) const
 {
   nNeighbours.Allocate(this->FirstNeighbour.GetNumberOfValues()); // same as this->NumVertices
   contourtree_mesh_inc_ns::ComputeMaxNeighboursWorklet computeMaxNeighboursWorklet(
@@ -492,7 +492,7 @@ void ContourTreeMesh<FieldType>::ComputeNNeighboursVector(IdArrayType& nNeighbou
 }
 
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
+inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
 {
   // Compute maximum number of neighbours
   IdArrayType nNeighbours;
@@ -503,7 +503,7 @@ void ContourTreeMesh<FieldType>::ComputeMaxNeighbours()
 
 // Define the behavior for the execution object generate by the PrepareForExecution function
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::SetPrepareForExecutionBehavior(bool getMax)
+inline void ContourTreeMesh<FieldType>::SetPrepareForExecutionBehavior(bool getMax)
 {
   this->mGetMax = getMax;
 }
@@ -511,8 +511,8 @@ void ContourTreeMesh<FieldType>::SetPrepareForExecutionBehavior(bool getMax)
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename FieldType>
 template <typename DeviceTag>
-contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag>
-ContourTreeMesh<FieldType>::PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
+contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag> inline ContourTreeMesh<
+  FieldType>::PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
 {
   return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag>(
     this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax, token);
@@ -526,7 +526,7 @@ struct NotNoSuchElement
 // Combine two ContourTreeMeshes
 template <typename FieldType>
 template <typename DeviceTag>
-void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
+inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
 { // Merge With
 #ifdef DEBUG_PRINT
   this->DebugPrint("THIS ContourTreeMesh", __FILE__, __LINE__);
@@ -787,7 +787,7 @@ void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
 
 
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::Save(const char* filename) const
+inline void ContourTreeMesh<FieldType>::Save(const char* filename) const
 {
   std::ofstream os(filename);
   SaveVector(os, this->SortedValues);
@@ -797,7 +797,7 @@ void ContourTreeMesh<FieldType>::Save(const char* filename) const
 }
 
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::Load(const char* filename)
+inline void ContourTreeMesh<FieldType>::Load(const char* filename)
 {
   std::ifstream is(filename);
   LoadVector(is, this->SortedValues);
@@ -812,8 +812,9 @@ void ContourTreeMesh<FieldType>::Load(const char* filename)
 
 template <typename FieldType>
 template <typename ValueType>
-void ContourTreeMesh<FieldType>::SaveVector(std::ostream& os,
-                                            const vtkm::cont::ArrayHandle<ValueType>& vec) const
+inline void ContourTreeMesh<FieldType>::SaveVector(
+  std::ostream& os,
+  const vtkm::cont::ArrayHandle<ValueType>& vec) const
 {
   vtkm::Id numVals = vec.GetNumberOfValues();
   //os.write(reinterpret_cast<const char*>(&numVals), sizeof(ValueType));
@@ -827,8 +828,8 @@ void ContourTreeMesh<FieldType>::SaveVector(std::ostream& os,
 
 template <typename FieldType>
 template <typename ValueType>
-void ContourTreeMesh<FieldType>::LoadVector(std::istream& is,
-                                            const vtkm::cont::ArrayHandle<ValueType>& vec)
+inline void ContourTreeMesh<FieldType>::LoadVector(std::istream& is,
+                                                   const vtkm::cont::ArrayHandle<ValueType>& vec)
 {
   vtkm::Id numVals;
   is.read(reinterpret_cast<char*>(&numVals), sizeof(ValueType));
@@ -843,7 +844,7 @@ void ContourTreeMesh<FieldType>::LoadVector(std::istream& is,
 }
 
 template <typename FieldType>
-MeshBoundaryContourTreeMeshExec ContourTreeMesh<FieldType>::GetMeshBoundaryExecutionObject(
+inline MeshBoundaryContourTreeMeshExec ContourTreeMesh<FieldType>::GetMeshBoundaryExecutionObject(
   vtkm::Id3 globalSize,
   vtkm::Id3 minIdx,
   vtkm::Id3 maxIdx) const
@@ -852,7 +853,7 @@ MeshBoundaryContourTreeMeshExec ContourTreeMesh<FieldType>::GetMeshBoundaryExecu
 }
 
 template <typename FieldType>
-void ContourTreeMesh<FieldType>::GetBoundaryVertices(
+inline void ContourTreeMesh<FieldType>::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,                    // output
   IdArrayType& boundarySortIndexArray,                 // output
   MeshBoundaryContourTreeMeshExec* meshBoundaryExecObj //input
