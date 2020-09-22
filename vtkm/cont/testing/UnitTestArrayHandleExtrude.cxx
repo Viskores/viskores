@@ -66,7 +66,7 @@ struct CopyValue : public vtkm::worklet::WorkletMapField
   typedef _2 ExecutionSignature(_1);
 
   template <typename T>
-  T&& operator()(T&& t) const
+  VTKM_EXEC_CONT T&& operator()(T&& t) const
   {
     return std::forward<T>(t);
   }
