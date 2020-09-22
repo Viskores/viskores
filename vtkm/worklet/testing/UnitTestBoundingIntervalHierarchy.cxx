@@ -50,7 +50,7 @@ struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
   {
     vtkm::Vec3f parametric;
     vtkm::Id cellId;
-    bih->FindCell(point, cellId, parametric);
+    bih.FindCell(point, cellId, parametric);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
 }; // struct BoundingIntervalHierarchyTester

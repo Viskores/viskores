@@ -48,7 +48,7 @@ public:
                               vtkm::Id& cellId,
                               vtkm::Vec3f& pcoords) const
     {
-      locator->FindCell(point, cellId, pcoords);
+      locator.FindCell(point, cellId, pcoords);
     }
   };
 

@@ -17,6 +17,7 @@ set(headers
   AtomicInterfaceExecution.h
   Buffer.h
   CastInvalidValue.h
+  CellLocatorBase.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterMemoryManager.h

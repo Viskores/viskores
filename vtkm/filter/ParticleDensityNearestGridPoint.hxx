@@ -37,7 +37,7 @@ public:
     vtkm::Vec3f parametric;
 
     // Find the cell containing the point
-    if (locator->FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
+    if (locator.FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
     {
       // increment density
       density.Add(cellId, 1);

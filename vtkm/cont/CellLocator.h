@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -19,12 +20,19 @@
 
 #include <vtkm/exec/CellLocator.h>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "CellLocator with virtual methods is removed. Do not include CellLocator.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocator : public vtkm::cont::ExecutionObjectBase
+class VTKM_CONT_EXPORT VTKM_DEPRECATED(
+  1.6,
+  "CellLocator with virtual methods no longer supported. Use CellLocatorGeneral.") CellLocator
+  : public vtkm::cont::ExecutionObjectBase
 {
 
 public:
@@ -55,6 +63,7 @@ public:
     }
   }
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const = 0;
@@ -66,6 +75,7 @@ public:
     vtkm::cont::Token token;
     return this->PrepareForExecution(device, token);
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
 protected:
   void SetModified() { this->Modified = true; }

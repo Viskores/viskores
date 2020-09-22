@@ -54,7 +54,6 @@ set(headers
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h
-  CellLocator.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
@@ -164,7 +163,6 @@ set(device_sources
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
-  CellLocator.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
@@ -195,6 +193,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
   set(headers ${headers}
     ArrayHandleVirtual.h
     ArrayHandleVirtualCoordinates.h
+    CellLocator.h
     StorageVirtual.h
     )
 
@@ -205,6 +204,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
 
   set(device_sources ${device_sources}
     ArrayHandleVirtual.cxx
+    CellLocator.cxx
     StorageVirtual.cxx
     )
 endif()

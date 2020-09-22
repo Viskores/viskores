@@ -160,7 +160,7 @@ public:
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords) const
   {
-    vtkm::ErrorCode status = locator->FindCell(point, cellId, pcoords);
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords);
     if (status != vtkm::ErrorCode::Success)
     {
       this->RaiseError(vtkm::ErrorString(status));
@@ -173,9 +173,6 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   locator.SetCellSet(dataset.GetCellSet());
   locator.SetCoordinates(dataset.GetCoordinateSystem());
   locator.Update();
-
-  const vtkm::cont::CellLocator& curLoc = *locator.GetCurrentLocator();
-  std::cout << "using locator: " << typeid(curLoc).name() << "\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;

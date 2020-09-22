@@ -10,7 +10,13 @@
 #ifndef vtk_m_cont_CellLocatorGeneral_h
 #define vtk_m_cont_CellLocatorGeneral_h
 
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorRectilinearGrid.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
+#include <vtkm/cont/CellLocatorUniformGrid.h>
+
+#include <vtkm/exec/CellLocatorMultiplexer.h>
+
+#include <vtkm/cont/internal/Variant.h>
 
 #include <functional>
 #include <memory>
@@ -20,48 +26,33 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocatorGeneral : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT CellLocatorGeneral
+  : public vtkm::cont::internal::CellLocatorBase<CellLocatorGeneral>
 {
+  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorGeneral>;
+
 public:
-  VTKM_CONT CellLocatorGeneral();
+  using ContLocatorList = vtkm::List<vtkm::cont::CellLocatorUniformGrid,
+                                     vtkm::cont::CellLocatorRectilinearGrid,
+                                     vtkm::cont::CellLocatorTwoLevel>;
 
-  VTKM_CONT ~CellLocatorGeneral() override;
+  using ExecLocatorList =
+    vtkm::List<vtkm::cont::internal::ExecutionObjectType<vtkm::cont::CellLocatorUniformGrid>,
+               vtkm::cont::internal::ExecutionObjectType<vtkm::cont::CellLocatorRectilinearGrid>,
+               vtkm::cont::internal::ExecutionObjectType<vtkm::cont::CellLocatorTwoLevel>>;
 
-  /// Get the current underlying cell locator
-  ///
-  VTKM_CONT const vtkm::cont::CellLocator* GetCurrentLocator() const { return this->Locator.get(); }
+  using ExecObjType = vtkm::ListApply<ExecLocatorList, vtkm::exec::CellLocatorMultiplexer>;
 
-  /// A configurator can be provided to select an appropriate
-  /// cell locator implementation and configure its parameters, based on the
-  /// input cell set and cooridinates.
-  /// If unset, a resonable default is used.
-  ///
-  using ConfiguratorSignature = void(std::unique_ptr<vtkm::cont::CellLocator>&,
-                                     const vtkm::cont::DynamicCellSet&,
-                                     const vtkm::cont::CoordinateSystem&);
-
-  VTKM_CONT void SetConfigurator(const std::function<ConfiguratorSignature>& configurator)
-  {
-    this->Configurator = configurator;
-  }
-
-  VTKM_CONT const std::function<ConfiguratorSignature>& GetConfigurator() const
-  {
-    return this->Configurator;
-  }
-
-  VTKM_CONT void ResetToDefaultConfigurator();
-
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
-    vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::Token& token) const override;
-
-protected:
-  VTKM_CONT void Build() override;
+  VTKM_CONT ExecObjType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                            vtkm::cont::Token& token) const;
 
 private:
-  std::unique_ptr<vtkm::cont::CellLocator> Locator;
-  std::function<ConfiguratorSignature> Configurator;
+  vtkm::cont::internal::ListAsVariant<ContLocatorList> LocatorImpl;
+
+  friend Superclass;
+  VTKM_CONT void Build();
+
+  struct PrepareFunctor;
 };
 }
 } // vtkm::cont

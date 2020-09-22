@@ -13,15 +13,10 @@
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 
-#include <vtkm/exec/CellLocatorUniformGrid.h>
-
 namespace vtkm
 {
 namespace cont
 {
-CellLocatorUniformGrid::CellLocatorUniformGrid() = default;
-
-CellLocatorUniformGrid::~CellLocatorUniformGrid() = default;
 
 using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
 using Structured2DType = vtkm::cont::CellSetStructured<2>;
@@ -73,25 +68,12 @@ void CellLocatorUniformGrid::Build()
   this->CellDims[2] = this->PointDims[2] - 1;
 }
 
-const vtkm::exec::CellLocator* CellLocatorUniformGrid::PrepareForExecution(
-  vtkm::cont::DeviceAdapterId device,
-  vtkm::cont::Token& token) const
+vtkm::exec::CellLocatorUniformGrid CellLocatorUniformGrid::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId vtkmNotUsed(device),
+  vtkm::cont::Token& vtkmNotUsed(token)) const
 {
-  if (this->Is3D)
-  {
-    using ExecutionType = vtkm::exec::CellLocatorUniformGrid<3>;
-    ExecutionType* execObject = new ExecutionType(
-      this->CellDims, this->PointDims, this->Origin, this->InvSpacing, this->MaxPoint);
-    this->ExecutionObjectHandle.Reset(execObject);
-  }
-  else
-  {
-    using ExecutionType = vtkm::exec::CellLocatorUniformGrid<2>;
-    ExecutionType* execObject = new ExecutionType(
-      this->CellDims, this->PointDims, this->Origin, this->InvSpacing, this->MaxPoint);
-    this->ExecutionObjectHandle.Reset(execObject);
-  }
-  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
+  return vtkm::exec::CellLocatorUniformGrid(
+    this->CellDims, this->Origin, this->InvSpacing, this->MaxPoint);
 }
 
 } //namespace cont

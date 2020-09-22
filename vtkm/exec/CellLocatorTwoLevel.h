@@ -15,9 +15,9 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapterTag.h>
 
 #include <vtkm/Math.h>
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/VecTraits.h>
@@ -83,24 +83,18 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
-template <typename CellSetType>
-class VTKM_ALWAYS_EXPORT CellLocatorTwoLevel : public vtkm::exec::CellLocator
+template <typename CellStructureType>
+class VTKM_ALWAYS_EXPORT CellLocatorTwoLevel
 {
 private:
   using DimVec3 = vtkm::internal::cl_uniform_bins::DimVec3;
   using FloatVec3 = vtkm::internal::cl_uniform_bins::FloatVec3;
 
   template <typename T>
-  using ArrayPortalConst = typename vtkm::cont::ArrayHandle<T>::ReadPortalType;
+  using ReadPortal = typename vtkm::cont::ArrayHandle<T>::ReadPortalType;
 
   using CoordsPortalType =
     typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
-
-  using CellSetP2CExecType = decltype(
-    std::declval<CellSetType>().PrepareForInput(std::declval<vtkm::cont::DeviceAdapterId>(),
-                                                vtkm::TopologyElementTagCell{},
-                                                vtkm::TopologyElementTagPoint{},
-                                                std::declval<vtkm::cont::Token&>()));
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -129,6 +123,7 @@ private:
   }
 
 public:
+  template <typename CellSetType>
   VTKM_CONT CellLocatorTwoLevel(const vtkm::internal::cl_uniform_bins::Grid& topLevelGrid,
                                 const vtkm::cont::ArrayHandle<DimVec3>& leafDimensions,
                                 const vtkm::cont::ArrayHandle<vtkm::Id>& leafStartIndex,
@@ -153,16 +148,8 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT virtual ~CellLocatorTwoLevel() noexcept override
-  {
-    // This must not be defaulted, since defaulted virtual destructors are
-    // troublesome with CUDA __host__ __device__ markup.
-  }
-
   VTKM_EXEC
-  vtkm::ErrorCode FindCell(const FloatVec3& point,
-                           vtkm::Id& cellId,
-                           FloatVec3& parametric) const override
+  vtkm::ErrorCode FindCell(const FloatVec3& point, vtkm::Id& cellId, FloatVec3& parametric) const
   {
     using namespace vtkm::internal::cl_uniform_bins;
 
@@ -213,17 +200,22 @@ public:
     return vtkm::ErrorCode::CellNotFound;
   }
 
+  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_EXEC CellLocatorTwoLevel* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_EXEC const CellLocatorTwoLevel* operator->() const { return this; }
+
 private:
   vtkm::internal::cl_uniform_bins::Grid TopLevel;
 
-  ArrayPortalConst<DimVec3> LeafDimensions;
-  ArrayPortalConst<vtkm::Id> LeafStartIndex;
+  ReadPortal<DimVec3> LeafDimensions;
+  ReadPortal<vtkm::Id> LeafStartIndex;
 
-  ArrayPortalConst<vtkm::Id> CellStartIndex;
-  ArrayPortalConst<vtkm::Id> CellCount;
-  ArrayPortalConst<vtkm::Id> CellIds;
+  ReadPortal<vtkm::Id> CellStartIndex;
+  ReadPortal<vtkm::Id> CellCount;
+  ReadPortal<vtkm::Id> CellIds;
 
-  CellSetP2CExecType CellSet;
+  CellStructureType CellSet;
   CoordsPortalType Coords;
 };
 }

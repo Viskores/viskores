@@ -10,27 +10,24 @@
 #ifndef vtkm_cont_CellLocatorUniformGrid_h
 #define vtkm_cont_CellLocatorUniformGrid_h
 
-#include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
+#include <vtkm/cont/internal/CellLocatorBase.h>
+
+#include <vtkm/exec/CellLocatorUniformGrid.h>
 
 namespace vtkm
 {
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocatorUniformGrid : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT CellLocatorUniformGrid
+  : public vtkm::cont::internal::CellLocatorBase<CellLocatorUniformGrid>
 {
+  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorUniformGrid>;
+
 public:
-  VTKM_CONT CellLocatorUniformGrid();
-
-  VTKM_CONT ~CellLocatorUniformGrid() override;
-
-  VTKM_CONT const vtkm::exec::CellLocator* PrepareForExecution(
+  VTKM_CONT vtkm::exec::CellLocatorUniformGrid PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
-    vtkm::cont::Token& token) const override;
-
-protected:
-  VTKM_CONT void Build() override;
+    vtkm::cont::Token& token) const;
 
 private:
   vtkm::Id3 CellDims;
@@ -40,7 +37,8 @@ private:
   vtkm::Vec3f MaxPoint;
   bool Is3D = true;
 
-  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
+  friend Superclass;
+  VTKM_CONT void Build();
 };
 }
 } // vtkm::cont

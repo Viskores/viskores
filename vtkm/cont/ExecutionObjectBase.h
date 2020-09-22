@@ -151,9 +151,9 @@ VTKM_CONT VTKM_DEPRECATED(
 /// environment for a particular device. This templated type gives the type for the class used
 /// in the execution environment for a given ExecutionObject and device.
 ///
-template <typename ExecutionObject, typename Device>
+template <typename ExecutionObject, typename Device = vtkm::cont::DeviceAdapterId>
 using ExecutionObjectType = decltype(CallPrepareForExecution(std::declval<ExecutionObject>(),
-                                                             Device{},
+                                                             std::declval<Device>(),
                                                              std::declval<vtkm::cont::Token&>()));
 
 } // namespace internal

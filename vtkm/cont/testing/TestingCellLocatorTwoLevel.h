@@ -173,7 +173,7 @@ public:
                             vtkm::Id& cellId,
                             vtkm::Vec3f& pcoords) const
   {
-    vtkm::ErrorCode status = locator->FindCell(point, cellId, pcoords);
+    vtkm::ErrorCode status = locator.FindCell(point, cellId, pcoords);
     if (status != vtkm::ErrorCode::Success)
     {
       this->RaiseError(vtkm::ErrorString(status));
