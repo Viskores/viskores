@@ -98,8 +98,9 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <utility>
 #include <vector>
 
+#include "TreeCompiler.h"
+
 #define PRESPLIT_FILE
-using ValueType = vtkm::Float32;
 
 namespace ctaug_ns = vtkm::worklet::contourtree_augmented;
 
@@ -154,7 +155,42 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
+#if 0
+struct PrintArrayContentsFunctor
+{
+  template <typename T, typename S>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& array) const
+  {
+      this->PrintArrayPortal(array.GetPortalConstControl());
+  }
 
+private:
+  template <typename PortalType >
+  VTKM_CONT void PrintArrayPortal(const PortalType& portal) const
+  {
+    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+    {
+      // All ArrayPortal objects have ValueType for the type of each value.
+      using ValueType = typename PortalType::ValueType;
+
+      ValueType value = portal.Get(index);
+      vtkm::IdComponent numComponents =
+        vtkm::VecTraits <ValueType >::GetNumberOfComponents(value);
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < numComponents; componentIndex ++)
+      {
+        std::cout << " " << vtkm::VecTraits<ValueType>::GetComponent(value, componentIndex);
+      }
+      //std::cout << std::endl;
+    }
+  }
+};
+
+template <typename VariantArrayType >
+void PrintArrayContents(const VariantArrayType& array)
+{
+  array.CastAndCall(PrintArrayContentsFunctor());
+}
+#endif
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
@@ -471,6 +507,7 @@ int main(int argc, char* argv[])
     }
 
     // Read data
+    using ValueType = vtkm::FloatDefault;
     std::vector<ValueType> values(numVertices);
     if (filename.compare(filename.length() - 5, 5, ".bdem") == 0)
     {
@@ -534,6 +571,19 @@ int main(int argc, char* argv[])
                                          static_cast<vtkm::Id>(dims[1]),
                                          static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) });
 
+#ifdef DEBUG_PRINT_CTUD
+    std::cout << "blockIndex: "
+              << vtkm::Id3{ static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[0]) /
+                                                            static_cast<float>(dims[0]))),
+                            static_cast<vtkm::Id>(std::ceil(static_cast<float>(offset[1]) /
+                                                            static_cast<float>(dims[1]))),
+                            static_cast<vtkm::Id>(nDims == 3
+                                                    ? std::ceil(static_cast<float>(offset[2]) /
+                                                                static_cast<float>(dims[2]))
+                                                    : 0) }
+              << std::endl;
+#endif
+
     if (blockNo == 0)
     {
       // FIXME: Hack: Approximate blocks per dim
@@ -546,6 +596,9 @@ int main(int argc, char* argv[])
                                                      static_cast<float>(dims[2]))
                                          : 1)
       };
+#ifdef DEBUG_PRINT_CTUD
+      std::cout << "blocksPerDim: " << blocksPerDim << std::endl;
+#endif
     }
   }
 
@@ -786,9 +839,39 @@ int main(int argc, char* argv[])
                                                      useMarchingCubes);
   filter.SetActiveField("values");
 
-  // Execute the contour tree analysis. NOTE: If MPI is used the result  will be
-  // a vtkm::cont::PartitionedDataSet instead of a vtkm::cont::DataSet
+  // Execute the contour tree analysis
   auto result = filter.Execute(useDataSet);
+
+#if 0
+  std::cout << "Result dataset has " << result.GetNumberOfPartitions() << " partitions" << std::endl;
+
+  for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+  {
+    auto ds = result.GetPartition(ds_no);
+    for (vtkm::Id f_no = 0; f_no < ds.GetNumberOfFields(); ++f_no)
+    {
+      auto field = ds.GetField(f_no);
+      std::cout << field.GetName() << ": ";
+      PrintArrayContents(field.GetData());
+      std::cout << std::endl;
+    }
+  }
+#endif
+
+  for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+  {
+    TreeCompiler treeCompiler;
+    treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+    char fname[256];
+    std::snprintf(fname,
+                  sizeof(fname),
+                  "TreeComplilerOutput_Rank%d_Block%d.dat",
+                  rank,
+                  static_cast<int>(ds_no));
+    FILE* out_file = std::fopen(fname, "wb");
+    treeCompiler.WriteBinary(out_file);
+    std::fclose(out_file);
+  }
 
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
