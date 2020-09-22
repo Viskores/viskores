@@ -266,8 +266,7 @@ std::string ContourTreeDotGraphPrint(
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   vtkm::worklet::contourtree_augmented::ContourTree& contourTree, // the contour tree itself
   const vtkm::Id showMask = SHOW_ALL_STANDARD, // mask with flags for what elements to show
-  const vtkm::worklet::contourtree_augmented::IdArrayType& necessaryFlags =
-    vtkm::worklet::contourtree_augmented::IdArrayType(),
+  // const vtkm::worklet::contourtree_augmented::IdArrayType &necessaryFlags = vtkm::worklet::contourtree_augmented::IdArrayType(),
   // array with flags for "necessary"
   const VectorType& perNodeValues = VectorType()) // an arbitrary vector of values
 {                                                 // ContourTreeSuperDotGraphPrint()
@@ -284,7 +283,7 @@ std::string ContourTreeDotGraphPrint(
   auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
   auto hypernodesPortal = contourTree.Hypernodes.ReadPortal();
   auto hyperarcsPortal = contourTree.Hyperarcs.ReadPortal();
-  auto necessaryFlagsPortal = necessaryFlags.ReadPortal();
+  // auto necessaryFlagsPortal	= necessaryFlags.ReadPortal();
   auto perNodeValuesPortal = perNodeValues.ReadPortal();
 
   // work out how long the computed value is
