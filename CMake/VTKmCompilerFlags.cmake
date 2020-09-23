@@ -124,8 +124,15 @@ elseif(VTKM_COMPILER_IS_ICC)
   target_compile_options(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
-  set(cxx_flags -Wall -Wcast-align -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused -fno-common -Wno-unused-function)
-  set(cuda_flags -Xcompiler=-Wall,-Wcast-align,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-fno-common,-Wunused,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-function)
+  set(cxx_flags -Wall -Wcast-align -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused -fno-common -Wno-unused-function)
+  set(cuda_flags -Xcompiler=-Wall,-Wcast-align,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-fno-common,-Wunused,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-function)
+
+  #Clang does not support the -Wchar-subscripts flag for warning if an array
+  #subscript has a char type.
+  if (VTKM_COMPILER_IS_GNU)
+    list(APPEND cxx_flags -Wchar-subscripts)
+    set(cuda_flags "${cuda_flags},-Wchar-subscripts")
+  endif()
 
   #Only add float-conversion warnings for gcc as the integer warnigns in GCC
   #include the implicit casting of all types smaller than int to ints.
