@@ -77,8 +77,11 @@ public:
   using IdArrayPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
   /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
-  using SortIndexPortalType = typename vtkm::cont::ArrayHandleVirtual<
-    vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using SortIndexPortalType = typename vtkm::cont::ArrayHandleMultiplexer<
+    vtkm::cont::ArrayHandle<vtkm::Id>,
+    vtkm::cont::ArrayHandleIndex>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  //typename vtkm::cont::ArrayHandleVirtual<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+
   // constructor - takes vectors as parameters
   VTKM_CONT
   BRACTNodeComparatorImpl(const IdArrayPortalType& regularIdPortal,
@@ -122,8 +125,10 @@ class BRACTNodeComparator : public vtkm::cont::ExecutionObjectBase
 public:
   // constructor - takes vectors as parameters
   VTKM_CONT
-  BRACTNodeComparator(const vtkm::worklet::contourtree_augmented::IdArrayType& regularId,
-                      const vtkm::cont::ArrayHandleVirtual<vtkm::Id>& meshSortIndex)
+  BRACTNodeComparator(
+    const vtkm::worklet::contourtree_augmented::IdArrayType& regularId,
+    const vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                             vtkm::cont::ArrayHandleIndex>& meshSortIndex)
     : RegularId(regularId)
     , MeshSortIndex(meshSortIndex)
   { // constructor
@@ -142,7 +147,9 @@ public:
 private:
   vtkm::worklet::contourtree_augmented::IdArrayType RegularId;
   /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
-  vtkm::cont::ArrayHandleVirtual<vtkm::Id> MeshSortIndex;
+  vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                     vtkm::cont::ArrayHandleIndex>
+    MeshSortIndex;
 }; // BRACTNodeComparator
 
 } // namespace bract_maker
