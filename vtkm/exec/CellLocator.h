@@ -35,8 +35,8 @@ public:
                                    vtkm::Id& cellId,
                                    vtkm::Vec3f& parametric) const = 0;
 
-  VTKM_EXEC
   VTKM_DEPRECATED(1.6, "FindCell no longer takes worklet argument.")
+  VTKM_EXEC
   void FindCell(const vtkm::Vec3f& point,
                 vtkm::Id& cellId,
                 vtkm::Vec3f& parametric,
