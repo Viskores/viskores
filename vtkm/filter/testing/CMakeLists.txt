@@ -19,6 +19,7 @@ set(unit_tests
   UnitTestContourFilterNormals.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestContourTreeUniformAugmentedFilter.cxx
+  UnitTestContourTreeUniformDistributedFilter.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCrossProductFilter.cxx
   UnitTestDotProductFilter.cxx

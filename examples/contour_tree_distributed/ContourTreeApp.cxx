@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
 #ifdef ENABLE_SET_NUM_THREADS
 #include "tbb/task_scheduler_init.h"
@@ -98,7 +99,6 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <utility>
 #include <vector>
 
-#include "TreeCompiler.h"
 
 #define PRESPLIT_FILE
 
@@ -868,7 +868,7 @@ int main(int argc, char* argv[])
 
   for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
   {
-    TreeCompiler treeCompiler;
+    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
     treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
     char fname[256];
     std::snprintf(fname,
