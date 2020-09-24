@@ -14,7 +14,6 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayGetValues.h>
-#include <vtkm/cont/ArrayHandleDecorator.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
@@ -442,11 +441,8 @@ auto CellSetExplicit<SST, CST, OST>
 -> typename ConnectivityChooser<VisitTopology,
                                 IncidentTopology>::NumIndicesArrayType
 {
-  auto offsets = this->GetOffsetsArray(visited, incident);
-  const vtkm::Id numVals = offsets.GetNumberOfValues() - 1;
-  return vtkm::cont::make_ArrayHandleDecorator(numVals,
-                                               detail::NumIndicesDecorator{},
-                                               std::move(offsets));
+  // Converts to NumIndicesArrayType (which is an ArrayHandleOffsetsToNumComponents)
+  return this->GetOffsetsArray(visited, incident);
 }
 
 //----------------------------------------------------------------------------

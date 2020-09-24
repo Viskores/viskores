@@ -30,6 +30,7 @@ set(headers
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandleMultiplexer.h
+  ArrayHandleOffsetsToNumComponents.h
   ArrayHandlePermutation.h
   ArrayHandleRecombineVec.h
   ArrayHandleReverse.h
