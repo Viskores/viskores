@@ -575,7 +575,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // Fan out
     auto nRounds = b->ContourTrees.size() - 1;
 
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Fan out. nRounds=" << nRounds);
     vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> hierarchicalTree;
     hierarchicalTree.Initialize(
       static_cast<vtkm::Id>(nRounds), b->ContourTrees[nRounds], b->ContourTreeMeshes[nRounds - 1]);
