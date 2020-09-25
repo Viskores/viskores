@@ -20,6 +20,11 @@
 #define VTKM_CUDA_DEVICE_PASS
 #endif
 
+// Defined when compiling for the HIP language.
+#ifdef __HIP__
+#define VTKM_HIP
+#endif
+
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
