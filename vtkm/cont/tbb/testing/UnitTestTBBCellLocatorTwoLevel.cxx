@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
+#include <vtkm/cont/testing/TestingCellLocatorTwoLevel.h>
 
-int UnitTestSerialPointLocatorUniformGrid(int argc, char* argv[])
+int UnitTestTBBCellLocatorTwoLevel(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::Testing::Run(
-    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagSerial>(), argc, argv);
+    TestingCellLocatorTwoLevel<vtkm::cont::DeviceAdapterTagTBB>, argc, argv);
 }

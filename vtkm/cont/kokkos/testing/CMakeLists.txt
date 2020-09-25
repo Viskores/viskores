@@ -14,7 +14,7 @@ set(unit_tests
   UnitTestKokkosArrayHandleMultiplexer.cxx
   UnitTestKokkosBitField.cxx
   UnitTestKokkosCellLocatorRectilinearGrid.cxx
-  UnitTestKokkosCellLocatorUniformBins.cxx
+  UnitTestKokkosCellLocatorTwoLevel.cxx
   UnitTestKokkosCellLocatorUniformGrid.cxx
   UnitTestKokkosComputeRange.cxx
   UnitTestKokkosColorTable.cxx
@@ -22,7 +22,7 @@ set(unit_tests
   UnitTestKokkosDataSetSingleType.cxx
   UnitTestKokkosDeviceAdapter.cxx
   UnitTestKokkosImplicitFunction.cxx
-  UnitTestKokkosPointLocatorUniformGrid.cxx
+  UnitTestKokkosPointLocatorSparseGrid.cxx
   UnitTestKokkosVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests} LABEL "KOKKOS" LIBRARIES vtkm_worklet)

@@ -8,15 +8,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
-#define vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
+#ifndef vtk_m_cont_testing_TestingPointLocatorSparseGrid_h
+#define vtk_m_cont_testing_TestingPointLocatorSparseGrid_h
 
 #include <random>
 
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/PointLocatorUniformGrid.h>
-#include <vtkm/exec/PointLocatorUniformGrid.h>
+#include <vtkm/cont/PointLocatorSparseGrid.h>
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
@@ -65,7 +64,7 @@ public:
   }
 };
 
-class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
+class PointLocatorSparseGridWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn qcIn,
@@ -76,7 +75,7 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
 
   VTKM_CONT
-  PointLocatorUniformGridWorklet() {}
+  PointLocatorSparseGridWorklet() {}
 
   template <typename CoordiVecType, typename Locator>
   VTKM_EXEC void operator()(const CoordiVecType& qc,
@@ -89,7 +88,7 @@ public:
 };
 
 template <typename DeviceAdapter>
-class TestingPointLocatorUniformGrid
+class TestingPointLocatorSparseGrid
 {
 public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -122,7 +121,7 @@ public:
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
-    vtkm::cont::PointLocatorUniformGrid pointLocatorUG;
+    vtkm::cont::PointLocatorSparseGrid pointLocatorUG;
     pointLocatorUG.SetCoordinates(coord);
     pointLocatorUG.SetRange({ { 0.0, 10.0 } });
     pointLocatorUG.SetNumberOfBins({ 5, 5, 5 });
@@ -150,9 +149,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> nnDis_Handle;
 
-    PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
-    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet> locatorDispatcher(
-      pointLocatorUniformGridWorklet);
+    PointLocatorSparseGridWorklet pointLocatorSparseGridWorklet;
+    vtkm::worklet::DispatcherMapField<PointLocatorSparseGridWorklet> locatorDispatcher(
+      pointLocatorSparseGridWorklet);
     locatorDispatcher.SetDevice(DeviceAdapter());
     locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
 
@@ -193,4 +192,4 @@ public:
   }
 };
 
-#endif // vtk_m_cont_testing_TestingPointLocatorUniformGrid_h
+#endif // vtk_m_cont_testing_TestingPointLocatorSparseGrid_h

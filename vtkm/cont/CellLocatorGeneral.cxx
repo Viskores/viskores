@@ -13,7 +13,7 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 
@@ -46,9 +46,9 @@ void DefaultConfigurator(std::unique_ptr<vtkm::cont::CellLocator>& locator,
       locator.reset(new vtkm::cont::CellLocatorRectilinearGrid);
     }
   }
-  else if (!dynamic_cast<vtkm::cont::CellLocatorUniformBins*>(locator.get()))
+  else if (!dynamic_cast<vtkm::cont::CellLocatorTwoLevel*>(locator.get()))
   {
-    locator.reset(new vtkm::cont::CellLocatorUniformBins);
+    locator.reset(new vtkm::cont::CellLocatorTwoLevel);
   }
 
   locator->SetCellSet(cellSet);

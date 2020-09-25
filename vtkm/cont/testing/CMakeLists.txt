@@ -15,7 +15,7 @@ set(headers
   TestingArrayHandles.h
   TestingArrayHandleMultiplexer.h
   TestingCellLocatorRectilinearGrid.h
-  TestingCellLocatorUniformBins.h
+  TestingCellLocatorTwoLevel.h
   TestingCellLocatorUniformGrid.h
   TestingColorTable.h
   TestingComputeRange.h
@@ -24,7 +24,7 @@ set(headers
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
-  TestingPointLocatorUniformGrid.h
+  TestingPointLocatorSparseGrid.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
   )

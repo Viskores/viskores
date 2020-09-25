@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/PointLocatorUniformGrid.h>
+#include <vtkm/cont/PointLocatorSparseGrid.h>
 
 namespace vtkm
 {
@@ -59,7 +59,7 @@ private:
 
 } // internal
 
-void PointLocatorUniformGrid::Build()
+void PointLocatorSparseGrid::Build()
 {
   if (this->IsRangeInvalid())
   {
@@ -96,11 +96,11 @@ void PointLocatorUniformGrid::Build()
   vtkm::cont::Algorithm::LowerBounds(cellIds, cell_ids_counting, this->CellLower);
 }
 
-struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
+struct PointLocatorSparseGrid::PrepareExecutionObjectFunctor
 {
   template <typename DeviceAdapter>
   VTKM_CONT bool operator()(DeviceAdapter,
-                            const vtkm::cont::PointLocatorUniformGrid& self,
+                            const vtkm::cont::PointLocatorSparseGrid& self,
                             ExecutionObjectHandleType& handle,
                             vtkm::cont::Token& token) const
   {
@@ -110,8 +110,8 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
     auto rmax = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(self.Range[0].Max),
                                static_cast<vtkm::FloatDefault>(self.Range[1].Max),
                                static_cast<vtkm::FloatDefault>(self.Range[2].Max));
-    vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>* h =
-      new vtkm::exec::PointLocatorUniformGrid<DeviceAdapter>(
+    vtkm::exec::PointLocatorSparseGrid<DeviceAdapter>* h =
+      new vtkm::exec::PointLocatorSparseGrid<DeviceAdapter>(
         rmin,
         rmax,
         self.Dims,
@@ -124,7 +124,7 @@ struct PointLocatorUniformGrid::PrepareExecutionObjectFunctor
   }
 };
 
-VTKM_CONT void PointLocatorUniformGrid::PrepareExecutionObject(
+VTKM_CONT void PointLocatorSparseGrid::PrepareExecutionObject(
   ExecutionObjectHandleType& execObjHandle,
   vtkm::cont::DeviceAdapterId deviceId,
   vtkm::cont::Token& token) const
@@ -133,7 +133,7 @@ VTKM_CONT void PointLocatorUniformGrid::PrepareExecutionObject(
     deviceId, PrepareExecutionObjectFunctor(), *this, execObjHandle, token);
   if (!success)
   {
-    throwFailedRuntimeDeviceTransfer("PointLocatorUniformGrid", deviceId);
+    throwFailedRuntimeDeviceTransfer("PointLocatorSparseGrid", deviceId);
   }
 }
 }

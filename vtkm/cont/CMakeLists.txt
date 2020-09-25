@@ -55,6 +55,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
@@ -102,6 +103,7 @@ set(headers
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
@@ -165,7 +167,7 @@ set(sources
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
-  CellLocatorUniformBins.cxx
+  CellLocatorTwoLevel.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx
@@ -182,7 +184,7 @@ set(sources
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
-  PointLocatorUniformGrid.cxx
+  PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
   Timer.cxx
   UnknownArrayHandle.cxx

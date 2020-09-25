@@ -7,7 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
@@ -345,7 +345,7 @@ namespace cont
 //----------------------------------------------------------------------------
 /// Builds the cell locator lookup structure
 ///
-VTKM_CONT void CellLocatorUniformBins::Build()
+VTKM_CONT void CellLocatorTwoLevel::Build()
 {
   vtkm::cont::Invoker invoke;
 
@@ -453,53 +453,53 @@ VTKM_CONT void CellLocatorUniformBins::Build()
 }
 
 //----------------------------------------------------------------------------
-struct CellLocatorUniformBins::MakeExecObject
+struct CellLocatorTwoLevel::MakeExecObject
 {
   template <typename CellSetType, typename DeviceAdapter>
   VTKM_CONT void operator()(const CellSetType& cellSet,
                             DeviceAdapter,
                             vtkm::cont::Token& token,
-                            const CellLocatorUniformBins& self) const
+                            const CellLocatorTwoLevel& self) const
   {
     auto execObject =
-      new vtkm::exec::CellLocatorUniformBins<CellSetType, DeviceAdapter>(self.TopLevel,
-                                                                         self.LeafDimensions,
-                                                                         self.LeafStartIndex,
-                                                                         self.CellStartIndex,
-                                                                         self.CellCount,
-                                                                         self.CellIds,
-                                                                         cellSet,
-                                                                         self.GetCoordinates(),
-                                                                         token);
+      new vtkm::exec::CellLocatorTwoLevel<CellSetType, DeviceAdapter>(self.TopLevel,
+                                                                      self.LeafDimensions,
+                                                                      self.LeafStartIndex,
+                                                                      self.CellStartIndex,
+                                                                      self.CellCount,
+                                                                      self.CellIds,
+                                                                      cellSet,
+                                                                      self.GetCoordinates(),
+                                                                      token);
     self.ExecutionObjectHandle.Reset(execObject);
   }
 };
 
-struct CellLocatorUniformBins::PrepareForExecutionFunctor
+struct CellLocatorTwoLevel::PrepareForExecutionFunctor
 {
   template <typename DeviceAdapter>
   VTKM_CONT bool operator()(DeviceAdapter,
                             vtkm::cont::Token& token,
-                            const CellLocatorUniformBins& self) const
+                            const CellLocatorTwoLevel& self) const
   {
     self.GetCellSet().CastAndCall(MakeExecObject{}, DeviceAdapter{}, token, self);
     return true;
   }
 };
 
-VTKM_CONT const vtkm::exec::CellLocator* CellLocatorUniformBins::PrepareForExecution(
+VTKM_CONT const vtkm::exec::CellLocator* CellLocatorTwoLevel::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
   if (!vtkm::cont::TryExecuteOnDevice(device, PrepareForExecutionFunctor(), token, *this))
   {
-    throwFailedRuntimeDeviceTransfer("CellLocatorUniformBins", device);
+    throwFailedRuntimeDeviceTransfer("CellLocatorTwoLevel", device);
   }
   return this->ExecutionObjectHandle.PrepareForExecution(device, token);
 }
 
 //----------------------------------------------------------------------------
-void CellLocatorUniformBins::PrintSummary(std::ostream& out) const
+void CellLocatorTwoLevel::PrintSummary(std::ostream& out) const
 {
   out << "DensityL1: " << this->DensityL1 << "\n";
   out << "DensityL2: " << this->DensityL2 << "\n";

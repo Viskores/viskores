@@ -7,13 +7,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
 
-int UnitTestOpenMPPointLocatorUniformGrid(int argc, char* argv[])
+#include <vtkm/cont/testing/TestingPointLocatorSparseGrid.h>
+
+int UnitTestSerialPointLocatorSparseGrid(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::Testing::Run(
-    TestingPointLocatorUniformGrid<vtkm::cont::DeviceAdapterTagOpenMP>(), argc, argv);
+    TestingPointLocatorSparseGrid<vtkm::cont::DeviceAdapterTagSerial>(), argc, argv);
 }

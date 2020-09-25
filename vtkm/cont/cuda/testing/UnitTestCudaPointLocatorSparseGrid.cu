@@ -8,12 +8,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/testing/TestingCellLocatorUniformBins.h>
+#include <vtkm/cont/testing/TestingPointLocatorSparseGrid.h>
 
-int UnitTestKokkosCellLocatorUniformBins(int argc, char* argv[])
+int UnitTestCudaPointLocatorSparseGrid(int argc, char* argv[])
 {
   auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagKokkos{});
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   return vtkm::cont::testing::Testing::Run(
-    TestingCellLocatorUniformBins<vtkm::cont::DeviceAdapterTagKokkos>, argc, argv);
+    TestingPointLocatorSparseGrid<vtkm::cont::DeviceAdapterTagCuda>(), argc, argv);
 }

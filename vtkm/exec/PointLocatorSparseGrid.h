@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_exec_PointLocatorUniformGrid_h
-#define vtk_m_exec_PointLocatorUniformGrid_h
+#ifndef vtk_m_exec_PointLocatorSparseGrid_h
+#define vtk_m_exec_PointLocatorSparseGrid_h
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -18,6 +18,7 @@
 
 #include <vtkm/exec/PointLocator.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
@@ -26,7 +27,7 @@ namespace exec
 {
 
 template <typename DeviceAdapter>
-class VTKM_ALWAYS_EXPORT PointLocatorUniformGrid final : public vtkm::exec::PointLocator
+class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid : public vtkm::exec::PointLocator
 {
 public:
   using CoordPortalType =
@@ -36,15 +37,15 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
 
-  PointLocatorUniformGrid() = default;
+  PointLocatorSparseGrid() = default;
 
-  PointLocatorUniformGrid(const vtkm::Vec3f& min,
-                          const vtkm::Vec3f& max,
-                          const vtkm::Id3& dims,
-                          const CoordPortalType& coords,
-                          const IdPortalType& pointIds,
-                          const IdPortalType& cellLower,
-                          const IdPortalType& cellUpper)
+  PointLocatorSparseGrid(const vtkm::Vec3f& min,
+                         const vtkm::Vec3f& max,
+                         const vtkm::Id3& dims,
+                         const CoordPortalType& coords,
+                         const IdPortalType& pointIds,
+                         const IdPortalType& cellLower,
+                         const IdPortalType& cellUpper)
     : Min(min)
     , Dims(dims)
     , Dxdydz((max - Min) / Dims)
@@ -237,4 +238,4 @@ private:
 }
 }
 
-#endif // vtk_m_exec_PointLocatorUniformGrid_h
+#endif // vtk_m_exec_PointLocatorSparseGrid_h
