@@ -106,21 +106,21 @@ public:
   template <typename Atomic>
   VTKM_EXEC void Max(Atomic& atom, const vtkm::Id& val, const vtkm::Id& index) const
   {
-    vtkm::Id old = -1;
-    do
+    vtkm::Id old = atom.Get(index);
+    while (old < val)
     {
-      old = atom.CompareAndSwap(index, val, old);
-    } while (old < val);
+      atom.CompareExchange(index, &old, val);
+    }
   }
 
   template <typename Atomic>
   VTKM_EXEC void Min(Atomic& atom, const vtkm::Id& val, const vtkm::Id& index) const
   {
-    vtkm::Id old = 1000000000;
-    do
+    vtkm::Id old = atom.Get(index);
+    while (old > val)
     {
-      old = atom.CompareAndSwap(index, val, old);
-    } while (old > val);
+      atom.CompareExchange(index, &old, val);
+    }
   }
 
   template <typename T, typename AtomicType>

@@ -327,14 +327,9 @@ public:
       T value = (T)index;
       //Get the old value from the array
       T oldValue = this->AArray.Get(0);
-      //This creates an atomic add using the CAS operatoin
-      T assumed = T(0);
-      do
-      {
-        assumed = oldValue;
-        oldValue = this->AArray.CompareAndSwap(0, (assumed + value), assumed);
-
-      } while (assumed != oldValue);
+      //Use atomic compare-exchange to atomically add value
+      while (!this->AArray.CompareExchange(0, &oldValue, oldValue + value))
+        ;
     }
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
