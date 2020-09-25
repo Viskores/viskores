@@ -193,7 +193,7 @@ public:
   static void PrintSuperarcArray(const std::vector<Edge>& superarc_array);
 
   // routine to print the superarcs
-  void PrintSuperarcs() const;
+  void PrintSuperarcs(bool) const;
 
   // routine to write out binary file
   void WriteBinary(FILE* outFile) const;
@@ -380,8 +380,14 @@ inline void TreeCompiler::PrintSuperarcArray(const std::vector<Edge>& superarc_a
 
 } // TreeCompiler::PrintSuperarcArray()
 
-inline void TreeCompiler::PrintSuperarcs() const
+inline void TreeCompiler::PrintSuperarcs(bool printHeader = false) const
 {
+  if (printHeader)
+  {
+    std::cout << "============" << std::endl;
+    std::cout << "Contour Tree" << std::endl;
+  }
+
   PrintSuperarcArray(this->superarcs);
 }
 

@@ -76,4 +76,13 @@ if (VTKm_ENABLE_MPI)
   if (TARGET vtkm::tbb)
     target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_SET_NUM_THREADS")
   endif()
+
+  add_executable(TreeCompiler TreeCompilerApp.cxx)
+  target_link_libraries(TreeCompiler vtkm_filter)
+  vtkm_add_target_information(TreeCompiler DROP_UNUSED_SYMBOLS)
+
+  configure_file(split_data_2d.py split_data_2d.py COPYONLY)
+  configure_file(split_data_3d.py split_data_3d.py COPYONLY)
+  configure_file(hact_test.sh hact_test.sh COPYONLY)
+  configure_file(testrun.sh testrun.sh COPYONLY)
 endif()
