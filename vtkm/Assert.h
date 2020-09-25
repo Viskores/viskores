@@ -21,6 +21,8 @@
 #define VTKM_NO_ASSERT
 #elif defined(VTKM_CUDA_DEVICE_PASS) && defined(VTKM_NO_ASSERT_CUDA)
 #define VTKM_NO_ASSERT
+#elif defined(VTKM_HIP) && defined(VTKM_NO_ASSERT_HIP)
+#define VTKM_NO_ASSERT
 #endif
 #endif // VTKM_NO_ASSERT
 
