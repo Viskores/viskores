@@ -377,41 +377,41 @@ public:
     }
     else
     {
-      std::cout << "           0          118" << std::endl;
-      std::cout << "          31           41" << std::endl;
-      std::cout << "          41           43" << std::endl;
-      std::cout << "          41           56" << std::endl;
-      std::cout << "          56           67" << std::endl;
-      std::cout << "          56           91" << std::endl;
-      std::cout << "          62           67" << std::endl;
-      std::cout << "          67          118" << std::endl;
-      std::cout << "          81           91" << std::endl;
-      std::cout << "          91           93" << std::endl;
-      std::cout << "         118          124" << std::endl;
+      std::cout << "           0          203" << std::endl;
+      std::cout << "          71           72" << std::endl;
+      std::cout << "          72           78" << std::endl;
+      std::cout << "          72          101" << std::endl;
+      std::cout << "         101          112" << std::endl;
+      std::cout << "         101          132" << std::endl;
+      std::cout << "         107          112" << std::endl;
+      std::cout << "         112          203" << std::endl;
+      std::cout << "         131          132" << std::endl;
+      std::cout << "         132          138" << std::endl;
+      std::cout << "         203          209" << std::endl;
 
       VTKM_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 11),
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 118 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 203 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 31, 41 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 71, 72 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 41, 43 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 72, 78 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 41, 56 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 72, 101 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 56, 67 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 101, 112 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 56, 91 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 101, 132 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 62, 67 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 107, 112 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 67, 118 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 112, 203 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 81, 91 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 131, 132 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[9] == Edge{ 91, 93 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[9] == Edge{ 132, 138 },
                        "Wrong result for ContourTreeUniformDistributed filter");
-      VTKM_TEST_ASSERT(treeCompiler.superarcs[10] == Edge{ 118, 124 },
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[10] == Edge{ 203, 209 },
                        "Wrong result for ContourTreeUniformDistributed filter");
     }
   }
@@ -502,13 +502,11 @@ public:
     this->TestContourTreeUniformDistributed5x6x7(8, false);
     this->TestContourTreeUniformDistributed5x6x7(16, false);
     //this->TestContourTreeUniformDistributed5x6x7(32, false); // Hang???
-#if 0
     this->TestContourTreeUniformDistributed5x6x7(2, true);
     this->TestContourTreeUniformDistributed5x6x7(4, true);
     this->TestContourTreeUniformDistributed5x6x7(8, true);
     this->TestContourTreeUniformDistributed5x6x7(16, true);
     // this->TestContourTreeUniformDistributed5x6x7(32, true);  // Hang???
-#endif
   }
 };
 }
