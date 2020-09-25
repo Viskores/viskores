@@ -482,6 +482,22 @@ int main(int argc, char* argv[])
     std::swap(bpd[0], bpd[1]);
 
     getline(inFile, line);
+    std::istringstream blockIndex_stream(line);
+    blockIndex_stream >> tag;
+    if (tag != "#BLOCK_INDEX")
+    {
+      std::cerr << "Error: Expected #BLOCK_INDEX, got " << tag << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+    std::vector<vtkm::Id> blockIndex;
+    while (blockIndex_stream >> dimVertices)
+      blockIndex.push_back(dimVertices);
+    // Swap dimensions so that they are from fastest to slowest growing
+    // dims[0] -> col; dims[1] -> row, dims[2] ->slice
+    std::swap(blockIndex[0], blockIndex[1]);
+
+    getline(inFile, line);
     std::istringstream linestream(line);
     std::vector<vtkm::Id> dims;
     while (linestream >> dimVertices)
@@ -567,16 +583,10 @@ int main(int argc, char* argv[])
     // and add to partition
     useDataSet.AppendPartition(ds);
 
-    // FIXME: Hack: Approximate block index (better to put this into file)
-    localBlockIndicesPortal.Set(
-      blockNo,
-      vtkm::Id3{ static_cast<vtkm::Id>(
-                   std::ceil(static_cast<float>(offset[0]) / static_cast<float>(dims[0]))),
-                 static_cast<vtkm::Id>(
-                   std::ceil(static_cast<float>(offset[1]) / static_cast<float>(dims[1]))),
-                 static_cast<vtkm::Id>(nDims == 3 ? std::ceil(static_cast<float>(offset[2]) /
-                                                              static_cast<float>(dims[2]))
-                                                  : 0) });
+    localBlockIndicesPortal.Set(blockNo,
+                                vtkm::Id3{ static_cast<vtkm::Id>(blockIndex[0]),
+                                           static_cast<vtkm::Id>(blockIndex[1]),
+                                           static_cast<vtkm::Id>(nDims == 3 ? blockIndex[2] : 0) });
     localBlockOriginsPortal.Set(blockNo,
                                 vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
                                            static_cast<vtkm::Id>(offset[1]),
@@ -597,6 +607,15 @@ int main(int argc, char* argv[])
                                                                 static_cast<float>(dims[2]))
                                                     : 0) }
               << std::endl;
+    std::cout << "blockOrigin: "
+              << vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
+                            static_cast<vtkm::Id>(offset[1]),
+                            static_cast<vtkm::Id>(nDims == 3 ? offset[2] : 0) }
+              << std::endl;
+    std::cout << "blockSize: "
+              << vtkm::Id3{ static_cast<vtkm::Id>(dims[0]),
+                            static_cast<vtkm::Id>(dims[1]),
+                            static_cast<vtkm::Id>(nDims == 3 ? dims[2] : 0) };
 #endif
 
     if (blockNo == 0)
@@ -871,11 +890,8 @@ int main(int argc, char* argv[])
     vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
     treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
     char fname[256];
-    std::snprintf(fname,
-                  sizeof(fname),
-                  "TreeComplilerOutput_Rank%d_Block%d.dat",
-                  rank,
-                  static_cast<int>(ds_no));
+    std::snprintf(
+      fname, sizeof(fname), "TreeCompilerOutput_Rank%d_Block%d.dat", rank, static_cast<int>(ds_no));
     FILE* out_file = std::fopen(fname, "wb");
     treeCompiler.WriteBinary(out_file);
     std::fclose(out_file);

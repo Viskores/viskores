@@ -36,12 +36,13 @@ def readBOV(filename):
 # Python order is slice, row, col
 # TXT file order is row, col, slice
 # offset and size are in file order
-def save_piece(fn, array, offset, n_blocks, size):
+def save_piece(fn, array, offset, n_blocks, block_index, size):
     with open(fn, 'w') as f:
         perm = [1, 2, 0]
         f.write('#GLOBAL_EXTENTS ' + ' '.join(map(str, [array.shape[i] for i in perm])) + '\n')
         f.write('#OFFSET ' + ' '.join(map(str, offset))+'\n')
         f.write('#BLOCKS_PER_DIM ' + ' '.join(map(str, n_blocks))+'\n')
+        f.write('#BLOCK_INDEX ' + ' '.join(map(str, block_index))+'\n')
         f.write(' '.join(map(str, size)) + '\n')
         if fn[-5:]=='.bdem':
             array[offset[2]:offset[2]+size[2],offset[0]:offset[0]+size[0],offset[1]:offset[1]+size[1]].astype(np.double).tofile(f)
@@ -90,11 +91,11 @@ slice_filename = name + '_slices.txt'
 
 # Save blocks
 block_no = 0
-for s_start, s_stop in zip(split_points_s, split_points_s[1:]):
-    for r_start, r_stop in zip(split_points_r, split_points_r[1:]):
-        for c_start, c_stop in zip(split_points_c, split_points_c[1:]):
+for block_index_s, (s_start, s_stop) in enumerate(zip(split_points_s, split_points_s[1:])):
+    for block_index_r, (r_start, r_stop) in enumerate(zip(split_points_r, split_points_r[1:])):
+        for block_index_c, (c_start, c_stop) in enumerate(zip(split_points_c, split_points_c[)1:]):
             n_s = s_stop - s_start + 1
             n_r = r_stop - r_start + 1
             n_c = c_stop - c_start + 1
-            save_piece(out_filename_pattern % block_no, data, (r_start, c_start, s_start), (n_r, n_c, n_s))
+            save_piece(out_filename_pattern % block_no, data, (r_start, c_start, s_start), (block_index_r, block_index_c, block_index_s), (n_r, n_c, n_s))
             block_no += 1

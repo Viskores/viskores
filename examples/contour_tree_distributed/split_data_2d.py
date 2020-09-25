@@ -11,11 +11,12 @@ def read_file(fn):
     return data
 
 # Save a block from a 2D NumPy array to disk
-def save_piece(fn, array, offset, n_blocks, size):
+def save_piece(fn, array, offset, n_blocks, block_index, size):
     with open(fn, 'w') as f:
         f.write('#GLOBAL_EXTENTS ' + ' '.join(map(str, array.shape)) + '\n')
         f.write('#OFFSET ' + ' '.join(map(str, offset))+'\n')
         f.write('#BLOCKS_PER_DIM ' + ' '.join(map(str, n_blocks))+'\n')
+        f.write('#BLOCK_INDEX ' + ' '.join(map(str, block_index))+'\n')
         f.write(' '.join(map(str, size)) + '\n')
         np.savetxt(f, array[offset[0]:offset[0]+size[0],offset[1]:offset[1]+size[1]], fmt='%.16g')
 
@@ -49,10 +50,10 @@ split_points_y = split_points(data.shape[1], n_blocks[1])
 
 # Save blocks
 block_no = 0
-for x_start, x_stop in zip(split_points_x, split_points_x[1:]):
-    for y_start, y_stop in zip(split_points_y, split_points_y[1:]):
+for block_index_x, (x_start, x_stop) in enumerate(zip(split_points_x, split_points_x[1:])):
+    for block_index_y, (y_start, y_stop) in enumerate(zip(split_points_y, split_points_y[1:])):
         n_x = x_stop - x_start + 1
         n_y = y_stop - y_start + 1
-        save_piece(out_filename_pattern % block_no, data, (x_start, y_start), n_blocks, (n_x, n_y))
+        save_piece(out_filename_pattern % block_no, data, (x_start, y_start), n_blocks, (block_index_x, block_index_y), (n_x, n_y))
 #         print("Wrote block %d, origin %d %d, size %d %d" % (block_no, x_start, y_start, n_x, n_y))
         block_no += 1
