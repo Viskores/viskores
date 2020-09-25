@@ -9,19 +9,19 @@
 ##============================================================================
 
 set(headers
-  ContourTreeBlockData.h
-  SpatialDecomposition.h
-  MultiBlockContourTreeHelper.h
-  MergeBlockFunctor.h
-  InteriorForest.h
   BoundaryTree.h
   BoundaryTreeMaker.h
-  HierarchicalContourTree.h
-  HierarchicalContourTreeDeviceData.h
-  TreeGrafter.h
   ComputeDistributedContourTreeFunctor.h
+  ContourTreeBlockData.h
   DistributedContourTreeBlockData.h
+  HierarchicalContourTree.h
+  InteriorForest.h
+  MergeBlockFunctor.h
+  MultiBlockContourTreeHelper.h
   PrintGraph.h
+  SpatialDecomposition.h
+  TreeCompiler.h
+  TreeGrafter.h
 )
 
 vtkm_declare_headers(${headers})
