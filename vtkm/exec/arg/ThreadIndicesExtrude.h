@@ -214,6 +214,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            const ConnectivityType& connectivity)
@@ -229,6 +230,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            vtkm::Id inputIndex,
