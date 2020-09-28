@@ -63,18 +63,19 @@ namespace
 // numberOf Blocks must be a power of 2
 vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBlocks)
 {
-  std::cout << "GlobalSize: " << globalSize << " numberOfBlocks:" << numberOfBlocks << " -> ";
+  // DEBUG: std::cout << "GlobalSize: " << globalSize << " numberOfBlocks:" << numberOfBlocks << " -> ";
   // Inefficient way to compute log2 of numberOfBlocks, i.e., number of total splits
-  int numSplits = 0;
+  vtkm::Id numSplits = 0;
+  vtkm::Id currNumberOfBlock = numberOfBlocks;
   bool isPowerOfTwo = true;
-  while (numberOfBlocks > 1)
+  while (currNumberOfBlock > 1)
   {
-    if (numberOfBlocks % 2 != 0)
+    if (currNumberOfBlock % 2 != 0)
     {
       isPowerOfTwo = false;
       break;
     }
-    numberOfBlocks /= 2;
+    currNumberOfBlock /= 2;
     ++numSplits;
   }
 
@@ -89,17 +90,17 @@ vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBl
         if (globalSize[d] > globalSize[splitAxis])
           splitAxis = d;
       // Split in half along that axis
-      std::cout << splitAxis << " " << globalSize << std::endl;
+      // DEBUG: std::cout << splitAxis << " " << globalSize << std::endl;
       VTKM_ASSERT(globalSize[splitAxis] > 1);
       ++splitsPerAxis[splitAxis];
       globalSize[splitAxis] /= 2;
       --numSplits;
     }
-    std::cout << "splitsPerAxis: " << splitsPerAxis;
+    // DEBUG: std::cout << "splitsPerAxis: " << splitsPerAxis;
     vtkm::Id3 blocksPerAxis;
     for (vtkm::Id d = 0; d < 3; ++d)
       blocksPerAxis[d] = 1 << splitsPerAxis[d];
-    std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
+    // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
     return blocksPerAxis;
   }
   else
@@ -111,6 +112,7 @@ vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBl
         splitAxis = d;
     vtkm::Id3 blocksPerAxis{ 1, 1, 1 };
     blocksPerAxis[splitAxis] = numberOfBlocks;
+    // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
     return blocksPerAxis;
   }
 }
@@ -119,7 +121,8 @@ std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 global
                                                                 vtkm::Id3 blocksPerAxis,
                                                                 vtkm::Id blockNo)
 {
-  std::cout << "Block " << blockNo;
+  // DEBUG: std::cout << "ComputeBlockExtents("<<globalSize <<", " << blocksPerAxis << ", " << blockNo << ")" << std::endl;
+  // DEBUG: std::cout << "Block " << blockNo;
 
   vtkm::Id3 blockIndex, blockOrigin, blockSize;
   for (vtkm::Id d = 0; d < 3; ++d)
@@ -132,8 +135,9 @@ std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 global
     vtkm::Id maxIdx =
       blockIndex[d] < blocksPerAxis[d] - 1 ? vtkm::Id((blockIndex[d] + 1) * dx) : globalSize[d] - 1;
     blockSize[d] = maxIdx - blockOrigin[d] + 1;
+    // DEBUG: std::cout << " " << blockIndex[d] <<  dx << " " << blockOrigin[d] << " " << maxIdx << " " << blockSize[d] << "; ";
   }
-  std::cout << " -> " << blockIndex << " " << blockOrigin << " " << blockSize << std::endl;
+  // DEBUG: std::cout << " -> " << blockIndex << " "  << blockOrigin << " " << blockSize << std::endl;
   return std::make_tuple(blockIndex, blockOrigin, blockSize);
 }
 
@@ -166,7 +170,7 @@ vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
         VTKM_ASSERT(outIdx >= 0 && outIdx < nOutValues);
         copyIdsPortal.Set(outIdx, inIdx);
       }
-  std::cout << copyIdsPortal.GetNumberOfValues() << std::endl;
+  // DEBUG: std::cout << copyIdsPortal.GetNumberOfValues() << std::endl;
 
   vtkm::cont::ArrayHandle<vtkm::Float32> inputArrayHandle;
   ds.GetPointField(fieldName).GetData().CopyTo(inputArrayHandle);
@@ -175,10 +179,9 @@ vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
   vtkm::cont::ArrayCopy(permutedInArray, outputArrayHandle);
   outputArrayHandle.SyncControlArray();
   VTKM_ASSERT(outputArrayHandle.GetNumberOfValues() == nOutValues);
-  auto rp = outputArrayHandle.ReadPortal();
-  for (vtkm::Id i = 0; i < nOutValues; ++i)
-    std::cout << rp.Get(i) << " ";
-  std::cout << std::endl;
+  // DEBUG: auto rp = outputArrayHandle.ReadPortal();
+  // DEBUG: for (vtkm::Id i = 0; i < nOutValues; ++i) std::cout << rp.Get(i) << " ";
+  // DEBUG: std::cout << std::endl;
 
   vtkm::cont::DataSetBuilderUniform dsb;
   if (globalSize[2] <= 1) // 2D Data Set
@@ -262,7 +265,7 @@ public:
                                                        useMarchingCubes);
     filter.SetActiveField(fieldName);
 
-    std::cout << "Executing filter" << std::endl;
+    // DEBUG: std::cout << "Executing filter" << std::endl;
     // Execute the contour tree analysis
     return filter.Execute(pds);
   }
