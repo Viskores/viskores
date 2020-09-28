@@ -55,6 +55,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
