@@ -220,10 +220,11 @@ public:
   vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(const vtkm::cont::DataSet& ds,
                                                                    std::string fieldName,
                                                                    bool useMarchingCubes,
-                                                                   int numberOfBlocks,
-                                                                   int rank = 0,
-                                                                   int numberOfRanks = 1) const
+                                                                   int numberOfBlocks) const
   {
+    // Serial: rank = 0, size =1
+    vtkm::Id rank = 0;
+    vtkm::Id numberOfRanks = 1;
     // Get dimensions of data set
     vtkm::Id3 globalSize;
     ds.GetCellSet().CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
@@ -231,22 +232,34 @@ public:
 
     // Determine split
     vtkm::Id3 blocksPerAxis = ComputeNumberOfBlocksPerAxis(globalSize, numberOfBlocks);
-    VTKM_ASSERT(numberOfBlocks % numberOfRanks == 0);
     vtkm::Id blocksPerRank = numberOfBlocks / numberOfRanks;
+    vtkm::Id numRanksWithExtraBlock = numberOfBlocks % numberOfRanks;
+    vtkm::Id blocksOnThisRank, startBlockNo;
+    if (rank < numRanksWithExtraBlock)
+    {
+      blocksOnThisRank = blocksPerRank + 1;
+      startBlockNo = (blocksPerRank + 1) * rank;
+    }
+    else
+    {
+      blocksOnThisRank = blocksPerRank;
+      startBlockNo = numRanksWithExtraBlock * (blocksPerRank + 1) +
+        (rank - numRanksWithExtraBlock) * blocksPerRank;
+    }
 
     vtkm::cont::PartitionedDataSet pds;
 
     vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
     vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
     vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
-    localBlockIndices.Allocate(blocksPerRank);
-    localBlockOrigins.Allocate(blocksPerRank);
-    localBlockSizes.Allocate(blocksPerRank);
+    localBlockIndices.Allocate(blocksOnThisRank);
+    localBlockOrigins.Allocate(blocksOnThisRank);
+    localBlockSizes.Allocate(blocksOnThisRank);
     auto localBlockIndicesPortal = localBlockIndices.WritePortal();
     auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
     auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
-    for (vtkm::Id blockNo = 0; blockNo < blocksPerRank; ++blockNo)
+    for (vtkm::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
     {
       vtkm::Id3 blockOrigin, blockSize, blockIndex;
       std::tie(blockIndex, blockOrigin, blockSize) =
@@ -276,7 +289,7 @@ public:
               << " blocks." << std::endl;
     vtkm::cont::DataSet in_ds = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
     vtkm::cont::PartitionedDataSet result =
-      this->RunContourTreeDUniformDistributed(in_ds, "pointvar", false, nBlocks, 0, 1);
+      this->RunContourTreeDUniformDistributed(in_ds, "pointvar", false, nBlocks);
 
     vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
     for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
@@ -324,12 +337,12 @@ public:
   void TestContourTreeUniformDistributed5x6x7(int nBlocks, bool marchingCubes) const
   {
     std::cout << "Testing ContourTreeUniformDistributed with "
-              << (marchingCubes ? "marching cubes" : "Freudenthal");
-    std::cout << " mesh connectivity on 3D 5x6x7 data set divided into " << nBlocks << " blocks."
+              << (marchingCubes ? "marching cubes" : "Freudenthal")
+              << " mesh connectivity on 3D 5x6x7 data set divided into " << nBlocks << " blocks."
               << std::endl;
     vtkm::cont::DataSet in_ds = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4();
     vtkm::cont::PartitionedDataSet result =
-      this->RunContourTreeDUniformDistributed(in_ds, "pointvar", marchingCubes, nBlocks, 0, 1);
+      this->RunContourTreeDUniformDistributed(in_ds, "pointvar", marchingCubes, nBlocks);
 
     vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
     for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
@@ -426,9 +439,8 @@ public:
                            bool marchingCubes = false) const
   {
     std::cout << "Testing ContourTreeUniformDistributed with "
-              << (marchingCubes ? "marching cubes" : "Freudenthal");
-    std::cout << " mesh connectivity on \"" << ds_filename << "\" divided into " << nBlocks
-              << " blocks." << std::endl;
+              << (marchingCubes ? "marching cubes" : "Freudenthal") << " mesh connectivity on \""
+              << ds_filename << "\" divided into " << nBlocks << " blocks." << std::endl;
 
     vtkm::io::VTKDataSetReader reader(ds_filename);
     vtkm::cont::DataSet ds;
@@ -448,7 +460,7 @@ public:
     std::vector<vtkm::worklet::contourtree_distributed::Edge> groundTruthSuperarcs =
       ReadGroundTruthContourTree(gtct_filename);
     vtkm::cont::PartitionedDataSet result =
-      this->RunContourTreeDUniformDistributed(ds, fieldName, marchingCubes, nBlocks, 0, 1);
+      this->RunContourTreeDUniformDistributed(ds, fieldName, marchingCubes, nBlocks);
 
     vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
     for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
