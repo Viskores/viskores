@@ -56,6 +56,12 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/ContourTreeUniformDistributed.h>
+#include <vtkm/io/ErrorIO.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/contourtree_distributed/TreeCompiler.h>
 
@@ -68,7 +74,7 @@ namespace testing
 namespace contourtree_uniform_distributed
 {
 // numberOf Blocks must be a power of 2
-vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBlocks)
+inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBlocks)
 {
   // DEBUG: std::cout << "GlobalSize: " << globalSize << " numberOfBlocks:" << numberOfBlocks << " -> ";
   // Inefficient way to compute log2 of numberOfBlocks, i.e., number of total splits
@@ -124,9 +130,9 @@ vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id numberOfBl
   }
 }
 
-std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 globalSize,
-                                                                vtkm::Id3 blocksPerAxis,
-                                                                vtkm::Id blockNo)
+inline std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 globalSize,
+                                                                       vtkm::Id3 blocksPerAxis,
+                                                                       vtkm::Id blockNo)
 {
   // DEBUG: std::cout << "ComputeBlockExtents("<<globalSize <<", " << blocksPerAxis << ", " << blockNo << ")" << std::endl;
   // DEBUG: std::cout << "Block " << blockNo;
@@ -148,10 +154,10 @@ std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3 global
   return std::make_tuple(blockIndex, blockOrigin, blockSize);
 }
 
-vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
-                                     vtkm::Id3 blockOrigin,
-                                     vtkm::Id3 blockSize,
-                                     const std::string& fieldName)
+inline vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
+                                            vtkm::Id3 blockOrigin,
+                                            vtkm::Id3 blockSize,
+                                            const std::string& fieldName)
 {
   vtkm::Id3 globalSize;
   ds.GetCellSet().CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
@@ -206,10 +212,14 @@ vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
   }
 }
 
-std::vector<vtkm::worklet::contourtree_distributed::Edge> ReadGroundTruthContourTree(
+inline std::vector<vtkm::worklet::contourtree_distributed::Edge> ReadGroundTruthContourTree(
   std::string filename)
 {
   std::ifstream ct_file(filename);
+  if (!ct_file.is_open())
+  {
+    throw vtkm::io::ErrorIO("Unable to open data file: " + filename);
+  }
   vtkm::Id val1, val2;
   std::vector<vtkm::worklet::contourtree_distributed::Edge> result;
   while (ct_file >> val1 >> val2)
@@ -218,6 +228,365 @@ std::vector<vtkm::worklet::contourtree_distributed::Edge> ReadGroundTruthContour
   }
   std::sort(result.begin(), result.end());
   return result;
+}
+
+inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
+  const vtkm::cont::DataSet& ds,
+  std::string fieldName,
+  bool useMarchingCubes,
+  int numberOfBlocks,
+  int rank = 0,
+  int numberOfRanks = 1)
+{
+  // Get dimensions of data set
+  vtkm::Id3 globalSize;
+  ds.GetCellSet().CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
+                              globalSize);
+
+  // Determine split
+  vtkm::Id3 blocksPerAxis = ComputeNumberOfBlocksPerAxis(globalSize, numberOfBlocks);
+  vtkm::Id blocksPerRank = numberOfBlocks / numberOfRanks;
+  vtkm::Id numRanksWithExtraBlock = numberOfBlocks % numberOfRanks;
+  vtkm::Id blocksOnThisRank, startBlockNo;
+  if (rank < numRanksWithExtraBlock)
+  {
+    blocksOnThisRank = blocksPerRank + 1;
+    startBlockNo = (blocksPerRank + 1) * rank;
+  }
+  else
+  {
+    blocksOnThisRank = blocksPerRank;
+    startBlockNo = numRanksWithExtraBlock * (blocksPerRank + 1) +
+      (rank - numRanksWithExtraBlock) * blocksPerRank;
+  }
+
+  // Created partitioned (split) data set
+  vtkm::cont::PartitionedDataSet pds;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
+  localBlockIndices.Allocate(blocksOnThisRank);
+  localBlockOrigins.Allocate(blocksOnThisRank);
+  localBlockSizes.Allocate(blocksOnThisRank);
+  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
+  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
+  auto localBlockSizesPortal = localBlockSizes.WritePortal();
+
+  for (vtkm::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
+  {
+    vtkm::Id3 blockOrigin, blockSize, blockIndex;
+    std::tie(blockIndex, blockOrigin, blockSize) =
+      ComputeBlockExtents(globalSize, blocksPerAxis, startBlockNo + blockNo);
+    pds.AppendPartition(CreateSubDataSet(ds, blockOrigin, blockSize, fieldName));
+    localBlockOriginsPortal.Set(blockNo, blockOrigin);
+    localBlockSizesPortal.Set(blockNo, blockSize);
+    localBlockIndicesPortal.Set(blockNo, blockIndex);
+  }
+
+  // Run the contour tree analysis
+  vtkm::filter::ContourTreeUniformDistributed filter(blocksPerAxis,
+                                                     globalSize,
+                                                     localBlockIndices,
+                                                     localBlockOrigins,
+                                                     localBlockSizes,
+                                                     useMarchingCubes);
+  filter.SetActiveField(fieldName);
+  auto result = filter.Execute(pds);
+
+  if (numberOfRanks == 1)
+  {
+    // Serial or only one parallel rank -> Result is already
+    // everything we need
+    return result;
+  }
+  else
+  {
+    // Mutiple ranks -> Some assembly required. Collect data
+    // on rank 0, all other ranks return empty data sets
+    using FieldTypeList =
+      vtkm::ListAppend<vtkm::filter::ContourTreeUniformDistributed::SupportedTypes,
+                       vtkm::List<vtkm::Id>>;
+    using DataSetWrapper =
+      vtkm::cont::SerializableDataSet<FieldTypeList, vtkm::cont::CellSetListStructured>;
+
+    // Communicate results to rank 0
+    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    vtkmdiy::Master master(comm, 1);
+    struct EmptyBlock
+    {
+    }; // Dummy block structure, since we need block data for DIY
+    master.add(comm.rank(), new EmptyBlock, new vtkmdiy::Link);
+    // .. Send data to rank 0
+    master.foreach ([result, filter](void*, const vtkmdiy::Master::ProxyWithLink& p) {
+      vtkmdiy::BlockID root{ 0, 0 }; // Rank 0
+      p.enqueue(root, result.GetNumberOfPartitions());
+      for (const vtkm::cont::DataSet& ds : result)
+      {
+        auto sds = DataSetWrapper(ds);
+        p.enqueue(root, sds);
+      }
+    });
+    // Exchange data, i.e., send to rank 0 (pass "true" to exchange data between
+    // *all* blocks, not just neighbors)
+    master.exchange(true);
+
+    if (comm.rank() == 0)
+    {
+      // Receive data on rank zero and return combined results
+      vtkm::cont::PartitionedDataSet combined_result;
+      master.foreach ([&combined_result, filter, numberOfRanks](
+                        void*, const vtkmdiy::Master::ProxyWithLink& p) {
+        for (int receiveFromRank = 0; receiveFromRank < numberOfRanks; ++receiveFromRank)
+        {
+          vtkm::Id numberOfDataSetsToReceive;
+          p.dequeue({ receiveFromRank, receiveFromRank }, numberOfDataSetsToReceive);
+          for (vtkm::Id currReceiveDataSetNo = 0; currReceiveDataSetNo < numberOfDataSetsToReceive;
+               ++currReceiveDataSetNo)
+          {
+            auto sds = vtkm::filter::MakeSerializableDataSet(filter);
+            p.dequeue({ receiveFromRank, receiveFromRank }, sds);
+            combined_result.AppendPartition(sds.DataSet);
+          }
+        }
+      });
+      return combined_result; // Return combined result on rank 0
+    }
+    else
+    {
+      // Return an empty data set on all other ranks
+      return vtkm::cont::PartitionedDataSet{};
+    }
+  }
+}
+
+inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int size = 1)
+{
+  if (rank == 0)
+  {
+    std::cout << "Testing ContourTreeUniformDistributed on 2D 8x9 data set divided into " << nBlocks
+              << " blocks." << std::endl;
+  }
+  vtkm::cont::DataSet in_ds = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
+  vtkm::cont::PartitionedDataSet result =
+    RunContourTreeDUniformDistributed(in_ds, "pointvar", false, nBlocks, rank, size);
+
+  if (vtkm::cont::EnvironmentTracker::GetCommunicator().rank() == 0)
+  {
+    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+    }
+    treeCompiler.ComputeSuperarcs();
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    treeCompiler.PrintSuperarcs();
+
+    // Print the expected contour tree
+    std::cout << "Expected Contour Tree" << std::endl;
+    std::cout << "          10           20" << std::endl;
+    std::cout << "          20           34" << std::endl;
+    std::cout << "          20           38" << std::endl;
+    std::cout << "          20           61" << std::endl;
+    std::cout << "          23           34" << std::endl;
+    std::cout << "          24           34" << std::endl;
+    std::cout << "          50           61" << std::endl;
+    std::cout << "          61           71" << std::endl;
+
+    using Edge = vtkm::worklet::contourtree_distributed::Edge;
+    VTKM_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 8),
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 10, 20 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 20, 34 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 20, 38 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 20, 61 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 23, 34 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 24, 34 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 50, 61 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+    VTKM_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 61, 71 },
+                     "Wrong result for ContourTreeUniformDistributed filter");
+  }
+}
+
+inline void TestContourTreeUniformDistributed5x6x7(int nBlocks,
+                                                   bool marchingCubes,
+                                                   int rank = 0,
+                                                   int size = 1)
+{
+  if (rank == 0)
+  {
+    std::cout << "Testing ContourTreeUniformDistributed with "
+              << (marchingCubes ? "marching cubes" : "Freudenthal")
+              << " mesh connectivity on 3D 5x6x7 data set divided into " << nBlocks << " blocks."
+              << std::endl;
+  }
+
+  vtkm::cont::DataSet in_ds = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4();
+  vtkm::cont::PartitionedDataSet result =
+    RunContourTreeDUniformDistributed(in_ds, "pointvar", marchingCubes, nBlocks, rank, size);
+
+  if (rank == 0)
+  {
+    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+    }
+    treeCompiler.ComputeSuperarcs();
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    treeCompiler.PrintSuperarcs();
+
+    // Print the expected contour tree
+    using Edge = vtkm::worklet::contourtree_distributed::Edge;
+    std::cout << "Expected Contour Tree" << std::endl;
+    if (!marchingCubes)
+    {
+      std::cout << "           0          112" << std::endl;
+      std::cout << "          71           72" << std::endl;
+      std::cout << "          72           78" << std::endl;
+      std::cout << "          72          101" << std::endl;
+      std::cout << "         101          112" << std::endl;
+      std::cout << "         101          132" << std::endl;
+      std::cout << "         107          112" << std::endl;
+      std::cout << "         131          132" << std::endl;
+      std::cout << "         132          138" << std::endl;
+
+      VTKM_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 9),
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 112 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 71, 72 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 72, 78 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 72, 101 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 101, 112 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 101, 132 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 107, 112 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 131, 132 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 132, 138 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+    }
+    else
+    {
+      std::cout << "           0          203" << std::endl;
+      std::cout << "          71           72" << std::endl;
+      std::cout << "          72           78" << std::endl;
+      std::cout << "          72          101" << std::endl;
+      std::cout << "         101          112" << std::endl;
+      std::cout << "         101          132" << std::endl;
+      std::cout << "         107          112" << std::endl;
+      std::cout << "         112          203" << std::endl;
+      std::cout << "         131          132" << std::endl;
+      std::cout << "         132          138" << std::endl;
+      std::cout << "         203          209" << std::endl;
+
+      VTKM_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 11),
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 203 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 71, 72 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 72, 78 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 72, 101 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 101, 112 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 101, 132 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 107, 112 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 112, 203 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 131, 132 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[9] == Edge{ 132, 138 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+      VTKM_TEST_ASSERT(treeCompiler.superarcs[10] == Edge{ 203, 209 },
+                       "Wrong result for ContourTreeUniformDistributed filter");
+    }
+  }
+}
+
+inline void TestContourTreeFile(std::string ds_filename,
+                                std::string fieldName,
+                                std::string gtct_filename,
+                                int nBlocks,
+                                bool marchingCubes = false,
+                                int rank = 0,
+                                int size = 1)
+{
+  if (rank == 0)
+  {
+    std::cout << "Testing ContourTreeUniformDistributed with "
+              << (marchingCubes ? "marching cubes" : "Freudenthal") << " mesh connectivity on \""
+              << ds_filename << "\" divided into " << nBlocks << " blocks." << std::endl;
+  }
+
+  vtkm::io::VTKDataSetReader reader(ds_filename);
+  vtkm::cont::DataSet ds;
+  try
+  {
+    ds = reader.ReadDataSet();
+  }
+  catch (vtkm::io::ErrorIO& e)
+  {
+    std::string message("Error reading: ");
+    message += ds_filename;
+    message += ", ";
+    message += e.GetMessage();
+
+    VTKM_TEST_FAIL(message.c_str());
+  }
+
+  vtkm::cont::PartitionedDataSet result =
+    RunContourTreeDUniformDistributed(ds, fieldName, marchingCubes, nBlocks, rank, size);
+
+  if (rank == 0)
+  {
+    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+    }
+    treeCompiler.ComputeSuperarcs();
+
+    std::vector<vtkm::worklet::contourtree_distributed::Edge> groundTruthSuperarcs =
+      ReadGroundTruthContourTree(gtct_filename);
+    if (groundTruthSuperarcs.size() < 50)
+    {
+      std::cout << "Computed Contour Tree" << std::endl;
+      treeCompiler.PrintSuperarcs();
+
+      // Print the expected contour tree
+      std::cout << "Expected Contour Tree" << std::endl;
+      vtkm::worklet::contourtree_distributed::TreeCompiler::PrintSuperarcArray(
+        groundTruthSuperarcs);
+    }
+    else
+    {
+      std::cout << "Not printing computed and expected contour tree due to size." << std::endl;
+    }
+
+    VTKM_TEST_ASSERT(treeCompiler.superarcs == groundTruthSuperarcs,
+                     "Test failed for data set " + ds_filename);
+  }
 }
 
 }
