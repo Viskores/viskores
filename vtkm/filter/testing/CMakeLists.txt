@@ -105,6 +105,7 @@ vtkm_unit_tests(
 # if MPI is enabled.
 if (VTKm_ENABLE_MPI)
   set(mpi_unit_tests
+    UnitTestContourTreeUniformDistributedFilterMPI.cxx
     UnitTestParticleMessengerMPI.cxx
     UnitTestStreamlineFilterMPI.cxx
   )
