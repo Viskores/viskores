@@ -134,7 +134,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 /// `Update` and `PrepareForExecution` methods.
 ///
 template <typename Derived>
-class VTKM_CONT_EXPORT CellLocatorBase : public vtkm::cont::ExecutionObjectBase
+class VTKM_ALWAYS_EXPORT CellLocatorBase : public vtkm::cont::ExecutionObjectBase
 {
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
