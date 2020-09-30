@@ -646,6 +646,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         "Superparents", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Superparents);
       hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(superparentsField);
 
+      // Copy cell set from input data set. This is mainly to ensure that the output data set
+      // has a defined cell set. Without one, serialization for DIY does not work properly.
+      // Having the extents of the input data set may also help in other use cases.
+      hierarchicalTreeOutputDataSet[b->BlockIndex].SetCellSet(
+        input.GetPartition(b->BlockIndex).GetCellSet());
+
 #if 0
     // TODO: GET THIS COMPILING
     // save the corresponding .gv file
