@@ -94,7 +94,7 @@ template <typename FieldType>
 class HierarchicalContourTree
 {
 public:
-  VTKM_EXEC_CONT
+  VTKM_CONT
   HierarchicalContourTree();
 
   // REGULAR arrays: i.e. over all nodes in the tree, including regular
@@ -160,12 +160,14 @@ public:
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> FirstHypernodePerIteration;
 
   /// routine to create a FindRegularByGlobal object that we can use as an input for worklets to call the function
+  VTKM_CONT
   FindRegularByGlobal GetFindRegularByGlobal()
   {
     return FindRegularByGlobal(this->RegularNodeSortOrder, this->RegularNodeGlobalIds);
   }
 
   /// routine to create a FindSuperArcForUnknownNode object that we can use as an input for worklets to call the function
+  VTKM_CONT
   FindSuperArcForUnknownNode<FieldType> GetFindSuperArcForUnknownNode()
   {
     return FindSuperArcForUnknownNode<FieldType>(this->Superparents,
@@ -188,20 +190,29 @@ public:
                   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& mesh);
 
   /// utility routines for the path probes
+  VTKM_CONT
   std::string RegularString(const vtkm::Id regularId) const;
+
+  VTKM_CONT
   std::string SuperString(const vtkm::Id superId) const;
+
+  VTKM_CONT
   std::string HyperString(const vtkm::Id hyperId) const;
 
   /// routine to probe a given node and trace it's hyperpath to the root
+  VTKM_CONT
   std::string ProbeHyperPath(const vtkm::Id regularId, const vtkm::Id maxLength = -1) const;
 
   /// routine to probe a given node and trace it's superpath to the root
+  VTKM_CONT
   std::string ProbeSuperPath(const vtkm::Id regularId, const vtkm::Id maxLength = -1) const;
 
   /// Outputs the Hierarchical Tree in Dot format for visualization
+  VTKM_CONT
   std::string PrintDotSuperStructure(const char* label) const;
 
   /// debug routine
+  VTKM_CONT
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
 
 private:
@@ -209,7 +220,6 @@ private:
   vtkm::cont::Invoker Invoke;
 };
 
-VTKM_EXEC_CONT
 template <typename FieldType>
 HierarchicalContourTree<FieldType>::HierarchicalContourTree()
 { // constructor
@@ -221,7 +231,6 @@ HierarchicalContourTree<FieldType>::HierarchicalContourTree()
 
 
 ///  routine to initialize the hierarchical tree with the top level tree
-VTKM_CONT
 template <typename FieldType>
 void HierarchicalContourTree<FieldType>::Initialize(
   vtkm::Id numRounds,
@@ -339,7 +348,6 @@ void HierarchicalContourTree<FieldType>::Initialize(
 
 
 /// utility routine for the path probes
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::RegularString(const vtkm::Id regularId) const
 { // RegularString()
@@ -375,7 +383,6 @@ std::string HierarchicalContourTree<FieldType>::RegularString(const vtkm::Id reg
 
 
 /// utility routine for the path probes
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::SuperString(const vtkm::Id superId) const
 { // SuperString()
@@ -427,7 +434,6 @@ std::string HierarchicalContourTree<FieldType>::SuperString(const vtkm::Id super
 
 
 /// utility routine for the path probes
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::HyperString(const vtkm::Id hyperId) const
 { // HyperString()
@@ -472,7 +478,6 @@ std::string HierarchicalContourTree<FieldType>::HyperString(const vtkm::Id hyper
 } // HyperString()
 
 /// routine to probe a given node and trace it's hyperpath to the root
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const vtkm::Id regularId,
                                                                const vtkm::Id maxLength) const
@@ -529,10 +534,7 @@ std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const vtkm::Id re
 } // ProbeHyperPath()
 
 
-
-
 /// routine to probe a given node and trace it's superpath to the root
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id regularId,
                                                                const vtkm::Id maxLength) const
@@ -589,7 +591,6 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const vtkm::Id re
 }
 
 /// Outputs the Hierarchical Tree in Dot format for visualization
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const char* label) const
 { // PrintDotSuperStructure
@@ -734,7 +735,6 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 } // PrintDotSuperStructure
 
 /// debug routine
-VTKM_CONT
 template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
                                                            const char* fileName,
