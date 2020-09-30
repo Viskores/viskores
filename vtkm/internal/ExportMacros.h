@@ -89,8 +89,8 @@
 #define VTKM_ALWAYS_EXPORT
 #define VTKM_NEVER_EXPORT
 #else
-#define VTKM_ALWAYS_EXPORT [[gnu::visibility("default")]]
-#define VTKM_NEVER_EXPORT [[gnu::visibility("hidden")]]
+#define VTKM_ALWAYS_EXPORT __attribute__((visibility("default")))
+#define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
 #endif
 
 // cuda 7.5 doesn't support static const or static constexpr variables

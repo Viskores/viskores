@@ -133,7 +133,14 @@
 // Only actually use the [[deprecated]] attribute if the compiler supports it AND
 // we know how to suppress deprecations when necessary.
 #if defined(VTK_M_DEPRECATED_ATTRIBUTE_SUPPORTED) && defined(VTKM_DEPRECATED_SUPPRESS_SUPPORTED)
+#ifdef VTKM_MSVC
 #define VTKM_DEPRECATED(...) [[deprecated(VTK_M_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))]]
+#else // !MSVC
+// GCC and other compilers support the C++14 attribute [[deprecated]], but there appears to be a
+// bug (or other undesirable behavior) where if you mix [[deprecated]] with __attribute__(()) you
+// get compile errors. To get around this, use __attribute((deprecated)) where supported.
+#define VTKM_DEPRECATED(...) __attribute__((deprecated(VTK_M_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))))
+#endif // !MSVC
 #else
 #define VTKM_DEPRECATED(...)
 #endif
