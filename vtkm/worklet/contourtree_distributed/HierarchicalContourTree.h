@@ -406,28 +406,29 @@ std::string HierarchicalContourTree<FieldType>::SuperString(const vtkm::Id super
       resultStream);
     resultStream << " Regular Id: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Supernodes.ReadPortal.Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
+      this->Supernodes.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
     resultStream << " Superarc:    ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Superarcs.ReadPortal.Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
+      this->Superarcs.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
     resultStream << " HNode ID: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Super2Hypernode.ReadPortal.Get(
+      this->Super2Hypernode.ReadPortal().Get(
         vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
     resultStream << " Hyperparent:   ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->Hyperparents.ReadPortal.Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
+      this->Hyperparents.ReadPortal().Get(
+        vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
     resultStream << " Round: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->WhichRound.ReadPortal.Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
+      this->WhichRound.ReadPortal().Get(vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
     resultStream << " Iteration: ";
     vtkm::worklet::contourtree_augmented::PrintIndexType(
-      this->WhichIteration.ReadPortal.Get(
+      this->WhichIteration.ReadPortal().Get(
         vtkm::worklet::contourtree_augmented::MaskedIndex(superId)),
       resultStream);
   }
