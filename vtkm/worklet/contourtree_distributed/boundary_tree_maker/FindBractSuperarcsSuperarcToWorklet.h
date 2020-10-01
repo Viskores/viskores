@@ -110,7 +110,7 @@ public:
 
     // also allocate space for the from, with index, &c.
     vtkm::Id to = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-    vtkm::Id toIndex = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    // vtkm::Id toIndex = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;  // set but not used
     vtkm::Id toSort = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::Id toSuper = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     vtkm::Id toHyper = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
@@ -119,7 +119,7 @@ public:
     if (from != bractVertexSupersetPortal.GetNumberOfValues() - 1)
     { // not RHE
       to = from + 1;
-      toIndex = bractVertexSupersetPortal.Get(to);
+      // toIndex = bractVertexSupersetPortal.Get(to);  // set but not used
       toSort = boundaryIndicesPortal.Get(to);
       toSuper = contourtreeSuperparentsPortal.Get(toSort);
       toHyper = contourtreeHyperparentsPortal.Get(toSuper);
