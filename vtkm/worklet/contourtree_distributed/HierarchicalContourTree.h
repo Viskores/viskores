@@ -623,29 +623,38 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
   outstream << "\t// Supernodes\n";
   // loop through all supernodes
-  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues; supernode++)
+  auto supernodesPortal = this->Supernodes.ReadPortal();
+  auto hypernodesPortal = this->Hypernodes.ReadPortal();
+  auto hyperparentsPortal = this->Hyperparents.ReadPortal();
+  auto hyperarcsPortal = this->Hyperarcs.ReadPortal();
+  auto regularNodeGlobalIdsPortal = this->RegularNodeGlobalIds.ReadPortal();
+  auto whichIterationPortal = this->WhichIteration.ReadPortal();
+  auto whichRoundPortal = this->whichRound.ReadPortal();
+  auto superarcsPortal = this->Superarcs.ReadPortal();
+  auto superparentsPortal = this->Superparents.ReadPortal();
+  for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
   { // per supernode
-    vtkm::Id regularID = this->Supernodes[supernode];
+    vtkm::Id regularID = supernodesPortal.Get(supernode);
     // print the supernode, making hypernodes double octagons
     outstream
       << "    SN" << std::setw(1) << supernode
       << " [style=filled,fillcolor=white,shape=" << std::setw(1)
-      << ((this->Hypernodes[this->Hyperparents[supernode]] == supernode)
+      << ((hypernodesPortal.Get(hyperparentsPortal.Get(supernode)) == supernode)
             ? "doublecircle"
             : "circle") // hypernodes are double-circles
       << ",label=\"sn" << std::setw(4) << supernode << "    h" << std::setw(1)
-      << ((this->Hypernodes[this->Hyperparents[supernode]] == supernode)
+      << ((hypernodesPortal.Get(hyperparentsPortal.Get(supernode)) == supernode)
             ? "n"
             : "p") // hypernodes show "hn001" (their own ID), supernodes show "hp001" (their hyperparent)
-      << std::setw(4) << this->Hyperparents[supernode] << "\\nm" << std::setw(1) << regularID
-      << "    g" << std::setw(4) << this->RegularNodeGlobalIDs[regularID] << "\\nrd" << std::setw(1)
-      << this->WhichRound[supernode] << "    it" << std::setw(4)
-      << contourtree_augmented::MaskedIndex(this->WhichIteration[supernode]) << "\"];\n";
+      << std::setw(4) << hyperparentsPortal.Get(supernode) << "\\nm" << std::setw(1) << regularID
+      << "    g" << std::setw(4) << regularNodeGlobalIdsPortal.Get(regularID) << "\\nrd"
+      << std::setw(1) << whichIterationPortal.Get(supernode) << "    it" << std::setw(4)
+      << contourtree_augmented::MaskedIndex(whichIterationPortal.Get(supernode)) << "\"];\n";
   } // per supernode
 
   outstream << "\t// Superarc nodes\n";
   // now repeat to create nodes for the middle of each superarc (to represent the superarcs themselves)
-  for (vtkm::Id superarc = 0; superarc < this->Superarcs.GetNumberOfValues; superarc++)
+  for (vtkm::Id superarc = 0; superarc < this->Superarcs.GetNumberOfValues(); superarc++)
   { // per superarc
     // print the superarc vertex
     outstream
@@ -659,13 +668,13 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
   { // per superarc
     // retrieve ID of target supernode
     vtkm::Id superarcFrom = superarc;
-    vtkm::Id superarcTo = this->Superarcs[superarcFrom];
+    vtkm::Id superarcTo = superarcsPortal.Get(superarcFrom);
 
     // if this is true, it may be the last pruned vertex
     if (contourtree_augmented::NoSuchElement(superarcTo))
     { // no superarc
       // if it occurred on the final round, it's the global root and is shown as the NULL node
-      if (this->WhichRound[superarcFrom] == this->NRounds)
+      if (whichRoundPortal.Get(superarcFrom) == this->NRounds)
       { // root node
         outstream << "\tSN" << std::setw(1) << superarcFrom << " -> SA" << std::setw(1) << superarc
                   << " [label=\"S" << std::setw(1) << superarc << "\",style=dotted]\n";
@@ -676,8 +685,8 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
       { // attachment point
         // otherwise, the target is actually a superarc vertex not a supernode vertex
         // so we use the regular ID to retrieve the superparent which tells us which superarc we insert into
-        vtkm::Id regularFrom = this->Supernodes[superarcFrom];
-        superarcTo = this->Superparents[regularFrom];
+        vtkm::Id regularFrom = supernodesPortal.Get(superarcFrom);
+        superarcTo = superparentsPortal.Get(regularFrom);
 
         // output a suitable edge
         outstream << "\tSN" << std::setw(1) << superarcFrom << " -> SA" << std::setw(1)
@@ -709,8 +718,8 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
   for (vtkm::Id hyperarc = 0; hyperarc < this->Hyperarcs.GetNumberOfValues; hyperarc++)
   { // per hyperarc
     // retrieve ID of target hypernode
-    vtkm::Id hyperarcFrom = this->Hypernodes[hyperarc];
-    vtkm::Id hyperarcTo = this->Hyperarcs[hyperarc];
+    vtkm::Id hyperarcFrom = hypernodesPortal.Get(hyperarc);
+    vtkm::Id hyperarcTo = hyperarcsPortal.Get(hyperarc);
 
     // if this is true, it is the last pruned vertex & needs a hyperarc to the root
     if (contourtree_augmented::NoSuchElement(hyperarcTo))
