@@ -98,8 +98,8 @@ inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id num
     while (numSplits > 0)
     {
       // Find split axis as axis with largest extent
-      vtkm::Id splitAxis = 0;
-      for (vtkm::Id d = 1; d < 3; ++d)
+      vtkm::IdComponent splitAxis = 0;
+      for (vtkm::IdComponent d = 1; d < 3; ++d)
         if (globalSize[d] > globalSize[splitAxis])
           splitAxis = d;
       // Split in half along that axis
@@ -118,7 +118,7 @@ inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id num
   }
   else
   {
-    std::cout << "numberOfBlocks is not a power of two. Splitting along longest axis" << std::endl;
+    std::cout << "numberOfBlocks is not a power of two. Splitting along longest axis." << std::endl;
     vtkm::Id splitAxis = 0;
     for (vtkm::Id d = 1; d < 3; ++d)
       if (globalSize[d] > globalSize[splitAxis])
