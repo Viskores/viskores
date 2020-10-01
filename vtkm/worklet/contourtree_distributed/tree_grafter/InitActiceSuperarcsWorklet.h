@@ -135,10 +135,10 @@ public:
          // test to see whether the superarc needs to be transferred
          if (residue->isNecessary[from] && residue->isNecessary[to])
            continue;
-         
+
          // retrieve the position (note that -1 converts partial sum to prefix sum, since all values were 1's originally)
          indexType activeSuperarc = activeSuperarcID[superarc] - 1;
-         
+
          // if to is higher
          if (isAscending(unmaskedTo))
            { // to is higher

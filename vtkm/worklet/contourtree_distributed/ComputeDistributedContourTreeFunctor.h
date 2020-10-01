@@ -270,7 +270,7 @@ public:
         std::string regularStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string("_Step_1_Contour_Tree_Regular_Structure.gv");
         std::ofstream regularStructureFile(regularStructureFileName);
         regularStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint<T, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType()
-          (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 1 Contour Tree Regular Structure"), 
+          (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 1 Contour Tree Regular Structure"),
                 block->Meshes.back(),
                 block->ContourTrees.back(),
                 worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS);
@@ -278,7 +278,7 @@ public:
         std::string superStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string("_Step_2_Contour_Tree_Super_Structure.gv");
         std::ofstream superStructureFile(superStructureFileName);
         superStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint<T, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType()
-          (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 2 Contour Tree Super Structure"), 
+          (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 2 Contour Tree Super Structure"),
                 block->Meshes.back(),
                 block->ContourTrees.back(),
                 worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS|worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|worklet::contourtree_distributed::SHOW_ALL_HYPERIDS);
@@ -348,7 +348,7 @@ public:
         std::ofstream boundaryTreeFile(boundaryTreeFileName);
         boundaryTreeFile << vtkm::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint
           (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 3 Boundary Tree"),
-                block->Meshes.back()], 
+                block->Meshes.back()],
                 block->BoundaryTrees.back());
 
         // and save the Interior Forest as another dot file
@@ -356,7 +356,7 @@ public:
         std::ofstream interiorForestFile(interiorForestFileName);
         interiorForestFileName << InteriorForestDotGraphPrintFile<MeshType>
           (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 4 Interior Forest"),
-                block->InteriorForests.back(), 
+                block->InteriorForests.back(),
                 block->ContourTrees.back(),
                 block->BoundaryTrees.back(),
                 block->Meshes.back());
@@ -366,7 +366,7 @@ public:
         std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
         boundaryTreeMeshFile << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>
           (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 5 Boundary Tree Mesh"),
-                block->ContourTreeMeshes.back(),  
+                block->ContourTreeMeshes.back(),
                 worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
 #endif
 #endif

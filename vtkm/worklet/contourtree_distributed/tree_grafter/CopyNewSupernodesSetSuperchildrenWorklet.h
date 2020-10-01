@@ -133,10 +133,10 @@ public:
       // attachment points have NULL superarcs and can be ignored
       if (noSuchElement(hierarchicalTree.superarcs[newSupernode]))
         continue;
-      
+
       // OK: we are now guaranteed to have a valid hyperparent
       indexType hyperparent = hierarchicalTree.hyperparents[newSupernode];
-      
+
       // we could still be at the end of the array, so we have to test explicitly
       if (newSupernode == hierarchicalTree.supernodes.size() - 1)
         // compute the delta and store it

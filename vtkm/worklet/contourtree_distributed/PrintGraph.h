@@ -409,7 +409,7 @@ std::string ContourTreeDotGraphPrint(
 		if (showMask & vtkm::worklet::contourtree_distributed::SHOW_BOUNDARY_NODES)
 			isGrey = (showMask & vtkm::worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE) && mesh.liesOnBoundary(regularID);
 		else if (showMask & vtkm::worklet::contourtree_distributed::SHOW_CRITICAL_BOUNDARY_NODES)
-			isGrey = (showMask & vtkm::worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE) && mesh.isNecessary(regularID);			
+			isGrey = (showMask & vtkm::worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE) && mesh.isNecessary(regularID);
 		else if (showMask & vtkm::worklet::contourtree_distributed::SHOW_NECESSARY_SUPERNODES)
 			isGrey = 	(showMask & vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE)			// skip if superstructure not shown
 					&&	!vtkm::worklet::contourtree_augmented::NoSuchElement(superID)						// ignore non-super nodes

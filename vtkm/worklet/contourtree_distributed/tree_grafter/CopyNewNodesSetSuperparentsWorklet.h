@@ -180,7 +180,7 @@ public:
       indexType oldSuperparent = contourTree->superparents[oldSortIndex];
       // and to a regular ID
       indexType oldSuperparentNewRegularID = hierarchicalRegularID[oldSuperparent];
-            
+
       // Assuming that the new supernodes & hypernodes have been transferred, EVERY supernode in the old tree
       // now has hierarchicalRegularID set correctly.  Since every regular node belongs on a superarc in the old tree,
       // we can use the ends of the superarc to invoke a search in the hierarchical tree for the superparent.
@@ -196,7 +196,7 @@ public:
         indexType oldSupertargetOldSortID = contourTree->supernodes[oldSupertargetSuperID];
         indexType oldSupertargetOldRegularID = mesh->SortOrder(oldSupertargetOldSortID);
         indexType oldSupertargetNewRegularID = hierarchicalTreeID[oldSupertargetOldRegularID];
-        
+
         // set up variables for our pruning search
         // collect the low end's values
         indexType lowEndRegularID = oldSuperarcAscends ? oldSuperparentNewRegularID : oldSupertargetNewRegularID;

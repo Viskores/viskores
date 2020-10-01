@@ -129,7 +129,7 @@ public:
       // and set criticality flags at both ends to attachment if they are necessary, regular otherwise
       indexType highType = residue->isNecessary[highEnd] ? IS_ATTACHMENT : IS_REGULAR;
       indexType lowType = residue->isNecessary[lowEnd] ? IS_ATTACHMENT : IS_REGULAR;
-      
+
       supernodeType[lowEnd] = lowType;
       supernodeType[highEnd] = highType;
       } // per active superarc

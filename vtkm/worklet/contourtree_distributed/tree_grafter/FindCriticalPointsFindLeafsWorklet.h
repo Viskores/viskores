@@ -124,16 +124,16 @@ public:
         for (indexType activeSuper = 0; activeSuper < activeSuperarcs.size(); activeSuper++)
           { // per active superarc
           indexType lowEnd = activeSuperarcs[activeSuper].low, highEnd = activeSuperarcs[activeSuper].high;
-        
+
           // if the low end thinks it ascends to the high end and does not have a descent, then it must be a lower leaf, unless it's necessary (ie an attachment)
           if ((supernodeType[lowEnd] != IS_SADDLE) && (upNeighbour[lowEnd] == highEnd) && noSuchElement(downNeighbour[lowEnd]) && (!residue->isNecessary[lowEnd]))
               supernodeType[lowEnd] = IS_LOWER_LEAF;
-          
+
           // symmetrically for the high end
           if ((supernodeType[highEnd] != IS_SADDLE) && (downNeighbour[highEnd] == lowEnd) && noSuchElement(upNeighbour[highEnd]) && (!residue->isNecessary[highEnd]))
               supernodeType[highEnd] = IS_UPPER_LEAF;
           } // per active superarc
-    
+
     */
   } // operator ()
 

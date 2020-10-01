@@ -248,7 +248,7 @@ public:
           // find the up & down neighbours
           indexType upNbr = maskedIndex(upNeighbour[high]);
           indexType downNbr = maskedIndex(downNeighbour[high]);
-          
+
           // test the up neighbour first for leaf-hood
           // but only if the corresponding flag is true
           if (supernodeType[upNbr] == IS_UPPER_LEAF)
@@ -271,7 +271,7 @@ public:
         default:
           break;
         } // switch on upper end
-        
+
       // test whether the bottom end is a lower leaf
       switch (supernodeType[low])
         { // switch on lower end
@@ -290,7 +290,7 @@ public:
           // find the up & down neighbours
           indexType upNbr = maskedIndex(upNeighbour[low]);
           indexType downNbr = maskedIndex(downNeighbour[low]);
-          
+
           // test the up neighbour first for leaf-hood
           if (supernodeType[upNbr] == IS_UPPER_LEAF)
             { // up neighbour is an upper leaf

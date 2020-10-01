@@ -119,7 +119,7 @@ public:
     for (indexType activeSuper = 0; activeSuper < activeSuperarcs.size(); activeSuper++)
       { // per active superarc
       indexType lowEnd = activeSuperarcs[activeSuper].low, highEnd = activeSuperarcs[activeSuper].high;
-      
+
       // test to see whether the top end is critical
       if ((upNeighbour[lowEnd] == highEnd) && (supernodeType[highEnd] != IS_REGULAR))
         upNeighbour[lowEnd] |= TERMINAL_ELEMENT;

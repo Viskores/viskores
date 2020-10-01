@@ -289,7 +289,7 @@ public:
 
       // set the supernode accordingly
       hierarchicalTree.supernodes[newSupernodeID] = newRegularID;
-      
+
       // and set the round and iteration
       hierarchicalTree.whichRound[newSupernodeID] = theRound;
       hierarchicalTree.whichIteration[newSupernodeID] = whenTransferred[oldSupernodeID];
@@ -351,7 +351,7 @@ public:
           // and we have to work out the supernode each connects to
           // unfortunately, the attachment points complicate this compared to the old code
           // for sweeping later, we will set the # of superchildren, but we don't have that yet
-          
+
           // So the test will have to be the following:
           //  i.    the "neighbour" is the +1 index
           //  ii.    if the neighbour is off the end, we take the end of the hyperarc
@@ -374,7 +374,7 @@ public:
           else
             { // not at the end of the array
             indexType nbrSuperID = newSupernodes[neighbour];
-            
+
             // immediately check for case iii. by looking at the hierarchicalSuperparent of the neighbour's old ID
             // if it's already set, it's because it's an attachment point
             if (!noSuchElement(hierarchicalSuperparent[nbrSuperID]))

@@ -229,10 +229,10 @@ public:
         indexType oldSortID = contourTree->supernodes[supernode];
         indexType oldRegularID = mesh->SortOrder(oldSortID);
         dataType dataValue = mesh->DataValue(oldRegularID);
-        
+
         indexType upGlobalID = residue->above[supernode];
         indexType upHierarchicalID = hierTree.FindRegularByGlobal(upGlobalID);
-        
+
         indexType dnGlobalID = residue->below[supernode];
         indexType dnHierarchicalID = hierTree.FindRegularByGlobal(dnGlobalID);
 

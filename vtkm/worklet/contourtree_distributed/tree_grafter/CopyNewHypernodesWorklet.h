@@ -132,16 +132,16 @@ public:
       // convert into new IDs
       indexType newHypernodeID = nOldHypernodes + newHypernode;
       indexType newHypernodeSuperID = hierarchicalSuperID[oldSupernodeID];
-      
+
       // store the new hypernode ID
       hierarchicalTree.hypernodes[newHypernodeID] = newHypernodeSuperID;
-      
+
       // retrieve the hyperarc and convert, carrying masking bits
       indexType newHyperarcOldSuperID = hierarchicalHyperarc[oldSupernodeID];
       indexType isAscendingHyperarc = isAscending(newHyperarcOldSuperID) ? IS_ASCENDING : 0x0;
       newHyperarcOldSuperID = maskedIndex(newHyperarcOldSuperID);
       indexType newHyperarcNewSuperID = hierarchicalSuperID[newHyperarcOldSuperID] | isAscendingHyperarc;
-      
+
       // and store it
       hierarchicalTree.hyperarcs[newHypernodeID] = newHyperarcNewSuperID;
       } // per new hypernode
