@@ -291,101 +291,120 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   if (this->SaveDotFiles)
   {
     vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
+
     // Save the BRACT dot for debug
-    std::string bractFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) +
-      std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + "_Initial_BRACT.gv";
-    std::ofstream bractFile(bractFileName);
-    bractFile
-      << this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)].PrintGlobalDot(
-           "Before Fan In",
-           mesh,
-           field,
-           this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockIndex),
-           this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockIndex),
-           this->MultiBlockSpatialDecomposition.GlobalSize)
-      << std::endl;
+    { // make context so the file will be closed and potentially large strings are cleaned up
+      std::string bractFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) +
+        std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + "_Initial_BRACT.gv";
+      std::ofstream bractFile(bractFileName);
+      std::string bractString =
+        this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)].PrintGlobalDot(
+          "Before Fan In",
+          mesh,
+          field,
+          this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockIndex),
+          this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockIndex),
+          this->MultiBlockSpatialDecomposition.GlobalSize);
+      bractFile << bractString << std::endl;
+    }
 
     // Save the regular structure as a dot file
-    std::string regularStructureFileName = std::string("Rank_") +
-      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-      std::to_string(static_cast<int>(blockIndex)) +
-      std::string("_Initial_Step_0_Contour_Tree_Regular_Structure.gv");
-    std::ofstream regularStructureFile(regularStructureFileName);
-    std::string label = std::string("Block ") +
-      std::to_string(static_cast<std::size_t>(blockIndex)) +
-      " Initial Step 0 Contour Tree Regular Structure";
-    vtkm::Id dotSettings = worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE |
-      worklet::contourtree_distributed::SHOW_ALL_IDS;
-    regularStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint<
-      T,
-      StorageType,
-      MeshType,
-      vtkm::worklet::contourtree_augmented::IdArrayType>(
-      label, // graph title
-      static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(
-        blockIndex)]),           // the underlying mesh for the contour tree
-      &localToGlobalIdRelabeler, // relabler needed to compute global ids
-      field,                     // data values
-      this->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // local contour tree
-      dotSettings // mask with flags for what elements to show
-    );
+    { // make context so the file will be closed and potentially large strings are cleaned up
+      std::string regularStructureFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(blockIndex)) +
+        std::string("_Initial_Step_0_Contour_Tree_Regular_Structure.gv");
+      std::ofstream regularStructureFile(regularStructureFileName);
+      std::string label = std::string("Block ") +
+        std::to_string(static_cast<std::size_t>(blockIndex)) +
+        " Initial Step 0 Contour Tree Regular Structure";
+      vtkm::Id dotSettings = worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE |
+        worklet::contourtree_distributed::SHOW_ALL_IDS;
+      std::string regularStructureString =
+        worklet::contourtree_distributed::ContourTreeDotGraphPrint<
+          T,
+          StorageType,
+          MeshType,
+          vtkm::worklet::contourtree_augmented::IdArrayType>(
+          label, // graph title
+          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(
+            blockIndex)]),           // the underlying mesh for the contour tree
+          &localToGlobalIdRelabeler, // relabler needed to compute global ids
+          field,                     // data values
+          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // local contour tree
+          dotSettings // mask with flags for what elements to show
+        );
+      regularStructureFile << regularStructureString << std::endl;
+    }
 
     // Save the super structure as a dot file
-    std::string superStructureFileName = std::string("Rank_") +
-      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-      std::to_string(static_cast<int>(blockIndex)) +
-      std::string("_Initial_Step_1_Contour_Tree_Super_Structure.gv");
-    std::ofstream superStructureFile(superStructureFileName);
-    vtkm::Id ctPrintSettings = worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
-      worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
-      worklet::contourtree_distributed::SHOW_ALL_IDS |
-      worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
-      worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
-    std::string ctPrintLabel = std::string("Block ") +
-      std::to_string(static_cast<size_t>(blockIndex)) +
-      " Initial Step 1 Contour Tree Super Structure";
-    superStructureFile << vtkm::worklet::contourtree_distributed::ContourTreeDotGraphPrint<
-      T,
-      StorageType,
-      MeshType,
-      vtkm::worklet::contourtree_augmented::IdArrayType>(
-      ctPrintLabel,
-      dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
-      &localToGlobalIdRelabeler,
-      field,
-      this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
-      ctPrintSettings);
+    { // make context so the file will be closed and potentially large strings are cleaned up
+      std::string superStructureFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(blockIndex)) +
+        std::string("_Initial_Step_1_Contour_Tree_Super_Structure.gv");
+      std::ofstream superStructureFile(superStructureFileName);
+      vtkm::Id ctPrintSettings = worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
+        worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
+        worklet::contourtree_distributed::SHOW_ALL_IDS |
+        worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
+        worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
+      std::string ctPrintLabel = std::string("Block ") +
+        std::to_string(static_cast<size_t>(blockIndex)) +
+        " Initial Step 1 Contour Tree Super Structure";
+      std::string superStructureString =
+        vtkm::worklet::contourtree_distributed::ContourTreeDotGraphPrint<
+          T,
+          StorageType,
+          MeshType,
+          vtkm::worklet::contourtree_augmented::IdArrayType>(
+          ctPrintLabel,
+          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          &localToGlobalIdRelabeler,
+          field,
+          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+          ctPrintSettings);
+      superStructureFile << superStructureString << std::endl;
+    }
 
     // save the Boundary Tree as a dot file
-    std::string boundaryTreeFileName = std::string("Rank_") +
-      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-      std::to_string(static_cast<size_t>(blockIndex)) +
-      std::string("_Initial_Step_3_Boundary_Tree.gv");
-    std::ofstream boundaryTreeFile(boundaryTreeFileName);
-    boundaryTreeFile << vtkm::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint(
-      std::string("Block ") + std::to_string(static_cast<size_t>(blockIndex)) +
-        std::string(" Initial Step 3 Boundary Tree"),
-      dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
-      meshBoundaryExecObject,
-      this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
-      &localToGlobalIdRelabeler,
-      field);
+    { // make context so the file will be closed and potentially large strings are cleaned up
+      std::string boundaryTreeFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<size_t>(blockIndex)) +
+        std::string("_Initial_Step_3_Boundary_Tree.gv");
+      std::ofstream boundaryTreeFile(boundaryTreeFileName);
+      std::string boundaryTreeString =
+        vtkm::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint(
+          std::string("Block ") + std::to_string(static_cast<size_t>(blockIndex)) +
+            std::string(" Initial Step 3 Boundary Tree"),
+          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          meshBoundaryExecObject,
+          this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+          &localToGlobalIdRelabeler,
+          field);
+      boundaryTreeFile << boundaryTreeString << std::endl;
+    }
 
     // and save the Interior Forest as another dot file
-    std::string interiorForestFileName = std::string("Rank_") +
-      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-      std::to_string(static_cast<int>(blockIndex)) +
-      std::string("_Initial_Step_4_Interior_Forest.gv");
-    std::ofstream interiorForestFile(interiorForestFileName);
-    interiorForestFile << worklet::contourtree_distributed::InteriorForestDotGraphPrint(
-      std::string("Block ") + std::to_string(rank) + " Initial Step 4 Interior Forest",
-      this->LocalInteriorForests[static_cast<std::size_t>(blockIndex)],
-      this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
-      this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
-      dynamic_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
-      meshBoundaryExecObject,
-      &localToGlobalIdRelabeler,
-      field);
+    { // make context so the file will be closed and potentially large strings are cleaned up
+      std::string interiorForestFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(blockIndex)) +
+        std::string("_Initial_Step_4_Interior_Forest.gv");
+      std::ofstream interiorForestFile(interiorForestFileName);
+      std::string interiorForestString =
+        worklet::contourtree_distributed::InteriorForestDotGraphPrint(
+          std::string("Block ") + std::to_string(rank) + " Initial Step 4 Interior Forest",
+          this->LocalInteriorForests[static_cast<std::size_t>(blockIndex)],
+          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+          this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          meshBoundaryExecObject,
+          &localToGlobalIdRelabeler,
+          field);
+      interiorForestFile << interiorForestString << std::endl;
+    }
   } // if (this->SaveDotFiles)
 } // ContourTreeUniformDistributed::ComputeLocalTreeImpl
 
