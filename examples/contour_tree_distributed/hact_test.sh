@@ -25,7 +25,7 @@ rm ${filename}
 echo "Running HACT"
 n_parts=$(($2*$2))
 echo mpirun -np 4  ./ContourTree_Distributed -d Any --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
-mpirun -np 4  ./ContourTree_Distributed -d Any --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
+mpirun -np 4  ./ContourTree_Distributed -d Any --preSplitFiles=1 --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
 rm ${fileroot}_part_*_of_${n_parts}.txt
 
 echo "Compiling Outputs"
