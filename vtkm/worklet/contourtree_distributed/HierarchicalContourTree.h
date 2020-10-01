@@ -664,7 +664,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
   outstream << "\t// Superarc edges\n";
   // loop through all superarcs to draw them
-  for (vtkm::Id superarc = 0; superarc < this->Superarcs.GetNumberOfValues; superarc++)
+  for (vtkm::Id superarc = 0; superarc < this->Superarcs.GetNumberOfValues(); superarc++)
   { // per superarc
     // retrieve ID of target supernode
     vtkm::Id superarcFrom = superarc;
@@ -715,7 +715,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
 
   outstream << "\t// Hyperarcs\n";
   // now loop through the hyperarcs to draw them
-  for (vtkm::Id hyperarc = 0; hyperarc < this->Hyperarcs.GetNumberOfValues; hyperarc++)
+  for (vtkm::Id hyperarc = 0; hyperarc < this->Hyperarcs.GetNumberOfValues(); hyperarc++)
   { // per hyperarc
     // retrieve ID of target hypernode
     vtkm::Id hyperarcFrom = hypernodesPortal.Get(hyperarc);
