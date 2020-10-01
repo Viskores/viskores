@@ -104,6 +104,7 @@ public:
   ///                               local data block
   /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
   ///                             connectivity should be used. Valid only for 3D input data. Default is false.
+  /// @param[in] saveDotFiles Save debug dot output files for the distributed contour tree compute.
   VTKM_CONT
   ContourTreeUniformDistributed(
     vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
@@ -111,7 +112,8 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
-    bool useMarchingCubes = false);
+    bool useMarchingCubes = false,
+    bool saveDotFiles = false);
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -170,6 +172,9 @@ public:
 private:
   /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;
+
+  /// Save dot files for all tree computations
+  bool SaveDotFiles;
 
   /// Information about the spatial decomposition
   vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;

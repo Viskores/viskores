@@ -231,7 +231,14 @@ int main(int argc, char* argv[])
   std::string filename = parser.getOptions().back();
   bool useMarchingCubes = false;
   if (parser.hasOption("--mc"))
+  {
     useMarchingCubes = true;
+  }
+  bool saveDotFiles = false;
+  if (parser.hasOption("--saveDot"))
+  {
+    saveDotFiles = true;
+  }
 
 #ifdef ENABLE_SET_NUM_THREADS
   int numThreads = tbb::task_scheduler_init::default_num_threads();
@@ -294,6 +301,8 @@ int main(int argc, char* argv[])
         << "--mc              Use marching cubes interpolation for contour tree calculation. "
            "(Default=False)"
         << std::endl;
+      std::cout << "--saveDot         Save dot files of the distributed contour tree computations."
+                << std::endl;
 #ifdef ENABLE_SET_NUM_THREADS
       std::cout
         << "--numThreads      Specifiy the number of threads to use. Available only with TBB."
@@ -863,7 +872,8 @@ int main(int argc, char* argv[])
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
-                                                     useMarchingCubes);
+                                                     useMarchingCubes,
+                                                     saveDotFiles);
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis
