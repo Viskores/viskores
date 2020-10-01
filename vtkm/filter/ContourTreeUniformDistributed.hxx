@@ -476,29 +476,28 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                                         fieldData,
                                                         localGlobalMeshIndex);
 
-#ifdef DEBUG_PRINT_CTUD
     // ... save for debugging in text and .gv/.dot format
-    char buffer[256];
-    std::snprintf(buffer,
-                  sizeof(buffer),
-                  "Rank_%d_Block_%d_Initial_Step_3_BRACT_Mesh.txt",
-                  static_cast<int>(rank),
-                  static_cast<int>(bi));
-    localDataBlocks[bi]->ContourTreeMeshes.back().Save(buffer);
+    if (this->SaveDotFiles)
+    {
+      // save the contour tree mesh
+      std::string contourTreeMeshFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(bi)) + std::string("_Initial_Step_3_BRACT_Mesh.txt");
+      localDataBlocks[bi]->ContourTreeMeshes.back().Save(contourTreeMeshFileName.c_str());
 
-    // save the corresponding .gv file
-    std::string boundaryTreeMeshFileName = std::string("Rank_") +
-      std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-      std::to_string(static_cast<int>(bi)) + std::string("_Initial_Step_5_BRACT_Mesh.gv");
-    std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
-    boundaryTreeMeshFile
-      << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
-           std::string("Block ") + std::to_string(static_cast<int>(rank)) +
-             std::string(" Initial Step 5 BRACT Mesh"),
-           localDataBlocks[bi]->ContourTreeMeshes.back(),
-           worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
-#endif
-  }
+      // save the corresponding .gv file
+      std::string boundaryTreeMeshFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(bi)) + std::string("_Initial_Step_5_BRACT_Mesh.gv");
+      std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
+      boundaryTreeMeshFile
+        << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
+             std::string("Block ") + std::to_string(static_cast<int>(rank)) +
+               std::string(" Initial Step 5 BRACT Mesh"),
+             localDataBlocks[bi]->ContourTreeMeshes.back(),
+             worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
+    } // if(SaveDotFiles)
+  }   // for
 
   // Setup vtkmdiy to do global binary reduction of neighbouring blocks. See also RecuctionOperation struct for example
   // Create the vtkmdiy master
@@ -573,132 +572,165 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   std::vector<vtkm::cont::DataSet> hierarchicalTreeOutputDataSet(
     localDataBlocks.size()); // DataSets for creating output data
-  master.foreach (
-    [&](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>* b,
-        const vtkmdiy::Master::ProxyWithLink&) {
+  master.foreach ([&](vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<
+                        FieldType>* b,
+                      const vtkmdiy::Master::ProxyWithLink&) {
 #ifdef DEBUG_PRINT_CTUD
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Fan In Complete" << std::endl
-                                   << "# of CTs: " << b->ContourTrees.size() << std::endl
-                                   << "# of CTMs: " << b->ContourTreeMeshes.size() << std::endl
-                                   << "# of IFs: " << b->InteriorForests.size() << std::endl);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Fan In Complete" << std::endl
+                                 << "# of CTs: " << b->ContourTrees.size() << std::endl
+                                 << "# of CTMs: " << b->ContourTreeMeshes.size() << std::endl
+                                 << "# of IFs: " << b->InteriorForests.size() << std::endl);
 
-      char buffer[256];
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "AfterFanInResults_Rank%d_Block%d.txt",
-                    static_cast<int>(rank),
-                    static_cast<int>(b->BlockIndex));
-      std::ofstream os(buffer);
-      os << "Contour Trees" << std::endl;
-      os << "=============" << std::endl;
-      for (const auto& ct : b->ContourTrees)
-        ct.PrintContent(os);
-      os << std::endl;
-      os << "Contour Tree Meshes" << std::endl;
-      os << "===================" << std::endl;
-      for (const auto& cm : b->ContourTreeMeshes)
-        cm.PrintContent(os);
-      os << std::endl;
-      os << "Interior Forests" << std::endl;
-      os << "===================" << std::endl;
-      for (const auto& info : b->InteriorForests)
-        info.PrintContent(os);
-      os << std::endl;
+    char buffer[256];
+    std::snprintf(buffer,
+                  sizeof(buffer),
+                  "AfterFanInResults_Rank%d_Block%d.txt",
+                  static_cast<int>(rank),
+                  static_cast<int>(b->BlockIndex));
+    std::ofstream os(buffer);
+    os << "Contour Trees" << std::endl;
+    os << "=============" << std::endl;
+    for (const auto& ct : b->ContourTrees)
+      ct.PrintContent(os);
+    os << std::endl;
+    os << "Contour Tree Meshes" << std::endl;
+    os << "===================" << std::endl;
+    for (const auto& cm : b->ContourTreeMeshes)
+      cm.PrintContent(os);
+    os << std::endl;
+    os << "Interior Forests" << std::endl;
+    os << "===================" << std::endl;
+    for (const auto& info : b->InteriorForests)
+      info.PrintContent(os);
+    os << std::endl;
 #endif
 
-      // Fan out
-      auto nRounds = b->ContourTrees.size() - 1;
+    // Fan out
+    auto nRounds = b->ContourTrees.size() - 1;
 
-      vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> hierarchicalTree;
-      hierarchicalTree.Initialize(static_cast<vtkm::Id>(nRounds),
-                                  b->ContourTrees[nRounds],
-                                  b->ContourTreeMeshes[nRounds - 1]);
+    vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> hierarchicalTree;
+    hierarchicalTree.Initialize(
+      static_cast<vtkm::Id>(nRounds), b->ContourTrees[nRounds], b->ContourTreeMeshes[nRounds - 1]);
 
-#if 0
-    // TODO: GET THIS COMPILING
     // save the corresponding .gv file
-    std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
-    std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
-    hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
-      (std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
-        vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
-      );
-#endif
-      for (auto round = nRounds - 1; round > 0; round--)
-      {
-        vtkm::worklet::contourtree_distributed::
-          TreeGrafter<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>, FieldType>
-            grafter(&(b->ContourTreeMeshes[round - 1]),
-                    b->ContourTrees[round],
-                    &(b->InteriorForests[round]));
-        grafter.GraftInteriorForests(static_cast<vtkm::Id>(round),
-                                     hierarchicalTree,
-                                     b->ContourTreeMeshes[round - 1].SortedValues);
-#if 0
-      // TODO: GET THIS COMPILING
-      // save the corresponding .gv file
-      std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
+    if (this->SaveDotFiles)
+    {
+      std::string hierarchicalTreeFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(b->BlockIndex)) + std::string("_Round_") +
+        std::to_string(nRounds) + std::string("_Hierarchical_Tree.gv");
+      std::string hierarchicalTreeLabel = std::string("Block ") +
+        std::to_string(static_cast<int>(b->BlockIndex)) + std::string(" Round ") +
+        std::to_string(nRounds) + std::string(" Hierarchical Tree");
+      vtkm::Id hierarchicalTreeDotSettings =
+        vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
+        vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
       std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
-      hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
-        (std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
-                vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
-        );
-#endif
-      }
+      hierarchicalTreeFile
+        << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>(
+             hierarchicalTreeLabel, hierarchicalTree, hierarchicalTreeDotSettings);
+    } // if(this->SaveDotFiles)
 
-      // bottom level
+    for (auto round = nRounds - 1; round > 0; round--)
+    {
       vtkm::worklet::contourtree_distributed::
-        TreeGrafter<vtkm::worklet::contourtree_augmented::DataSetMesh, FieldType>
-          grafter(&(this->LocalMeshes[static_cast<std::size_t>(b->BlockIndex)]),
-                  b->ContourTrees[0],
-                  &(b->InteriorForests[0]));
-      auto currBlock = input.GetPartition(b->BlockIndex);
-      auto currField =
-        currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-      vtkm::cont::ArrayHandle<FieldType> fieldData;
-      vtkm::cont::ArrayCopy(currField.GetData().ResetTypes(vtkm::List<FieldType>{}), fieldData);
-      auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
-        this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(b->BlockIndex),
-        this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(b->BlockIndex),
-        this->MultiBlockSpatialDecomposition.GlobalSize);
-      grafter.GraftInteriorForests(0, hierarchicalTree, fieldData, &localToGlobalIdRelabeler);
+        TreeGrafter<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>, FieldType>
+          grafter(&(b->ContourTreeMeshes[round - 1]),
+                  b->ContourTrees[round],
+                  &(b->InteriorForests[round]));
+      grafter.GraftInteriorForests(static_cast<vtkm::Id>(round),
+                                   hierarchicalTree,
+                                   b->ContourTreeMeshes[round - 1].SortedValues);
+      if (this->SaveDotFiles)
+      {
+        // save the corresponding .gv file
+        std::string hierarchicalTreeFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(b->BlockIndex)) + std::string("_Round_") +
+          std::to_string(nRounds) + std::string("_Hierarchical_Tree.gv");
+        std::string hierarchicalTreeLabel = std::string("Block ") +
+          std::to_string(static_cast<int>(b->BlockIndex)) + std::string(" Round ") +
+          std::to_string(nRounds) + std::string(" Hierarchical Tree");
+        vtkm::Id hierarchicalTreeDotSettings =
+          vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
+          vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
+          vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS |
+          vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
+          vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
+        std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
+        hierarchicalTreeFile
+          << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<
+               FieldType>(hierarchicalTreeLabel, hierarchicalTree, hierarchicalTreeDotSettings);
+      } // if(this->SaveDotFiles)
+    }   // for
 
-      // Create data set from output
-      vtkm::cont::Field dataValuesField(
-        "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.DataValues);
-      hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(dataValuesField);
-      vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
-                                                  vtkm::cont::Field::Association::WHOLE_MESH,
-                                                  hierarchicalTree.RegularNodeGlobalIds);
-      hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(regularNodeGlobalIdsField);
-      vtkm::cont::Field superarcsField(
-        "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Superarcs);
-      hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(superarcsField);
-      vtkm::cont::Field supernodesField(
-        "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Supernodes);
-      hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(supernodesField);
-      vtkm::cont::Field superparentsField(
-        "Superparents", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Superparents);
-      hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(superparentsField);
+    // bottom level
+    vtkm::worklet::contourtree_distributed::
+      TreeGrafter<vtkm::worklet::contourtree_augmented::DataSetMesh, FieldType>
+        grafter(&(this->LocalMeshes[static_cast<std::size_t>(b->BlockIndex)]),
+                b->ContourTrees[0],
+                &(b->InteriorForests[0]));
+    auto currBlock = input.GetPartition(b->BlockIndex);
+    auto currField =
+      currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+    vtkm::cont::ArrayHandle<FieldType> fieldData;
+    vtkm::cont::ArrayCopy(currField.GetData().ResetTypes(vtkm::List<FieldType>{}), fieldData);
+    auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
+      this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(b->BlockIndex),
+      this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(b->BlockIndex),
+      this->MultiBlockSpatialDecomposition.GlobalSize);
+    grafter.GraftInteriorForests(0, hierarchicalTree, fieldData, &localToGlobalIdRelabeler);
 
-      // Copy cell set from input data set. This is mainly to ensure that the output data set
-      // has a defined cell set. Without one, serialization for DIY does not work properly.
-      // Having the extents of the input data set may also help in other use cases.
-      hierarchicalTreeOutputDataSet[b->BlockIndex].SetCellSet(
-        input.GetPartition(b->BlockIndex).GetCellSet());
+    // Create data set from output
+    vtkm::cont::Field dataValuesField(
+      "DataValues", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.DataValues);
+    hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(dataValuesField);
+    vtkm::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
+                                                vtkm::cont::Field::Association::WHOLE_MESH,
+                                                hierarchicalTree.RegularNodeGlobalIds);
+    hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(regularNodeGlobalIdsField);
+    vtkm::cont::Field superarcsField(
+      "Superarcs", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Superarcs);
+    hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(superarcsField);
+    vtkm::cont::Field supernodesField(
+      "Supernodes", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Supernodes);
+    hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(supernodesField);
+    vtkm::cont::Field superparentsField(
+      "Superparents", vtkm::cont::Field::Association::WHOLE_MESH, hierarchicalTree.Superparents);
+    hierarchicalTreeOutputDataSet[b->BlockIndex].AddField(superparentsField);
 
-#if 0
-    // TODO: GET THIS COMPILING
+    // Copy cell set from input data set. This is mainly to ensure that the output data set
+    // has a defined cell set. Without one, serialization for DIY does not work properly.
+    // Having the extents of the input data set may also help in other use cases.
+    hierarchicalTreeOutputDataSet[b->BlockIndex].SetCellSet(
+      input.GetPartition(b->BlockIndex).GetCellSet());
+
     // save the corresponding .gv file
-    std::string hierarchicalTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(b->BlockIndex)) + "_Round_" + std::to_string(nRounds) + "_Hierarchical_Tree.gv";
-    std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
-    hierarchicalTreeFile << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>
-      (std::string("Block ") + std::to_string(static_cast<int>(b->BlockIndex)) + " Round " + std::to_string(nRounds) + " Hierarchical Tree", hierarchicalTree,
-        vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS
-      );
-#endif
-    });
+    if (this->SaveDotFiles)
+    {
+      std::string hierarchicalTreeFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(b->BlockIndex)) + std::string("_Round_") +
+        std::to_string(nRounds) + std::string("_Hierarchical_Tree.gv");
+      std::string hierarchicalTreeLabel = std::string("Block ") +
+        std::to_string(static_cast<int>(b->BlockIndex)) + std::string(" Round ") +
+        std::to_string(nRounds) + std::string(" Hierarchical Tree");
+      vtkm::Id hierarchicalTreeDotSettings =
+        vtkm::worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
+        vtkm::worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_IDS |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
+        vtkm::worklet::contourtree_distributed::SHOW_ALL_HYPERIDS;
+      std::ofstream hierarchicalTreeFile(hierarchicalTreeFileName);
+      hierarchicalTreeFile
+        << vtkm::worklet::contourtree_distributed::HierarchicalContourTreeDotGraphPrint<FieldType>(
+             hierarchicalTreeLabel, hierarchicalTree, hierarchicalTreeDotSettings);
+    } // if(this->SaveDotFiles)
+  }); // master.foreach
 
   result = vtkm::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
 }
