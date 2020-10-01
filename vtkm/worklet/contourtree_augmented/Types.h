@@ -67,21 +67,21 @@ namespace contourtree_augmented
 
 // constexpr for bit flags
 // clang-format off
-constexpr vtkm::Id NO_SUCH_ELEMENT = std::numeric_limits<vtkm::Id>::min();
-constexpr vtkm::Id TERMINAL_ELEMENT = std::numeric_limits<vtkm::Id>::max() / 2 + 1; //0x40000000 || 0x4000000000000000
-constexpr vtkm::Id IS_SUPERNODE = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000
-constexpr vtkm::Id IS_HYPERNODE = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
-constexpr vtkm::Id IS_ASCENDING = std::numeric_limits<vtkm::Id>::max() / 16 + 1; //0x08000000 || 0x0800000000000000
-constexpr vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x07FFFFFF || 0x07FFFFFFFFFFFFFF
-constexpr vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
-constexpr vtkm::Id ELEMENT_EXISTS = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000 , same as IS_SUPERNODE
+constexpr VTKM_EXEC_CONT vtkm::Id NO_SUCH_ELEMENT = std::numeric_limits<vtkm::Id>::min();
+constexpr VTKM_EXEC_CONT vtkm::Id TERMINAL_ELEMENT = std::numeric_limits<vtkm::Id>::max() / 2 + 1; //0x40000000 || 0x4000000000000000
+constexpr VTKM_EXEC_CONT vtkm::Id IS_SUPERNODE = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000
+constexpr VTKM_EXEC_CONT vtkm::Id IS_HYPERNODE = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
+constexpr VTKM_EXEC_CONT vtkm::Id IS_ASCENDING = std::numeric_limits<vtkm::Id>::max() / 16 + 1; //0x08000000 || 0x0800000000000000
+constexpr VTKM_EXEC_CONT vtkm::Id INDEX_MASK = std::numeric_limits<vtkm::Id>::max() / 16; //0x07FFFFFF || 0x07FFFFFFFFFFFFFF
+constexpr VTKM_EXEC_CONT vtkm::Id CV_OTHER_FLAG = std::numeric_limits<vtkm::Id>::max() / 8 + 1; //0x10000000 || 0x1000000000000000
+constexpr VTKM_EXEC_CONT vtkm::Id ELEMENT_EXISTS = std::numeric_limits<vtkm::Id>::max() / 4 + 1; //0x20000000 || 0x2000000000000000 , same as IS_SUPERNODE
 
 // flags for testing regular vertices
-constexpr vtkm::Id IS_LOWER_LEAF = static_cast<vtkm::Id>(0);
-constexpr vtkm::Id IS_UPPER_LEAF = static_cast<vtkm::Id>(1);
-constexpr vtkm::Id IS_REGULAR = static_cast<vtkm::Id>(2);
-constexpr vtkm::Id IS_SADDLE = static_cast<vtkm::Id>(3);
-constexpr vtkm::Id IS_ATTACHMENT = static_cast<vtkm::Id>(4);
+constexpr VTKM_EXEC_CONT vtkm::Id IS_LOWER_LEAF = static_cast<vtkm::Id>(0);
+constexpr VTKM_EXEC_CONT vtkm::Id IS_UPPER_LEAF = static_cast<vtkm::Id>(1);
+constexpr VTKM_EXEC_CONT vtkm::Id IS_REGULAR = static_cast<vtkm::Id>(2);
+constexpr VTKM_EXEC_CONT vtkm::Id IS_SADDLE = static_cast<vtkm::Id>(3);
+constexpr VTKM_EXEC_CONT vtkm::Id IS_ATTACHMENT = static_cast<vtkm::Id>(4);
 
 // clang-format on
 using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
