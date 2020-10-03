@@ -775,8 +775,7 @@ std::string BoundaryTreeDotGraphPrint(
 
   // loop through all nodes
   auto meshSortOrderPortal = mesh.SortOrder.ReadPortal();
-  auto globalIds =
-    mesh.GetGlobalIdsFromSortIndices(boundaryTree.VertexIndex, localToGlobalIdRelabeler);
+  auto globalIds = mesh.GetGlobalIdsFromSortIndices(mesh.SortOrder, localToGlobalIdRelabeler);
   auto globalIdsPortal = globalIds.ReadPortal();
   auto dataValuesPortal = field.ReadPortal();
   for (vtkm::Id node = 0; node < boundaryTree.VertexIndex.GetNumberOfValues(); node++)
@@ -784,7 +783,9 @@ std::string BoundaryTreeDotGraphPrint(
     // work out the node and it's value
     vtkm::Id sortID = vertexIndexPortal.Get(node);
     vtkm::Id regularID = meshSortOrderPortal.Get(sortID);
-    vtkm::Id globalID = globalIdsPortal.Get(sortID);
+    // NOTE: globalIdsPortal already looked up by meshSortOrder so we need to
+    //       look up globalID now by node not sortID
+    vtkm::Id globalID = globalIdsPortal.Get(node);
     auto dataValue = dataValuesPortal.Get(regularID);
 
     // print the vertex (using global ID to simplify things for the residue)
@@ -810,7 +811,6 @@ std::string BoundaryTreeDotGraphPrint(
                 << "\\n";
     outStream << "\"];\n";
   } // per vertex
-
   // always show the null node
   outStream << "\t// Null Node" << std::endl;
   outStream
@@ -854,7 +854,6 @@ std::string BoundaryTreeDotGraphPrint(
   { // print footer
     outStream << "\t}" << std::endl;
   } // print footer
-
   // now return the string
   return outStream.str();
 } // BoundaryTreeDotGraphPrint()
@@ -909,8 +908,7 @@ std::string InteriorForestDotGraphPrint(
   // now we need to show the forest and how it relates to the boundary tree
   // note - we will ignore the boundary tree Mesh Indices array for now
   auto meshSortOrderPortal = mesh.SortOrder.ReadPortal();
-  auto globalIds =
-    mesh.GetGlobalIdsFromSortIndices(contourTree.Supernodes, localToGlobalIdRelabeler);
+  auto globalIds = mesh.GetGlobalIdsFromSortIndices(mesh.SortOrder, localToGlobalIdRelabeler);
   auto globalIdsPortal = globalIds.ReadPortal();
   auto dataValuesPortal = field.ReadPortal();
 
@@ -920,7 +918,9 @@ std::string InteriorForestDotGraphPrint(
     // retrieve the various IDs for the supernode
     vtkm::Id sortID = supernodesPortal.Get(supernode);
     vtkm::Id regularID = meshSortOrderPortal.Get(sortID);
-    vtkm::Id globalID = globalIdsPortal.Get(sortID);
+    // NOTE: globalIdsPortal already looked up by meshSortOrder so we need to
+    //       look up globalID now by supernode not sortID
+    vtkm::Id globalID = globalIdsPortal.Get(supernode);
     auto dataValue = dataValuesPortal.Get(regularID);
 
     // vertices marked "necessary" are in the interior of the BRACT, but not all are in the BRACT
