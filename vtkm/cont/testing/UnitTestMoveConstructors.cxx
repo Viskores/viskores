@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetStructured.h>
@@ -94,22 +93,22 @@ struct IsNoExceptHandle
   void operator()(T) const
   {
     using HandleType = vtkm::cont::ArrayHandle<T>;
-    using VirtualType = vtkm::cont::ArrayHandleVirtual<T>;
+    using MultiplexerType = vtkm::cont::ArrayHandleMultiplexer<HandleType>;
 
     //verify the handle type
     is_noexcept_movable<HandleType>();
-    is_noexcept_movable<VirtualType>();
+    is_noexcept_movable<MultiplexerType>();
 
     //verify the input portals of the handle
     is_noexcept_movable<decltype(std::declval<HandleType>().PrepareForInput(
       vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
-    is_noexcept_movable<decltype(std::declval<VirtualType>().PrepareForInput(
+    is_noexcept_movable<decltype(std::declval<MultiplexerType>().PrepareForInput(
       vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
 
     //verify the output portals of the handle
     is_noexcept_movable<decltype(std::declval<HandleType>().PrepareForOutput(
       2, vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
-    is_noexcept_movable<decltype(std::declval<VirtualType>().PrepareForOutput(
+    is_noexcept_movable<decltype(std::declval<MultiplexerType>().PrepareForOutput(
       2, vtkm::cont::DeviceAdapterTagSerial{}, std::declval<vtkm::cont::Token&>()))>();
   }
 };
@@ -136,14 +135,11 @@ void TestContDataTypesHaveMoveSemantics()
 
   vtkm::testing::Testing::TryTypes(IsNoExceptHandle{}, ::vtkmComplexCustomTypes{});
 
-  //verify the DataSet, Field, CoordinateSystem, and ArrayHandleVirtualCoordinates
+  //verify the DataSet, Field, and CoordinateSystem
   //all have efficient storage in containers such as std::vector
   is_noexcept_movable<vtkm::cont::DataSet>();
   is_noexcept_movable<vtkm::cont::Field>();
   is_noexcept_movable<vtkm::cont::CoordinateSystem>();
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  is_noexcept_movable<vtkm::cont::ArrayHandleVirtualCoordinates>();
-  VTKM_DEPRECATED_SUPPRESS_END
 
   //verify the CellSetStructured, and CellSetExplicit
   //have efficient storage in containers such as std::vector

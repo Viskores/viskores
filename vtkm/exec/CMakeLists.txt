@@ -19,6 +19,7 @@ set(headers
   CellLocator.h
   CellLocatorBoundingIntervalHierarchyExec.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
@@ -31,7 +32,7 @@ set(headers
   FunctorBase.h
   ParametricCoordinates.h
   PointLocator.h
-  PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   TaskBase.h
   )
 

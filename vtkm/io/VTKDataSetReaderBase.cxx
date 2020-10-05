@@ -267,7 +267,7 @@ void VTKDataSetReaderBase::ReadCells(vtkm::cont::ArrayHandle<vtkm::Id>& connecti
   std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numInts));
   this->ReadArray(buffer);
 
-  vtkm::Int32* buffp = &buffer[0];
+  vtkm::Int32* buffp = buffer.data();
   auto connectivityPortal = connectivity.WritePortal();
   auto numIndicesPortal = numIndices.WritePortal();
   for (vtkm::Id i = 0, connInd = 0; i < numCells; ++i)
@@ -292,7 +292,7 @@ void VTKDataSetReaderBase::ReadShapes(vtkm::cont::ArrayHandle<vtkm::UInt8>& shap
   std::vector<vtkm::Int32> buffer(static_cast<std::size_t>(numCells));
   this->ReadArray(buffer);
 
-  vtkm::Int32* buffp = &buffer[0];
+  vtkm::Int32* buffp = buffer.data();
   auto shapesPortal = shapes.WritePortal();
   for (vtkm::Id i = 0; i < numCells; ++i)
   {

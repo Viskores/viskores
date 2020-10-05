@@ -129,6 +129,13 @@ public:
   VTKM_EXEC_CONT
   Particle() {}
 
+  VTKM_EXEC_CONT Particle(const vtkm::Particle& rhs)
+    : ParticleBase(rhs)
+  {
+    // This must not be defaulted, since defaulted copy constructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
   VTKM_EXEC_CONT ~Particle() noexcept override
   {
     // This must not be defaulted, since defaulted virtual destructors are
@@ -144,6 +151,19 @@ public:
            const vtkm::FloatDefault& time = 0)
     : ParticleBase(p, id, numSteps, status, time)
   {
+  }
+
+  VTKM_EXEC_CONT Particle& operator=(const vtkm::Particle& rhs)
+  {
+    // This must not be defaulted, since defaulted assignment operators are
+    // troublesome with CUDA __host__ __device__ markup.
+
+    if (&rhs == this)
+    {
+      return *this;
+    }
+    vtkm::ParticleBase::operator=(rhs);
+    return *this;
   }
 
   VTKM_EXEC_CONT

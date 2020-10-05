@@ -43,12 +43,14 @@ public:
   vtkm::cont::DataSet Make2DUniformDataSet0();
   vtkm::cont::DataSet Make2DUniformDataSet1();
   vtkm::cont::DataSet Make2DUniformDataSet2();
+  vtkm::cont::DataSet Make2DUniformDataSet3();
 
   // 3D uniform datasets.
   vtkm::cont::DataSet Make3DUniformDataSet0();
   vtkm::cont::DataSet Make3DUniformDataSet1();
   vtkm::cont::DataSet Make3DUniformDataSet2();
   vtkm::cont::DataSet Make3DUniformDataSet3(const vtkm::Id3 dims = vtkm::Id3(10));
+  vtkm::cont::DataSet Make3DUniformDataSet4();
   vtkm::cont::DataSet Make3DRegularDataSet0();
   vtkm::cont::DataSet Make3DRegularDataSet1();
 
@@ -177,7 +179,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet0()
   return dataSet;
 }
 
-//Make a simple 2D, 16 cell uniform dataset.
+//Make a simple 2D, 16 cell uniform dataset (5x5.txt)
 inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet1()
 {
   vtkm::cont::DataSetBuilderUniform dsb;
@@ -233,6 +235,29 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet2()
 
   return dataSet;
 }
+
+//Make a simple 2D, 56 cell uniform dataset. (8x9test.txt)
+inline vtkm::cont::DataSet MakeTestDataSet::Make2DUniformDataSet3()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  constexpr vtkm::Id2 dimensions(9, 8);
+  vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+
+  constexpr vtkm::Id nVerts = 72;
+  constexpr vtkm::Float32 pointvar[nVerts] = {
+    29.0f, 37.0f, 39.0f, 70.0f, 74.0f, 84.0f, 38.0f, 36.0f, 26.0f, 27.0f, 100.0f, 49.0f,
+    72.0f, 85.0f, 89.0f, 83.0f, 28.0f, 24.0f, 25.0f, 47.0f, 50.0f, 73.0f, 86.0f,  90.0f,
+    71.0f, 82.0f, 22.0f, 23.0f, 75.0f, 79.0f, 48.0f, 69.0f, 87.0f, 88.0f, 81.0f,  18.0f,
+    19.0f, 76.0f, 80.0f, 78.0f, 46.0f, 68.0f, 67.0f, 40.0f, 16.0f, 17.0f, 41.0f,  77.0f,
+    45.0f, 35.0f, 20.0f, 21.0f, 32.0f, 15.0f, 13.0f, 42.0f, 43.0f, 44.0f, 34.0f,  33.0f,
+    31.0f, 30.0f, 14.0f, 12.0f, 11.0f, 10.0f, 9.0f,  8.0f,  7.0f,  6.0f,  5.0f,   0.0f
+  };
+
+  dataSet.AddPointField("pointvar", pointvar, nVerts);
+
+  return dataSet;
+}
+
 //Make a simple 3D, 4 cell uniform dataset.
 inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet0()
 {
@@ -254,7 +279,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet0()
   return dataSet;
 }
 
-//Make a simple 3D, 64 cell uniform dataset.
+//Make a simple 3D, 64 cell uniform dataset. (5b 5x5x5)
 inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet1()
 {
   vtkm::cont::DataSetBuilderUniform dsb;
@@ -368,6 +393,39 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(const vtkm::Id
   vtkm::cont::ArrayCopy(
     vtkm::cont::make_ArrayHandleCounting(vtkm::Float64(0), vtkm::Float64(1), numCells), cellvar);
   dataSet.AddCellField("cellvar", cellvar);
+
+  return dataSet;
+}
+
+//Make a simple 3D, 120 cell uniform dataset. (This is the data set from
+//Make3DUniformDataSet1 upsampled from 5x5x to 5x6x7.)
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet4()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  constexpr vtkm::Id3 dimensions(5, 6, 7);
+  vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+
+  constexpr vtkm::Id nVerts = 210;
+  constexpr vtkm::Float32 pointvar[nVerts] = {
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.53f, 0.48f, 0.45f,
+    0.0f,  0.0f,  0.64f, 0.56f, 0.61f, 0.0f,  0.0f,  0.61f, 0.56f, 0.64f, 0.0f,  0.0f,  0.45f,
+    0.48f, 0.53f, 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.73f, 0.61f, 0.63f, 0.0f,  0.0f,  0.85f, 0.66f, 0.78f, 0.0f,  0.0f,  0.80f, 0.64f,
+    0.83f, 0.0f,  0.0f,  0.61f, 0.59f, 0.71f, 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.60f, 0.40f, 0.53f, 0.0f,  0.0f,  0.63f, 0.29f, 0.53f,
+    0.0f,  0.0f,  0.57f, 0.25f, 0.55f, 0.0f,  0.0f,  0.48f, 0.32f, 0.56f, 0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.72f, 0.60f, 0.61f, 0.0f,
+    0.0f,  0.84f, 0.64f, 0.76f, 0.0f,  0.0f,  0.78f, 0.62f, 0.81f, 0.0f,  0.0f,  0.60f, 0.57f,
+    0.70f, 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.52f, 0.46f, 0.44f, 0.0f,  0.0f,  0.63f, 0.54f, 0.59f, 0.0f,  0.0f,  0.59f, 0.54f, 0.63f,
+    0.0f,  0.0f,  0.44f, 0.46f, 0.52f, 0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+    0.0f,  0.0f
+  };
+  dataSet.AddPointField("pointvar", pointvar, nVerts);
 
   return dataSet;
 }

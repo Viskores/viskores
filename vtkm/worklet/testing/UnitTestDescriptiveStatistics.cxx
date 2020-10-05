@@ -192,7 +192,7 @@ void TestVarianceProperty()
   {
     condition_number_kv += vtkm::Abs(rp.Get(i) - mean_kv) * vtkm::Abs(rp.Get(i));
   }
-  condition_number_kv *= (2.0f / ((rp.GetNumberOfValues() - 1) * var_kv));
+  condition_number_kv *= (2.0f / (static_cast<float>(rp.GetNumberOfValues() - 1) * var_kv));
   VTKM_TEST_ASSERT(test_equal(var_kv,
                               4.0 * 4.0 * var_v,
                               condition_number_kv * std::numeric_limits<vtkm::Float32>::epsilon()));
@@ -210,7 +210,7 @@ void TestVarianceProperty()
   {
     condition_number_v += vtkm::Abs(rp.Get(i) - mean_v) * vtkm::Abs(rp.Get(i));
   }
-  condition_number_v *= (2.0f / ((rp.GetNumberOfValues() - 1) * var_v));
+  condition_number_v *= (2.0f / (static_cast<float>(rp.GetNumberOfValues() - 1) * var_v));
 
   VTKM_TEST_ASSERT(
     test_equal(var_v, var_px, condition_number_v * std::numeric_limits<vtkm::Float32>::epsilon()));

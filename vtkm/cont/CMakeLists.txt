@@ -41,8 +41,6 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
-  ArrayHandleVirtual.h
-  ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
@@ -57,6 +55,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
@@ -68,6 +67,7 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   ColorTable.h
+  ColorTableMap.h
   ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
@@ -103,6 +103,7 @@ set(headers
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
@@ -111,27 +112,25 @@ set(headers
   StorageImplicit.h
   StorageList.h
   StorageListTag.h
-  StorageVirtual.h
   Timer.h
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  UncertainArrayHandle.h
+  UnknownArrayHandle.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetExtrude.hxx
   CellSetStructured.hxx
-  ColorTable.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
   ParticleArrayCopy.hxx
-  StorageVirtual.hxx
   VirtualObjectHandle.hxx
   )
 
@@ -160,7 +159,6 @@ set(sources
   # This list of sources has code that uses devices and so might need to be
   # compiled with a device-specific compiler (like CUDA).
   set(device_sources
-  ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
@@ -169,7 +167,7 @@ set(sources
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
-  CellLocatorUniformBins.cxx
+  CellLocatorTwoLevel.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx
@@ -181,17 +179,34 @@ set(sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  internal/VariantArrayHandleContainer.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
-  PointLocatorUniformGrid.cxx
+  PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
-  StorageVirtual.cxx
   Timer.cxx
+  UnknownArrayHandle.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    ArrayHandleVirtual.h
+    ArrayHandleVirtualCoordinates.h
+    StorageVirtual.h
+    )
+
+  set(template_sources ${template_sources}
+    ArrayHandleVirtual.hxx
+    StorageVirtual.hxx
+    )
+
+  set(device_sources ${device_sources}
+    ArrayHandleVirtual.cxx
+    StorageVirtual.cxx
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.

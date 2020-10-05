@@ -22,7 +22,7 @@ void TestFieldToColors()
 
   //build a color table with clamping off and verify that sampling works
   vtkm::Range range{ 0.0, 50.0 };
-  vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
+  vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::CoolToWarm);
   table.RescaleToRange(range);
   table.SetClampingOff();
   table.SetAboveRangeColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red

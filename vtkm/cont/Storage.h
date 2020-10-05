@@ -50,7 +50,13 @@ namespace cont
 /// To implement your own StorageTag, you first must create a tag class (an
 /// empty struct) defining your tag (i.e. struct VTKM_ALWAYS_EXPORT StorageTagMyAlloc { };). Then
 /// provide a partial template specialization of vtkm::cont::internal::Storage
-/// for your new tag.
+/// for your new tag. Note that because the StorageTag is being used for
+/// template specialization, storage tags cannot use inheritance (or, rather,
+/// inheritance won't have any effect). You can, however, have a partial template
+/// specialization of vtkm::cont::internal::Storage inherit from a different
+/// specialization. So, for example, you could not have StorageTagFoo inherit from
+/// StorageTagBase, but you could have vtkm::cont::internal::Storage<T, StorageTagFoo>
+/// inherit from vtkm::cont::internal::Storage<T, StorageTagBase>.
 ///
 struct VTKM_ALWAYS_EXPORT StorageTag___
 {

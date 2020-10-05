@@ -140,12 +140,14 @@ public:
 
   void TestContourWedges() const
   {
+    std::cout << "Testing Contour filter on wedge cells" << std::endl;
+
     auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/wedge_cells.vtk");
     vtkm::io::VTKDataSetReader reader(pathname);
 
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
-    vtkm::cont::CellSetExplicit<> cellSet;
+    vtkm::cont::CellSetSingleType<> cellSet;
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;

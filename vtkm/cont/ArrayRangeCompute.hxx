@@ -94,6 +94,8 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 } // namespace detail
 
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 VTKM_CONT
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
@@ -132,6 +134,8 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
     return detail::ArrayRangeComputeImpl(input, device);
   }
 }
+VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ArrayHandleType>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const ArrayHandleType& input,

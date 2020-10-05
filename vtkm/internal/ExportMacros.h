@@ -16,7 +16,14 @@
   * Export macros for various parts of the VTKm library.
   */
 
-#ifdef VTKM_CUDA
+#ifdef VTKM_HIP
+
+#include "hip/hip_runtime.h"
+#define VTKM_EXEC __device__ __host__
+#define VTKM_EXEC_CONT __device__ __host__
+#define VTKM_SUPPRESS_EXEC_WARNINGS
+
+#elif defined(VTKM_CUDA)
 
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__

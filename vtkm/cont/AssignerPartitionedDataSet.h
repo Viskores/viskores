@@ -59,7 +59,7 @@ public:
   AssignerPartitionedDataSet(vtkm::Id num_partitions);
 
   VTKM_CONT
-  virtual ~AssignerPartitionedDataSet();
+  ~AssignerPartitionedDataSet() override;
 
   ///@{
   /// vtkmdiy::Assigner API implementation.

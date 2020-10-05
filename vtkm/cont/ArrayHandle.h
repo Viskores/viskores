@@ -1391,16 +1391,16 @@ public:
 
   /// \brief Deep copies the data in the array.
   ///
-  /// Takes the data that is in this array and copies that data into the provided
-  /// \a destination.
+  /// Takes the data that is in \a source and copies that data into this array.
   ///
-  VTKM_CONT void DeepCopy(vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& destination) const
+  VTKM_CONT void DeepCopyFrom(
+    const vtkm::cont::ArrayHandleNewStyle<ValueType, StorageTag>& source) const
   {
-    VTKM_ASSERT(this->Buffers.size() == destination.Buffers.size());
+    VTKM_ASSERT(this->Buffers.size() == source.Buffers.size());
 
     for (std::size_t bufferIndex = 0; bufferIndex < this->Buffers.size(); ++bufferIndex)
     {
-      this->Buffers[bufferIndex].DeepCopy(destination.Buffers[bufferIndex]);
+      this->Buffers[bufferIndex].DeepCopyFrom(source.Buffers[bufferIndex]);
     }
   }
 

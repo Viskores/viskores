@@ -20,6 +20,11 @@
 #define VTKM_CUDA_DEVICE_PASS
 #endif
 
+// Defined when compiling for the HIP language.
+#ifdef __HIP__
+#define VTKM_HIP
+#endif
+
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
@@ -64,6 +69,10 @@
 
 #if !defined(VTKM_NO_ASSERT_CUDA)
 #cmakedefine VTKM_NO_ASSERT_CUDA
+#endif
+
+#if !defined(VTKM_NO_ASSERT_HIP)
+#cmakedefine VTKM_NO_ASSERT_HIP
 #endif
 
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
@@ -301,6 +310,9 @@
 //Mark if we have enabled logging.
 #cmakedefine VTKM_ENABLE_LOGGING
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#cmakedefine VTKM_NO_DEPRECATED_VIRTUAL
+#endif
 
 // Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
 // VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a

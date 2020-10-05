@@ -21,7 +21,6 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/cont/Invoker.h>
@@ -440,7 +439,7 @@ public:
 
     Run(delta, fastCheck, bounds, concretePoints);
 
-    // Make sure that the modified points are reflected back in the virtual array.
+    // Make sure that the modified points are reflected back in the variant array.
     points = concretePoints;
   }
 

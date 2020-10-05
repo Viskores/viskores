@@ -14,15 +14,19 @@
 #include <vtkm/Deprecated.h>
 
 #include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/Field.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
+#endif
 
 namespace vtkm
 {
 namespace cont
 {
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 namespace detail
 {
 
@@ -117,6 +121,7 @@ VTKM_CONT VTKM_DEPRECATED(
   vtkm::cont::printSummary_ArrayHandle(coordArray, out, full);
 }
 VTKM_DEPRECATED_SUPPRESS_END
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
@@ -146,7 +151,11 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
   VTKM_CONT detail::CoordDataDepWrapper GetData() const;
+#else
+  VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> GetData() const;
+#endif
 
 private:
 #ifdef VTKM_USE_DOUBLE_PRECISION
@@ -267,11 +276,14 @@ struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <>
 struct DynamicTransformTraits<vtkm::cont::detail::CoordDataDepWrapper>
 {
   using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
+
 
 } // namespace internal
 } // namespace cont
@@ -283,12 +295,14 @@ struct DynamicTransformTraits<vtkm::cont::detail::CoordDataDepWrapper>
 namespace mangled_diy_namespace
 {
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
 template <>
 struct Serialization<vtkm::cont::detail::CoordDataDepWrapper>
   : public Serialization<
       vtkm::cont::VariantArrayHandleBase<vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>>>
 {
 };
+#endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <>
 struct Serialization<vtkm::cont::CoordinateSystem>

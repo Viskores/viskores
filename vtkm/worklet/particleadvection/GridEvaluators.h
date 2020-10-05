@@ -17,7 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
@@ -167,11 +167,11 @@ public:
       else
       {
         // Default to using an locator for explicit meshes.
-        vtkm::cont::CellLocatorUniformBins locator;
+        vtkm::cont::CellLocatorTwoLevel locator;
         locator.SetCoordinates(coordinates);
         locator.SetCellSet(cellset);
         locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+        this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
       }
       vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
@@ -179,22 +179,22 @@ public:
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
-      vtkm::cont::CellLocatorUniformBins locator;
+      vtkm::cont::CellLocatorTwoLevel locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
       vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
-      vtkm::cont::CellLocatorUniformBins locator;
+      vtkm::cont::CellLocatorTwoLevel locator;
       locator.SetCoordinates(coordinates);
       locator.SetCellSet(cellset);
       locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformBins>(locator);
+      this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
       vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);

@@ -14,9 +14,8 @@ set(headers
   Testing.h
   TestingArrayHandles.h
   TestingArrayHandleMultiplexer.h
-  TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorRectilinearGrid.h
-  TestingCellLocatorUniformBins.h
+  TestingCellLocatorTwoLevel.h
   TestingCellLocatorUniformGrid.h
   TestingColorTable.h
   TestingComputeRange.h
@@ -25,7 +24,7 @@ set(headers
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
-  TestingPointLocatorUniformGrid.h
+  TestingPointLocatorSparseGrid.h
   TestingSerialization.h
   TestingVirtualObjectHandle.h
   )
@@ -88,6 +87,7 @@ set(unit_tests
   UnitTestTimer.cxx
   UnitTestToken.cxx
   UnitTestTryExecute.cxx
+  UnitTestUnknownArrayHandle.cxx
   UnitTestVariantArrayHandle.cxx
   )
 

@@ -55,7 +55,7 @@ build:ubuntu1804_gcc7:
   variables:
     CC: "gcc-7"
     CXX: "g++-7"
-    VTKM_SETTINGS: "cuda+turing+mpi+64bit_floats"
+    VTKM_SETTINGS: "cuda+turing+mpi+64bit_floats+no_virtual"
 
 test:ubuntu1804_gcc7:
   tags:

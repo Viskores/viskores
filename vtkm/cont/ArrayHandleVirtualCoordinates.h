@@ -22,10 +22,16 @@
 #include <memory>
 #include <type_traits>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtualCoordiantes is removed. Do not include ArrayHandleVirtualCoordinates.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
 {
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 /// ArrayHandleVirtualCoordinates is a specialization of ArrayHandle.
 class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6, "Virtual ArrayHandles are being phased out.")
@@ -35,16 +41,12 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleVirtualCoordinates,
                                 (vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>));
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T, typename S>
   explicit ArrayHandleVirtualCoordinates(const vtkm::cont::ArrayHandle<T, S>& ah)
     : vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>(vtkm::cont::make_ArrayHandleCast<ValueType>(ah))
   {
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 };
-
-VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 template <typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::ArrayHandleVirtualCoordinates& coords,

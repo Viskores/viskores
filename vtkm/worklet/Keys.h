@@ -17,7 +17,6 @@
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/Logging.h>
 
 #include <vtkm/Hash.h>
@@ -443,10 +442,6 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
   extern template class VTKM_WORKLET_TEMPLATE_EXPORT vtkm::worklet::Keys<T>;                       \
   extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
     const vtkm::cont::ArrayHandle<T>& keys,                                                        \
-    vtkm::worklet::KeysSortType sort,                                                              \
-    vtkm::cont::DeviceAdapterId device);                                                           \
-  extern template VTKM_WORKLET_TEMPLATE_EXPORT VTKM_CONT void vtkm::worklet::Keys<T>::BuildArrays( \
-    const vtkm::cont::ArrayHandleVirtual<T>& keys,                                                 \
     vtkm::worklet::KeysSortType sort,                                                              \
     vtkm::cont::DeviceAdapterId device)
 

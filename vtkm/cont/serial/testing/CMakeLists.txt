@@ -12,10 +12,9 @@ set(unit_tests
   UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
   UnitTestSerialArrayHandleMultiplexer.cxx
-  UnitTestSerialArrayHandleVirtualCoordinates.cxx
   UnitTestSerialBitField.cxx
   UnitTestSerialCellLocatorRectilinearGrid.cxx
-  UnitTestSerialCellLocatorUniformBins.cxx
+  UnitTestSerialCellLocatorTwoLevel.cxx
   UnitTestSerialCellLocatorUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
   UnitTestSerialColorTable.cxx
@@ -23,7 +22,7 @@ set(unit_tests
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
   UnitTestSerialImplicitFunction.cxx
-  UnitTestSerialPointLocatorUniformGrid.cxx
+  UnitTestSerialPointLocatorSparseGrid.cxx
   UnitTestSerialVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests}
