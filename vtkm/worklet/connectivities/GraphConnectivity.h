@@ -48,7 +48,7 @@ public:
 
       // We need to reload thisComp and thatComp every iteration since
       // they might have been changed by Unite() both as a result of
-      // attaching on tree to the other or as a result of path compression
+      // attaching one tree to the other or as a result of path compression
       // in findRoot().
       auto thisComp = comp.Get(index);
       auto thatComp = comp.Get(neighbor);
@@ -69,45 +69,29 @@ public:
 class GraphConnectivity
 {
 public:
-  using Algorithm = vtkm::cont::Algorithm;
-
   template <typename InputPortalType, typename OutputPortalType>
   void Run(const InputPortalType& numIndicesArray,
            const InputPortalType& indexOffsetsArray,
            const InputPortalType& connectivityArray,
            OutputPortalType& componentsOut) const
   {
-    vtkm::cont::ArrayHandle<vtkm::Id> components;
+    using Algorithm = vtkm::cont::Algorithm;
+
+    // Initialize the parent pointer to point to the pixel itself. There are other
+    // ways to initialize the parent pointers, for example, a smaller or the minimal
+    // neighbor.
     Algorithm::Copy(
       vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      components);
+      componentsOut);
 
     // TODO: give the reason that single pass algorithm works.
     vtkm::cont::Invoker invoke;
-    invoke(detail::GraphGraft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
-    invoke(PointerJumping{}, components);
+    invoke(
+      detail::GraphGraft{}, indexOffsetsArray, numIndicesArray, connectivityArray, componentsOut);
+    invoke(PointerJumping{}, componentsOut);
 
     // renumber connected component to the range of [0, number of components).
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-    Algorithm::Copy(components, uniqueComponents);
-    Algorithm::Sort(uniqueComponents);
-    Algorithm::Unique(uniqueComponents);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      cellIds);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-      uniqueColor);
-    vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIdsOut;
-    InnerJoin().Run(
-      components, cellIds, uniqueComponents, uniqueColor, cellColors, cellIdsOut, componentsOut);
-
-    Algorithm::SortByKey(cellIdsOut, componentsOut);
+    Renumber::Run(componentsOut);
   }
 };
 }

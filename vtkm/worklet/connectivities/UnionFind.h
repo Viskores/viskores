@@ -69,7 +69,7 @@ public:
     // is changed, there is no hazard, since we are just attaching a tree to a
     // now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
     // components merged.
-    // However, when the root of the attaching tree (root_v) is change, it
+    // However, when the root of the attaching tree (root_v) is changed, it
     // means that the root_u has been attached to yet some other root_s and became
     // a non-root node. If we are now attaching this non-root node to root_w we
     // would leave root_s behind and undoing previous work.

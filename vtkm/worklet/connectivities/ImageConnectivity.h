@@ -93,46 +93,23 @@ public:
     template <int Dimension, typename T, typename StorageT, typename OutputPortalType>
     void operator()(const vtkm::cont::ArrayHandle<T, StorageT>& pixels,
                     const vtkm::cont::CellSetStructured<Dimension>& input,
-                    OutputPortalType& components) const
+                    OutputPortalType& componentsOut) const
     {
       using Algorithm = vtkm::cont::Algorithm;
 
-      // Initialize the parent pointer to point it the pixel itself. There are other
-      // ways to initialize the parent points, for example, a smaller or the minimal
-      // neighbor. This can potentially reduce the number of iteration by 1.
+      // Initialize the parent pointer to point to the pixel itself. There are other
+      // ways to initialize the parent pointers, for example, a smaller or the minimal
+      // neighbor.
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      components);
+                      componentsOut);
 
       // TODO: give the reason that single pass algorithm works.
       vtkm::cont::Invoker invoke;
-      invoke(detail::ImageGraft{}, input, components, pixels, components);
-      invoke(PointerJumping{}, components);
+      invoke(detail::ImageGraft{}, input, componentsOut, pixels, componentsOut);
+      invoke(PointerJumping{}, componentsOut);
 
       // renumber connected component to the range of [0, number of components).
-      // FIXME: we should able to apply findRoot to each pixel and use some kind
-      // of atomic operation to get the number of unique components without the
-      // cost of copying and sorting. This might be able to be extended to also
-      // work for the renumbering (replacing InnerJoin) through atomic increment.
-      vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-      Algorithm::Copy(components, uniqueComponents);
-      Algorithm::Sort(uniqueComponents);
-      Algorithm::Unique(uniqueComponents);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> pixelIds;
-      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      pixelIds);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-      Algorithm::Copy(
-        vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-        uniqueColor);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
-      vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-      InnerJoin().Run(
-        components, pixelIds, uniqueComponents, uniqueColor, cellColors, pixelIdsOut, components);
-
-      Algorithm::SortByKey(pixelIdsOut, components);
+      Renumber::Run(componentsOut);
     }
   };
 
