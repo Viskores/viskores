@@ -7,10 +7,15 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_internal_Variant_h
-#define vtk_m_internal_Variant_h
 
-#include <vtkm/internal/VariantDetail.h>
+#if !defined(VTK_M_DEVICE) || !defined(VTK_M_NAMESPACE)
+#error VariantImpl.h must be included from Variant.h
+// Some defines to make my IDE happy.
+#define VTK_M_DEVICE
+#define VTK_M_NAMESPACE tmp
+#endif
+
+#include <vtkm/internal/VariantImplDetail.h>
 
 #include <vtkm/Deprecated.h>
 #include <vtkm/List.h>
@@ -19,6 +24,8 @@
 #include <vtkmstd/is_trivial.h>
 
 namespace vtkm
+{
+namespace VTK_M_NAMESPACE
 {
 namespace internal
 {
@@ -32,9 +39,8 @@ namespace detail
 
 struct VariantCopyFunctor
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT void operator()(const T& src, void* destPointer) const noexcept
+  VTK_M_DEVICE void operator()(const T& src, void* destPointer) const noexcept
   {
     new (destPointer) T(src);
   }
@@ -42,9 +48,8 @@ struct VariantCopyFunctor
 
 struct VariantDestroyFunctor
 {
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT void operator()(T& src) const noexcept
+  VTK_M_DEVICE void operator()(T& src) const noexcept
   {
     src.~T();
   }
@@ -104,7 +109,8 @@ template <typename VariantType>
 struct VariantTriviallyCopyable;
 
 template <typename... Ts>
-struct VariantTriviallyCopyable<vtkm::internal::Variant<Ts...>> : AllTriviallyCopyable<Ts...>
+struct VariantTriviallyCopyable<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
+  : AllTriviallyCopyable<Ts...>
 {
 };
 
@@ -165,7 +171,7 @@ template <typename VariantType>
 struct VariantTriviallyConstructible;
 
 template <typename... Ts>
-struct VariantTriviallyConstructible<vtkm::internal::Variant<Ts...>>
+struct VariantTriviallyConstructible<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>>
   : AllTriviallyConstructible<Ts...>
 {
 };
@@ -180,19 +186,19 @@ struct VariantStorageImpl
   template <vtkm::IdComponent Index>
   using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
 
-  VTKM_EXEC_CONT void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
-  VTKM_EXEC_CONT const void* GetPointer() const
+  VTK_M_DEVICE void* GetPointer() { return reinterpret_cast<void*>(&this->Storage); }
+  VTK_M_DEVICE const void* GetPointer() const
   {
     return reinterpret_cast<const void*>(&this->Storage);
   }
 
-  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
-  VTKM_EXEC_CONT bool IsValid() const noexcept
+  VTK_M_DEVICE vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
+  VTK_M_DEVICE bool IsValid() const noexcept
   {
     return (this->Index >= 0) && (this->Index < static_cast<vtkm::IdComponent>(sizeof...(Ts)));
   }
 
-  VTKM_EXEC_CONT void Reset() noexcept
+  VTK_M_DEVICE void Reset() noexcept
   {
     if (this->IsValid())
     {
@@ -202,7 +208,7 @@ struct VariantStorageImpl
   }
 
   template <typename Functor, typename... Args>
-  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) const
+  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) const
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
@@ -216,7 +222,7 @@ struct VariantStorageImpl
   }
 
   template <typename Functor, typename... Args>
-  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) noexcept(
+  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) noexcept(
     noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
@@ -238,8 +244,9 @@ struct VariantConstructorImpl;
 
 // Can trivially construct, deconstruct, and copy all data. (Probably all trivial classes.)
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type, std::true_type>
-  : VariantStorageImpl<Ts...>
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
+                              std::true_type,
+                              std::true_type> : VariantStorageImpl<Ts...>
 {
   VariantConstructorImpl() = default;
   ~VariantConstructorImpl() = default;
@@ -253,10 +260,11 @@ struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type, st
 // Can trivially copy, but cannot trivially construct. Common if a class is simple but
 // initializes itself.
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type, std::true_type>
-  : VariantStorageImpl<Ts...>
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
+                              std::false_type,
+                              std::true_type> : VariantStorageImpl<Ts...>
 {
-  VTKM_EXEC_CONT VariantConstructorImpl() { this->Index = -1; }
+  VTK_M_DEVICE VariantConstructorImpl() { this->Index = -1; }
 
   // Any trivially copyable class is trivially destructable.
   ~VariantConstructorImpl() = default;
@@ -269,26 +277,27 @@ struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type, s
 
 // Cannot trivially copy. We assume we cannot trivially construct/destruct.
 template <typename construct_type, typename... Ts>
-struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, construct_type, std::false_type>
-  : VariantStorageImpl<Ts...>
+struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
+                              construct_type,
+                              std::false_type> : VariantStorageImpl<Ts...>
 {
-  VTKM_EXEC_CONT VariantConstructorImpl() { this->Index = -1; }
-  VTKM_EXEC_CONT ~VariantConstructorImpl() { this->Reset(); }
+  VTK_M_DEVICE VariantConstructorImpl() { this->Index = -1; }
+  VTK_M_DEVICE ~VariantConstructorImpl() { this->Reset(); }
 
-  VTKM_EXEC_CONT VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
+  VTK_M_DEVICE VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
   {
     src.CastAndCall(VariantCopyFunctor{}, this->GetPointer());
     this->Index = src.Index;
   }
 
-  VTKM_EXEC_CONT VariantConstructorImpl(VariantConstructorImpl&& rhs) noexcept
+  VTK_M_DEVICE VariantConstructorImpl(VariantConstructorImpl&& rhs) noexcept
   {
     this->Storage = std::move(rhs.Storage);
     this->Index = std::move(rhs.Index);
     rhs.Index = -1;
   }
 
-  VTKM_EXEC_CONT VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
+  VTK_M_DEVICE VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
   {
     this->Reset();
     src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
@@ -296,7 +305,7 @@ struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, construct_type, st
     return *this;
   }
 
-  VTKM_EXEC_CONT VariantConstructorImpl& operator=(VariantConstructorImpl&& rhs) noexcept
+  VTK_M_DEVICE VariantConstructorImpl& operator=(VariantConstructorImpl&& rhs) noexcept
   {
     this->Reset();
 // Get rid of spurious GCC-10 warning:
@@ -326,10 +335,7 @@ public:
   /// Returns the index of the type of object this variant is storing. If no object is currently
   /// stored (i.e. the `Variant` is invalid), an invalid is returned.
   ///
-  VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept
-  {
-    return this->Superclass::GetIndex();
-  }
+  VTK_M_DEVICE vtkm::IdComponent GetIndex() const noexcept { return this->Superclass::GetIndex(); }
 
   /// Returns true if this `Variant` is storing an object from one of the types in the template
   /// list, false otherwise.
@@ -338,7 +344,7 @@ public:
   /// is undefined. The `Variant` could report itself as validly containing an object that
   /// is trivially constructed.
   ///
-  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->Superclass::IsValid(); }
+  VTK_M_DEVICE bool IsValid() const noexcept { return this->Superclass::IsValid(); }
 
   /// Type that converts to a std::integral_constant containing the index of the given type (or
   /// -1 if that type is not in the list).
@@ -348,7 +354,7 @@ public:
   /// Returns the index for the given type (or -1 if that type is not in the list).
   ///
   template <typename T>
-  VTKM_EXEC_CONT static constexpr vtkm::IdComponent GetIndexOf()
+  VTK_M_DEVICE static constexpr vtkm::IdComponent GetIndexOf()
   {
     return IndexOf<T>::value;
   }
@@ -369,9 +375,8 @@ public:
   Variant& operator=(const Variant&) = default;
   Variant& operator=(Variant&&) = default;
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT Variant(const T& src) noexcept
+  VTK_M_DEVICE Variant(const T& src) noexcept
   {
     constexpr vtkm::IdComponent index = GetIndexOf<T>();
     // Might be a way to use an enable_if to enforce a proper type.
@@ -381,9 +386,8 @@ public:
     this->Index = index;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T>
-  VTKM_EXEC_CONT Variant(const T&& src) noexcept
+  VTK_M_DEVICE Variant(const T&& src) noexcept
   {
     constexpr vtkm::IdComponent index = IndexOf<T>::value;
     // Might be a way to use an enable_if to enforce a proper type.
@@ -394,7 +398,7 @@ public:
   }
 
   template <typename T, typename... Args>
-  VTKM_EXEC_CONT T& Emplace(Args&&... args)
+  VTK_M_DEVICE T& Emplace(Args&&... args)
   {
     constexpr vtkm::IdComponent I = GetIndexOf<T>();
     VTKM_STATIC_ASSERT_MSG(I >= 0, "Variant::Emplace called with invalid type.");
@@ -402,7 +406,7 @@ public:
   }
 
   template <typename T, typename U, typename... Args>
-  VTKM_EXEC_CONT T& Emplace(std::initializer_list<U> il, Args&&... args)
+  VTK_M_DEVICE T& Emplace(std::initializer_list<U> il, Args&&... args)
   {
     constexpr vtkm::IdComponent I = GetIndexOf<T>();
     VTKM_STATIC_ASSERT_MSG(I >= 0, "Variant::Emplace called with invalid type.");
@@ -410,7 +414,7 @@ public:
   }
 
   template <vtkm::IdComponent I, typename... Args>
-  VTKM_EXEC_CONT TypeAt<I>& Emplace(Args&&... args)
+  VTK_M_DEVICE TypeAt<I>& Emplace(Args&&... args)
   {
     VTKM_STATIC_ASSERT_MSG((I >= 0) && (I < NumberOfTypes),
                            "Variant::Emplace called with invalid index");
@@ -418,7 +422,7 @@ public:
   }
 
   template <vtkm::IdComponent I, typename U, typename... Args>
-  VTKM_EXEC_CONT TypeAt<I>& Emplace(std::initializer_list<U> il, Args&&... args)
+  VTK_M_DEVICE TypeAt<I>& Emplace(std::initializer_list<U> il, Args&&... args)
   {
     VTKM_STATIC_ASSERT_MSG((I >= 0) && (I < NumberOfTypes),
                            "Variant::Emplace called with invalid index");
@@ -426,9 +430,8 @@ public:
   }
 
 private:
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename... Args>
-  VTKM_EXEC_CONT T& EmplaceImpl(Args&&... args)
+  VTK_M_DEVICE T& EmplaceImpl(Args&&... args)
   {
     this->Reset();
     T* value = new (this->GetPointer()) T{ args... };
@@ -436,9 +439,8 @@ private:
     return *value;
   }
 
-  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename T, vtkm::IdComponent I, typename U, typename... Args>
-  VTKM_EXEC_CONT T& EmplaceImpl(std::initializer_list<U> il, Args&&... args)
+  VTK_M_DEVICE T& EmplaceImpl(std::initializer_list<U> il, Args&&... args)
   {
     this->Reset();
     T* value = new (this->GetPointer()) T(il, args...);
@@ -452,14 +454,14 @@ public:
   /// variant does not contain the value at the given index.
   ///
   template <vtkm::IdComponent I>
-  VTKM_EXEC_CONT TypeAt<I>& Get() noexcept
+  VTK_M_DEVICE TypeAt<I>& Get() noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
     return *reinterpret_cast<TypeAt<I>*>(this->GetPointer());
   }
 
   template <vtkm::IdComponent I>
-  VTKM_EXEC_CONT const TypeAt<I>& Get() const noexcept
+  VTK_M_DEVICE const TypeAt<I>& Get() const noexcept
   {
     VTKM_ASSERT(I == this->GetIndex());
     return *reinterpret_cast<const TypeAt<I>*>(this->GetPointer());
@@ -471,14 +473,14 @@ public:
   /// contain a value of the given type.
   ///
   template <typename T>
-  VTKM_EXEC_CONT T& Get() noexcept
+  VTK_M_DEVICE T& Get() noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
     return *reinterpret_cast<T*>(this->GetPointer());
   }
 
   template <typename T>
-  VTKM_EXEC_CONT const T& Get() const noexcept
+  VTK_M_DEVICE const T& Get() const noexcept
   {
     VTKM_ASSERT(this->GetIndexOf<T>() == this->GetIndex());
     return *reinterpret_cast<const T*>(this->GetPointer());
@@ -493,7 +495,7 @@ public:
   /// The results are undefined if the Variant is not valid.
   ///
   template <typename Functor, typename... Args>
-  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) const
+  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) const
     noexcept(noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
       -> decltype(f(std::declval<const TypeAt<0>&>(), args...))
   {
@@ -501,7 +503,7 @@ public:
   }
 
   template <typename Functor, typename... Args>
-  VTKM_EXEC_CONT auto CastAndCall(Functor&& f, Args&&... args) noexcept(
+  VTK_M_DEVICE auto CastAndCall(Functor&& f, Args&&... args) noexcept(
     noexcept(f(std::declval<const TypeAt<0>&>(), args...)))
     -> decltype(f(std::declval<TypeAt<0>&>(), args...))
   {
@@ -511,7 +513,7 @@ public:
   /// Destroys any object the Variant is holding and sets the Variant to an invalid state. This
   /// method is not thread safe.
   ///
-  VTKM_EXEC_CONT void Reset() noexcept { this->Superclass::Reset(); }
+  VTK_M_DEVICE void Reset() noexcept { this->Superclass::Reset(); }
 };
 
 /// \brief Convert a ListTag to a Variant.
@@ -522,13 +524,15 @@ template <typename ListTag>
 using ListTagAsVariant VTKM_DEPRECATED(
   1.6,
   "vtkm::ListTag is no longer supported. Use vtkm::List instead.") =
-  vtkm::ListApply<ListTag, vtkm::internal::Variant>;
+  vtkm::ListApply<ListTag, vtkm::VTK_M_NAMESPACE::internal::Variant>;
 
 /// \brief Convert a `List` to a `Variant`.
 ///
 template <typename List>
-using ListAsVariant = vtkm::ListApply<List, vtkm::internal::Variant>;
+using ListAsVariant = vtkm::ListApply<List, vtkm::VTK_M_NAMESPACE::internal::Variant>;
 }
-} // namespace vtkm::internal
+}
+} // namespace vtkm::VTK_M_NAMESPACE::internal
 
-#endif //vtk_m_internal_Variant_h
+#undef VTK_M_DEVICE
+#undef VTK_M_NAMESPACE

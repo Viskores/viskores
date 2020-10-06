@@ -33,6 +33,7 @@ set(headers
   ReverseConnectivityBuilder.h
   StorageError.h
   TransferInfo.h
+  Variant.h
   VirtualObjectTransfer.h
   VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h
