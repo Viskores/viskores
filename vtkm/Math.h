@@ -2411,11 +2411,19 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 ///
 static inline VTKM_EXEC_CONT vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32& integral)
 {
+#if defined(VTKM_CUDA)
+  return VTKM_CUDA_MATH_FUNCTION_32(modf)(x, &integral);
+#else
   return std::modf(x, &integral);
+#endif
 }
 static inline VTKM_EXEC_CONT vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64& integral)
 {
+#if defined(VTKM_CUDA)
+  return VTKM_CUDA_MATH_FUNCTION_64(modf)(x, &integral);
+#else
   return std::modf(x, &integral);
+#endif
 }
 
 //-----------------------------------------------------------------------------
