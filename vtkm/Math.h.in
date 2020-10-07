@@ -1011,7 +1011,8 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
                                                              QType& quotient)
 {
   int iQuotient;
-#ifdef VTKM_CUDA
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   const vtkm::Float32 result =
     VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
 #else
@@ -1041,7 +1042,8 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 ///
 static inline VTKM_EXEC_CONT vtkm::Float32 ModF(vtkm::Float32 x, vtkm::Float32& integral)
 {
-#if defined(VTKM_CUDA)
+  // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   return VTKM_CUDA_MATH_FUNCTION_32(modf)(x, &integral);
 #else
   return std::modf(x, &integral);
