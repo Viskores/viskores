@@ -29,8 +29,10 @@ public:
   // This is the naive findRoot() without path compaction in SV Jayanti et. al.
   // Since the parents array is read-only in this function, there is no data
   // race when it is called by multiple treads concurrently. We can just call
-  // Get() which actually calls Load() with memory_order_acquire ordering
-  // which in turn ensure writes by other threads (via Unite()) are reflected.
+  // Get(). For cases where findRoot() is used in other functions that write
+  // to parents (e.g. Unite()), Get() actually calls Load() with
+  // memory_order_acquire ordering, which in turn ensure writes by other threads
+  // are reflected.
   template <typename Parents>
   static VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index)
   {
@@ -83,7 +85,7 @@ public:
     // it means parent[root_u] has been updated by some other thread. CAS returns
     // the new value of parent[root_u] (root_s in the Problem description) which
     // we can use as the new root_u. We keep retrying until there is no more
-    // data race and root_u == root_w i.e. they are in the same component.
+    // data race and root_u == root_v i.e. they are in the same component.
 
     // Problem II: There is a potential concurrent write data race as it is
     // possible for the two threads to try to change the same old root to
