@@ -29,8 +29,10 @@ public:
   // This is the naive findRoot() without path compaction in SV Jayanti et. al.
   // Since the parents array is read-only in this function, there is no data
   // race when it is called by multiple treads concurrently. We can just call
-  // Get() which actually calls Load() with memory_order_acquire ordering
-  // which in turn ensure writes by other threads (via Unite()) are reflected.
+  // Get(). For cases where findRoot() is used in other functions that write
+  // to parents (e.g. Unite()), Get() actually calls Load() with
+  // memory_order_acquire ordering, which in turn ensure writes by other threads
+  // are reflected.
   template <typename Parents>
   static VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index)
   {
