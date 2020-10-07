@@ -34,6 +34,8 @@
 #include <vtkm/exec/arg/IncidentElementIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
+#include <vtkm/worklet/DispatcherMapTopology.h>
+
 namespace vtkm
 {
 namespace worklet

@@ -47,7 +47,7 @@ inline VTKM_CONT vtkm::cont::DataSet SplitSharpEdges::DoExecute(
   this->Worklet.Run(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this),
                     this->FeatureAngle,
                     field,
-                    input.GetCoordinateSystem().GetData(),
+                    input.GetCoordinateSystem().GetDataAsMultiplexer(),
                     newCoords,
                     newCellset);
 

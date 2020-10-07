@@ -22,6 +22,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/thirdparty/diy/diy.h>
@@ -100,14 +101,30 @@ struct Testing
 public:
   static VTKM_CONT const std::string GetTestDataBasePath() { return SetAndGetTestDataBasePath(); }
 
+  static VTKM_CONT const std::string DataPath(const std::string& filename)
+  {
+    return GetTestDataBasePath() + filename;
+  }
+
   static VTKM_CONT const std::string GetRegressionTestImageBasePath()
   {
     return SetAndGetRegressionImageBasePath();
   }
 
+  static VTKM_CONT const std::string RegressionImagePath(const std::string& filename)
+  {
+    return GetRegressionTestImageBasePath() + filename;
+  }
+
   template <class Func>
   static VTKM_CONT int Run(Func function, int& argc, char* argv[])
   {
+    std::unique_ptr<vtkmdiy::mpi::environment> env_diy = nullptr;
+    if (!vtkmdiy::mpi::environment::initialized())
+    {
+      env_diy.reset(new vtkmdiy::mpi::environment(argc, argv));
+    }
+
     vtkm::cont::Initialize(argc, argv);
     ParseAdditionalTestArgs(argc, argv);
 
@@ -130,6 +147,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -165,6 +183,7 @@ public:
     catch (std::exception& error)
     {
       std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
+      return 1;
     }
     catch (...)
     {
@@ -180,7 +199,13 @@ private:
     static std::string TestDataBasePath;
 
     if (path != "")
+    {
       TestDataBasePath = path;
+      if ((TestDataBasePath.back() != '/') && (TestDataBasePath.back() != '\\'))
+      {
+        TestDataBasePath = TestDataBasePath + "/";
+      }
+    }
 
     return TestDataBasePath;
   }
@@ -190,7 +215,14 @@ private:
     static std::string RegressionTestImageBasePath;
 
     if (path != "")
+    {
       RegressionTestImageBasePath = path;
+      if ((RegressionTestImageBasePath.back() != '/') &&
+          (RegressionTestImageBasePath.back() != '\\'))
+      {
+        RegressionTestImageBasePath = RegressionTestImageBasePath + '/';
+      }
+    }
 
     return RegressionTestImageBasePath;
   }
@@ -345,6 +377,39 @@ struct TestEqualArrayHandle
   template <typename TypeList1, typename TypeList2>
   VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
                             const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCall(*this, array1, result);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
+                            const vtkm::cont::UnknownArrayHandle& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
+      *this, array1, result);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
+                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
+                            TestEqualResult& result) const
+  {
+    array1.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
+      *this, array2, result);
+  }
+
+  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
+                            const vtkm::cont::UnknownArrayHandle& array2,
+                            TestEqualResult& result) const
+  {
+    array2.CastAndCallForTypes<vtkm::TypeListAll, VTKM_DEFAULT_STORAGE_LIST>(*this, array1, result);
+  }
+
+  template <typename TypeList, typename StorageList>
+  VTKM_CONT void operator()(const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
+                            const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array2,
                             TestEqualResult& result) const
   {
     array2.CastAndCall(*this, array1, result);

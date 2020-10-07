@@ -16,8 +16,8 @@
 
 #ifdef VTKM_ENABLE_OPENMP
 #include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
-#include <vtkm/cont/openmp/internal/AtomicInterfaceExecutionOpenMP.h>
 #include <vtkm/cont/openmp/internal/DeviceAdapterAlgorithmOpenMP.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterMemoryManagerOpenMP.h>
 #include <vtkm/cont/openmp/internal/VirtualObjectTransferOpenMP.h>
 #endif
 

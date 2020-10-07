@@ -52,9 +52,7 @@ public:
 }; //class IntersectionPoint
 } // anon namespace
 
-ShapeIntersector::ShapeIntersector()
-{
-}
+ShapeIntersector::ShapeIntersector() {}
 ShapeIntersector::~ShapeIntersector(){};
 
 void ShapeIntersector::IntersectionPoint(Ray<vtkm::Float32>& rays)

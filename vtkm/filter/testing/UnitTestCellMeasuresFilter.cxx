@@ -18,6 +18,25 @@
 namespace
 {
 
+struct CheckCellMeasuresFunctor
+{
+  template <typename ArrayType>
+  void operator()(const ArrayType& resultArrayHandle,
+                  const std::vector<vtkm::Float32>& expected) const
+  {
+    VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() ==
+                       static_cast<vtkm::Id>(expected.size()),
+                     "Wrong number of entries in the output dataset");
+
+    auto portal = resultArrayHandle.ReadPortal();
+    for (std::size_t i = 0; i < expected.size(); ++i)
+    {
+      VTKM_TEST_ASSERT(test_equal(portal.Get(static_cast<vtkm::Id>(i)), expected[i]),
+                       "Wrong result for CellMeasure filter");
+    }
+  }
+};
+
 template <typename IntegrationType>
 void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
                             const char* msg,
@@ -29,34 +48,25 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
   vtkm::filter::CellMeasures<IntegrationType> vols;
   vtkm::cont::DataSet outputData = vols.Execute(dataset);
 
-  VTKM_TEST_ASSERT(vols.GetCellMeasureName().empty(), "Default output field name should be empty.");
+  VTKM_TEST_ASSERT(vols.GetCellMeasureName() == "measure");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == static_cast<vtkm::Id>(expected.size()),
                    "Wrong number of cells in the output dataset");
 
   // Check that the empty measure name above produced a field with the expected name.
-  vols.SetCellMeasureName("measure");
-  auto temp = outputData.GetField(vols.GetCellMeasureName()).GetData();
-  VTKM_TEST_ASSERT(temp.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
+  auto result = outputData.GetField(vols.GetCellMeasureName()).GetData();
+  VTKM_TEST_ASSERT(result.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Output field could not be found or was improper.");
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> resultArrayHandle;
-  temp.CopyTo(resultArrayHandle);
-  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
-                   "Wrong number of entries in the output dataset");
-
-  for (unsigned int i = 0; i < static_cast<unsigned int>(expected.size()); ++i)
-  {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(vtkm::Id(i)), expected[i]),
-                     "Wrong result for CellMeasure filter");
-  }
+  vtkm::cont::CastAndCall(
+    result.ResetTypes(vtkm::TypeListFieldScalar{}), CheckCellMeasuresFunctor{}, expected);
 }
 
 void TestCellMeasures()
 {
-  using vtkm::Volume;
   using vtkm::AllMeasures;
+  using vtkm::Volume;
 
   vtkm::cont::testing::MakeTestDataSet factory;
   vtkm::cont::DataSet data;

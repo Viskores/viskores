@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_CellMeasures_h
 #define vtk_m_filter_CellMeasures_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/CellMeasure.h>
 
 namespace vtkm
@@ -27,7 +27,7 @@ namespace filter
 ///
 /// By default, the new cell-data array is named "measure".
 template <typename IntegrationType>
-class CellMeasures : public vtkm::filter::FilterCell<CellMeasures<IntegrationType>>
+class CellMeasures : public vtkm::filter::FilterField<CellMeasures<IntegrationType>>
 {
 public:
   using SupportedTypes = vtkm::TypeListFieldVec3;
@@ -35,7 +35,7 @@ public:
   VTKM_CONT
   CellMeasures();
 
-  /// Set/Get the name of the cell measure field. If empty, "measure" is used.
+  /// Set/Get the name of the cell measure field. If not set, "measure" is used.
   void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }
   const std::string& GetCellMeasureName() const { return this->GetOutputFieldName(); }
 

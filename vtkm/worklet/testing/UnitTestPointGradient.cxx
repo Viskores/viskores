@@ -90,7 +90,8 @@ void TestPointGradientUniform3DWithVectorField()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::worklet::PointGradient gradient;
   auto result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
@@ -134,7 +135,8 @@ void TestPointGradientUniform3DWithVectorField2()
   {
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input = vtkm::cont::make_ArrayHandle(vec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> input =
+    vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
 
   vtkm::worklet::GradientOutputFields<vtkm::Vec3f_64> extraOutput;
   extraOutput.SetComputeGradient(false);

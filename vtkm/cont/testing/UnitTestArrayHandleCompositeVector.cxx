@@ -15,7 +15,6 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -53,16 +52,7 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
   }
 
   // Make an array handle that points to this buffer.
-  using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-  ArrayHandleType bufferHandle = vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
-
-  // When this function returns, the array is going to go out of scope, which
-  // will invalidate the array handle we just created. So copy to a new buffer
-  // that will stick around after we return.
-  ArrayHandleType copyHandle;
-  vtkm::cont::ArrayCopy(bufferHandle, copyHandle);
-
-  return copyHandle;
+  return vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 }
 
 template <typename ValueType, typename C>

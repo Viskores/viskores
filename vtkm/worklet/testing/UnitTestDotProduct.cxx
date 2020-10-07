@@ -70,8 +70,8 @@ void TestDotProduct()
 
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> inputArray1, inputArray2;
   vtkm::cont::ArrayHandle<T> outputArray;
-  inputArray1 = vtkm::cont::make_ArrayHandle(inputVecs1);
-  inputArray2 = vtkm::cont::make_ArrayHandle(inputVecs2);
+  inputArray1 = vtkm::cont::make_ArrayHandle(inputVecs1, vtkm::CopyFlag::Off);
+  inputArray2 = vtkm::cont::make_ArrayHandle(inputVecs2, vtkm::CopyFlag::Off);
 
   vtkm::worklet::DotProduct dotProductWorklet;
   vtkm::worklet::DispatcherMapField<vtkm::worklet::DotProduct> dispatcherDotProduct(

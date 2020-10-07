@@ -17,15 +17,14 @@
 // this one.
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/internal/AtomicInterfaceControl.h>
-#include <vtkm/cont/internal/AtomicInterfaceExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, 7);
+// Hijack the serial device id so that precompiled units (like memory management) still work.
+VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, VTKM_DEVICE_ADAPTER_SERIAL);
 
 namespace vtkm
 {
@@ -71,11 +70,20 @@ public:
 namespace internal
 {
 
+template <>
+class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : public vtkm::cont::internal::DeviceAdapterMemoryManagerShared
+{
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override
+  {
+    return vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral{};
+  }
+};
+
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public vtkm::cont::internal::ArrayManagerExecution<T,
-                                                       StorageTag,
-                                                       vtkm::cont::DeviceAdapterTagSerial>
+  : public vtkm::cont::internal::
+      ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   using Superclass =
@@ -90,40 +98,11 @@ public:
   }
 };
 
-template <>
-class AtomicInterfaceExecution<DeviceAdapterTagTestAlgorithmGeneral> : public AtomicInterfaceControl
-{
-};
-
 template <typename TargetClass>
 struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
 {
   using VirtualObjectTransferShareWithControl<TargetClass>::VirtualObjectTransferShareWithControl;
-};
-
-template <typename T>
-struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagTestAlgorithmGeneral>
-  : public ExecutionPortalFactoryBasicShareWithControl<T>
-{
-  using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
-
-  using Superclass::CreatePortal;
-  using Superclass::CreatePortalConst;
-  using typename Superclass::PortalConstType;
-  using typename Superclass::PortalType;
-  using typename Superclass::ValueType;
-};
-
-template <>
-struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
-  : public ExecutionArrayInterfaceBasicShareWithControl
-{
-  //inherit our parents constructor
-  using ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl;
-
-  VTKM_CONT
-  DeviceAdapterId GetDeviceId() const final { return DeviceAdapterTagTestAlgorithmGeneral{}; }
 };
 }
 }

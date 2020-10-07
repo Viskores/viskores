@@ -1,0 +1,102 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
+
+#ifndef vtk_m_filter_Messenger_h
+#define vtk_m_filter_Messenger_h
+
+#include <vtkm/filter/vtkm_filter_extra_export.h>
+
+#include <vtkm/Types.h>
+#include <vtkm/cont/Serialization.h>
+#include <vtkm/thirdparty/diy/diy.h>
+
+#include <list>
+#include <map>
+#include <set>
+#include <vector>
+
+#ifdef VTKM_ENABLE_MPI
+#include <mpi.h>
+#endif
+
+namespace vtkm
+{
+namespace filter
+{
+namespace particleadvection
+{
+
+class VTKM_FILTER_EXTRA_EXPORT Messenger
+{
+public:
+  VTKM_CONT Messenger(vtkmdiy::mpi::communicator& comm);
+  VTKM_CONT virtual ~Messenger()
+  {
+#ifdef VTKM_ENABLE_MPI
+    this->CleanupRequests();
+#endif
+  }
+
+#ifdef VTKM_ENABLE_MPI
+  VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
+
+protected:
+  void InitializeBuffers();
+  void CleanupRequests(int tag = TAG_ANY);
+  void CheckPendingSendRequests();
+  void PostRecv(int tag);
+  void PostRecv(int tag, std::size_t sz, int src = -1);
+  void SendData(int dst, int tag, const vtkmdiy::MemoryBuffer& buff);
+  bool RecvData(std::set<int>& tags,
+                std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
+                bool blockAndWait = false);
+
+  //Message headers.
+  typedef struct
+  {
+    int rank, tag;
+    std::size_t id, numPackets, packet, packetSz, dataSz;
+  } Header;
+
+  bool RecvData(int tag, std::vector<vtkmdiy::MemoryBuffer>& buffers, bool blockAndWait = false);
+
+  void PrepareForSend(int tag, const vtkmdiy::MemoryBuffer& buff, std::vector<char*>& buffList);
+  vtkm::Id GetMsgID() { return this->MsgID++; }
+  static bool PacketCompare(const char* a, const char* b);
+  void ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
+                              std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers);
+
+  // Send/Recv buffer management structures.
+  using RequestTagPair = std::pair<MPI_Request, int>;
+  using RankIdPair = std::pair<int, int>;
+
+  //Member data
+  std::map<int, std::pair<std::size_t, std::size_t>> MessageTagInfo;
+  MPI_Comm MPIComm;
+  std::size_t MsgID;
+  int NumRanks;
+  int Rank;
+  std::map<RequestTagPair, char*> RecvBuffers;
+  std::map<RankIdPair, std::list<char*>> RecvPackets;
+  std::map<RequestTagPair, char*> SendBuffers;
+  static constexpr int TAG_ANY = -1;
+#else
+  static constexpr int NumRanks = 1;
+  static constexpr int Rank = 0;
+#endif
+
+  static std::size_t CalcMessageBufferSize(std::size_t msgSz);
+};
+}
+}
+} // namespace vtkm::filter::particleadvection
+
+
+#endif

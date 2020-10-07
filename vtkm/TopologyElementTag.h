@@ -89,8 +89,8 @@ struct TopologyElementTagCheck<vtkm::TopologyElementTagFace> : std::true_type
 {
 };
 
-#define VTKM_IS_TOPOLOGY_ELEMENT_TAG(type)                                                         \
-  static_assert(::vtkm::internal::TopologyElementTagCheck<type>::value,                            \
+#define VTKM_IS_TOPOLOGY_ELEMENT_TAG(type)                              \
+  static_assert(::vtkm::internal::TopologyElementTagCheck<type>::value, \
                 "Invalid Topology Element Tag being used")
 
 } // namespace internal

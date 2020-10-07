@@ -13,6 +13,7 @@
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #include <vtkm/cont/TryExecute.h>
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace vtkm
 {
 namespace cont
@@ -37,6 +38,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
 }
 }
 } // namespace vtkm::cont
+VTKM_DEPRECATED_SUPPRESS_END
 
 
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -45,6 +47,7 @@ ArrayHandleType inline ArrayHandleVirtual<T>::CastToType(
 //=============================================================================
 // Specializations of serialization related classes
 /// @cond SERIALIZATION
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 namespace mangled_diy_namespace
 {
 
@@ -55,7 +58,23 @@ struct Serialization<vtkm::cont::ArrayHandleVirtual<T>>
   static VTKM_CONT void save(vtkmdiy::BinaryBuffer& bb,
                              const vtkm::cont::ArrayHandleVirtual<T>& obj)
   {
-    vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+    vtkm::cont::ArrayHandle<T> array;
+    if (obj.template IsType<decltype(array)>())
+    {
+      array = obj.template Cast<decltype(array)>();
+    }
+    else
+    {
+      vtkm::Id size = obj.GetNumberOfValues();
+      array.Allocate(size);
+      auto src = obj.ReadPortal();
+      auto dest = array.WritePortal();
+      for (vtkm::IdComponent index = 0; index < size; ++index)
+      {
+        dest.Set(index, src.Get(index));
+      }
+    }
+    vtkmdiy::save(bb, array);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::ArrayHandleVirtual<T>& obj)
@@ -99,7 +118,16 @@ struct IntAnySerializer
     else
     {
       vtkmdiy::save(bb, vtkm::cont::SerializableTypeString<BasicType>::Get());
-      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+      BasicType array;
+      vtkm::Id size = obj.GetNumberOfValues();
+      array.Allocate(size);
+      auto src = obj.ReadPortal();
+      auto dest = array.WritePortal();
+      for (vtkm::IdComponent index = 0; index < size; ++index)
+      {
+        dest.Set(index, src.Get(index));
+      }
+      vtkmdiy::save(bb, array);
     }
   }
 
@@ -153,5 +181,6 @@ struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>>
 };
 
 } // mangled_diy_namespace
+VTKM_DEPRECATED_SUPPRESS_END
 
 #endif

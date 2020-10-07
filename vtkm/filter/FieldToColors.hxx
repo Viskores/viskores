@@ -12,7 +12,7 @@
 #define vtk_m_filter_FieldToColors_hxx
 
 #include <vtkm/VecTraits.h>
-#include <vtkm/cont/ColorTable.hxx>
+#include <vtkm/cont/ColorTableMap.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
 namespace vtkm
@@ -34,74 +34,68 @@ struct ComponentInputMode
 }
 
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    ScalarInputMode,
+inline bool execute(ScalarInputMode,
                     int,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagSingleComponent)
 {
-  return table.Map(input, samples, output);
+  return vtkm::cont::ColorTableMap(input, samples, output);
 }
 
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    MagnitudeInputMode,
+inline bool execute(MagnitudeInputMode,
                     int,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagMultipleComponents)
 {
-  return table.MapMagnitude(input, samples, output);
+  return vtkm::cont::ColorTableMapMagnitude(input, samples, output);
 }
 
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    ComponentInputMode,
+inline bool execute(ComponentInputMode,
                     int comp,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagMultipleComponents)
 {
-  return table.MapComponent(input, comp, samples, output);
+  return vtkm::cont::ColorTableMapComponent(input, comp, samples, output);
 }
 
 //error cases
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    ScalarInputMode,
+inline bool execute(ScalarInputMode,
                     int,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagMultipleComponents)
 { //vector input in scalar mode so do magnitude
-  return table.MapMagnitude(input, samples, output);
+  return vtkm::cont::ColorTableMapMagnitude(input, samples, output);
 }
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    MagnitudeInputMode,
+inline bool execute(MagnitudeInputMode,
                     int,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagSingleComponent)
 { //is a scalar array so ignore Magnitude mode
-  return table.Map(input, samples, output);
+  return vtkm::cont::ColorTableMap(input, samples, output);
 }
 template <typename T, typename S, typename U>
-inline bool execute(const vtkm::cont::ColorTable& table,
-                    ComponentInputMode,
+inline bool execute(ComponentInputMode,
                     int,
                     const T& input,
                     const S& samples,
                     U& output,
                     vtkm::VecTraitsTagSingleComponent)
 { //is a scalar array so ignore COMPONENT mode
-  return table.Map(input, samples, output);
+  return vtkm::cont::ColorTableMap(input, samples, output);
 }
 
 
@@ -167,35 +161,20 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       case SCALAR:
       {
-        ran = execute(this->Table,
-                      ScalarInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGBA,
-                      output,
-                      IsVec{});
+        ran =
+          execute(ScalarInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
         break;
       }
       case MAGNITUDE:
       {
-        ran = execute(this->Table,
-                      MagnitudeInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGBA,
-                      output,
-                      IsVec{});
+        ran = execute(
+          MagnitudeInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
         break;
       }
       case COMPONENT:
       {
-        ran = execute(this->Table,
-                      ComponentInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGBA,
-                      output,
-                      IsVec{});
+        ran = execute(
+          ComponentInputMode{}, this->Component, inField, this->SamplesRGBA, output, IsVec{});
         break;
       }
     }
@@ -215,35 +194,20 @@ inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
     {
       case SCALAR:
       {
-        ran = execute(this->Table,
-                      ScalarInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGB,
-                      output,
-                      IsVec{});
+        ran =
+          execute(ScalarInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
         break;
       }
       case MAGNITUDE:
       {
-        ran = execute(this->Table,
-                      MagnitudeInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGB,
-                      output,
-                      IsVec{});
+        ran = execute(
+          MagnitudeInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
         break;
       }
       case COMPONENT:
       {
-        ran = execute(this->Table,
-                      ComponentInputMode{},
-                      this->Component,
-                      inField,
-                      this->SamplesRGB,
-                      output,
-                      IsVec{});
+        ran = execute(
+          ComponentInputMode{}, this->Component, inField, this->SamplesRGB, output, IsVec{});
         break;
       }
     }

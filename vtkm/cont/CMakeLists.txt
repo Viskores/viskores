@@ -13,6 +13,7 @@ set(headers
   ArrayCopy.h
   ArrayGetValues.h
   ArrayHandle.h
+  ArrayHandleBasic.h
   ArrayHandleBitField.h
   ArrayHandleCartesianProduct.h
   ArrayHandleCast.h
@@ -32,6 +33,7 @@ set(headers
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
+  ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
   ArrayHandleSOA.h
@@ -39,8 +41,6 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
-  ArrayHandleVirtual.h
-  ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
@@ -55,6 +55,7 @@ set(headers
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformBins.h
   CellLocatorUniformGrid.h
   CellSet.h
@@ -66,6 +67,7 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   ColorTable.h
+  ColorTableMap.h
   ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
@@ -97,59 +99,59 @@ set(headers
   Initialize.h
   Invoker.h
   Logging.h
+  ParticleArrayCopy.h
   PartitionedDataSet.h
   PointLocator.h
   PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageBasic.h
   StorageExtrude.h
   StorageImplicit.h
   StorageList.h
   StorageListTag.h
-  StorageVirtual.h
   Timer.h
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  UncertainArrayHandle.h
+  UnknownArrayHandle.h
   VariantArrayHandle.h
   VirtualObjectHandle.h
   )
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayHandleVirtual.hxx
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetExtrude.hxx
   CellSetStructured.hxx
-  ColorTable.hxx
-  CoordinateSystem.hxx
   FieldRangeCompute.hxx
   FieldRangeGlobalCompute.hxx
-  StorageBasic.hxx
-  StorageVirtual.hxx
+  ParticleArrayCopy.hxx
   VirtualObjectHandle.hxx
   )
 
 set(sources
   ArrayHandle.cxx
+  ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
+  BitField.cxx
   ColorTablePresets.cxx
   DeviceAdapterTag.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
-  internal/ArrayHandleBasicImpl.cxx
-  internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/Buffer.cxx
+  internal/DeviceAdapterMemoryManager.cxx
+  internal/DeviceAdapterMemoryManagerShared.cxx
   internal/TransferInfo.cxx
   internal/VirtualObjectTransfer.cxx
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
-  StorageBasic.cxx
   Token.cxx
   TryExecute.cxx
   )
@@ -157,7 +159,6 @@ set(sources
   # This list of sources has code that uses devices and so might need to be
   # compiled with a device-specific compiler (like CUDA).
   set(device_sources
-  ArrayHandleVirtual.cxx
   ArrayRangeCompute.cxx
   AssignerPartitionedDataSet.cxx
   BoundsCompute.cxx
@@ -166,7 +167,7 @@ set(sources
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorGeneral.cxx
   CellLocatorRectilinearGrid.cxx
-  CellLocatorUniformBins.cxx
+  CellLocatorTwoLevel.cxx
   CellLocatorUniformGrid.cxx
   CellSet.cxx
   CellSetExplicit.cxx
@@ -178,17 +179,34 @@ set(sources
   DataSetBuilderExplicit.cxx
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
-  internal/VariantArrayHandleContainer.cxx
   Field.cxx
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
   PointLocator.cxx
-  PointLocatorUniformGrid.cxx
+  PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
-  StorageVirtual.cxx
   Timer.cxx
+  UnknownArrayHandle.cxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    ArrayHandleVirtual.h
+    ArrayHandleVirtualCoordinates.h
+    StorageVirtual.h
+    )
+
+  set(template_sources ${template_sources}
+    ArrayHandleVirtual.hxx
+    StorageVirtual.hxx
+    )
+
+  set(device_sources ${device_sources}
+    ArrayHandleVirtual.cxx
+    StorageVirtual.cxx
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 # Set up default types, which can be custom configured by other build systems.
@@ -237,6 +255,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 set(backends )
 if(TARGET vtkm::tbb)
@@ -247,6 +266,9 @@ if(TARGET vtkm::cuda)
 endif()
 if(TARGET vtkm::openmp)
   list(APPEND backends vtkm::openmp)
+endif()
+if(TARGET vtkm::kokkos)
+  list(APPEND backends vtkm::kokkos)
 endif()
 
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})

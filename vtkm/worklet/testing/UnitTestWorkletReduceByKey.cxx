@@ -24,14 +24,14 @@ namespace
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 #define STRINGIFY_IMPL(x) #x
 
-#define TEST_ASSERT_WORKLET(condition)                                                             \
-  do                                                                                               \
-  {                                                                                                \
-    if (!(condition))                                                                              \
-    {                                                                                              \
-      this->RaiseError("Test assert failed: " #condition "\n" __FILE__ ":" STRINGIFY(__LINE__));   \
-      return;                                                                                      \
-    }                                                                                              \
+#define TEST_ASSERT_WORKLET(condition)                                                           \
+  do                                                                                             \
+  {                                                                                              \
+    if (!(condition))                                                                            \
+    {                                                                                            \
+      this->RaiseError("Test assert failed: " #condition "\n" __FILE__ ":" STRINGIFY(__LINE__)); \
+      return;                                                                                    \
+    }                                                                                            \
   } while (false)
 
 #define ARRAY_SIZE 1033
@@ -122,7 +122,8 @@ void TryKeyType(KeyType)
     keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
 
-  vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keyArray =
+    vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE, vtkm::CopyFlag::On);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
   vtkm::cont::ArrayCopy(keyArray, sortedKeys);

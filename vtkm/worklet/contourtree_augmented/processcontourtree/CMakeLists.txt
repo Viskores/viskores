@@ -13,12 +13,9 @@ set(headers
   PiecewiseLinearFunction.h
   SuperArcVolumetricComparator.h
   SuperNodeBranchComparator.h
-  ComputeBestUpDown.h
-  ComputeEulerTourFirstNext.h
-  ComputeEulerTourList.h
-  ComputeMinMaxValues.h
+  PointerDoubling.h
+  HypersweepWorklets.h
   SetTriangleSuperarcId.h
-  EulerTour.h
  )
 
 #-----------------------------------------------------------------------------

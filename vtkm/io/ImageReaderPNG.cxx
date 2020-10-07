@@ -60,9 +60,7 @@ namespace vtkm
 namespace io
 {
 
-ImageReaderPNG::~ImageReaderPNG() noexcept
-{
-}
+ImageReaderPNG::~ImageReaderPNG() noexcept {}
 
 void ImageReaderPNG::Read()
 {

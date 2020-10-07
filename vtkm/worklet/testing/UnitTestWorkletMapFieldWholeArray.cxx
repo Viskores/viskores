@@ -68,8 +68,10 @@ struct DoTestWholeArrayWorklet
       inOutArray[index] = static_cast<T>(TestValue(index, T()) + T(100));
     }
 
-    vtkm::cont::ArrayHandle<T> inHandle = vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inHandle =
+      vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE, vtkm::CopyFlag::On);
+    vtkm::cont::ArrayHandle<T> inOutHandle =
+      vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE, vtkm::CopyFlag::On);
     vtkm::cont::ArrayHandle<T> outHandle;
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);

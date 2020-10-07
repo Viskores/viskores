@@ -196,117 +196,13 @@ using FloatDefault = vtkm::Float64;
 using FloatDefault = vtkm::Float32;
 #endif
 
+
 namespace internal
 {
 
-//-----------------------------------------------------------------------------
-
 /// Placeholder class for when a type is not applicable.
-///
 struct NullType
 {
-};
-
-//-----------------------------------------------------------------------------
-template <vtkm::IdComponent Size>
-struct VecComponentWiseUnaryOperation
-{
-  template <typename T, typename UnaryOpType>
-  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
-  {
-    T result;
-    for (vtkm::IdComponent i = 0; i < Size; ++i)
-    {
-      result[i] = unaryOp(v[i]);
-    }
-    return result;
-  }
-};
-
-template <>
-struct VecComponentWiseUnaryOperation<1>
-{
-  template <typename T, typename UnaryOpType>
-  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
-  {
-    return T(unaryOp(v[0]));
-  }
-};
-
-template <>
-struct VecComponentWiseUnaryOperation<2>
-{
-  template <typename T, typename UnaryOpType>
-  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
-  {
-    return T(unaryOp(v[0]), unaryOp(v[1]));
-  }
-};
-
-template <>
-struct VecComponentWiseUnaryOperation<3>
-{
-  template <typename T, typename UnaryOpType>
-  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
-  {
-    return T(unaryOp(v[0]), unaryOp(v[1]), unaryOp(v[2]));
-  }
-};
-
-template <>
-struct VecComponentWiseUnaryOperation<4>
-{
-  template <typename T, typename UnaryOpType>
-  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
-  {
-    return T(unaryOp(v[0]), unaryOp(v[1]), unaryOp(v[2]), unaryOp(v[3]));
-  }
-};
-
-template <typename T, typename BinaryOpType, typename ReturnT = T>
-struct BindLeftBinaryOp
-{
-  // Warning: a reference.
-  const T& LeftValue;
-  const BinaryOpType BinaryOp;
-  VTKM_EXEC_CONT
-  BindLeftBinaryOp(const T& leftValue, BinaryOpType binaryOp = BinaryOpType())
-    : LeftValue(leftValue)
-    , BinaryOp(binaryOp)
-  {
-  }
-
-  template <typename RightT>
-  VTKM_EXEC_CONT ReturnT operator()(const RightT& rightValue) const
-  {
-    return static_cast<ReturnT>(this->BinaryOp(this->LeftValue, static_cast<T>(rightValue)));
-  }
-
-private:
-  void operator=(const BindLeftBinaryOp<T, BinaryOpType, ReturnT>&) = delete;
-};
-
-template <typename T, typename BinaryOpType, typename ReturnT = T>
-struct BindRightBinaryOp
-{
-  // Warning: a reference.
-  const T& RightValue;
-  const BinaryOpType BinaryOp;
-  VTKM_EXEC_CONT
-  BindRightBinaryOp(const T& rightValue, BinaryOpType binaryOp = BinaryOpType())
-    : RightValue(rightValue)
-    , BinaryOp(binaryOp)
-  {
-  }
-
-  template <typename LeftT>
-  VTKM_EXEC_CONT ReturnT operator()(const LeftT& leftValue) const
-  {
-    return static_cast<ReturnT>(this->BinaryOp(static_cast<T>(leftValue), this->RightValue));
-  }
-
-private:
-  void operator=(const BindRightBinaryOp<T, BinaryOpType, ReturnT>&) = delete;
 };
 
 } // namespace internal
@@ -629,6 +525,7 @@ public:
 
   // The enable_if predicate will disable this constructor for Size=1 so that
   // the variadic constructor constexpr VecBase(T, Ts&&...) is called instead.
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <vtkm::IdComponent Size2 = Size, typename std::enable_if<Size2 != 1, int>::type = 0>
   VTKM_EXEC_CONT explicit VecBase(const ComponentType& value)
   {
@@ -638,6 +535,7 @@ public:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename... Ts>
   VTKM_EXEC_CONT constexpr VecBase(ComponentType value0, Ts&&... values)
     : Components{ value0, values... }
@@ -645,6 +543,7 @@ public:
     VTKM_STATIC_ASSERT(sizeof...(Ts) + 1 == Size);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   VecBase(std::initializer_list<ComponentType> values)
   {
@@ -684,6 +583,7 @@ public:
 #pragma warning(disable : 4244)
 #endif
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherValueType, typename OtherDerivedType>
   VTKM_EXEC_CONT explicit VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
   {
@@ -713,7 +613,7 @@ public:
     return this->Components[idx];
   }
 
-
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator+(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -729,6 +629,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator-(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -744,6 +645,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator*(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -759,6 +661,7 @@ public:
     return result;
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
   operator/(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
@@ -1550,11 +1453,11 @@ static inline VTKM_EXEC_CONT typename detail::DotType<T>::type Dot(const vtkm::V
 }
 // Integer types of a width less than an integer get implicitly casted to
 // an integer when doing a multiplication.
-#define VTK_M_SCALAR_DOT(stype)                                                                    \
-  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b)                  \
-  {                                                                                                \
-    return a * b;                                                                                  \
-  } /* LEGACY */                                                                                   \
+#define VTK_M_SCALAR_DOT(stype)                                                   \
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b) \
+  {                                                                               \
+    return a * b;                                                                 \
+  } /* LEGACY */                                                                  \
   static inline VTKM_EXEC_CONT detail::DotType<stype>::type Dot(stype a, stype b) { return a * b; }
 VTK_M_SCALAR_DOT(vtkm::Int8)
 VTK_M_SCALAR_DOT(vtkm::UInt8)
@@ -1656,94 +1559,6 @@ inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 4>& a)
 template <typename U, typename V>
 struct Pair;
 
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(T scalar, const vtkm::Vec<T, Size>& vec)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindLeftBinaryOp<T, vtkm::Multiply>(scalar));
-}
-
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec, T scalar)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Multiply>(scalar));
-}
-
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(vtkm::Float64 scalar,
-                                                   const vtkm::Vec<T, Size>& vec)
-{
-  return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindLeftBinaryOp<vtkm::Float64, vtkm::Multiply, T>(scalar)));
-}
-
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec,
-                                                   vtkm::Float64 scalar)
-{
-  return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Multiply, T>(scalar)));
-}
-
-template <vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(
-  vtkm::Float64 scalar,
-  const vtkm::Vec<vtkm::Float64, Size>& vec)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindLeftBinaryOp<vtkm::Float64, vtkm::Multiply>(scalar));
-}
-
-template <vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(
-  const vtkm::Vec<vtkm::Float64, Size>& vec,
-  vtkm::Float64 scalar)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Multiply>(scalar));
-}
-
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec, T scalar)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Divide>(scalar));
-}
-
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec,
-                                                   vtkm::Float64 scalar)
-{
-  return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Divide, T>(scalar)));
-}
-
-template <vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator/(
-  const vtkm::Vec<vtkm::Float64, Size>& vec,
-  vtkm::Float64 scalar)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
-    vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Divide>(scalar));
-}
-
-// clang-format off
-// The enable_if for this operator is effectively disabling the negate
-// operator for Vec of unsigned integers. Another approach would be
-// to use enable_if<!is_unsigned>. That would be more inclusive but would
-// also allow other types like Vec<Vec<unsigned> >. If necessary, we could
-// change this implementation to be more inclusive.
-template <typename T, vtkm::IdComponent Size>
-inline VTKM_EXEC_CONT
-typename std::enable_if<(std::is_floating_point<T>::value || std::is_signed<T>::value),
-                        vtkm::Vec<T, Size>>::type
-operator-(const vtkm::Vec<T, Size>& x)
-{
-  return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(x, vtkm::Negate());
-}
-// clang-format on
-
 /// Helper function for printing out vectors during testing.
 ///
 template <typename T, vtkm::IdComponent Size>
@@ -1765,7 +1580,8 @@ inline VTKM_EXEC_CONT std::ostream& operator<<(std::ostream& stream, const vtkm:
   return stream << "[" << vec.first << "," << vec.second << "]";
 }
 
-
 } // End of namespace vtkm
+
+#include <vtkm/internal/VecOperators.h>
 // Declared inside of vtkm namespace so that the operator work with ADL lookup
 #endif //vtk_m_Types_h

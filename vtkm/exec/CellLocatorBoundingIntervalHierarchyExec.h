@@ -13,7 +13,7 @@
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -74,12 +74,13 @@ public:
   CellLocatorBoundingIntervalHierarchyExec() {}
 
   VTKM_CONT
-  CellLocatorBoundingIntervalHierarchyExec(const NodeArrayHandle& nodes,
-                                           const CellIdArrayHandle& cellIds,
-                                           const CellSetType& cellSet,
-                                           const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
-                                           DeviceAdapter,
-                                           vtkm::cont::Token& token)
+  CellLocatorBoundingIntervalHierarchyExec(
+    const NodeArrayHandle& nodes,
+    const CellIdArrayHandle& cellIds,
+    const CellSetType& cellSet,
+    const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coords,
+    DeviceAdapter,
+    vtkm::cont::Token& token)
     : Nodes(nodes.PrepareForInput(DeviceAdapter(), token))
     , CellIds(cellIds.PrepareForInput(DeviceAdapter(), token))
     , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
@@ -274,11 +275,11 @@ private:
   using NodePortal = typename NodeArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
   using CellIdPortal =
     typename CellIdArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using CellSetPortal = typename CellSetType::template ExecutionTypes<DeviceAdapter,
-                                                                      VisitType,
-                                                                      IncidentType>::ExecObjectType;
-  using CoordsPortal = typename vtkm::cont::ArrayHandleVirtualCoordinates::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
+  using CellSetPortal = typename CellSetType::
+    template ExecutionTypes<DeviceAdapter, VisitType, IncidentType>::ExecObjectType;
+  using CoordsPortal =
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
 
   NodePortal Nodes;
   CellIdPortal CellIds;

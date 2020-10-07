@@ -97,6 +97,7 @@ inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNGP::DoExecute(
 
   return surrogate;
 }
+
 }
 }
 #endif //vtk_m_filter_particle_density_ngp_hxx

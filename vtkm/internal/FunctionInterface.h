@@ -10,6 +10,7 @@
 #ifndef vtk_m_internal_FunctionInterface_h
 #define vtk_m_internal_FunctionInterface_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>
@@ -237,8 +238,19 @@ VTKM_EXEC_CONT auto ParameterGet(const FunctionInterface<FunctionSignature>& fIn
 template <typename R, typename... Args>
 FunctionInterface<R(Args...)> make_FunctionInterface(const Args&... args)
 {
+// MSVC will issue deprecation warnings if this templated method is instantiated with
+// a deprecated class here even if the method is called from a section of code where
+// deprecation warnings are suppressed. This is annoying behavior since this templated
+// method has no control over what class it is used from. To get around it, we have to
+// suppress all deprecation warnings here.
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+#endif
   detail::ParameterContainer<R(Args...)> container = { args... };
   return FunctionInterface<R(Args...)>{ container };
+#ifdef VTKM_MSVC
+  VTKM_DEPRECATED_SUPPRESS_END
+#endif
 }
 }
 } // namespace vtkm::internal

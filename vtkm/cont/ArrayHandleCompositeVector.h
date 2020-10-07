@@ -67,13 +67,12 @@ struct AllAreArrayHandles
 // `vtkm::Vec<Float32, 3>`. This also validates that all members have the same `ValueType`.
 
 template <typename ExpectedValueType, typename ArrayType>
-constexpr bool CheckValueType()
+struct CheckValueType
 {
   VTKM_STATIC_ASSERT_MSG((std::is_same<ExpectedValueType, typename ArrayType::ValueType>::value),
                          "ArrayHandleCompositeVector must be built from "
                          "ArrayHandles with the same ValueTypes.");
-  return std::is_same<ExpectedValueType, typename ArrayType::ValueType>::value;
-}
+};
 
 template <typename ArrayType0, typename... ArrayTypes>
 struct GetValueType
@@ -81,9 +80,7 @@ struct GetValueType
   static constexpr vtkm::IdComponent COUNT =
     static_cast<vtkm::IdComponent>(sizeof...(ArrayTypes)) + 1;
   using ComponentType = typename ArrayType0::ValueType;
-  static constexpr std::array<bool, sizeof...(ArrayTypes) + 1> ValueCheck{
-    { true, CheckValueType<ComponentType, ArrayTypes>()... }
-  };
+  using ValueCheck = vtkm::List<CheckValueType<ComponentType, ArrayTypes>...>;
   using ValueType = vtkm::Vec<ComponentType, COUNT>;
 };
 
@@ -500,9 +497,9 @@ public:
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
-  using PortalExecution = ArrayPortalCompositeVector<
-    typename vtkm::cont::ArrayHandle<T,
-                                     StorageTags>::template ExecutionTypes<DeviceTag>::Portal...>;
+  using PortalExecution =
+    ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
+                                 template ExecutionTypes<DeviceTag>::Portal...>;
   using PortalConstExecution =
     ArrayPortalCompositeVector<typename vtkm::cont::ArrayHandle<T, StorageTags>::
                                  template ExecutionTypes<DeviceTag>::PortalConst...>;

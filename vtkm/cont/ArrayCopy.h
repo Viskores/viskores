@@ -16,6 +16,8 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 // TODO: When virtual arrays are available, compile the implementation in a .cxx/.cu file. Common
 // arrays are copied directly but anything else would be copied through virtual methods.
 
@@ -27,12 +29,13 @@ namespace cont
 namespace detail
 {
 
-// normal element-wise copy:
+// Element-wise copy.
+// TODO: Remove last argument once ArryHandleNewStyle becomes ArrayHandle
 template <typename InArrayType, typename OutArrayType>
-void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* Copy storage */)
+void ArrayCopyWithAlgorithm(const InArrayType& source, OutArrayType& destination)
 {
   // Find the device that already has a copy of the data:
-  vtkm::cont::DeviceAdapterId devId = in.GetDeviceAdapterId();
+  vtkm::cont::DeviceAdapterId devId = source.GetDeviceAdapterId();
 
   // If the data is not on any device, let the runtime tracker pick an available
   // parallel copy algorithm.
@@ -41,14 +44,14 @@ void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* 
     devId = vtkm::cont::make_DeviceAdapterId(VTKM_DEVICE_ADAPTER_ANY);
   }
 
-  bool success = vtkm::cont::Algorithm::Copy(devId, in, out);
+  bool success = vtkm::cont::Algorithm::Copy(devId, source, destination);
 
   if (!success && devId.GetValue() != VTKM_DEVICE_ADAPTER_ANY)
   { // Retry on any device if the first attempt failed.
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
                "Failed to run ArrayCopy on device '" << devId.GetName()
                                                      << "'. Retrying on any device.");
-    success = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, in, out);
+    success = vtkm::cont::Algorithm::Copy(vtkm::cont::DeviceAdapterTagAny{}, source, destination);
   }
 
   if (!success)
@@ -57,14 +60,55 @@ void ArrayCopyImpl(const InArrayType& in, OutArrayType& out, std::false_type /* 
   }
 }
 
+// TODO: Remove last argument once ArryHandleNewStyle becomes ArrayHandle
+template <typename InArrayType, typename OutArrayType>
+void ArrayCopyOldImpl(const InArrayType& in, OutArrayType& out, std::false_type /* Copy storage */)
+{
+  ArrayCopyWithAlgorithm(in, out);
+}
+
 // Copy storage for implicit arrays, must be of same type:
+// TODO: This will go away once ArrayHandleNewStyle becomes ArrayHandle.
 template <typename ArrayType>
-void ArrayCopyImpl(const ArrayType& in, ArrayType& out, std::true_type /* Copy storage */)
+void ArrayCopyOldImpl(const ArrayType& in, ArrayType& out, std::true_type /* Copy storage */)
 {
   // This is only called if in/out are the same type and the handle is not
   // writable. This allows read-only implicit array handles to be copied.
   auto newStorage = in.GetStorage();
   out = ArrayType(newStorage);
+}
+
+// TODO: This will go away once ArrayHandleNewStyle becomes ArrayHandle.
+template <typename InArrayType, typename OutArrayType>
+VTKM_CONT void ArrayCopyImpl(const InArrayType& source,
+                             OutArrayType& destination,
+                             std::false_type /* New style */)
+{
+  using SameTypes = std::is_same<InArrayType, OutArrayType>;
+  using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<OutArrayType>;
+  using JustCopyStorage = std::integral_constant<bool, SameTypes::value && !IsWritable::value>;
+  ArrayCopyOldImpl(source, destination, JustCopyStorage{});
+}
+
+// TODO: ArrayHandleNewStyle will eventually become ArrayHandle, in which case this
+// will become ArrayCopyWithAlgorithm
+template <typename T1, typename S1, typename T2, typename S2>
+VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T1, S1>& source,
+                             vtkm::cont::ArrayHandle<T2, S2>& destination,
+                             std::true_type /* New style */)
+{
+  VTKM_STATIC_ASSERT((!std::is_same<T1, T2>::value || !std::is_same<S1, S2>::value));
+  ArrayCopyWithAlgorithm(source, destination);
+}
+
+// TODO: ArrayHandleNewStyle will eventually become ArrayHandle, in which case this
+// will become the only version with the same array types.
+template <typename T, typename S>
+VTKM_CONT void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T, S>& source,
+                             vtkm::cont::ArrayHandle<T, S>& destination,
+                             std::true_type /* New style */)
+{
+  destination.DeepCopyFrom(source);
 }
 
 } // namespace detail
@@ -93,11 +137,11 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
   using IsWritable = vtkm::cont::internal::IsWritableArrayHandle<OutArrayType>;
 
   // There are three cases handled here:
-  // 1. Output is writable:
-  //    -> Do element-wise copy (normal copy behavior)
-  // 2. Output is not writable and arrays are same type:
-  //    -> just copy storage (special case for implicit array cloning)
-  // 3. Output is not writable and arrays are different types:
+  // 1. The arrays are the same type:
+  //    -> Deep copy the buffers and the Storage object
+  // 2. The arrays are different and the output is writable:
+  //    -> Do element-wise copy
+  // 3. The arrays are different and the output is not writable:
   //    -> fail (cannot copy)
 
   // Give a nice error message for case 3:
@@ -105,10 +149,44 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
                          "Cannot copy to a read-only array with a different "
                          "type than the source.");
 
-  using JustCopyStorage = std::integral_constant<bool, SameTypes::value && !IsWritable::value>;
+  using IsNewStyle =
+    std::is_base_of<vtkm::cont::ArrayHandleNewStyle<InValueType, InStorage>, InArrayType>;
 
   // Static dispatch cases 1 & 2
-  detail::ArrayCopyImpl(source, destination, JustCopyStorage{});
+  detail::ArrayCopyImpl(source, destination, std::integral_constant<bool, IsNewStyle::value>{});
+}
+
+// Forward declaration
+// Cannot include VariantArrayHandle.h here due to circular dependency.
+template <typename TypeList>
+class VariantArrayHandleBase;
+
+namespace detail
+{
+
+struct ArrayCopyFunctor
+{
+  template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
+                            vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination) const
+  {
+    vtkm::cont::ArrayCopy(source, destination);
+  }
+};
+
+} // namespace detail
+
+/// \brief Deep copies data in a `VariantArrayHandle` to an array of a known type.
+///
+/// This form of `ArrayCopy` can be used to copy data from an unknown array type to
+/// an array of a known type. Note that regardless of the source type, the data will
+/// be deep copied.
+///
+template <typename InTypeList, typename OutValueType, typename OutStorage>
+VTKM_CONT void ArrayCopy(const vtkm::cont::VariantArrayHandleBase<InTypeList>& source,
+                         vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination)
+{
+  source.CastAndCall(detail::ArrayCopyFunctor{}, destination);
 }
 }
 } // namespace vtkm::cont

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_ClipWithField_h
 #define vtk_m_filter_ClipWithField_h
 
-#include <vtkm/filter/vtkm_filter_export.h>
+#include <vtkm/filter/vtkm_filter_extra_export.h>
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/filter/MapFieldPermutation.h>
@@ -108,6 +108,8 @@ VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
 }
 } // namespace vtkm::filter
 
+#ifndef vtk_m_filter_ClipWithField_hxx
 #include <vtkm/filter/ClipWithField.hxx>
+#endif
 
 #endif // vtk_m_filter_ClipWithField_h

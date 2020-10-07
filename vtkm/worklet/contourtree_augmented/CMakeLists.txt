@@ -13,8 +13,8 @@ set(headers
   ActiveGraph.h
   ContourTree.h
   ContourTreeMaker.h
+  DataSetMesh.h
   MergeTree.h
-  Mesh_DEM_Triangulation.h
   MeshExtrema.h
   PointerDoubling.h
   PrintVectors.h
@@ -22,8 +22,8 @@ set(headers
   Types.h
   )
 #-----------------------------------------------------------------------------
-add_subdirectory(mesh_dem)
-add_subdirectory(mesh_dem_meshtypes)
+add_subdirectory(data_set_mesh)
+add_subdirectory(meshtypes)
 add_subdirectory(meshextrema)
 add_subdirectory(activegraph)
 add_subdirectory(contourtreemaker)

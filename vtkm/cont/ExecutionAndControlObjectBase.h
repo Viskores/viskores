@@ -57,13 +57,13 @@ struct HasPrepareForControl
 
 /// Checks that the argument is a proper execution object.
 ///
-#define VTKM_IS_EXECUTION_AND_CONTROL_OBJECT(execObject)                                           \
-  static_assert(::vtkm::cont::internal::IsExecutionAndControlObjectBase<execObject>::value,        \
-                "Provided type is not a subclass of vtkm::cont::ExecutionAndControlObjectBase.");  \
-  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value ||               \
-                  ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value,     \
-                "Provided type does not have requisite PrepareForExecution method.");              \
-  static_assert(::vtkm::cont::internal::HasPrepareForControl<execObject>::value,                   \
+#define VTKM_IS_EXECUTION_AND_CONTROL_OBJECT(execObject)                                          \
+  static_assert(::vtkm::cont::internal::IsExecutionAndControlObjectBase<execObject>::value,       \
+                "Provided type is not a subclass of vtkm::cont::ExecutionAndControlObjectBase."); \
+  static_assert(::vtkm::cont::internal::HasPrepareForExecution<execObject>::value ||              \
+                  ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value,    \
+                "Provided type does not have requisite PrepareForExecution method.");             \
+  static_assert(::vtkm::cont::internal::HasPrepareForControl<execObject>::value,                  \
                 "Provided type does not have requisite PrepareForControl method.")
 
 /// \brief Gets the object to use in the control environment from an ExecutionAndControlObject.

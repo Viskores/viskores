@@ -50,7 +50,13 @@ namespace cont
 /// To implement your own StorageTag, you first must create a tag class (an
 /// empty struct) defining your tag (i.e. struct VTKM_ALWAYS_EXPORT StorageTagMyAlloc { };). Then
 /// provide a partial template specialization of vtkm::cont::internal::Storage
-/// for your new tag.
+/// for your new tag. Note that because the StorageTag is being used for
+/// template specialization, storage tags cannot use inheritance (or, rather,
+/// inheritance won't have any effect). You can, however, have a partial template
+/// specialization of vtkm::cont::internal::Storage inherit from a different
+/// specialization. So, for example, you could not have StorageTagFoo inherit from
+/// StorageTagBase, but you could have vtkm::cont::internal::Storage<T, StorageTagFoo>
+/// inherit from vtkm::cont::internal::Storage<T, StorageTagBase>.
 ///
 struct VTKM_ALWAYS_EXPORT StorageTag___
 {
@@ -166,26 +172,5 @@ public:
 } // namespace internal
 }
 } // namespace vtkm::cont
-
-// This is put at the bottom of the header so that the Storage template is
-// declared before any implementations are called.
-
-#if VTKM_STORAGE == VTKM_STORAGE_BASIC
-
-#include <vtkm/cont/StorageBasic.h>
-#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::StorageTagBasic
-
-#elif VTKM_STORAGE == VTKM_STORAGE_ERROR
-
-#include <vtkm/cont/internal/StorageError.h>
-#define VTKM_DEFAULT_STORAGE_TAG ::vtkm::cont::internal::StorageTagError
-
-#elif (VTKM_STORAGE == VTKM_STORAGE_UNDEFINED) || !defined(VTKM_STORAGE)
-
-#ifndef VTKM_DEFAULT_STORAGE_TAG
-#warning If array storage is undefined, VTKM_DEFAULT_STORAGE_TAG must be defined.
-#endif
-
-#endif
 
 #endif //vtk_m_cont_Storage_h

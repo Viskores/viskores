@@ -343,9 +343,8 @@ public:
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:
-  using ConnType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
-                                                      vtkm::TopologyElementTagPoint,
-                                                      3>;
+  using ConnType = vtkm::exec::
+    ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>;
   ConnType Connectivity;
   vtkm::Id Segments[7];
   vtkm::Id3 CellDims;
@@ -509,12 +508,13 @@ public:
 template <typename CellSetType,
           typename ShapeHandleType,
           typename ConnHandleType,
-          typename OffsetsHandleType>
+          typename OffsetsHandleType,
+          typename CoordsType>
 VTKM_CONT void GenerateFaceConnnectivity(const CellSetType cellSet,
                                          const ShapeHandleType shapes,
                                          const ConnHandleType conn,
                                          const OffsetsHandleType shapeOffsets,
-                                         const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
+                                         const CoordsType& coords,
                                          vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
                                          vtkm::cont::ArrayHandle<vtkm::Id3>& cellFaceId,
                                          vtkm::Float32 BoundingBox[6],
@@ -651,18 +651,14 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Vec<Id, 4>> ExtractFaces(
   return externalTriangles;
 }
 
-MeshConnectivityBuilder::MeshConnectivityBuilder()
-{
-}
-MeshConnectivityBuilder::~MeshConnectivityBuilder()
-{
-}
+MeshConnectivityBuilder::MeshConnectivityBuilder() {}
+MeshConnectivityBuilder::~MeshConnectivityBuilder() {}
 
 
 VTKM_CONT
 void MeshConnectivityBuilder::BuildConnectivity(
   vtkm::cont::CellSetSingleType<>& cellSetUnstructured,
-  const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
+  const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coordinates,
   vtkm::Bounds coordsBounds)
 {
   Logger* logger = Logger::GetInstance();
@@ -725,7 +721,7 @@ void MeshConnectivityBuilder::BuildConnectivity(
 VTKM_CONT
 void MeshConnectivityBuilder::BuildConnectivity(
   vtkm::cont::CellSetExplicit<>& cellSetUnstructured,
-  const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
+  const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coordinates,
   vtkm::Bounds coordsBounds)
 {
   Logger* logger = Logger::GetInstance();
@@ -902,14 +898,14 @@ MeshConnContainer* MeshConnectivityBuilder::BuildConnectivity(
   if (type == Unstructured)
   {
     vtkm::cont::CellSetExplicit<> cells = cellset.Cast<vtkm::cont::CellSetExplicit<>>();
-    this->BuildConnectivity(cells, coordinates.GetData(), coordBounds);
+    this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn =
       new UnstructuredContainer(cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
   }
   else if (type == UnstructuredSingle)
   {
     vtkm::cont::CellSetSingleType<> cells = cellset.Cast<vtkm::cont::CellSetSingleType<>>();
-    this->BuildConnectivity(cells, coordinates.GetData(), coordBounds);
+    this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn = new UnstructuredSingleContainer(cells, coordinates, FaceConnectivity, Triangles);
   }
   else if (type == Structured)

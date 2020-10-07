@@ -59,7 +59,7 @@ set (diy_libraries "")
 # Debugging
 if                          (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
                              ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-    list (APPEND diy_definitions "-DDEBUG")
+    list (APPEND diy_definitions "-DVTKMDIY_DEBUG")
 endif                       ()
 
 # Logging
@@ -104,6 +104,9 @@ endif()
 if (NOT DEFINED diy_install_include_dir)
     set(diy_install_include_dir "include")
 endif()
+if (NOT DEFINED diy_install_bin_dir)
+    set(diy_install_bin_dir "bin")
+endif()
 if (NOT DEFINED diy_install_lib_dir)
     set(diy_install_lib_dir "lib")
 endif()
@@ -139,6 +142,7 @@ function(add_diy_mpi_library use_mpi)
     endif()
 
     add_library(${lib_name} ${sources})
+    set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_features(${lib_name} PRIVATE cxx_std_11)
     target_compile_definitions(${lib_name}
         PRIVATE -DVTKMDIY_HAS_MPI=${has_mpi_val}
@@ -248,10 +252,13 @@ if (NOT DEFINED diy_install_only_libraries) # defined by parent project if build
     endif()
 endif()
 
-install(TARGETS ${diy_targets} EXPORT ${diy_export_name} DESTINATION ${diy_install_lib_dir})
+install(TARGETS ${diy_targets} EXPORT ${diy_export_name}
+    ARCHIVE DESTINATION ${diy_install_lib_dir}
+    LIBRARY DESTINATION ${diy_install_lib_dir}
+    RUNTIME DESTINATION ${diy_install_bin_dir})
 
-export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) # Only generate these files when diy is the main project
-    install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
-    install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
+  export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
+  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
+  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
 endif()

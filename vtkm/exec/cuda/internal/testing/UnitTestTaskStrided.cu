@@ -40,13 +40,16 @@ namespace
 
 struct TestExecObject
 {
+  using PortalType =
+    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<vtkm::cont::DeviceAdapterTagCuda>::Portal;
+
   VTKM_EXEC_CONT
-  TestExecObject(vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> portal)
+  TestExecObject(PortalType portal)
     : Portal(portal)
   {
   }
 
-  vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> Portal;
+  PortalType Portal;
 };
 
 struct MyOutputToInputMapPortal
@@ -238,25 +241,25 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
 // Check behavior of InvocationToFetch helper class.
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagInput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagOutput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<vtkm::exec::internal::detail::
-                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
-                vtkm::exec::arg::Fetch<TestFetchTagOutput,
-                                       vtkm::exec::arg::AspectTagDefault,
-                                       TestExecObject>>::type::value));
+  (std::is_same<
+    vtkm::exec::internal::detail::
+      InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
+    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault, TestExecObject>>::
+     type::value));
 
 template <typename DeviceAdapter>
 void TestNormalFunctorInvoke()

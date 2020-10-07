@@ -338,9 +338,10 @@ protected:
     }
     else
     {
-      level = static_cast<vtkm::Id>(
-        vtkm::Floor(1.0 + vtkm::Log2(static_cast<vtkm::Float64>(sigInLen) /
-                                     static_cast<vtkm::Float64>(filterLength))));
+      level =
+        static_cast<vtkm::Id>(vtkm::Floor(1.0 +
+                                          vtkm::Log2(static_cast<vtkm::Float64>(sigInLen) /
+                                                     static_cast<vtkm::Float64>(filterLength))));
     }
   }
 

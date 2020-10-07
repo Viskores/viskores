@@ -242,8 +242,9 @@ Timer::Timer(vtkm::cont::DeviceAdapterId device)
   if (!tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << device.GetName() << "' can not run on current Device."
-                                                 "Thus timer is not usable");
+               "Device '" << device.GetName()
+                          << "' can not run on current Device."
+                             "Thus timer is not usable");
   }
 }
 
@@ -262,8 +263,9 @@ void Timer::Reset(vtkm::cont::DeviceAdapterId device)
   if (!tracker.CanRunOn(device))
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "Device '" << device.GetName() << "' can not run on current Device."
-                                                 "Thus timer is not usable");
+               "Device '" << device.GetName()
+                          << "' can not run on current Device."
+                             "Thus timer is not usable");
   }
 
   this->Device = device;

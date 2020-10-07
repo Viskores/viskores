@@ -28,9 +28,7 @@ TextAnnotationBillboard::TextAnnotationBillboard(const std::string& text,
 {
 }
 
-TextAnnotationBillboard::~TextAnnotationBillboard()
-{
-}
+TextAnnotationBillboard::~TextAnnotationBillboard() {}
 
 void TextAnnotationBillboard::SetPosition(const vtkm::Vec3f_32& position)
 {

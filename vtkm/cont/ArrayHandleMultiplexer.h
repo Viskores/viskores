@@ -101,7 +101,8 @@ struct ArrayPortalMultiplexer
   ArrayPortalMultiplexer& operator=(const ArrayPortalMultiplexer&) = default;
 
   template <typename Portal>
-  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src) noexcept : PortalVariant(src)
+  VTKM_EXEC_CONT ArrayPortalMultiplexer(const Portal& src) noexcept
+    : PortalVariant(src)
   {
   }
 
@@ -175,9 +176,9 @@ struct MultiplexerShrinkFunctor
 struct MultiplexerReleaseResourcesFunctor
 {
   template <typename ArrayHandleType>
-  VTKM_CONT vtkm::Id operator()(ArrayHandleType&& array) const
+  VTKM_CONT void operator()(ArrayHandleType&& array) const
   {
-    return array.ReleaseResources();
+    array.ReleaseResources();
   }
 };
 
@@ -333,6 +334,10 @@ public:
   }
 
   VTKM_CONT ArrayHandleVariantType& GetArrayHandleVariant() { return this->ArrayHandleVariant; }
+  VTKM_CONT const ArrayHandleVariantType& GetArrayHandleVariant() const
+  {
+    return this->ArrayHandleVariant;
+  }
 };
 
 

@@ -20,6 +20,10 @@
 
 #include <typeinfo>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtual is removed. Do not include StorageVirtual.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
@@ -35,8 +39,8 @@ public:
   ArrayPortalRef() = default;
 
   ArrayPortalRef(std::shared_ptr<vtkm::ArrayPortalVirtual<T>> portal, vtkm::Id numValues) noexcept
-    : vtkm::ArrayPortalRef<T>(portal.get(), numValues),
-      ManagedPortal(portal)
+    : vtkm::ArrayPortalRef<T>(portal.get(), numValues)
+    , ManagedPortal(portal)
   {
   }
 };
@@ -58,7 +62,7 @@ namespace vtkm
 namespace cont
 {
 
-struct VTKM_ALWAYS_EXPORT StorageTagVirtual
+struct VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6) StorageTagVirtual
 {
 };
 
@@ -256,6 +260,7 @@ private:
 
 } // namespace detail
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
 class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagVirtual>
 {
@@ -315,6 +320,7 @@ private:
   {
   }
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace internal
 }

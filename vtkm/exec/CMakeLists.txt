@@ -19,6 +19,7 @@ set(headers
   CellLocator.h
   CellLocatorBoundingIntervalHierarchyExec.h
   CellLocatorRectilinearGrid.h
+  CellLocatorTwoLevel.h
   CellLocatorUniformGrid.h
   CellMeasure.h
   ColorTable.h
@@ -31,7 +32,7 @@ set(headers
   FunctorBase.h
   ParametricCoordinates.h
   PointLocator.h
-  PointLocatorUniformGrid.h
+  PointLocatorSparseGrid.h
   TaskBase.h
   )
 
@@ -53,6 +54,7 @@ add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)
 add_subdirectory(cuda)
+add_subdirectory(kokkos)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

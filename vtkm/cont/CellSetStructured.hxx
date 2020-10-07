@@ -26,13 +26,12 @@ typename CellSetStructured<DIMENSION>::SchedulingRangeType
 
 template <vtkm::IdComponent DIMENSION>
 template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-typename CellSetStructured<DIMENSION>::template ExecutionTypes<DeviceAdapter,
-                                                               VisitTopology,
-                                                               IncidentTopology>::ExecObjectType
-CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter,
-                                              VisitTopology,
-                                              IncidentTopology,
-                                              vtkm::cont::Token&) const
+typename CellSetStructured<DIMENSION>::
+  template ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
+  CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter,
+                                                VisitTopology,
+                                                IncidentTopology,
+                                                vtkm::cont::Token&) const
 {
   using ConnectivityType =
     typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType;

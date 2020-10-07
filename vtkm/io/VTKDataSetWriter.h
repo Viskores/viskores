@@ -25,7 +25,7 @@ public:
   VTKM_CONT VTKDataSetWriter(const char* fileName);
   VTKM_CONT VTKDataSetWriter(const std::string& fileName);
 
-  VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet, bool just_points = false) const;
+  VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet) const;
 
 private:
   std::string FileName;

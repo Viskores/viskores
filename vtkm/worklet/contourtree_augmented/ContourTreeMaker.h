@@ -58,9 +58,9 @@
 // local includes
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
 #include <vtkm/worklet/contourtree_augmented/MergeTree.h>
 #include <vtkm/worklet/contourtree_augmented/MeshExtrema.h>
-#include <vtkm/worklet/contourtree_augmented/Mesh_DEM_Triangulation.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -398,7 +398,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
                  tempSupernodesIndex,                               // loopindex
                  this->ContourTreeResult.WhenTransferred,           // input
                  this->ContourTreeResult.FirstSupernodePerIteration // output
-                 );
+    );
   }
 
   // TODO The following loop should be safe in parallel since there should never be two zeros in sequence, i.e., the next
@@ -432,7 +432,7 @@ void ContourTreeMaker::ComputeHyperAndSuperStructure()
                                         0,                                     // start index
                                         this->ContourTreeResult.NumIterations, // stop index
                                         this->ContourTreeResult.FirstHypernodePerIteration // target
-                                        );
+    );
   }
 
   this->ContourTreeResult.FirstHypernodePerIteration.WritePortal().Set(
@@ -547,6 +547,7 @@ void ContourTreeMaker::ComputeBoundaryRegularStructure(
                this->ContourTreeResult.Supernodes,      // (input)
                meshExtrema.Peaks,                       // (input)
                meshExtrema.Pits,                        // (input)
+               mesh.SortOrder,                          // (input)
                meshBoundaryExecObj);                    // (input)
 
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
@@ -926,7 +927,7 @@ void ContourTreeMaker::CompressTrees()
                  this->ContourTreeResult.Superarcs, // (input)
                  this->AugmentedJoinSuperarcs,      // (input/output)
                  this->AugmentedSplitSuperarcs      // (input/output)
-                 );
+    );
 
   } // iteration log times
 

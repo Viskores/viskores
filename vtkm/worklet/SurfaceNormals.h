@@ -131,9 +131,9 @@ public:
     }
   }
 
-  template <typename CellSetType, typename NormalCompType>
+  template <typename CellSetType, typename PointsType, typename NormalCompType>
   void Run(const CellSetType& cellset,
-           const vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>& points,
+           const PointsType& points,
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals)
   {
     if (this->Normalize)

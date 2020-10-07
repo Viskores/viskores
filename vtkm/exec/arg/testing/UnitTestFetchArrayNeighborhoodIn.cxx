@@ -104,10 +104,9 @@ struct FetchArrayNeighborhoodInTests
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(POINT_DIMS);
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
-                                       3>
-      connectivity(connectivityInternals);
+    vtkm::exec::
+      ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+        connectivity(connectivityInternals);
 
     // Verify that 3D scheduling works with neighborhoods
     {

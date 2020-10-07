@@ -172,9 +172,8 @@ private:
 
 
 public:
-  using ConnectivityArrays = vtkm::cont::internal::RConnBuilderInputData<ConnectivityStorageTag,
-                                                                         OffsetsStorageTag,
-                                                                         NumIndicesStorageTag>;
+  using ConnectivityArrays = vtkm::cont::internal::
+    RConnBuilderInputData<ConnectivityStorageTag, OffsetsStorageTag, NumIndicesStorageTag>;
 
   template <typename Device>
   static ConnectivityArrays Get(const CellSetPermutationType& cellset, Device)

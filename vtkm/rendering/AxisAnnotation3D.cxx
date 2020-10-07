@@ -36,9 +36,7 @@ AxisAnnotation3D::AxisAnnotation3D()
 {
 }
 
-AxisAnnotation3D::~AxisAnnotation3D()
-{
-}
+AxisAnnotation3D::~AxisAnnotation3D() {}
 
 void AxisAnnotation3D::SetTickInvert(bool x, bool y, bool z)
 {

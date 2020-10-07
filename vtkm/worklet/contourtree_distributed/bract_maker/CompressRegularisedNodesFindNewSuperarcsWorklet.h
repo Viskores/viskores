@@ -74,7 +74,7 @@ public:
                                 WholeArrayIn upNeighbour, //input
                                 WholeArrayIn downNeighbour,
                                 WholeArrayOut newSuperarc // output
-                                );
+  );
   using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
   using InputDomain = _1;
 

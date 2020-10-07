@@ -111,10 +111,8 @@ template <typename T, vtkm::IdComponent N>
 vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other)
 {
   const T* vmem = reinterpret_cast<const T*>(&*other.ReadPortal().GetIteratorBegin());
-  vtkm::cont::ArrayHandle<T> mem =
-    vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
-  vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::ArrayCopy(mem, result);
+  vtkm::cont::ArrayHandle<T> result =
+    vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N, vtkm::CopyFlag::On);
   return result;
 }
 

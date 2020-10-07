@@ -45,10 +45,11 @@ vtkm::Id ArrayLength(const T (&)[Length])
 vtkm::cont::CellSetExplicit<> MakeTestCellSet1()
 {
   vtkm::cont::CellSetExplicit<> cs;
-  cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes, ArrayLength(g_shapes)),
-          vtkm::cont::make_ArrayHandle(g_connectivity, ArrayLength(g_connectivity)),
-          vtkm::cont::make_ArrayHandle(g_offsets, ArrayLength(g_offsets)));
+  cs.Fill(
+    numberOfPoints,
+    vtkm::cont::make_ArrayHandle(g_shapes, ArrayLength(g_shapes), vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(g_connectivity, ArrayLength(g_connectivity), vtkm::CopyFlag::Off),
+    vtkm::cont::make_ArrayHandle(g_offsets, ArrayLength(g_offsets), vtkm::CopyFlag::Off));
   return cs;
 }
 
@@ -57,9 +58,10 @@ vtkm::cont::CellSetExplicit<> MakeTestCellSet2()
 {
   vtkm::cont::CellSetExplicit<> cs;
   cs.Fill(numberOfPoints,
-          vtkm::cont::make_ArrayHandle(g_shapes2, ArrayLength(g_shapes2)),
-          vtkm::cont::make_ArrayHandle(g_connectivity2, ArrayLength(g_connectivity2)),
-          vtkm::cont::make_ArrayHandle(g_offsets2, ArrayLength(g_offsets2)));
+          vtkm::cont::make_ArrayHandle(g_shapes2, ArrayLength(g_shapes2), vtkm::CopyFlag::Off),
+          vtkm::cont::make_ArrayHandle(
+            g_connectivity2, ArrayLength(g_connectivity2), vtkm::CopyFlag::Off),
+          vtkm::cont::make_ArrayHandle(g_offsets2, ArrayLength(g_offsets2), vtkm::CopyFlag::Off));
   return cs;
 }
 

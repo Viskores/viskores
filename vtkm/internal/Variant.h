@@ -16,7 +16,7 @@
 #include <vtkm/List.h>
 
 #include <vtkmstd/aligned_union.h>
-#include <vtkmstd/is_trivially_copyable.h>
+#include <vtkmstd/is_trivial.h>
 
 namespace vtkm
 {
@@ -83,23 +83,20 @@ struct AllTriviallyCopyable<T0, T1, T2>
 
 template <typename T0, typename T1, typename T2, typename T3>
 struct AllTriviallyCopyable<T0, T1, T2, T3>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value &&
-                            vtkmstd::is_trivially_copyable<T2>::value &&
-                            vtkmstd::is_trivially_copyable<T3>::value)>
+  : std::integral_constant<
+      bool,
+      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
+       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value)>
 {
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
 struct AllTriviallyCopyable<T0, T1, T2, T3, T4, Ts...>
-  : std::integral_constant<bool,
-                           (vtkmstd::is_trivially_copyable<T0>::value &&
-                            vtkmstd::is_trivially_copyable<T1>::value &&
-                            vtkmstd::is_trivially_copyable<T2>::value &&
-                            vtkmstd::is_trivially_copyable<T3>::value &&
-                            vtkmstd::is_trivially_copyable<T4>::value &&
-                            AllTriviallyCopyable<Ts...>::value)>
+  : std::integral_constant<
+      bool,
+      (vtkmstd::is_trivially_copyable<T0>::value && vtkmstd::is_trivially_copyable<T1>::value &&
+       vtkmstd::is_trivially_copyable<T2>::value && vtkmstd::is_trivially_copyable<T3>::value &&
+       vtkmstd::is_trivially_copyable<T4>::value && AllTriviallyCopyable<Ts...>::value)>
 {
 };
 
@@ -112,11 +109,73 @@ struct VariantTriviallyCopyable<vtkm::internal::Variant<Ts...>> : AllTriviallyCo
 };
 
 template <typename... Ts>
+struct AllTriviallyConstructible;
+
+template <>
+struct AllTriviallyConstructible<> : std::true_type
+{
+};
+
+template <typename T0>
+struct AllTriviallyConstructible<T0>
+  : std::integral_constant<bool, (vtkmstd::is_trivially_constructible<T0>::value)>
+{
+};
+
+template <typename T0, typename T1>
+struct AllTriviallyConstructible<T0, T1>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_constructible<T0>::value &&
+                            vtkmstd::is_trivially_constructible<T1>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2>
+struct AllTriviallyConstructible<T0, T1, T2>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_constructible<T0>::value &&
+                            vtkmstd::is_trivially_constructible<T1>::value &&
+                            vtkmstd::is_trivially_constructible<T2>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2, typename T3>
+struct AllTriviallyConstructible<T0, T1, T2, T3>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_constructible<T0>::value &&
+                            vtkmstd::is_trivially_constructible<T1>::value &&
+                            vtkmstd::is_trivially_constructible<T2>::value &&
+                            vtkmstd::is_trivially_constructible<T3>::value)>
+{
+};
+
+template <typename T0, typename T1, typename T2, typename T3, typename T4, typename... Ts>
+struct AllTriviallyConstructible<T0, T1, T2, T3, T4, Ts...>
+  : std::integral_constant<bool,
+                           (vtkmstd::is_trivially_constructible<T0>::value &&
+                            vtkmstd::is_trivially_constructible<T1>::value &&
+                            vtkmstd::is_trivially_constructible<T2>::value &&
+                            vtkmstd::is_trivially_constructible<T3>::value &&
+                            vtkmstd::is_trivially_constructible<T4>::value &&
+                            AllTriviallyConstructible<Ts...>::value)>
+{
+};
+
+template <typename VariantType>
+struct VariantTriviallyConstructible;
+
+template <typename... Ts>
+struct VariantTriviallyConstructible<vtkm::internal::Variant<Ts...>>
+  : AllTriviallyConstructible<Ts...>
+{
+};
+
+template <typename... Ts>
 struct VariantStorageImpl
 {
   typename vtkmstd::aligned_union<0, Ts...>::type Storage;
 
-  vtkm::IdComponent Index = -1;
+  vtkm::IdComponent Index;
 
   template <vtkm::IdComponent Index>
   using TypeAt = typename vtkm::ListAt<vtkm::List<Ts...>, Index>;
@@ -128,7 +187,10 @@ struct VariantStorageImpl
   }
 
   VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept { return this->Index; }
-  VTKM_EXEC_CONT bool IsValid() const noexcept { return this->GetIndex() >= 0; }
+  VTKM_EXEC_CONT bool IsValid() const noexcept
+  {
+    return (this->Index >= 0) && (this->Index < static_cast<vtkm::IdComponent>(sizeof...(Ts)));
+  }
 
   VTKM_EXEC_CONT void Reset() noexcept
   {
@@ -169,11 +231,14 @@ struct VariantStorageImpl
 };
 
 template <typename VariantType,
+          typename TriviallyConstructible =
+            typename VariantTriviallyConstructible<VariantType>::type,
           typename TriviallyCopyable = typename VariantTriviallyCopyable<VariantType>::type>
 struct VariantConstructorImpl;
 
+// Can trivially construct, deconstruct, and copy all data. (Probably all trivial classes.)
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type>
+struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type, std::true_type>
   : VariantStorageImpl<Ts...>
 {
   VariantConstructorImpl() = default;
@@ -185,12 +250,29 @@ struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::true_type>
   VariantConstructorImpl& operator=(VariantConstructorImpl&&) = default;
 };
 
+// Can trivially copy, but cannot trivially construct. Common if a class is simple but
+// initializes itself.
 template <typename... Ts>
-struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type>
+struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, std::false_type, std::true_type>
   : VariantStorageImpl<Ts...>
 {
-  VariantConstructorImpl() = default;
+  VTKM_EXEC_CONT VariantConstructorImpl() { this->Index = -1; }
 
+  // Any trivially copyable class is trivially destructable.
+  ~VariantConstructorImpl() = default;
+
+  VariantConstructorImpl(const VariantConstructorImpl&) = default;
+  VariantConstructorImpl(VariantConstructorImpl&&) = default;
+  VariantConstructorImpl& operator=(const VariantConstructorImpl&) = default;
+  VariantConstructorImpl& operator=(VariantConstructorImpl&&) = default;
+};
+
+// Cannot trivially copy. We assume we cannot trivially construct/destruct.
+template <typename construct_type, typename... Ts>
+struct VariantConstructorImpl<vtkm::internal::Variant<Ts...>, construct_type, std::false_type>
+  : VariantStorageImpl<Ts...>
+{
+  VTKM_EXEC_CONT VariantConstructorImpl() { this->Index = -1; }
   VTKM_EXEC_CONT ~VariantConstructorImpl() { this->Reset(); }
 
   VTKM_EXEC_CONT VariantConstructorImpl(const VariantConstructorImpl& src) noexcept
@@ -242,15 +324,19 @@ class Variant : detail::VariantConstructorImpl<Variant<Ts...>>
 
 public:
   /// Returns the index of the type of object this variant is storing. If no object is currently
-  /// stored (i.e. the Variant is invalid), -1 is returned.
+  /// stored (i.e. the `Variant` is invalid), an invalid is returned.
   ///
   VTKM_EXEC_CONT vtkm::IdComponent GetIndex() const noexcept
   {
     return this->Superclass::GetIndex();
   }
 
-  /// Returns true if this Variant is storing an object from one of the types in the template
+  /// Returns true if this `Variant` is storing an object from one of the types in the template
   /// list, false otherwise.
+  ///
+  /// Note that if this `Variant` was not initialized with an object, the result of `IsValid`
+  /// is undefined. The `Variant` could report itself as validly containing an object that
+  /// is trivially constructed.
   ///
   VTKM_EXEC_CONT bool IsValid() const noexcept { return this->Superclass::IsValid(); }
 

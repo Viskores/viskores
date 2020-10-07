@@ -75,7 +75,7 @@ void TestPointMerging()
   //Convert the baseData implicit points to explicit points, since the contour
   //filter for uniform data always does point merging
   vtkm::cont::ArrayHandle<vtkm::Vec3f> newcoords;
-  vtkm::cont::Algorithm::Copy(baseData.GetCoordinateSystem().GetData(), newcoords);
+  vtkm::cont::ArrayCopy(baseData.GetCoordinateSystem().GetData(), newcoords);
   baseData.GetCoordinateSystem().SetData(newcoords);
 
   vtkm::filter::Contour marchingCubes;

@@ -17,14 +17,14 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellLocator.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
-#include <vtkm/cont/CellLocatorUniformBins.h>
+#include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 
 namespace vtkm
 {

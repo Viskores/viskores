@@ -8,15 +8,9 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
-# We require CMake 3.11 with the MSVC generator as the $<COMPILE_LANGUAGE:>
-# generator expression is not supported on older versions.
+# If you want CUDA support, you will need to have CMake 3.13 on Linux/OSX.
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project (VTKm)
-
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
-  cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
-endif()
 
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
@@ -79,8 +73,9 @@ endmacro ()
 
 # Configurable Options
 vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
-vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_KOKKOS "Enable Kokkos support" OFF)
 vtkm_option(VTKm_ENABLE_OPENMP "Enable OpenMP support" OFF)
+vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
@@ -108,6 +103,17 @@ vtkm_option(VTKm_ENABLE_LOGGING "Enable VTKm Logging" ON)
 # performance.
 vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 
+# The CUDA compiler (as of CUDA 11) takes a surprising long time to compile
+# kernels with assert in them. By default we turn off asserts when compiling
+# for CUDA devices.
+vtkm_option(VTKm_NO_ASSERT_CUDA "Disable assertions for CUDA devices." ON)
+
+# The HIP compiler (as of ROCm 3.7) takes a surprising long time to compile
+# kernels with assert in them they generate `printf` calls which are very
+# slow ( cause massive register spillage). By default we turn off asserts when
+# compiling for HIP devices.
+vtkm_option(VTKm_NO_ASSERT_HIP "Disable assertions for HIP devices." ON)
+
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.
@@ -132,13 +138,22 @@ vtkm_option(VTKm_ENABLE_DEVELOPER_FLAGS "Enable compiler flags that are useful w
 # Some application might need not to install those, hence this option.
 vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README and LICENSE files" OFF)
 
+# We are in the process of deprecating the use of virtual methods because they
+# are not well supported on many accelerators. Turn this option on to remove
+# the code entirely. Note that the deprecation of virtual methods is work in
+# progress, so not all use of virtual methods may be done. In VTK-m 2.0
+# virtual methods should be removed entirely and this option will be removed.
+vtkm_option(VTKm_NO_DEPRECATED_VIRTUAL "Do not compile support of deprecated virtual methods" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
+  VTKm_NO_ASSERT_CUDA
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_HIDE_PRIVATE_SYMBOLS
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
+  VTKm_NO_DEPRECATED_VIRTUAL
   )
 
 #-----------------------------------------------------------------------------
@@ -268,8 +283,9 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   # Install helper configure files.
   install(
     FILES
+      ${VTKm_SOURCE_DIR}/CMake/VTKmCMakeBackports.cmake
       ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-      ${VTKm_SOURCE_DIR}/CMake/FindMPI.cmake
+      ${VTKm_SOURCE_DIR}/CMake/patches/3.15/FindMPI.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 
@@ -281,7 +297,6 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmDIYUtils.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_SOURCE_DIR}/CMake/VTKmMPI.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
@@ -315,7 +330,7 @@ endif ()
 #-----------------------------------------------------------------------------
 #add the benchmarking folder
 if(VTKm_ENABLE_BENCHMARKS)
-    add_subdirectory(benchmarking)
+  add_subdirectory(benchmarking)
 endif()
 
 #-----------------------------------------------------------------------------

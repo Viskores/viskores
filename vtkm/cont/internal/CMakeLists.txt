@@ -9,9 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayExportMacros.h
-  ArrayHandleBasicImpl.h
-  ArrayHandleBasicImpl.hxx
   ArrayHandleExecutionManager.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
@@ -20,9 +17,12 @@ set(headers
   ArrayTransfer.h
   AtomicInterfaceControl.h
   AtomicInterfaceExecution.h
+  Buffer.h
   CastInvalidValue.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterMemoryManager.h
+  DeviceAdapterMemoryManagerShared.h
   DeviceAdapterListHelpers.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
@@ -33,8 +33,8 @@ set(headers
   ReverseConnectivityBuilder.h
   StorageError.h
   TransferInfo.h
-  VariantArrayHandleContainer.h
   VirtualObjectTransfer.h
+  VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h
   )
 

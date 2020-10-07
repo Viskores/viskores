@@ -33,7 +33,8 @@ void TestVectorMagnitude()
   {
     fvec[i] = vtkm::make_Vec(fvars[i], fvars[i], fvars[i]);
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> finput = vtkm::cont::make_ArrayHandle(fvec);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> finput =
+    vtkm::cont::make_ArrayHandle(fvec, vtkm::CopyFlag::On);
 
   dataSet.AddPointField("double_vec_pointvar", finput);
 

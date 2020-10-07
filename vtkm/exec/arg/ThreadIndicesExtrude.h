@@ -91,6 +91,15 @@ public:
     //this->CellShape = connectivity.GetCellShape(index);
   }
 
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
+
   /// \brief The logical index into the input domain.
   ///
   /// This is similar to \c GetIndex3D except the Vec size matches the actual
@@ -205,6 +214,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            const ConnectivityType& connectivity)
@@ -220,6 +230,7 @@ public:
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
 
+  VTKM_EXEC
   ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex3D,
                            vtkm::Id threadIndex1D,
                            vtkm::Id inputIndex,
@@ -237,6 +248,15 @@ public:
     this->LogicalIndex = logicalIndex;
     this->IndicesIncident = connectivity.GetIndices(logicalIndex);
   }
+
+  /// \brief The index of the thread or work invocation.
+  ///
+  /// This index refers to which instance of the worklet is being invoked. Every invocation of the
+  /// worklet has a unique thread index. This is also called the work index depending on the
+  /// context.
+  ///
+  VTKM_EXEC
+  vtkm::Id GetThreadIndex() const { return this->ThreadIndex; }
 
   /// \brief The logical index into the input domain.
   ///

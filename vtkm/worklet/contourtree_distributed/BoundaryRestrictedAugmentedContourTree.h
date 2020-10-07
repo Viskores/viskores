@@ -56,8 +56,8 @@
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem/IdRelabeler.h>
-#include <vtkm/worklet/contourtree_augmented/mesh_dem_meshtypes/ContourTreeMesh.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 #include <sstream>
 #include <string>

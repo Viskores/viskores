@@ -93,6 +93,10 @@ public:
   // destructor
   ~WaveletFilter()
   {
+    this->LowDecomType.ReleaseResources();
+    this->HighDecomType.ReleaseResources();
+    this->LowReconType.ReleaseResources();
+    this->HighReconType.ReleaseResources();
     if (LowDecomposeFilter)
     {
       delete[] LowDecomposeFilter;
@@ -134,10 +138,14 @@ private:
 
   void MakeArrayHandles()
   {
-    LowDecomType = vtkm::cont::make_ArrayHandle(LowDecomposeFilter, FilterLength);
-    HighDecomType = vtkm::cont::make_ArrayHandle(HighDecomposeFilter, FilterLength);
-    LowReconType = vtkm::cont::make_ArrayHandle(LowReconstructFilter, FilterLength);
-    HighReconType = vtkm::cont::make_ArrayHandle(HighReconstructFilter, FilterLength);
+    LowDecomType =
+      vtkm::cont::make_ArrayHandle(LowDecomposeFilter, FilterLength, vtkm::CopyFlag::Off);
+    HighDecomType =
+      vtkm::cont::make_ArrayHandle(HighDecomposeFilter, FilterLength, vtkm::CopyFlag::Off);
+    LowReconType =
+      vtkm::cont::make_ArrayHandle(LowReconstructFilter, FilterLength, vtkm::CopyFlag::Off);
+    HighReconType =
+      vtkm::cont::make_ArrayHandle(HighReconstructFilter, FilterLength, vtkm::CopyFlag::Off);
   }
 
   // Flipping operation; helper function to initialize a filter.

@@ -23,6 +23,12 @@ struct TypePlaceholder
 {
 };
 
+// A class that is trivially copiable but not totally trivial.
+struct TrivialCopy
+{
+  vtkm::Id Value = 0;
+};
+
 void TestSize()
 {
   std::cout << "Test size" << std::endl;
@@ -171,13 +177,42 @@ void TestTriviallyCopyable()
 {
 #ifndef VTKM_USING_GLIBCXX_4
   // Make sure base types are behaving as expected
+  VTKM_STATIC_ASSERT(std::is_trivially_constructible<float>::value);
   VTKM_STATIC_ASSERT(std::is_trivially_copyable<float>::value);
+  VTKM_STATIC_ASSERT(std::is_trivial<float>::value);
+  VTKM_STATIC_ASSERT(std::is_trivially_constructible<int>::value);
   VTKM_STATIC_ASSERT(std::is_trivially_copyable<int>::value);
+  VTKM_STATIC_ASSERT(std::is_trivial<int>::value);
+  VTKM_STATIC_ASSERT(!std::is_trivially_constructible<std::shared_ptr<float>>::value);
   VTKM_STATIC_ASSERT(!std::is_trivially_copyable<std::shared_ptr<float>>::value);
+  VTKM_STATIC_ASSERT(!std::is_trivial<std::shared_ptr<float>>::value);
+  VTKM_STATIC_ASSERT(!std::is_trivially_constructible<TrivialCopy>::value);
+  VTKM_STATIC_ASSERT(std::is_trivially_copyable<TrivialCopy>::value);
+  VTKM_STATIC_ASSERT(!std::is_trivial<TrivialCopy>::value);
+
+  // A variant of trivially constructable things should be trivially constructable
+  VTKM_STATIC_ASSERT((vtkm::internal::detail::AllTriviallyConstructible<float, int>::value));
+  VTKM_STATIC_ASSERT((std::is_trivially_constructible<vtkm::internal::Variant<float, int>>::value));
 
   // A variant of trivially copyable things should be trivially copyable
-  VTKM_STATIC_ASSERT((vtkm::internal::detail::AllTriviallyCopyable<float, int>::value));
-  VTKM_STATIC_ASSERT((std::is_trivially_copyable<vtkm::internal::Variant<float, int>>::value));
+  VTKM_STATIC_ASSERT(
+    (vtkm::internal::detail::AllTriviallyCopyable<float, int, TrivialCopy>::value));
+  VTKM_STATIC_ASSERT(
+    (std::is_trivially_copyable<vtkm::internal::Variant<float, int, TrivialCopy>>::value));
+
+  // A variant of any non-trivially constructable things is not trivially copyable
+  VTKM_STATIC_ASSERT((
+    !vtkm::internal::detail::AllTriviallyConstructible<std::shared_ptr<float>, float, int>::value));
+  VTKM_STATIC_ASSERT((
+    !vtkm::internal::detail::AllTriviallyConstructible<float, std::shared_ptr<float>, int>::value));
+  VTKM_STATIC_ASSERT((
+    !vtkm::internal::detail::AllTriviallyConstructible<float, int, std::shared_ptr<float>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+                      vtkm::internal::Variant<std::shared_ptr<float>, float, int>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+                      vtkm::internal::Variant<float, std::shared_ptr<float>, int>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivially_constructible<
+                      vtkm::internal::Variant<float, int, std::shared_ptr<float>>>::value));
 
   // A variant of any non-trivially copyable things is not trivially copyable
   VTKM_STATIC_ASSERT(
@@ -192,6 +227,12 @@ void TestTriviallyCopyable()
                       vtkm::internal::Variant<float, std::shared_ptr<float>, int>>::value));
   VTKM_STATIC_ASSERT((!std::is_trivially_copyable<
                       vtkm::internal::Variant<float, int, std::shared_ptr<float>>>::value));
+
+  // A variant of trivial things should be trivial
+  VTKM_STATIC_ASSERT((std::is_trivial<vtkm::internal::Variant<float, int>>::value));
+  VTKM_STATIC_ASSERT((!std::is_trivial<vtkm::internal::Variant<float, int, TrivialCopy>>::value));
+  VTKM_STATIC_ASSERT(
+    (!std::is_trivial<vtkm::internal::Variant<float, int, std::shared_ptr<float>>>::value));
 #endif // !VTKM_USING_GLIBCXX_4
 }
 
@@ -410,9 +451,9 @@ void TestEmplace()
 
   variant.Emplace<1>(TestValue(2, vtkm::Id{}), TestValue(3, vtkm::Id{}), TestValue(4, vtkm::Id{}));
   VTKM_TEST_ASSERT(variant.GetIndex() == 1);
-  VTKM_TEST_ASSERT(variant.Get<vtkm::Id3>() == vtkm::Id3{ TestValue(2, vtkm::Id{}),
-                                                          TestValue(3, vtkm::Id{}),
-                                                          TestValue(4, vtkm::Id{}) });
+  VTKM_TEST_ASSERT(
+    variant.Get<vtkm::Id3>() ==
+    vtkm::Id3{ TestValue(2, vtkm::Id{}), TestValue(3, vtkm::Id{}), TestValue(4, vtkm::Id{}) });
 
   variant.Emplace<2>(
     { TestValue(5, vtkm::Id{}), TestValue(6, vtkm::Id{}), TestValue(7, vtkm::Id{}) });

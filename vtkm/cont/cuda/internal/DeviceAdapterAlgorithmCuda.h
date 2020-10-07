@@ -16,6 +16,7 @@
 #include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
@@ -26,8 +27,6 @@
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-#include <vtkm/cont/cuda/internal/AtomicInterfaceExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTimerImplementationCuda.h>
@@ -68,37 +67,6 @@ namespace cont
 {
 namespace cuda
 {
-
-/// \brief RAII helper for temporarily changing CUDA stack size in an
-/// exception-safe way.
-struct ScopedCudaStackSize
-{
-  ScopedCudaStackSize(std::size_t newStackSize)
-  {
-    cudaDeviceGetLimit(&this->OldStackSize, cudaLimitStackSize);
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Temporarily changing Cuda stack size from "
-                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(this->OldStackSize))
-                 << " to "
-                 << vtkm::cont::GetHumanReadableSize(static_cast<vtkm::UInt64>(newStackSize)));
-    cudaDeviceSetLimit(cudaLimitStackSize, newStackSize);
-  }
-
-  ~ScopedCudaStackSize()
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Restoring Cuda stack size to " << vtkm::cont::GetHumanReadableSize(
-                 static_cast<vtkm::UInt64>(this->OldStackSize)));
-    cudaDeviceSetLimit(cudaLimitStackSize, this->OldStackSize);
-  }
-
-  // Disable copy
-  ScopedCudaStackSize(const ScopedCudaStackSize&) = delete;
-  ScopedCudaStackSize& operator=(const ScopedCudaStackSize&) = delete;
-
-private:
-  std::size_t OldStackSize;
-};
 
 /// \brief Represents how to schedule 1D, 2D, and 3D Cuda kernels
 ///
@@ -263,6 +231,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
 private:
 #endif
 
+  using Superclass = vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+    vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>,
+    vtkm::cont::DeviceAdapterTagCuda>;
+
   template <typename BitsPortal, typename IndicesPortal, typename GlobalPopCountType>
   struct BitFieldToUnorderedSetFunctor : public vtkm::exec::FunctorBase
   {
@@ -273,8 +245,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_STATIC_ASSERT(
       VTKM_PASS_COMMAS(std::is_same<typename IndicesPortal::ValueType, vtkm::Id>::value));
@@ -486,8 +457,7 @@ private:
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
-    using Word = typename vtkm::cont::internal::AtomicInterfaceExecution<
-      DeviceAdapterTagCuda>::WordTypePreferred;
+    using Word = vtkm::AtomicTypePreferred;
 
     VTKM_CONT
     CountSetBitsFunctor(const BitsPortal& portal, GlobalPopCountType* globalPopCount)
@@ -1213,10 +1183,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     // Check if the ranges overlap and fail if they do.
-    if (input == output && ((outputIndex >= inputStartIndex &&
-                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
-                            (inputStartIndex >= outputIndex &&
-                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    if (input == output &&
+        ((outputIndex >= inputStartIndex &&
+          outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+         (inputStartIndex >= outputIndex &&
+          inputStartIndex < outputIndex + numberOfElementsToCopy)))
     {
       return false;
     }
@@ -1338,6 +1309,25 @@ public:
     vtkm::cont::Token token;
     return ReducePortal(
       input.PrepareForInput(DeviceAdapterTagCuda(), token), initialValue, binary_functor);
+  }
+
+  // At least some versions of Thrust/nvcc result in compile errors when calling Thrust's
+  // reduce with sufficiently complex iterators, which can happen with some versions of
+  // ArrayHandleMultiplexer. Thus, don't use the Thrust version for ArrayHandleMultiplexer.
+  template <typename T, typename U, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue)
+  {
+    return Superclass::Reduce(input, initialValue);
+  }
+  template <typename T, typename U, typename BinaryFunctor, typename... SIns>
+  VTKM_CONT static U Reduce(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<SIns...>>& input,
+    U initialValue,
+    BinaryFunctor binary_functor)
+  {
+    return Superclass::Reduce(input, initialValue, binary_functor);
   }
 
   template <typename T,

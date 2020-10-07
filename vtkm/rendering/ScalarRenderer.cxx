@@ -53,9 +53,7 @@ ScalarRenderer::ScalarRenderer()
 {
 }
 
-ScalarRenderer::~ScalarRenderer()
-{
-}
+ScalarRenderer::~ScalarRenderer() {}
 
 void ScalarRenderer::SetWidth(const vtkm::Int32 width)
 {

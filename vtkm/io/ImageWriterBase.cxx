@@ -27,9 +27,7 @@ ImageWriterBase::ImageWriterBase(const std::string& filename)
 {
 }
 
-ImageWriterBase::~ImageWriterBase() noexcept
-{
-}
+ImageWriterBase::~ImageWriterBase() noexcept {}
 
 void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet)
 {

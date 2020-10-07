@@ -32,14 +32,12 @@
 #include <vtkm/exec/arg/FetchTagKeysIn.h>
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
 #include <vtkm/exec/arg/ValueCount.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-
-template <typename WorkletType>
-class DispatcherReduceByKey;
 
 class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 {

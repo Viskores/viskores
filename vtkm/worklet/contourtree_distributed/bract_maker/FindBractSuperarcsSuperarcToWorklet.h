@@ -80,7 +80,7 @@ public:
                                 WholeArrayIn meshSortOrder,           // input
                                 WholeArrayOut treeToSuperset,         // output
                                 FieldOut bractSuperarcs               // output
-                                );
+  );
   using ExecutionSignature = _10(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 

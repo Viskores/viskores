@@ -28,6 +28,7 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 
+#include <vtkm/worklet/WorkletReduceByKey.h>
 #include <vtkm/worklet/contour/CommonState.h>
 #include <vtkm/worklet/contour/MarchingCellTables.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
@@ -614,10 +615,10 @@ vtkm::cont::CellSetSingleType<> execute(
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
+  using vtkm::worklet::contour::MapPointField;
   using vtkm::worklet::marching_cells::ClassifyCell;
   using vtkm::worklet::marching_cells::EdgeWeightGenerate;
   using vtkm::worklet::marching_cells::EdgeWeightGenerateMetaData;
-  using vtkm::worklet::contour::MapPointField;
 
   vtkm::worklet::marching_cells::CellClassifyTable classTable;
   vtkm::worklet::marching_cells::TriangleGenerationTable triTable;
@@ -625,7 +626,8 @@ vtkm::cont::CellSetSingleType<> execute(
   // Setup the invoker
   vtkm::cont::Invoker invoker;
 
-  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle = vtkm::cont::make_ArrayHandle(isovalues);
+  vtkm::cont::ArrayHandle<ValueType> isoValuesHandle =
+    vtkm::cont::make_ArrayHandle(isovalues, vtkm::CopyFlag::Off);
 
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated

@@ -80,7 +80,7 @@ template <typename Storage>
 struct ArrayValidPredicate
 {
   template <typename T>
-  using Predicate = vtkm::cont::internal::IsInValidArrayHandle<T, Storage>;
+  using Predicate = vtkm::cont::internal::IsInvalidArrayHandle<T, Storage>;
 };
 
 template <typename TargetT, typename Storage, bool Valid>

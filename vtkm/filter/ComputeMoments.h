@@ -10,14 +10,14 @@
 #ifndef vtk_m_filter_ComputeMoments_h
 #define vtk_m_filter_ComputeMoments_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 
 namespace vtkm
 {
 namespace filter
 {
-class ComputeMoments : public vtkm::filter::FilterCell<ComputeMoments>
+class ComputeMoments : public vtkm::filter::FilterField<ComputeMoments>
 {
 public:
   using SupportedTypes = vtkm::List<vtkm::Float32,

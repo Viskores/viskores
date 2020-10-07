@@ -302,9 +302,7 @@ SphereIntersector::SphereIntersector()
 {
 }
 
-SphereIntersector::~SphereIntersector()
-{
-}
+SphereIntersector::~SphereIntersector() {}
 
 void SphereIntersector::SetData(const vtkm::cont::CoordinateSystem& coords,
                                 vtkm::cont::ArrayHandle<vtkm::Id> pointIds,

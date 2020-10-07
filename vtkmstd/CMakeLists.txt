@@ -11,7 +11,7 @@
 set(headers
   aligned_union.h
   integer_sequence.h
-  is_trivially_copyable.h
+  is_trivial.h
   void_t.h
   )
 

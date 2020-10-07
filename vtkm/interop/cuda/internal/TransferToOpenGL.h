@@ -182,7 +182,7 @@ public:
     this->Resource->Map();
 
     ValueType* beginPointer = this->Resource->GetMappedPoiner<ValueType>(size);
-    auto deviceMemory = vtkm::cont::make_ArrayHandle(beginPointer, size);
+    auto deviceMemory = vtkm::cont::make_ArrayHandle(beginPointer, size, vtkm::CopyFlag::Off);
 
     //Do a device to device memory copy
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(handle, deviceMemory);

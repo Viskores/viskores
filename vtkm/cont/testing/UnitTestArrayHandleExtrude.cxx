@@ -66,7 +66,7 @@ struct CopyValue : public vtkm::worklet::WorkletMapField
   typedef _2 ExecutionSignature(_1);
 
   template <typename T>
-  T&& operator()(T&& t) const
+  VTKM_EXEC_CONT T&& operator()(T&& t) const
   {
     return std::forward<T>(t);
   }
@@ -96,7 +96,7 @@ int TestArrayHandleExtrude()
   const int numPlanes = 8;
 
   auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(
-    vtkm::cont::make_ArrayHandle(points_rz), numPlanes, false);
+    vtkm::cont::make_ArrayHandle(points_rz, vtkm::CopyFlag::Off), numPlanes, false);
 
   VTKM_TEST_ASSERT(coords.GetNumberOfValues() ==
                      static_cast<vtkm::Id>(((points_rz.size() / 2) * numPlanes)),

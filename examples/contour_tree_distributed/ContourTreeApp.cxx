@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
   auto comm = MPI_COMM_WORLD;
 
   // Tell VTK-m which communicator it should use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(comm));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator());
 
   // get the rank and size
   int rank, size;
@@ -252,25 +252,14 @@ int main(int argc, char* argv[])
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                std::endl
-                 << "    ------------ Settings -----------"
-                 << std::endl
-                 << "    filename="
-                 << filename
-                 << std::endl
-                 << "    device="
-                 << device.GetName()
-                 << std::endl
-                 << "    mc="
-                 << useMarchingCubes
-                 << std::endl
+                 << "    ------------ Settings -----------" << std::endl
+                 << "    filename=" << filename << std::endl
+                 << "    device=" << device.GetName() << std::endl
+                 << "    mc=" << useMarchingCubes << std::endl
 #ifdef ENABLE_SET_NUM_THREADS
-                 << "    numThreads="
-                 << numThreads
-                 << std::endl
+                 << "    numThreads=" << numThreads << std::endl
 #endif
-                 << "    nblocks="
-                 << numBlocks
-                 << std::endl);
+                 << "    nblocks=" << numBlocks << std::endl);
   }
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 startUpTime = currTime - prevTime;
@@ -341,14 +330,9 @@ int main(int argc, char* argv[])
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                std::endl
-                 << "    ---------------- Input Mesh Properties --------------"
-                 << std::endl
-                 << "    Number of dimensions: "
-                 << nDims
-                 << std::endl
-                 << "    Number of mesh vertices: "
-                 << numVertices
-                 << std::endl);
+                 << "    ---------------- Input Mesh Properties --------------" << std::endl
+                 << "    Number of dimensions: " << nDims << std::endl
+                 << "    Number of mesh vertices: " << numVertices << std::endl);
   }
 
   // Check for fatal input errors
@@ -359,13 +343,14 @@ int main(int argc, char* argv[])
   // Log any errors if found on rank 0
   VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
                 invalidNumDimensions && (rank == 0),
-                "The input mesh is " << nDims << "D. "
-                                                 "The input data must be either 2D or 3D.");
-  VTKM_LOG_IF_S(
-    vtkm::cont::LogLevel::Error,
-    invalidMCOption && (rank == 0),
-    "The input mesh is " << nDims << "D. "
-                         << "Contour tree using marching cubes is only supported for 3D data.");
+                "The input mesh is " << nDims
+                                     << "D. "
+                                        "The input data must be either 2D or 3D.");
+  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
+                invalidMCOption && (rank == 0),
+                "The input mesh is "
+                  << nDims << "D. "
+                  << "Contour tree using marching cubes is only supported for 3D data.");
   // If we found any errors in the setttings than finalize MPI and exit the execution
   if (invalidNumDimensions || invalidMCOption)
   {
@@ -519,44 +504,18 @@ int main(int argc, char* argv[])
   currTime = totalTime.GetElapsedTime();
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
-               << "    -------------------------- Totals "
-               << rank
-               << " -----------------------------"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Start-up"
-               << ": "
-               << startUpTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Data Read"
-               << ": "
-               << dataReadTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Build VTKM Dataset"
-               << ": "
-               << buildDatasetTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Compute Contour Tree"
-               << ": "
-               << computeContourTreeTime
-               << " seconds"
-               << std::endl
-               << std::setw(42)
-               << std::left
-               << "    Total Time"
-               << ": "
-               << currTime
-               << " seconds");
+               << "    -------------------------- Totals " << rank
+               << " -----------------------------" << std::endl
+               << std::setw(42) << std::left << "    Start-up"
+               << ": " << startUpTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Data Read"
+               << ": " << dataReadTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Build VTKM Dataset"
+               << ": " << buildDatasetTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Compute Contour Tree"
+               << ": " << computeContourTreeTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Total Time"
+               << ": " << currTime << " seconds");
 
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;

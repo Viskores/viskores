@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_SurfaceNormals_h
 #define vtk_m_filter_SurfaceNormals_h
 
-#include <vtkm/filter/FilterCell.h>
+#include <vtkm/filter/FilterField.h>
 
 namespace vtkm
 {
@@ -23,7 +23,7 @@ namespace filter
 /// The cell normals are faceted and are computed based on the plane where a
 /// face lies. The point normals are smooth normals, computed by averaging
 /// the face normals of incident cells.
-class SurfaceNormals : public vtkm::filter::FilterCell<SurfaceNormals>
+class SurfaceNormals : public vtkm::filter::FilterField<SurfaceNormals>
 {
 public:
   using SupportedTypes = vtkm::TypeListFieldVec3;

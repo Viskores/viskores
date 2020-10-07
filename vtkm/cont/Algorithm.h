@@ -12,7 +12,7 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/Token.h>
 #include <vtkm/cont/TryExecute.h>

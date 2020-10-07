@@ -10,6 +10,8 @@
 #define vtk_m_cont_StorageVirtual_cxx
 #include <vtkm/cont/StorageVirtual.h>
 
+#include <vtkm/cont/DeviceAdapter.h>
+
 namespace vtkm
 {
 namespace cont
@@ -29,8 +31,8 @@ StorageVirtual::StorageVirtual(const StorageVirtual& src)
 
 //--------------------------------------------------------------------
 StorageVirtual::StorageVirtual(StorageVirtual&& src) noexcept
-  : DeviceUpToDate(src.DeviceUpToDate),
-    DeviceTransferState(std::move(src.DeviceTransferState))
+  : DeviceUpToDate(src.DeviceUpToDate)
+  , DeviceTransferState(std::move(src.DeviceTransferState))
 {
 }
 
@@ -51,9 +53,7 @@ StorageVirtual& StorageVirtual::operator=(StorageVirtual&& src) noexcept
 }
 
 //--------------------------------------------------------------------
-StorageVirtual::~StorageVirtual()
-{
-}
+StorageVirtual::~StorageVirtual() {}
 
 //--------------------------------------------------------------------
 void StorageVirtual::DropExecutionPortal()
@@ -180,10 +180,10 @@ void StorageVirtual::TransferPortalForOutput(vtkm::cont::internal::TransferInfoA
   throw vtkm::cont::ErrorBadValue("StorageTagVirtual by default doesn't support exec side writes.");
 }
 
-#define VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(T)                                                \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<T>;                                         \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>;                           \
-  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>;                           \
+#define VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(T)                      \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<T>;               \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 2>>; \
+  template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 3>>; \
   template class VTKM_CONT_EXPORT ArrayTransferVirtual<vtkm::Vec<T, 4>>
 
 VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(char);
@@ -200,10 +200,10 @@ VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE(vtkm::Float64);
 
 #undef VTK_M_ARRAY_TRANSFER_VIRTUAL_INSTANTIATE
 
-#define VTK_M_STORAGE_VIRTUAL_INSTANTIATE(T)                                                       \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>;                 \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>;   \
-  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>;   \
+#define VTK_M_STORAGE_VIRTUAL_INSTANTIATE(T)                                                     \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<T, VTKM_DEFAULT_STORAGE_TAG>;               \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 2>, VTKM_DEFAULT_STORAGE_TAG>; \
+  template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 3>, VTKM_DEFAULT_STORAGE_TAG>; \
   template class VTKM_CONT_EXPORT StorageVirtualImpl<vtkm::Vec<T, 4>, VTKM_DEFAULT_STORAGE_TAG>
 
 VTK_M_STORAGE_VIRTUAL_INSTANTIATE(char);

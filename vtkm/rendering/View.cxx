@@ -76,9 +76,7 @@ View::View(const vtkm::rendering::Scene& scene,
   this->AxisColor = foregroundColor;
 }
 
-View::~View()
-{
-}
+View::~View() {}
 
 const vtkm::rendering::Scene& View::GetScene() const
 {

@@ -69,7 +69,7 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
   EvaluateImplicitFunction eval(function.PrepareForExecution(device, token));
   EvalDispatcher dispatcher(eval);
   dispatcher.SetDevice(DeviceAdapter());
-  dispatcher.Invoke(points, values, gradients);
+  dispatcher.Invoke(points.GetDataAsMultiplexer(), values, gradients);
 }
 
 template <typename ItemType, std::size_t N>

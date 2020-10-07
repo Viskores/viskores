@@ -16,10 +16,14 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/worklet/particleadvection/EulerIntegrator.h>
+#include <vtkm/worklet/particleadvection/Field.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/RK4Integrator.h>
 
 #include <random>
 
@@ -296,7 +300,9 @@ public:
                             vtkm::worklet::particleadvection::GridEvaluatorStatus& status,
                             vtkm::Vec3f& pointOut) const
   {
-    status = evaluator.Evaluate(pointIn.Pos, pointOut);
+    vtkm::VecVariable<vtkm::Vec3f, 2> values;
+    status = evaluator.Evaluate(pointIn.Pos, values);
+    pointOut = values[0];
   }
 };
 
@@ -311,7 +317,8 @@ void ValidateEvaluator(const EvalType& eval,
   using Status = vtkm::worklet::particleadvection::GridEvaluatorStatus;
   EvalTester evalTester;
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
-  vtkm::cont::ArrayHandle<vtkm::Particle> pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::cont::ArrayHandle<vtkm::Particle> pointsHandle =
+    vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> evalResults;
@@ -344,9 +351,9 @@ public:
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::FloatDefault time = 0;
-    status = integrator->Step(pointIn.Pos, time, pointOut);
+    status = integrator->Step(&pointIn, time, pointOut);
     if (status.CheckSpatialBounds())
-      status = integrator->SmallStep(pointIn.Pos, time, pointOut);
+      status = integrator->SmallStep(&pointIn, time, pointOut);
   }
 };
 
@@ -361,7 +368,7 @@ void ValidateIntegrator(const IntegratorType& integrator,
   using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -394,7 +401,7 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   using Status = vtkm::worklet::particleadvection::IntegratorStatus;
 
   IntegratorTesterDispatcher integratorTesterDispatcher;
-  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns);
+  auto pointsHandle = vtkm::cont::make_ArrayHandle(pointIns, vtkm::CopyFlag::Off);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> stepResults;
@@ -416,7 +423,8 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
 void TestEvaluators()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
   std::vector<vtkm::Vec3f> vecs;
@@ -450,6 +458,7 @@ void TestEvaluators()
 
         vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
+        FieldType velocities(vecField);
 
         //vtkm::FloatDefault stepSize = 0.01f;
         vtkm::FloatDefault stepSize = 0.1f;
@@ -495,7 +504,7 @@ void TestEvaluators()
 
         for (auto& ds : dataSets)
         {
-          GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
+          GridEvalType gridEval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
           ValidateEvaluator(gridEval, pointIns, vec, "grid evaluator");
 
           RK4Type rk4(gridEval, stepSize);
@@ -507,9 +516,10 @@ void TestEvaluators()
   }
 }
 
-void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResult& res,
-                                     vtkm::Id nSeeds,
-                                     vtkm::Id maxSteps)
+void ValidateParticleAdvectionResult(
+  const vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& res,
+  vtkm::Id nSeeds,
+  vtkm::Id maxSteps)
 {
   VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
                    "Number of output particles does not match input.");
@@ -527,7 +537,7 @@ void ValidateParticleAdvectionResult(const vtkm::worklet::ParticleAdvectionResul
   }
 }
 
-void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
+void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
                               vtkm::Id nSeeds,
                               vtkm::Id maxSteps)
 {
@@ -546,7 +556,8 @@ void ValidateStreamlineResult(const vtkm::worklet::StreamlineResult& res,
 void TestIntegrators()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
 
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Bounds bounds(0., 1., 0., 1., .0, .1);
@@ -560,16 +571,17 @@ void TestIntegrators()
   std::vector<vtkm::Vec3f> fieldData;
   for (vtkm::Id i = 0; i < nElements; i++)
     fieldData.push_back(vtkm::Vec3f(0., 0., 1.));
-  FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData);
+  FieldHandle fieldValues = vtkm::cont::make_ArrayHandle(fieldData, vtkm::CopyFlag::Off);
+  FieldType velocities(fieldValues);
 
-  GridEvalType eval(dataset.GetCoordinateSystem(), dataset.GetCellSet(), fieldValues);
+  GridEvalType eval(dataset.GetCoordinateSystem(), dataset.GetCellSet(), velocities);
 
   //Generate three random points.
   std::vector<vtkm::Particle> points;
   GenerateRandomParticles(points, 3, bounds);
 
   vtkm::worklet::ParticleAdvection pa;
-  vtkm::worklet::ParticleAdvectionResult res;
+  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
   {
     auto seeds = vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::On);
     using IntegratorType = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
@@ -589,7 +601,8 @@ void TestIntegrators()
 void TestParticleWorkletsWithDataSetTypes()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::FloatDefault stepSize = 0.01f;
 
@@ -606,7 +619,8 @@ void TestParticleWorkletsWithDataSetTypes()
     field.push_back(vtkm::Normal(vec));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
+  FieldType velocities(fieldArray);
 
   std::vector<vtkm::Bounds> bounds;
   bounds.push_back(vtkm::Bounds(0, 10, 0, 10, 0, 10));
@@ -637,7 +651,7 @@ void TestParticleWorkletsWithDataSetTypes()
 
     for (auto& ds : dataSets)
     {
-      GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+      GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
       RK4Type rk4(eval, stepSize);
 
       //Do 4 tests on each dataset.
@@ -648,7 +662,7 @@ void TestParticleWorkletsWithDataSetTypes()
         if (i < 2)
         {
           vtkm::worklet::ParticleAdvection pa;
-          vtkm::worklet::ParticleAdvectionResult res;
+          vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
           if (i == 0)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -664,7 +678,7 @@ void TestParticleWorkletsWithDataSetTypes()
         else
         {
           vtkm::worklet::Streamline s;
-          vtkm::worklet::StreamlineResult res;
+          vtkm::worklet::StreamlineResult<vtkm::Particle> res;
           if (i == 2)
           {
             auto seeds = vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
@@ -694,16 +708,18 @@ void TestParticleStatus()
   for (vtkm::Id i = 0; i < nElements; i++)
     field.push_back(vtkm::Vec3f(1, 0, 0));
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
-
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::Id maxSteps = 1000;
   vtkm::FloatDefault stepSize = 0.01f;
 
-  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  FieldHandle fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
+  FieldType velocities(fieldArray);
+
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
   RK4Type rk4(eval, stepSize);
 
   vtkm::worklet::ParticleAdvection pa;
@@ -723,7 +739,8 @@ void TestParticleStatus()
 void TestWorkletsBasic()
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
   vtkm::FloatDefault stepSize = 0.01f;
 
@@ -736,12 +753,13 @@ void TestWorkletsBasic()
     field.push_back(vtkm::Normal(vecDir));
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  fieldArray = vtkm::cont::make_ArrayHandle(field, vtkm::CopyFlag::Off);
+  FieldType velocities(fieldArray);
 
   vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
   auto ds = CreateUniformDataSet(bounds, dims);
 
-  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), fieldArray);
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
   RK4Type rk4(eval, stepSize);
 
   vtkm::Id maxSteps = 83;
@@ -781,7 +799,7 @@ void TestWorkletsBasic()
     if (w == "particleAdvection")
     {
       vtkm::worklet::ParticleAdvection pa;
-      vtkm::worklet::ParticleAdvectionResult res;
+      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
 
       res = pa.Run(rk4, seedsArray, maxSteps);
 
@@ -805,7 +823,7 @@ void TestWorkletsBasic()
     else if (w == "streamline")
     {
       vtkm::worklet::Streamline s;
-      vtkm::worklet::StreamlineResult res;
+      vtkm::worklet::StreamlineResult<vtkm::Particle> res;
 
       res = s.Run(rk4, seedsArray, maxSteps);
 
@@ -847,6 +865,105 @@ void TestWorkletsBasic()
   }
 }
 
+template <class ResultType>
+void ValidateResult(const ResultType& res,
+                    vtkm::Id maxSteps,
+                    const std::vector<vtkm::Vec3f>& endPts)
+{
+  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
+  vtkm::Id numPts = static_cast<vtkm::Id>(endPts.size());
+
+  VTKM_TEST_ASSERT(res.Particles.GetNumberOfValues() == numPts,
+                   "Wrong number of points in particle advection result.");
+
+  auto portal = res.Particles.ReadPortal();
+  for (vtkm::Id i = 0; i < 3; i++)
+  {
+    vtkm::Vec3f p = portal.Get(i).Pos;
+    vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
+
+    VTKM_TEST_ASSERT(vtkm::Magnitude(p - e) <= eps, "Particle advection point is wrong");
+    VTKM_TEST_ASSERT(portal.Get(i).NumSteps == maxSteps, "Particle advection NumSteps is wrong");
+    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckOk(), "Particle advection Status is wrong");
+    VTKM_TEST_ASSERT(portal.Get(i).Status.CheckTerminate(),
+                     "Particle advection particle did not terminate");
+  }
+}
+
+
+void TestParticleAdvectionFile(const std::string& fname,
+                               const std::vector<vtkm::Vec3f>& pts,
+                               vtkm::FloatDefault stepSize,
+                               vtkm::Id maxSteps,
+                               const std::vector<vtkm::Vec3f>& endPts)
+{
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Testing particle advection on file " << fname);
+  vtkm::io::VTKDataSetReader reader(fname);
+  vtkm::cont::DataSet ds;
+  try
+  {
+    ds = reader.ReadDataSet();
+  }
+  catch (vtkm::io::ErrorIO& e)
+  {
+    std::string message("Error reading: ");
+    message += fname;
+    message += ", ";
+    message += e.GetMessage();
+
+    VTKM_TEST_FAIL(message.c_str());
+  }
+
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+
+  VTKM_TEST_ASSERT(ds.HasField("vec"), "Data set missing a field named 'vec'");
+  vtkm::cont::Field& field = ds.GetField("vec");
+  auto fieldData = field.GetData();
+
+  FieldHandle fieldArray;
+
+  // Get fieldData (from file) into an ArrayHandle of type vtkm::Vec3f
+  // If types match, do a simple cast.
+  // If not, need to copy it into the appropriate type.
+  if (fieldData.IsType<FieldHandle>())
+    fieldArray = fieldData.Cast<FieldHandle>();
+  else
+    vtkm::cont::ArrayCopy(fieldData.ResetTypes<vtkm::TypeListFieldVec3>(), fieldArray);
+
+  FieldType velocities(fieldArray);
+  GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);
+  RK4Type rk4(eval, stepSize);
+
+  for (int i = 0; i < 2; i++)
+  {
+    std::vector<vtkm::Particle> seeds;
+    for (size_t j = 0; j < pts.size(); j++)
+      seeds.push_back(vtkm::Particle(pts[j], static_cast<vtkm::Id>(j)));
+    auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
+
+    if (i == 0)
+    {
+      vtkm::worklet::ParticleAdvection pa;
+      vtkm::worklet::ParticleAdvectionResult<vtkm::Particle> res;
+
+      res = pa.Run(rk4, seedArray, maxSteps);
+      ValidateResult(res, maxSteps, endPts);
+    }
+    else if (i == 1)
+    {
+      vtkm::worklet::Streamline s;
+      vtkm::worklet::StreamlineResult<vtkm::Particle> res;
+
+      res = s.Run(rk4, seedArray, maxSteps);
+      ValidateResult(res, maxSteps, endPts);
+    }
+  }
+}
+
 void TestParticleAdvection()
 {
   TestIntegrators();
@@ -854,6 +971,33 @@ void TestParticleAdvection()
   TestParticleStatus();
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();
+
+  //Fusion test.
+  std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;
+  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.6f, 0.6f));
+  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.6f));
+  fusionPts.push_back(vtkm::Vec3f(0.8f, 0.8f, 0.3f));
+  //End point values were generated in VisIt.
+  fusionEndPts.push_back(vtkm::Vec3f(0.5335789918f, 0.87112802267f, 0.6723330020f));
+  fusionEndPts.push_back(vtkm::Vec3f(0.5601879954f, 0.91389900446f, 0.43989110522f));
+  fusionEndPts.push_back(vtkm::Vec3f(0.7004770041f, 0.63193398714f, 0.64524400234f));
+  vtkm::FloatDefault fusionStep = 0.005f;
+  std::string fusionFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fusion.vtk");
+  TestParticleAdvectionFile(fusionFile, fusionPts, fusionStep, 1000, fusionEndPts);
+
+  //Fishtank test.
+  std::vector<vtkm::Vec3f> fishPts, fishEndPts;
+  fishPts.push_back(vtkm::Vec3f(0.75f, 0.5f, 0.01f));
+  fishPts.push_back(vtkm::Vec3f(0.4f, 0.2f, 0.7f));
+  fishPts.push_back(vtkm::Vec3f(0.5f, 0.3f, 0.8f));
+  //End point values were generated in VisIt.
+  fishEndPts.push_back(vtkm::Vec3f(0.7734669447f, 0.4870159328f, 0.8979591727f));
+  fishEndPts.push_back(vtkm::Vec3f(0.7257543206f, 0.1277695596f, 0.7468645573f));
+  fishEndPts.push_back(vtkm::Vec3f(0.8347796798f, 0.1276152730f, 0.4985143244f));
+
+  vtkm::FloatDefault fishStep = 0.001f;
+  std::string fishFile = vtkm::cont::testing::Testing::DataPath("rectilinear/fishtank.vtk");
+  TestParticleAdvectionFile(fishFile, fishPts, fishStep, 100, fishEndPts);
 }
 
 int UnitTestParticleAdvection(int argc, char* argv[])

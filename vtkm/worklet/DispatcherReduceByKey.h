@@ -12,14 +12,14 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/worklet/WorkletReduceByKey.h>
-
+#include <vtkm/cont/arg/TypeCheckTagKeys.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
 namespace vtkm
 {
 namespace worklet
 {
+class WorkletReduceByKey;
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletReduceByKey.
 ///

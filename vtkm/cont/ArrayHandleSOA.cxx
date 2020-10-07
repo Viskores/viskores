@@ -16,10 +16,10 @@ namespace vtkm
 namespace cont
 {
 
-#define VTKM_ARRAYHANDLE_SOA_INSTANTIATE(Type)                                                     \
-  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagSOA>;                                \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagSOA>;                  \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagSOA>;                  \
+#define VTKM_ARRAYHANDLE_SOA_INSTANTIATE(Type)                                    \
+  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagSOA>;               \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagSOA>; \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagSOA>; \
   template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagSOA>;
 
 VTKM_ARRAYHANDLE_SOA_INSTANTIATE(char)

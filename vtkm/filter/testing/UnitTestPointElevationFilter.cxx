@@ -76,12 +76,13 @@ void TestPointElevationNoPolicy()
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
   result.GetPointField("height").GetData().CopyTo(resultArrayHandle);
-  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coordsPortal = coordinates.ReadPortal();
+  auto resultPortal = resultArrayHandle.ReadPortal();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
-      "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 
@@ -106,12 +107,13 @@ void TestPointElevationWithPolicy()
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
   result.GetPointField("elevation").GetData().CopyTo(resultArrayHandle);
-  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto coordsPortal = coordinates.ReadPortal();
+  auto resultPortal = resultArrayHandle.ReadPortal();
   for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(coordinates.ReadPortal().Get(i)[1] * 2.0, resultArrayHandle.ReadPortal().Get(i)),
-      "Wrong result for PointElevation worklet");
+    VTKM_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 

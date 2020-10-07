@@ -72,7 +72,7 @@ class CompressRegularisedNodesCopyNecessaryRegularNodesWorklet
 public:
   using ControlSignature = void(FieldInOut newVertexId, // Input/Output
                                 FieldIn keptInBract     // input
-                                );
+  );
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 

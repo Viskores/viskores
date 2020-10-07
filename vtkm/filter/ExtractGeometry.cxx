@@ -18,7 +18,7 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_EXPORT ExtractGeometry::ExtractGeometry()
+VTKM_FILTER_COMMON_EXPORT ExtractGeometry::ExtractGeometry()
   : vtkm::filter::FilterDataSet<ExtractGeometry>()
   , ExtractInside(true)
   , ExtractBoundaryCells(false)
@@ -26,8 +26,8 @@ VTKM_FILTER_EXPORT ExtractGeometry::ExtractGeometry()
 {
 }
 
-VTKM_FILTER_EXPORT bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                            const vtkm::cont::Field& field)
+VTKM_FILTER_COMMON_EXPORT bool ExtractGeometry::MapFieldOntoOutput(vtkm::cont::DataSet& result,
+                                                                   const vtkm::cont::Field& field)
 {
   if (field.IsFieldPoint())
   {

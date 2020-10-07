@@ -22,8 +22,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ColorTable.hxx>
-
 #include <fstream>
 #include <iostream>
 
@@ -234,9 +232,7 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   this->ResizeBuffers(width, height);
 }
 
-Canvas::~Canvas()
-{
-}
+Canvas::~Canvas() {}
 
 vtkm::rendering::Canvas* Canvas::NewCopy() const
 {
@@ -316,23 +312,11 @@ void Canvas::SetForegroundColor(const vtkm::rendering::Color& color)
   Internals->ForegroundColor = color;
 }
 
-void Canvas::Initialize()
-{
-}
-
-void Canvas::Activate()
-{
-}
-
 void Canvas::Clear()
 {
   internal::ClearBuffers worklet;
   vtkm::worklet::DispatcherMapField<internal::ClearBuffers> dispatcher(worklet);
   dispatcher.Invoke(this->GetColorBuffer(), this->GetDepthBuffer());
-}
-
-void Canvas::Finish()
-{
 }
 
 void Canvas::BlendBackground()
@@ -552,15 +536,15 @@ bool Canvas::LoadFont() const
   {
     return false;
   }
-  std::size_t numValues = textureWidth * textureHeight;
-  std::vector<unsigned char> alpha(numValues);
-  for (std::size_t i = 0; i < numValues; ++i)
+  vtkm::Id numValues = static_cast<vtkm::Id>(textureWidth * textureHeight);
+  vtkm::cont::ArrayHandle<UInt8> alpha;
+  alpha.Allocate(numValues);
+  auto alphaPortal = alpha.WritePortal();
+  for (vtkm::Id i = 0; i < numValues; ++i)
   {
-    alpha[i] = rgba[i * 4 + 3];
+    alphaPortal.Set(i, rgba[static_cast<std::size_t>(i * 4 + 3)]);
   }
-  vtkm::cont::ArrayHandle<vtkm::UInt8> textureHandle = vtkm::cont::make_ArrayHandle(alpha);
-  Internals->FontTexture =
-    FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), textureHandle);
+  Internals->FontTexture = FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), alpha);
   Internals->FontTexture.SetFilterMode(TextureFilterMode::Linear);
   Internals->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
   return true;

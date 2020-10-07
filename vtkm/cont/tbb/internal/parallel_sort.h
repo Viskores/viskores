@@ -208,9 +208,9 @@ void parallel_quick_sort(RandomAccessIterator begin, RandomAccessIterator end, c
   if (my_context.is_group_execution_cancelled())
   do_parallel_quick_sort:
 #endif /* __TBB_TASK_GROUP_CONTEXT */
-  parallel_for(quick_sort_range<RandomAccessIterator, Compare>(begin, end - begin, comp),
-               quick_sort_body<RandomAccessIterator, Compare>(),
-               auto_partitioner());
+    parallel_for(quick_sort_range<RandomAccessIterator, Compare>(begin, end - begin, comp),
+                 quick_sort_body<RandomAccessIterator, Compare>(),
+                 auto_partitioner());
 }
 
 } // namespace internal

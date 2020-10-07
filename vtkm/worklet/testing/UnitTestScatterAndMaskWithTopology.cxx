@@ -145,15 +145,12 @@ struct DoTestWorklet<TestWorkletMapTopoSelect>
   template <typename T>
   VTKM_CONT void operator()(T) const
   {
-    // 18 are the number of vertices at the DataSet created by Make3DUniformDataSet0
-    const vtkm::Id selectArraySize = 18;
-    const vtkm::IdComponent selectArray[selectArraySize] = { 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                             0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-    auto selectArrayHandle = vtkm::cont::make_ArrayHandle(selectArray, selectArraySize);
-
     vtkm::cont::testing::MakeTestDataSet testDataSet;
     vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
+
+    // Start select array with an array of zeros
+    auto selectArrayHandle = vtkm::cont::make_ArrayHandleMove(
+      std::vector<vtkm::IdComponent>(static_cast<std::size_t>(dataSet3D.GetNumberOfPoints()), 0));
 
     vtkm::cont::CellSetStructured<3> cellSet =
       dataSet3D.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();

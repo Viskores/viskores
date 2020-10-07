@@ -13,6 +13,7 @@
 #include <vtkm/cont/DataSet.h>
 
 #include <vtkm/rendering/raytracing/Ray.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
 
 namespace vtkm
 {
@@ -21,7 +22,7 @@ namespace rendering
 namespace raytracing
 {
 
-class VolumeRendererStructured
+class VTKM_RENDERING_EXPORT VolumeRendererStructured
 {
 public:
   using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
@@ -65,7 +66,7 @@ protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
   vtkm::Bounds SpatialExtent;
-  vtkm::cont::ArrayHandleVirtualCoordinates Coordinates;
+  vtkm::cont::CoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;

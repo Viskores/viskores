@@ -74,10 +74,9 @@ void ValidatePointTransform(const vtkm::cont::CoordinateSystem& coords,
     .GetData()
     .CopyTo(resultArrayHandle);
 
-  vtkm::cont::ArrayHandleVirtualCoordinates outPointsArrayHandle =
-    result.GetCoordinateSystem().GetData();
+  auto outPointsArrayHandle = result.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  auto points = coords.GetData();
+  auto points = coords.GetDataAsMultiplexer();
   VTKM_TEST_ASSERT(points.GetNumberOfValues() == resultArrayHandle.GetNumberOfValues(),
                    "Incorrect number of points in point transform");
 

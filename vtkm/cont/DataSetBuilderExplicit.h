@@ -69,19 +69,29 @@ public:
                                               const std::string& coordsNm = "coords");
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet Create(
-    const vtkm::cont::ArrayHandle<T>& xVals,
-    const vtkm::cont::ArrayHandle<T>& yVals,
-    const vtkm::cont::ArrayHandle<T>& zVals,
-    const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-    const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-    const std::string& coordsNm = "coords")
+  VTKM_DEPRECATED(1.6,
+                  "Combine point coordinate arrays using most appropriate array (e.g. "
+                  "ArrayHandleCompositeVector, ArrayHandleSOA, ArrayHandleCartesianProduct")
+  VTKM_CONT static vtkm::cont::DataSet
+    Create(const vtkm::cont::ArrayHandle<T>& xVals,
+           const vtkm::cont::ArrayHandle<T>& yVals,
+           const vtkm::cont::ArrayHandle<T>& zVals,
+           const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+           const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+           const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+           const std::string& coordsNm = "coords")
   {
+    VTKM_ASSERT(xVals.GetNumberOfValues() == yVals.GetNumberOfValues());
+    VTKM_ASSERT(xVals.GetNumberOfValues() == zVals.GetNumberOfValues());
+
     auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
 
     return DataSetBuilderExplicit::BuildDataSet(
-      xVals, yVals, zVals, shapes, offsets, connectivity, coordsNm);
+      vtkm::cont::make_ArrayHandleCompositeVector(xVals, yVals, zVals),
+      shapes,
+      offsets,
+      connectivity,
+      coordsNm);
   }
 
   template <typename T>
@@ -124,15 +134,6 @@ public:
 
 private:
   template <typename T>
-  static vtkm::cont::DataSet BuildDataSet(const vtkm::cont::ArrayHandle<T>& X,
-                                          const vtkm::cont::ArrayHandle<T>& Y,
-                                          const vtkm::cont::ArrayHandle<T>& Z,
-                                          const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-                                          const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
-                                          const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-                                          const std::string& coordsNm);
-
-  template <typename T>
   VTKM_CONT static vtkm::cont::DataSet BuildDataSet(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
     const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
@@ -161,9 +162,16 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
 {
   VTKM_ASSERT(xVals.size() == yVals.size() && yVals.size() == zVals.size() && xVals.size() > 0);
 
-  auto xArray = vtkm::cont::make_ArrayHandle(xVals, vtkm::CopyFlag::On);
-  auto yArray = vtkm::cont::make_ArrayHandle(yVals, vtkm::CopyFlag::On);
-  auto zArray = vtkm::cont::make_ArrayHandle(zVals, vtkm::CopyFlag::On);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coordsArray;
+  coordsArray.Allocate(static_cast<vtkm::Id>(xVals.size()));
+  auto coordsPortal = coordsArray.WritePortal();
+  for (std::size_t index = 0; index < xVals.size(); ++index)
+  {
+    coordsPortal.Set(static_cast<vtkm::Id>(index),
+                     vtkm::make_Vec(static_cast<vtkm::FloatDefault>(xVals[index]),
+                                    static_cast<vtkm::FloatDefault>(yVals[index]),
+                                    static_cast<vtkm::FloatDefault>(zVals[index])));
+  }
 
   auto shapesArray = vtkm::cont::make_ArrayHandle(shapes, vtkm::CopyFlag::On);
   auto connArray = vtkm::cont::make_ArrayHandle(connectivity, vtkm::CopyFlag::On);
@@ -172,33 +180,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::Create(
     vtkm::cont::make_ArrayHandle(numIndices, vtkm::CopyFlag::Off));
 
   return DataSetBuilderExplicit::BuildDataSet(
-    xArray, yArray, zArray, shapesArray, offsetsArray, connArray, coordsNm);
-}
-
-template <typename T>
-inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
-  const vtkm::cont::ArrayHandle<T>& X,
-  const vtkm::cont::ArrayHandle<T>& Y,
-  const vtkm::cont::ArrayHandle<T>& Z,
-  const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-  const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
-  const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-  const std::string& coordsNm)
-{
-  VTKM_ASSERT(X.GetNumberOfValues() == Y.GetNumberOfValues() &&
-              Y.GetNumberOfValues() == Z.GetNumberOfValues() && X.GetNumberOfValues() > 0 &&
-              shapes.GetNumberOfValues() + 1 == offsets.GetNumberOfValues());
-
-  vtkm::cont::DataSet dataSet;
-  dataSet.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, Y, Z)));
-  vtkm::Id nPts = X.GetNumberOfValues();
-  vtkm::cont::CellSetExplicit<> cellSet;
-
-  cellSet.Fill(nPts, shapes, connectivity, offsets);
-  dataSet.SetCellSet(cellSet);
-
-  return dataSet;
+    coordsArray, shapesArray, offsetsArray, connArray, coordsNm);
 }
 
 template <typename T>

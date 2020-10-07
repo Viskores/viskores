@@ -20,14 +20,19 @@
 
 #include <memory>
 
+#ifdef VTKM_NO_DEPRECATED_VIRTUAL
+#error "ArrayHandleVirtual is removed. Do not include ArrayHandleVirtual.h"
+#endif
+
 namespace vtkm
 {
 namespace cont
 {
 
 
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename T>
-class VTKM_ALWAYS_EXPORT ArrayHandleVirtual
+class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6) ArrayHandleVirtual
   : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>
 {
   using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagVirtual>;
@@ -267,6 +272,7 @@ VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT(vtkm::Float64);
 #undef VTK_M_ARRAY_HANDLE_VIRTUAL_EXPORT
 
 #endif //vtk_m_cont_ArrayHandleVirtual_cxx
+VTKM_DEPRECATED_SUPPRESS_END
 }
 } //namespace vtkm::cont
 
