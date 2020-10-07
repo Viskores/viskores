@@ -68,20 +68,22 @@ public:
 class GraphConnectivity
 {
 public:
-  template <typename InputPortalType, typename OutputPortalType>
-  void Run(const InputPortalType& numIndicesArray,
-           const InputPortalType& indexOffsetsArray,
-           const InputPortalType& connectivityArray,
-           OutputPortalType& componentsOut) const
+  template <typename InputArrayType, typename OutputArrayType>
+  void Run(const InputArrayType& numIndicesArray,
+           const InputArrayType& indexOffsetsArray,
+           const InputArrayType& connectivityArray,
+           OutputArrayType& componentsOut) const
   {
+    VTKM_IS_ARRAY_HANDLE(InputArrayType);
+    VTKM_IS_ARRAY_HANDLE(OutputArrayType);
+
     using Algorithm = vtkm::cont::Algorithm;
 
-    // Initialize the parent pointer to point to the pixel itself. There are other
+    // Initialize the parent pointer to point to the node itself. There are other
     // ways to initialize the parent pointers, for example, a smaller or the minimal
     // neighbor.
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      componentsOut);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numIndicesArray.GetNumberOfValues()),
+                    componentsOut);
 
     vtkm::cont::Invoker invoke;
     invoke(
