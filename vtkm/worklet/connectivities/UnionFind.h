@@ -27,9 +27,10 @@ class UnionFind
 {
 public:
   // This is the naive findRoot() without path compaction in SV Jayanti et. al.
-  // Since the parents array is read-only there is no data race, we can just
-  // call Get() which actually calls Load() with memory_order_acquire ordering
-  // which in turn ensure writes by other threads are reflected.
+  // Since the parents array is read-only in this function, there is no data
+  // race when it is called by multiple treads concurrently. We can just call
+  // Get() which actually calls Load() with memory_order_acquire ordering
+  // which in turn ensure writes by other threads (via Unite()) are reflected.
   template <typename Parents>
   static VTKM_EXEC vtkm::Id findRoot(const Parents& parents, vtkm::Id index)
   {
@@ -70,8 +71,8 @@ public:
     // means that the root_u has been attached to yet some other root_s and became
     // a non-root node. If we are now attaching this non-root node to root_w we
     // would leave root_s behind and undoing previous work.
-    // Atomic Load/Store with memory_order_acquire are no able to detect this
-    // data race. While Load see all previous Stores by other threds, it can not
+    // Atomic Load/Store with memory_order_acquire are not able to detect this
+    // data race. While Load sees all previous Stores by other threads, it can not
     // be aware of any Store after the Load.
     // Resolution: Use atomic Compare and Swap in a loop when updating root_u.
     // CAS will check if root of u has been updated by some other thread between
@@ -86,10 +87,10 @@ public:
 
     // Problem II: There is a potential concurrent write data race as it is
     // possible for the two threads to try to change the same old root to
-    // different new roots, e.g. T0 calls parents.Set(u, v) while T1 calls
-    // parents.Set(u, w) where v < u and w < u (but the order of v and w is
-    // unspecified.) Each thread assumes success while the outcome is actually
-    // unspecified.
+    // different new roots, e.g. T0 calls parents.Set(root_u, root_v) while T1
+    // calls parents.Set(root_u, root_w) where root_v < root_u and root_w < root_u
+    // (but the order of root_v and root_w is unspecified.) Each thread assumes
+    // success while the outcome is actually unspecified.
     // Resolution: Use an atomic Compare and Swap is suggested in SV Janati et. al.
     // as well as J. Jaiganesht et. al. to resolve the data race. The CAS
     // checks if the old root is the same as what we expected. If so, there is

@@ -101,8 +101,7 @@ public:
       // Initialize the parent pointer to point to the pixel itself. There are other
       // ways to initialize the parent pointers, for example, a smaller or the minimal
       // neighbor.
-      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                      componentsOut);
+      Algorithm::Copy(vtkm::cont::ArrayHandleIndex(pixels.GetNumberOfValues()), componentsOut);
 
       vtkm::cont::Invoker invoke;
       invoke(detail::ImageGraft{}, input, componentsOut, pixels, componentsOut);

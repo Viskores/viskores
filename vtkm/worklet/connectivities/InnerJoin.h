@@ -11,7 +11,7 @@
 #ifndef vtk_m_worklet_connectivity_InnerJoin_h
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
-#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -98,13 +98,11 @@ public:
     Algorithm::Unique(uniqueComponents);
 
     vtkm::cont::ArrayHandle<vtkm::Id> ids;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, componentsInOut.GetNumberOfValues()), ids);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(componentsInOut.GetNumberOfValues()), ids);
 
     vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-      uniqueColor);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(uniqueComponents.GetNumberOfValues()),
+                    uniqueColor);
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
     vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
