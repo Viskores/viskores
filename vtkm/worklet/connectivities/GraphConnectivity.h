@@ -34,7 +34,6 @@ public:
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
 
-  // TODO: Use Scatter?
   template <typename InPortalType, typename AtomicCompInOut>
   VTKM_EXEC void operator()(vtkm::Id index,
                             vtkm::Id start,
@@ -84,7 +83,6 @@ public:
       vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
       componentsOut);
 
-    // TODO: give the reason that single pass algorithm works.
     vtkm::cont::Invoker invoke;
     invoke(
       detail::GraphGraft{}, indexOffsetsArray, numIndicesArray, connectivityArray, componentsOut);

@@ -60,14 +60,15 @@ public:
       {
         for (int i = minIndices[0]; i <= maxIndices[0]; i++)
         {
-          // We need to reload thisComp and thatComp every iteration since
-          // they might have been changed by Unite(), both as a result of
-          // attaching one tree to the other or as a result of path compaction
-          // in findRoot().
-          auto thisComp = neighborComp.Get(0, 0, 0);
-          auto thatComp = neighborComp.Get(i, j, k);
           if (thisColor == neighborColor.Get(i, j, k))
           {
+            // We need to reload thisComp and thatComp every iteration since
+            // they might have been changed by Unite(), both as a result of
+            // attaching one tree to the other or as a result of path compaction
+            // in findRoot().
+            auto thisComp = neighborComp.Get(0, 0, 0);
+            auto thatComp = neighborComp.Get(i, j, k);
+
             // Merge the two components one way or the other, the order will
             // be resolved by Unite().
             UnionFind::Unite(compOut, thisComp, thatComp);
@@ -103,7 +104,6 @@ public:
       Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
                       componentsOut);
 
-      // TODO: give the reason that single pass algorithm works.
       vtkm::cont::Invoker invoke;
       invoke(detail::ImageGraft{}, input, componentsOut, pixels, componentsOut);
       invoke(PointerJumping{}, componentsOut);

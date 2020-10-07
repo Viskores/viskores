@@ -84,23 +84,22 @@ public:
 class Renumber
 {
 public:
-  // FIXME: const correctness for input. Or make it single InOut argument.
-  static void Run(vtkm::cont::ArrayHandle<vtkm::Id>& components)
+  static void Run(vtkm::cont::ArrayHandle<vtkm::Id>& componentsInOut)
   {
     using Algorithm = vtkm::cont::Algorithm;
 
-    // FIXME: we should able to apply findRoot to each pixel and use some kind
+    // FIXME: we should be able to apply findRoot to each pixel and use some kind
     // of atomic operation to get the number of unique components without the
     // cost of copying and sorting. This might be able to be extended to also
     // work for the renumbering (replacing InnerJoin) through atomic increment.
     vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-    Algorithm::Copy(components, uniqueComponents);
+    Algorithm::Copy(componentsInOut, uniqueComponents);
     Algorithm::Sort(uniqueComponents);
     Algorithm::Unique(uniqueComponents);
 
     vtkm::cont::ArrayHandle<vtkm::Id> ids;
-    Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, components.GetNumberOfValues()),
-                    ids);
+    Algorithm::Copy(
+      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, componentsInOut.GetNumberOfValues()), ids);
 
     vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
     Algorithm::Copy(
@@ -109,10 +108,15 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
     vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-    InnerJoin::Run(
-      components, ids, uniqueComponents, uniqueColor, cellColors, pixelIdsOut, components);
+    InnerJoin::Run(componentsInOut,
+                   ids,
+                   uniqueComponents,
+                   uniqueColor,
+                   cellColors,
+                   pixelIdsOut,
+                   componentsInOut);
 
-    Algorithm::SortByKey(pixelIdsOut, components);
+    Algorithm::SortByKey(pixelIdsOut, componentsInOut);
   }
 };
 }

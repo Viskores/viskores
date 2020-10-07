@@ -59,49 +59,58 @@ public:
     // rooted forest structure of Union-Find at the expense of duplicated (but
     // benign) work.
 
-    // Case 2, T0 calling Unite(u, v), T1 calling Unite(u, w) and T2 calling
-    // Unite(v, s) concurrently.
+    // Case 2, T0 calling Unite(u, v) and T1 calling Unite(u, w) concurrently.
     // Problem I: There is a potential write after read data race. After T0
-    // calls findRoot for u and v, T1 might have called parents.Set(root_u, root_w)
-    // thus changed root_u to root_w thus making root_u "obsolete" before T0 calls
-    // parents.Set() on root_u/root_v.
+    // calls findRoot() for u but before actually updating the parent of root_u,
+    // T1 might have changed root_u to root_w and made root_u "obsolete".
     // When the root of the tree to be attached to (e.g. root_u, when root_u <  root_v)
     // is changed, there is no hazard, since we are just attaching a tree to a
-    // now a non-root node, root_u, (thus, root_w <- root_u <- root_v) and three
-    // components merged.
+    // now a non-root node, root_u, (thus, root_w <- root_u <- root_v).
     // However, when the root of the attaching tree (root_v) is changed, it
     // means that the root_u has been attached to yet some other root_s and became
     // a non-root node. If we are now attaching this non-root node to root_w we
     // would leave root_s behind and undoing previous work.
-    // Resolution: TDB, mostly some reason for CompareAndSwap
+    // Atomic Load/Store with memory_order_acquire are no able to detect this
+    // data race. While Load see all previous Stores by other threds, it can not
+    // be aware of any Store after the Load.
+    // Resolution: Use atomic Compare and Swap in a loop when updating root_u.
+    // CAS will check if root of u has been updated by some other thread between
+    // findRoot(u) is called and when root of u is going to be updated. This is
+    // done by comparing the root_u = findRoot(u) to the current value at
+    // parents[root_u]. If they are the same, no data race has happened and the
+    // value in parents[root_u] is updated. However, if root_u != parent[root_u],
+    // it means parent[root_u] has been updated by some other thread. CAS returns
+    // the new value of parent[root_u] (root_s in the Problem description) which
+    // we can use as the new root_u. We keep retrying until there is no more
+    // data race and root_u == root_w i.e. they are in the same component.
 
-    // Case 3. There is a potential concurrent write data race as it is possible
-    // for two threads to try to change the same old root to different new roots,
-    // e.g. threadA calls parents.Set(root, rootA) while threadB calls
-    // parents(root, rootB) where rootB < root and rootA < root (but the order
-    // of rootA and rootB is unspecified.) Each thread assumes success while
-    // the outcome is actually unspecified.
-    // Resolution: An atomic Compare and Swap is suggested in SV Janati et. al.
+    // Problem II: There is a potential concurrent write data race as it is
+    // possible for the two threads to try to change the same old root to
+    // different new roots, e.g. T0 calls parents.Set(u, v) while T1 calls
+    // parents.Set(u, w) where v < u and w < u (but the order of v and w is
+    // unspecified.) Each thread assumes success while the outcome is actually
+    // unspecified.
+    // Resolution: Use an atomic Compare and Swap is suggested in SV Janati et. al.
     // as well as J. Jaiganesht et. al. to resolve the data race. The CAS
     // checks if the old root is the same as what we expected. If so, there is
-    // no data race, CAS will set the root to the desired value. The return value
-    // from CAS will equal to our expected old root and signifies a successful
-    // write which terminates the while loop.
-    // If the old root is not what we expected, it was updated by some other
-    // thread and the update by this thread fails. The root as updated by
-    // the other thread is returned. This returned value would not equal to our desired new
-    // root, signifying the need to retry with the while loop. On the other
-    // hand,
-    // Why simple Load/Store as provide by AtomicArray Get/Set do not work.
-
+    // no data race, CAS will set the root to the desired new value. The return
+    // value from CAS will equal to our expected old root and signifies a
+    // successful write which terminates the while loop.
+    // If the old root is not what we expected, it has been updated by some
+    // other thread and the update by this thread fails. The root as updated by
+    // the other thread is returned. This returned value would not equal to
+    // our desired new root, signifying the need to retry with the while loop.
+    // We can use this return "new root" as is without calling findRoot() to
+    // find the "new root". The while loop terminates when both u and v have
+    // the same root (thus united).
     auto root_u = UnionFind::findRoot(parents, u);
     auto root_v = UnionFind::findRoot(parents, v);
 
     while (root_u != root_v)
     {
-      // FIXME: we might be executing the loop one extra time.
+      // FIXME: we might be executing the loop one extra time than necessary.
       // Nota Bene: VTKm's CompareAndSwap has a different order of parameters
-      // than normal practice, it is (index, new, expected) rather than
+      // than common practice, it is (index, new, expected) rather than
       // (index, expected, new).
       if (root_u < root_v)
         root_v = parents.CompareAndSwap(root_v, root_u, root_v);
