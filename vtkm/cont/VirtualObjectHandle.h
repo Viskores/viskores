@@ -100,6 +100,7 @@ public:
                        bool acquireOwnership = true,
                        DeviceAdapterList devices = DeviceAdapterList())
   {
+    VTKM_DEPRECATED_SUPPRESS_BEGIN
     VTKM_STATIC_ASSERT_MSG((std::is_base_of<VirtualBaseType, VirtualDerivedType>::value),
                            "Tried to bind a type that is not a subclass of the base class.");
 
@@ -118,6 +119,7 @@ public:
       vtkm::cont::internal::ForEachValidDevice(
         devices, internal::CreateTransferInterface(), this->Internals.get(), derived);
     }
+    VTKM_DEPRECATED_SUPPRESS_END
   }
 
   /// Release all host and execution side resources

@@ -26,10 +26,10 @@ namespace detail
 struct FindCellFunctor
 {
   template <typename Locator>
-  vtkm::ErrorCode operator()(Locator&& locator,
-                             const vtkm::Vec3f& point,
-                             vtkm::Id& cellId,
-                             vtkm::Vec3f& parametric) const
+  VTKM_EXEC vtkm::ErrorCode operator()(Locator&& locator,
+                                       const vtkm::Vec3f& point,
+                                       vtkm::Id& cellId,
+                                       vtkm::Vec3f& parametric) const
   {
     return locator.FindCell(point, cellId, parametric);
   }

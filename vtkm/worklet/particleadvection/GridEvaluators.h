@@ -94,7 +94,7 @@ public:
                                          const vtkm::FloatDefault& time,
                                          vtkm::VecVariable<Point, 2>& out) const
   {
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     Point parametric;
     GridEvaluatorStatus status;
 

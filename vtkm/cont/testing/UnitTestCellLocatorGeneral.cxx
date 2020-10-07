@@ -183,8 +183,7 @@ void TestWithDataSet(vtkm::cont::CellLocatorGeneral& locator, const vtkm::cont::
   vtkm::cont::ArrayHandle<PointType> pcoords;
 
   vtkm::worklet::DispatcherMapField<FindCellWorklet> dispatcher;
-  // CellLocatorGeneral is non-copyable. Pass it via a pointer.
-  dispatcher.Invoke(points, &locator, cellIds, pcoords);
+  dispatcher.Invoke(points, locator, cellIds, pcoords);
 
   auto cellIdPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();

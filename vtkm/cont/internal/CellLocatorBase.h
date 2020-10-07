@@ -146,7 +146,7 @@ public:
   // Support deprecated classes
   operator detail::CellLocatorBaseWrapper<Derived>() const
   {
-    return detail::CellLocatorBaseExecWrapper<Derived>(*this);
+    return detail::CellLocatorBaseWrapper<Derived>(reinterpret_cast<const Derived&>(*this));
   }
   VTKM_DEPRECATED_SUPPRESS_END
 #endif //!VTKM_NO_DEPRECATED_VIRTUAL

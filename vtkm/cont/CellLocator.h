@@ -34,6 +34,7 @@ class VTKM_CONT_EXPORT VTKM_DEPRECATED(
   "CellLocator with virtual methods no longer supported. Use CellLocatorGeneral.") CellLocator
   : public vtkm::cont::ExecutionObjectBase
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 public:
   virtual ~CellLocator();
@@ -63,7 +64,6 @@ public:
     }
   }
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
   VTKM_CONT virtual const vtkm::exec::CellLocator* PrepareForExecution(
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const = 0;
@@ -75,7 +75,6 @@ public:
     vtkm::cont::Token token;
     return this->PrepareForExecution(device, token);
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 
 protected:
   void SetModified() { this->Modified = true; }
@@ -89,6 +88,7 @@ private:
   vtkm::cont::CoordinateSystem Coords;
   bool Modified = true;
 };
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // namespace cont
 } // namespace vtkm

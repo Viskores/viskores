@@ -30,6 +30,7 @@ class VTKM_DEPRECATED(
   "CellLocator with virtual methods no longer supported. Use CellLocatorGeneral.")
   VTKM_ALWAYS_EXPORT CellLocator : public vtkm::VirtualObjectBase
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
 public:
   VTKM_EXEC_CONT virtual ~CellLocator() noexcept
   {
@@ -55,6 +56,7 @@ public:
       worklet.RaiseError(vtkm::ErrorString(status));
     }
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 };
 
 } // namespace exec
