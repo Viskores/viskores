@@ -11,6 +11,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/Contour.h>
 
+#include <iomanip>
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
 class TestImageConnectivity
@@ -22,6 +23,7 @@ public:
   {
     CCL_CUDA8x4();
     CCL_CUDA8x8();
+    Valentine();
   }
 
   void CCL_CUDA8x4() const
@@ -81,6 +83,49 @@ public:
                                                    0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,
                                                    0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
                                                    0, 1, 0, 1, 1, 1, 3, 3, 0, 1, 1, 1, 1, 1, 3, 3 };
+
+    for (vtkm::Id i = 0; i < component.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(component.ReadPortal().Get(i) == componentExpected[size_t(i)],
+                       "Components has unexpected value.");
+    }
+  }
+
+  void Valentine() const
+  {
+    // Sample image by VALENTINE PELTIER
+
+    // clang-format off
+    auto pixels = vtkm::cont::make_ArrayHandle<vtkm::UInt8>( {
+      1, 1, 0, 1, 0, 0,
+      0, 0, 0, 1, 1, 0,
+      1, 1, 0, 1, 0, 1,
+      1, 0, 1, 0, 0, 0,
+      0, 1, 0, 1, 1, 1,
+      1, 1, 0, 0, 1, 0,
+    });
+    // clang-format on
+
+    vtkm::cont::DataSetBuilderUniform builder;
+    vtkm::cont::DataSet data = builder.Create(vtkm::Id3(6, 6, 1));
+
+    auto colorField = vtkm::cont::make_FieldPoint("color", pixels);
+    data.AddField(colorField);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> component;
+    vtkm::worklet::connectivity::ImageConnectivity().Run(
+      data.GetCellSet().Cast<vtkm::cont::CellSetStructured<2>>(), colorField.GetData(), component);
+
+    // clang-format off
+    std::vector<vtkm::UInt8> componentExpected = {
+      0,  0,  1,  2,  1,  1,
+      1,  1,  1,  2,  2,  1,
+      2,  2,  1,  2,  1,  2,
+      2,  1,  2,  1,  1,  1,
+      1,  2,  1,  2,  2,  2,
+      2,  2,  1,  1,  2,  3
+    };
+    // clang-format on
 
     for (vtkm::Id i = 0; i < component.GetNumberOfValues(); ++i)
     {
