@@ -108,11 +108,7 @@ public:
                      "Neighboring nodes don't have the same component id");
   }
 
-  void TestECL_CC_DataSets() const
-  {
-    TestECL_CC("internet.egr", 1);
-    TestECL_CC("kron_g500-logn21.egr", 553159);
-  }
+  void TestECL_CC_DataSets() const { TestECL_CC("internet.egr", 1); }
 
   void TestSimpleGraph() const
   {
