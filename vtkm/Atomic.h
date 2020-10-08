@@ -142,9 +142,9 @@ VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline T AtomicLoadImpl(T* const addr, vtkm::MemoryOrder order)
 {
-  const volatile T* vaddr = addr; /* volatile to bypass cache*/
+  volatile T* const vaddr = addr; /* volatile to bypass cache*/
   if (order == vtkm::MemoryOrder::SequentiallyConsistent)
   {
     __threadfence();
@@ -270,7 +270,7 @@ VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline T AtomicLoadImpl(T* const addr, vtkm::MemoryOrder order)
 {
   switch (order)
   {
@@ -407,35 +407,35 @@ VTKM_EXEC_CONT inline T BitCast(T&& src)
 //
 // https://docs.microsoft.com/en-us/windows/desktop/sync/interlocked-variable-access
 
-VTKM_EXEC_CONT inline vtkm::UInt8 AtomicLoadImpl(const vtkm::UInt8* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::UInt8 AtomicLoadImpl(vtkm::UInt8* const addr, vtkm::MemoryOrder order)
 {
   // This assumes that the memory interface is smart enough to load a 32-bit
   // word atomically and a properly aligned 8-bit word from it.
   // We could build address masks and do shifts to perform this manually if
   // this assumption is incorrect.
-  auto result = *static_cast<volatile const vtkm::UInt8*>(addr);
+  auto result = *static_cast<volatile vtkm::UInt8* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VTKM_EXEC_CONT inline vtkm::UInt16 AtomicLoadImpl(const vtkm::UInt16* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::UInt16 AtomicLoadImpl(vtkm::UInt16* const addr, vtkm::MemoryOrder order)
 {
   // This assumes that the memory interface is smart enough to load a 32-bit
   // word atomically and a properly aligned 16-bit word from it.
   // We could build address masks and do shifts to perform this manually if
   // this assumption is incorrect.
-  auto result = *static_cast<volatile const vtkm::UInt16*>(addr);
+  auto result = *static_cast<volatile vtkm::UInt16* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VTKM_EXEC_CONT inline vtkm::UInt32 AtomicLoadImpl(const vtkm::UInt32* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::UInt32 AtomicLoadImpl(vtkm::UInt32* const addr, vtkm::MemoryOrder order)
 {
-  auto result = *static_cast<volatile const vtkm::UInt32*>(addr);
+  auto result = *static_cast<volatile vtkm::UInt32* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VTKM_EXEC_CONT inline vtkm::UInt64 AtomicLoadImpl(const vtkm::UInt64* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::UInt64 AtomicLoadImpl(vtkm::UInt64* const addr, vtkm::MemoryOrder order)
 {
-  auto result = *static_cast<volatile const vtkm::UInt64*>(addr);
+  auto result = *static_cast<volatile vtkm::UInt64* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
@@ -538,7 +538,7 @@ VTKM_EXEC_CONT inline int GccAtomicMemOrder(vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicLoadImpl(const T* addr, vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline T AtomicLoadImpl(T* const addr, vtkm::MemoryOrder order)
 {
   return __atomic_load_n(addr, GccAtomicMemOrder(order));
 }
@@ -627,7 +627,7 @@ using AtomicTypesSupported = vtkm::List<vtkm::UInt32, vtkm::UInt64>;
 /// or after that write.
 ///
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicLoad(const T* pointer,
+VTKM_EXEC_CONT inline T AtomicLoad(T* const pointer,
                                    vtkm::MemoryOrder order = vtkm::MemoryOrder::Acquire)
 {
   return detail::AtomicLoadImpl(pointer, order);
