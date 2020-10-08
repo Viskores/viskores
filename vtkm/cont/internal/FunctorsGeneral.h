@@ -12,6 +12,7 @@
 
 #include <vtkm/Algorithms.h>
 #include <vtkm/BinaryOperators.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -83,15 +84,7 @@ struct WrappedBinaryOperator
   }
 };
 
-//needs to be in a location that TBB DeviceAdapterAlgorithm can reach
-struct DefaultCompareFunctor
-{
-  template <typename T>
-  VTKM_EXEC bool operator()(const T& first, const T& second) const
-  {
-    return first < second;
-  }
-};
+using DefaultCompareFunctor = vtkm::SortLess;
 
 //needs to be in a location that TBB DeviceAdapterAlgorithm can reach
 template <typename T, typename U, class BinaryCompare = DefaultCompareFunctor>
