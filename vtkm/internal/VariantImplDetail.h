@@ -12,6 +12,9 @@
 
 #if !defined(VTK_M_DEVICE) || !defined(VTK_M_NAMESPACE)
 #error VarianImplDetail.h must be included from VariantImpl.h
+// Some defines to make my IDE happy.
+#define VTK_M_DEVICE
+#define VTK_M_NAMESPACE tmp
 #endif
 
 #include <vtkm/Types.h>

@@ -290,36 +290,11 @@ struct VariantConstructorImpl<vtkm::VTK_M_NAMESPACE::internal::Variant<Ts...>,
     this->Index = src.Index;
   }
 
-  VTK_M_DEVICE VariantConstructorImpl(VariantConstructorImpl&& rhs) noexcept
-  {
-    this->Storage = std::move(rhs.Storage);
-    this->Index = std::move(rhs.Index);
-    rhs.Index = -1;
-  }
-
   VTK_M_DEVICE VariantConstructorImpl& operator=(const VariantConstructorImpl& src) noexcept
   {
     this->Reset();
     src.CastAndCall(detail::VariantCopyFunctor{}, this->GetPointer());
     this->Index = src.Index;
-    return *this;
-  }
-
-  VTK_M_DEVICE VariantConstructorImpl& operator=(VariantConstructorImpl&& rhs) noexcept
-  {
-    this->Reset();
-// Get rid of spurious GCC-10 warning:
-// Storage might be uninitialized, but that is OK as long as Index == -1.
-#if defined(VTKM_GCC)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-    this->Storage = std::move(rhs.Storage);
-#if defined(VTKM_GCC)
-#pragma GCC diagnostic pop
-#endif
-    this->Index = std::move(rhs.Index);
-    rhs.Index = -1;
     return *this;
   }
 };
