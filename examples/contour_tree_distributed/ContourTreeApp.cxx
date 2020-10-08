@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
   // From https://www.unix.com/302983597-post2.html
   char cstr_filename[255];
   std::snprintf(cstr_filename, sizeof(cstr_filename), "cout_%d.log", rank);
-  int out = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
+  int out = open(cstr_filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
   if (-1 == out)
   {
     perror("opening cout.log");
@@ -348,7 +348,7 @@ int main(int argc, char* argv[])
 
 #ifndef SINGLE_FILE_STDOUT_STDERR
   std::snprintf(cstr_filename, sizeof(cstr_filename), "cerr_%d.log", rank);
-  int err = open(cstr_filename, O_RDWR | O_CREAT | O_APPEND, 0600);
+  int err = open(cstr_filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
   if (-1 == err)
   {
     perror("opening cerr.log");
@@ -677,22 +677,19 @@ int main(int argc, char* argv[])
       // TODO All we should need to do to implement BOV support is to copy the values
       // in the values vector and copy the dimensions in the dims vector
       vtkm::Id3 pointDimensions;
-      vtkm::worklet::contourtree_augmented::GetPointDimensions temp;
-      temp(inDataSet.GetCellSet(), pointDimensions);
+      auto cellSet = inDataSet.GetCellSet();
+      cellSet.CastAndCall(vtkm::worklet::contourtree_augmented::GetPointDimensions(),
+                          pointDimensions);
+      std::cout << "Point dimensions are " << pointDimensions << std::endl;
+      dims.resize(3);
       dims[0] = pointDimensions[0];
       dims[1] = pointDimensions[1];
       dims[2] = pointDimensions[2];
-      auto tempField = inDataSet.GetField("values").GetData();
-      values.resize(static_cast<std::size_t>(tempField.GetNumberOfValues()));
-      auto tempFieldHandle = tempField.AsVirtual<ValueType>().ReadPortal();
-      for (vtkm::Id i = 0; i < tempField.GetNumberOfValues(); i++)
-      {
-        values[static_cast<std::size_t>(i)] = static_cast<ValueType>(tempFieldHandle.Get(i));
-      }
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "BOV reader not yet support in MPI mode by this example");
-      MPI_Finalize();
-      return EXIT_FAILURE;
+      auto tempFieldData = inDataSet.GetField(0).GetData();
+      values.resize(static_cast<std::size_t>(tempFieldData.GetNumberOfValues()));
+      auto valuesHandle = vtkm::cont::make_ArrayHandle(values, vtkm::CopyFlag::Off);
+      vtkm::cont::ArrayCopy(tempFieldData.ResetTypes(vtkm::List<ValueType>{}), valuesHandle);
+      valuesHandle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
     }
     else // Read ASCII data input
     {
@@ -774,8 +771,8 @@ int main(int argc, char* argv[])
       {
         VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
                       rank == 0,
-                      "Number of ranks to large for data. Use " << lastDimSize / 2
-                                                                << "or fewer ranks");
+                      "Number of ranks too large for data. Use " << lastDimSize / 2
+                                                                 << "or fewer ranks");
         MPI_Finalize();
         return EXIT_FAILURE;
       }
