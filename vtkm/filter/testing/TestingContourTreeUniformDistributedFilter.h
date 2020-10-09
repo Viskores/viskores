@@ -57,6 +57,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
