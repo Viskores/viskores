@@ -72,6 +72,7 @@ public:
     TestContourTreeUniformDistributed8x9(4, rank, size);
     TestContourTreeUniformDistributed8x9(8, rank, size);
     TestContourTreeUniformDistributed8x9(16, rank, size);
+#if 0
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
                         Testing::DataPath("rectilinear/vanc.ct_txt"),
@@ -93,6 +94,7 @@ public:
                         false,
                         rank,
                         size);
+#endif
     TestContourTreeUniformDistributed5x6x7(4, false, rank, size);
     TestContourTreeUniformDistributed5x6x7(8, false, rank, size);
     TestContourTreeUniformDistributed5x6x7(16, false, rank, size);
