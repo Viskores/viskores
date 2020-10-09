@@ -320,10 +320,10 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
     master.foreach ([result, filter](void*, const vtkmdiy::Master::ProxyWithLink& p) {
       vtkmdiy::BlockID root{ 0, 0 }; // Rank 0
       p.enqueue(root, result.GetNumberOfPartitions());
-      for (const vtkm::cont::DataSet& ds : result)
+      for (const vtkm::cont::DataSet& curr_ds : result)
       {
-        auto sds = DataSetWrapper(ds);
-        p.enqueue(root, sds);
+        auto curr_sds = DataSetWrapper(curr_ds);
+        p.enqueue(root, curr_sds);
       }
     });
     // Exchange data, i.e., send to rank 0 (pass "true" to exchange data between
