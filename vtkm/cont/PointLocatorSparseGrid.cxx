@@ -61,6 +61,8 @@ private:
 
 void PointLocatorSparseGrid::Build()
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "PointLocatorSparseGrid::Build");
+
   if (this->IsRangeInvalid())
   {
     this->Range = this->GetCoordinates().GetRange();
