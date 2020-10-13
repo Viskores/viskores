@@ -130,6 +130,8 @@ vtkm::worklet::MaskSelect::ThreadToOutputMapType vtkm::worklet::MaskSelect::Buil
   const VariantArrayHandleMask& maskArray,
   vtkm::cont::DeviceAdapterId device)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "MaskSelect::Build");
+
   vtkm::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
   maskArray.CastAndCall(MaskBuilder(), threadToOutputMap, device);
   return threadToOutputMap;

@@ -156,6 +156,8 @@ private:
   {
     VTKM_IS_LIST(TypeList);
 
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Field::GetRange");
+
     if (this->ModifiedFlag)
     {
       vtkm::cont::CastAndCall(
