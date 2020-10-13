@@ -347,6 +347,8 @@ namespace cont
 ///
 VTKM_CONT void CellLocatorTwoLevel::Build()
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "CellLocatorTwoLevel::Build");
+
   vtkm::cont::Invoker invoke;
 
   auto cellset = this->GetCellSet();

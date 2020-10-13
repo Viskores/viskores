@@ -229,6 +229,8 @@ CellLocatorBoundingIntervalHierarchy::~CellLocatorBoundingIntervalHierarchy() = 
 
 void CellLocatorBoundingIntervalHierarchy::Build()
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "CellLocatorBoundingIntervalHierarchy::Build");
+
   vtkm::cont::Invoker invoker;
 
   vtkm::cont::DynamicCellSet cellSet = this->GetCellSet();
