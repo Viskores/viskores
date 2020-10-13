@@ -141,6 +141,7 @@ struct ComputePass1 : public vtkm::worklet::WorkletVisitPointsWithCells
         }
       }
     }
+    write_edge(device, startPos + (offset * end), edges, FlyingEdges3D::Below);
   }
 };
 
@@ -150,7 +151,7 @@ struct launchComputePass1
   VTKM_CONT bool operator()(DeviceAdapterTag device,
                             const ComputePass1<T>& worklet,
                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
+                            vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
                             Args&&... args) const
   {
@@ -165,7 +166,7 @@ struct launchComputePass1
   VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device,
                             const ComputePass1<T>& worklet,
                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
+                            vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
                             Args&&... args) const
   {
