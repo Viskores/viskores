@@ -30,8 +30,8 @@ cd ubuntu1804/base
 sudo docker build -t kitware/vtkm:ci-ubuntu1804-$date .
 cd ../..
 
-cd ubuntu1804/cuda10.1
-sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda10.1-$date .
+cd ubuntu1804/cuda11.1
+sudo docker build -t kitware/vtkm:ci-ubuntu1804_cuda11.1-$date .
 cd ../..
 
 cd ubuntu1804/kokkos-cuda
