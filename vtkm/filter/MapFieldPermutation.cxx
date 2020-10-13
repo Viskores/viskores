@@ -78,6 +78,8 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   vtkm::cont::Field& outputField,
   vtkm::Float64 invalidValue)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::VariantArrayHandle outputArray;
   DoMapFieldPermutation functor;
   inputField.GetData().ResetTypes<vtkm::TypeListAll>().CastAndCall(

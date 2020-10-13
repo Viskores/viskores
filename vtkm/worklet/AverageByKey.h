@@ -70,6 +70,7 @@ struct AverageByKey
                             const InArrayType& inValues,
                             OutArrayType& outAverages)
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "AverageByKey::Run");
 
     vtkm::worklet::DispatcherReduceByKey<AverageWorklet> dispatcher;
     dispatcher.Invoke(keys, inValues, outAverages);
@@ -133,6 +134,8 @@ struct AverageByKey
                             vtkm::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
                             vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
   {
+    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "AverageByKey::Run");
+
     auto results = vtkm::worklet::DescriptiveStatistics::Run(keyArray, valueArray);
 
     // Copy/TransformCopy from results to outputKeyArray and outputValueArray
