@@ -40,6 +40,8 @@ bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
                                         const vtkm::worklet::internal::KeysBase& keys,
                                         vtkm::cont::Field& outputField)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::VariantArrayHandle outputArray;
   DoMapFieldMerge functor;
   inputField.GetData().ResetTypes<vtkm::TypeListAll>().CastAndCall(
@@ -59,6 +61,8 @@ bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
                                         const vtkm::worklet::internal::KeysBase& keys,
                                         vtkm::cont::DataSet& outputData)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::Field outputField;
   bool success = vtkm::filter::MapFieldMergeAverage(inputField, keys, outputField);
   if (success)
