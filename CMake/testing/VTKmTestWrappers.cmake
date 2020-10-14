@@ -178,6 +178,9 @@ function(vtkm_unit_tests)
   # Add the path to the location where regression test images are to be stored
   list(APPEND VTKm_UT_TEST_ARGS "--baseline-dir=${VTKm_SOURCE_DIR}/data/baseline")
 
+  # Add the path to the location where generated regression test images should be written
+  list(APPEND VTKm_UT_TEST_ARGS "--write-dir=${VTKm_BINARY_DIR}")
+
   if(VTKm_UT_MPI)
     if (VTKm_ENABLE_MPI)
       vtkm_create_test_executable(

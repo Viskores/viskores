@@ -81,7 +81,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
       VTKM_LOG_S(vtkm::cont::LogLevel::Error, error.what());
       imageResult.PushMessage(error.GetMessage());
 
-      const std::string outputImagePath = vtkm::cont::testing::Testing::BuildDirPath(fileName);
+      const std::string outputImagePath = vtkm::cont::testing::Testing::WriteDirPath(fileName);
       vtkm::io::WriteImageFile(view->GetCanvas().GetDataSet(), outputImagePath, "color");
 
       imageResult.PushMessage("File '" + fileName + "' did not exist but has been generated");
@@ -114,7 +114,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
 
     if (writeDiff && resultDataSet.HasPointField("image-diff"))
     {
-      const std::string diffName = "diff-" + fileName;
+      const std::string diffName = vtkm::cont::testing::Testing::WriteDirPath("diff-" + fileName);
       vtkm::io::WriteImageFile(resultDataSet, diffName, "image-diff");
     }
 
