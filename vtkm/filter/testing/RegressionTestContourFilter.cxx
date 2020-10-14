@@ -10,10 +10,13 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
+#include <vtkm/source/Tangle.h>
+
 #include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -56,8 +59,78 @@ void TestContourFilterWedge()
   VTKM_TEST_ASSERT(test_equal_images(view, "contour-wedge.png"));
 }
 
+void TestContourFilterUniform()
+{
+  std::cout << "Generate Image for Contour filter on a uniform grid" << std::endl;
+
+  vtkm::cont::ColorTable colorTable(
+    { 0, 1 }, { 0.20f, 0.80f, .20f }, { .20f, .80f, .201f }, vtkm::ColorSpace::RGB);
+  using M = vtkm::rendering::MapperRayTracer;
+  using C = vtkm::rendering::CanvasRayTracer;
+  using V3 = vtkm::rendering::View3D;
+
+  vtkm::cont::testing::MakeTestDataSet maker;
+  vtkm::cont::DataSet inputData = maker.Make3DUniformDataSet0();
+  std::string fieldName = "pointvar";
+  VTKM_TEST_ASSERT(inputData.HasField(fieldName));
+
+  vtkm::filter::Contour contour;
+  contour.SetGenerateNormals(false);
+  contour.SetMergeDuplicatePoints(true);
+  contour.SetIsoValue(0, 100.0);
+  contour.SetActiveField(fieldName);
+  contour.SetFieldsToPass(fieldName);
+  vtkm::cont::DataSet result = contour.Execute(inputData);
+
+  result.PrintSummary(std::cout);
+
+  C canvas(512, 512);
+  M mapper;
+  vtkm::rendering::Scene scene;
+  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
+    result, "pointvar", canvas, mapper, scene, colorTable);
+
+  //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
+  VTKM_TEST_ASSERT(test_equal_images(view, "contour-uniform.png"));
+}
+
+void TestContourFilterTangle()
+{
+  std::cout << "Generate Image for Contour filter on a uniform tangle grid" << std::endl;
+
+  vtkm::cont::ColorTable colorTable(
+    { 0, 1 }, { 0.20f, 0.80f, .20f }, { .20f, .80f, .201f }, vtkm::ColorSpace::RGB);
+  using M = vtkm::rendering::MapperRayTracer;
+  using C = vtkm::rendering::CanvasRayTracer;
+  using V3 = vtkm::rendering::View3D;
+
+  vtkm::Id3 dims(4, 4, 4);
+  vtkm::source::Tangle tangle(dims);
+  vtkm::cont::DataSet dataSet = tangle.Execute();
+
+  vtkm::filter::Contour contour;
+  contour.SetGenerateNormals(true);
+  contour.SetIsoValue(0, 1);
+  contour.SetActiveField("nodevar");
+  contour.SetFieldsToPass("nodevar");
+  auto result = contour.Execute(dataSet);
+
+  result.PrintSummary(std::cout);
+
+  C canvas(512, 512);
+  M mapper;
+  vtkm::rendering::Scene scene;
+  auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
+    result, "nodevar", canvas, mapper, scene, colorTable);
+
+  //Y axis Flying Edge algorithm has subtle differences at a couple of boundaries
+  VTKM_TEST_ASSERT(test_equal_images(view, "contour-tangle.png"));
+}
+
 void TestContourFilter()
 {
+  TestContourFilterUniform();
+  TestContourFilterTangle();
   TestContourFilterWedge();
 }
 } // namespace
