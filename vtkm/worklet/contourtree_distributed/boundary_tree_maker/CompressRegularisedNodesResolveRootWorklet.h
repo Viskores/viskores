@@ -102,7 +102,8 @@ public:
     // if there is loopback and we're the lower one, substitute NULL
     if (newIndex < newInbound)
     {
-      newSuperarcPortal.Set(newIndex, vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      newSuperarcPortal.Set(newIndex,
+                            (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
     }
 
     // In serial this worklet implements the following operation

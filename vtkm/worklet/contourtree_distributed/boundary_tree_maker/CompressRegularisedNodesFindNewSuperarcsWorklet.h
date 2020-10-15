@@ -107,7 +107,7 @@ public:
     //  i. points to nothing - copy it
     if (vtkm::worklet::contourtree_augmented::NoSuchElement((oldInbound)))
     {
-      newSuperarcPortal.Set(newId, (vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT));
+      newSuperarcPortal.Set(newId, (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
     }
     //  ii. points to a necessary vertex - copy it
     else if (!vtkm::worklet::contourtree_augmented::NoSuchElement(

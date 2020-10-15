@@ -113,22 +113,22 @@ public:
     { // from is lower
       if (upNeighbourPortal.Get(from) != to)
       {
-        newVertexIdPortal.Set(from, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(from, (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
       if (downNeighbourPortal.Get(to) != from)
       {
-        newVertexIdPortal.Set(to, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(to, (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
     } // from is lower
     else
     { // to is lower
       if (upNeighbourPortal.Get(to) != from)
       {
-        newVertexIdPortal.Set(to, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(to, (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
       if (downNeighbourPortal.Get(from) != to)
       {
-        newVertexIdPortal.Set(from, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(from, (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
     } // to is lower
 

@@ -170,8 +170,8 @@ public:
           hierarchicalTreeHyperparentsPortal.Get(
             hierarchicalTreeSuperparentsPortal.Get(storedRegularId)));
         // we set this to indicate that it's an attachment point
-        hierarchicalTreeSuperarcsPortal.Set(newSupernodeId,
-                                            vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+        hierarchicalTreeSuperarcsPortal.Set(
+          newSupernodeId, (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
       } // regular but not super
     }   // present: actually II
     else
@@ -186,8 +186,8 @@ public:
         hierarchicalTreeHyperparentsPortal.Set(newSupernodeId,
                                                hierarchicalHyperparentPortal.Get(oldSupernodeId));
         // and the superarc should indicate an attachment point
-        hierarchicalTreeSuperarcsPortal.Set(newSupernodeId,
-                                            vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+        hierarchicalTreeSuperarcsPortal.Set(
+          newSupernodeId, (vtkm::Id)vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
       } // attachment point
       // otherwise, we have a brand new free supernode, which is it's own superparent
       else
@@ -208,7 +208,7 @@ public:
           hierarchicalHyperarcPortal.Get(hierarchicalHyperparentOldSuperId);
         vtkm::Id isAscendingHyperarc =
           vtkm::worklet::contourtree_augmented::IsAscending(hierarchicalHyperarcOldSuperId)
-          ? vtkm::worklet::contourtree_augmented::IS_ASCENDING
+          ? (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_ASCENDING
           : 0x0;
         hierarchicalHyperarcOldSuperId =
           vtkm::worklet::contourtree_augmented::MaskedIndex(hierarchicalHyperarcOldSuperId);
