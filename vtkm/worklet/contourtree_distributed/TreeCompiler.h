@@ -406,22 +406,30 @@ inline void TreeCompiler::ReadBinary(FILE* inFile)
   fseek(inFile, 0, SEEK_END);
 
   // use fTell to retrieve the size of the file
-  long long nBytes = ftell(inFile);
+  std::size_t nBytes = ftell(inFile);
   // now rewind
   rewind(inFile);
 
   // compute how many elements are to be read
-  long long nSupernodes = nBytes / sizeof(SupernodeOnSuperarc);
+  std::size_t nSupernodes = nBytes / sizeof(SupernodeOnSuperarc);
 
   // retrieve the current size
-  long long currentSize = supernodes.size();
+  std::size_t currentSize = supernodes.size();
 
   // resize to add the right number
   supernodes.resize(currentSize + nSupernodes);
 
   // now read directly into the right chunk
-  fread(&(supernodes[currentSize]), sizeof(SupernodeOnSuperarc), nSupernodes, inFile);
+  std::size_t nSupernodesRead =
+    fread(&(supernodes[currentSize]), sizeof(SupernodeOnSuperarc), nSupernodes, inFile);
 
+  if (nSupernodesRead != nSupernodes)
+  {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+               "Error: Expected to read " << nSupernodes << " supernodes but could read only "
+                                          << nSupernodesRead << ". Output will be incorrect!"
+                                          << std::endl);
+  }
 } // ReadBinary()
 
 // stream output - just dumps the supernodeonsuperarcs
