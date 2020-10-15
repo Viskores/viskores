@@ -10,6 +10,7 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/thirdparty/diy/environment.h>
@@ -37,6 +38,8 @@ vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims,
 
 void TestBasic()
 {
+  std::cout << "Basic uniform grid" << std::endl;
+
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f origin(0, 0, 0), spacing(1, 1, 1), vecX(1, 0, 0);
   vtkm::cont::DataSet ds = CreateDataSet(dims, origin, spacing, vecX);
@@ -68,6 +71,8 @@ void TestBasic()
 
 void TestPartitionedDataSet()
 {
+  std::cout << "Partitioned data set" << std::endl;
+
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f o1(0, 0, 0), o2(4, 0, 0), o3(8, 0, 0);
   const vtkm::Vec3f spacing(1, 1, 1);
@@ -95,13 +100,15 @@ void TestPartitionedDataSet()
 
   particleAdvection.SetActiveField("vector");
   auto out = particleAdvection.Execute(pds);
-  std::cout << "###### " << out.GetNumberOfPartitions() << std::endl;
 
+#if 0
+  std::cout << "###### " << out.GetNumberOfPartitions() << std::endl;
   for (int i = 0; i < out.GetNumberOfPartitions(); i++)
   {
     std::cout << "PID= " << i << std::endl;
     out.GetPartition(i).PrintSummary(std::cout);
   }
+#endif
 
   VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
   auto ds = out.GetPartition(0);
@@ -119,30 +126,15 @@ void TestPartitionedDataSet()
 
   vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
-  ds.PrintSummary(std::cout);
+  //ds.PrintSummary(std::cout);
 }
 
-void TestFile(const std::string& fname,
-              const std::vector<vtkm::Vec3f>& pts,
-              vtkm::FloatDefault stepSize,
-              vtkm::Id maxSteps,
-              const std::vector<vtkm::Vec3f>& endPts)
+void TestDataSet(const vtkm::cont::DataSet& dataset,
+                 const std::vector<vtkm::Vec3f>& pts,
+                 vtkm::FloatDefault stepSize,
+                 vtkm::Id maxSteps,
+                 const std::vector<vtkm::Vec3f>& endPts)
 {
-  vtkm::io::VTKDataSetReader reader(fname);
-  vtkm::cont::DataSet ds;
-  try
-  {
-    ds = reader.ReadDataSet();
-  }
-  catch (vtkm::io::ErrorIO& e)
-  {
-    std::string message("Error reading: ");
-    message += fname;
-    message += ", ";
-    message += e.GetMessage();
-
-    VTKM_TEST_FAIL(message.c_str());
-  }
   vtkm::Id numPoints = static_cast<vtkm::Id>(pts.size());
 
   std::vector<vtkm::Particle> seeds;
@@ -156,7 +148,7 @@ void TestFile(const std::string& fname,
   particleAdvection.SetSeeds(seedArray);
 
   particleAdvection.SetActiveField("vec");
-  auto output = particleAdvection.Execute(ds);
+  auto output = particleAdvection.Execute(dataset);
 
   auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
@@ -172,6 +164,42 @@ void TestFile(const std::string& fname,
     vtkm::Vec3f pt = cPortal.Get(i);
     VTKM_TEST_ASSERT(vtkm::Magnitude(pt - e) <= eps, "Particle advection point is wrong");
   }
+}
+
+void TestFile(const std::string& fname,
+              const std::vector<vtkm::Vec3f>& pts,
+              vtkm::FloatDefault stepSize,
+              vtkm::Id maxSteps,
+              const std::vector<vtkm::Vec3f>& endPts)
+{
+  std::cout << fname << std::endl;
+
+  vtkm::io::VTKDataSetReader reader(fname);
+  vtkm::cont::DataSet dataset;
+  try
+  {
+    dataset = reader.ReadDataSet();
+  }
+  catch (vtkm::io::ErrorIO& e)
+  {
+    std::string message("Error reading: ");
+    message += fname;
+    message += ", ";
+    message += e.GetMessage();
+
+    VTKM_TEST_FAIL(message.c_str());
+  }
+
+  TestDataSet(dataset, pts, stepSize, maxSteps, endPts);
+
+  std::cout << "  as explicit grid" << std::endl;
+  vtkm::filter::CleanGrid clean;
+  clean.SetCompactPointFields(false);
+  clean.SetMergePoints(false);
+  clean.SetRemoveDegenerateCells(false);
+  vtkm::cont::DataSet explicitData = clean.Execute(dataset);
+
+  TestDataSet(explicitData, pts, stepSize, maxSteps, endPts);
 }
 
 void TestParticleAdvectionFilter()

@@ -81,25 +81,6 @@ private:
 public:
   // Cuda kernels have to be public (in Cuda 4.0).
 
-  struct CopyArrayKernel
-  {
-    VTKM_CONT
-    CopyArrayKernel(const IdPortalConstType& input, const IdPortalType& output)
-      : InputArray(input)
-      , OutputArray(output)
-    {
-    }
-
-    VTKM_EXEC void operator()(vtkm::Id index, const vtkm::exec::internal::ErrorMessageBuffer&) const
-    {
-      this->OutputArray.Set(index, this->InputArray.Get(index));
-    }
-
-    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
-
-    IdPortalConstType InputArray;
-    IdPortalType OutputArray;
-  };
 
   template <typename PortalType>
   struct GenericClearArrayKernel
@@ -142,19 +123,6 @@ public:
   };
 
   using ClearArrayKernel = GenericClearArrayKernel<IdPortalType>;
-
-  struct ClearArrayMapKernel //: public vtkm::exec::WorkletMapField
-  {
-
-    // using ControlSignature = void(Field(Out));
-    // using ExecutionSignature = void(_1);
-
-    template <typename T>
-    VTKM_EXEC void operator()(T& value) const
-    {
-      value = OFFSET;
-    }
-  };
 
   template <typename PortalType>
   struct AddArrayKernel

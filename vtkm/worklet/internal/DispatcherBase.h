@@ -599,7 +599,7 @@ public:
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Invoking Worklet: '%s'",
-                   vtkm::cont::TypeToString<WorkletType>().c_str());
+                   vtkm::cont::TypeToString<DerivedClass>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 

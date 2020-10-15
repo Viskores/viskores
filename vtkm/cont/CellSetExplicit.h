@@ -81,6 +81,8 @@ template <typename S1, typename S2>
 void ConvertNumIndicesToOffsets(const vtkm::cont::ArrayHandle<vtkm::Id, S1>& numIndices,
                                 vtkm::cont::ArrayHandle<vtkm::Id, S2>& offsets)
 {
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   vtkm::cont::Algorithm::ScanExtended(numIndices, offsets);
 }
 

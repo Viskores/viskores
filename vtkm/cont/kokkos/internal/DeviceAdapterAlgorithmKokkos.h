@@ -24,7 +24,10 @@
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
+#include <Kokkos_Sort.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
+
+#include <type_traits>
 
 namespace vtkm
 {
@@ -88,6 +91,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagKokkos>
       vtkm::cont::DeviceAdapterTagKokkos>
 {
 private:
+  using Superclass = vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+    DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagKokkos>,
+    vtkm::cont::DeviceAdapterTagKokkos>;
+
   constexpr static vtkm::Id ErrorMessageMaxLength = 1024;
   using ErrorMessageStorage =
     Kokkos::DualView<char*, Kokkos::LayoutLeft, Kokkos::DefaultExecutionSpace>;
@@ -132,6 +139,25 @@ public:
     return DeviceAdapterAlgorithm::Reduce(
       vtkm::cont::make_ArrayHandleImplicit(countPerWord, bitsPortal.GetNumberOfWords()),
       vtkm::Id{ 0 });
+  }
+
+  using Superclass::Copy;
+
+  template <typename T>
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T>& input,
+                             vtkm::cont::ArrayHandle<T>& output)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+
+    vtkm::cont::Token token;
+
+    auto portalIn = input.PrepareForInput(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+    auto portalOut = output.PrepareForOutput(inSize, vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+
+    kokkos::internal::KokkosViewConstExec<T> viewIn(portalIn.GetArray(), inSize);
+    kokkos::internal::KokkosViewExec<T> viewOut(portalOut.GetArray(), inSize);
+    Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, viewOut, viewIn);
   }
 
   template <typename WType, typename IType>
@@ -200,6 +226,34 @@ public:
 
     vtkm::exec::kokkos::internal::TaskBasic3D<Functor, vtkm::internal::NullType> kernel(functor);
     ScheduleTask(kernel, rangeMax);
+  }
+
+private:
+  template <typename T>
+  VTKM_CONT static void SortImpl(vtkm::cont::ArrayHandle<T>& values, vtkm::SortLess, std::true_type)
+  {
+    vtkm::cont::Token token;
+    auto portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+    kokkos::internal::KokkosViewExec<T> view(portal.GetArray(), portal.GetNumberOfValues());
+    Kokkos::sort(view);
+  }
+
+  template <typename T>
+  VTKM_CONT static void SortImpl(vtkm::cont::ArrayHandle<T>& values,
+                                 vtkm::SortLess comp,
+                                 std::false_type)
+  {
+    Superclass::Sort(values, comp);
+  }
+
+public:
+  using Superclass::Sort;
+
+  template <typename T>
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T>& values, vtkm::SortLess comp)
+  {
+    SortImpl(values, comp, typename std::is_scalar<T>::type{});
   }
 
   VTKM_CONT static void Synchronize() {}

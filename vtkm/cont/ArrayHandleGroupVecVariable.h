@@ -459,6 +459,8 @@ VTKM_CONT void ConvertNumComponentsToOffsets(
   using namespace vtkm::cont;
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
   Algorithm::ScanExtended(device, make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
 
   sourceArraySize = ArrayGetValue(offsetsArray.GetNumberOfValues() - 1, offsetsArray);
@@ -471,6 +473,8 @@ VTKM_CONT void ConvertNumComponentsToOffsets(
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+
+  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
   vtkm::cont::Algorithm::ScanExtended(
     device, vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);

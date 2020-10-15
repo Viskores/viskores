@@ -24,94 +24,74 @@ namespace connectivity
 {
 namespace detail
 {
-class Graft : public vtkm::worklet::WorkletMapField
+class GraphGraft : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn start,
                                 FieldIn degree,
                                 WholeArrayIn ids,
-                                WholeArrayInOut comp);
+                                AtomicArrayInOut comp);
 
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
 
-  using InputDomain = _1;
-
-  // TODO: Use Scatter?
-  template <typename InPortalType, typename InOutPortalType>
+  template <typename InPortalType, typename AtomicCompInOut>
   VTKM_EXEC void operator()(vtkm::Id index,
                             vtkm::Id start,
                             vtkm::Id degree,
                             const InPortalType& conn,
-                            InOutPortalType& comp) const
+                            AtomicCompInOut& comp) const
   {
     for (vtkm::Id offset = start; offset < start + degree; offset++)
     {
       vtkm::Id neighbor = conn.Get(offset);
-      if ((comp.Get(index) == comp.Get(comp.Get(index))) && (comp.Get(neighbor) < comp.Get(index)))
-      {
-        comp.Set(comp.Get(index), comp.Get(neighbor));
-      }
+
+      // We need to reload thisComp and thatComp every iteration since
+      // they might have been changed by Unite() both as a result of
+      // attaching one tree to the other or as a result of path compression
+      // in findRoot().
+      auto thisComp = comp.Get(index);
+      auto thatComp = comp.Get(neighbor);
+
+      // Merge the two components one way or the other, the order will
+      // be resolved by Unite().
+      UnionFind::Unite(comp, thisComp, thatComp);
     }
   }
 };
 }
 
+// Single pass connected component algorithm from
+// Jaiganesh, Jayadharini, and Martin Burtscher.
+// "A high-performance connected components implementation for GPUs."
+// Proceedings of the 27th International Symposium on High-Performance
+// Parallel and Distributed Computing. 2018.
 class GraphConnectivity
 {
 public:
-  using Algorithm = vtkm::cont::Algorithm;
-
-  template <typename InputPortalType, typename OutputPortalType>
-  void Run(const InputPortalType& numIndicesArray,
-           const InputPortalType& indexOffsetsArray,
-           const InputPortalType& connectivityArray,
-           OutputPortalType& componentsOut) const
+  template <typename InputArrayType, typename OutputArrayType>
+  void Run(const InputArrayType& numIndicesArray,
+           const InputArrayType& indexOffsetsArray,
+           const InputArrayType& connectivityArray,
+           OutputArrayType& componentsOut) const
   {
-    bool everythingIsAStar = false;
-    vtkm::cont::ArrayHandle<vtkm::Id> components;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      components);
+    VTKM_IS_ARRAY_HANDLE(InputArrayType);
+    VTKM_IS_ARRAY_HANDLE(OutputArrayType);
 
-    //used as an atomic bool, so we use Int32 as it the
-    //smallest type that VTK-m supports as atomics
-    vtkm::cont::ArrayHandle<vtkm::Int32> allStars;
-    allStars.Allocate(1);
+    using Algorithm = vtkm::cont::Algorithm;
+
+    // Initialize the parent pointer to point to the node itself. There are other
+    // ways to initialize the parent pointers, for example, a smaller or the minimal
+    // neighbor.
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numIndicesArray.GetNumberOfValues()),
+                    componentsOut);
 
     vtkm::cont::Invoker invoke;
-
-    do
-    {
-      allStars.WritePortal().Set(0, 1); //reset the atomic state
-      invoke(detail::Graft{}, indexOffsetsArray, numIndicesArray, connectivityArray, components);
-
-      // Detection of allStars has to come before pointer jumping. Don't try to rearrange it.
-      invoke(IsStar{}, components, allStars);
-      everythingIsAStar = (allStars.WritePortal().Get(0) == 1);
-      invoke(PointerJumping{}, components);
-    } while (!everythingIsAStar);
+    invoke(
+      detail::GraphGraft{}, indexOffsetsArray, numIndicesArray, connectivityArray, componentsOut);
+    invoke(PointerJumping{}, componentsOut);
 
     // renumber connected component to the range of [0, number of components).
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-    Algorithm::Copy(components, uniqueComponents);
-    Algorithm::Sort(uniqueComponents);
-    Algorithm::Unique(uniqueComponents);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, numIndicesArray.GetNumberOfValues()),
-      cellIds);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-      uniqueColor);
-    vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
-    vtkm::cont::ArrayHandle<vtkm::Id> cellIdsOut;
-    InnerJoin().Run(
-      components, cellIds, uniqueComponents, uniqueColor, cellColors, cellIdsOut, componentsOut);
-
-    Algorithm::SortByKey(cellIdsOut, componentsOut);
+    Renumber::Run(componentsOut);
   }
 };
 }

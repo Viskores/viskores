@@ -25,6 +25,7 @@
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/cont/internal/OptionParser.h>
 
@@ -38,6 +39,7 @@
 #include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/filter/Threshold.h>
 #include <vtkm/filter/ThresholdPoints.h>
+#include <vtkm/filter/Triangulate.h>
 #include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/filter/VertexClustering.h>
 #include <vtkm/filter/WarpScalar.h>
@@ -91,12 +93,15 @@ vtkm::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
 static vtkm::cont::DataSet InputDataSet;
+static vtkm::cont::DataSet UnstructuredInputDataSet;
 // The point scalars to use:
 static std::string PointScalarsName;
 // The cell scalars to use:
 static std::string CellScalarsName;
 // The point vectors to use:
 static std::string PointVectorsName;
+// Whether the input is a file or is generated
+bool FileAsInput = false;
 
 bool InputIsStructured()
 {
@@ -398,7 +403,9 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
   helper(3);
   helper(12);
 }
-VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+
+// :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
+//VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
 {
@@ -427,10 +434,9 @@ void BenchTetrahedralize(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
   // This filter only supports structured datasets:
-  if (!InputIsStructured())
+  if (FileAsInput && !InputIsStructured())
   {
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
-    return;
   }
 
   vtkm::filter::Tetrahedralize filter;
@@ -455,10 +461,9 @@ void BenchVertexClustering(::benchmark::State& state)
   const vtkm::Id numDivs = static_cast<vtkm::Id>(state.range(0));
 
   // This filter only supports unstructured datasets:
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("VertexClustering Filter requires unstructured data.");
-    return;
+    state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
   vtkm::filter::VertexClustering filter;
@@ -468,8 +473,9 @@ void BenchVertexClustering(::benchmark::State& state)
   for (auto _ : state)
   {
     (void)_;
+
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(UnstructuredInputDataSet);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -529,13 +535,12 @@ struct PrepareForInput
 
 void BenchReverseConnectivityGen(::benchmark::State& state)
 {
-  if (InputIsStructured())
+  if (FileAsInput && InputIsStructured())
   {
-    state.SkipWithError("ReverseConnectivityGen requires unstructured data.");
-    return;
+    state.SkipWithError("ReverseConnectivityGen requires unstructured data (--use tetra).");
   }
 
-  auto cellset = InputDataSet.GetCellSet();
+  auto cellset = UnstructuredInputDataSet.GetCellSet();
   PrepareForInput functor;
   for (auto _ : state)
   {
@@ -978,6 +983,7 @@ void InitDataSet(int& argc, char** argv)
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
     vtkm::io::VTKDataSetReader reader(filename);
     InputDataSet = reader.ReadDataSet();
+    FileAsInput = true;
   }
   else
   {
@@ -987,7 +993,14 @@ void InitDataSet(int& argc, char** argv)
     source.SetExtent({ 0 }, { waveletDim - 1 });
 
     InputDataSet = source.Execute();
+
+    vtkm::cont::DataSet input = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet2();
+    vtkm::filter::Triangulate triangulateFilter;
+    triangulateFilter.SetFieldsToPass(
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+    UnstructuredInputDataSet = triangulateFilter.Execute(input);
   }
+
 
   if (tetra)
   {

@@ -17,13 +17,14 @@
 namespace
 {
 
-class DeduceCellSet
+class DeduceCellSetTriangulate
 {
   vtkm::worklet::Triangulate& Worklet;
   vtkm::cont::CellSetSingleType<>& OutCellSet;
 
 public:
-  DeduceCellSet(vtkm::worklet::Triangulate& worklet, vtkm::cont::CellSetSingleType<>& outCellSet)
+  DeduceCellSetTriangulate(vtkm::worklet::Triangulate& worklet,
+                           vtkm::cont::CellSetSingleType<>& outCellSet)
     : Worklet(worklet)
     , OutCellSet(outCellSet)
   {
@@ -35,17 +36,17 @@ public:
   }
 };
 template <>
-void DeduceCellSet::operator()(const vtkm::cont::CellSetExplicit<>& cellset) const
+void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetExplicit<>& cellset) const
 {
   this->OutCellSet = Worklet.Run(cellset);
 }
 template <>
-void DeduceCellSet::operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
+void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
 {
   this->OutCellSet = Worklet.Run(cellset);
 }
 template <>
-void DeduceCellSet::operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
+void DeduceCellSetTriangulate::operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
 {
   this->OutCellSet = Worklet.Run(cellset);
 }
@@ -72,7 +73,7 @@ inline VTKM_CONT vtkm::cont::DataSet Triangulate::DoExecute(
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
 
   vtkm::cont::CellSetSingleType<> outCellSet;
-  DeduceCellSet triangulate(this->Worklet, outCellSet);
+  DeduceCellSetTriangulate triangulate(this->Worklet, outCellSet);
 
   vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyCellSet(cells, policy, *this), triangulate);
 

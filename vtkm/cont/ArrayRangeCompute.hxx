@@ -47,6 +47,8 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
   const vtkm::cont::ArrayHandle<T, S>& input,
   vtkm::cont::DeviceAdapterId device)
 {
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "ArrayRangeCompute");
+
   using VecTraits = vtkm::VecTraits<T>;
   using CT = typename VecTraits::ComponentType;
   //We want to minimize the amount of code that we do in try execute as
