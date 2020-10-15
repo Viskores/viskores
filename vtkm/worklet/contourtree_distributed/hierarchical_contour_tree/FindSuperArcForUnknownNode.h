@@ -433,7 +433,7 @@ class FindSuperArcForUnknownNode : public vtkm::cont::ExecutionObjectBase
 {
 public:
   /// constructor
-  VTKM_EXEC_CONT
+  VTKM_CONT
   FindSuperArcForUnknownNode(
     const vtkm::worklet::contourtree_augmented::IdArrayType& superparents,
     const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
