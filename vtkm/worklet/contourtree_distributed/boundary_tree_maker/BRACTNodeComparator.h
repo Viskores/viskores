@@ -54,7 +54,7 @@
 #define vtk_m_worklet_contourtree_distributed_bract_maker_bract_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleVirtual.h>
+#include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -76,7 +76,7 @@ class BRACTNodeComparatorImpl
 public:
   using IdArrayPortalType =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
+  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleMultiplexer here
   using SortIndexPortalType = typename vtkm::cont::ArrayHandleMultiplexer<
     vtkm::cont::ArrayHandle<vtkm::Id>,
     vtkm::cont::ArrayHandleIndex>::template ExecutionTypes<DeviceAdapter>::PortalConst;
@@ -146,7 +146,7 @@ public:
 
 private:
   vtkm::worklet::contourtree_augmented::IdArrayType RegularId;
-  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleVirtual here
+  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleMultiplexer here
   vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
                                      vtkm::cont::ArrayHandleIndex>
     MeshSortIndex;
