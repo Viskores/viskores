@@ -69,10 +69,10 @@ namespace bract_maker
 class ArraySumFunctor
 {
 public:
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArraySumFunctor() {}
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   ArraySumFunctor(const vtkm::worklet::contourtree_augmented::IdArrayType& first,
                   const vtkm::worklet::contourtree_augmented::IdArrayType& second)
     : First(first)

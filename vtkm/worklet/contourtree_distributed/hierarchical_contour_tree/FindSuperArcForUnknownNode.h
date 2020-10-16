@@ -76,7 +76,7 @@ public:
   using DataPortalType =
     typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceTag>::PortalConst;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   FindSuperArcForUnknownNodeDeviceData(
     vtkm::cont::Token& token,
     const vtkm::worklet::contourtree_augmented::IdArrayType& superparents,

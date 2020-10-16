@@ -74,7 +74,7 @@ public:
     typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
       DeviceTag>::PortalConst;
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   FindRegularByGlobalDeviceData(
     vtkm::cont::Token& token,
     const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeSortOrder,
@@ -87,12 +87,12 @@ public:
   }
 
   /// Define also as an operator so that we can use it in ArrayHandleTransform directly
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   vtkm::Id operator()(vtkm::Id globalId) const { return this->FindRegularByGlobal(globalId); }
 
   // TODO: This is just a binary search. Does VTKm have an implementation we can use to replace this with?
   /// routine to search the array of regular nodes for a particular global ID
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   vtkm::Id FindRegularByGlobal(vtkm::Id globalId) const
   { // FindRegularByGlobal()
     // this is just a binary search, but the C++ STL doesn't seem to implement it . . .
@@ -169,7 +169,7 @@ class FindRegularByGlobal : public vtkm::cont::ExecutionObjectBase
 {
 public:
   /// constructor
-  VTKM_EXEC_CONT
+  VTKM_CONT
   FindRegularByGlobal(const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeSortOrder,
                       const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds)
     : RegularNodeSortOrder(regularNodeSortOrder)
