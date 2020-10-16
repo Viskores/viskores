@@ -106,7 +106,7 @@ public:
     // We'll cast the signed types to unsigned to work around this.
     using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
-    return static_cast<T>(vtkm::AtomicLoad(reinterpret_cast<APIType* const>(this->Data + index)));
+    return static_cast<T>(vtkm::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index)));
   }
 
   /// \brief Peform an atomic addition with sequentially consistent memory
