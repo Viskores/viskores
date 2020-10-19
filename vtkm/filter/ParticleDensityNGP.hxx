@@ -41,13 +41,9 @@ public:
       // increment density
       density.Add(cellId, 1);
     }
-    else
-    {
 
-      // FIXME: what does mean when it is not found?
-      // We simply ignore that particular particle.
-      std::cout << "WTF: " << point << std::endl;
-    }
+    // FIXME: what does mean when it is not found?
+    // We simply ignore that particular particle.
   }
 }; //NGPWorklet
 } //worklet
