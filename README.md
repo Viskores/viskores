@@ -76,8 +76,8 @@ VTK-m Requires:
 Optional dependencies are:
 
   + CUDA Device Adapter
-      + [Cuda Toolkit 9.2+](https://developer.nvidia.com/cuda-toolkit)
-      + Note CUDA >= 10.1 is required on Windows
+      + [Cuda Toolkit 9.2, >= 10.2](https://developer.nvidia.com/cuda-toolkit)
+      + Note CUDA >= 10.2 is required on Windows
   + TBB Device Adapter
       + [TBB](https://www.threadingbuildingblocks.org/)
   + OpenMP Device Adapter
@@ -105,12 +105,12 @@ VTK-m has been tested on the following configurations:c
   + On Linux
       + GCC 4.8.5, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
       + CMake 3.12, 3.13, 3.16, 3.17
-      + CUDA 9.2.148, 10.0.130, 10.1.105, 10.2.89
+      + CUDA 9.2, 10.2, 11.0, 11.1 
       + TBB 4.4 U2, 2017 U7
   + On Windows
       + Visual Studio 2015, 2017
       + CMake 3.12, 3.17
-      + CUDA 10.1
+      + CUDA 10.2
       + TBB 2017 U3, 2018 U2
   + On MacOS
       + AppleClang 9.1
