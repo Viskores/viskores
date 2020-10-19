@@ -30,16 +30,24 @@ public:
   template <typename Point, typename CellLocatorExecObj, typename AtomicArray>
   VTKM_EXEC void operator()(const Point& point,
                             const CellLocatorExecObj& locator,
-                            AtomicArray& density)
+                            AtomicArray& density) const
   {
-    vtkm::Id cellId;
+    vtkm::Id cellId{};
     vtkm::Vec3f parametric;
 
     // Find the cell containing the point
-    locator.FindCell(point, cellId, parametric, *this);
+    if (locator->FindCell(point, cellId, parametric) == vtkm::ErrorCode::Success)
+    {
+      // increment density
+      density.Add(cellId, 1);
+    }
+    else
+    {
 
-    // increment density
-    density.Add(cellId, 1);
+      // FIXME: what does mean when it is not found?
+      // We simply ignore that particular particle.
+      std::cout << "WTF: " << point << std::endl;
+    }
   }
 }; //NGPWorklet
 } //worklet
@@ -50,9 +58,9 @@ namespace vtkm
 {
 namespace filter
 {
-inline VTKM_CONT ParticleDensityNGP::ParticleDensityNGP(vtkm::Id3& dimension,
-                                                        vtkm::Vec3f& origin,
-                                                        vtkm::Vec3f& spacing)
+inline VTKM_CONT ParticleDensityNGP::ParticleDensityNGP(const vtkm::Id3& dimension,
+                                                        const vtkm::Vec3f& origin,
+                                                        const vtkm::Vec3f& spacing)
   : Dimension(dimension)
   , Origin(origin)
   , Spacing(spacing)
@@ -61,41 +69,39 @@ inline VTKM_CONT ParticleDensityNGP::ParticleDensityNGP(vtkm::Id3& dimension,
 
 template <typename T, typename StorageType, typename Policy>
 inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNGP::DoExecute(
-  const vtkm::cont::DataSet& input,
+  const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<Policy> policy)
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<Policy>)
 {
   // TODO: it really doesn't need to be a UniformGrid, any CellSet with CellLocator will work.
-  // Make it another input rather an output generated.
+  //  Make it another input rather an output generated.
 
-  // We want to stores density as PointField which conforms to VTK/VTKm's idea of ImageDataset
-  // and works with the ImageConnectivity for segmentation purpose. We thus create a surrogate
-  // uniform dataset that has the cell dimension as the point dimension of the output. We use
-  // this dataset only for point in cell lookup purpose. This is a somewhat convolved way of
-  // doing some simple math.
-  auto surrogate = vtkm::cont::DataSetBuilderUniform::Create(
-    this->Dimension - vtkm::Id3{ 1, 1, 1 }, this->Origin, this->Spacing);
+  // We stores density as CellField which conforms to physicists' idea of particle density
+  // better. However, VTK/VTKm's idea of "Image" Dataset and the ImageConnectivity filter
+  // expect a PointField. For better separation of concerns, we create a uniform dataset
+  // that has the cell dimension as expected and later convert the dataset to its dual.
+  auto uniform = vtkm::cont::DataSetBuilderUniform::Create(
+    this->Dimension + vtkm::Id3{ 1, 1, 1 }, this->Origin, this->Spacing);
 
-  // Create a CellSetLocator
+  // Create a CellLocator
   vtkm::cont::CellLocatorUniformGrid locator;
-  locator.SetCellSet(surrogate.GetCellSet());
-  locator.SetCoordinates(surrogate.GetCoordinateSystem());
+  locator.SetCellSet(uniform.GetCellSet());
+  locator.SetCoordinates(uniform.GetCoordinateSystem());
   locator.Update();
 
-  // We still use an ArrayHandle<T> and pass it to the Worklet as AtomicArrayInOut
-  // it will be type converted automatically. However the ArrayHandle needs to be
-  // allocated and initialized. The easily way to do it is to copy from an
-  // ArrayHandleConstant
+  // We create an ArrayHandle and pass it to the Worklet as AtomicArrayInOut.
+  // However the ArrayHandle needs to be allocated and initialized first. The
+  // easily way to do it is to copy from an ArrayHandleConstant
   vtkm::cont::ArrayHandle<vtkm::Id> density;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, surrogate.GetNumberOfCells()),
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, uniform.GetNumberOfCells()),
                         density);
 
-  this->Invoke(input, locator, density);
+  this->Invoke(vtkm::worklet::NGPWorklet{}, field, locator, density);
 
-  surrogate.AddField(vtkm::cont::make_FieldCell("density", density));
+  uniform.AddField(vtkm::cont::make_FieldCell("density", density));
 
-  return surrogate;
+  return uniform;
 }
 
 }

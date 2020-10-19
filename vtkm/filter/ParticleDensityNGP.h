@@ -24,10 +24,12 @@ class ParticleDensityNGP : public vtkm::filter::FilterField<ParticleDensityNGP>
 {
 public:
   // ParticleDensity only support turning 2D/3D particle positions into density
-  using SupportedTypes = vtkm::TypeListFloatVec;
+  using SupportedTypes = vtkm::TypeListFieldVec3;
 
   //
-  ParticleDensityNGP(vtkm::Id3& dimension, vtkm::Vec3f& origin, vtkm::Vec3f& spacing);
+  ParticleDensityNGP(const vtkm::Id3& dimension,
+                     const vtkm::Vec3f& origin,
+                     const vtkm::Vec3f& spacing);
 
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -36,7 +38,7 @@ public:
                                           vtkm::filter::PolicyBase<Policy> policy);
 
 private:
-  vtkm::Id3 Dimension;
+  vtkm::Id3 Dimension; // Cell dimension
   vtkm::Vec3f Origin;
   vtkm::Vec3f Spacing;
 };
