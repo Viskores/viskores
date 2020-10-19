@@ -16,6 +16,7 @@
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/GhostCellClassify.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/EulerIntegrator.h>
@@ -301,7 +302,7 @@ public:
                             vtkm::Vec3f& pointOut) const
   {
     vtkm::VecVariable<vtkm::Vec3f, 2> values;
-    status = evaluator.Evaluate(pointIn.Pos, values);
+    status = evaluator.Evaluate(pointIn.Pos, pointIn.Time, values);
     pointOut = values[0];
   }
 };
@@ -411,6 +412,12 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
+    if (!status.CheckOk())
+    {
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      std::cout << "Fail coming... at " << index << std::endl;
+    }
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
     //Result should be push just outside of the bounds.
@@ -514,6 +521,56 @@ void TestEvaluators()
       }
     }
   }
+}
+
+void TestGhostCellEvaluators()
+{
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
+  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+
+  vtkm::Id numX = 6;
+  vtkm::Id numY = 6;
+  vtkm::Id numZ = 6;
+
+  vtkm::Id3 dims(numX + 1, numY + 1, numZ + 1);
+  vtkm::filter::GhostCellClassify addGhost;
+  auto ds = vtkm::cont::DataSetBuilderUniform::Create(dims);
+  auto dsWithGhost = addGhost.Execute(ds);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
+  vtkm::Vec3f vec(1, 0, 0);
+  CreateConstantVectorField(dims[0] * dims[1] * dims[2], vec, vecField);
+  dsWithGhost.AddPointField("vec", vecField);
+  FieldType velocities(vecField);
+
+  GridEvalType gridEval(dsWithGhost, velocities);
+
+  vtkm::FloatDefault stepSize = 0.1;
+  RK4Type rk4(gridEval, stepSize);
+
+  vtkm::worklet::ParticleAdvection pa;
+  std::vector<vtkm::Particle> seeds;
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(4, 3, 3), 1));
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(5.5, 5.5, 5.5), 1));
+  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, 3, 3), 1));
+
+  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
+  auto res = pa.Run(rk4, seedArray, 10000);
+
+  auto posPortal = res.Particles.ReadPortal();
+  vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+  for (vtkm::Id i = 0; i < numSeeds; i++)
+  {
+    const auto& p = posPortal.Get(i);
+    VTKM_TEST_ASSERT(p.Status.CheckSpatialBounds(), "Particle did not leave the dataset.");
+    VTKM_TEST_ASSERT(p.Status.CheckInGhostCell(), "Particle did not end up in ghost cell.");
+  }
+
+  //  for (int i = 0; i < seeds.size(); i++)
+  //      std::cout<<posPortal.Get(i).Pos<<" "<<posPortal.Get(i).Time<<" "<<posPortal.Get(i).Status<<std::endl;
 }
 
 void ValidateParticleAdvectionResult(
@@ -968,6 +1025,8 @@ void TestParticleAdvection()
 {
   TestIntegrators();
   TestEvaluators();
+  TestGhostCellEvaluators();
+
   TestParticleStatus();
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();

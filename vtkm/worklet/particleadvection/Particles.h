@@ -77,6 +77,8 @@ public:
       p.Status.SetSpatialBounds();
     if (status.CheckTemporalBounds())
       p.Status.SetTemporalBounds();
+    if (status.CheckInGhostCell())
+      p.Status.SetInGhostCell();
     this->Particles.Set(idx, p);
   }
 
@@ -86,7 +88,7 @@ public:
     ParticleType p = this->GetParticle(idx);
 
     return (p.Status.CheckOk() && !p.Status.CheckTerminate() && !p.Status.CheckSpatialBounds() &&
-            !p.Status.CheckTemporalBounds());
+            !p.Status.CheckTemporalBounds() && !p.Status.CheckInGhostCell());
   }
 
   VTKM_EXEC
