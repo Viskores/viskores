@@ -23,9 +23,12 @@
 
 #include <vtkm/exec/kokkos/internal/TaskBasic.h>
 
+#include <vtkmstd/void_t.h>
+
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
+#include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_Sort.hpp>
 VTKM_THIRDPARTY_POST_INCLUDE
 
@@ -33,6 +36,20 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
+namespace internal
+{
+
+template <typename, typename = void>
+struct is_type_complete : public std::false_type
+{
+};
+
+template <typename T>
+struct is_type_complete<T, vtkmstd::void_t<decltype(sizeof(T))>> : public std::true_type
+{
+};
+} // internal
+
 namespace cont
 {
 
@@ -41,6 +58,7 @@ namespace kokkos
 namespace internal
 {
 
+//----------------------------------------------------------------------------
 template <typename BitsPortal>
 struct BitFieldToBoolField : public vtkm::exec::FunctorBase
 {
@@ -82,6 +100,66 @@ struct BitFieldCountSetBitsWord : public vtkm::exec::FunctorBase
 
 private:
   BitsPortal Bits;
+};
+
+//----------------------------------------------------------------------------
+template <typename Operator, typename ResultType>
+struct ReductionIdentity;
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Sum, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::sum();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Add, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::sum();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Product, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::prod();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Multiply, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::prod();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Minimum, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::min();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::Maximum, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::max();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::MinAndMax<ResultType>, vtkm::Vec<ResultType, 2>>
+{
+  static constexpr vtkm::Vec<ResultType, 2> value =
+    vtkm::Vec<ResultType, 2>(Kokkos::reduction_identity<ResultType>::min(),
+                             Kokkos::reduction_identity<ResultType>::max());
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::BitwiseAnd, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::band();
+};
+
+template <typename ResultType>
+struct ReductionIdentity<vtkm::BitwiseOr, ResultType>
+{
+  static constexpr ResultType value = Kokkos::reduction_identity<ResultType>::bor();
 };
 }
 } // kokkos::internal
@@ -147,6 +225,125 @@ public:
     kokkos::internal::KokkosViewConstExec<T> viewIn(portalIn.GetArray(), inSize);
     kokkos::internal::KokkosViewExec<T> viewOut(portalOut.GetArray(), inSize);
     Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), viewOut, viewIn);
+  }
+
+private:
+  template <typename ArrayHandle, typename BinaryFunctor, typename ResultType>
+  VTKM_CONT static ResultType ReduceImpl(const ArrayHandle& input,
+                                         BinaryFunctor binary_functor,
+                                         ResultType initialValue,
+                                         std::false_type)
+  {
+    return Superclass::Reduce(input, initialValue, binary_functor);
+  }
+
+  template <typename ArrayPortal, typename BinaryFunctor, typename ResultType>
+  class ReduceFunctor
+  {
+  public:
+    using size_type = vtkm::Id;
+    using value_type = ResultType;
+
+    KOKKOS_INLINE_FUNCTION
+    ReduceFunctor() {}
+
+    KOKKOS_INLINE_FUNCTION
+    explicit ReduceFunctor(const ArrayPortal& portal, const BinaryFunctor& op)
+      : Portal(portal)
+      , Operator(op)
+    {
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const size_type i, value_type& update) const
+    {
+      update = this->Operator(update, this->Portal.Get(i));
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile value_type& dst, const volatile value_type& src) const
+    {
+      dst = this->Operator(dst, src);
+    }
+
+    KOKKOS_INLINE_FUNCTION void init(value_type& dst) const
+    {
+      dst = kokkos::internal::ReductionIdentity<BinaryFunctor, value_type>::value;
+    }
+
+  private:
+    ArrayPortal Portal;
+    BinaryFunctor Operator;
+  };
+
+  template <typename ArrayHandle, typename BinaryFunctor, typename ResultType>
+  VTKM_CONT static ResultType ReduceImpl(const ArrayHandle& input,
+                                         BinaryFunctor binary_functor,
+                                         ResultType initialValue,
+                                         std::true_type)
+  {
+    vtkm::cont::Token token;
+    auto inputPortal = input.PrepareForInput(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+    ReduceFunctor<decltype(inputPortal), BinaryFunctor, ResultType> functor(inputPortal,
+                                                                            binary_functor);
+
+    ResultType result;
+
+    Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace, vtkm::Id> policy(
+      vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, input.GetNumberOfValues());
+    Kokkos::parallel_reduce(policy, functor, result);
+
+    return binary_functor(initialValue, result);
+  }
+
+  template <bool P1, typename BinaryFunctor, typename ResultType>
+  struct UseKokkosReduceP1 : std::false_type
+  {
+  };
+
+  template <typename BinaryFunctor, typename ResultType>
+  struct UseKokkosReduceP1<true, BinaryFunctor, ResultType>
+    : vtkm::internal::is_type_complete<
+        kokkos::internal::ReductionIdentity<BinaryFunctor, ResultType>>
+  {
+  };
+
+  template <typename BinaryFunctor, typename ResultType>
+  struct UseKokkosReduce
+    : UseKokkosReduceP1<
+        vtkm::internal::is_type_complete<Kokkos::reduction_identity<ResultType>>::value,
+        BinaryFunctor,
+        ResultType>
+  {
+  };
+
+public:
+  template <typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
+                            BinaryFunctor binary_functor)
+  {
+#if defined(VTKM_KOKKOS_CUDA)
+    // Kokkos reduce is having some issues with the cuda backend. Please refer to issue #586.
+    // Following is a work around where we use the Superclass reduce implementation when using
+    // Cuda execution space.
+    std::integral_constant<
+      bool,
+      !std::is_same<vtkm::cont::kokkos::internal::ExecutionSpace, Kokkos::Cuda>::value &&
+        UseKokkosReduce<BinaryFunctor, U>::value>
+      use_kokkos_reduce;
+#else
+    typename UseKokkosReduce<BinaryFunctor, U>::type use_kokkos_reduce;
+#endif
+
+    return ReduceImpl(input, binary_functor, initialValue, use_kokkos_reduce);
+  }
+
+  template <typename T, typename U, class CIn>
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+  {
+    return Reduce(input, initialValue, vtkm::Add());
   }
 
   template <typename WType, typename IType>
