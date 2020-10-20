@@ -57,7 +57,7 @@ public:
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault time) const
   {
-    return time >= TimeOne && time <= TimeTwo;
+    return time >= this->TimeOne && time <= this->TimeTwo;
   }
 
   VTKM_EXEC

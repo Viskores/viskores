@@ -115,7 +115,7 @@ protected:
                           vtkm::FloatDefault& time,
                           vtkm::Vec3f& outpos) const override
     {
-      vtkm::Vec3f velocity;
+      vtkm::Vec3f velocity(0, 0, 0);
       auto status = this->CheckStep(particle, this->StepLength, velocity);
       if (status.CheckOk())
       {

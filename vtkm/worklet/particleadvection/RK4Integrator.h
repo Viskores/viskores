@@ -109,7 +109,6 @@ public:
       velocity = (v1 + 2 * v2 + 2 * v3 + v4) / static_cast<vtkm::FloatDefault>(6);
 
       return IntegratorStatus(evalStatus);
-      //      return IntegratorStatus(true, false, evalStatus.CheckTemporalBounds(), evalStatus.CheckInGhostCell());
     }
   };
 
