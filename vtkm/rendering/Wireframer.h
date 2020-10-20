@@ -362,7 +362,7 @@ private:
       blendedColor[2] = color[2] * intensity + srcColor[2] * alpha;
       blendedColor[3] = alpha + intensity;
       next.Ints.Color = PackColor(blendedColor);
-      current.Raw = FrameBuffer.CompareAndSwap(index, next.Raw, current.Raw);
+      FrameBuffer.CompareExchange(index, &current.Raw, next.Raw);
     } while (current.Floats.Depth > next.Floats.Depth);
   }
 

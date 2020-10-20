@@ -207,15 +207,23 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
-                                                 T desired,
-                                                 T expected,
-                                                 vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
+                                                     T* expected,
+                                                     T desired,
+                                                     vtkm::MemoryOrder order)
 {
   AtomicStoreFence(order);
-  auto result = atomicCAS(addr, expected, desired);
+  auto result = atomicCAS(addr, *expected, desired);
   AtomicLoadFence(order);
-  return result;
+  if (result == *expected)
+  {
+    return true;
+  }
+  else
+  {
+    *expected = result;
+    return false;
+  }
 }
 }
 } // namespace vtkm::detail
@@ -355,15 +363,23 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
-                                                 T desired,
-                                                 T expected,
-                                                 vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
+                                                     T* expected,
+                                                     T desired,
+                                                     vtkm::MemoryOrder order)
 {
   AtomicStoreFence(order);
-  T result = Kokkos::atomic_compare_exchange(addr, expected, desired);
+  T oldValue = Kokkos::atomic_compare_exchange(addr, *expected, desired);
   AtomicLoadFence(order);
-  return result;
+  if (oldValue == *expected)
+  {
+    return true;
+  }
+  else
+  {
+    *expected = oldValue;
+    return false;
+  }
 }
 }
 } // namespace vtkm::detail
@@ -492,13 +508,22 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(vtkm::UInt64* addr,
   {                                                                                     \
     return AtomicXorImpl(addr, static_cast<vtkmType>(~vtkmType{ 0u }), order);          \
   }                                                                                     \
-  VTKM_EXEC_CONT inline vtkmType AtomicCompareAndSwapImpl(                              \
-    vtkmType* addr, vtkmType desired, vtkmType expected, vtkm::MemoryOrder order)       \
+  VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(                                 \
+    vtkmType* addr, vtkmType* expected, vtkmType desired, vtkm::MemoryOrder order)      \
   {                                                                                     \
-    return BitCast<vtkmType>(                                                           \
+    vtkmType result = BitCast<vtkmType>(                                                \
       _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),    \
                                           BitCast<winType>(desired),                    \
-                                          BitCast<winType>(expected)));                 \
+                                          BitCast<winType>(*expected)));                \
+    if (result == *expected)                                                            \
+    {                                                                                   \
+      return true;                                                                      \
+    }                                                                                   \
+    else                                                                                \
+    {                                                                                   \
+      *expected = result;                                                               \
+      return false;                                                                     \
+    }                                                                                   \
   }
 
 VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt8, CHAR, 8)
@@ -585,14 +610,13 @@ VTKM_EXEC_CONT inline T AtomicNotImpl(T* addr, vtkm::MemoryOrder order)
 }
 
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwapImpl(T* addr,
-                                                 T desired,
-                                                 T expected,
-                                                 vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
+                                                     T* expected,
+                                                     T desired,
+                                                     vtkm::MemoryOrder order)
 {
-  __atomic_compare_exchange_n(
-    addr, &expected, desired, false, GccAtomicMemOrder(order), GccAtomicMemOrder(order));
-  return expected;
+  return __atomic_compare_exchange_n(
+    addr, expected, desired, false, GccAtomicMemOrder(order), GccAtomicMemOrder(order));
 }
 }
 } // namespace vtkm::detail
@@ -801,24 +825,34 @@ VTKM_EXEC_CONT inline T AtomicNot(
 
 /// \brief Atomic function that replaces a value given a condition.
 ///
-/// Given a pointer, a new desired value, and an expected value, replaces the value at the
-/// pointer if it is the same as the expected value with the new desired value. If the original
-/// value in the pointer does not equal the expected value, then the memory at the pointer
-/// remains unchanged. In either case, the function returns the _old_ original value that
-/// was at the pointer.
+/// Given a pointer to a `shared` value, a pointer holding the `expected` value at that shared
+/// location, and a new `desired` value, `AtomicCompareExchange` compares the existing `shared`
+/// value to the `expected` value, and then conditionally replaces the `shared` value with
+/// the provided `desired` value. Otherwise, the `expected` value gets replaced with the
+/// `shared` value. Note that in either case, the function returns with `expected` replaced
+/// with the value _originally_ in `shared` at the start of the call.
 ///
-/// If multiple threads call `AtomicCompareAndSwap` simultaneously, the result will be consistent
-/// as if one was called before the other (although it is indeterminate which will be applied
-/// first).
+/// If the `shared` value and `expected` value are the same, then `shared` gets set to
+/// `desired`, and `AtomicCompareAndExchange` returns `true`.
+///
+/// If the `shared` value and `expected` value are different, then `expected` gets set
+/// to `shared`, and `AtomicCompareAndExchange` returns `false`. The value at `shared`
+/// is _not_ changed in this case.
+///
+/// If multiple threads call `AtomicCompareExchange` simultaneously with the same `shared`
+/// pointer, the result will be consistent as if one was called before the other (although
+/// it is indeterminate which will be applied first). Note that the `expected` pointer should
+/// _not_ be shared among threads. The `expected` pointer should be thread-local (often
+/// pointing to an object on the stack).
 ///
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareAndSwap(
-  T* pointer,
+VTKM_EXEC_CONT inline T AtomicCompareExchange(
+  T* shared,
+  T* expected,
   T desired,
-  T expected,
   vtkm::MemoryOrder order = vtkm::MemoryOrder::SequentiallyConsistent)
 {
-  return detail::AtomicCompareAndSwapImpl(pointer, desired, expected, order);
+  return detail::AtomicCompareExchangeImpl(shared, expected, desired, order);
 }
 
 } // namespace vtkm
