@@ -225,8 +225,7 @@ inline void TreeCompiler::AddHierarchicalTree(const vtkm::cont::DataSet& addedTr
   vtkm::cont::VariantArrayHandle dataValues_array = addedTree.GetField("DataValues").GetData();
   std::vector<vtkm::FloatDefault> dataValues(dataValues_array.GetNumberOfValues());
   auto dataValues_handle = vtkm::cont::make_ArrayHandle(dataValues, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(dataValues_array.ResetTypes(vtkm::List<vtkm::FloatDefault>{}),
-                        dataValues_handle);
+  vtkm::cont::ArrayCopy(dataValues_array.ResetTypes(vtkm::TypeListScalarAll{}), dataValues_handle);
   dataValues_handle.SyncControlArray();
 
   auto regularNodeGlobalIds_array = addedTree.GetField("RegularNodeGlobalIds").GetData();

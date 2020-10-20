@@ -61,6 +61,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ContourTreeUniformDistributed.h>
+#include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -186,29 +187,24 @@ inline vtkm::cont::DataSet CreateSubDataSet(const vtkm::cont::DataSet& ds,
       }
   // DEBUG: std::cout << copyIdsPortal.GetNumberOfValues() << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArrayHandle;
-  ds.GetPointField(fieldName).GetData().CopyTo(inputArrayHandle);
-  auto permutedInArray = make_ArrayHandlePermutation(copyIdsArray, inputArrayHandle);
-  vtkm::cont::ArrayHandle<vtkm::Float32> outputArrayHandle;
-  vtkm::cont::ArrayCopy(permutedInArray, outputArrayHandle);
-  outputArrayHandle.SyncControlArray();
-  VTKM_ASSERT(outputArrayHandle.GetNumberOfValues() == nOutValues);
-  // DEBUG: auto rp = outputArrayHandle.ReadPortal();
-  // DEBUG: for (vtkm::Id i = 0; i < nOutValues; ++i) std::cout << rp.Get(i) << " ";
-  // DEBUG: std::cout << std::endl;
+  vtkm::cont::Field permutedField;
+  bool success =
+    vtkm::filter::MapFieldPermutation(ds.GetPointField(fieldName), copyIdsArray, permutedField);
+  if (!success)
+    throw vtkm::cont::ErrorBadType("Field copy failed (probably due to invalid type)");
 
   vtkm::cont::DataSetBuilderUniform dsb;
   if (globalSize[2] <= 1) // 2D Data Set
   {
     vtkm::Id2 dimensions{ blockSize[0], blockSize[1] };
     vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
-    dataSet.AddPointField(fieldName, outputArrayHandle);
+    dataSet.AddField(permutedField);
     return dataSet;
   }
   else
   {
     vtkm::cont::DataSet dataSet = dsb.Create(blockSize);
-    dataSet.AddPointField(fieldName, outputArrayHandle);
+    dataSet.AddField(permutedField);
     return dataSet;
   }
 }
