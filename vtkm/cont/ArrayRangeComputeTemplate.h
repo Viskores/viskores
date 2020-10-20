@@ -17,6 +17,10 @@
 
 #include <vtkm/cont/Algorithm.h>
 
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/cont/ArrayHandleVirtual.h>
+#endif
+
 #include <limits>
 
 namespace vtkm
@@ -140,8 +144,9 @@ VTKM_DEPRECATED_SUPPRESS_END
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
 
 template <typename ArrayHandleType>
-inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(const ArrayHandleType& input,
-                                                              vtkm::cont::DeviceAdapterId device)
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const ArrayHandleType& input,
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{})
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
   return detail::ArrayRangeComputeImpl(input, device);

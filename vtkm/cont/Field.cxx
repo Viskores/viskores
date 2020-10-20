@@ -10,6 +10,24 @@
 
 #include <vtkm/cont/Field.h>
 
+#include <vtkm/TypeList.h>
+
+namespace
+{
+
+using ComputeRangeTypes = vtkm::TypeListAll;
+
+struct ComputeRange
+{
+  template <typename ArrayHandleType>
+  void operator()(const ArrayHandleType& input, vtkm::cont::ArrayHandle<vtkm::Range>& range) const
+  {
+    range = vtkm::cont::ArrayRangeCompute(input);
+  }
+};
+
+} // anonymous namespace
+
 namespace vtkm
 {
 namespace cont
@@ -107,6 +125,31 @@ vtkm::cont::VariantArrayHandle& Field::GetData()
 {
   this->ModifiedFlag = true;
   return this->Data;
+}
+
+VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
+{
+  VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Field::GetRange");
+
+  if (this->ModifiedFlag)
+  {
+    vtkm::cont::CastAndCall(
+      this->Data.ResetTypes(ComputeRangeTypes{}), ComputeRange{}, this->Range);
+    this->ModifiedFlag = false;
+  }
+
+  return this->Range;
+}
+
+VTKM_CONT void Field::GetRange(vtkm::Range* range) const
+{
+  this->GetRange();
+  const vtkm::Id length = this->Range.GetNumberOfValues();
+  auto portal = this->Range.ReadPortal();
+  for (vtkm::Id i = 0; i < length; ++i)
+  {
+    range[i] = portal.Get(i);
+  }
 }
 }
 } // namespace vtkm::cont

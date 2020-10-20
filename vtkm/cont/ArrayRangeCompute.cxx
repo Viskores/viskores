@@ -8,7 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayRangeCompute.hxx>
+#include <vtkm/cont/ArrayRangeComputeTemplate.h>
 
 namespace vtkm
 {
@@ -38,36 +38,42 @@ void ThrowArrayRangeComputeFailed()
   }                                                                 \
   struct SwallowSemicolon
 
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int8, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt8, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int16, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt16, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int32, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt32, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int64, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt64, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float32, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float64, vtkm::cont::StorageTagBasic);
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T(Storage) \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, Storage);           \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int8, Storage);     \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt8, Storage);    \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int16, Storage);    \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt16, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int32, Storage);    \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt32, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int64, Storage);    \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt64, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float32, Storage);  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float64, Storage)
 
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int32, 2, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int64, 2, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 2, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 2, vtkm::cont::StorageTagBasic);
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(N, Storage)       \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(char, N, Storage);          \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int8, N, Storage);    \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, N, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int16, N, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt16, N, Storage);  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int32, N, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt32, N, Storage);  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int64, N, Storage);   \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt64, N, Storage);  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, N, Storage); \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, N, Storage)
 
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int32, 3, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int64, 3, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 3, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 3, vtkm::cont::StorageTagBasic);
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T(vtkm::cont::StorageTagBasic);
 
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(char, 4, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int8, 4, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
-VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(2, vtkm::cont::StorageTagBasic);
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(3, vtkm::cont::StorageTagBasic);
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(4, vtkm::cont::StorageTagBasic);
 
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC
+#undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T
+#undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC
 
 // Special implementation for regular point coordinates, which are easy
 // to determine.

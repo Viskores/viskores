@@ -126,7 +126,6 @@ VTKM_DEPRECATED_SUPPRESS_END
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;
-  using CoordinatesTypeList = vtkm::List<vtkm::Vec3f_32, vtkm::Vec3f_64>;
 
 public:
   VTKM_CONT
@@ -205,10 +204,7 @@ public:
   VTKM_CONT MultiplexerArrayType GetDataAsMultiplexer() const;
 
   VTKM_CONT
-  void GetRange(vtkm::Range* range) const
-  {
-    this->Superclass::GetRange(range, CoordinatesTypeList());
-  }
+  void GetRange(vtkm::Range* range) const { this->Superclass::GetRange(range); }
 
   VTKM_CONT
   vtkm::Vec<vtkm::Range, 3> GetRange() const
@@ -221,7 +217,7 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetRangeAsArrayHandle() const
   {
-    return this->Superclass::GetRange(CoordinatesTypeList());
+    return this->Superclass::GetRange();
   }
 
   VTKM_CONT
