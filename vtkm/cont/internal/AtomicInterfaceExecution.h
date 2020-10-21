@@ -71,7 +71,8 @@ struct VTKM_DEPRECATED(1.6, "Use the functions in vtkm/Atomic.h.") AtomicInterfa
   template <typename T>
   VTKM_EXEC_CONT static T CompareAndSwap(T* addr, T newWord, T expected)
   {
-    return vtkm::AtomicCompareAndSwap(addr, newWord, expected);
+    vtkm::AtomicCompareExchange(addr, &expected, newWord);
+    return expected;
   }
 };
 }

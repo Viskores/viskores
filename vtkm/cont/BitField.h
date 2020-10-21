@@ -430,56 +430,74 @@ public:
   }
 
   /// Perform an atomic compare-and-swap operation on the bit at @a bitIdx.
-  /// If the value in memory is equal to @a expectedBit, it is replaced with
-  /// the value of @a newBit and the original value of the bit is returned as a
-  /// boolean. This method implements a full memory barrier around the atomic
+  /// If the value in memory is equal to @a oldBit, it is replaced with
+  /// the value of @a newBit and true is returned. If the value in memory is
+  /// not equal to @oldBit, @oldBit is changed to that value and false is
+  /// returned. This method implements a full memory barrier around the atomic
   /// operation.
   VTKM_EXEC_CONT
-  bool CompareAndSwapBitAtomic(vtkm::Id bitIdx, bool newBit, bool expectedBit) const
+  bool CompareExchangeBitAtomic(vtkm::Id bitIdx, bool* oldBit, bool newBit) const
   {
     VTKM_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     using WordType = WordTypePreferred;
     const auto coord = this->GetBitCoordinateFromIndex<WordType>(bitIdx);
     const auto bitmask = WordType(1) << coord.BitOffset;
 
-    WordType oldWord;
-    WordType newWord;
+    WordType oldWord = this->GetWord<WordType>(coord.WordIndex);
     do
     {
-      oldWord = this->GetWord<WordType>(coord.WordIndex);
-      bool oldBitSet = (oldWord & bitmask) != WordType(0);
-      if (oldBitSet != expectedBit)
+      bool actualBit = (oldWord & bitmask) != WordType(0);
+      if (actualBit != *oldBit)
       { // The bit-of-interest does not match what we expected.
-        return oldBitSet;
+        *oldBit = actualBit;
+        return false;
       }
-      else if (oldBitSet == newBit)
+      else if (actualBit == newBit)
       { // The bit hasn't changed, but also already matches newVal. We're done.
-        return expectedBit;
+        return true;
       }
 
-      // Compute the new word
-      newWord = oldWord ^ bitmask;
-    } // CAS loop to resolve any conflicting changes to other bits in the word.
-    while (this->CompareAndSwapWordAtomic(coord.WordIndex, newWord, oldWord) != oldWord);
+      // Attempt to update the word with a compare-exchange in the loop condition.
+      // If the old word changed since last queried, oldWord will get updated and
+      // the loop will continue until it succeeds.
+    } while (!this->CompareExchangeWordAtomic(coord.WordIndex, &oldWord, oldWord ^ bitmask));
 
+    return true;
+  }
+
+  VTKM_DEPRECATED(1.6, "Use CompareExchangeBitAtomic. (Note the changed interface.)")
+  VTKM_EXEC_CONT bool CompareAndSwapBitAtomic(vtkm::Id bitIdx, bool newBit, bool expectedBit) const
+  {
+    this->CompareExchangeBitAtomic(bitIdx, &expectedBit, newBit);
     return expectedBit;
   }
 
-  /// Perform an atomic compare-and-swap operation on the word at @a wordIdx.
-  /// If the word in memory is equal to @a expectedWord, it is replaced with
-  /// the value of @a newWord and the original word is returned. This method
-  /// implements a full memory barrier around the atomic operation.
+  /// Perform an atomic compare-exchange operation on the word at @a wordIdx.
+  /// If the word in memory is equal to @a oldWord, it is replaced with
+  /// the value of @a newWord and true returned. If the word in memory is not
+  /// equal to @oldWord, @oldWord is set to the word in memory and false is
+  /// returned. This method implements a full memory barrier around the atomic
+  /// operation.
   template <typename WordType = WordTypePreferred>
-  VTKM_EXEC_CONT WordType CompareAndSwapWordAtomic(vtkm::Id wordIdx,
-                                                   WordType newWord,
-                                                   WordType expected) const
+  VTKM_EXEC_CONT bool CompareExchangeWordAtomic(vtkm::Id wordIdx,
+                                                WordType* oldWord,
+                                                WordType newWord) const
   {
     VTKM_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VTKM_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
                            "Requested WordType does not support atomic"
                            " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
-    return vtkm::AtomicCompareAndSwap(addr, newWord, expected);
+    return vtkm::AtomicCompareExchange(addr, oldWord, newWord);
+  }
+
+  template <typename WordType = WordTypePreferred>
+  VTKM_DEPRECATED(1.6, "Use CompareExchangeWordAtomic. (Note the changed interface.)")
+  VTKM_EXEC_CONT WordType
+    CompareAndSwapWordAtomic(vtkm::Id wordIdx, WordType newWord, WordType expected) const
+  {
+    this->CompareExchangeWordAtomic(wordIdx, &expected, newWord);
+    return expected;
   }
 
 private:

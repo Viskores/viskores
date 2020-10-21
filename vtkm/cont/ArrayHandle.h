@@ -1225,7 +1225,7 @@ public:
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
-  VTKM_CONT void ReleaseResourcesExecution()
+  VTKM_CONT void ReleaseResourcesExecution() const
   {
     detail::ArrayHandleReleaseResourcesExecution(this->Buffers);
   }
@@ -1294,27 +1294,23 @@ public:
     return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
   }
 
-  template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(DeviceAdapterTag) const
+    ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
-    return this->PrepareForInput(DeviceAdapterTag{}, token);
+    return this->PrepareForInput(device, token);
   }
-  template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForOutput now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::Portal
-    PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
+    WritePortalType PrepareForOutput(vtkm::Id numberOfValues, vtkm::cont::DeviceAdapterId device)
   {
     vtkm::cont::Token token;
-    return this->PrepareForOutput(numberOfValues, DeviceAdapterTag{}, token);
+    return this->PrepareForOutput(numberOfValues, device, token);
   }
-  template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInPlace now requires a vtkm::cont::Token object.")
-    typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(DeviceAdapterTag)
+    WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
-    return this->PrepareForInPlace(DeviceAdapterTag{}, token);
+    return this->PrepareForInPlace(device, token);
   }
 
   /// Returns true if the ArrayHandle's data is on the given device. If the data are on the given

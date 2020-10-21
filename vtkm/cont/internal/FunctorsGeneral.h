@@ -657,6 +657,23 @@ VTKM_EXEC static inline vtkm::Id IteratorDistanceImpl(const Iterator& from,
   return static_cast<vtkm::Id>(to - from);
 }
 
+#if defined(VTKM_HIP)
+
+template <typename Iterator>
+__host__ static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
+{
+  return static_cast<vtkm::Id>(std::distance(from, to));
+}
+
+template <typename Iterator>
+__device__ static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
+{
+  return IteratorDistanceImpl(
+    from, to, typename std::iterator_traits<Iterator>::iterator_category{});
+}
+
+#else
+
 template <typename Iterator>
 VTKM_EXEC static inline vtkm::Id IteratorDistance(const Iterator& from, const Iterator& to)
 {
@@ -667,6 +684,8 @@ VTKM_EXEC static inline vtkm::Id IteratorDistance(const Iterator& from, const It
     from, to, typename std::iterator_traits<Iterator>::iterator_category{});
 #endif
 }
+
+#endif
 
 template <class InputPortalType, class ValuesPortalType, class OutputPortalType>
 struct LowerBoundsKernel

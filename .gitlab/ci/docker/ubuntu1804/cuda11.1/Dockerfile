@@ -1,10 +1,10 @@
-FROM nvidia/cuda:10.1-devel-ubuntu18.04
+FROM nvidia/cuda:11.1-devel-ubuntu18.04
 LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
 
 # Base dependencies for building VTK-m projects
 RUN apt-get update && apt-get install -y --no-install-recommends \
       curl \
-      g++ \
+      g++-8 \
       clang-8 \
       git \
 

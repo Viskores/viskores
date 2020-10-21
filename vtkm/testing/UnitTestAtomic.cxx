@@ -277,7 +277,7 @@ struct AtomicTests
     }
   }
 
-  struct CompareAndSwapFunctor : vtkm::worklet::WorkletMapField
+  struct CompareExchangeFunctor : vtkm::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn ignored, ExecObject);
     using ExecutionSignature = void(WorkIndex, _2);
@@ -288,8 +288,8 @@ struct AtomicTests
       bool success = false;
       for (T overlapIndex = 0; overlapIndex < static_cast<T>(OVERLAP); ++overlapIndex)
       {
-        T oldValue = vtkm::AtomicCompareAndSwap(data + arrayIndex, overlapIndex + 1, overlapIndex);
-        if (oldValue == overlapIndex)
+        T expectedValue = overlapIndex;
+        if (vtkm::AtomicCompareExchange(data + arrayIndex, &expectedValue, overlapIndex + 1))
         {
           success = true;
           break;
@@ -303,9 +303,9 @@ struct AtomicTests
     }
   };
 
-  VTKM_CONT void TestCompareAndSwap()
+  VTKM_CONT void TestCompareExchange()
   {
-    std::cout << "AtomicCompareAndSwap" << std::endl;
+    std::cout << "AtomicCompareExchange" << std::endl;
     vtkm::cont::ArrayHandleBasic<T> array;
     vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant<T>(0, ARRAY_SIZE), array);
     array.Allocate(ARRAY_SIZE);
@@ -331,7 +331,7 @@ struct AtomicTests
     TestOr();
     TestXor();
     TestNot();
-    TestCompareAndSwap();
+    TestCompareExchange();
   }
 };
 
