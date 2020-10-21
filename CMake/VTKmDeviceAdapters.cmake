@@ -167,7 +167,10 @@ if(VTKm_ENABLE_CUDA)
     # 6 - volta
     #   - Uses: --generate-code=arch=compute_70,code=sm_70
     # 7 - turing
-    #   - Uses: --generate-code=arch=compute_75code=sm_75
+    #   - Uses: --generate-code=arch=compute_75,code=sm_75
+    # 8 - ampere
+    #   - Uses: --generate-code=arch=compute_80,code=sm_80
+    #   - Uses: --generate-code=arch=compute_86,code=sm_86
     # 8 - all
     #   - Uses: --generate-code=arch=compute_30,code=sm_30
     #   - Uses: --generate-code=arch=compute_35,code=sm_35
@@ -175,12 +178,14 @@ if(VTKm_ENABLE_CUDA)
     #   - Uses: --generate-code=arch=compute_60,code=sm_60
     #   - Uses: --generate-code=arch=compute_70,code=sm_70
     #   - Uses: --generate-code=arch=compute_75,code=sm_75
+    #   - Uses: --generate-code=arch=compute_80,code=sm_80
+    #   - Uses: --generate-code=arch=compute_86,code=sm_86
     # 8 - none
     #
 
     #specify the property
     set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing all none)
+    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta turing ampere all none)
 
     #detect what the property is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
@@ -234,13 +239,18 @@ if(VTKm_ENABLE_CUDA)
       set(arch_flags --generate-code=arch=compute_70,code=sm_70)
     elseif(VTKm_CUDA_Architecture STREQUAL "turing")
       set(arch_flags --generate-code=arch=compute_75,code=sm_75)
+    elseif(VTKm_CUDA_Architecture STREQUAL "ampere")
+      set(arch_flags --generate-code=arch=compute_80,code=sm_80)
+      set(arch_flags --generate-code=arch=compute_86,code=sm_86)
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
       set(arch_flags --generate-code=arch=compute_30,code=sm_30
                      --generate-code=arch=compute_35,code=sm_35
                      --generate-code=arch=compute_50,code=sm_50
                      --generate-code=arch=compute_60,code=sm_60
                      --generate-code=arch=compute_70,code=sm_70
-                     --generate-code=arch=compute_75,code=sm_75)
+                     --generate-code=arch=compute_75,code=sm_75
+                     --generate-code=arch=compute_80,code=sm_80
+                     --generate-code=arch=compute_86,code=sm_86)
     endif()
 
     string(REPLACE ";" " " arch_flags "${arch_flags}")
