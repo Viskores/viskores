@@ -160,6 +160,11 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
 }
 
 // Forward declaration
+// Cannot include UncertainArrayHandle.h here due to circular dependency.
+template <typename ValueList, typename StorageList>
+class UncertainArrayHandle;
+
+// Forward declaration
 // Cannot include VariantArrayHandle.h here due to circular dependency.
 template <typename TypeList>
 class VariantArrayHandleBase;
@@ -178,6 +183,19 @@ struct ArrayCopyFunctor
 };
 
 } // namespace detail
+
+/// \brief Deep copies data in an `UncertainArrayHandle` to an array of a known type.
+///
+/// This form of `ArrayCopy` can be used to copy data from an unknown array type to
+/// an array of a known type. Note that regardless of the source type, the data will
+/// be deep copied.
+///
+template <typename InValueList, typename InStorageList, typename OutValue, typename OutStorage>
+VTKM_CONT void ArrayCopy(const vtkm::cont::UncertainArrayHandle<InValueList, InStorageList>& src,
+                         vtkm::cont::ArrayHandle<OutValue, OutStorage>& dest)
+{
+  src.CastAndCall(detail::ArrayCopyFunctor{}, dest);
+}
 
 /// \brief Deep copies data in a `VariantArrayHandle` to an array of a known type.
 ///

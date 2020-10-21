@@ -419,6 +419,30 @@ public:
     points = uniquePointCoordinates;
   }
 
+  template <typename TL, typename SL>
+  VTKM_CONT void Run(
+    vtkm::Float64 delta,                              // Distance to consider two points coincident
+    bool fastCheck,                                   // If true, approximate distances are used
+    const vtkm::Bounds& bounds,                       // Bounds of points
+    vtkm::cont::UncertainArrayHandle<TL, SL>& points) // coordinates, modified to merge close
+  {
+    // Get a cast to a concrete set of point coordiantes so that it can be modified in place
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
+    if (points.template IsType<decltype(concretePoints)>())
+    {
+      concretePoints = points.template Cast<decltype(concretePoints)>();
+    }
+    else
+    {
+      vtkm::cont::ArrayCopy(points, concretePoints);
+    }
+
+    Run(delta, fastCheck, bounds, concretePoints);
+
+    // Make sure that the modified points are reflected back in the variant array.
+    points = concretePoints;
+  }
+
   template <typename TL>
   VTKM_CONT void Run(
     vtkm::Float64 delta,                            // Distance to consider two points coincident
@@ -458,12 +482,12 @@ private:
   {
     template <typename T, typename S>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& inArray,
-                              vtkm::cont::VariantArrayHandleCommon& outHolder,
+                              vtkm::cont::UnknownArrayHandle& outHolder,
                               const PointMerge& self) const
     {
       vtkm::cont::ArrayHandle<T> outArray;
       self.MapPointField(inArray, outArray);
-      outHolder = vtkm::cont::VariantArrayHandleCommon(outArray);
+      outHolder = vtkm::cont::UnknownArrayHandle(outArray);
     }
   };
 
@@ -484,11 +508,11 @@ public:
     return outArray;
   }
 
-  template <typename InTypes>
-  VTKM_CONT vtkm::cont::VariantArrayHandleBase<InTypes> MapPointField(
-    const vtkm::cont::VariantArrayHandleBase<InTypes>& inArray) const
+  template <typename TL, typename SL>
+  VTKM_CONT vtkm::cont::UncertainArrayHandle<TL, SL> MapPointField(
+    const vtkm::cont::UncertainArrayHandle<TL, SL>& inArray) const
   {
-    vtkm::cont::VariantArrayHandleBase<InTypes> outArray;
+    vtkm::cont::UncertainArrayHandle<TL, SL> outArray;
     vtkm::cont::CastAndCall(inArray, MapPointFieldFunctor{}, outArray, *this);
     return outArray;
   }

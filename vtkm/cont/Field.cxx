@@ -12,10 +12,19 @@
 
 #include <vtkm/TypeList.h>
 
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
+
 namespace
 {
 
 using ComputeRangeTypes = vtkm::TypeListAll;
+using ComputeRangeStorage = vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST,
+                                             vtkm::List<vtkm::cont::StorageTagConstant,
+                                                        vtkm::cont::StorageTagCounting,
+                                                        vtkm::cont::StorageTagIndex>>;
 
 struct ComputeRange
 {
@@ -115,13 +124,13 @@ Field::~Field() {}
 
 
 VTKM_CONT
-const vtkm::cont::VariantArrayHandle& Field::GetData() const
+const vtkm::cont::UnknownArrayHandle& Field::GetData() const
 {
   return this->Data;
 }
 
 VTKM_CONT
-vtkm::cont::VariantArrayHandle& Field::GetData()
+vtkm::cont::UnknownArrayHandle& Field::GetData()
 {
   this->ModifiedFlag = true;
   return this->Data;
@@ -134,7 +143,7 @@ VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
   if (this->ModifiedFlag)
   {
     vtkm::cont::CastAndCall(
-      this->Data.ResetTypes(ComputeRangeTypes{}), ComputeRange{}, this->Range);
+      this->Data.ResetTypes<ComputeRangeTypes, ComputeRangeStorage>(), ComputeRange{}, this->Range);
     this->ModifiedFlag = false;
   }
 
@@ -151,5 +160,37 @@ VTKM_CONT void Field::GetRange(vtkm::Range* range) const
     range[i] = portal.Get(i);
   }
 }
+
+VTKM_CONT void Field::SetData(const vtkm::cont::UnknownArrayHandle& newdata)
+{
+  this->Data = newdata;
+  this->ModifiedFlag = true;
+}
 }
 } // namespace vtkm::cont
+
+namespace mangled_diy_namespace
+{
+
+void Serialization<vtkm::cont::Field>::save(BinaryBuffer& bb, const vtkm::cont::Field& field)
+{
+  vtkmdiy::save(bb, field.GetName());
+  vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
+  vtkmdiy::save(bb, field.GetData());
+}
+
+void Serialization<vtkm::cont::Field>::load(BinaryBuffer& bb, vtkm::cont::Field& field)
+{
+  std::string name;
+  vtkmdiy::load(bb, name);
+  int assocVal = 0;
+  vtkmdiy::load(bb, assocVal);
+
+  auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
+  vtkm::cont::UnknownArrayHandle data;
+  vtkmdiy::load(bb, data);
+  field = vtkm::cont::Field(name, assoc, data);
+}
+
+
+} // namespace diy

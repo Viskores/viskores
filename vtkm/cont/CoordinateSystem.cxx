@@ -36,8 +36,8 @@ VTKM_CONT CoordinateSystem::CoordinateSystem()
 }
 
 VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
-                                             const vtkm::cont::VariantArrayHandleCommon& data)
-  : Superclass(name, Association::POINTS, vtkm::cont::VariantArrayHandle{ data })
+                                             const vtkm::cont::UnknownArrayHandle& data)
+  : Superclass(name, Association::POINTS, data)
 {
 }
 
@@ -60,10 +60,11 @@ VTKM_CONT vtkm::cont::detail::CoordDataDepWrapper CoordinateSystem::GetData() co
   return vtkm::cont::detail::CoordDataDepWrapper(this->Superclass::GetData());
 }
 #else  //!VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_CONT vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3> CoordinateSystem::GetData()
-  const
+VTKM_CONT vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>
+CoordinateSystem::GetData() const
 {
-  return vtkm::cont::VariantArrayHandleBase<vtkm::TypeListFieldVec3>(this->Superclass::GetData());
+  return vtkm::cont::UncertainArrayHandle<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(
+    this->Superclass::GetData());
 }
 #endif //!VTKM_NO_DEPRECATED_VIRTUAL
 

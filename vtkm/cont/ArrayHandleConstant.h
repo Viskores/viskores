@@ -73,6 +73,12 @@ public:
                                                                numberOfValues))
   {
   }
+
+  /// \brief Returns the constant value stored in this array.
+  ///
+  /// The value set in the constructor of this array is returned even if the number of values is 0.
+  ///
+  VTKM_CONT T GetValue() const { return this->ReadPortal().GetFunctor()(0); }
 };
 
 /// make_ArrayHandleConstant is convenience function to generate an
