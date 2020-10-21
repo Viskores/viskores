@@ -20,16 +20,19 @@ namespace filter
 /// \brief Estimate the density of particles using the Nearest Grid Point method
 
 // We only need the CoordinateSystem of the input dataset thus a FilterField
-class ParticleDensityNGP : public vtkm::filter::FilterField<ParticleDensityNGP>
+class ParticleDensityNearestGridPoint
+  : public vtkm::filter::FilterField<ParticleDensityNearestGridPoint>
 {
 public:
   // ParticleDensity only support turning 2D/3D particle positions into density
   using SupportedTypes = vtkm::TypeListFieldVec3;
 
   //
-  ParticleDensityNGP(const vtkm::Id3& dimension,
-                     const vtkm::Vec3f& origin,
-                     const vtkm::Vec3f& spacing);
+  ParticleDensityNearestGridPoint(const vtkm::Id3& dimension,
+                                  const vtkm::Vec3f& origin,
+                                  const vtkm::Vec3f& spacing);
+
+  ParticleDensityNearestGridPoint(const vtkm::Id3& dimension, const vtkm::Bounds& bounds);
 
   template <typename T, typename StorageType, typename Policy>
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -45,6 +48,6 @@ private:
 }
 }
 
-#include <vtkm/filter/ParticleDensityNGP.hxx>
+#include <vtkm/filter/ParticleDensityNearestGridPoint.hxx>
 
 #endif //vtk_m_filter_particle_density_ngp_h

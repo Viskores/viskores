@@ -81,7 +81,7 @@ set(extra_headers
   MeshQuality.h
   NDEntropy.h
   NDHistogram.h
-  ParticleDensityNGP.h
+  ParticleDensityNearestGridPoint.h
   ParticleAdvection.h
   Pathline.h
   PointAverage.h
@@ -130,7 +130,7 @@ set(extra_header_template_sources
   MeshQuality.hxx
   NDEntropy.hxx
   NDHistogram.hxx
-  ParticleDensityNGP.hxx
+  ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
   PointAverage.hxx

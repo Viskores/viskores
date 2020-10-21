@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_particle_density_ngp_hxx
 #define vtk_m_filter_particle_density_ngp_hxx
 
-#include "ParticleDensityNGP.h"
+#include "ParticleDensityNearestGridPoint.h"
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -54,17 +54,26 @@ namespace vtkm
 {
 namespace filter
 {
-inline VTKM_CONT ParticleDensityNGP::ParticleDensityNGP(const vtkm::Id3& dimension,
-                                                        const vtkm::Vec3f& origin,
-                                                        const vtkm::Vec3f& spacing)
+inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(
+  const vtkm::Id3& dimension,
+  const vtkm::Vec3f& origin,
+  const vtkm::Vec3f& spacing)
   : Dimension(dimension)
   , Origin(origin)
   , Spacing(spacing)
 {
 }
 
+ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dimension,
+                                                                 const vtkm::Bounds& bounds)
+  : Dimension(dimension)
+  , Origin({ bounds.X.Min, bounds.Y.Min, bounds.Y.Min })
+  , Spacing(vtkm::Vec3f{ bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length() } / Dimension)
+{
+}
+
 template <typename T, typename StorageType, typename Policy>
-inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNGP::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ParticleDensityNearestGridPoint::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata&,

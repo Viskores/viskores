@@ -11,7 +11,7 @@
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/ParticleDensityNGP.h>
+#include <vtkm/filter/ParticleDensityNearestGridPoint.h>
 #include <vtkm/worklet/DescriptiveStatistics.h>
 
 void TestNGP()
@@ -31,9 +31,9 @@ void TestNGP()
     positions, vtkm::CellShapeTagVertex{}, 1, connectivity);
 
   auto cellDims = vtkm::Id3{ 3, 3, 3 };
-  vtkm::filter::ParticleDensityNGP filter{ cellDims,
-                                           { 0.f, 0.f, 0.f },
-                                           vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f } };
+  vtkm::filter::ParticleDensityNearestGridPoint filter{
+    cellDims, { 0.f, 0.f, 0.f }, vtkm::Vec3f{ 1.f / 3.f, 1.f / 3.f, 1.f / 3.f }
+  };
   filter.SetUseCoordinateSystemAsField(true);
   auto density = filter.Execute(dataSet);
 
