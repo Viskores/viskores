@@ -53,12 +53,19 @@ public:
                          const GhostCellArrayType& ghostCells,
                          vtkm::cont::Token& token)
     : Bounds(bounds)
+  /*
     , Field(field.PrepareForExecution(DeviceAdapter(), token))
     , GhostCells(ghostCells.PrepareForInput(DeviceAdapter(), token))
     , HaveGhostCells(ghostCells.GetNumberOfValues() > 0)
     , InterpolationHelper(interpolationHelper->PrepareForExecution(DeviceAdapter(), token))
     , Locator(locator->PrepareForExecution(DeviceAdapter(), token))
+*/
   {
+    this->Locator = locator->PrepareForExecution(DeviceAdapter(), token);
+    this->InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter(), token);
+    this->Field = field.PrepareForExecution(DeviceAdapter(), token);
+    this->GhostCells = ghostCells.PrepareForInput(DeviceAdapter(), token);
+    this->HaveGhostCells = (ghostCells.GetNumberOfValues() > 0);
   }
 
   template <typename Point>
@@ -148,7 +155,7 @@ private:
 
   vtkm::Bounds Bounds;
   const vtkm::worklet::particleadvection::ExecutionField* Field;
-  const GhostCellPortal GhostCells;
+  GhostCellPortal GhostCells;
   bool HaveGhostCells;
   const vtkm::exec::CellInterpolationHelper* InterpolationHelper;
   const vtkm::exec::CellLocator* Locator;
