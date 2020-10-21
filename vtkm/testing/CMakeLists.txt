@@ -55,11 +55,9 @@ set(unit_tests_device
   )
 
 
-#suppress gcc note:
 #variable tracking size limit exceeded with -fvar-tracking-assignments, retrying without
-if (VTKM_COMPILER_IS_GNU)
-  set_source_files_properties(UnitTestBounds.cxx PROPERTIES COMPILE_OPTIONS "-fno-var-tracking-assignments")
-endif()
+set_source_files_properties(UnitTestBounds.cxx PROPERTIES
+  COMPILE_OPTIONS "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:GNU>>:-fno-var-tracking-assignments>")
 
 vtkm_unit_tests(SOURCES ${unit_tests})
 
