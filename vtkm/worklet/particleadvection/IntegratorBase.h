@@ -144,6 +144,7 @@ protected:
       vtkm::FloatDefault stepRange[2] = { 0, this->StepLength };
 
       vtkm::Vec3f currPos(particle->Pos);
+      vtkm::Vec3f currVelocity(0, 0, 0);
       vtkm::VecVariable<vtkm::Vec3f, 2> currValue, tmp;
       auto evalStatus = this->Evaluator.Evaluate(currPos, particle->Time, currValue);
       if (evalStatus.CheckFail())
@@ -158,7 +159,6 @@ protected:
         vtkm::FloatDefault currStep = stepRange[0] + (this->StepLength / div);
 
         //See if we can step by currStep
-        vtkm::Vec3f currVelocity;
         IntegratorStatus status = this->CheckStep(particle, currStep, currVelocity);
 
         if (status.CheckOk()) //Integration step succedded.
