@@ -106,19 +106,16 @@ public:
     // We can use this return "new root" as is without calling findRoot() to
     // find the "new root". The while loop terminates when both u and v have
     // the same root (thus united).
-    auto root_u = UnionFind::findRoot(parents, u);
-    auto root_v = UnionFind::findRoot(parents, v);
+    vtkm::Id root_u = UnionFind::findRoot(parents, u);
+    vtkm::Id root_v = UnionFind::findRoot(parents, v);
 
     while (root_u != root_v)
     {
       // FIXME: we might be executing the loop one extra time than necessary.
-      // Nota Bene: VTKm's CompareAndSwap has a different order of parameters
-      // than common practice, it is (index, new, expected) rather than
-      // (index, expected, new).
       if (root_u < root_v)
-        root_v = parents.CompareAndSwap(root_v, root_u, root_v);
+        parents.CompareExchange(root_v, &root_v, root_u);
       else if (root_u > root_v)
-        root_u = parents.CompareAndSwap(root_u, root_v, root_u);
+        parents.CompareExchange(root_u, &root_u, root_v);
     }
   }
 

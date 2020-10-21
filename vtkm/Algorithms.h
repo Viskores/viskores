@@ -90,7 +90,7 @@ VTKM_EXEC_CONT vtkm::Id BinarySearch(const PortalT& portal, const T& val)
 template <typename IterT, typename T, typename Comp>
 VTKM_EXEC_CONT IterT LowerBound(IterT first, IterT last, const T& val, Comp comp)
 {
-#ifdef VTKM_CUDA
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   auto len = last - first;
   while (len != 0)
   {
@@ -107,9 +107,9 @@ VTKM_EXEC_CONT IterT LowerBound(IterT first, IterT last, const T& val, Comp comp
     }
   }
   return first;
-#else  // VTKM_CUDA
+#else  // VTKM_CUDA || VTKM_HIP
   return std::lower_bound(first, last, val, std::move(comp));
-#endif // VTKM_CUDA
+#endif // VTKM_CUDA || VTKM_HIP
 }
 
 template <typename IterT, typename T>
@@ -139,7 +139,7 @@ VTKM_EXEC_CONT vtkm::Id LowerBound(const PortalT& portal, const T& val)
 template <typename IterT, typename T, typename Comp>
 VTKM_EXEC_CONT IterT UpperBound(IterT first, IterT last, const T& val, Comp comp)
 {
-#ifdef VTKM_CUDA
+#if defined(VTKM_CUDA) || defined(VTKM_HIP)
   auto len = last - first;
   while (len != 0)
   {
@@ -156,9 +156,9 @@ VTKM_EXEC_CONT IterT UpperBound(IterT first, IterT last, const T& val, Comp comp
     }
   }
   return first;
-#else  // VTKM_CUDA
+#else  // VTKM_CUDA || VTKM_HIP
   return std::upper_bound(first, last, val, std::move(comp));
-#endif // VTKM_CUDA
+#endif // VTKM_CUDA || VTKM_HIP
 }
 
 template <typename IterT, typename T>

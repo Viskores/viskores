@@ -264,14 +264,9 @@ public:
     //Id writeValue = op(vertexValue, parentValue);
 
     auto cur = minMaxIndexPortal.Get(parent); // Load the current value at idx
-    vtkm::Id newVal;                          // will hold the result of the multiplication
-    vtkm::Id expect;                          // will hold the expected value before multiplication
-
-    do
-    {
-      expect = cur;                        // Used to ensure the value hasn't changed since reading
-      newVal = this->Op(cur, vertexValue); // the actual multiplication
-    } while ((cur = minMaxIndexPortal.CompareAndSwap(parent, newVal, expect)) != expect);
+    // Use a compare-exchange loop to ensure the operation gets applied atomically
+    while (!minMaxIndexPortal.CompareExchange(parent, &cur, this->Op(cur, vertexValue)))
+      ;
 
     //minMaxIndexPortal.Set(parent, writeValue);
   }

@@ -203,11 +203,19 @@ struct TestingBitField
     DEVICE_ASSERT(testValues("XorBitAtomic"));
 
     const auto notBit = !bit;
-    bool casResult = portal.CompareAndSwapBitAtomic(i, bit, notBit);
-    DEVICE_ASSERT(casResult == bit);
+    // A compare-exchange that should fail
+    auto expectedBit = notBit;
+    bool cxResult = portal.CompareExchangeBitAtomic(i, &expectedBit, bit);
+    DEVICE_ASSERT(!cxResult);
+    DEVICE_ASSERT(expectedBit != notBit);
+    DEVICE_ASSERT(portal.GetBit(i) == expectedBit);
     DEVICE_ASSERT(portal.GetBit(i) == bit);
-    casResult = portal.CompareAndSwapBitAtomic(i, notBit, bit);
-    DEVICE_ASSERT(casResult == bit);
+
+    // A compare-exchange that should succeed.
+    expectedBit = bit;
+    cxResult = portal.CompareExchangeBitAtomic(i, &expectedBit, notBit);
+    DEVICE_ASSERT(cxResult);
+    DEVICE_ASSERT(expectedBit == bit);
     DEVICE_ASSERT(portal.GetBit(i) == notBit);
 
     return true;
@@ -258,12 +266,20 @@ struct TestingBitField
     portal.XorWordAtomic(i, mod);
     DEVICE_ASSERT(testValues("XorWordAtomic"));
 
+    // Compare-exchange that should fail
     const WordType notWord = static_cast<WordType>(~word);
-    auto casResult = portal.CompareAndSwapWordAtomic(i, word, notWord);
-    DEVICE_ASSERT(casResult == word);
+    WordType expectedWord = notWord;
+    bool cxResult = portal.CompareExchangeWordAtomic(i, &expectedWord, word);
+    DEVICE_ASSERT(!cxResult);
+    DEVICE_ASSERT(expectedWord != notWord);
+    DEVICE_ASSERT(portal.template GetWord<WordType>(i) == expectedWord);
     DEVICE_ASSERT(portal.template GetWord<WordType>(i) == word);
-    casResult = portal.CompareAndSwapWordAtomic(i, notWord, word);
-    DEVICE_ASSERT(casResult == word);
+
+    // Compare-exchange that should succeed
+    expectedWord = word;
+    cxResult = portal.CompareExchangeWordAtomic(i, &expectedWord, notWord);
+    DEVICE_ASSERT(cxResult);
+    DEVICE_ASSERT(expectedWord == word);
     DEVICE_ASSERT(portal.template GetWord<WordType>(i) == notWord);
 
     return true;

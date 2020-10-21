@@ -260,7 +260,7 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(
     ->ArgNames({ "Values", "Ops", "Stride" }),
   vtkm::cont::AtomicArrayTypeList);
 
-// Benchmarks AtomicArray::CompareAndSwap such that each work index writes to adjacent
+// Benchmarks AtomicArray::CompareExchange such that each work index writes to adjacent
 // indices.
 struct CASSeqWorker : public vtkm::worklet::WorkletMapField
 {
@@ -273,12 +273,8 @@ struct CASSeqWorker : public vtkm::worklet::WorkletMapField
     const vtkm::Id idx = i % portal.GetNumberOfValues();
     const T val = static_cast<T>(i) + in;
     T oldVal = portal.Get(idx);
-    T assumed = static_cast<T>(0);
-    do
-    {
-      assumed = oldVal;
-      oldVal = portal.CompareAndSwap(idx, assumed + val, assumed);
-    } while (assumed != oldVal);
+    while (!portal.CompareExchange(idx, &oldVal, oldVal + val))
+      ;
   }
 };
 
@@ -371,7 +367,7 @@ VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCASSeqBaseline,
                                 ->ArgNames({ "Values", "Ops" }),
                               vtkm::cont::AtomicArrayTypeList);
 
-// Benchmarks AtomicArray::CompareAndSwap such that each work index writes to
+// Benchmarks AtomicArray::CompareExchange such that each work index writes to
 // a strided index:
 // ( floor(i / stride) + stride * (i % stride)
 struct CASStrideWorker : public vtkm::worklet::WorkletMapField
@@ -393,12 +389,8 @@ struct CASStrideWorker : public vtkm::worklet::WorkletMapField
     const vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
     const T val = static_cast<T>(i) + in;
     T oldVal = portal.Get(idx);
-    T assumed = static_cast<T>(0);
-    do
-    {
-      assumed = oldVal;
-      oldVal = portal.CompareAndSwap(idx, assumed + val, assumed);
-    } while (assumed != oldVal);
+    while (!portal.CompareExchange(idx, &oldVal, oldVal + val))
+      ;
   }
 };
 
