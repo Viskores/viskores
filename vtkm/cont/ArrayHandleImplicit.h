@@ -11,29 +11,14 @@
 #define vtk_m_cont_ArrayHandleImplicit_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageImplicit.h>
+
+#include <vtkmstd/is_trivial.h>
 
 namespace vtkm
 {
-namespace cont
-{
 
-namespace detail
+namespace internal
 {
-
-template <class FunctorType_>
-class VTKM_ALWAYS_EXPORT ArrayPortalImplicit;
-
-/// A convenience class that provides a typedef to the appropriate tag for
-/// a implicit array container.
-template <typename FunctorType>
-struct ArrayHandleImplicitTraits
-{
-  using ValueType = decltype(FunctorType{}(vtkm::Id{}));
-  using StorageTag = vtkm::cont::StorageTagImplicit<ArrayPortalImplicit<FunctorType>>;
-  using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-};
 
 /// \brief An array portal that returns the result of a functor
 ///
@@ -48,8 +33,8 @@ template <class FunctorType_>
 class VTKM_ALWAYS_EXPORT ArrayPortalImplicit
 {
 public:
-  using ValueType = typename ArrayHandleImplicitTraits<FunctorType_>::ValueType;
   using FunctorType = FunctorType_;
+  using ValueType = decltype(FunctorType{}(vtkm::Id{}));
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -82,7 +67,169 @@ private:
   vtkm::Id NumberOfValues;
 };
 
+} // namespace internal
+
+namespace cont
+{
+
+/// \brief An implementation for read-only implicit arrays.
+///
+/// It is sometimes the case that you want VTK-m to operate on an array of
+/// implicit values. That is, rather than store the data in an actual array, it
+/// is gerenated on the fly by a function. This is handled in VTK-m by creating
+/// an ArrayHandle in VTK-m with a StorageTagImplicit type of \c Storage. This
+/// tag itself is templated to specify an ArrayPortal that generates the
+/// desired values. An ArrayHandle created with this tag will raise an error on
+/// any operation that tries to modify it.
+///
+template <class ArrayPortalType>
+struct VTKM_ALWAYS_EXPORT StorageTagImplicit
+{
+  using PortalType = ArrayPortalType;
+};
+
+namespace internal
+{
+
+struct VTKM_CONT_EXPORT BufferMetaDataImplicit : vtkm::cont::internal::BufferMetaData
+{
+  void* Portal;
+
+  using DeleterType = void(void*);
+  DeleterType* Deleter;
+
+  using CopierType = void*(void*);
+  CopierType* Copier;
+
+  template <typename PortalType>
+  BufferMetaDataImplicit(const PortalType& portal)
+    : Portal(new PortalType(portal))
+    , Deleter([](void* p) { delete reinterpret_cast<PortalType*>(p); })
+    , Copier([](void* p) -> void* { return new PortalType(*reinterpret_cast<PortalType*>(p)); })
+  {
+  }
+
+  VTKM_CONT BufferMetaDataImplicit(const BufferMetaDataImplicit& src);
+
+  BufferMetaDataImplicit& operator=(const BufferMetaDataImplicit&) = delete;
+
+  VTKM_CONT ~BufferMetaDataImplicit() override;
+
+  VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
+};
+
+namespace detail
+{
+
+VTKM_CONT_EXPORT vtkm::cont::internal::BufferMetaDataImplicit* GetImplicitMetaData(
+  const vtkm::cont::internal::Buffer& buffer);
+
 } // namespace detail
+
+template <class ArrayPortalType>
+struct VTKM_ALWAYS_EXPORT
+  Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
+{
+  VTKM_IS_TRIVIALLY_COPYABLE(ArrayPortalType);
+
+  using ReadPortalType = ArrayPortalType;
+
+  // Note that this portal is almost certainly read-only, so you will probably get
+  // an error if you try to write to it.
+  using WritePortalType = ArrayPortalType;
+
+  // Implicit array has one buffer that should be empty (NumberOfBytes = 0), but holds
+  // the metadata for the array.
+  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
+  {
+    vtkm::cont::internal::BufferMetaDataImplicit* metadata =
+      detail::GetImplicitMetaData(buffers[0]);
+    VTKM_ASSERT(metadata->Portal);
+    return reinterpret_cast<ArrayPortalType*>(metadata->Portal)->GetNumberOfValues();
+  }
+
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag,
+                                      vtkm::cont::Token&)
+  {
+    if (numValues == GetNumberOfValues(buffers))
+    {
+      // In general, we don't allow resizing of the array, but if it was "allocated" to the
+      // correct size, we will allow that.
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadAllocation("Cannot allocate/resize implicit arrays.");
+    }
+  }
+
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId,
+                                                   vtkm::cont::Token&)
+  {
+    vtkm::cont::internal::BufferMetaDataImplicit* metadata =
+      detail::GetImplicitMetaData(buffers[0]);
+    VTKM_ASSERT(metadata->Portal);
+    return *reinterpret_cast<ReadPortalType*>(metadata->Portal);
+  }
+
+  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer*,
+                                                     vtkm::cont::DeviceAdapterId,
+                                                     vtkm::cont::Token&)
+  {
+    throw vtkm::cont::ErrorBadAllocation("Cannot write to implicit arrays.");
+  }
+};
+
+/// Given an array portal, returns the buffers for the `ArrayHandle` with a storage that
+/// is (or is compatible with) a storage tag of `StorageTagImplicit<PortalType>`.
+template <typename PortalType>
+VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> PortalToArrayHandleImplicitBuffers(
+  const PortalType& portal)
+{
+  std::vector<vtkm::cont::internal::Buffer> buffers(1);
+  buffers[0].SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>(
+    new vtkm::cont::internal::BufferMetaDataImplicit(portal)));
+  return buffers;
+}
+
+/// Given a functor and the number of values, returns the buffers for the `ArrayHandleImplicit`
+/// for the given functor.
+template <typename FunctorType>
+VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> FunctorToArrayHandleImplicitBuffers(
+  const FunctorType& functor,
+  vtkm::Id numValues)
+{
+  return PortalToArrayHandleImplicitBuffers(
+    vtkm::internal::ArrayPortalImplicit<FunctorType>(functor, numValues));
+}
+
+} // namespace internal
+
+namespace detail
+{
+
+/// A convenience class that provides a typedef to the appropriate tag for
+/// a implicit array container.
+template <typename FunctorType>
+struct ArrayHandleImplicitTraits
+{
+  using ValueType = decltype(FunctorType{}(vtkm::Id{}));
+  using PortalType = vtkm::internal::ArrayPortalImplicit<FunctorType>;
+  using StorageTag = vtkm::cont::StorageTagImplicit<PortalType>;
+  using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
+};
+
+} // namespace detail
+
+// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
+template <typename PortalType>
+VTKM_ARRAY_HANDLE_NEW_STYLE(typename PortalType::ValueType,
+                            vtkm::cont::StorageTagImplicit<PortalType>);
 
 /// \brief An \c ArrayHandle that computes values on the fly.
 ///
@@ -97,6 +244,7 @@ class VTKM_ALWAYS_EXPORT ArrayHandleImplicit
 {
 private:
   using ArrayTraits = typename detail::ArrayHandleImplicitTraits<FunctorType>;
+  using PortalType = typename ArrayTraits::PortalType;
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleImplicit,
@@ -105,7 +253,7 @@ public:
 
   VTKM_CONT
   ArrayHandleImplicit(FunctorType functor, vtkm::Id length)
-    : Superclass(typename ArrayTraits::StorageType::PortalType(functor, length))
+    : Superclass(internal::PortalToArrayHandleImplicitBuffers(PortalType(functor, length)))
   {
   }
 };
@@ -144,7 +292,7 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 template <typename Functor>
 struct SerializableTypeString<vtkm::cont::ArrayHandle<
   typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
-  vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
+  vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalImplicit<Functor>>>>
   : SerializableTypeString<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
 };
@@ -183,7 +331,7 @@ public:
 template <typename Functor>
 struct Serialization<vtkm::cont::ArrayHandle<
   typename vtkm::cont::detail::ArrayHandleImplicitTraits<Functor>::ValueType,
-  vtkm::cont::StorageTagImplicit<vtkm::cont::detail::ArrayPortalImplicit<Functor>>>>
+  vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalImplicit<Functor>>>>
   : Serialization<vtkm::cont::ArrayHandleImplicit<Functor>>
 {
 };

@@ -18,56 +18,7 @@ namespace UnitTestArrayHandleCountingNamespace
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-// An unusual data type that represents a number with a string of a
-// particular length. This makes sure that the ArrayHandleCounting
-// works correctly with type casts.
-class StringInt
-{
-public:
-  StringInt() {}
-  StringInt(vtkm::Id v)
-  {
-    VTKM_ASSERT(v >= 0);
-    for (vtkm::Id i = 0; i < v; i++)
-    {
-      ++(*this);
-    }
-  }
-
-  operator vtkm::Id() const { return vtkm::Id(this->Value.size()); }
-
-  StringInt operator+(const StringInt& rhs) const { return StringInt(this->Value + rhs.Value); }
-
-  StringInt operator*(const StringInt& rhs) const
-  {
-    StringInt result;
-    for (vtkm::Id i = 0; i < rhs; i++)
-    {
-      result = result + *this;
-    }
-    return result;
-  }
-
-  bool operator==(const StringInt& other) const { return this->Value.size() == other.Value.size(); }
-
-  StringInt& operator++()
-  {
-    this->Value.append(".");
-    return *this;
-  }
-
-private:
-  StringInt(const std::string& v)
-    : Value(v)
-  {
-  }
-
-  std::string Value;
-};
-
 } // namespace UnitTestArrayHandleCountingNamespace
-
-VTKM_BASIC_TYPE_VECTOR(UnitTestArrayHandleCountingNamespace::StringInt)
 
 namespace UnitTestArrayHandleCountingNamespace
 {
@@ -81,7 +32,7 @@ struct TemplatedTests
 
   using PortalType =
     typename vtkm::cont::internal::Storage<ValueType,
-                                           typename ArrayHandleType::StorageTag>::PortalConstType;
+                                           typename ArrayHandleType::StorageTag>::ReadPortalType;
 
   void operator()(const ValueType& startingValue, const ValueType& step)
   {
@@ -90,7 +41,7 @@ struct TemplatedTests
     ArrayHandleType arrayMake =
       vtkm::cont::make_ArrayHandleCounting(startingValue, step, ARRAY_SIZE);
 
-    ArrayHandleType2 arrayHandle = ArrayHandleType2(PortalType(startingValue, step, ARRAY_SIZE));
+    ArrayHandleType2 arrayHandle = ArrayHandleType(startingValue, step, ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
                      "Counting array using constructor has wrong size.");
@@ -127,8 +78,6 @@ void TestArrayHandleCounting()
   TemplatedTests<vtkm::Float32>()(3.0f, -0.5f);
   TemplatedTests<vtkm::Float64>()(0.0, 1.0);
   TemplatedTests<vtkm::Float64>()(-3.0, 2.0);
-  TemplatedTests<StringInt>()(StringInt(0), StringInt(1));
-  TemplatedTests<StringInt>()(StringInt(10), StringInt(2));
 }
 
 

@@ -10,8 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleCounting_h
 #define vtk_m_cont_ArrayHandleCounting_h
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 
 #include <vtkm/VecTraits.h>
 
@@ -52,24 +51,6 @@ public:
   {
   }
 
-  template <typename OtherValueType>
-  VTKM_EXEC_CONT ArrayPortalCounting(const ArrayPortalCounting<OtherValueType>& src)
-    : Start(src.Start)
-    , Step(src.Step)
-    , NumberOfValues(src.NumberOfValues)
-  {
-  }
-
-  template <typename OtherValueType>
-  VTKM_EXEC_CONT ArrayPortalCounting<ValueType>& operator=(
-    const ArrayPortalCounting<OtherValueType>& src)
-  {
-    this->Start = src.Start;
-    this->Step = src.Step;
-    this->NumberOfValues = src.NumberOfValues;
-    return *this;
-  }
-
   VTKM_EXEC_CONT
   ValueType GetStart() const { return this->Start; }
 
@@ -98,19 +79,12 @@ using StorageTagCountingSuperclass =
 template <typename T>
 struct Storage<T, vtkm::cont::StorageTagCounting> : Storage<T, StorageTagCountingSuperclass<T>>
 {
-  using Superclass = Storage<T, StorageTagCountingSuperclass<T>>;
-  using Superclass::Superclass;
-};
-
-template <typename T, typename Device>
-struct ArrayTransfer<T, vtkm::cont::StorageTagCounting, Device>
-  : ArrayTransfer<T, StorageTagCountingSuperclass<T>, Device>
-{
-  using Superclass = ArrayTransfer<T, StorageTagCountingSuperclass<T>, Device>;
-  using Superclass::Superclass;
 };
 
 } // namespace internal
+
+template <typename T>
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagCounting);
 
 /// ArrayHandleCounting is a specialization of ArrayHandle. By default it
 /// contains a increment value, that is increment for each step between zero
@@ -126,7 +100,8 @@ public:
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
-    : Superclass(internal::ArrayPortalCounting<CountingValueType>(start, step, length))
+    : Superclass(internal::PortalToArrayHandleImplicitBuffers(
+        internal::ArrayPortalCounting<CountingValueType>(start, step, length)))
   {
   }
 };

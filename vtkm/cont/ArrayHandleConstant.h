@@ -47,19 +47,12 @@ using StorageTagConstantSuperclass =
 template <typename T>
 struct Storage<T, vtkm::cont::StorageTagConstant> : Storage<T, StorageTagConstantSuperclass<T>>
 {
-  using Superclass = Storage<T, StorageTagConstantSuperclass<T>>;
-  using Superclass::Superclass;
-};
-
-template <typename T, typename Device>
-struct ArrayTransfer<T, vtkm::cont::StorageTagConstant, Device>
-  : ArrayTransfer<T, StorageTagConstantSuperclass<T>, Device>
-{
-  using Superclass = ArrayTransfer<T, StorageTagConstantSuperclass<T>, Device>;
-  using Superclass::Superclass;
 };
 
 } // namespace internal
+
+template <typename T>
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagConstant);
 
 /// \brief An array handle with a constant value.
 ///
@@ -79,9 +72,8 @@ public:
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
-    : Superclass(typename internal::Storage<T, StorageTag>::PortalConstType(
-        internal::ConstantFunctor<T>(value),
-        numberOfValues))
+    : Superclass(internal::FunctorToArrayHandleImplicitBuffers(internal::ConstantFunctor<T>(value),
+                                                               numberOfValues))
   {
   }
 };
