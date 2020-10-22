@@ -875,6 +875,15 @@ void TreeGrafter<MeshType, FieldType>::ListNewHypernodes(
       this->WhenTransferred);
   vtkm::cont::Algorithm::Sort(this->NewHypernodes, hyperNodeWhenComparator);
 
+  if (this->NewHypernodes.GetNumberOfValues() == 0)
+  {
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "TreeGrafter::ListNewHypernodes(): No new hypernodes. Returning.");
+#endif
+    return;
+  }
+
   //  D.  Use this sorted array to set the hierarchical hyper index for each supernode that is a new hypernode
   vtkm::Id nOldHypernodes = hierarchicalTree.Hypernodes.GetNumberOfValues();
   // VTKm copy can't allocate for transformed arrays, but this->HierarchicalHyperId.Allocate(nOldHypernodes) has already been allocate earlier.
@@ -926,6 +935,16 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
     notANewSupernodePredicate // unary predicate for deciding which supernodes are considered true
   );
   this->NewSupernodes = compressedNewSupernodes; // swap in the compressed array
+
+  if (this->NewSupernodes.GetNumberOfValues() == 0)
+  {
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "TreeGrafter::ListNewSupernodes(): No new supernodes. Returning.");
+#endif
+    return;
+  }
+
   //  C.  Sort them to match the hyperarc sort: note that the supernodes array ALWAYS holds a sort index into the nodes
   auto superNodeWhenComparator =
     vtkm::worklet::contourtree_distributed::tree_grafter::SuperNodeWhenComparator(
@@ -1010,6 +1029,15 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   );
   // swap in the compressed array
   this->NewNodes = compressedNewNodes;
+
+  if (this->NewNodes.GetNumberOfValues() == 0)
+  {
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "TreeGrafter::ListNewNodes(): No noew nodes. Returning.");
+#endif
+    return;
+  }
 
   //  E.  And set their new ID for future use
   vtkm::Id nOldNodes = hierarchicalTree.RegularNodeGlobalIds.GetNumberOfValues();
@@ -1181,7 +1209,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
     vtkm::cont::make_ArrayHandlePermutation(newHypernodeIndex, hierarchicalTree.Hypernodes);
   auto permutedSuper2hypernode =
     vtkm::cont::make_ArrayHandlePermutation(permutedHypernodes, hierarchicalTree.Super2Hypernode);
-  vtkm::cont::Algorithm::Copy(newHypernodeIndex, permutedSuper2hypernode);
+  if (newHypernodeIndex.GetNumberOfValues())
+  { // TODO/FIXME: Can we detect this earlier and save computation time?
+    vtkm::cont::Algorithm::Copy(newHypernodeIndex, permutedSuper2hypernode);
+  }
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, DebugPrint("New Supernodes Copied", __FILE__, __LINE__));
@@ -1301,7 +1332,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
     auto regular2SupernodePermuted = vtkm::cont::make_ArrayHandlePermutation(
       vtkm::cont::make_ArrayHandlePermutation(tempNewSupernodeIndex, hierarchicalTree.Supernodes),
       hierarchicalTree.Regular2Supernode);
-    vtkm::cont::Algorithm::Copy(tempNewSupernodeIndex, regular2SupernodePermuted);
+    if (tempNewSupernodeIndex.GetNumberOfValues())
+    { // TODO/FIXME: Can we detect this earlier and save computation time?
+      vtkm::cont::Algorithm::Copy(tempNewSupernodeIndex, regular2SupernodePermuted);
+    }
   }
 
   // E.  Now we sort out the superparents

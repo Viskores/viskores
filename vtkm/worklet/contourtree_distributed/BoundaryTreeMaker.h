@@ -439,13 +439,24 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     // i. Pull the array bounds into register
     vtkm::Id firstSupernode = firstSupernodePerIterationReadPortal.Get(iteration);
     vtkm::Id lastSupernode = firstSupernodePerIterationReadPortal.Get(iteration + 1);
+
+    if (lastSupernode == firstSupernode)
+    {
+#ifdef DEBUG_PRINT
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                 "BoundaryTreeMaker::PropagateBoundaryCounts(): lastSupernode == firstSupernode "
+                 " -> Skipping iteration");
+#endif
+      continue;
+    }
+
     vtkm::Id firstHypernode = firstHypernodePerIterationReadPortal.Get(iteration);
     vtkm::Id lastHypernode = firstHypernodePerIterationReadPortal.Get(iteration + 1);
 
     //  ii.  Add xfer + int & store in dependent count
     //      Compute the sum of this->SupernodeTransferBoundaryCount and this->SuperarcIntrinsicBoundaryCount
     //      for the [firstSupernodex, lastSupernode) subrange and copy to the this->SuperarcDependentBoundaryCount
-    { // make local context ot fancyTempSumArray gets deleted
+    { // make local context so fancyTempSumArray gets deleted
       auto fancyTempSumArray = vtkm::cont::make_ArrayHandleImplicit(
         bract_maker::ArraySumFunctor(this->SupernodeTransferBoundaryCount,
                                      this->SuperarcIntrinsicBoundaryCount),
@@ -701,6 +712,15 @@ void BoundaryTreeMaker<MeshType,
   // We need to grow the arrays, without loosing our original data, so we need
   // to create new arrays of the approbriate size, copy our data in and then
   // assign. TODO: Would be great if VTKm allow resize without losing the values
+  if (this->NumNecessary == 0)
+  {
+#ifdef DEBUG_PRINT
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "BoundaryTreeMaker::AugmentBoundaryWithNecessaryInteriorSupernodes():"
+               "No additional nodes necessary. Returning.");
+#endif
+    return;
+  }
   {
     // Create a new resized array and copy the original values to the array
     vtkm::worklet::contourtree_augmented::IdArrayType tempBractVertexSuperset;
