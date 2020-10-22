@@ -547,7 +547,7 @@ void TestGhostCellEvaluators()
 
   GridEvalType gridEval(dsWithGhost, velocities);
 
-  vtkm::FloatDefault stepSize = 0.1;
+  vtkm::FloatDefault stepSize = static_cast<vtkm::FloatDefault>(0.1);
   RK4Type rk4(gridEval, stepSize);
 
   vtkm::worklet::ParticleAdvection pa;

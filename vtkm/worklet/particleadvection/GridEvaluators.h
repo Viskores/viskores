@@ -59,13 +59,6 @@ public:
     , InterpolationHelper(interpolationHelper->PrepareForExecution(DeviceAdapter(), token))
     , Locator(locator->PrepareForExecution(DeviceAdapter(), token))
   {
-#if 0
-    this->Locator = locator->PrepareForExecution(DeviceAdapter(), token);
-    this->InterpolationHelper = interpolationHelper->PrepareForExecution(DeviceAdapter(), token);
-    this->Field = field.PrepareForExecution(DeviceAdapter(), token);
-    this->GhostCells = ghostCells.PrepareForInput(DeviceAdapter(), token);
-    this->HaveGhostCells = (ghostCells.GetNumberOfValues() > 0);
-#endif
   }
 
   template <typename Point>
