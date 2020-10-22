@@ -67,8 +67,13 @@ inline VTKM_CONT ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoin
 ParticleDensityNearestGridPoint::ParticleDensityNearestGridPoint(const Id3& dimension,
                                                                  const vtkm::Bounds& bounds)
   : Dimension(dimension)
-  , Origin({ bounds.X.Min, bounds.Y.Min, bounds.Y.Min })
-  , Spacing(vtkm::Vec3f{ bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length() } / Dimension)
+  , Origin({ static_cast<vtkm::FloatDefault>(bounds.X.Min),
+             static_cast<vtkm::FloatDefault>(bounds.Y.Min),
+             static_cast<vtkm::FloatDefault>(bounds.Z.Min) })
+  , Spacing(vtkm::Vec3f{ static_cast<vtkm::FloatDefault>(bounds.X.Length()),
+                         static_cast<vtkm::FloatDefault>(bounds.Y.Length()),
+                         static_cast<vtkm::FloatDefault>(bounds.Z.Length()) } /
+            Dimension)
 {
 }
 
