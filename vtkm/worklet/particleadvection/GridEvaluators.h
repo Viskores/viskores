@@ -170,12 +170,31 @@ public:
   GridEvaluator() = default;
 
   VTKM_CONT
+  GridEvaluator(const vtkm::cont::DataSet& dataSet, const std::string& fieldName)
+    : Bounds(dataSet.GetCoordinateSystem().GetBounds())
+    , Field(dataSet.GetField(fieldName))
+    , GhostCellArray()
+  {
+    this->InitializeLocator(dataSet.GetCoordinateSystem(), dataSet.GetCellSet());
+
+    if (dataSet.HasCellField("vtkmGhostCells"))
+    {
+      auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();
+      if (arr.IsType<GhostCellArrayType>())
+        this->GhostCellArray = arr.Cast<GhostCellArrayType>();
+      else
+        throw vtkm::cont::ErrorInternal("vtkmGhostCells not of type vtkm::UInt8");
+    }
+  }
+
+  VTKM_CONT
   GridEvaluator(const vtkm::cont::DataSet& dataSet, const FieldType& field)
     : Bounds(dataSet.GetCoordinateSystem().GetBounds())
     , Field(field)
     , GhostCellArray()
   {
     this->InitializeLocator(dataSet.GetCoordinateSystem(), dataSet.GetCellSet());
+
     if (dataSet.HasCellField("vtkmGhostCells"))
     {
       auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();

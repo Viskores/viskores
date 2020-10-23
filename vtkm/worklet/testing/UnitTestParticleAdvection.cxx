@@ -211,8 +211,8 @@ static void MakeExplicitCells(const CellSetType& cellSet,
   }
 }
 
-vtkm::cont::DataSet CreateWeirdnessFromStructuredDataSet(const vtkm::cont::DataSet& input,
-                                                         DataSetOption option)
+vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::cont::DataSet& input,
+                                                        DataSetOption option)
 {
   using CoordType = vtkm::Vec3f;
 
@@ -412,12 +412,7 @@ void ValidateIntegratorForBoundary(const vtkm::Bounds& bounds,
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
     Status status = statusPortal.Get(index);
-    if (!status.CheckOk())
-    {
-      std::cout << __FILE__ << " " << __LINE__ << std::endl;
-      std::cout << __FILE__ << " " << __LINE__ << std::endl;
-      std::cout << "Fail coming... at " << index << std::endl;
-    }
+
     VTKM_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(status.CheckSpatialBounds(), "Error in evaluator for " + msg);
     //Result should be push just outside of the bounds.
@@ -460,8 +455,14 @@ void TestEvaluators()
       for (auto& bound : bounds)
       {
         std::vector<vtkm::cont::DataSet> dataSets;
-        dataSets.push_back(CreateUniformDataSet(bound, dim));
-        dataSets.push_back(CreateRectilinearDataSet(bound, dim));
+        auto uniformDS = CreateUniformDataSet(bound, dim);
+        auto rectilinearDS = CreateRectilinearDataSet(bound, dim);
+        dataSets.push_back(uniformDS);
+        dataSets.push_back(rectilinearDS);
+        dataSets.push_back(CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::SINGLE));
+        dataSets.push_back(
+          CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::CURVILINEAR));
+        dataSets.push_back(CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::EXPLICIT));
 
         vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
         CreateConstantVectorField(dim[0] * dim[1] * dim[2], vec, vecField);
@@ -530,47 +531,74 @@ void TestGhostCellEvaluators()
   using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
-  vtkm::Id numX = 6;
-  vtkm::Id numY = 6;
-  vtkm::Id numZ = 6;
+  constexpr vtkm::Id nX = 6;
+  constexpr vtkm::Id nY = 6;
+  constexpr vtkm::Id nZ = 6;
 
-  vtkm::Id3 dims(numX + 1, numY + 1, numZ + 1);
+  vtkm::Bounds bounds(0,
+                      static_cast<vtkm::FloatDefault>(nX),
+                      0,
+                      static_cast<vtkm::FloatDefault>(nY),
+                      0,
+                      static_cast<vtkm::FloatDefault>(nZ));
+  vtkm::Id3 dims(nX + 1, nY + 1, nZ + 1);
+
+  std::vector<vtkm::cont::DataSet> dataSets;
+  auto uniformDS = CreateUniformDataSet(bounds, dims);
+  auto rectilinearDS = CreateRectilinearDataSet(bounds, dims);
+  dataSets.push_back(uniformDS);
+  dataSets.push_back(rectilinearDS);
+  dataSets.push_back(CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::SINGLE));
+  dataSets.push_back(CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::CURVILINEAR));
+  dataSets.push_back(CreateExplicitFromStructuredDataSet(uniformDS, DataSetOption::EXPLICIT));
+
   vtkm::filter::GhostCellClassify addGhost;
-  auto ds = vtkm::cont::DataSetBuilderUniform::Create(dims);
-  auto dsWithGhost = addGhost.Execute(ds);
+  auto dsWithGhost = addGhost.Execute(uniformDS);
+  auto ghostField = dsWithGhost.GetField("vtkmGhostCells");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
-  vtkm::Vec3f vec(1, 0, 0);
-  CreateConstantVectorField(dims[0] * dims[1] * dims[2], vec, vecField);
-  dsWithGhost.AddPointField("vec", vecField);
-  FieldType velocities(vecField);
-
-  GridEvalType gridEval(dsWithGhost, velocities);
-
-  vtkm::FloatDefault stepSize = static_cast<vtkm::FloatDefault>(0.1);
-  RK4Type rk4(gridEval, stepSize);
-
-  vtkm::worklet::ParticleAdvection pa;
-  std::vector<vtkm::Particle> seeds;
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(4, 3, 3), 1));
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(5.5, 5.5, 5.5), 1));
-  seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, 3, 3), 1));
-
-  auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
-  auto res = pa.Run(rk4, seedArray, 10000);
-
-  auto posPortal = res.Particles.ReadPortal();
-  vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-  for (vtkm::Id i = 0; i < numSeeds; i++)
+  for (auto& ds : dataSets)
   {
-    const auto& p = posPortal.Get(i);
-    VTKM_TEST_ASSERT(p.Status.CheckSpatialBounds(), "Particle did not leave the dataset.");
-    VTKM_TEST_ASSERT(p.Status.CheckInGhostCell(), "Particle did not end up in ghost cell.");
-  }
+    vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
+    vtkm::Vec3f vec(1, 0, 0);
+    CreateConstantVectorField(dims[0] * dims[1] * dims[2], vec, vecField);
+    dsWithGhost.AddPointField("vec", vecField);
+    FieldType velocities(vecField);
 
-  //  for (int i = 0; i < seeds.size(); i++)
-  //      std::cout<<posPortal.Get(i).Pos<<" "<<posPortal.Get(i).Time<<" "<<posPortal.Get(i).Status<<std::endl;
+    ds.AddField(ghostField);
+
+    GridEvalType gridEval(ds, velocities);
+
+    vtkm::FloatDefault stepSize = static_cast<vtkm::FloatDefault>(0.1);
+    RK4Type rk4(gridEval, stepSize);
+
+    vtkm::worklet::ParticleAdvection pa;
+    std::vector<vtkm::Particle> seeds;
+    //Points in a ghost cell.
+    seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, .5, .5), 0));
+    seeds.push_back(vtkm::Particle(vtkm::Vec3f(.5, 3, 3), 1));
+    seeds.push_back(vtkm::Particle(vtkm::Vec3f(5.5, 5.5, 5.5), 2));
+
+    //Point inside
+    seeds.push_back(vtkm::Particle(vtkm::Vec3f(3, 3, 3), 3));
+
+    auto seedArray = vtkm::cont::make_ArrayHandle(seeds, vtkm::CopyFlag::Off);
+    auto res = pa.Run(rk4, seedArray, 10000);
+
+    auto posPortal = res.Particles.ReadPortal();
+    vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+    for (vtkm::Id i = 0; i < numSeeds; i++)
+    {
+      const auto& p = posPortal.Get(i);
+      VTKM_TEST_ASSERT(p.Status.CheckSpatialBounds(), "Particle did not leave the dataset.");
+      VTKM_TEST_ASSERT(p.Status.CheckInGhostCell(), "Particle did not end up in ghost cell.");
+
+      //Particles that start in a ghost cell should take no steps.
+      if (p.ID == 0 || p.ID == 1 || p.ID == 2)
+        VTKM_TEST_ASSERT(p.NumSteps == 0, "Particle in ghost cell should *not* take any steps");
+      else if (p.ID == 3)
+        VTKM_TEST_ASSERT(p.NumSteps == 21, "Wrong number of steps for particle with ghost cells");
+    }
+  }
 }
 
 void ValidateParticleAdvectionResult(
@@ -691,10 +719,10 @@ void TestParticleWorkletsWithDataSetTypes()
     dataSets.push_back(CreateUniformDataSet(bound, dims));
     dataSets.push_back(CreateRectilinearDataSet(bound, dims));
     // Create an explicit dataset.
-    dataSets.push_back(CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::SINGLE));
+    dataSets.push_back(CreateExplicitFromStructuredDataSet(dataSets[0], DataSetOption::SINGLE));
     dataSets.push_back(
-      CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::CURVILINEAR));
-    dataSets.push_back(CreateWeirdnessFromStructuredDataSet(dataSets[0], DataSetOption::EXPLICIT));
+      CreateExplicitFromStructuredDataSet(dataSets[0], DataSetOption::CURVILINEAR));
+    dataSets.push_back(CreateExplicitFromStructuredDataSet(dataSets[0], DataSetOption::EXPLICIT));
 
     //Generate three random points.
     std::vector<vtkm::Particle> pts;
