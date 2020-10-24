@@ -92,6 +92,8 @@ vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm:
                         static_cast<vtkm::FloatDefault>((dims[1] - 1)),
                       static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
                         static_cast<vtkm::FloatDefault>((dims[2] - 1)));
+  std::cout << "BUM: " << origin << " " << spacing << std::endl;
+  std::cout << " bum bum: " << bounds << " " << dims << std::endl;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
@@ -237,25 +239,6 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bounds& boun
   return output;
 }
 
-vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims,
-                                  const vtkm::Vec3f& origin,
-                                  const vtkm::Vec3f& spacing,
-                                  const vtkm::Vec3f& vec)
-{
-  vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
-
-  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints));
-  for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
-    vectorField[i] = vec;
-
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
-  ds.AddPointField("vector", vectorField);
-
-  return ds;
-}
-
 void TestBasic()
 {
   std::cout << "Basic uniform grid" << std::endl;
@@ -263,6 +246,8 @@ void TestBasic()
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Bounds bounds(0, dims[1] - 1, 0, dims[2] - 1, 0, dims[3] - 1);
   const vtkm::Vec3f vecX(1, 0, 0);
+
+  std::cout << "Basic: " << bounds << " " << dims << std::endl;
 
   std::vector<vtkm::cont::DataSet> dataSets;
   dataSets.push_back(CreateUniformDataSet(bounds, dims));
@@ -373,54 +358,6 @@ void TestPartitionedDataSet()
     vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
     VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
   }
-
-#if 0
-  const vtkm::Vec3f o1(0, 0, 0), o2(4, 0, 0), o3(8, 0, 0);
-  const vtkm::Vec3f spacing(1, 1, 1);
-  const vtkm::Vec3f vecX(1, 0, 0);
-
-  vtkm::cont::PartitionedDataSet pds;
-
-  pds.AppendPartition(CreateDataSet(dims, o1, spacing, vecX));
-  pds.AppendPartition(CreateDataSet(dims, o2, spacing, vecX));
-  pds.AppendPartition(CreateDataSet(dims, o3, spacing, vecX));
-
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                             vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                             vtkm::Particle(vtkm::Vec3f(4.2f, 1.0f, .2f), 2),
-                                             vtkm::Particle(vtkm::Vec3f(8.2f, 1.0f, .2f), 3) });
-
-  vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-
-  vtkm::filter::ParticleAdvection particleAdvection;
-
-  particleAdvection.SetStepSize(0.1f);
-  particleAdvection.SetNumberOfSteps(1000);
-  particleAdvection.SetSeeds(seedArray);
-
-  particleAdvection.SetActiveField("vector");
-  auto out = particleAdvection.Execute(pds);
-
-  VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
-  auto ds = out.GetPartition(0);
-
-  //Validate the result is correct.
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
-
-  auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
-  VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
-  auto ptPortal = coords.ReadPortal();
-  vtkm::Id nPts = ptPortal.GetNumberOfValues();
-  for (vtkm::Id i = 0; i < nPts; i++)
-    VTKM_TEST_ASSERT(ptPortal.Get(i)[0] >= 12);
-
-  vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
-  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
-  //ds.PrintSummary(std::cout);
-
-#endif
 }
 
 void TestDataSet(const vtkm::cont::DataSet& dataset,
