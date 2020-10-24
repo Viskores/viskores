@@ -92,8 +92,6 @@ vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm:
                         static_cast<vtkm::FloatDefault>((dims[1] - 1)),
                       static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
                         static_cast<vtkm::FloatDefault>((dims[2] - 1)));
-  std::cout << "BUM: " << origin << " " << spacing << std::endl;
-  std::cout << " bum bum: " << bounds << " " << dims << std::endl;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
@@ -244,10 +242,8 @@ void TestBasic()
   std::cout << "Basic uniform grid" << std::endl;
 
   const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Bounds bounds(0, dims[1] - 1, 0, dims[2] - 1, 0, dims[3] - 1);
+  const vtkm::Bounds bounds(0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1);
   const vtkm::Vec3f vecX(1, 0, 0);
-
-  std::cout << "Basic: " << bounds << " " << dims << std::endl;
 
   std::vector<vtkm::cont::DataSet> dataSets;
   dataSets.push_back(CreateUniformDataSet(bounds, dims));
