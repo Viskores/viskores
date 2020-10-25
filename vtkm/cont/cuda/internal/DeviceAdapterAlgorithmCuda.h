@@ -1639,6 +1639,8 @@ public:
   static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
                            vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT(numInstances >= 0);
     if (numInstances < 1)
     {
@@ -1671,6 +1673,8 @@ public:
   static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>& functor,
                            vtkm::Id3 rangeMax)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     VTKM_ASSERT((rangeMax[0] >= 0) && (rangeMax[1] >= 0) && (rangeMax[2] >= 0));
     if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
     {
