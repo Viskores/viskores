@@ -17,60 +17,10 @@
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/thirdparty/diy/environment.h>
+#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
 {
-
-#if 0
-class TestingDataSetBuilder
-{
-public:
-   enum class DataSetGenerationType
-   {
-       UNIFORM = 0,
-       RECTILINEAR = 1,
-       CURVILINEAR = 2,
-       EXPLICIT_SINGLE = 3,
-       EXPLICIT = 4
-   };
-
-  TestingDataSetBuilder() {}
-
-  vtkm::cont::DataSet GenerateDataSet(const vtkm::Bounds& bounds, const vtkm::Id& dims, DataSetGenerationType dsType)
-  {
-    if (dsType == DataSetGenerationType::UNIFORM)
-        return this->GenerateUniform(bounds, dims);
-    else if (dsType == DataSetGenerationType::RECTILINEAR)
-        return this->GenerateUniform(bounds, dims);
-  }
-
-  void SetDataSetTypeUniform() { this->DataSetType = DataSetGenerationType::UNIFORM; }
-  void SetDataSetTypeRectilinear() { this->DataSetType = DataSetGenerationType::RECTILINEAR; }
-  void SetDataSetTypeCurvilinear() { this->DataSetType = DataSetGenerationType::CURVILINEAR; }
-  void SetDataSetTypeExplicitSingle() { this->DataSetType = DataSetGenerationType::EXPLICIT_SINGLE; }
-  void SetDataSetTypeExplicit() { this->DataSetType = DataSetGenerationType::EXPLICIT; }
-
-private:
-  vtkm::cont::DataSet GenerateUniform(const vtkm::Bounds& bounds, const vtkm::Id& dims)
-  {
-    vtkm::Vec3f origin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
-                       static_cast<vtkm::FloatDefault>(bounds.Y.Min),
-                       static_cast<vtkm::FloatDefault>(bounds.Z.Min));
-    vtkm::Vec3f spacing(static_cast<vtkm::FloatDefault>(bounds.X.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[0] - 1)),
-                        static_cast<vtkm::FloatDefault>(bounds.Y.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[1] - 1)),
-                        static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[2] - 1)));
-
-    vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-    vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
-    return ds;
-  }
-
-  DataSetGenerationType DataSetType;
-};
-#endif
 
 vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, const vtkm::Vec3f& vec)
 {
@@ -80,182 +30,6 @@ vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, con
   vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
   vtkm::cont::ArrayCopy(vecConst, vecField);
   return vecField;
-}
-
-vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds,
-                                         const vtkm::Id3& dims,
-                                         bool addGhost = false)
-{
-  vtkm::Vec3f origin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
-                     static_cast<vtkm::FloatDefault>(bounds.Y.Min),
-                     static_cast<vtkm::FloatDefault>(bounds.Z.Min));
-  vtkm::Vec3f spacing(static_cast<vtkm::FloatDefault>(bounds.X.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[0] - 1)),
-                      static_cast<vtkm::FloatDefault>(bounds.Y.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[1] - 1)),
-                      static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[2] - 1)));
-
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
-
-  if (addGhost)
-  {
-    vtkm::filter::GhostCellClassify addGhostFilter;
-    return addGhostFilter.Execute(ds);
-  }
-  return ds;
-}
-
-vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds,
-                                             const vtkm::Id3& dims,
-                                             bool addGhost = false)
-{
-  vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
-  std::vector<vtkm::FloatDefault> xvals, yvals, zvals;
-
-  vtkm::Vec3f spacing(static_cast<vtkm::FloatDefault>(bounds.X.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[0] - 1)),
-                      static_cast<vtkm::FloatDefault>(bounds.Y.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[1] - 1)),
-                      static_cast<vtkm::FloatDefault>(bounds.Z.Length()) /
-                        static_cast<vtkm::FloatDefault>((dims[2] - 1)));
-  xvals.resize((size_t)dims[0]);
-  xvals[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min);
-  for (size_t i = 1; i < (size_t)dims[0]; i++)
-    xvals[i] = xvals[i - 1] + spacing[0];
-
-  yvals.resize((size_t)dims[1]);
-  yvals[0] = static_cast<vtkm::FloatDefault>(bounds.Y.Min);
-  for (size_t i = 1; i < (size_t)dims[1]; i++)
-    yvals[i] = yvals[i - 1] + spacing[1];
-
-  zvals.resize((size_t)dims[2]);
-  zvals[0] = static_cast<vtkm::FloatDefault>(bounds.Z.Min);
-  for (size_t i = 1; i < (size_t)dims[2]; i++)
-    zvals[i] = zvals[i - 1] + spacing[2];
-
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(xvals, yvals, zvals);
-
-  if (addGhost)
-  {
-    vtkm::filter::GhostCellClassify addGhostFilter;
-    return addGhostFilter.Execute(ds);
-  }
-  return ds;
-}
-
-enum class DataSetOption
-{
-  SINGLE = 0,
-  CURVILINEAR,
-  EXPLICIT
-};
-
-template <class CellSetType, vtkm::IdComponent NDIM>
-static void MakeExplicitCells(const CellSetType& cellSet,
-                              vtkm::Vec<vtkm::Id, NDIM>& cellDims,
-                              vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
-                              vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-                              vtkm::cont::ArrayHandle<vtkm::Id>& conn)
-{
-  using Connectivity = vtkm::internal::ConnectivityStructuredInternals<NDIM>;
-
-  vtkm::Id nCells = cellSet.GetNumberOfCells();
-  vtkm::IdComponent nVerts = (NDIM == 2 ? 4 : 8);
-  vtkm::Id connLen = (NDIM == 2 ? nCells * 4 : nCells * 8);
-
-  conn.Allocate(connLen);
-  shapes.Allocate(nCells);
-  numIndices.Allocate(nCells);
-
-  Connectivity structured;
-  structured.SetPointDimensions(cellDims + vtkm::Vec<vtkm::Id, NDIM>(1));
-
-  auto connPortal = conn.WritePortal();
-  auto shapesPortal = shapes.WritePortal();
-  auto numIndicesPortal = numIndices.WritePortal();
-  vtkm::Id connectionIndex = 0;
-  for (vtkm::Id cellIndex = 0; cellIndex < nCells; cellIndex++)
-  {
-    auto ptIds = structured.GetPointsOfCell(cellIndex);
-    for (vtkm::IdComponent vertexIndex = 0; vertexIndex < nVerts; vertexIndex++, connectionIndex++)
-      connPortal.Set(connectionIndex, ptIds[vertexIndex]);
-
-    shapesPortal.Set(cellIndex, (NDIM == 2 ? vtkm::CELL_SHAPE_QUAD : vtkm::CELL_SHAPE_HEXAHEDRON));
-    numIndicesPortal.Set(cellIndex, nVerts);
-  }
-}
-
-vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bounds& bounds,
-                                                        const vtkm::Id3& dims,
-                                                        DataSetOption option,
-                                                        bool addGhost = false)
-{
-  using CoordType = vtkm::Vec3f;
-  auto input = CreateUniformDataSet(bounds, dims, addGhost);
-
-  auto inputCoords = input.GetCoordinateSystem(0).GetData();
-  vtkm::cont::ArrayHandle<CoordType> explCoords;
-  vtkm::cont::ArrayCopy(inputCoords, explCoords);
-
-  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet();
-  vtkm::cont::ArrayHandle<vtkm::Id> conn;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-  vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
-  vtkm::cont::DataSet output;
-  vtkm::cont::DataSetBuilderExplicit dsb;
-
-  using Structured2DType = vtkm::cont::CellSetStructured<2>;
-  using Structured3DType = vtkm::cont::CellSetStructured<3>;
-
-  switch (option)
-  {
-    case DataSetOption::SINGLE:
-      if (cellSet.IsType<Structured2DType>())
-      {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
-        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
-        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, vtkm::CellShapeTagQuad(), 4, conn, "coordinates");
-      }
-      else
-      {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
-        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
-        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, vtkm::CellShapeTagHexahedron(), 8, conn, "coordinates");
-      }
-      break;
-
-    case DataSetOption::CURVILINEAR:
-      // In this case the cell set/connectivity is the same as the input
-      // Only the coords are no longer Uniform / Rectilinear
-      output.SetCellSet(cellSet);
-      output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", explCoords));
-      break;
-
-    case DataSetOption::EXPLICIT:
-      if (cellSet.IsType<Structured2DType>())
-      {
-        Structured2DType cells2D = cellSet.Cast<Structured2DType>();
-        vtkm::Id2 cellDims = cells2D.GetCellDimensions();
-        MakeExplicitCells(cells2D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
-      }
-      else
-      {
-        Structured3DType cells3D = cellSet.Cast<Structured3DType>();
-        vtkm::Id3 cellDims = cells3D.GetCellDimensions();
-        MakeExplicitCells(cells3D, cellDims, numIndices, shapes, conn);
-        output = dsb.Create(explCoords, shapes, numIndices, conn, "coordinates");
-      }
-      break;
-  }
-
-  if (addGhost)
-    output.AddField(input.GetField("vtkmGhostCells"));
-  return output;
 }
 
 void TestBasic()
@@ -269,7 +43,6 @@ void TestBasic()
   //Test datasets with and without ghost cells.
   for (int ghostType = 0; ghostType < 2; ghostType++)
   {
-    std::vector<vtkm::cont::DataSet> dataSets;
     bool addGhost = (ghostType == 1);
     vtkm::Id3 useDims;
     vtkm::Bounds useBounds;
@@ -289,14 +62,7 @@ void TestBasic()
       useBounds = bounds;
     }
 
-    dataSets.push_back(CreateUniformDataSet(useBounds, useDims, addGhost));
-    dataSets.push_back(CreateRectilinearDataSet(useBounds, useDims, addGhost));
-    dataSets.push_back(
-      CreateExplicitFromStructuredDataSet(useBounds, useDims, DataSetOption::SINGLE, addGhost));
-    dataSets.push_back(CreateExplicitFromStructuredDataSet(
-      useBounds, useDims, DataSetOption::CURVILINEAR, addGhost));
-    dataSets.push_back(
-      CreateExplicitFromStructuredDataSet(useBounds, useDims, DataSetOption::EXPLICIT, addGhost));
+    auto dataSets = vtkm::worklet::testing::CreateAllDataSets(useBounds, useDims, addGhost);
 
     for (auto& ds : dataSets)
     {
@@ -377,28 +143,19 @@ void TestPartitionedDataSet()
       useDims = dimensions;
       useBounds = bounds;
     }
+    auto allPDs = vtkm::worklet::testing::CreateAllDataSets(useBounds, useDims, addGhost);
 
-    for (int dsType = 0; dsType < 5; dsType++)
+    for (auto& pds : allPDs)
     {
-      vtkm::cont::PartitionedDataSet pds;
-      for (auto& b : useBounds)
+      for (auto& ds : pds)
       {
-        vtkm::cont::DataSet ds;
-        if (dsType == 0)
-          ds = CreateUniformDataSet(b, useDims, addGhost);
-        else if (dsType == 1)
-          ds = CreateRectilinearDataSet(b, useDims, addGhost);
-        else if (dsType == 2)
-          ds = CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::SINGLE, addGhost);
-        else if (dsType == 3)
-          ds =
-            CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::CURVILINEAR, addGhost);
-        else if (dsType == 4)
-          ds = CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::EXPLICIT, addGhost);
-
-        ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vecX));
-        pds.AppendPartition(ds);
+        auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
+        ds.AddPointField(fieldName, vecField);
       }
+
+      std::cout << "RUN ON: " << std::endl << std::endl;
+      pds.PrintSummary(std::cout);
+      std::cout << std::endl << std::endl << std::endl << std::endl;
 
       vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
       seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
