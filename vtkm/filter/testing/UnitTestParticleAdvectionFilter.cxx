@@ -8,12 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CleanGrid.h>
-#include <vtkm/filter/GhostCellClassify.h>
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/thirdparty/diy/environment.h>
