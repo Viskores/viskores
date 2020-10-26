@@ -166,7 +166,7 @@ namespace diy
                            ExternalStorage*     storage   = 0,  //!< storage object (path, method, etc.) for storing temporary blocks being shuffled in/out of core
                            SaveBlock            save      = 0,  //!< block save function; master manages saving if save != 0
                            LoadBlock            load_     = 0,  //!< block load function; master manages loading if load != 0
-                           QueuePolicy*         q_policy  = new QueueSizePolicy(4096)); //!< policy for managing message queues specifies maximum size of message queues to keep in memory
+                           QueuePolicy*         q_policy  = nullptr); //!< policy for managing message queues specifies maximum size of message queues to keep in memory
       inline        ~Master();
 
       inline void   clear();
@@ -370,7 +370,7 @@ Master(mpi::communicator    comm,
        LoadBlock            load_,
        QueuePolicy*         q_policy):
   blocks_(create_, destroy_, storage, save, load_),
-  queue_policy_(q_policy),
+  queue_policy_( (q_policy==nullptr) ? new QueueSizePolicy(4096): q_policy),
   limit_(limit__),
 #if !defined(VTKMDIY_NO_THREADS)
   threads_(threads__ == -1 ? static_cast<int>(thread::hardware_concurrency()) : threads__),
