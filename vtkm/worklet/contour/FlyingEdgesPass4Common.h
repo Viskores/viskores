@@ -171,7 +171,7 @@ struct Pass4TrimState
     }
     if (ijk[AxisToSum::xindex] >= (pdims[AxisToSum::xindex] - 2))
     {
-      boundaryStatus[AxisToSum::yindex] += FlyingEdges3D::MaxBoundary;
+      boundaryStatus[AxisToSum::xindex] += FlyingEdges3D::MaxBoundary;
     }
     if (ijk[AxisToSum::yindex] < 1)
     {
