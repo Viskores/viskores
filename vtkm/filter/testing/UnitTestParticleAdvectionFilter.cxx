@@ -65,7 +65,7 @@ void TestBasic()
       auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
       ds.AddPointField("vector", vecField);
 
-      const vtkm::FloatDefault x0 = staic_cast<vtkm::FloatDefault>(0.2);
+      const vtkm::FloatDefault x0 = static_cast<vtkm::FloatDefault>(0.2);
       std::vector<vtkm::Particle> seeds = { vtkm::Particle(vtkm::Vec3f(x0, 1, 1), 0),
                                             vtkm::Particle(vtkm::Vec3f(x0, 2, 1), 1),
                                             vtkm::Particle(vtkm::Vec3f(x0, 3, 1), 2),
