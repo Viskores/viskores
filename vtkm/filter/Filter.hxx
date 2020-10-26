@@ -249,9 +249,6 @@ inline VTKM_CONT Filter<Derived>::~Filter()
 template <typename Derived>
 inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(const vtkm::cont::DataSet& input)
 {
-  VTKM_LOG_SCOPE(
-    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
-
   Derived* self = static_cast<Derived*>(this);
   vtkm::cont::PartitionedDataSet output = self->Execute(vtkm::cont::PartitionedDataSet(input));
   if (output.GetNumberOfPartitions() > 1)
@@ -267,7 +264,8 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   const vtkm::cont::PartitionedDataSet& input)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
-                 "Filter (PartitionedDataSet): '%s'",
+                 "Filter (%d partitions): '%s'",
+                 (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
@@ -293,9 +291,6 @@ VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
-  VTKM_LOG_SCOPE(
-    vtkm::cont::LogLevel::Perf, "Filter: '%s'", vtkm::cont::TypeToString<Derived>().c_str());
-
   Derived* self = static_cast<Derived*>(this);
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   vtkm::cont::PartitionedDataSet output =
@@ -316,7 +311,8 @@ VTKM_CONT vtkm::cont::PartitionedDataSet Filter<Derived>::Execute(
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
-                 "Filter (PartitionedDataSet): '%s'",
+                 "Filter (%d partitions): '%s'",
+                 (int)input.GetNumberOfPartitions(),
                  vtkm::cont::TypeToString<Derived>().c_str());
 
   Derived* self = static_cast<Derived*>(this);
