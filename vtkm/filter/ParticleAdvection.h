@@ -54,7 +54,6 @@ private:
   vtkm::Id NumberOfSteps;
   vtkm::FloatDefault StepSize;
   vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
-  vtkm::worklet::ParticleAdvection Worklet;
 };
 }
 } // namespace vtkm::filter

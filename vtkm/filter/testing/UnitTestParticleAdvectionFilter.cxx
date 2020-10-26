@@ -13,6 +13,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/GhostCellClassify.h>
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/thirdparty/diy/environment.h>
@@ -81,7 +82,9 @@ vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, con
   return vecField;
 }
 
-vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
+vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds,
+                                         const vtkm::Id3& dims,
+                                         bool addGhost = false)
 {
   vtkm::Vec3f origin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
                      static_cast<vtkm::FloatDefault>(bounds.Y.Min),
@@ -95,10 +98,18 @@ vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm:
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
+
+  if (addGhost)
+  {
+    vtkm::filter::GhostCellClassify addGhostFilter;
+    return addGhostFilter.Execute(ds);
+  }
   return ds;
 }
 
-vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
+vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds,
+                                             const vtkm::Id3& dims,
+                                             bool addGhost = false)
 {
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
   std::vector<vtkm::FloatDefault> xvals, yvals, zvals;
@@ -125,6 +136,12 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
     zvals[i] = zvals[i - 1] + spacing[2];
 
   vtkm::cont::DataSet ds = dataSetBuilder.Create(xvals, yvals, zvals);
+
+  if (addGhost)
+  {
+    vtkm::filter::GhostCellClassify addGhostFilter;
+    return addGhostFilter.Execute(ds);
+  }
   return ds;
 }
 
@@ -172,10 +189,11 @@ static void MakeExplicitCells(const CellSetType& cellSet,
 
 vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bounds& bounds,
                                                         const vtkm::Id3& dims,
-                                                        DataSetOption option)
+                                                        DataSetOption option,
+                                                        bool addGhost = false)
 {
   using CoordType = vtkm::Vec3f;
-  auto input = CreateUniformDataSet(bounds, dims);
+  auto input = CreateUniformDataSet(bounds, dims, addGhost);
 
   auto inputCoords = input.GetCoordinateSystem(0).GetData();
   vtkm::cont::ArrayHandle<CoordType> explCoords;
@@ -234,52 +252,83 @@ vtkm::cont::DataSet CreateExplicitFromStructuredDataSet(const vtkm::Bounds& boun
       }
       break;
   }
+
+  if (addGhost)
+    output.AddField(input.GetField("vtkmGhostCells"));
   return output;
 }
 
 void TestBasic()
 {
-  std::cout << "Basic uniform grid" << std::endl;
+  std::cout << "Basic Tests" << std::endl;
 
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Bounds bounds(0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1);
   const vtkm::Vec3f vecX(1, 0, 0);
 
-  std::vector<vtkm::cont::DataSet> dataSets;
-  dataSets.push_back(CreateUniformDataSet(bounds, dims));
-  dataSets.push_back(CreateRectilinearDataSet(bounds, dims));
-  dataSets.push_back(CreateExplicitFromStructuredDataSet(bounds, dims, DataSetOption::SINGLE));
-  dataSets.push_back(CreateExplicitFromStructuredDataSet(bounds, dims, DataSetOption::CURVILINEAR));
-  dataSets.push_back(CreateExplicitFromStructuredDataSet(bounds, dims, DataSetOption::EXPLICIT));
-
-  for (auto& ds : dataSets)
+  //Test datasets with and without ghost cells.
+  for (int ghostType = 0; ghostType < 2; ghostType++)
   {
-    auto vecField = CreateConstantVectorField(dims[0] * dims[1] * dims[2], vecX);
-    ds.AddPointField("vector", vecField);
+    std::vector<vtkm::cont::DataSet> dataSets;
+    bool addGhost = (ghostType == 1);
+    vtkm::Id3 useDims;
+    vtkm::Bounds useBounds;
+    if (addGhost)
+    {
+      useDims = dims + vtkm::Id3(2, 2, 2);
+      useBounds.X.Min = bounds.X.Min - 1;
+      useBounds.X.Max = bounds.X.Max + 1;
+      useBounds.Y.Min = bounds.Y.Min - 1;
+      useBounds.Y.Max = bounds.Y.Max + 1;
+      useBounds.Z.Min = bounds.Z.Min - 1;
+      useBounds.Z.Max = bounds.Z.Max + 1;
+    }
+    else
+    {
+      useDims = dims;
+      useBounds = bounds;
+    }
 
-    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
-      vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                     vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                     vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2),
-                                     vtkm::Particle(vtkm::Vec3f(.2f, 3.2f, .2f), 3) });
+    dataSets.push_back(CreateUniformDataSet(useBounds, useDims, addGhost));
+    dataSets.push_back(CreateRectilinearDataSet(useBounds, useDims, addGhost));
+    dataSets.push_back(
+      CreateExplicitFromStructuredDataSet(useBounds, useDims, DataSetOption::SINGLE, addGhost));
+    dataSets.push_back(CreateExplicitFromStructuredDataSet(
+      useBounds, useDims, DataSetOption::CURVILINEAR, addGhost));
+    dataSets.push_back(
+      CreateExplicitFromStructuredDataSet(useBounds, useDims, DataSetOption::EXPLICIT, addGhost));
 
-    vtkm::filter::ParticleAdvection particleAdvection;
-    particleAdvection.SetStepSize(0.1f);
-    particleAdvection.SetNumberOfSteps(20);
-    particleAdvection.SetSeeds(seedArray);
+    for (auto& ds : dataSets)
+    {
+      auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
+      ds.AddPointField("vector", vecField);
 
-    particleAdvection.SetActiveField("vector");
-    auto output = particleAdvection.Execute(ds);
+      const vtkm::FloatDefault x0(0.2);
+      std::vector<vtkm::Particle> seeds = { vtkm::Particle(vtkm::Vec3f(x0, 1, 1), 0),
+                                            vtkm::Particle(vtkm::Vec3f(x0, 2, 1), 1),
+                                            vtkm::Particle(vtkm::Vec3f(x0, 3, 1), 2),
+                                            vtkm::Particle(vtkm::Vec3f(x0, 3, 2), 3) };
 
-    //Validate the result is correct.
-    VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                     "Wrong number of coordinate systems in the output dataset");
+      auto seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
-    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 4, "Wrong number of coordinates");
+      vtkm::filter::ParticleAdvection particleAdvection;
+      particleAdvection.SetStepSize(0.1f);
+      particleAdvection.SetNumberOfSteps(20);
+      particleAdvection.SetSeeds(seedArray);
 
-    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 4, "Wrong number of cells");
+      particleAdvection.SetActiveField("vector");
+      auto output = particleAdvection.Execute(ds);
+
+      //Validate the result is correct.
+      VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems in the output dataset");
+
+      vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+      VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 4, "Wrong number of coordinates");
+
+      vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+      VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 4, "Wrong number of cells");
+    }
   }
 }
 
@@ -287,7 +336,7 @@ void TestPartitionedDataSet()
 {
   std::cout << "Partitioned data set" << std::endl;
 
-  const vtkm::Id3 dims(5, 5, 5);
+  const vtkm::Id3 dimensions(5, 5, 5);
   const vtkm::Vec3f vecX(1, 0, 0);
   std::vector<vtkm::Bounds> bounds = { vtkm::Bounds(0, 4, 0, 4, 0, 4),
                                        vtkm::Bounds(4, 8, 0, 4, 0, 4),
@@ -298,61 +347,99 @@ void TestPartitionedDataSet()
     globalBounds.Include(b);
 
   const std::string fieldName = "vec";
-  for (int i = 0; i < 5; i++)
-  {
-    vtkm::cont::PartitionedDataSet pds;
-    for (auto& b : bounds)
-    {
-      vtkm::cont::DataSet ds;
-      if (i == 0)
-        ds = CreateUniformDataSet(b, dims);
-      else if (i == 1)
-        ds = CreateRectilinearDataSet(b, dims);
-      else if (i == 2)
-        ds = CreateExplicitFromStructuredDataSet(b, dims, DataSetOption::SINGLE);
-      else if (i == 3)
-        ds = CreateExplicitFromStructuredDataSet(b, dims, DataSetOption::CURVILINEAR);
-      else if (i == 4)
-        ds = CreateExplicitFromStructuredDataSet(b, dims, DataSetOption::EXPLICIT);
 
-      ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vecX));
-      pds.AppendPartition(ds);
+  for (int gType = 1; gType < 2; gType++)
+  {
+    bool addGhost = (gType == 1);
+    vtkm::Id3 useDims;
+    std::vector<vtkm::Bounds> useBounds;
+    vtkm::Bounds boundsWithGhosts;
+
+    if (addGhost)
+    {
+      useDims = dimensions + vtkm::Id3(2, 2, 2);
+      for (auto& b : bounds)
+      {
+        vtkm::Bounds b2;
+        b2.X.Min = b.X.Min - 1;
+        b2.X.Max = b.X.Max + 1;
+        b2.Y.Min = b.Y.Min - 1;
+        b2.Y.Max = b.Y.Max + 1;
+        b2.Z.Min = b.Z.Min - 1;
+        b2.Z.Max = b.Z.Max + 1;
+        useBounds.push_back(b2);
+
+        boundsWithGhosts.Include(b2);
+      }
+    }
+    else
+    {
+      useDims = dimensions;
+      useBounds = bounds;
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-    seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                               vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                               vtkm::Particle(vtkm::Vec3f(4.2f, 1.0f, .2f), 2),
-                                               vtkm::Particle(vtkm::Vec3f(8.2f, 1.0f, .2f), 3) });
+    for (int dsType = 0; dsType < 5; dsType++)
+    {
+      vtkm::cont::PartitionedDataSet pds;
+      for (auto& b : useBounds)
+      {
+        vtkm::cont::DataSet ds;
+        if (dsType == 0)
+          ds = CreateUniformDataSet(b, useDims, addGhost);
+        else if (dsType == 1)
+          ds = CreateRectilinearDataSet(b, useDims, addGhost);
+        else if (dsType == 2)
+          ds = CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::SINGLE, addGhost);
+        else if (dsType == 3)
+          ds =
+            CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::CURVILINEAR, addGhost);
+        else if (dsType == 4)
+          ds = CreateExplicitFromStructuredDataSet(b, useDims, DataSetOption::EXPLICIT, addGhost);
 
-    vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+        ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vecX));
+        pds.AppendPartition(ds);
+      }
 
-    vtkm::filter::ParticleAdvection particleAdvection;
+      vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+      seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                                 vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                                 vtkm::Particle(vtkm::Vec3f(4.2f, 1.0f, .2f), 2),
+                                                 vtkm::Particle(vtkm::Vec3f(8.2f, 1.0f, .2f), 3) });
 
-    particleAdvection.SetStepSize(0.1f);
-    particleAdvection.SetNumberOfSteps(1000);
-    particleAdvection.SetSeeds(seedArray);
+      vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
-    particleAdvection.SetActiveField(fieldName);
-    auto out = particleAdvection.Execute(pds);
+      vtkm::filter::ParticleAdvection particleAdvection;
 
-    VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
-    auto ds = out.GetPartition(0);
+      particleAdvection.SetStepSize(0.1f);
+      particleAdvection.SetNumberOfSteps(1000);
+      particleAdvection.SetSeeds(seedArray);
 
-    //Validate the result is correct.
-    VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                     "Wrong number of coordinate systems in the output dataset");
+      particleAdvection.SetActiveField(fieldName);
+      auto out = particleAdvection.Execute(pds);
 
-    auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
+      VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+      auto ds = out.GetPartition(0);
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
-    auto ptPortal = coords.ReadPortal();
-    vtkm::Id nPts = ptPortal.GetNumberOfValues();
-    for (vtkm::Id j = 0; j < nPts; j++)
-      VTKM_TEST_ASSERT(!globalBounds.Contains(ptPortal.Get(j)), "End point not oustide bounds");
+      //Validate the result is correct.
+      VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems in the output dataset");
 
-    vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
-    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
+      auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
+
+      VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
+      auto ptPortal = coords.ReadPortal();
+      vtkm::Id nPts = ptPortal.GetNumberOfValues();
+      for (vtkm::Id j = 0; j < nPts; j++)
+      {
+        VTKM_TEST_ASSERT(!globalBounds.Contains(ptPortal.Get(j)), "End point not oustide bounds");
+        if (addGhost)
+          VTKM_TEST_ASSERT(boundsWithGhosts.Contains(ptPortal.Get(j)),
+                           "End point not inside bounds with ghosts");
+      }
+
+      vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
+      VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
+    }
   }
 }
 

@@ -175,6 +175,7 @@ public:
     , Field(dataSet.GetField(fieldName))
     , GhostCellArray()
   {
+    std::cout << "REMOVE ME: " << __FILE__ << " " << __LINE__ << std::endl;
     this->InitializeLocator(dataSet.GetCoordinateSystem(), dataSet.GetCellSet());
 
     if (dataSet.HasCellField("vtkmGhostCells"))
