@@ -38,7 +38,6 @@ void TestStreamline()
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
   for (auto& ds : dataSets)
   {
-    cnt++;
     auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
     ds.AddPointField(fieldName, vecField);
 

@@ -169,6 +169,7 @@ public:
   VTKM_CONT
   GridEvaluator() = default;
 
+#if 0
   VTKM_CONT
   GridEvaluator(const vtkm::cont::DataSet& dataSet, const std::string& fieldName)
     : Bounds(dataSet.GetCoordinateSystem().GetBounds())
@@ -187,6 +188,7 @@ public:
         throw vtkm::cont::ErrorInternal("vtkmGhostCells not of type vtkm::UInt8");
     }
   }
+#endif
 
   VTKM_CONT
   GridEvaluator(const vtkm::cont::DataSet& dataSet, const FieldType& field)
