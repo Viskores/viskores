@@ -13,54 +13,61 @@
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
+#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
 {
-vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dims, const vtkm::Vec3f& vec)
+
+vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, const vtkm::Vec3f& vec)
 {
-  vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
+  vtkm::cont::ArrayHandleConstant<vtkm::Vec3f> vecConst;
+  vecConst = vtkm::cont::make_ArrayHandleConstant(vec, num);
 
-  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints));
-  for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
-    vectorField[i] = vec;
-
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
-  ds.AddPointField("vector", vectorField);
-
-  return ds;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> vecField;
+  vtkm::cont::ArrayCopy(vecConst, vecField);
+  return vecField;
 }
 
 void TestStreamline()
 {
   const vtkm::Id3 dims(5, 5, 5);
+  const vtkm::Bounds bounds(0, 4, 0, 4, 0, 4);
   const vtkm::Vec3f vecX(1, 0, 0);
+  std::string fieldName = "vec";
 
-  vtkm::cont::DataSet ds = CreateDataSet(dims, vecX);
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
+  int cnt = 0;
+  for (auto& ds : dataSets)
+  {
+    cnt++;
+    auto vecField = CreateConstantVectorField(ds.GetNumberOfPoints(), vecX);
+    ds.AddPointField(fieldName, vecField);
 
-  vtkm::filter::Streamline streamline;
+    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+      vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                     vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                     vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  streamline.SetStepSize(0.1f);
-  streamline.SetNumberOfSteps(20);
-  streamline.SetSeeds(seedArray);
+    vtkm::filter::Streamline streamline;
 
-  streamline.SetActiveField("vector");
-  auto output = streamline.Execute(ds);
+    streamline.SetStepSize(0.1f);
+    streamline.SetNumberOfSteps(20);
+    streamline.SetSeeds(seedArray);
 
-  //Validate the result is correct.
-  VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+    streamline.SetActiveField(fieldName);
+    auto output = streamline.Execute(ds);
 
-  vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+    //Validate the result is correct.
+    VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
+                     "Wrong number of coordinate systems in the output dataset");
 
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+    std::cout << "count= " << cnt << " " << coords.GetNumberOfPoints() << std::endl;
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+
+    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+  }
 }
 
 void TestPathline()
@@ -68,33 +75,47 @@ void TestPathline()
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f vecX(1, 0, 0);
   const vtkm::Vec3f vecY(0, 1, 0);
+  const vtkm::Bounds bounds(0, 4, 0, 4, 0, 4);
+  std::string fieldName = "vec";
 
-  vtkm::cont::DataSet ds1 = CreateDataSet(dims, vecX);
-  vtkm::cont::DataSet ds2 = CreateDataSet(dims, vecY);
+  auto dataSets1 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
+  auto dataSets2 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
 
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  std::size_t numDS = dataSets1.size();
+  for (std::size_t i = 0; i < numDS; i++)
+  {
+    auto ds1 = dataSets1[i];
+    auto ds2 = dataSets2[i];
 
-  vtkm::filter::Pathline pathline;
+    auto vecField1 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecX);
+    auto vecField2 = CreateConstantVectorField(ds1.GetNumberOfPoints(), vecY);
+    ds1.AddPointField(fieldName, vecField1);
+    ds2.AddPointField(fieldName, vecField2);
 
-  pathline.SetPreviousTime(0.0f);
-  pathline.SetNextTime(1.0f);
-  pathline.SetNextDataSet(ds2);
-  pathline.SetStepSize(static_cast<vtkm::FloatDefault>(0.05f));
-  pathline.SetNumberOfSteps(20);
-  pathline.SetSeeds(seedArray);
+    vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
+      vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
+                                     vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
+                                     vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  pathline.SetActiveField("vector");
-  auto output = pathline.Execute(ds1);
+    vtkm::filter::Pathline pathline;
 
-  //Validate the result is correct.
-  vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+    pathline.SetPreviousTime(0.0f);
+    pathline.SetNextTime(1.0f);
+    pathline.SetNextDataSet(ds2);
+    pathline.SetStepSize(static_cast<vtkm::FloatDefault>(0.05f));
+    pathline.SetNumberOfSteps(20);
+    pathline.SetSeeds(seedArray);
 
-  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
-  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+    pathline.SetActiveField(fieldName);
+    auto output = pathline.Execute(ds1);
+
+    //Validate the result is correct.
+    vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+    VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
+
+    vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+    VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
+  }
 }
 
 void TestStreamlineFile(const std::string& fname,
