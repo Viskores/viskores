@@ -36,7 +36,6 @@ void TestStreamline()
   std::string fieldName = "vec";
 
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
-  int cnt = 0;
   for (auto& ds : dataSets)
   {
     cnt++;
@@ -62,7 +61,6 @@ void TestStreamline()
                      "Wrong number of coordinate systems in the output dataset");
 
     vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
-    std::cout << "count= " << cnt << " " << coords.GetNumberOfPoints() << std::endl;
     VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
 
     vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
