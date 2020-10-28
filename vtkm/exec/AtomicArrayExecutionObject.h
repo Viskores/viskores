@@ -49,6 +49,16 @@ struct MakeUnsigned<vtkm::Int64>
 {
   using type = vtkm::UInt64;
 };
+template <>
+struct MakeUnsigned<vtkm::Float32>
+{
+  using type = vtkm::Float32;
+};
+template <>
+struct MakeUnsigned<vtkm::Float64>
+{
+  using type = vtkm::Float64;
+};
 }
 
 template <typename T, typename Device>
