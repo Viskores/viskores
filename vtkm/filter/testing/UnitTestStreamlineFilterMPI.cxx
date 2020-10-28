@@ -66,20 +66,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
     x1 += dx;
   }
 
-#if 0
-  comm.barrier();
-  for (int i = 0; i < comm.size(); i++)
-  {
-    if (comm.rank() == i)
-    {
-      std::cout<<"Rank= "<<i<<std::endl;
-      for (auto& b : bounds)
-        std::cout<<b<<std::endl;
-    }
-    comm.barrier();
-  }
-#endif
-
   std::vector<vtkm::cont::PartitionedDataSet> allPDs;
   const vtkm::Id3 dims(numDims, numDims, numDims);
   allPDs = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
@@ -136,8 +122,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
           vtkm::Id nPts = indices.GetNumberOfValues();
           auto iPortal = indices.ReadPortal();
           vtkm::Vec3f lastPt = ptPortal.Get(iPortal.Get(nPts - 1));
-
-          //          std::cout<<" lastPt "<<j<<" "<<lastPt<<" xMax= "<<xMaxRange<<std::endl;
           VTKM_TEST_ASSERT(xMaxRange.Contains(lastPt[0]), "Wrong end point for seed");
         }
       }
@@ -171,10 +155,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
         VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
         auto ptPortal = coords.ReadPortal();
         for (vtkm::Id i = 0; i < numSeeds; i++)
-        {
-          //          std::cout<<"  "<<ptPortal.Get(i)<<" xMax= "<<xMax<<std::endl;
           VTKM_TEST_ASSERT(xMaxRange.Contains(ptPortal.Get(i)[0]), "Wrong end point for seed");
-        }
 
         vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
         VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
@@ -188,7 +169,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
 void TestStreamlineFiltersMPI()
 {
   std::vector<bool> flags = { true, false };
-  for (int n = 1; n < 10; n++)
+  for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
       for (auto useSL : flags)
