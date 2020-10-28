@@ -111,6 +111,7 @@ public:
   // prints the contents of the BRACT in debug format
   void PrintContent(std::ostream& outStream) const;
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  inline std::string PrintArraySizes() const;
 };
 
 
@@ -291,6 +292,17 @@ inline std::string BoundaryTree::DebugPrint(const char* message,
 #endif
   return resultStream.str();
 } // DebugPrint
+
+inline std::string BoundaryTree::PrintArraySizes() const
+{ // PrintArraySizes
+  std::stringstream arraySizeLog;
+  arraySizeLog << std::setw(42) << std::left << "    #VertexIndex"
+               << ": " << this->VertexIndex.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superarcs"
+               << ": " << this->Superarcs.GetNumberOfValues() << std::endl;
+  return arraySizeLog.str();
+} // PrintArraySizes
+
 
 
 } // namespace contourtree_distributed

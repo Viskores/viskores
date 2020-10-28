@@ -174,6 +174,7 @@ public:
   // print routines
   inline void PrintDotSuperStructure() const;
   inline std::string PrintHyperStructureStatistics(bool print = true) const;
+  inline std::string PrintArraySizes() const;
 
 }; // class ContourTree
 
@@ -407,6 +408,29 @@ inline std::string ContourTree::PrintHyperStructureStatistics(bool print) const
   return resultString.str();
 } // PrintHyperStructureStatistics()
 
+inline std::string ContourTree::PrintArraySizes() const
+{ // PrintArraySizes
+  std::stringstream arraySizeLog;
+  arraySizeLog << std::setw(42) << std::left << "    #Nodes"
+               << ": " << this->Nodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Arcs"
+               << ": " << this->Arcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superparents"
+               << ": " << this->Superparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Superarcs"
+               << ": " << this->Superarcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Supernodes"
+               << ": " << this->Supernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperparents"
+               << ": " << this->Hyperparents.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #WhenTransferred"
+               << ": " << this->WhenTransferred.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hypernodes"
+               << ": " << this->Hypernodes.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Hyperarcs"
+               << ": " << this->Hyperarcs.GetNumberOfValues() << std::endl;
+  return arraySizeLog.str();
+} // PrintArraySizes
 
 } // namespace contourtree_augmented
 } // worklet

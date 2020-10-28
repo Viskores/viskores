@@ -889,24 +889,7 @@ int main(int argc, char* argv[])
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl
                << "    ---------------- Contour Tree Array Sizes ---------------------" << std::endl
-               << std::setw(42) << std::left << "    #Nodes"
-               << ": " << ct.Nodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Arcs"
-               << ": " << ct.Arcs.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Superparents"
-               << ": " << ct.Superparents.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Superarcs"
-               << ": " << ct.Superarcs.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Supernodes"
-               << ": " << ct.Supernodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hyperparents"
-               << ": " << ct.Hyperparents.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #WhenTransferred"
-               << ": " << ct.WhenTransferred.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hypernodes"
-               << ": " << ct.Hypernodes.GetNumberOfValues() << std::endl
-               << std::setw(42) << std::left << "    #Hyperarcs"
-               << ": " << ct.Hyperarcs.GetNumberOfValues() << std::endl);
+               << ct.PrintArraySizes());
   // Print hyperstructure statistics
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              std::endl

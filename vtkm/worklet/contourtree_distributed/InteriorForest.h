@@ -101,6 +101,7 @@ public:
   // prints the contents of the object in a standard format
   void PrintContent(std::ostream& outStream) const;
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
+  inline std::string PrintArraySizes() const;
 };
 
 
@@ -143,6 +144,19 @@ inline std::string InteriorForest::DebugPrint(const char* message,
   return resultStream.str();
 } // DebugPrint
 
+inline std::string InteriorForest::PrintArraySizes() const
+{ // PrintArraySizes
+  std::stringstream arraySizeLog;
+  arraySizeLog << std::setw(42) << std::left << "    #BractMeshIndices"
+               << ": " << this->BractMeshIndices.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #IsNecessary"
+               << ": " << this->IsNecessary.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Above"
+               << ": " << this->Above.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Below"
+               << ": " << this->Below.GetNumberOfValues() << std::endl;
+  return arraySizeLog.str();
+} // PrintArraySizes
 
 } // namespace contourtree_distributed
 } // namespace worklet
