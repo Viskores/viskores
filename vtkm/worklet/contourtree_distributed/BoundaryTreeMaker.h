@@ -65,7 +65,6 @@
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
 
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AddTerminalFlagsToUpDownNeighboursWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/ArraySumFunctor.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BRACTNodeComparator.h>
@@ -88,9 +87,9 @@
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsSubtractDependentCountsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferCumulativeCountsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferDependentCountsWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SelectRangeFunctor.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SetInteriorForestWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SetUpAndDownNeighboursWorklet.h>
+#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/SumFunctor.h>
 
 
 // vtkm includes
@@ -459,10 +458,11 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     //      Compute the sum of this->SupernodeTransferBoundaryCount and this->SuperarcIntrinsicBoundaryCount
     //      for the [firstSupernodex, lastSupernode) subrange and copy to the this->SuperarcDependentBoundaryCount
     { // make local context so fancyTempSumArray gets deleted
-      auto fancyTempSumArray = vtkm::cont::make_ArrayHandleImplicit(
-        bract_maker::ArraySumFunctor(this->SupernodeTransferBoundaryCount,
-                                     this->SuperarcIntrinsicBoundaryCount),
-        this->SupernodeTransferBoundaryCount.GetNumberOfValues());
+      auto fancyTempZippedArray = vtkm::cont::make_ArrayHandleZip(
+        this->SupernodeTransferBoundaryCount, this->SuperarcIntrinsicBoundaryCount);
+      auto fancyTempSumArray =
+        vtkm::cont::make_ArrayHandleTransform(fancyTempZippedArray, bract_maker::SumFunctor{});
+
       vtkm::cont::Algorithm::CopySubRange(
         fancyTempSumArray,                    // input array
         firstSupernode,                       // start index for the copy
@@ -477,9 +477,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 #endif
     // iii.Perform prefix sum on dependent count range
     { // make local context so tempArray and fancyRangeArraySuperarcDependentBoundaryCountget  deleted
-      auto fancyRangeArraySuperarcDependentBoundaryCount = vtkm::cont::make_ArrayHandleImplicit(
-        bract_maker::SelectRangeFunctor(this->SuperarcDependentBoundaryCount, firstSupernode),
-        lastSupernode - firstSupernode);
+      auto fancyRangeArraySuperarcDependentBoundaryCount = make_ArrayHandleView(
+        this->SuperarcDependentBoundaryCount, firstSupernode, lastSupernode - firstSupernode);
       // Write to temporary array first as it is not clear whether ScanInclusive is safe to read and write
       // to the same array and range
       vtkm::worklet::contourtree_augmented::IdArrayType tempArray;

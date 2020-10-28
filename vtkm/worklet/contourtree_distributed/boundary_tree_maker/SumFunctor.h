@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_select_range_functor_h
-#define vtk_m_worklet_contourtree_distributed_bract_maker_select_range_functor_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_array_sum_functor_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_array_sum_functor_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -65,30 +65,18 @@ namespace contourtree_distributed
 namespace bract_maker
 {
 
-//Simple functor to subset a VTKm ArrayHandle
-class SelectRangeFunctor
+// Simple functor used to sum two zipped arrays
+class SumFunctor
 {
 public:
-  VTKM_EXEC_CONT
-  SelectRangeFunctor() {}
+  VTKM_CONT
+  SumFunctor() {}
 
   VTKM_EXEC_CONT
-  SelectRangeFunctor(const vtkm::worklet::contourtree_augmented::IdArrayType& dataArray,
-                     vtkm::Id startIndex)
-    : DataArray(dataArray)
-    , StartIndex(startIndex)
+  vtkm::Id operator()(const vtkm::Pair<vtkm::Id, vtkm::Id>& inp) const
   {
+    return inp.first + inp.second;
   }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(const vtkm::Id index) const
-  {
-    return this->DataArray.ReadPortal().Get(this->StartIndex + index);
-  }
-
-private:
-  vtkm::worklet::contourtree_augmented::IdArrayType DataArray;
-  vtkm::Id StartIndex;
 };
 
 } // namespace bract_maker
