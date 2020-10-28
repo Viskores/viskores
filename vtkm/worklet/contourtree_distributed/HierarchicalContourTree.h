@@ -211,6 +211,10 @@ public:
   VTKM_CONT
   std::string PrintDotSuperStructure(const char* label) const;
 
+  /// Print hierarchical tree construction stats, usually used for logging
+  VTKM_CONT
+  std::string PrintTreeStats() const;
+
   /// debug routine
   VTKM_CONT
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
@@ -751,7 +755,7 @@ template <typename FieldType>
 std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
                                                            const char* fileName,
                                                            long lineNum) const
-{
+{ // DebugPrint
   std::stringstream resultStream;
   resultStream << std::endl;
   resultStream << "[CUTHERE]-------------------------------" << std::endl;
@@ -831,7 +835,25 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(const char* message,
     resultStream << std::endl;
   } // per round
   return resultStream.str();
-}
+} // DebugPrint
+
+template <typename FieldType>
+std::string HierarchicalContourTree<FieldType>::PrintTreeStats() const
+{ // PrintTreeStats
+  std::stringstream resultStream;
+  resultStream << std::setw(42) << std::left << "    NumRounds"
+               << ": " << this->NumRounds << std::endl;
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "    NumIterations", this->NumIterations, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "    NumRegularNodesInRound", this->NumRegularNodesInRound, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "    NumSupernodesInRound", this->NumRegularNodesInRound, -1, resultStream);
+  vtkm::worklet::contourtree_augmented::PrintIndices(
+    "    NumHypernodesInRound", this->NumRegularNodesInRound, -1, resultStream);
+
+  return resultStream.str();
+} // PrintTreeStats
 
 
 } // namespace contourtree_distributed
