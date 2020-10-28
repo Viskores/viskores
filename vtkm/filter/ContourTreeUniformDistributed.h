@@ -97,14 +97,18 @@ public:
   /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
   /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
   /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
-  ///                               with respect to blocksPerDim
+  ///                              with respect to blocksPerDim
   /// @param[in] localBlockOrigins  Array with the (x,y,z) origin (with regard to mesh index) of each
-  ///                               local data block
+  ///                              local data block
   /// @param[in] localBlockSizes    Array with the sizes (i.e., extends in number of mesh points) of each
-  ///                               local data block
+  ///                             local data block
   /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
-  ///                             connectivity should be used. Valid only for 3D input data. Default is false.
+  ///                            connectivity should be used. Valid only for 3D input data. Default is false.
   /// @param[in] saveDotFiles Save debug dot output files for the distributed contour tree compute.
+  /// @param[in] timingsLogLevel Set the vtkm::cont:LogLevel to be used to record timings information
+  ///                            specific to the computation of the hierachical contour tree
+  /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
+  ///                         about the various trees computed as part of the hierarchical contour tree compute
   VTKM_CONT
   ContourTreeUniformDistributed(
     vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
@@ -113,7 +117,9 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
     bool useMarchingCubes = false,
-    bool saveDotFiles = false);
+    bool saveDotFiles = false,
+    vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+    vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
 
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
@@ -175,6 +181,12 @@ private:
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;
+
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
+
+  /// Log level to be used for outputting metadata about the trees. Default is vtkm::cont::LogLevel::Info
+  vtkm::cont::LogLevel TreeLogLevel = vtkm::cont::LogLevel::Info;
 
   /// Information about the spatial decomposition
   vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;

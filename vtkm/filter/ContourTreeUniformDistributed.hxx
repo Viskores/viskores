@@ -129,9 +129,10 @@ struct PostExecuteCaller
 template <typename FieldType>
 void SaveAfterFanInResults(
   vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>* blockData,
-  vtkm::Id rank)
+  vtkm::Id rank,
+  vtkm::cont::LogLevel logLevel)
 {
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+  VTKM_LOG_S(logLevel,
              "Fan In Complete" << std::endl
                                << "# of CTs: " << blockData->ContourTrees.size() << std::endl
                                << "# of CTMs: " << blockData->ContourTreeMeshes.size() << std::endl
@@ -200,10 +201,14 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
   bool useMarchingCubes,
-  bool saveDotFiles)
+  bool saveDotFiles,
+  vtkm::cont::LogLevel timingsLogLevel,
+  vtkm::cont::LogLevel treeLogLevel)
   : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
   , UseMarchingCubes(useMarchingCubes)
   , SaveDotFiles(saveDotFiles)
+  , TimingsLogLevel(timingsLogLevel)
+  , TreeLogLevel(treeLogLevel)
   , MultiBlockSpatialDecomposition(blocksPerDim,
                                    globalSize,
                                    localBlockIndices,
@@ -291,6 +296,7 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 
   // Set up the worklet
   vtkm::worklet::ContourTreeAugmented worklet;
+  worklet.SetTimingsLogLevel(this->TimingsLogLevel);
   worklet.Run(field,
               mesh,
               this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
@@ -507,35 +513,36 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecutio
                             policy);
   }
 
+  // TODO: Record how many boundary points vs. how many boundary critical points. This happens in the BoundaryTree not TreeGrafter
   // Log sizes of the local contour trees, boundary trees, and interior forests
   for (size_t bi = 0; bi < this->LocalContourTrees.size(); bi++)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+    VTKM_LOG_S(this->TreeLogLevel,
                std::endl
                  << "    ---------------- Contour Tree Array Sizes ---------------------"
                  << std::endl
                  << "    Block Index : " << bi << std::endl
                  << LocalContourTrees[bi].PrintArraySizes());
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+    VTKM_LOG_S(this->TreeLogLevel,
                std::endl
                  << "    ---------------- Boundary Tree Array Sizes ---------------------"
                  << std::endl
                  << "    Block Index : " << bi << std::endl
                  << LocalBoundaryTrees[bi].PrintArraySizes());
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+    VTKM_LOG_S(this->TreeLogLevel,
                std::endl
                  << "    ---------------- Interior Forest Array Sizes ---------------------"
                  << std::endl
                  << "    Block Index : " << bi << std::endl
                  << LocalInteriorForests[bi].PrintArraySizes());
-    // VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+    // VTKM_LOG_S(this->TreeLogLevel,
     //           std::endl
     //           << "    ---------------- Hyperstructure Statistics ---------------------"  << std::endl
     //           << LocalContourTrees[bi].PrintHyperStructureStatistics(false) << std::endl);
   }
 
   // Log timing statistics
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+  VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
                << "    " << std::setw(38) << std::left << "Contour Tree Filter PrepareForExecution"
                << ": " << timer.GetElapsedTime() << " seconds");
@@ -571,7 +578,7 @@ inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
                           metaData,
                           policy);
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+  VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
                << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
                << ": " << timer.GetElapsedTime() << " seconds");
@@ -589,6 +596,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 {
   vtkm::cont::Timer timer;
   timer.Start();
+  std::stringstream timingsStream;
 
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id size = comm.size();
@@ -672,10 +680,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     } // if(SaveDotFiles)
   }   // for
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Compute Block Data for Fan In"
-               << ": " << timer.GetElapsedTime() << " seconds");
+  timingsStream << "    " << std::setw(38) << std::left << "Compute Block Data for Fan In"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   // 1.2 Setup vtkmdiy to do global binary reduction of neighbouring blocks.
@@ -744,31 +750,28 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     true        // contiguous: true=distance doubling , false=distnace halving TODO check this value
   );
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Setup DIY for Fan In"
-               << ": " << timer.GetElapsedTime() << " seconds");
+  timingsStream << "    " << std::setw(38) << std::left << "Setup DIY for Fan In"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   // 1.3 execute the fan in reduction
   const vtkm::worklet::contourtree_distributed::ComputeDistributedContourTreeFunctor<FieldType>
     computeDistributedContourTreeFunctor{ this->MultiBlockSpatialDecomposition.GlobalSize };
+  // TODO: Timestamp each iteration of the reduction in computeDistributedContourTreeFunctor
+  // TODO: Sizes of contour tree, boundary tree, interior forest arrays per iteration
+  // TODO: Make the log level to use setable
   vtkmdiy::reduce(master, assigner, partners, computeDistributedContourTreeFunctor);
 
   // 1.4 Log timings and barrier to make sure everyone is done
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Fan In Reduction"
-               << ": " << timer.GetElapsedTime() << " seconds");
+  timingsStream << "    " << std::setw(38) << std::left << "Fan In Reduction"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   // Be safe! that the Fan In is completed on all blocks and ranks
   comm.barrier();
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Post Fan In Barrier"
-               << ": " << timer.GetElapsedTime() << " seconds");
+  timingsStream << "    " << std::setw(38) << std::left << "Post Fan In Barrier"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
   // 2. Fan out to update all the tree
@@ -781,7 +784,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       const vtkmdiy::Master::ProxyWithLink&) {
 #ifdef DEBUG_PRINT_CTUD
       // Save the contour tree, contour tree meshes, and interior forest data for debugging
-      vtkm::filter::contourtree_distributed_detail::SaveAfterFanInResults(blockData, rank);
+      vtkm::filter::contourtree_distributed_detail::SaveAfterFanInResults(
+        blockData, rank, this->TreeLogLevel);
 #endif
 
       // Fan out
@@ -815,7 +819,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
             blockData, hierarchicalTree, rank, nRounds);
         } // if(this->SaveDotFiles)
-      }   // for
+        // TODO: Time each of the iterations of the loop
+      } // for
 
       // bottom level
       vtkm::worklet::contourtree_distributed::
@@ -835,6 +840,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           blockData->BlockIndex),
         this->MultiBlockSpatialDecomposition.GlobalSize);
       grafter.GraftInteriorForests(0, hierarchicalTree, fieldData, &localToGlobalIdRelabeler);
+      // TODO: Time bottom level
 
       // Create data set from output
       vtkm::cont::Field dataValuesField(
@@ -866,14 +872,22 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
         vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
           blockData, hierarchicalTree, rank, nRounds);
       } // if(this->SaveDotFiles)
+
+      // Log the stats from the hierarchical contour tree
+      VTKM_LOG_S(this->TreeLogLevel,
+                 std::endl
+                   << "    ------------ Hierarchical Tree Construction Stats ------------"
+                   << std::endl
+                   << std::setw(42) << std::left << "    BlockIndex"
+                   << ": " << blockData->BlockIndex << std::endl
+                   << hierarchicalTree.PrintTreeStats() << std::endl);
     }); // master.foreach
 
   // 2.2 Log timings for fan out
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Fan Out Foreach"
-               << ": " << timer.GetElapsedTime() << " seconds");
-  //timer.Start();
+  timingsStream << "    " << std::setw(38) << std::left << "Fan Out Foreach"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+
+  VTKM_LOG_S(this->TimingsLogLevel, timingsStream.str());
 
   result = vtkm::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
 }
