@@ -192,6 +192,14 @@ void PrintArrayContents(const VariantArrayType& array)
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
 {
+  // Set the logging levels we want to use. These could be made command line options as well
+  // Log level to be used for outputting timing information.
+  vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Info;
+  // Log level to be used for outputting metadata about the trees.
+  vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info;
+  // Log level for outputs specific to the example
+  vtkm::cont::LogLevel exampleLogLevel = vtkm::cont::LogLevel::Info;
+
   // Setup the MPI environment.
   MPI_Init(&argc, &argv);
   auto comm = MPI_COMM_WORLD;
@@ -211,7 +219,7 @@ int main(int argc, char* argv[])
     vtkm::cont::Initialize(argc, argv, vtkm_initialize_options);
   auto device = vtkm_config.Device;
 
-  VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info, rank == 0, "Running with MPI. #ranks=" << size);
+  VTKM_LOG_IF_S(exampleLogLevel, rank == 0, "Running with MPI. #ranks=" << size);
 
   // Setup timing
   vtkm::Float64 prevTime = 0;
@@ -226,6 +234,7 @@ int main(int argc, char* argv[])
   ParseCL parser;
   parser.parse(argc, argv);
   std::string filename = parser.getOptions().back();
+
   bool useMarchingCubes = false;
   if (parser.hasOption("--mc"))
   {
@@ -240,6 +249,11 @@ int main(int argc, char* argv[])
   if (parser.hasOption("--saveDot"))
   {
     saveDotFiles = true;
+  }
+  bool forwardSummary = false;
+  if (parser.hasOption("--forwardSummary"))
+  {
+    forwardSummary = true;
   }
 
 #ifdef ENABLE_SET_NUM_THREADS
@@ -309,6 +323,8 @@ int main(int argc, char* argv[])
 #endif
       std::cout << "--numBlocks      Number of blocks to use during computation "
                 << "(Default=number of MPI ranks.)" << std::endl;
+      std::cout << "--forwardSummary Forward the summary timings also to the per-rank "
+                << "log files. Default is to round-robin print the summary instead" << std::endl;
       std::cout << std::endl;
     }
     MPI_Finalize();
@@ -317,7 +333,7 @@ int main(int argc, char* argv[])
 
   if (rank == 0)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+    VTKM_LOG_S(exampleLogLevel,
                std::endl
                  << "    ------------ Settings -----------" << std::endl
                  << "    filename=" << filename << std::endl
@@ -651,7 +667,7 @@ int main(int argc, char* argv[])
     // Print the mesh metadata
     if (rank == 0)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+      VTKM_LOG_S(exampleLogLevel,
                  std::endl
                    << "    ---------------- Input Mesh Properties --------------" << std::endl
                    << "    Number of dimensions: " << nDims << std::endl);
@@ -748,7 +764,7 @@ int main(int argc, char* argv[])
     // Print the mesh metadata
     if (rank == 0)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+      VTKM_LOG_S(exampleLogLevel,
                  std::endl
                    << "    ---------------- Input Mesh Properties --------------" << std::endl
                    << "    Number of dimensions: " << nDims);
@@ -873,7 +889,9 @@ int main(int argc, char* argv[])
                                                      localBlockOrigins,
                                                      localBlockSizes,
                                                      useMarchingCubes,
-                                                     saveDotFiles);
+                                                     saveDotFiles,
+                                                     timingsLogLevel,
+                                                     treeLogLevel);
   filter.SetActiveField("values");
 
   // Execute the contour tree analysis
@@ -918,22 +936,27 @@ int main(int argc, char* argv[])
   close(err);
 #endif
 
-  dup2(save_out, fileno(stdout));
-  dup2(save_err, fileno(stderr));
-
-  close(save_out);
-  close(save_err);
-
-  // Force a simple round-robin on the ranks for the summary prints. Its not perfect for MPI but
-  // it works well enough to sort the summaries from the ranks for small-scale debugging.
-  if (rank > 0)
+  if (!forwardSummary)
   {
-    int temp;
-    MPI_Status status;
-    MPI_Recv(&temp, 1, MPI_INT, (rank - 1), 0, comm, &status);
+    // write our log data now and close the files so that the summary is written round-robin to
+    // the normal log output stream
+    dup2(save_out, fileno(stdout));
+    dup2(save_err, fileno(stderr));
+    // close our MPI forward
+    close(save_out);
+    close(save_err);
+
+    // Force a simple round-robin on the ranks for the summary prints. Its not perfect for MPI but
+    // it works well enough to sort the summaries from the ranks for small-scale debugging.
+    if (rank > 0)
+    {
+      int temp;
+      MPI_Status status;
+      MPI_Recv(&temp, 1, MPI_INT, (rank - 1), 0, comm, &status);
+    }
   }
   currTime = totalTime.GetElapsedTime();
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+  VTKM_LOG_S(timingsLogLevel,
              std::endl
                << "    -------------------------- Totals " << rank
                << " -----------------------------" << std::endl
@@ -952,12 +975,29 @@ int main(int argc, char* argv[])
   std::cout << std::flush;
   std::cerr << std::flush;
 
-  // Let the next rank know that it is time to print their summary.
-  if (rank < (size - 1))
+  // Round robin output
+  if (!forwardSummary)
   {
-    int message = 1;
-    MPI_Send(&message, 1, MPI_INT, (rank + 1), 0, comm);
+    // Let the next rank know that it is time to print their summary.
+    if (rank < (size - 1))
+    {
+      int message = 1;
+      MPI_Send(&message, 1, MPI_INT, (rank + 1), 0, comm);
+    }
   }
+  // Finish logging to our per-rank log-files
+  else
+  {
+    // write our log data now
+    // the normal log output stream
+    dup2(save_out, fileno(stdout));
+    dup2(save_err, fileno(stderr));
+    // close our MPI forward
+    close(save_out);
+    close(save_err);
+  }
+
+  // Finalize and finish the execution
   MPI_Finalize();
   return EXIT_SUCCESS;
 }
