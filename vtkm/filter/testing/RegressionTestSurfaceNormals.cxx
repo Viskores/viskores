@@ -10,8 +10,8 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/SurfaceNormals.h>
 
@@ -32,8 +32,13 @@ void TestSurfaceNormals()
   using C = vtkm::rendering::CanvasRayTracer;
   using V3 = vtkm::rendering::View3D;
 
-  vtkm::cont::testing::MakeTestDataSet makeTestData;
-  auto dataSet = makeTestData.Make3DExplicitDataSetPolygonal();
+  // NOTE: This dataset stores a shape value of 7 for polygons.  The
+  // VTKDataSetReader currently converts all polygons with 4 verticies to
+  // quads (shape 9).
+  auto pathname =
+    vtkm::cont::testing::Testing::DataPath("unstructured/SurfaceNormalsTestDataSet.vtk");
+  vtkm::io::VTKDataSetReader reader(pathname);
+  auto dataSet = reader.ReadDataSet();
 
   vtkm::filter::SurfaceNormals surfaceNormals;
   surfaceNormals.SetGeneratePointNormals(true);
@@ -48,7 +53,8 @@ void TestSurfaceNormals()
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
     result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.05));
 
-  VTKM_TEST_ASSERT(vtkm::rendering::testing::test_equal_images(view, "surface-normals.png"));
+  VTKM_TEST_ASSERT(
+    vtkm::rendering::testing::test_equal_images_matching_name(view, "surface-normals.png"));
 }
 } // namespace
 

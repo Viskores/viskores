@@ -12,7 +12,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/testing/MakeTestDataSet.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/filter/Tube.h>
@@ -34,10 +34,9 @@ void TestStreamline()
   using C = vtkm::rendering::CanvasRayTracer;
   using V3 = vtkm::rendering::View3D;
 
-  const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Vec3f vecX(1, 0, 0);
-  vtkm::filter::testing::MakeTestDataSet makeTestData;
-  auto dataSet = makeTestData.MakeStreamlineTestDataSet(dims, vecX);
+  auto pathname = vtkm::cont::testing::Testing::DataPath("uniform/StreamlineTestDataSet.vtk");
+  vtkm::io::VTKDataSetReader reader(pathname);
+  vtkm::cont::DataSet dataSet = reader.ReadDataSet();
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
     vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
                                    vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
@@ -75,7 +74,8 @@ void TestStreamline()
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
     result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.1));
 
-  VTKM_TEST_ASSERT(vtkm::rendering::testing::test_equal_images(view, "streamline.png"));
+  VTKM_TEST_ASSERT(
+    vtkm::rendering::testing::test_equal_images_matching_name(view, "streamline.png"));
 }
 } // namespace
 

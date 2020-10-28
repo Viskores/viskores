@@ -11,7 +11,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/testing/MakeTestDataSet.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/PointTransform.h>
 #include <vtkm/filter/VectorMagnitude.h>
@@ -33,8 +33,10 @@ void TestPointTransform()
   using C = vtkm::rendering::CanvasRayTracer;
   using V3 = vtkm::rendering::View3D;
 
-  vtkm::filter::testing::MakeTestDataSet makeTestData;
-  auto dataSet = makeTestData.MakePointTransformTestDataSet();
+  auto pathname =
+    vtkm::cont::testing::Testing::DataPath("unstructured/PointTransformTestDataSet.vtk");
+  vtkm::io::VTKDataSetReader reader(pathname);
+  vtkm::cont::DataSet dataSet = reader.ReadDataSet();
 
   vtkm::filter::PointTransform pointTransform;
   pointTransform.SetOutputFieldName("translation");
@@ -56,7 +58,8 @@ void TestPointTransform()
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
     result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.05));
 
-  VTKM_TEST_ASSERT(vtkm::rendering::testing::test_equal_images(view, "point-transform.png"));
+  VTKM_TEST_ASSERT(
+    vtkm::rendering::testing::test_equal_images_matching_name(view, "point-transform.png"));
 }
 } // namespace
 

@@ -12,8 +12,8 @@
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
 
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/testing/MakeTestDataSet.h>
 
 #include <vtkm/source/Wavelet.h>
 
@@ -36,6 +36,79 @@ const std::vector<vtkm::FloatDefault> expectedPointvar{ 10.1f, 20.1f, 30.2f, 40.
                                                         70.3f, 80.3f, 10.1f, 10.1f, 20.1f, 20.1f,
                                                         30.2f, 30.2f, 40.2f, 40.2f, 50.3f, 50.3f,
                                                         60.3f, 60.3f, 70.3f, 70.3f, 80.3f, 80.3f };
+
+vtkm::cont::DataSet Make3DExplicitSimpleCube()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+
+  const int nVerts = 8;
+  const int nCells = 6;
+  using CoordType = vtkm::Vec3f;
+  std::vector<CoordType> coords = {
+    CoordType(0, 0, 0), // 0
+    CoordType(1, 0, 0), // 1
+    CoordType(1, 0, 1), // 2
+    CoordType(0, 0, 1), // 3
+    CoordType(0, 1, 0), // 4
+    CoordType(1, 1, 0), // 5
+    CoordType(1, 1, 1), // 6
+    CoordType(0, 1, 1)  // 7
+  };
+
+  //Connectivity
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> numIndices;
+  for (size_t i = 0; i < 6; i++)
+  {
+    shapes.push_back(vtkm::CELL_SHAPE_QUAD);
+    numIndices.push_back(4);
+  }
+
+
+  std::vector<vtkm::Id> conn;
+  // Down face
+  conn.push_back(0);
+  conn.push_back(1);
+  conn.push_back(5);
+  conn.push_back(4);
+  // Right face
+  conn.push_back(1);
+  conn.push_back(2);
+  conn.push_back(6);
+  conn.push_back(5);
+  // Top face
+  conn.push_back(2);
+  conn.push_back(3);
+  conn.push_back(7);
+  conn.push_back(6);
+  // Left face
+  conn.push_back(3);
+  conn.push_back(0);
+  conn.push_back(4);
+  conn.push_back(7);
+  // Front face
+  conn.push_back(4);
+  conn.push_back(5);
+  conn.push_back(6);
+  conn.push_back(7);
+  // Back face
+  conn.push_back(0);
+  conn.push_back(3);
+  conn.push_back(2);
+  conn.push_back(1);
+
+  //Create the dataset.
+  dataSet = dsb.Create(coords, shapes, numIndices, conn, "coordinates");
+
+  vtkm::FloatDefault vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f };
+  vtkm::FloatDefault cellvar[nCells] = { 100.1f, 200.2f, 300.3f, 400.4f, 500.5f, 600.6f };
+
+  dataSet.AddPointField("pointvar", vars, nVerts);
+  dataSet.AddCellField("cellvar", cellvar, nCells);
+
+  return dataSet;
+}
 
 vtkm::cont::DataSet Make3DWavelet()
 {
@@ -129,8 +202,8 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
 
 void TestWithExplicitData()
 {
-  vtkm::filter::testing::MakeTestDataSet makeTestData;
-  vtkm::cont::DataSet simpleCube = makeTestData.Make3DExplicitSimpleCube();
+  vtkm::cont::DataSet simpleCube = Make3DExplicitSimpleCube();
+
   // Generate surface normal field
   vtkm::filter::SurfaceNormals surfaceNormalsFilter;
   surfaceNormalsFilter.SetGenerateCellNormals(true);

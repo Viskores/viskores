@@ -13,7 +13,6 @@
 #include <vtkm/filter/ParticleAdvection.h>
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/filter/testing/MakeTestDataSet.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
 

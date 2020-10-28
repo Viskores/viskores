@@ -13,6 +13,7 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/ImageDifference.h>
@@ -51,6 +52,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
   const bool& writeDiff = true,
   const bool& returnOnPass = true)
 {
+  vtkm::cont::ScopedRuntimeDeviceTracker runtime(vtkm::cont::DeviceAdapterTagAny{});
   vtkm::cont::testing::TestEqualResult testResults;
 
   if (fileNames.empty())
@@ -132,6 +134,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
     testResults.PushMessage(imageResult.GetMergedMessage());
   }
 
+  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Test Results: " << testResults.GetMergedMessage());
   return testResults;
 }
 
@@ -171,7 +174,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images_matching_name(
   const bool& writeDiff = true,
   const bool& returnOnPass = true)
 {
-  std::vector<std::string> fileNames{ fileName };
+  std::vector<std::string> fileNames;
   auto found = fileName.rfind(".");
   auto prefix = fileName.substr(0, found);
   auto suffix = fileName.substr(found, fileName.length());
@@ -185,12 +188,12 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images_matching_name(
     if (!check.good())
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Could not find file with name " << fileNameStream.str() << ", beginning testing");
+                 "Stopped filename search at: " << fileNameStream.str() << ", beginning testing");
       break;
     }
     fileNames.emplace_back(fileNameStream.str());
   }
-  test_equal_images(view, fileNames, threshold, radius, average, writeDiff, returnOnPass);
+  return test_equal_images(view, fileNames, threshold, radius, average, writeDiff, returnOnPass);
 }
 
 

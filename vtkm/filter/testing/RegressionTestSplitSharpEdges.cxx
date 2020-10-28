@@ -11,7 +11,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/testing/MakeTestDataSet.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include <vtkm/filter/SplitSharpEdges.h>
 #include <vtkm/filter/SurfaceNormals.h>
@@ -33,11 +33,10 @@ void TestSplitSharpEdges()
   using C = vtkm::rendering::CanvasRayTracer;
   using V3 = vtkm::rendering::View3D;
 
-  vtkm::filter::testing::MakeTestDataSet makeTestData;
-  vtkm::filter::SurfaceNormals surfaceNormalsFilter;
-  surfaceNormalsFilter.SetGenerateCellNormals(true);
-  vtkm::cont::DataSet dataSet =
-    surfaceNormalsFilter.Execute(makeTestData.Make3DExplicitSimpleCube());
+  auto pathname =
+    vtkm::cont::testing::Testing::DataPath("unstructured/SplitSharpEdgesTestDataSet.vtk");
+  vtkm::io::VTKDataSetReader reader(pathname);
+  auto dataSet = reader.ReadDataSet();
 
   vtkm::filter::SplitSharpEdges splitSharpEdges;
   splitSharpEdges.SetFeatureAngle(89.0);

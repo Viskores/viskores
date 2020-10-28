@@ -8,12 +8,6 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(headers
-  MakeTestDataSet.h
-)
-
-vtkm_declare_headers(${headers})
-
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
