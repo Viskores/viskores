@@ -792,7 +792,7 @@ VTKM_EXEC_CONT inline T AtomicAdd(
 {
   return detail::AtomicAddImpl(pointer, operand, order);
 }
-template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
+template <typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 VTKM_EXEC_CONT inline T AtomicAdd(
   T* pointer,
   detail::OppositeSign<T> operand,
