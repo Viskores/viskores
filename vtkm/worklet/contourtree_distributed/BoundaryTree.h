@@ -87,6 +87,15 @@ public:
   // and the ID of the vertex it connects to (or NO_SUCH_ELEMENT)
   vtkm::worklet::contourtree_augmented::IdArrayType Superarcs;
 
+  // Total size of the boundary (used for logging only!)
+  vtkm::Id NumBoundary;
+
+  // Total number of boundary points used (used for logging only!).
+  // If the whole boundary is used then NumBoundaryUsed == NumBoundary
+  // but if only the boundary critical points are being used then
+  // NumBoundaryUsed >= NumBoundary
+  vtkm::Id NumBoundaryUsed;
+
   // constructor
   BoundaryTree() {}
 
@@ -299,7 +308,11 @@ inline std::string BoundaryTree::PrintArraySizes() const
   arraySizeLog << std::setw(42) << std::left << "    #VertexIndex"
                << ": " << this->VertexIndex.GetNumberOfValues() << std::endl
                << std::setw(42) << std::left << "    #Superarcs"
-               << ": " << this->Superarcs.GetNumberOfValues() << std::endl;
+               << ": " << this->Superarcs.GetNumberOfValues() << std::endl
+               << std::setw(42) << std::left << "    #Boundary"
+               << ": " << this->NumBoundary << std::endl
+               << std::setw(42) << std::left << "    #BoundaryUsed"
+               << ": " << this->NumBoundaryUsed << std::endl;
   return arraySizeLog.str();
 } // PrintArraySizes
 

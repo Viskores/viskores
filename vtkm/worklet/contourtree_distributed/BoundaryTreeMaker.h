@@ -101,8 +101,6 @@
 #include <string>
 #include <utility>
 
-
-// TODO: Validate that the SetInteriorForest function produces the correct result
 // TODO: Change all pointers to std mangaged pointers or use references (the memory for those pointers should be managed outside in the filter)
 
 namespace vtkm
@@ -336,6 +334,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
   // i.e., remove those boundary verticies from the list that are not critical.
   // This should be a flag that we can set on the Construct method so that we
   // can do performance tests for both code paths.
+  // We also need to updated this->NumBoundary and this->BoundaryTree.NumBoundaryUsed
+  // accordingly if we only used boundary critical points
+  this->Bract->NumBoundary = this->NumBoundary;
+  this->Bract->NumBoundaryUsed = this->NumBoundary;
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,

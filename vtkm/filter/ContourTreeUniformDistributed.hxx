@@ -513,7 +513,6 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecutio
                             policy);
   }
 
-  // TODO: Record how many boundary points vs. how many boundary critical points. This happens in the BoundaryTree not TreeGrafter
   // Log sizes of the local contour trees, boundary trees, and interior forests
   for (size_t bi = 0; bi < this->LocalContourTrees.size(); bi++)
   {
