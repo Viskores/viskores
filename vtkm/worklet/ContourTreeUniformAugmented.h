@@ -211,8 +211,13 @@ public:
     }
   }
 
+  void SetTimingsLogLevel(vtkm::cont::LogLevel level) { this->TimingsLogLevel = level; }
+
 
 private:
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
+
   /*!
   *  Run the contour tree for the given mesh. This function implements the main steps for
   *  computing the contour tree after the mesh has been constructed using the approbrite
@@ -365,7 +370,7 @@ private:
     // contourTree.PrintDotSuperStructure();
 
     // Log the collected timing results in one coherent log entry
-    VTKM_LOG_S(vtkm::cont::LogLevel::Perf, timingsStream.str());
+    VTKM_LOG_S(this->TimingsLogLevel, timingsStream.str());
   }
 };
 
