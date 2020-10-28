@@ -388,10 +388,38 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 
 
 //-----------------------------------------------------------------------------
-// Main execution phases of the filter.
+// Main execution phases of the filter
+//
+// The functions are executed by VTKm in the following order
+// - PreExecute
 // - PrepareForExecution
-// -
+//   --> ComputeLocalTree (struct)
+//      --> ComputeLocalTree (filter funct)
+//        --> ComputeLocalTreeImpl (filter funct)
+// - PostExecute
+//   --> DoPostExecute
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+template <typename DerivedPolicy>
+inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
+  const vtkm::cont::PartitionedDataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  if (vtkm::worklet::contourtree_distributed::SpatialDecomposition::GetGlobalNumberOfBlocks(
+        input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
+  {
+    throw vtkm::cont::ErrorFilterExecution(
+      "Global number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
+  }
+  if (this->MultiBlockSpatialDecomposition.GetLocalNumberOfBlocks() !=
+      input.GetNumberOfPartitions())
+  {
+    throw vtkm::cont::ErrorFilterExecution(
+      "Local number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
+  }
+}
+
+
 template <typename DerivedPolicy>
 vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecution(
   const vtkm::cont::PartitionedDataSet& input,
@@ -454,26 +482,40 @@ vtkm::cont::PartitionedDataSet ContourTreeUniformDistributed::PrepareForExecutio
   return input; // TODO/FIXME: What to return?
 }
 
-
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreeUniformDistributed::PreExecute(
+inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
   const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  vtkm::cont::PartitionedDataSet& result,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  if (vtkm::worklet::contourtree_distributed::SpatialDecomposition::GetGlobalNumberOfBlocks(
-        input) != this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks())
+  vtkm::cont::Timer timer;
+  timer.Start();
+  // We are running in parallel and need to merge the contour tree in PostExecute
+  // TODO/FIXME: Make sure this still makes sense
+  if (this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks() == 1)
   {
-    throw vtkm::cont::ErrorFilterExecution(
-      "Global number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
+    return;
   }
-  if (this->MultiBlockSpatialDecomposition.GetLocalNumberOfBlocks() !=
-      input.GetNumberOfPartitions())
-  {
-    throw vtkm::cont::ErrorFilterExecution(
-      "Local number of blocks in MultiBlock dataset does not match the SpatialDecomposition");
-  }
+  auto field = // TODO/FIXME: Correct for more than one block per rank?
+    input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+  vtkm::filter::FieldMetadata metaData(field);
+
+  vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
+                          vtkm::filter::contourtree_distributed_detail::PostExecuteCaller{},
+                          this,
+                          input,
+                          result,
+                          metaData,
+                          policy);
+
+  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+             std::endl
+               << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
+               << ": " << timer.GetElapsedTime() << " seconds");
 }
+
 
 //-----------------------------------------------------------------------------
 template <typename FieldType, typename StorageType, typename DerivedPolicy>
@@ -801,41 +843,6 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   }); // master.foreach
 
   result = vtkm::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
-}
-
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-inline VTKM_CONT void ContourTreeUniformDistributed::PostExecute(
-  const vtkm::cont::PartitionedDataSet& input,
-  vtkm::cont::PartitionedDataSet& result,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-{
-  vtkm::cont::Timer timer;
-  timer.Start();
-  // We are running in parallel and need to merge the contour tree in PostExecute
-  // TODO/FIXME: Make sure this still makes sense
-  if (this->MultiBlockSpatialDecomposition.GetGlobalNumberOfBlocks() == 1)
-  {
-    return;
-  }
-  auto field = // TODO/FIXME: Correct for more than one block per rank?
-    input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-  vtkm::filter::FieldMetadata metaData(field);
-
-  vtkm::filter::FilterTraits<ContourTreeUniformDistributed> traits;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyFieldActive(field, policy, traits),
-                          vtkm::filter::contourtree_distributed_detail::PostExecuteCaller{},
-                          this,
-                          input,
-                          result,
-                          metaData,
-                          policy);
-
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
-               << ": " << timer.GetElapsedTime() << " seconds");
 }
 
 } // namespace filter
