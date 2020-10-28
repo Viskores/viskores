@@ -225,6 +225,46 @@ VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
     return false;
   }
 }
+#if __CUDA_ARCH__ < 200
+VTKM_EXEC_CONT inline vtkm::Float32 vtkmAtomicAddImpl(vtkm::Float32* address,
+                                                      vtkm::Float32 value,
+                                                      vtkm::MemoryOrder order)
+{
+  union {
+    vtkm::UInt32 i;
+    vtkm::Float32 f;
+  } expected{ .f = *address }, desired{};
+
+  do
+  {
+    desired.f = expected.f + value;
+  } while (!AtomicCompareExchangeImpl(
+    reinterprete_cast<vtkm::UInt32*>(address), expected.i, desired.i, order));
+
+  // return the "old" value that was in the memory.
+  return expected.f;
+}
+#endif
+#if __CUDA_ARCH__ < 600
+VTKM_EXEC_CONT inline vtkm::Float64 vtkmAtomicAdd(vtkm::Float64* address,
+                                                  vtkm::Float64 value,
+                                                  vtkm::MemoryOrder order)
+{
+  union {
+    vtkm::UInt64 i;
+    vtkm::Float64 f;
+  } expected{ .f = *address }, desired{};
+
+  do
+  {
+    desired.f = expected.f + value;
+  } while (!AtomicCompareExchangeImpl(
+    reinterprete_cast<vtkm::UInt64*>(address), expected.i, desired.i, order));
+
+  // return the "old" value that was in the memory.
+  return expected.f;
+}
+#endif
 }
 } // namespace vtkm::detail
 
@@ -592,20 +632,18 @@ VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* addr,
   union {
     vtkm::UInt32 i;
     vtkm::Float32 f;
-  } expected{}, desired{};
-
-  expected.f = *addr;
+  } expected{ .f = *addr }, desired{};
 
   do
   {
     desired.f = expected.f + arg;
   } while (
-    __atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt32*>(addr),
-                                &expected.i, // reloads expected with *addr prior to the operation
-                                desired.i,
-                                false,
-                                GccAtomicMemOrder(order),
-                                GccAtomicMemOrder(order)));
+    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt32*>(addr),
+                                 &expected.i, // reloads expected with *addr prior to the operation
+                                 desired.i,
+                                 false,
+                                 GccAtomicMemOrder(order),
+                                 GccAtomicMemOrder(order)));
   // return the "old" value that was in the memory.
   return expected.f;
 }
@@ -623,13 +661,12 @@ VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float64* addr,
   {
     desired.f = expected.f + arg;
   } while (
-    // FIXME: deadlock when *addr == expected.i????!!!!
-    __atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt64*>(addr),
-                                &expected.i, // reloads expected with *addr prior to the operation
-                                desired.i,
-                                false,
-                                GccAtomicMemOrder(order),
-                                GccAtomicMemOrder(order)));
+    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt64*>(addr),
+                                 &expected.i, // reloads expected with *addr prior to the operation
+                                 desired.i,
+                                 false,
+                                 GccAtomicMemOrder(order),
+                                 GccAtomicMemOrder(order)));
   // return the "old" value that was in the memory.
   return expected.f;
 }
@@ -895,7 +932,7 @@ VTKM_EXEC_CONT inline T AtomicNot(
 /// pointing to an object on the stack).
 ///
 template <typename T>
-VTKM_EXEC_CONT inline T AtomicCompareExchange(
+VTKM_EXEC_CONT inline bool AtomicCompareExchange(
   T* shared,
   T* expected,
   T desired,

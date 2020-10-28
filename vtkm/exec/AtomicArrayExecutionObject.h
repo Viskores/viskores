@@ -186,10 +186,11 @@ public:
   /// AtomicArrayExecutionObject<vtkm::Int32, ...> arr = ...;
   ///
   /// // Compare-exchange multiplication:
-  /// vtkm::Int32 current = arr->Get(idx); // Load the current value at idx
+  /// vtkm::Int32 current = arr.Get(idx); // Load the current value at idx
+  /// vtkm::Int32 newVal;
   /// do {
-  ///   vtkm::Int32 newVal = current * multFactor; // the actual multiplication
-  /// } while (!arr->CompareExchange(idx, &current, newVal));
+  ///   newVal = current * multFactor; // the actual multiplication
+  /// } while (!arrCompareExchange(idx, &current, newVal));
   /// ```
   ///
   /// The while condition here updates \a newVal what the proper multiplication

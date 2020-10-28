@@ -44,10 +44,10 @@ void TestNGP()
   vtkm::cont::ArrayHandle<vtkm::Float32> field;
   density.GetCellField("density").GetData().CopyTo(field);
 
-  //  auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
-  //  auto result = vtkm::worklet::DescriptiveStatistics::Run(field);
-  //  VTKM_TEST_ASSERT(test_equal(result.Sum(), mass_result.Sum()));
-  //  VTKM_TEST_ASSERT(test_equal(result.Mean(), mass_result.Mean()));
+  auto mass_result = vtkm::worklet::DescriptiveStatistics::Run(mass);
+  auto density_result = vtkm::worklet::DescriptiveStatistics::Run(field);
+  // Unfortunately, floating point atomics suffer from precision error more than everything else.
+  VTKM_TEST_ASSERT(test_equal(density_result.Sum(), mass_result.Sum(), 10));
 }
 
 void TestParticleDensity()
