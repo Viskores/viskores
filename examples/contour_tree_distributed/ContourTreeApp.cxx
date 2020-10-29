@@ -152,7 +152,7 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
-#if 0
+/*
 struct PrintArrayContentsFunctor
 {
   template <typename T, typename S>
@@ -187,7 +187,7 @@ void PrintArrayContents(const VariantArrayType& array)
 {
   array.CastAndCall(PrintArrayContentsFunctor());
 }
-#endif
+*/
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
@@ -249,6 +249,11 @@ int main(int argc, char* argv[])
   if (parser.hasOption("--saveDot"))
   {
     saveDotFiles = true;
+  }
+  bool saveTreeCompilerData = false;
+  if (parser.hasOption("--saveTreeCompilerData"))
+  {
+    saveTreeCompilerData = true;
   }
   bool forwardSummary = false;
   if (parser.hasOption("--forwardSummary"))
@@ -317,6 +322,8 @@ int main(int argc, char* argv[])
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
       std::cout << "--saveDot        Save DOT files of the distributed contour tree "
                 << "computation (Default=False). " << std::endl;
+      std::cout << "--saveTreeCompilerData  Save data files needed for the tree compiler"
+                << std::endl;
 #ifdef ENABLE_SET_NUM_THREADS
       std::cout << "--numThreads     Specifiy the number of threads to use. "
                 << "Available only with TBB." << std::endl;
@@ -341,6 +348,7 @@ int main(int argc, char* argv[])
                  << "    device=" << device.GetName() << std::endl
                  << "    mc=" << useMarchingCubes << std::endl
                  << "    saveDot=" << saveDotFiles << std::endl
+                 << "    saveTreeCompilerData=" << saveTreeCompilerData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
 #ifdef ENABLE_SET_NUM_THREADS
                  << "    numThreads=" << numThreads << std::endl
@@ -898,7 +906,11 @@ int main(int argc, char* argv[])
   // Execute the contour tree analysis
   auto result = filter.Execute(useDataSet);
 
-#if 0
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 computeContourTreeTime = currTime - prevTime;
+  prevTime = currTime;
+
+  /*
   std::cout << "Result dataset has " << result.GetNumberOfPartitions() << " partitions" << std::endl;
 
   for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
@@ -912,22 +924,28 @@ int main(int argc, char* argv[])
       std::cout << std::endl;
     }
   }
-#endif
+  */
 
-  for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+  if (saveTreeCompilerData)
   {
-    vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
-    treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
-    char fname[256];
-    std::snprintf(
-      fname, sizeof(fname), "TreeCompilerOutput_Rank%d_Block%d.dat", rank, static_cast<int>(ds_no));
-    FILE* out_file = std::fopen(fname, "wb");
-    treeCompiler.WriteBinary(out_file);
-    std::fclose(out_file);
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
+      treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
+      char fname[256];
+      std::snprintf(fname,
+                    sizeof(fname),
+                    "TreeCompilerOutput_Rank%d_Block%d.dat",
+                    rank,
+                    static_cast<int>(ds_no));
+      FILE* out_file = std::fopen(fname, "wb");
+      treeCompiler.WriteBinary(out_file);
+      std::fclose(out_file);
+    }
   }
 
   currTime = totalTime.GetElapsedTime();
-  vtkm::Float64 computeContourTreeTime = currTime - prevTime;
+  vtkm::Float64 saveTreeCompilerDataTime = currTime - prevTime;
   prevTime = currTime;
 
   std::cout << std::flush;
@@ -969,6 +987,8 @@ int main(int argc, char* argv[])
                << ": " << buildDatasetTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Compute Contour Tree"
                << ": " << computeContourTreeTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Save Tree Compiler Data"
+               << ": " << saveTreeCompilerDataTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Total Time"
                << ": " << currTime << " seconds");
 
