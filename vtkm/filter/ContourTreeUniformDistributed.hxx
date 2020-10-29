@@ -899,6 +899,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                    << hierarchicalTree.PrintTreeStats() << std::endl);
     }); // master.foreach
 
+  // Clean-up
+  for (auto block : localDataBlocks)
+    delete block;
+
   // 2.2 Log timings for fan out
   timingsStream << "    " << std::setw(38) << std::left << "Fan Out Foreach"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
