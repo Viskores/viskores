@@ -316,7 +316,7 @@ private:
     MergeTree splitTree(mesh.NumVertices, false);
     ActiveGraph splitGraph(false);
     splitGraph.Initialise(mesh, extrema);
-    timingsStream << "    " << std::setw(38) << std::left << "Splot Tree Initialize Active Graph"
+    timingsStream << "    " << std::setw(38) << std::left << "Split Tree Initialize Active Graph"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 #ifdef DEBUG_PRINT
     splitGraph.DebugPrint("Active Graph Instantiated", __FILE__, __LINE__);

@@ -903,7 +903,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timingsStream << "    " << std::setw(38) << std::left << "Fan Out Foreach"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 
-  VTKM_LOG_S(this->TimingsLogLevel, timingsStream.str());
+  VTKM_LOG_S(this->TimingsLogLevel, std::endl << timingsStream.str());
 
   result = vtkm::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
 }

@@ -341,6 +341,7 @@ int main(int argc, char* argv[])
                  << "    device=" << device.GetName() << std::endl
                  << "    mc=" << useMarchingCubes << std::endl
                  << "    saveDot=" << saveDotFiles << std::endl
+                 << "    forwardSummary=" << forwardSummary << std::endl
 #ifdef ENABLE_SET_NUM_THREADS
                  << "    numThreads=" << numThreads << std::endl
 #endif
