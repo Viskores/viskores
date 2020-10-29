@@ -296,7 +296,7 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 
   // Set up the worklet
   vtkm::worklet::ContourTreeAugmented worklet;
-  worklet.SetTimingsLogLevel(this->TimingsLogLevel);
+  worklet.TimingsLogLevel = vtkm::cont::LogLevel::Off; // turn of the loggin, we do this afterwards
   worklet.Run(field,
               mesh,
               this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
@@ -304,6 +304,13 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
               this->NumIterations,
               compRegularStruct,
               meshBoundaryExecObject);
+  // Log the contour tree timiing stats
+  VTKM_LOG_S(this->TimingsLogLevel,
+             std::endl
+               << "    ---------------- Contour Tree Worklet Timings ------------------"
+               << std::endl
+               << "    Block Index : " << blockIndex << std::endl
+               << worklet.TimingsLogString);
 
   // Now we compute the BRACT for our data block. We do this here because we know the MeshType
   // here and we don't need to store the mesh separately any more since it is stored in the BRACT
@@ -755,10 +762,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // 1.3 execute the fan in reduction
   const vtkm::worklet::contourtree_distributed::ComputeDistributedContourTreeFunctor<FieldType>
-    computeDistributedContourTreeFunctor{ this->MultiBlockSpatialDecomposition.GlobalSize };
-  // TODO: Timestamp each iteration of the reduction in computeDistributedContourTreeFunctor
-  // TODO: Sizes of contour tree, boundary tree, interior forest arrays per iteration
-  // TODO: Make the log level to use setable
+    computeDistributedContourTreeFunctor(
+      this->MultiBlockSpatialDecomposition.GlobalSize, this->TimingsLogLevel, this->TreeLogLevel);
   vtkmdiy::reduce(master, assigner, partners, computeDistributedContourTreeFunctor);
 
   // 1.4 Log timings and barrier to make sure everyone is done
@@ -802,8 +807,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           blockData, hierarchicalTree, rank, nRounds);
       } // if(this->SaveDotFiles)
 
+      vtkm::cont::Timer iterationTimer;
       for (auto round = nRounds - 1; round > 0; round--)
       {
+        iterationTimer.Start();
         vtkm::worklet::contourtree_distributed::
           TreeGrafter<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>, FieldType>
             grafter(&(blockData->ContourTreeMeshes[round - 1]),
@@ -818,10 +825,15 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           vtkm::filter::contourtree_distributed_detail::SaveHierarchicalTreeDot(
             blockData, hierarchicalTree, rank, nRounds);
         } // if(this->SaveDotFiles)
-        // TODO: Time each of the iterations of the loop
+        // Log the time for each of the iterations of the fan out loop
+        VTKM_LOG_S(this->TreeLogLevel,
+                   std::endl
+                     << "    Fan Out Time (block=" << blockData->BlockIndex << " , round=" << round
+                     << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl);
       } // for
 
       // bottom level
+      iterationTimer.Start();
       vtkm::worklet::contourtree_distributed::
         TreeGrafter<vtkm::worklet::contourtree_augmented::DataSetMesh, FieldType>
           grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->BlockIndex)]),
@@ -839,7 +851,12 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           blockData->BlockIndex),
         this->MultiBlockSpatialDecomposition.GlobalSize);
       grafter.GraftInteriorForests(0, hierarchicalTree, fieldData, &localToGlobalIdRelabeler);
-      // TODO: Time bottom level
+
+      // Log the time for each of the iterations of the fan out loop
+      VTKM_LOG_S(this->TreeLogLevel,
+                 std::endl
+                   << "    Fan Out Time (block=" << blockData->BlockIndex << " , round=" << 0
+                   << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl);
 
       // Create data set from output
       vtkm::cont::Field dataValuesField(
