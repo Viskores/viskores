@@ -90,6 +90,17 @@ class ContourTreeAugmented
 {
 public:
   /*!
+  * Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  * Use vtkm::cont::LogLevel::Off to disable outputing the results via vtkm logging here. The
+  * results are saved in the TimingsLogString variable so we can use it to do our own logging
+  */
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
+
+  /// Remember the results from our time-keeping so we can customize our logging
+  std::string TimingsLogString;
+
+
+  /*!
   * Run the contour tree to merge an existing set of contour trees
   *
   *  fieldArray   : Needed only as a pass-through value but not used in this case
@@ -211,13 +222,8 @@ public:
     }
   }
 
-  void SetTimingsLogLevel(vtkm::cont::LogLevel level) { this->TimingsLogLevel = level; }
-
 
 private:
-  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
-  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
-
   /*!
   *  Run the contour tree for the given mesh. This function implements the main steps for
   *  computing the contour tree after the mesh has been constructed using the approbrite
@@ -262,9 +268,6 @@ private:
     vtkm::cont::Timer timer;
     timer.Start();
     std::stringstream timingsStream; // Use a string stream to log in one message
-    timingsStream << std::endl;
-    timingsStream << "    ------------------- Contour Tree Worklet Timings ----------------------"
-                  << std::endl;
 
     // Sort the mesh data
     mesh.SortData(fieldArray);
@@ -370,7 +373,15 @@ private:
     // contourTree.PrintDotSuperStructure();
 
     // Log the collected timing results in one coherent log entry
-    VTKM_LOG_S(this->TimingsLogLevel, timingsStream.str());
+    this->TimingsLogString = timingsStream.str();
+    if (this->TimingsLogLevel != vtkm::cont::LogLevel::Off)
+    {
+      VTKM_LOG_S(this->TimingsLogLevel,
+                 std::endl
+                   << "    ------------------- Contour Tree Worklet Timings ----------------------"
+                   << std::endl
+                   << this->TimingsLogString);
+    }
   }
 };
 
