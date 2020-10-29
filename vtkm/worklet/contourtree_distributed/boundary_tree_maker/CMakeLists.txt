@@ -30,9 +30,8 @@ set(headers
   CompressRegularisedNodesTransferVerticesWorklet.h
   CompressRegularisedNodesFillBractSuperarcsWorklet.h
   SetInteriorForestWorklet.h
-  ArraySumFunctor.h
+  SumFunctor.h
   NoSuchElementFunctor.h
-  SelectRangeFunctor.h
   HyperarcComparator.h
   ContourTreeNodeHyperArcComparator.h
   BRACTNodeComparator.h
