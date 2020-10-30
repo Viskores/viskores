@@ -848,9 +848,9 @@ std::string HierarchicalContourTree<FieldType>::PrintTreeStats() const
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "    NumRegularNodesInRound", this->NumRegularNodesInRound, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "    NumSupernodesInRound", this->NumRegularNodesInRound, -1, resultStream);
+    "    NumSupernodesInRound", this->NumSupernodesInRound, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "    NumHypernodesInRound", this->NumRegularNodesInRound, -1, resultStream);
+    "    NumHypernodesInRound", this->NumHypernodesInRound, -1, resultStream);
 
   return resultStream.str();
 } // PrintTreeStats
