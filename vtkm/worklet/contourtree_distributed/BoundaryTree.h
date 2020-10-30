@@ -74,12 +74,12 @@ namespace contourtree_distributed
 ///
 /// A contour tree for boundary vertices with the interior abstracted.
 /// This is primarily a data storage class. The actual constuction of
-/// the BRACT is performed by the BoundaryTreeMaker
-/// (BRACTMaker). As a data store, this class primarily stores a set of
-/// arrays and provides convenience functions for interacting with the
+/// the BoundaryTree performed by the BoundaryTreeMaker
+/// As a data store, this class primarily stores a set of arrays
+/// and provides convenience functions for interacting with the
 /// the data, e.g., to export the data to dot.
 class BoundaryTree
-{ // class BRACT
+{ // class BoundaryTree
 public:
   // for each vertex, we store the index
   vtkm::worklet::contourtree_augmented::IdArrayType VertexIndex;
@@ -121,7 +121,7 @@ public:
   void PrintContent(std::ostream& outStream) const;
   std::string DebugPrint(const char* message, const char* fileName, long lineNum) const;
   inline std::string PrintArraySizes() const;
-};
+}; // class BoundaryTree
 
 
 // prints the contents of the BRACT for comparison with sweep and merge
