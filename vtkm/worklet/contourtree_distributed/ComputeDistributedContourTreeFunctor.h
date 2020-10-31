@@ -120,11 +120,9 @@ public:
     timer.Start();
     std::stringstream timingsStream;
 
-    // Get our DIY id
-    const auto selfid = rp.gid();
-
-    // Get rank (for debug and logging output only)
+    // Get our rank and DIY id
     const vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
+    const auto selfid = rp.gid();
 
     // Here we do the deque first before the send due to the way the iteration is handled in DIY, i.e., in each iteration
     // A block needs to first collect the data from its neighours and then send the combined block to its neighbours
@@ -132,7 +130,6 @@ public:
     // 1. dequeue the block and compute the new contour tree and contour tree mesh for the block if we have the hight GID
     std::vector<int> incoming;
     rp.incoming(incoming);
-    //std::cout << "Incoming size is " << incoming.size() << std::endl;
     // log the time for getting the data from DIY
     timingsStream << "    " << std::setw(38) << std::left << "DIY Incoming Data"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
@@ -143,6 +140,8 @@ public:
     {
       // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
       // If that assumption does not hold, it will break things.
+      // NOTE/IMPORTANT: This assumption only holds if the number of blocks is a power of two.
+      // Otherwise, we may need to process more than one incoming block
       if (ingid != selfid)
       {
         vtkm::Id3 otherBlockOrigin;
@@ -153,22 +152,12 @@ public:
         rp.dequeue(ingid, otherContourTreeMesh);
 
 #ifdef DEBUG_PRINT_CTUD
-        char buffer[256];
-#if 0
-          // FIXME: Delete after debugging
-          std::cout << "Our block has extents: " << block->BlockOrigin << " " << block->BlockSize << std::endl;
-          std::cout << "Received block from " << ingid << " with extents: " << otherBlockOrigin << " " << otherBlockSize << std::endl;
-
-          std::cout << "=================== BEFORE COMBINING =====================" << std::endl;
-          block->ContourTreeMeshes.back().DebugPrint("OUR CTM", __FILE__, __LINE__);
-          otherContourTreeMesh.DebugPrint("OTHER CTM", __FILE__, __LINE__);
-#endif
-#if 0
-          std::snprintf(buffer, sizeof(buffer), "BeforeCombine_MyMesh_ContourTreeMesh_Rank%lld_Round%d.txt", rank, rp.round());
-          block->ContourTreeMeshes.back().Save(buffer);
-          std::snprintf(buffer, sizeof(buffer), "BeforeCombine_Other_ContourTreeMesh_Rank%lld_Round%d.txt", rank, rp.round());
-          otherContourTreeMesh.Save(buffer);
-#endif
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Local block has extents: " << block->BlockOrigin << " " << block->BlockSize
+                                               << std::endl
+                                               << "Combining with block received from ID " << ingid
+                                               << " with extents: " << otherBlockOrigin << " "
+                                               << otherBlockSize << std::endl);
 #endif
 
         // Merge the two contour tree meshes
@@ -176,19 +165,23 @@ public:
           MergeContourTreeMeshFunctor{}, otherContourTreeMesh, block->ContourTreeMeshes.back());
 
 #ifdef DEBUG_PRINT_CTUD
-        std::snprintf(buffer,
-                      sizeof(buffer),
-                      "AfterCombine_ContourTreeMesh_Rank%d_Block%d_Round%d.txt",
-                      static_cast<int>(rank),
-                      static_cast<int>(block->BlockIndex),
-                      rp.round());
-        block->ContourTreeMeshes.back().Save(buffer);
-#if 0
-          // FIXME: Delete after debugging
-          std::cout << "================== AFTER COMBINING =================" << std::endl;
-          std::cout << "OUR CTM" << std::endl;
-          block->ContourTreeMeshes.back().DebugPrint("OUR CTM", __FILE__, __LINE__);
-#endif
+        // save the corresponding .gv file for the contour tree mesh
+        std::string contourTreeMeshFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+          std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
+          std::string("_Step_0_Combined_Mesh.gv");
+        std::string contourTreeMeshLabel = std::string("Block ") +
+          std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
+          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+          std::string(" Step 0 Combined Mesh");
+        std::string contourTreeMeshString =
+          vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
+            contourTreeMeshLabel,
+            block->ContourTreeMeshes.back(),
+            worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
+        std::ofstream contourTreeMeshFile(contourTreeMeshFileName);
+        contourTreeMeshFile << contourTreeMeshString;
 #endif
 
         // Compute the origin and size of the new block
@@ -229,18 +222,59 @@ public:
                     currNumIterations,
                     1, // Fully augmented
                     meshBoundaryExecObj);
-#ifdef DEBUG_PRINT_CTUD
-#if 0
-          // FIXME: Delete after debugging
-          std::cout << "=================== BEGIN: COMBINED CONTOUR TREE =========================" << std::endl;
-          block->ContourTrees.back().PrintContent();
-          std::cout << "=================== END: COMBINED CONTOUR TREE =========================" << std::endl;
-#endif
-#endif
 
         // Update block extents
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
+
+#ifdef DEBUG_PRINT_CTUD
+        /*
+        // TODO: GET THIS COMPILING. NEED TO LIKELY PUT THIS IN A SEPARATE FUNCTION TO GET THE STORAGE TYPE TEMPLATE PARAMETER
+        // TODO/FIXME: At this time we should only be dealing with contour tree meshes and not possibly other mesh types,
+        // and block does not have a Meshes member. Shouldn't this all be ContourTreeMesh instead?
+        // and the ones for the contour tree regular and superstructures
+        std::string regularStructureFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+          std::string("_Step_1_Contour_Tree_Regular_Structure.gv");
+        std::string regularStructureLabel = std::string("Block ") +
+          std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
+          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+          std::string(" Step 1 Contour Tree Regular Structure");
+        std::string regularStructureString =
+                      worklet::contourtree_distributed::ContourTreeDotGraphPrint < FieldType,
+                    MeshType,
+                    vtkm::worklet::contourtree_augmented::IdArrayType()(
+                      regularStructureLabel,
+                      block->Meshes.back(),
+                      block->ContourTrees.back(),
+                      worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE |
+                        worklet::contourtree_distributed::SHOW_ALL_IDS);
+        std::ofstream regularStructureFile(regularStructureFileName);
+        regularStructureFile << regularStructureString;
+
+        std::string superStructureFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+          std::string("_Step_2_Contour_Tree_Super_Structure.gv");
+        std::ofstream superStructureFile(superStructureFileName);
+        superStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint < T,
+          MeshType,
+          vtkm::worklet::contourtree_augmented::IdArrayType()(
+            std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) +
+              " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+              std::string(" Step 2 Contour Tree Super Structure"),
+            block->Meshes.back(),
+            block->ContourTrees.back(),
+            worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE |
+              worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE |
+              worklet::contourtree_distributed::SHOW_ALL_IDS |
+              worklet::contourtree_distributed::SHOW_ALL_SUPERIDS |
+              worklet::contourtree_distributed::SHOW_ALL_HYPERIDS);
+        */
+#endif
 
         // Log the contour tree timiing stats
         VTKM_LOG_S(this->TimingsLogLevel,
@@ -260,6 +294,7 @@ public:
                      << "    DIY Id  : " << selfid << std::endl
                      << "    Round   : " << rp.round() << std::endl
                      << block->ContourTrees.back().PrintArraySizes());
+
       } // end if (ingid != selfid)
     }   // end for
 
@@ -273,91 +308,9 @@ public:
     // last round) then compute contour tree mesh to send and save it.
     if (rp.round() != 0 && rp.out_link().size() != 0)
     {
-#ifdef DEBUG_PRINT_CTUD
-      char buffer[256];
-#if 0
-      std::snprintf(buffer, sizeof(buffer), "CombinedMeshes_GID%d_Round%d.txt", selfid, rp.round());
-      block->ContourTreeMeshes.back().Save(buffer);
-#endif
-#endif
-
       vtkm::Id3 maxIdx{ block->BlockOrigin[0] + block->BlockSize[0] - 1,
                         block->BlockOrigin[1] + block->BlockSize[1] - 1,
                         block->BlockOrigin[2] + block->BlockSize[2] - 1 };
-
-#ifdef DEBUG_PRINT_CTUD
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "BRACTInputCTM_Rank%d_Block%d_Round%d.ctm_txt",
-                    static_cast<int>(rank),
-                    static_cast<int>(block->BlockIndex),
-                    static_cast<int>(block->ContourTreeMeshes.size() - 1));
-      block->ContourTreeMeshes.back().Save(buffer);
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "BRACTComputation_Rank%d_Block%d_Round%d.txt",
-                    static_cast<int>(rank),
-                    static_cast<int>(block->BlockIndex),
-                    rp.round());
-      std::ofstream os(buffer);
-      os << "Block Origin: " << block->BlockOrigin << " Block Size: " << block->BlockSize
-         << " Block MaxIdx: " << maxIdx << std::endl;
-      os << "================= INPUT ===================" << std::endl;
-      os << "+++++++++++++++++ Contour Tree +++++++++++++++++" << std::endl;
-      block->ContourTrees.back().PrintContent(os);
-      os << "+++++++++++++++++ Contour Tree Mesh +++++++++++++++++" << std::endl;
-      block->ContourTreeMeshes.back().PrintContent(os);
-
-      // save the corresponding .gv file for the contour tree mesh
-      for (const int ingid : incoming)
-      {
-        // NOTE/IMPORTANT: In each round we should have only one swap partner (despite for-loop here).
-        std::string contourTreeMeshFileName = std::string("Rank_") +
-          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-          std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
-          std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
-          std::string("_Step_0_Combined_Mesh.gv");
-        std::string contourTreeMeshLabel = std::string("Block ") +
-          std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
-          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
-          std::string(" Step 0 Combined Mesh");
-        std::string contourTreeMeshString =
-          vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
-            contourTreeMeshLabel,
-            block->ContourTreeMeshes.back(),
-            worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
-        std::ofstream contourTreeMeshFile(contourTreeMeshFileName);
-        contourTreeMeshFile << contourTreeMeshString;
-// TODO: GET THIS COMPILING. NEED TO LIKELY PUT THIS IN A SEPARATE FUNCTION TO GET THE STORAGE TYPE TEMPLATE PARAMETER
-#if 0
-        // and the ones for the contour tree regular and superstructures
-        std::string regularStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank))
-            + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex))
-            + "_Round_" + std::to_string(rp.round())
-            + " Partner " + std::to_string(ingid)
-            + std::string("_Step_1_Contour_Tree_Regular_Structure.gv");
-        std::string regularStructureLabel = std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex))
-            + " Round " + std::to_string(rp.round())
-            + " Partner " + std::to_string(ingid)
-            + std::string(" Step 1 Contour Tree Regular Structure");
-        std::string regularStructureString = worklet::contourtree_distributed::ContourTreeDotGraphPrint<FieldType, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType()
-            (regularStructureLabel,
-                          block->Meshes.back(),
-                block->ContourTrees.back(),
-                worklet::contourtree_distributed::SHOW_REGULAR_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS);
-        std::ofstream regularStructureFile(regularStructureFileName);
-        regularStructureFile << regularStructureString;
-
-        std::string superStructureFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string("_Step_2_Contour_Tree_Super_Structure.gv");
-        std::ofstream superStructureFile(superStructureFileName);
-        superStructureFile << worklet::contourtree_distributed::ContourTreeDotGraphPrint<T, MeshType, vtkm::worklet::contourtree_augmented::IdArrayType()
-          (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 2 Contour Tree Super Structure"),
-                block->Meshes.back(),
-                block->ContourTrees.back(),
-                worklet::contourtree_distributed::SHOW_SUPER_STRUCTURE|worklet::contourtree_distributed::SHOW_HYPER_STRUCTURE|worklet::contourtree_distributed::SHOW_ALL_IDS|worklet::contourtree_distributed::SHOW_ALL_SUPERIDS|worklet::contourtree_distributed::SHOW_ALL_HYPERIDS);
-#endif
-      } // end for (const int ingid : incoming) outpyt dot
-#endif
 
       // Compute BRACT
       vtkm::worklet::contourtree_distributed::BoundaryTree boundaryTree;
@@ -377,71 +330,59 @@ public:
       // Construct the BRACT and InteriorForest. Since we are working on a ContourTreeMesh we do
       // not need to provide and IdRelabeler here in order to compute the InteriorForest
       boundaryTreeMaker.Construct();
-#ifdef DEBUG_PRINT_CTUD
-      os << "================= OUTPUT ===================" << std::endl;
-      os << "+++++++++++++++++ BRACT +++++++++++++++++++" << std::endl;
-      os << boundaryTree.DebugPrint("validate", __FILE__, __LINE__);
-      os << "+++++++++++++++++ BRACT Contour Tree Mesh +++++++++++++++++++" << std::endl;
-
-      //char buffer[256];
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "GID %d, Round %d, Block %d, Computed by BRACTMaker",
-                    selfid,
-                    rp.round(),
-                    static_cast<int>(block->BlockIndex));
-      std::string debug_dot = boundaryTree.PrintGlobalDot(buffer, block->ContourTreeMeshes.back());
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "BRACT_Rank%d__Block%d_Round%d.gv",
-                    static_cast<int>(rank),
-                    static_cast<int>(block->BlockIndex),
-                    rp.round());
-      std::ofstream dotStream(buffer);
-      dotStream << debug_dot;
-#endif
       // Construct contour tree mesh from BRACT
       block->ContourTreeMeshes.emplace_back(
         boundaryTree.VertexIndex, boundaryTree.Superarcs, block->ContourTreeMeshes.back());
 
 #ifdef DEBUG_PRINT_CTUD
-      block->ContourTreeMeshes.back().PrintContent(os);
-      //char buffer[256];
-      std::snprintf(buffer,
-                    sizeof(buffer),
-                    "CombinedMeshes_Rank%d_Block%d_Round%lu.ctm_txt",
-                    static_cast<int>(rank),
-                    static_cast<int>(block->BlockIndex),
-                    block->ContourTreeMeshes.size() - 1);
-      block->ContourTreeMeshes.back().Save(buffer);
-
-#if 0
+      /*
+      // TODO: GET THIS COMPILING.
+      // TODO/FIXME: Need to get inggid here somehow
       // save the Boundary Tree as a dot file
-      std::string boundaryTreeFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) + std::string("_Step_3_Boundary_Tree.gv");
+      std::string boundaryTreeFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+        std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
+        std::string("_Step_3_Boundary_Tree.gv");
       std::ofstream boundaryTreeFile(boundaryTreeFileName);
       boundaryTreeFile << vtkm::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint
-        (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 3 Boundary Tree"),
-              block->Meshes.back()],
-              block->BoundaryTrees.back());
+        (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
+         std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+         std::string(" Step 3 Boundary Tree"),
+         block->Meshes.back()],
+         block->BoundaryTrees.back());
 
       // and save the Interior Forest as another dot file
-      std::string interiorForestFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) + std::string("_Step_4_Interior_Forest.gv");
+      std::string interiorForestFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+        std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
+        std::string("_Step_4_Interior_Forest.gv");
       std::ofstream interiorForestFile(interiorForestFileName);
-      interiorForestFileName << InteriorForestDotGraphPrintFile<MeshType>
-        (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 4 Interior Forest"),
-              block->InteriorForests.back(),
-              block->ContourTrees.back(),
-              block->BoundaryTrees.back(),
-              block->Meshes.back());
+      interiorForestFileName << InteriorForestDotGraphPrintFile<MeshType>(
+        std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " +
+          std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+          std::string(" Step 4 Interior Forest"),
+        block->InteriorForests.back(),
+        block->ContourTrees.back(),
+        block->BoundaryTrees.back(),
+        block->Meshes.back());
 
       // save the corresponding .gv file
-      std::string boundaryTreeMeshFileName = std::string("Rank_") + std::to_string(static_cast<int>(rank)) + std::string("_Block_") + std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" + std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) + std::string("_Step_5_Boundary_Tree_Mesh.gv");
+      std::string boundaryTreeMeshFileName = std::string("Rank_") +
+        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+        std::to_string(static_cast<int>(block->BlockIndex)) + "_Round_" +
+        std::to_string(rp.round()) + "_Partner_" + std::to_string(ingid) +
+        std::string("_Step_5_Boundary_Tree_Mesh.gv");
       std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
-      boundaryTreeMeshFile << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>
-        (std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) + " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) + std::string(" Step 5 Boundary Tree Mesh"),
-              block->ContourTreeMeshes.back(),
-              worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
-#endif
+      boundaryTreeMeshFile
+        << vtkm::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
+             std::string("Block ") + std::to_string(static_cast<int>(block->BlockIndex)) +
+               " Round " + std::to_string(rp.round()) + " Partner " + std::to_string(ingid) +
+               std::string(" Step 5 Boundary Tree Mesh"),
+             block->ContourTreeMeshes.back(),
+             worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
+      */
 #endif
 
       // Log the boundary tree size statistics
