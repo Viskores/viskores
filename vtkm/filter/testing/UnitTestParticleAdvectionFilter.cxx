@@ -149,10 +149,6 @@ void TestPartitionedDataSet()
         ds.AddPointField(fieldName, vecField);
       }
 
-      std::cout << "RUN ON: " << std::endl << std::endl;
-      pds.PrintSummary(std::cout);
-      std::cout << std::endl << std::endl << std::endl << std::endl;
-
       vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
       seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
                                                  vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),

@@ -11,7 +11,6 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/GhostCellClassify.h>
 
 namespace vtkm
