@@ -286,6 +286,8 @@ public:
   template <typename T, class Container>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     //this is required to get sort to work with zip handles
     std::less<T> lessOp;
     vtkm::cont::tbb::sort::parallel_sort(values, lessOp);
@@ -295,6 +297,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort(values, binary_compare);
   }
 
@@ -302,6 +306,8 @@ public:
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, std::less<T>());
   }
 
@@ -310,6 +316,8 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, binary_compare);
   }
 
@@ -323,6 +331,8 @@ public:
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
                                BinaryCompare binary_compare)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     vtkm::Id outputSize;
     {
       vtkm::cont::Token token;

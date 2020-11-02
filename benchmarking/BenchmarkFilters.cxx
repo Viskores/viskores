@@ -347,10 +347,11 @@ void BenchContour(::benchmark::State& state)
 {
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(0));
-  const bool mergePoints = static_cast<bool>(state.range(1));
-  const bool normals = static_cast<bool>(state.range(2));
-  const bool fastNormals = static_cast<bool>(state.range(3));
+  const bool isStructured = static_cast<vtkm::Id>(state.range(0));
+  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(1));
+  const bool mergePoints = static_cast<bool>(state.range(2));
+  const bool normals = static_cast<bool>(state.range(3));
+  const bool fastNormals = static_cast<bool>(state.range(4));
 
   vtkm::filter::Contour filter;
   filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::POINTS);
@@ -376,11 +377,14 @@ void BenchContour(::benchmark::State& state)
   filter.SetComputeFastNormalsForUnstructured(fastNormals);
 
   vtkm::cont::Timer timer{ device };
+
+  vtkm::cont::DataSet input = isStructured ? InputDataSet : UnstructuredInputDataSet;
+
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = filter.Execute(InputDataSet);
+    auto result = filter.Execute(input);
     ::benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -390,13 +394,17 @@ void BenchContour(::benchmark::State& state)
 
 void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
 {
-  bm->ArgNames({ "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
+  bm->ArgNames({ "IsStructuredDataSet", "NIsoVals", "MergePts", "GenNormals", "FastNormals" });
 
   auto helper = [&](const vtkm::Id numIsoVals) {
-    bm->Args({ numIsoVals, 0, 0, 0 });
-    bm->Args({ numIsoVals, 1, 0, 0 });
-    bm->Args({ numIsoVals, 0, 1, 0 });
-    bm->Args({ numIsoVals, 0, 1, 1 });
+    bm->Args({ 0, numIsoVals, 0, 0, 0 });
+    bm->Args({ 0, numIsoVals, 1, 0, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 0 });
+    bm->Args({ 0, numIsoVals, 0, 1, 1 });
+    bm->Args({ 1, numIsoVals, 0, 0, 0 });
+    bm->Args({ 1, numIsoVals, 1, 0, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 0 });
+    bm->Args({ 1, numIsoVals, 0, 1, 1 });
   };
 
   helper(1);
@@ -405,7 +413,7 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
 }
 
 // :TODO: Disabled until SIGSEGV in Countour when passings field is resolved
-//VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
 {
@@ -993,25 +1001,21 @@ void InitDataSet(int& argc, char** argv)
     source.SetExtent({ 0 }, { waveletDim - 1 });
 
     InputDataSet = source.Execute();
-
-    vtkm::cont::DataSet input = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet2();
-    vtkm::filter::Triangulate triangulateFilter;
-    triangulateFilter.SetFieldsToPass(
-      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
-    UnstructuredInputDataSet = triangulateFilter.Execute(input);
-  }
-
-
-  if (tetra)
-  {
-    std::cerr << "[InitDataSet] Tetrahedralizing dataset...\n";
-    vtkm::filter::Tetrahedralize tet;
-    tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
-    InputDataSet = tet.Execute(InputDataSet);
   }
 
   FindFields();
   CreateMissingFields();
+
+  std::cerr
+    << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
+  vtkm::filter::Tetrahedralize tet;
+  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
+  UnstructuredInputDataSet = tet.Execute(InputDataSet);
+
+  if (tetra)
+  {
+    InputDataSet = UnstructuredInputDataSet;
+  }
 
   inputGenTimer.Stop();
 

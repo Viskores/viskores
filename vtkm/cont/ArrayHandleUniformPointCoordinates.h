@@ -10,8 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
 namespace vtkm
@@ -33,21 +32,12 @@ template <>
 struct Storage<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>
   : Storage<vtkm::Vec3f, StorageTagUniformPointsSuperclass>
 {
-  using Superclass = Storage<vtkm::Vec3f, StorageTagUniformPointsSuperclass>;
-
-  using Superclass::Superclass;
-};
-
-template <typename Device>
-struct ArrayTransfer<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints, Device>
-  : ArrayTransfer<vtkm::Vec3f, StorageTagUniformPointsSuperclass, Device>
-{
-  using Superclass = ArrayTransfer<vtkm::Vec3f, StorageTagUniformPointsSuperclass, Device>;
-
-  using Superclass::Superclass;
 };
 
 } // namespace internal
+
+template <>
+VTKM_ARRAY_HANDLE_NEW_STYLE(vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints);
 
 /// ArrayHandleUniformPointCoordinates is a specialization of ArrayHandle. It
 /// contains the information necessary to compute the point coordinates in a
@@ -70,7 +60,7 @@ public:
   ArrayHandleUniformPointCoordinates(vtkm::Id3 dimensions,
                                      ValueType origin = ValueType(0.0f, 0.0f, 0.0f),
                                      ValueType spacing = ValueType(1.0f, 1.0f, 1.0f))
-    : Superclass(StorageType(
+    : Superclass(internal::PortalToArrayHandleImplicitBuffers(
         vtkm::internal::ArrayPortalUniformPointCoordinates(dimensions, origin, spacing)))
   {
   }

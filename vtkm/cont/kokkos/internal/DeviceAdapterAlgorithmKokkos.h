@@ -165,6 +165,8 @@ public:
     vtkm::exec::kokkos::internal::TaskBasic1D<WType, IType>& functor,
     vtkm::Id numInstances)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     if (numInstances < 1)
     {
       // No instances means nothing to run. Just return.
@@ -187,6 +189,8 @@ public:
     vtkm::exec::kokkos::internal::TaskBasic3D<WType, IType>& functor,
     vtkm::Id3 rangeMax)
   {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
     if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
     {
       // No instances means nothing to run. Just return.
