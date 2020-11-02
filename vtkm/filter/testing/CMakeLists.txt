@@ -46,7 +46,6 @@ set(unit_tests
   UnitTestMeshQualityFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
-  UnitTestParticleAdvectionFilter.cxx
   UnitTestParticleDensity.cxx
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx
