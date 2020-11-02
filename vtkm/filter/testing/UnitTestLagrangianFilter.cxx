@@ -28,10 +28,6 @@ std::vector<vtkm::cont::DataSet> MakeDataSets()
   const vtkm::Id3 dims(16, 16, 16);
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
 
-  vtkm::Float64 xdiff = (xmax - xmin) / (static_cast<vtkm::Float64>(dims[0] - 1));
-  vtkm::Float64 ydiff = (ymax - ymin) / (static_cast<vtkm::Float64>(dims[1] - 1));
-  vtkm::Float64 zdiff = (zmax - zmin) / (static_cast<vtkm::Float64>(dims[2] - 1));
-
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
 
   for (auto& ds : dataSets)

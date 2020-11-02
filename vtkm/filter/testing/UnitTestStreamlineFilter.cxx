@@ -299,7 +299,10 @@ void TestStreamlineFile(const std::string& fname,
   auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
-  VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
+  if (useSL)
+    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
+  else
+    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");
 
   auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
   auto cPortal = coords.ReadPortal();
