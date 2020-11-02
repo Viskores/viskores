@@ -130,7 +130,8 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
   vtkm::FloatDefault x0 = 0;
   vtkm::FloatDefault x1 = x0 + static_cast<vtkm::FloatDefault>(numDims - 1);
   vtkm::FloatDefault dx = x1 - x0;
-  vtkm::FloatDefault y0 = 0, y1 = numDims - 1, z0 = 0, z1 = numDims - 1;
+  vtkm::FloatDefault y0 = 0, y1 = static_cast<vtkm::FloatDefault>(numDims - 1);
+  vtkm::FloatDefault z0 = 0, z1 = static_cast<vtkm::FloatDefault>(numDims - 1);
 
   if (useGhost)
   {

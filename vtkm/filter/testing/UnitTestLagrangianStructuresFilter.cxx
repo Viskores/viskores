@@ -356,6 +356,15 @@ void Test3DLCS()
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
   for (auto& input : dataSets)
   {
+    using Structured3DType = vtkm::cont::CellSetStructured<3>;
+    using Structured2DType = vtkm::cont::CellSetStructured<2>;
+
+    vtkm::cont::DynamicCellSet cellset = input.GetCellSet();
+
+    //Only structured supported in filter right now.
+    if (!(cellset.IsType<Structured2DType>() || cellset.IsType<Structured3DType>()))
+      continue;
+
     std::vector<vtkm::FloatDefault> diffVec;
     std::vector<vtkm::FloatDefault> visitVec;
     std::vector<vtkm::Vec3f> fieldVec;
