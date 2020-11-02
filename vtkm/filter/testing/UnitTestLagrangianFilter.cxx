@@ -20,11 +20,7 @@ namespace
 
 std::vector<vtkm::cont::DataSet> MakeDataSets()
 {
-  vtkm::Float64 xmin = 0, xmax = 10;
-  vtkm::Float64 ymin = 0, ymax = 10;
-  vtkm::Float64 zmin = 0, zmax = 10;
-
-  vtkm::Bounds bounds(xmin, xmax, ymin, ymax, zmin, zmax);
+  vtkm::Bounds bounds(0, 10, 0, 10, 0, 10);
   const vtkm::Id3 dims(16, 16, 16);
   auto dataSets = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, false);
 
