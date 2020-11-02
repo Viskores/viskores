@@ -246,6 +246,27 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
   }
 }
 
+template <typename CellSetType, typename CoordsType>
+void ValidateEndPoints(const CellSetType& cellSet,
+                       const CoordsType& coords,
+                       vtkm::Id numPoints,
+                       const std::vector<vtkm::Vec3f>& endPts)
+{
+  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
+  auto cPortal = coords.ReadPortal();
+
+  for (vtkm::Id i = 0; i < numPoints; i++)
+  {
+    vtkm::Id numPts = cellSet.GetNumberOfPointsInCell(i);
+    std::vector<vtkm::Id> ids(static_cast<std::size_t>(numPts));
+    cellSet.GetCellPointIds(i, ids.data());
+
+    vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
+    vtkm::Vec3f pt = cPortal.Get(ids[ids.size() - 1]);
+    VTKM_TEST_ASSERT(vtkm::Magnitude(pt - e) <= eps, "Particle advection point is wrong");
+  }
+}
+
 void TestStreamlineFile(const std::string& fname,
                         const std::vector<vtkm::Vec3f>& pts,
                         vtkm::FloatDefault stepSize,
@@ -299,24 +320,18 @@ void TestStreamlineFile(const std::string& fname,
   auto coords = output.GetCoordinateSystem().GetDataAsMultiplexer();
   vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numPoints, "Wrong number of cells");
+
   if (useSL)
-    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
-  else
-    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");
-
-  auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
-  auto cPortal = coords.ReadPortal();
-  const vtkm::FloatDefault eps = static_cast<vtkm::FloatDefault>(1e-3);
-
-  for (vtkm::Id i = 0; i < numPoints; i++)
   {
-    vtkm::Id numPts = cells.GetNumberOfPointsInCell(i);
-    std::vector<vtkm::Id> ids(static_cast<std::size_t>(numPts));
-    cells.GetCellPointIds(i, ids.data());
-
-    vtkm::Vec3f e = endPts[static_cast<std::size_t>(i)];
-    vtkm::Vec3f pt = cPortal.Get(ids[ids.size() - 1]);
-    VTKM_TEST_ASSERT(vtkm::Magnitude(pt - e) <= eps, "Particle advection point is wrong");
+    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type");
+    auto cells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+    ValidateEndPoints(cells, coords, numPoints, endPts);
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetSingleType<>>(), "Wrong cell type");
+    auto cells = dcells.Cast<vtkm::cont::CellSetSingleType<>>();
+    ValidateEndPoints(cells, coords, numPoints, endPts);
   }
 }
 
