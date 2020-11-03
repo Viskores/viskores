@@ -722,6 +722,11 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   std::vector<vtkmdiy::Link*> localLinks(static_cast<std::vector<vtkmdiy::Link>::size_type>(
     input.GetNumberOfPartitions())); // dummy links needed to make DIY happy
+
+  timingsStream << "    " << std::setw(38) << std::left << "Compute Block Ids and Local Links"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // 1.2.2 Add my local blocks to the vtkmdiy master.
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
@@ -730,6 +735,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                localDataBlocks[bi],
                localLinks[bi]);
   }
+
+  timingsStream << "    " << std::setw(38) << std::left << "Add Data Blocks to DIY"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   // 1.2.3 Define the decomposition of the domain into regular blocks
   vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
@@ -746,8 +755,16 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                       static_cast<int>(vtkmdiyLocalBlockGids[static_cast<size_t>(bi)]));
   }
 
+  timingsStream << "    " << std::setw(38) << std::left << "Create DIY Decomposer and Assigner"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // 1.2.4  Fix the vtkmdiy links.
   vtkmdiy::fix_links(master, assigner);
+
+  timingsStream << "    " << std::setw(38) << std::left << "Fix DIY Links"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   // partners for merge over regular block grid
   vtkmdiy::RegularSwapPartners partners(
@@ -756,7 +773,7 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     true        // contiguous: true=distance doubling , false=distnace halving TODO check this value
   );
 
-  timingsStream << "    " << std::setw(38) << std::left << "Setup DIY for Fan In"
+  timingsStream << "    " << std::setw(38) << std::left << "Create DIY Swap Partners"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
