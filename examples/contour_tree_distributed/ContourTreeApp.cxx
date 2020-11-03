@@ -355,9 +355,6 @@ int main(int argc, char* argv[])
 #endif
                  << "    nblocks=" << numBlocks << std::endl);
   }
-  currTime = totalTime.GetElapsedTime();
-  vtkm::Float64 startUpTime = currTime - prevTime;
-  prevTime = currTime;
 
   // Redirect stdout to file if we are using MPI with Debugging
   //#ifdef DEBUG_PRINT
@@ -399,7 +396,16 @@ int main(int argc, char* argv[])
     return 255;
   }
 
-  //#endif
+  // Measure our time for startup
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 startUpTime = currTime - prevTime;
+  prevTime = currTime;
+
+  // Make sure that all ranks have started up before we start the data read
+  MPI_Barrier(comm);
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 startUpSyncTime = currTime - prevTime;
+  prevTime = currTime;
 
   ///////////////////////////////////////////////
   // Read the input data
@@ -592,6 +598,10 @@ int main(int argc, char* argv[])
         }
       }
 
+      currTime = totalTime.GetElapsedTime();
+      dataReadTime = currTime - prevTime;
+      prevTime = currTime;
+
       // Create vtk-m data set
       vtkm::cont::DataSetBuilderUniform dsb;
       vtkm::cont::DataSet ds;
@@ -668,10 +678,6 @@ int main(int argc, char* argv[])
 #endif
       }
     }
-
-    currTime = totalTime.GetElapsedTime();
-    dataReadTime = currTime - prevTime;
-    prevTime = currTime;
 
     // Print the mesh metadata
     if (rank == 0)
@@ -891,6 +897,12 @@ int main(int argc, char* argv[])
   buildDatasetTime = currTime - prevTime;
   prevTime = currTime;
 
+  // Make sure that all ranks have started up before we start the data read
+  MPI_Barrier(comm);
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 dataReadSyncTime = currTime - prevTime;
+  prevTime = currTime;
+
   // Convert the mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeUniformDistributed filter(blocksPerDim,
                                                      globalSize,
@@ -908,6 +920,12 @@ int main(int argc, char* argv[])
 
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
+  prevTime = currTime;
+
+  // Make sure that all ranks have started up before we start the data read
+  MPI_Barrier(comm);
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 postFilterSyncTime = currTime - prevTime;
   prevTime = currTime;
 
   /*
@@ -981,12 +999,18 @@ int main(int argc, char* argv[])
                << " -----------------------------" << std::endl
                << std::setw(42) << std::left << "    Start-up"
                << ": " << startUpTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Start-up Sync"
+               << ": " << startUpSyncTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Data Read"
                << ": " << dataReadTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Build VTKM Dataset"
                << ": " << buildDatasetTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Data Read/Build Sync"
+               << ": " << dataReadSyncTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Compute Contour Tree"
                << ": " << computeContourTreeTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Post filter Sync"
+               << ": " << postFilterSyncTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Save Tree Compiler Data"
                << ": " << saveTreeCompilerDataTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Total Time"
