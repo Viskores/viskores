@@ -197,7 +197,8 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
         VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
         explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
 
-        vtkm::FloatDefault xMax = bounds[static_cast<std::size_t>(i)].X.Max;
+        vtkm::FloatDefault xMax =
+          static_cast<vtkm::FloatDefault>(bounds[static_cast<std::size_t>(i)].X.Max);
         if (useGhost)
           xMax = xMax - 1;
         vtkm::Range xMaxRange(xMax, xMax + static_cast<vtkm::FloatDefault>(.5));
@@ -230,7 +231,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, bool useSL)
       VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
 
-      vtkm::FloatDefault xMax = bounds[bounds.size() - 1].X.Max;
+      vtkm::FloatDefault xMax = static_cast<vtkm::FloatDefault>(bounds[bounds.size() - 1].X.Max);
       if (useGhost)
         xMax = xMax - 1;
       vtkm::Range xMaxRange(xMax, xMax + static_cast<vtkm::FloatDefault>(.5));
