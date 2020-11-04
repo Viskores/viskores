@@ -342,6 +342,10 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   // save the regular structure
   if (this->SaveDotFiles)
   {
+    // Time execution
+    vtkm::cont::Timer timer;
+    timer.Start();
+    // Get the rank
     vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
 
     // Save the BRACT dot for debug
@@ -456,6 +460,12 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
           &localToGlobalIdRelabeler,
           field);
       interiorForestFile << interiorForestString << std::endl;
+
+      // Log timing statistics
+      VTKM_LOG_S(this->TimingsLogLevel,
+                 std::endl
+                   << "    " << std::setw(38) << std::left << "ComputeLocalTree Save Dot"
+                   << ": " << timer.GetElapsedTime() << " seconds");
     }
   } // if (this->SaveDotFiles)
 } // ContourTreeUniformDistributed::ComputeLocalTreeImpl
@@ -662,9 +672,16 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                                                         sortOrder,
                                                         fieldData,
                                                         localGlobalMeshIndex);
+  } // for
 
-    // ... save for debugging in text and .gv/.dot format
-    if (this->SaveDotFiles)
+  timingsStream << "    " << std::setw(38) << std::left << "Compute Block Data for Fan In"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
+  // ... save for debugging in text and .gv/.dot format
+  if (this->SaveDotFiles)
+  {
+    for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
     {
       // save the contour tree mesh
       std::string contourTreeMeshFileName = std::string("Rank_") +
@@ -683,10 +700,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                std::string(" Initial Step 5 BRACT Mesh"),
              localDataBlocks[bi]->ContourTreeMeshes.back(),
              worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
-    } // if(SaveDotFiles)
-  }   // for
+    } // for
+  }   // // if(SaveDotFiles)
 
-  timingsStream << "    " << std::setw(38) << std::left << "Compute Block Data for Fan In"
+  timingsStream << "    " << std::setw(38) << std::left << "Save block data for debug"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
   timer.Start();
 
