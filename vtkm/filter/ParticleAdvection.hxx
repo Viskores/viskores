@@ -29,7 +29,6 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ParticleAdvection::ParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<ParticleAdvection>()
-  , Worklet()
 {
 }
 

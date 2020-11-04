@@ -38,9 +38,6 @@ public:
     , Eval(nullptr)
     , ID(id)
   {
-    const vtkm::cont::DynamicCellSet& cells = ds.GetCellSet();
-    const vtkm::cont::CoordinateSystem& coords = ds.GetCoordinateSystem();
-
     auto fieldData = this->ActiveField.GetData();
     FieldHandle fieldArray;
 
@@ -49,7 +46,7 @@ public:
     else
       vtkm::cont::ArrayCopy(fieldData.ResetTypes<vtkm::TypeListFieldVec3>(), fieldArray);
 
-    this->Eval = std::shared_ptr<GridEvalType>(new GridEvalType(coords, cells, fieldArray));
+    this->Eval = std::shared_ptr<GridEvalType>(new GridEvalType(ds, fieldArray));
   }
 
   vtkm::Id GetID() const { return this->ID; }

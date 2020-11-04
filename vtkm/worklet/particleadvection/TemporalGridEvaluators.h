@@ -57,7 +57,7 @@ public:
   VTKM_EXEC
   bool IsWithinTemporalBoundary(const vtkm::FloatDefault time) const
   {
-    return time >= TimeOne && time <= TimeTwo;
+    return time >= this->TimeOne && time <= this->TimeTwo;
   }
 
   VTKM_EXEC
@@ -85,10 +85,10 @@ public:
     }
 
     vtkm::VecVariable<Point, 2> e1, e2;
-    status = this->EvaluatorOne.Evaluate(particle, e1);
+    status = this->EvaluatorOne.Evaluate(particle, time, e1);
     if (status.CheckFail())
       return status;
-    status = this->EvaluatorTwo.Evaluate(particle, e2);
+    status = this->EvaluatorTwo.Evaluate(particle, time, e2);
     if (status.CheckFail())
       return status;
 
