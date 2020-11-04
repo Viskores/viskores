@@ -114,9 +114,9 @@ public:
   ) const
   {
     // Track timing of main steps
-    vtkm::cont::Timer totalTimer;
+    vtkm::cont::Timer totalTimer; // Total time for each call
     totalTimer.Start();
-    vtkm::cont::Timer timer;
+    vtkm::cont::Timer timer; // Time individual steps
     timer.Start();
     std::stringstream timingsStream;
 
@@ -144,12 +144,20 @@ public:
       // Otherwise, we may need to process more than one incoming block
       if (ingid != selfid)
       {
+        vtkm::cont::Timer loopTimer; // time the steps of this loop
+        loopTimer.Start();
+
         vtkm::Id3 otherBlockOrigin;
         rp.dequeue(ingid, otherBlockOrigin);
         vtkm::Id3 otherBlockSize;
         rp.dequeue(ingid, otherBlockSize);
         vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> otherContourTreeMesh;
         rp.dequeue(ingid, otherContourTreeMesh);
+
+        timingsStream << "      Subphase of Merge Block" << std::endl;
+        timingsStream << "        |-->" << std::setw(38) << std::left << "DIY Deque Data"
+                      << ": " << loopTimer.GetElapsedTime() << " seconds" << std::endl;
+        loopTimer.Start();
 
 #ifdef DEBUG_PRINT_CTUD
         VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -163,6 +171,10 @@ public:
         // Merge the two contour tree meshes
         vtkm::cont::TryExecute(
           MergeContourTreeMeshFunctor{}, otherContourTreeMesh, block->ContourTreeMeshes.back());
+
+        timingsStream << "        |-->" << std::setw(38) << std::left << "Merge Contour Tree Mesh"
+                      << ": " << loopTimer.GetElapsedTime() << " seconds" << std::endl;
+        loopTimer.Start();
 
 #ifdef DEBUG_PRINT_CTUD
         // save the corresponding .gv file for the contour tree mesh
@@ -182,6 +194,10 @@ public:
             worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
         std::ofstream contourTreeMeshFile(contourTreeMeshFileName);
         contourTreeMeshFile << contourTreeMeshString;
+        timingsStream << "        |-->" << std::setw(38) << std::left
+                      << "Save Contour Tree Mesh Dot"
+                      << ": " << loopTimer.GetElapsedTime() << " seconds" << std::endl;
+        loopTimer.Start();
 #endif
 
         // Compute the origin and size of the new block
@@ -226,6 +242,11 @@ public:
         // Update block extents
         block->BlockOrigin = currBlockOrigin;
         block->BlockSize = currBlockSize;
+
+        timingsStream << "        |-->" << std::setw(38) << std::left
+                      << "Compute Joint Contour Tree"
+                      << ": " << loopTimer.GetElapsedTime() << " seconds" << std::endl;
+        loopTimer.Start();
 
 #ifdef DEBUG_PRINT_CTUD
         /*
@@ -299,7 +320,7 @@ public:
     }   // end for
 
     // log the time needed to compute the local contour tree
-    timingsStream << "    " << std::setw(38) << std::left << "Compute Contour Tree"
+    timingsStream << "    " << std::setw(38) << std::left << "Merge Block (Compute Joint Tree)"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
