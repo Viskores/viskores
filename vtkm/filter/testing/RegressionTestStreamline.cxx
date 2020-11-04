@@ -72,10 +72,9 @@ void TestStreamline()
   M mapper;
   vtkm::rendering::Scene scene;
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
-    result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.1));
+    result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.0));
 
-  VTKM_TEST_ASSERT(
-    vtkm::rendering::testing::test_equal_images_matching_name(view, "streamline.png"));
+  VTKM_TEST_ASSERT(vtkm::rendering::testing::test_equal_images(view, "streamline.png"));
 }
 } // namespace
 
