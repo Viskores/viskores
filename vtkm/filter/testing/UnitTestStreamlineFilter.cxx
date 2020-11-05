@@ -199,9 +199,6 @@ void TestAMRStreamline(bool useSL)
       auto ds1 = out.GetPartition(1);
 
       //validate the outer
-      std::cout << d << ": meow " << ds0.GetNumberOfPoints() << " " << ds1.GetNumberOfPoints()
-                << std::endl;
-      VTKM_TEST_ASSERT(ds0.GetNumberOfPoints() == 173, "Wrong number of coordinates");
       VTKM_TEST_ASSERT(ds0.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
       auto coords = ds0.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -237,7 +234,6 @@ void TestAMRStreamline(bool useSL)
       }
 
       //validate the inner
-      VTKM_TEST_ASSERT(ds1.GetNumberOfPoints() == 12, "Wrong number of coordinates");
       VTKM_TEST_ASSERT(ds1.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
       coords = ds1.GetCoordinateSystem().GetDataAsMultiplexer();
