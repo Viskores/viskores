@@ -508,10 +508,6 @@ void TestStreamlineFile(const std::string& fname,
 
 void TestStreamlineFilters()
 {
-  TestAMRStreamline(true);
-
-  return;
-
   std::vector<bool> flags = { true, false };
   for (int n = 1; n < 3; n++)
   {
@@ -522,8 +518,8 @@ void TestStreamlineFilters()
 
   TestStreamline();
   TestPathline();
-  TestAMRStreamline(true);
-  TestAMRStreamline(false);
+  for (auto useSL : flags)
+    TestAMRStreamline(useSL);
 
   //Fusion test.
   std::vector<vtkm::Vec3f> fusionPts, fusionEndPts;
