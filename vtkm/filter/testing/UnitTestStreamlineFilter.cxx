@@ -14,10 +14,7 @@
 #include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/testing/GenerateTestDataSets.h>
-
-#include <vtkm/io/VTKDataSetWriter.h>
 
 namespace
 {
@@ -202,6 +199,8 @@ void TestAMRStreamline(bool useSL)
       auto ds1 = out.GetPartition(1);
 
       //validate the outer
+      std::cout << d << ": meow " << ds0.GetNumberOfPoints() << " " << ds1.GetNumberOfPoints()
+                << std::endl;
       VTKM_TEST_ASSERT(ds0.GetNumberOfPoints() == 173, "Wrong number of coordinates");
       VTKM_TEST_ASSERT(ds0.GetNumberOfCoordinateSystems() == 1,
                        "Wrong number of coordinate systems in the output dataset");
