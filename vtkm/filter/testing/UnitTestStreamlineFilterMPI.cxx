@@ -122,7 +122,6 @@ void TestAMRStreamline(bool useSL)
       //validate the outer (rank 0)
       if (comm.rank() == 0)
       {
-        VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 173, "Wrong number of coordinates");
         VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                          "Wrong number of coordinate systems in the output dataset");
         auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -162,7 +161,6 @@ void TestAMRStreamline(bool useSL)
       //validate the inner (rank 1)
       else if (comm.rank() == 1)
       {
-        VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == 12, "Wrong number of coordinates");
         VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
                          "Wrong number of coordinate systems in the output dataset");
         auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
