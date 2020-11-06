@@ -10,8 +10,8 @@ import operator
 # Read a 3D text file from disk into a NumPy array
 # ... Plain text
 def read_file(fn):
-    data = np.fromfile(fn, dtype=np.int, sep=" ")
-    data = data[3:].reshape((data[2],data[0],data[1]))
+    data = np.fromfile(fn, dtype=np.float, sep=" ")
+    data = data[3:].reshape((int(data[2]),int(data[0]),int(data[1])))
     return data
 
 # ... VisItBOV
@@ -82,9 +82,9 @@ else:
 
 # Python order is slice, row, col
 # Compute split points
-split_points_s = split_points(data.shape[0], n_blocks[0])
-split_points_r = split_points(data.shape[1], n_blocks[1])
-split_points_c = split_points(data.shape[2], n_blocks[2])
+split_points_s = split_points(data.shape[0], n_blocks[2])
+split_points_r = split_points(data.shape[1], n_blocks[0])
+split_points_c = split_points(data.shape[2], n_blocks[1])
 
 # Create the file that records the slice values
 slice_filename = name + '_slices.txt'
@@ -93,9 +93,9 @@ slice_filename = name + '_slices.txt'
 block_no = 0
 for block_index_s, (s_start, s_stop) in enumerate(zip(split_points_s, split_points_s[1:])):
     for block_index_r, (r_start, r_stop) in enumerate(zip(split_points_r, split_points_r[1:])):
-        for block_index_c, (c_start, c_stop) in enumerate(zip(split_points_c, split_points_c[)1:]):
+        for block_index_c, (c_start, c_stop) in enumerate(zip(split_points_c, split_points_c[1:])):
             n_s = s_stop - s_start + 1
             n_r = r_stop - r_start + 1
             n_c = c_stop - c_start + 1
-            save_piece(out_filename_pattern % block_no, data, (r_start, c_start, s_start), (block_index_r, block_index_c, block_index_s), (n_r, n_c, n_s))
+            save_piece(out_filename_pattern % block_no, data, (r_start, c_start, s_start), n_blocks, (block_index_r, block_index_c, block_index_s), (n_r, n_c, n_s))
             block_no += 1
