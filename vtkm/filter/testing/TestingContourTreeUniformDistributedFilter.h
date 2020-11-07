@@ -286,7 +286,10 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
-                                                     useMarchingCubes);
+                                                     useMarchingCubes,
+                                                     false,
+                                                     vtkm::cont::LogLevel::UserVerboseLast,
+                                                     vtkm::cont::LogLevel::UserVerboseLast);
   filter.SetActiveField(fieldName);
   auto result = filter.Execute(pds);
 
