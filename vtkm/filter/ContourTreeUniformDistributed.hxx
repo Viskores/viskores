@@ -291,6 +291,8 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   MeshType& mesh,
   MeshBoundaryExecType& meshBoundaryExecObject)
 {
+  vtkm::cont::Timer timer;
+  timer.Start();
   // We always need to compute the fully augmented contour tree for our local data block
   const unsigned int compRegularStruct = 1;
 
@@ -311,13 +313,20 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
                << std::endl
                << "    Block Index : " << blockIndex << std::endl
                << worklet.TimingsLogString);
-
+  VTKM_LOG_S(this->TimingsLogLevel,
+             std::endl
+               << "    "
+                  "ComputeLocalTree ContourTree (blockIndex="
+               << blockIndex << ") "
+               << ": " << timer.GetElapsedTime() << " seconds");
+  timer.Start();
   // Now we compute the BRACT for our data block. We do this here because we know the MeshType
   // here and we don't need to store the mesh separately any more since it is stored in the BRACT
 
   // Get the mesh information needed to create an IdRelabeler to relable local to global ids
   // Create an IdRelabeler since we are using a DataSetMesh type here, we don't need
   // the IdRelabeler for the BRACT construction when we are using a ContourTreeMesh.
+
   auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
     this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(blockIndex),
     this->MultiBlockSpatialDecomposition.LocalBlockSizes.ReadPortal().Get(blockIndex),
@@ -335,16 +344,20 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
     );
   // Execute the BRACT construction, including the compute of the InteriorForest
   boundaryTreeMaker.Construct(&localToGlobalIdRelabeler);
-
+  // Log timing statistics
+  VTKM_LOG_S(this->TimingsLogLevel,
+             std::endl
+               << "    "
+                  "ComputeLocalTree BoundaryTreeMaker (blockIndex="
+               << blockIndex << ") "
+               << ": " << timer.GetElapsedTime() << " seconds");
+  timer.Start();
 
   // At this point, I'm reasonably certain that the contour tree has been computed regardless of data push/pull
   // So although it might be logical to print things out earlier, I'll do it here
   // save the regular structure
   if (this->SaveDotFiles)
   {
-    // Time execution
-    vtkm::cont::Timer timer;
-    timer.Start();
     // Get the rank
     vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
 
@@ -839,6 +852,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       vtkm::filter::contourtree_distributed_detail::SaveAfterFanInResults(
         blockData, rank, this->TreeLogLevel);
 #endif
+      vtkm::cont::Timer iterationTimer;
+      iterationTimer.Start();
       std::stringstream fanoutTimingsStream;
 
       // Fan out
@@ -856,7 +871,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
           blockData, hierarchicalTree, rank, nRounds);
       } // if(this->SaveDotFiles)
 
-      vtkm::cont::Timer iterationTimer;
+      fanoutTimingsStream << "    Fan Out Init Hierarchical Tree (block=" << blockData->BlockIndex
+                          << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
+      iterationTimer.Start();
+
       for (auto round = nRounds - 1; round > 0; round--)
       {
         iterationTimer.Start();
