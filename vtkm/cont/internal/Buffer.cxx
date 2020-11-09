@@ -642,7 +642,7 @@ vtkm::cont::internal::BufferMetaData* Buffer::GetMetaData() const
   return this->Internals->MetaData.get();
 }
 
-void Buffer::SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata)
+void Buffer::SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata) const
 {
   this->Internals->MetaData = std::move(metadata);
 }

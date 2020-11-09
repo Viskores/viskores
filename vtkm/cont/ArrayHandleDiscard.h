@@ -88,111 +88,57 @@ struct VTKM_ALWAYS_EXPORT StorageTagDiscard
 {
 };
 
-template <typename ValueType_>
-class Storage<ValueType_, StorageTagDiscard>
+struct VTKM_CONT_EXPORT BufferMetaDataDiscard : vtkm::cont::internal::BufferMetaData
 {
-public:
-  using ValueType = ValueType_;
-  using PortalType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
-  using PortalConstType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
+  vtkm::Id NumberOfValues = 0;
 
-  VTKM_CONT
-  Storage() {}
+  VTKM_CONT ~BufferMetaDataDiscard() override;
 
-  VTKM_CONT
-  PortalType GetPortal() { return PortalType(this->NumberOfValues); }
-
-  VTKM_CONT
-  PortalConstType GetPortalConst() { return PortalConstType(this->NumberOfValues); }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
-
-  VTKM_CONT
-  void Allocate(vtkm::Id numValues) { this->NumberOfValues = numValues; }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numValues) { this->NumberOfValues = numValues; }
-
-  VTKM_CONT
-  void ReleaseResources() { this->NumberOfValues = 0; }
-
-private:
-  vtkm::Id NumberOfValues;
+  VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
 };
 
-template <typename ValueType_, typename DeviceAdapter_>
-class ArrayTransfer<ValueType_, StorageTagDiscard, DeviceAdapter_>
+VTKM_CONT_EXPORT vtkm::cont::internal::BufferMetaDataDiscard* GetDiscardMetaData(
+  const vtkm::cont::internal::Buffer& buffer);
+
+template <typename ValueType>
+class Storage<ValueType, StorageTagDiscard>
 {
-  using StorageTag = StorageTagDiscard;
-  using StorageType = Storage<ValueType_, StorageTag>;
-
 public:
-  using ValueType = ValueType_;
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-  using PortalExecution = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
-  using PortalConstExecution = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
+  using WritePortalType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
 
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : Internal(storage)
+  // Note that this portal is write-only, so you will probably run into problems if
+  // you actually try to use this read portal.
+  using ReadPortalType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag,
+                                      vtkm::cont::Token&)
   {
+    VTKM_ASSERT(numValues >= 0);
+    vtkm::cont::internal::GetDiscardMetaData(buffers[0])->NumberOfValues = numValues;
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    VTKM_ASSERT(this->Internal != nullptr);
-    return this->Internal->GetNumberOfValues();
+    return vtkm::cont::internal::GetDiscardMetaData(buffers[0])->NumberOfValues;
   }
 
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer*,
+                                                   vtkm::cont::DeviceAdapterId,
+                                                   vtkm::cont::Token&)
   {
-    throw vtkm::cont::ErrorBadValue("Input access not supported: "
-                                    "Cannot read from an ArrayHandleDiscard.");
+    throw vtkm::cont::ErrorBadValue("Cannot read from ArrayHandleDiscard.");
   }
 
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId,
+                                                     vtkm::cont::Token&)
   {
-    throw vtkm::cont::ErrorBadValue("InPlace access not supported: "
-                                    "Cannot read from an ArrayHandleDiscard.");
+    return WritePortalType(GetNumberOfValues(buffers));
   }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numValues, vtkm::cont::Token&)
-  {
-    VTKM_ASSERT(this->Internal != nullptr);
-    this->Internal->Allocate(numValues);
-    return PortalConstExecution(this->Internal->GetNumberOfValues());
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* storage) const
-  {
-    VTKM_ASSERT(storage == this->Internal);
-    (void)storage;
-    // no-op
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id numValues)
-  {
-    VTKM_ASSERT(this->Internal != nullptr);
-    this->Internal->Shrink(numValues);
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    VTKM_ASSERT(this->Internal != nullptr);
-    this->Internal->ReleaseResources();
-  }
-
-private:
-  StorageType* Internal;
 };
 
 template <typename ValueType_>
@@ -204,6 +150,10 @@ struct ArrayHandleDiscardTraits
 };
 
 } // end namespace internal
+
+// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
+template <typename T>
+VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagDiscard);
 
 /// ArrayHandleDiscard is a write-only array that discards all data written to
 /// it. This can be used to save memory when a filter provides optional outputs
