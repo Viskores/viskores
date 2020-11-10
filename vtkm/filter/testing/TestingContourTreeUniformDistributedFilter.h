@@ -286,7 +286,11 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
-                                                     true, // use boundary extream only
+                                                     // Freudenthal: Only use boundary extrema
+                                                     // MC: use all points on boundary
+                                                     // TODO/FIXME: Figure out why MC does not
+                                                     // work when only using boundary extrema
+                                                     !useMarchingCubes,
                                                      useMarchingCubes,
                                                      false,
                                                      vtkm::cont::LogLevel::UserVerboseLast,
