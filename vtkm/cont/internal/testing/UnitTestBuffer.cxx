@@ -25,7 +25,7 @@ using PortalTypeConst = vtkm::cont::internal::ArrayPortalFromIterators<const T*>
 
 struct TestMetaData
 {
-  vtkm::Id Value;
+  vtkm::Id Value = 0;
 };
 
 constexpr vtkm::Id METADATA_VALUE = 42;
