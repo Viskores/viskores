@@ -142,6 +142,8 @@ public:
           break; // [1] - 1, [0]
         default:
           //throw vtkm::cont::ErrorBadValue("Bad edgeNo case"); // std::abort(); CUDA does not allow abort or exceptions
+          nbrSortIndex =
+            -1; // Just here to keep the compiler happy  // TODO FIXME How can we abort here on the device?
           break;
       }
 
