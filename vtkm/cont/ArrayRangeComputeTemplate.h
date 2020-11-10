@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_ArrayRangeCompute_hxx
-#define vtk_m_cont_ArrayRangeCompute_hxx
+#ifndef vtk_m_cont_ArrayRangeComputeTemplate_h
+#define vtk_m_cont_ArrayRangeComputeTemplate_h
 
 #include <vtkm/cont/ArrayRangeCompute.h>
 
@@ -154,4 +154,4 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ArrayRangeCompute_hxx
+#endif //vtk_m_cont_ArrayRangeComputeTemplate_h
