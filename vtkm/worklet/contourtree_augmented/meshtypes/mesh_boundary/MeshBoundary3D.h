@@ -141,7 +141,8 @@ public:
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
           break; // [1] - 1, [0]
         default:
-          std::abort();
+          //throw vtkm::cont::ErrorBadValue("Bad edgeNo case"); // std::abort(); CUDA does not allow abort or exceptions
+          break;
       }
 
       bool currIsInUpperLink = (nbrSortIndex > sortIndex);
