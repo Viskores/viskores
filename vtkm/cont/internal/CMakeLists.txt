@@ -12,7 +12,6 @@ set(headers
   ArrayHandleExecutionManager.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h
-  ArrayPortalCheck.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
@@ -33,6 +32,7 @@ set(headers
   ReverseConnectivityBuilder.h
   StorageError.h
   TransferInfo.h
+  Variant.h
   VirtualObjectTransfer.h
   VirtualObjectTransferInstantiate.h
   VirtualObjectTransferShareWithControl.h

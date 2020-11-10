@@ -14,6 +14,5 @@ set(unit_tests
   UnitTestConfigureFor32.cxx
   UnitTestConfigureFor64.cxx
   #UnitTestFunctionInterface.cxx #FIXME
-  UnitTestVariant.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

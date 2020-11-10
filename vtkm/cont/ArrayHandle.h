@@ -34,7 +34,6 @@
 #include <vector>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
-#include <vtkm/cont/internal/ArrayPortalCheck.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/Buffer.h>
 
@@ -296,9 +295,8 @@ public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
   using ValueType = T;
   using StorageTag = StorageTag_;
-  using WritePortalType = vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalType>;
-  using ReadPortalType =
-    vtkm::cont::internal::ArrayPortalCheck<typename StorageType::PortalConstType>;
+  using WritePortalType = typename StorageType::PortalType;
+  using ReadPortalType = typename StorageType::PortalConstType;
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {

@@ -194,8 +194,7 @@ typename ArrayHandle<T, S>::ReadPortalType ArrayHandle<T, S>::ReadPortal() const
     this->SyncControlArray(lock, token);
     if (this->Internals->IsControlArrayValid(lock))
     {
-      return ReadPortalType(this->Internals->GetControlArrayValidPointer(lock),
-                            this->Internals->GetControlArray(lock)->GetPortalConst());
+      return ReadPortalType(this->Internals->GetControlArray(lock)->GetPortalConst());
     }
     else
     {
@@ -223,8 +222,7 @@ typename ArrayHandle<T, S>::WritePortalType ArrayHandle<T, S>::WritePortal() con
       // array will become invalid. Play it safe and release the execution
       // resources. (Use the const version to preserve the execution array.)
       this->ReleaseResourcesExecutionInternal(lock, token);
-      return WritePortalType(this->Internals->GetControlArrayValidPointer(lock),
-                             this->Internals->GetControlArray(lock)->GetPortal());
+      return WritePortalType(this->Internals->GetControlArray(lock)->GetPortal());
     }
     else
     {

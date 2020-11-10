@@ -13,12 +13,13 @@
 #include <vtkm/Assert.h>
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/internal/Variant.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+
+#include <vtkm/cont/internal/Variant.h>
+#include <vtkm/exec/internal/Variant.h>
 
 namespace vtkm
 {
@@ -88,7 +89,7 @@ private:
 template <typename... PortalTypes>
 struct ArrayPortalMultiplexer
 {
-  using PortalVariantType = vtkm::internal::Variant<PortalTypes...>;
+  using PortalVariantType = vtkm::exec::internal::Variant<PortalTypes...>;
   PortalVariantType PortalVariant;
 
   using ValueType = typename PortalVariantType::template TypeAt<0>::ValueType;
@@ -209,7 +210,8 @@ private:
   template <typename S>
   using StorageToPortalConstControl = typename StorageToArrayHandle<S>::ReadPortalType;
 
-  using ArrayHandleVariantType = vtkm::internal::Variant<StorageToArrayHandle<StorageTags>...>;
+  using ArrayHandleVariantType =
+    vtkm::cont::internal::Variant<StorageToArrayHandle<StorageTags>...>;
   ArrayHandleVariantType ArrayHandleVariant;
 
 public:
