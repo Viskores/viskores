@@ -99,12 +99,13 @@ public:
                vtkm::cont::GetSizeString(static_cast<vtkm::UInt64>(numBytes)).c_str());
 
     buffers[0].SetNumberOfBytes(numBytes, preserve, token);
-    vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits = numberOfBits;
+    buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    vtkm::Id numberOfBits = vtkm::cont::detail::GetBitFieldMetaData(buffers[0])->NumberOfBits;
+    vtkm::Id numberOfBits =
+      buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits;
     VTKM_ASSERT((buffers[0].GetNumberOfBytes() * CHAR_BIT) >= numberOfBits);
     return numberOfBits;
   }
