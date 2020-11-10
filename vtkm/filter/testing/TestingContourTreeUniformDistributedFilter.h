@@ -286,6 +286,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
+                                                     true, // use boundary extream only
                                                      useMarchingCubes,
                                                      false,
                                                      vtkm::cont::LogLevel::UserVerboseLast,
