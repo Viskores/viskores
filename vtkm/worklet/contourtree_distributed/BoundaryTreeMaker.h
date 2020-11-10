@@ -1228,7 +1228,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
 
   // now fill them in
   auto meshGlobalIds =
-    this->Mesh->GetGlobalIdsFromMeshIndices(this->BractVertexSuperset, localToGlobalIdRelabeler);
+    this->Mesh
+      ->template GetGlobalIdsFromMeshIndices<vtkm::worklet::contourtree_augmented::IdArrayType>(
+        this->BractVertexSuperset, localToGlobalIdRelabeler);
   auto setInteriorForestWorklet =
     vtkm::worklet::contourtree_distributed::bract_maker::SetInteriorForestWorklet();
   // NOTE: We don't need this->BractVertexSuperset as input since meshGlobalIds is already transformed accordingly

@@ -241,15 +241,18 @@ public:
   /// notice that the sort ID is the same as the mesh ID for the ContourTreeMesh class.
   /// To reduce memory usage we here use a fancy array handle rather than copy data
   /// as is needed for the DataSetMesh types.
+  /// MeshIdArrayType must be an array if Ids. Usually this is a vtkm::worklet::contourtree_augmented::IdArrayType
+  /// but in some cases it may also be a fancy array to avoid memory allocation
   /// We here return a fancy array handle to convert values on-the-fly without requiring additional memory
   /// @param[in] meshIds Array with mesh Ids to be converted from local to global Ids
   /// @param[in] localToGlobalIdRelabeler This parameter is here only for
   ///            consistency with the DataSetMesh types but is not
   ///            used here and as such can simply be set to nullptr
-  inline vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> GetGlobalIdsFromMeshIndices(
-    const IdArrayType& meshIds,
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr) const
+  template <typename MeshIdArrayType>
+  inline vtkm::cont::ArrayHandlePermutation<MeshIdArrayType, IdArrayType>
+  GetGlobalIdsFromMeshIndices(const MeshIdArrayType& meshIds,
+                              const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                                localToGlobalIdRelabeler = nullptr) const
   {                                 // GetGlobalIDsFromMeshIndices()
     (void)localToGlobalIdRelabeler; // avoid compiler warning
     return vtkm::cont::make_ArrayHandlePermutation(meshIds, this->GlobalMeshIndex);

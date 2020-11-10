@@ -989,11 +989,25 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
                                          this->ContourTree.Nodes.GetNumberOfValues()),
     this->HierarchicalTreeId);
 
-  //  B.  Set the ID correctly for every vertex in the BRACT
-  //      We know by assumption that they are all in the hierarchical tree
-  // Convert the mesh ids from  this->InteriorForest-BractMeshIndices to global mesh indices
-  auto globalIdsForBractMeshIndices = this->Mesh->GetGlobalIdsFromMeshIndices(
-    this->InteriorForest->BractMeshIndices, localToGlobalIdRelabeler);
+  //  B.  Set the ID correctly for every regular node
+  //    They will not all be in the hierarchical tree, so NO_SUCH_ELEMENT will occur, but that is
+  //    what we want in this case.  It also means we don't have to set it to NO_SUCH_ELEMENT in section
+  //    A., but paranoia indicates we leave that in
+  //    This section implements:
+  //  for (indexType vertex = 0; vertex < contourTree->nodes.size(); vertex++)
+  //  { // per vertex in the bract
+  //  // now convert to a global index
+  //  indexType globalID = mesh->GetGlobalIDFromMeshIndex(vertex);
+  //
+  //  // look that one up and store the result (NO_SUCH_ELEMENT is acceptable, but should never occur)
+  //  hierarchicalTreeID[vertex] = hierarchicalTree.FindRegularByGlobal(globalID);
+  //  } // per vertex in the bract
+  // Convert the mesh ids for the contourtree nodes to global ids. This will also be our
+  // main field array for the worklet
+  auto globalIdsForBractMeshIndices =
+    this->Mesh->template GetGlobalIdsFromMeshIndices<vtkm::cont::ArrayHandleIndex>(
+      vtkm::cont::ArrayHandleIndex(this->ContourTree.Nodes.GetNumberOfValues()),
+      localToGlobalIdRelabeler);
   // Get a FindRegularByGlobal execution object that we can use as an input for worklets to call the function
   auto findRegularByGlobal = hierarchicalTree.GetFindRegularByGlobal();
   // look up our gloabl ids  (NO_SUCH_ELEMENT is acceptable, but should never occur) and
@@ -1002,9 +1016,8 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   auto listNewNodesCopyIdsWorklet =
     vtkm::worklet::contourtree_distributed::tree_grafter::ListNewNodesCopyIdsWorklet();
   this->Invoke(listNewNodesCopyIdsWorklet,
-               this->InteriorForest->BractMeshIndices, // input mesh index
-               globalIdsForBractMeshIndices,           // input global indices
-               findRegularByGlobal,                    // input object to call FindRegularByGlobal
+               globalIdsForBractMeshIndices, // input global indices
+               findRegularByGlobal,          // input object to call FindRegularByGlobal
                this->HierarchicalTreeId);
 
   //  C.  Start with the list of all nodes in the non-hierarchical tree
@@ -1250,8 +1263,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
                                     totalNNodes,
                                     vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   // TODO: The original code created a separate array newNodesGloablId that was set to NO_SUCH_ELEMENT first but we should only need the fancy array here and save the memory
-  auto newNodesGloablId = this->Mesh->GetGlobalIdsFromMeshIndices(
-    this->NewNodes, localToGlobalIdRelabeler); // this is a fancy array
+  auto newNodesGloablId =
+    this->Mesh
+      ->template GetGlobalIdsFromMeshIndices<vtkm::worklet::contourtree_augmented::IdArrayType>(
+        this->NewNodes, localToGlobalIdRelabeler); // this is a fancy array
   vtkm::cont::Algorithm::CopySubRange(
     newNodesGloablId,                      // array to copy
     0,                                     // start index

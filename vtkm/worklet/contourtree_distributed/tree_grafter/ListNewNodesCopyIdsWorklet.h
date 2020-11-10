@@ -70,14 +70,13 @@ class ListNewNodesCopyIdsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(
-    FieldIn interiorForestBractMeshIndices, // input mesh ids
-    FieldIn globalIdsForBractMeshIndices,   // input iteration index.
-    ExecObject findRegularByGlobal,         // input to findRegularByGlobal
+    FieldIn globalIdsForBractMeshIndices, // input iteration index.
+    ExecObject findRegularByGlobal,       // input to findRegularByGlobal
     WholeArrayOut
       hierarchicalTreeId // output  (need WholeArrayOut because globalIdsForBractMeshIndices is 1 smaller and need to avoid false resize
   );
 
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3);
   using InputDomain = _1;
 
   // Default Constructor
@@ -85,27 +84,25 @@ public:
   ListNewNodesCopyIdsWorklet() {}
 
   template <typename ExecObjectType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& meshId,
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Id& globalId,
                             const ExecObjectType& findRegularByGlobal,
                             const OutFieldPortalType& hierarchicalTreeIdPortal) const
   { // operator ()
     // the lookup to mesh->GetGlobalIDFromMeshIndex is done outside the worklet
     // for all mesh ids so all we need to do here is call FindRegularByGlobal
-    hierarchicalTreeIdPortal.Set(meshId, findRegularByGlobal.FindRegularByGlobal(globalId));
+    hierarchicalTreeIdPortal.Set(vertex, findRegularByGlobal.FindRegularByGlobal(globalId));
 
     // In serial this worklet implements the following operation
     /*
-     for (indexType bractVertex = 0; bractVertex < residue->bractMeshIndices.size(); bractVertex++)
-      { // per vertex in the bract
-        // retrieve mesh ID
-        indexType meshID = residue->bractMeshIndices[bractVertex];
+    for (indexType vertex = 0; vertex < contourTree->nodes.size(); vertex++)
+    { // per vertex in the bract
+      // now convert to a global index
+      indexType globalID = mesh->GetGlobalIDFromMeshIndex(vertex);
 
-        // now convert to a global index
-        indexType globalID = mesh->GetGlobalIDFromMeshIndex(meshID);
-        // look that one up and store the result (NO_SUCH_ELEMENT is acceptable, but should never occur)
-        hierarchicalTreeID[meshID] = hierarchicalTree.FindRegularByGlobal(globalID);
-      } // per vertex in the bract
+      // look that one up and store the result (NO_SUCH_ELEMENT is acceptable, but should never occur)
+      hierarchicalTreeID[vertex] = hierarchicalTree.FindRegularByGlobal(globalID);
+    } // per vertex in the bract
 
     */
   } // operator ()
