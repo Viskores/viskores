@@ -101,21 +101,25 @@ public:
     // if the low end thinks it ascends to the high end and does
     // not have a descent, then it must be a lower leaf, unless it's
     // necessary (i.e. an attachment)
-    if ((supernodeTypePortal.Get(lowEnd) != vtkm::worklet::contourtree_augmented::IS_SADDLE) &&
+    if ((supernodeTypePortal.Get(lowEnd) !=
+         (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE) &&
         (upNeighbourPortal.Get(lowEnd) == highEnd) &&
         vtkm::worklet::contourtree_augmented::NoSuchElement(downNeighbourPortal.Get(lowEnd)) &&
         (!isNecessaryPortal.Get(lowEnd)))
     {
-      supernodeTypePortal.Set(lowEnd, vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF);
+      supernodeTypePortal.Set(lowEnd,
+                              (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF);
     }
 
     // symmetrically for the high end
-    if ((supernodeTypePortal.Get(highEnd) != vtkm::worklet::contourtree_augmented::IS_SADDLE) &&
+    if ((supernodeTypePortal.Get(highEnd) !=
+         (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE) &&
         (downNeighbourPortal.Get(highEnd) == lowEnd) &&
         vtkm::worklet::contourtree_augmented::NoSuchElement(upNeighbourPortal.Get(highEnd)) &&
         (!isNecessaryPortal.Get(highEnd)))
     {
-      supernodeTypePortal.Set(highEnd, vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF);
+      supernodeTypePortal.Set(highEnd,
+                              (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF);
     }
 
     // In serial this worklet implements the following operation

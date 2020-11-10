@@ -102,13 +102,13 @@ public:
     // which guarantees that it is a saddle (or an attachment - but we exclude that by testing it)
     if (!isNecessaryPortal.Get(lowEnd) && (upNeighbourPortal.Get(lowEnd) != highEnd))
     {
-      supernodeTypePortal.Set(lowEnd, vtkm::worklet::contourtree_augmented::IS_SADDLE);
+      supernodeTypePortal.Set(lowEnd, (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE);
     }
 
     // symmetrically for the high end
     if (!isNecessaryPortal.Get(highEnd) && (downNeighbourPortal.Get(highEnd) != lowEnd))
     {
-      supernodeTypePortal.Set(highEnd, vtkm::worklet::contourtree_augmented::IS_SADDLE);
+      supernodeTypePortal.Set(highEnd, (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE);
     }
 
     // In serial this worklet implements the following operation

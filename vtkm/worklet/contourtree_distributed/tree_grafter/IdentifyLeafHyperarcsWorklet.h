@@ -123,7 +123,7 @@ public:
     // test whether the top end is an upper leaf
     switch (supernodeTypePortal.Get(high))
     { // switch on upper end
-      case vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF:
       { // upper end is a leaf
         // in lower leaf rounds, never recognise these
         hierarchicalHyperparentPortal.Set(high, high);
@@ -133,7 +133,7 @@ public:
           high, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_HYPERNODE);
         break;
       } // upper end is a leaf
-      case vtkm::worklet::contourtree_augmented::IS_REGULAR:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_REGULAR:
       { // upper end is regular
         // notice that this is redundant, so will be set from both arcs
         // this is parallel safe, because it sets the same value anyway
@@ -146,26 +146,29 @@ public:
 
         // test the up neighbour first for leaf-hood
         // but only if the corresponding flag is true
-        if (supernodeTypePortal.Get(upNbr) == vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF)
+        if (supernodeTypePortal.Get(upNbr) ==
+            (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF)
         { // up neighbour is an upper leaf
           hierarchicalHyperparentPortal.Set(high, upNbr);
-          whenTransferredPortal.Set(
-            high, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(high,
+                                    this->NumTransferIterations |
+                                      (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
         } // up neighbour is an upper leaf
         // then the down neighbour (cannot both be true)
         else if (supernodeTypePortal.Get(downNbr) ==
-                 vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF)
+                 (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF)
         { // down neighbour is a lower leaf
           hierarchicalHyperparentPortal.Set(high, downNbr);
-          whenTransferredPortal.Set(
-            high, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(high,
+                                    this->NumTransferIterations |
+                                      (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
         } // down neighbour is a lower leaf
         break;
       } // case: upper end is regular
       // all other cases do nothing
-      case vtkm::worklet::contourtree_augmented::IS_SADDLE:
-      case vtkm::worklet::contourtree_augmented::IS_ATTACHMENT:
-      case vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_ATTACHMENT:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF:
       default:
         break;
     } // switch on upper end
@@ -173,18 +176,19 @@ public:
     // test whether the bottom end is a lower leaf
     switch (supernodeTypePortal.Get(low))
     { // switch on lower end
-      case vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF:
       { // lower end is a leaf
         hierarchicalHyperparentPortal.Set(low, low);
         hierarchicalHyperarcPortal.Set(
           low,
           vtkm::worklet::contourtree_augmented::MaskedIndex(upNeighbourPortal.Get(low)) |
-            vtkm::worklet::contourtree_augmented::IS_ASCENDING);
-        whenTransferredPortal.Set(
-          low, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_HYPERNODE);
+            (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_ASCENDING);
+        whenTransferredPortal.Set(low,
+                                  this->NumTransferIterations |
+                                    (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_HYPERNODE);
         break;
       } // lower end is a leaf
-      case vtkm::worklet::contourtree_augmented::IS_REGULAR:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_REGULAR:
       { // lower end is regular
         // notice that this is redundant, so will be set from both arcs
         // this is parallel safe, because it sets the same value anyway
@@ -196,26 +200,29 @@ public:
           vtkm::worklet::contourtree_augmented::MaskedIndex(downNeighbourPortal.Get(low));
 
         // test the up neighbour first for leaf-hood
-        if (supernodeTypePortal.Get(upNbr) == vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF)
+        if (supernodeTypePortal.Get(upNbr) ==
+            (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF)
         { // up neighbour is an upper leaf
           hierarchicalHyperparentPortal.Set(low, upNbr);
-          whenTransferredPortal.Set(
-            low, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(low,
+                                    this->NumTransferIterations |
+                                      (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
         } // up neighbour is an upper leaf
         // then the down neighbour (cannot both be true)
         else if (supernodeTypePortal.Get(downNbr) ==
-                 vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF)
+                 (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_LOWER_LEAF)
         { // down neighbour is a lower leaf
           hierarchicalHyperparentPortal.Set(low, downNbr);
-          whenTransferredPortal.Set(
-            low, this->NumTransferIterations | vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(low,
+                                    this->NumTransferIterations |
+                                      (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SUPERNODE);
         } // down neighbour is a lower leaf
         break;
       } // lower end is regular
       // all other cases do nothing
-      case vtkm::worklet::contourtree_augmented::IS_SADDLE:
-      case vtkm::worklet::contourtree_augmented::IS_ATTACHMENT:
-      case vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_SADDLE:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_ATTACHMENT:
+      case (vtkm::Id)vtkm::worklet::contourtree_augmented::IS_UPPER_LEAF:
       default:
         break;
     } // switch on lower end

@@ -96,14 +96,16 @@ public:
     if (vtkm::worklet::contourtree_augmented::NoSuchElement(upNeighbourValue) ||
         vtkm::worklet::contourtree_augmented::NoSuchElement(downNeighbourValue))
     {
-      newVertexIdPortal.Set(boundaryNode, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+      newVertexIdPortal.Set(boundaryNode,
+                            (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
     }
     // retrieve mesh index (i.e., bractVertexSupersetValue) & check whether on the boundary
     if (
       meshBoundary.LiesOnBoundary(
         bractVertexSupersetValue)) // TODO: This may need to change to isNecessary when we change to boundary critical points
     {
-      newVertexIdPortal.Set(boundaryNode, vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
+      newVertexIdPortal.Set(boundaryNode,
+                            (vtkm::Id)vtkm::worklet::contourtree_augmented::ELEMENT_EXISTS);
     }
 
     // In serial this worklet implements the following operation
