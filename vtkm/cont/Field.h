@@ -16,9 +16,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/ArrayRangeCompute.hxx>
 #include <vtkm/cont/VariantArrayHandle.h>
 
 namespace vtkm
@@ -29,6 +27,7 @@ namespace cont
 namespace internal
 {
 
+// This implements deprecated functionality.
 struct ComputeRange
 {
   template <typename ArrayHandleType>
@@ -89,6 +88,7 @@ public:
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 
   template <typename TypeList>
+  VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
   {
     this->GetRangeImpl(TypeList());
@@ -101,6 +101,7 @@ public:
   }
 
   template <typename TypeList>
+  VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
     VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
@@ -108,16 +109,9 @@ public:
     return this->GetRangeImpl(TypeList());
   }
 
-  VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const
-  {
-    return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST());
-  }
+  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  VTKM_CONT void GetRange(vtkm::Range* range) const
-  {
-    return this->GetRange(range, VTKM_DEFAULT_TYPE_LIST());
-  }
+  VTKM_CONT void GetRange(vtkm::Range* range) const;
 
   template <typename T, typename StorageTag>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
@@ -151,6 +145,7 @@ private:
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
 
+  // This implements deprecated functionality
   template <typename TypeList>
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList) const
   {

@@ -29,6 +29,7 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
+#include <vtkm/cont/ArrayRangeComputeTemplate.h>
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Logging.h>

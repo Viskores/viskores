@@ -45,6 +45,7 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
+  ArrayRangeComputeTemplate.h
   AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
@@ -123,12 +124,10 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
-  ArrayRangeCompute.hxx
+  ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   CellSetExtrude.hxx
   CellSetStructured.hxx
-  FieldRangeCompute.hxx
-  FieldRangeGlobalCompute.hxx
   ParticleArrayCopy.hxx
   VirtualObjectHandle.hxx
   )

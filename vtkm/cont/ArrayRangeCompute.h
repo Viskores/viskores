@@ -18,34 +18,33 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-#include <vtkm/cont/ArrayHandleVirtual.h>
-#endif
-
 namespace vtkm
 {
 namespace cont
 {
 
+///@{
 /// \brief Compute the range of the data in an array handle.
 ///
-/// Given an \c ArrayHandle, this function computes the range (min and max) of
+/// Given an `ArrayHandle`, this function computes the range (min and max) of
 /// the values in the array. For arrays containing Vec values, the range is
 /// computed for each component.
 ///
-/// This method optionally takes a \c vtkm::cont::DeviceAdapterId to control which
+/// This method optionally takes a `vtkm::cont::DeviceAdapterId` to control which
 /// devices to try.
 ///
-/// The result is returned in an \c ArrayHandle of \c Range objects. There is
+/// The result is returned in an `ArrayHandle` of `Range` objects. There is
 /// one value in the returned array for every component of the input's value
 /// type.
 ///
-template <typename ArrayHandleType>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const ArrayHandleType& input,
-  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
+/// Note that the ArrayRangeCompute.h header file contains only precompiled overloads
+/// of ArrayRangeCompute. This is so that ArrayRangeCompute.h can be included in
+/// code that does not use a device compiler. If you need to compute array ranges
+/// for arbitrary `ArrayHandle`s not in this precompiled list, you need to include
+/// ArrayRangeComputeTemplate.h. This contains a templated version of ArrayRangeCompute
+/// that will compile for any `ArrayHandle` type not already handled.
+///
 
-// Precompiled versions of ArrayRangeCompute
 #define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(T, Storage)    \
   VTKM_CONT_EXPORT                                        \
   VTKM_CONT                                               \
@@ -59,45 +58,42 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input, \
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(char, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int8, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt8, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int16, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt16, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int32, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt32, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int64, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt64, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float32, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float64, vtkm::cont::StorageTagBasic);
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(Storage) \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(char, Storage);           \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int8, Storage);     \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt8, Storage);    \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int16, Storage);    \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt16, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int32, Storage);    \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt32, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int64, Storage);    \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt64, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float32, Storage);  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float64, Storage)
 
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int32, 2, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int64, 2, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 2, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 2, vtkm::cont::StorageTagBasic);
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(N, Storage)       \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(char, N, Storage);          \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int8, N, Storage);    \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, N, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int16, N, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt16, N, Storage);  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int32, N, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt32, N, Storage);  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int64, N, Storage);   \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt64, N, Storage);  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, N, Storage); \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, N, Storage)
 
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int32, 3, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int64, 3, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 3, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 3, vtkm::cont::StorageTagBasic);
+VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(vtkm::cont::StorageTagBasic);
 
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(char, 4, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int8, 4, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
-VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
+VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(2, vtkm::cont::StorageTagBasic);
+VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(3, vtkm::cont::StorageTagBasic);
+VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(4, vtkm::cont::StorageTagBasic);
 
 #undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T
 #undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC
-
-#ifndef VTKM_NO_DEPRECATED_VIRTUAL
-VTKM_DEPRECATED_SUPPRESS_BEGIN
-VTKM_CONT VTKM_DEPRECATED(1.6, "ArrayHandleVirtual no longer supported.")
-  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-    const vtkm::cont::ArrayHandleVirtual<vtkm::Vec3f>& input,
-    vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
-VTKM_DEPRECATED_SUPPRESS_END
-#endif //VTKM_NO_DEPRECATED_VIRTUAL
+#undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T
+#undef VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC
 
 VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<vtkm::Vec3f,
@@ -153,6 +149,7 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
   return result;
 }
+///@}
 
 VTKM_CONT_EXPORT void ThrowArrayRangeComputeFailed();
 }
