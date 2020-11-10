@@ -145,7 +145,8 @@ public:
   /// This form of SetMetaData takes an rvalue to a unique_ptr holding the metadata to
   /// ensure that the object is properly managed.
   ///
-  VTKM_CONT void SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata);
+  VTKM_CONT void SetMetaData(
+    std::unique_ptr<vtkm::cont::internal::BufferMetaData>&& metadata) const;
 
   /// \brief Sets the metadata for the buffer.
   ///
@@ -153,7 +154,7 @@ public:
   /// must be a subclass of BufferMetaData or you will get a compile error.
   ///
   template <typename MetaDataType>
-  VTKM_CONT void SetMetaData(const MetaDataType& metadata)
+  VTKM_CONT void SetMetaData(const MetaDataType& metadata) const
   {
     this->SetMetaData(
       std::unique_ptr<vtkm::cont::internal::BufferMetaData>(new MetaDataType(metadata)));

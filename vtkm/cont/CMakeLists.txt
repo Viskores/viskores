@@ -136,6 +136,7 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
+  ArrayHandleDiscard.cxx
   ArrayHandleImplicit.cxx
   ArrayHandleSOA.cxx
   BitField.cxx
