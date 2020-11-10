@@ -116,6 +116,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
     const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+    bool useBoundaryExtremaOnly = true,
     bool useMarchingCubes = false,
     bool saveDotFiles = false,
     vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
@@ -176,6 +177,9 @@ public:
   //@}
 
 private:
+  /// Use only boundary critical points in the parallel merge to reduce communication. Disabling this should only be needed for performance testing.
+  bool UseBoundaryExtremaOnly;
+
   /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;
 

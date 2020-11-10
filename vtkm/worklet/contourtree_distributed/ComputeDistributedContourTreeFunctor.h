@@ -98,9 +98,11 @@ public:
   ///                         about the various trees computed as part of the hierarchical contour tree compute
   ComputeDistributedContourTreeFunctor(
     vtkm::Id3 globalSize,
+    bool useBoundaryExtremaOnly,
     vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
     vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info)
     : GlobalSize(globalSize)
+    , UseBoundaryExtremaOnly(useBoundaryExtremaOnly)
     , TimingsLogLevel(timingsLogLevel)
     , TreeLogLevel(treeLogLevel)
   {
@@ -350,7 +352,7 @@ public:
         &(block->InteriorForests.back()));
       // Construct the BRACT and InteriorForest. Since we are working on a ContourTreeMesh we do
       // not need to provide and IdRelabeler here in order to compute the InteriorForest
-      boundaryTreeMaker.Construct();
+      boundaryTreeMaker.Construct(nullptr, this->UseBoundaryExtremaOnly);
       // Construct contour tree mesh from BRACT
       block->ContourTreeMeshes.emplace_back(
         boundaryTree.VertexIndex, boundaryTree.Superarcs, block->ContourTreeMeshes.back());
@@ -466,6 +468,9 @@ public:
 private:
   /// Extends of the global mesh
   vtkm::Id3 GlobalSize;
+
+  /// Use boundary extrema only (instead of the full boundary) during the fan in
+  bool UseBoundaryExtremaOnly;
 
   /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
   vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;

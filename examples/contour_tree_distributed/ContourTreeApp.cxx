@@ -234,7 +234,11 @@ int main(int argc, char* argv[])
   ParseCL parser;
   parser.parse(argc, argv);
   std::string filename = parser.getOptions().back();
-
+  bool useBoundaryExtremaOnly = true;
+  if (parser.hasOption("--useFullBoundary"))
+  {
+    useBoundaryExtremaOnly = false;
+  }
   bool useMarchingCubes = false;
   if (parser.hasOption("--mc"))
   {
@@ -319,6 +323,11 @@ int main(int argc, char* argv[])
       std::cout << "Options: (Bool options are give via int, i.e. =0 for False and =1 for True)"
                 << std::endl;
       std::cout << "--mc             Use marching cubes connectivity (Default=False)." << std::endl;
+      std::cout << "--useFullBoundary Use the full boundary during. Typically only useful"
+                << std::endl;
+      std::cout << "                 to compare the performance between using the full boundary"
+                << std::endl;
+      std::cout << "                 and when using only boundary extrema." << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
       std::cout << "--saveDot        Save DOT files of the distributed contour tree "
                 << "computation (Default=False). " << std::endl;
@@ -347,6 +356,7 @@ int main(int argc, char* argv[])
                  << "    preSplitFiles=" << preSplitFiles << std::endl
                  << "    device=" << device.GetName() << std::endl
                  << "    mc=" << useMarchingCubes << std::endl
+                 << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
                  << "    saveDot=" << saveDotFiles << std::endl
                  << "    saveTreeCompilerData=" << saveTreeCompilerData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
@@ -909,6 +919,7 @@ int main(int argc, char* argv[])
                                                      localBlockIndices,
                                                      localBlockOrigins,
                                                      localBlockSizes,
+                                                     useBoundaryExtremaOnly,
                                                      useMarchingCubes,
                                                      saveDotFiles,
                                                      timingsLogLevel,

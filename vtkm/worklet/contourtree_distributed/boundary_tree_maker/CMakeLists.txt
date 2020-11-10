@@ -9,6 +9,7 @@
 ##============================================================================
 
 set(headers
+  FindBoundaryVerticesIsNecessaryWorklet.h
   BoundaryVerticesPerSuperArcWorklets.h
   PropagateBoundaryCountsSubtractDependentCountsWorklet.h
   PropagateBoundaryCountsTransferDependentCountsWorklet.h

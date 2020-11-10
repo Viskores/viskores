@@ -122,7 +122,7 @@ public:
       }
       else
       {
-        // if not a corner, keeep only vertices that are local extrema
+        // if not a corner, keep only vertices that are local extrema
         vtkm::Id sp, sn;
         if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
         {
@@ -138,8 +138,12 @@ public:
           assert(meshIndex >= this->MeshStructure.MeshSize[0]);
           sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
           assert(meshIndex + this->MeshStructure.MeshSize[0] <
-                 this->SortIndices.GetNumberOfValues());
+                 this->SortIndicesPortal.GetNumberOfValues());
           sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
+        }
+        else
+        {
+          return false;
         }
         return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
       }

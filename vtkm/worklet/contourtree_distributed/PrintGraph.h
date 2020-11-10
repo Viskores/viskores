@@ -758,6 +758,8 @@ std::string BoundaryTreeDotGraphPrint(
                              boundaryVertexSortIndexArray, // output
                              &meshBoundaryExecutionObject  //input
     );
+    // TODO Add option for boundary critical only
+
     auto boundaryVertexArrayPortal = boundaryVertexArray.ReadPortal();
     // vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(mesh.SortOrder);
     // vtkm::Id maxId = static_cast<vtkm::Id>(rangeArray.ReadPortal().Get(0).Max) + 1;

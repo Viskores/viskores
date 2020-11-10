@@ -75,6 +75,7 @@
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesResolveRootWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesTransferVerticesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/ContourTreeNodeHyperArcComparator.h>
+#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryVerticesIsNecessaryWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBractSuperarcsSuperarcToWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSetSuperparentNecessaryWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSupernodesFindNodesWorklet.h>
@@ -196,13 +197,20 @@ public:
   /// @param[in] localToGlobalIdRelabeler IdRelabeler for the mesh needed to call
   ///            this->Mesh->GetGlobalIdsFromMeshIndices(...)  used by the
   ///            this->SetInteriorForest function (default=nullptr).
+  /// @param[in] boundaryCritical If True then use only boundary critical points
+  ///            in the BoundaryTree, otherwise use the full boundary between blocks.
+  ///            (default=true)
   VTKM_CONT
   void Construct(const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
-                   localToGlobalIdRelabeler = nullptr);
+                   localToGlobalIdRelabeler = nullptr,
+                 bool boundaryCritical = true);
 
   /// routine to find the set of boundary vertices
+  /// @param[in] boundaryCritical If True then use only boundary critical points
+  ///            in the BoundaryTree, otherwise use the full boundary between blocks.
+  ///            (default=true)
   VTKM_CONT
-  void FindBoundaryVertices();
+  void FindBoundaryVertices(bool boundaryCritical);
 
   /// routine to compute the initial dependent counts (i.e. along each superarc)
   /// in preparation for hyper-propagation
@@ -271,7 +279,8 @@ private:
 
 template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler)
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+  bool boundaryCritical)
 { // Construct
 
   // 0.  Retrieve the number of iterations used to construct the contour tree
@@ -282,7 +291,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
 
   // Step I: Initialise the bract to hold the set of boundary vertices
   //        & save how many for later
-  this->FindBoundaryVertices();
+  this->FindBoundaryVertices(boundaryCritical);
 
   // Step II: For each supernode / superarc, compute the dependent boundary counts
   this->ComputeDependentBoundaryCounts();
@@ -321,21 +330,38 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
 ///   - this->this->BractVertexSuperset
 ///   - this->BoundaryIndices
 template <typename MeshType, typename MeshBoundaryExecObjType>
-void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices()
+void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
+  bool boundaryCritical)
 { // FindBoundaryVertices
 
   // ask the mesh to give us a list of boundary verticels (with their regular indices)
   this->Mesh->GetBoundaryVertices(
     this->BractVertexSuperset, this->BoundaryIndices, &(this->MeshBoundaryExecutionObject));
   // pull a local copy of the size (they can diverge)
+  this->Bract->NumBoundary = this->BractVertexSuperset.GetNumberOfValues();
+  // Identify the points that are boundary critical and update this->BractVertexSuperset,
+  // and this->BoundaryIndices accordingly by removing all boundary vertices that are
+  // not boundary cirtical, and hence, are not neccessary for merging neighboring data blocks
+  if (boundaryCritical)
+  {
+    vtkm::worklet::contourtree_distributed::bract_maker::FindBoundaryVerticesIsNecessaryWorklet
+      isNecessaryWorklet;
+    vtkm::cont::ArrayHandle<bool> isBoundaryCritical;
+    this->Invoke(isNecessaryWorklet,
+                 this->BractVertexSuperset,
+                 &(this->MeshBoundaryExecutionObject),
+                 isBoundaryCritical);
+    vtkm::worklet::contourtree_augmented::IdArrayType necessaryBractVertexSuperset;
+    vtkm::worklet::contourtree_augmented::IdArrayType necessaryBoundaryIndices;
+    vtkm::cont::Algorithm::CopyIf(
+      this->BractVertexSuperset, isBoundaryCritical, necessaryBractVertexSuperset);
+    this->BractVertexSuperset = necessaryBractVertexSuperset;
+    vtkm::cont::Algorithm::CopyIf(
+      this->BoundaryIndices, isBoundaryCritical, necessaryBoundaryIndices);
+    this->BoundaryIndices = necessaryBoundaryIndices;
+  }
+
   this->NumBoundary = this->BractVertexSuperset.GetNumberOfValues();
-  // TODO: Need to update this function to optionally use only boundary critical points,
-  // i.e., remove those boundary verticies from the list that are not critical.
-  // This should be a flag that we can set on the Construct method so that we
-  // can do performance tests for both code paths.
-  // We also need to updated this->NumBoundary and this->BoundaryTree.NumBoundaryUsed
-  // accordingly if we only used boundary critical points
-  this->Bract->NumBoundary = this->NumBoundary;
   this->Bract->NumBoundaryUsed = this->NumBoundary;
 
 #ifdef DEBUG_PRINT

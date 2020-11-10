@@ -200,11 +200,13 @@ ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
   const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+  bool useBoundaryExtremaOnly,
   bool useMarchingCubes,
   bool saveDotFiles,
   vtkm::cont::LogLevel timingsLogLevel,
   vtkm::cont::LogLevel treeLogLevel)
   : vtkm::filter::FilterField<ContourTreeUniformDistributed>()
+  , UseBoundaryExtremaOnly(useBoundaryExtremaOnly)
   , UseMarchingCubes(useMarchingCubes)
   , SaveDotFiles(saveDotFiles)
   , TimingsLogLevel(timingsLogLevel)
@@ -343,7 +345,7 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
         blockIndex)] // The interior forest (a.k.a. Residue) to be computed
     );
   // Execute the BRACT construction, including the compute of the InteriorForest
-  boundaryTreeMaker.Construct(&localToGlobalIdRelabeler);
+  boundaryTreeMaker.Construct(&localToGlobalIdRelabeler, this->UseBoundaryExtremaOnly);
   // Log timing statistics
   VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
@@ -823,8 +825,10 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // 1.3 execute the fan in reduction
   const vtkm::worklet::contourtree_distributed::ComputeDistributedContourTreeFunctor<FieldType>
-    computeDistributedContourTreeFunctor(
-      this->MultiBlockSpatialDecomposition.GlobalSize, this->TimingsLogLevel, this->TreeLogLevel);
+    computeDistributedContourTreeFunctor(this->MultiBlockSpatialDecomposition.GlobalSize,
+                                         this->UseBoundaryExtremaOnly,
+                                         this->TimingsLogLevel,
+                                         this->TreeLogLevel);
   vtkmdiy::reduce(master, assigner, partners, computeDistributedContourTreeFunctor);
 
   // Record timing for the actual reduction
