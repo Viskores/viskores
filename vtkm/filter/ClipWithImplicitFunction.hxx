@@ -17,6 +17,12 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
+// Do not instantiation common concrete types unless we are compiling the
+// corresponding TU.
+#ifndef vtkm_filter_ClipWithImplicitFunction_cxx
+#include <vtkm/filter/ClipWithImplicitFunctionSkipInstantiations.hxx>
+#endif
+
 namespace vtkm
 {
 namespace filter

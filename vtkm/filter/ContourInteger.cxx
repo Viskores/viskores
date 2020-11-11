@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ContourExecute_cxx
-#define vtk_m_filter_ContourExecute_cxx
+#ifndef vtk_m_filter_ContourExecuteInteger_cxx
+#define vtk_m_filter_ContourExecuteInteger_cxx
 
 #include <vtkm/filter/Contour.h>
 
