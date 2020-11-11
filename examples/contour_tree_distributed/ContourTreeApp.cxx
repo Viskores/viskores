@@ -243,6 +243,14 @@ int main(int argc, char* argv[])
   if (parser.hasOption("--mc"))
   {
     useMarchingCubes = true;
+    if (useBoundaryExtremaOnly)
+    {
+      std::cerr
+        << "Error: Marching cubes connectivity currently only works when using full boundary"
+        << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
   }
   bool preSplitFiles = false;
   if (parser.hasOption("--preSplitFiles"))
