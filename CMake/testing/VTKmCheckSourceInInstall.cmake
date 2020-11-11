@@ -121,9 +121,11 @@ function(do_verify root_dir prefix)
     cont/ArrayHandleVirtual.hxx
     cont/ArrayHandleVirtualCoordinates.h
     cont/CellLocator.h
+    cont/PointLocator.h
     cont/StorageVirtual.h
     cont/StorageVirtual.hxx
     exec/CellLocator.h
+    exec/PointLocator.h
     )
 
   #by default every header in a testing directory doesn't need to be installed
