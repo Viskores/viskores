@@ -173,11 +173,13 @@ using WordTypeDefault = vtkm::UInt32;
 
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
-using Int64 = long long;
+using Int64 = signed long long;
 using UInt64 = unsigned long long;
+#define VTKM_UNUSED_INT_TYPE long
 #elif VTKM_SIZE_LONG == 8
 using Int64 = signed long;
 using UInt64 = unsigned long;
+#define VTKM_UNUSED_INT_TYPE long long
 #else
 #error Could not find a 64-bit integer.
 #endif

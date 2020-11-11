@@ -38,31 +38,35 @@ void ThrowArrayRangeComputeFailed()
   }                                                                 \
   struct SwallowSemicolon
 
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T(Storage) \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, Storage);           \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int8, Storage);     \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt8, Storage);    \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int16, Storage);    \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt16, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int32, Storage);    \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt32, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int64, Storage);    \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt64, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float32, Storage);  \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float64, Storage)
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T(Storage)              \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int8, Storage);                  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt8, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int16, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt16, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int32, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt32, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Int64, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::UInt64, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float32, Storage);               \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(vtkm::Float64, Storage);               \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, Storage);                        \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(signed VTKM_UNUSED_INT_TYPE, Storage); \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(unsigned VTKM_UNUSED_INT_TYPE, Storage)
 
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(N, Storage)       \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(char, N, Storage);          \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int8, N, Storage);    \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, N, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int16, N, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt16, N, Storage);  \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int32, N, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt32, N, Storage);  \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int64, N, Storage);   \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt64, N, Storage);  \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, N, Storage); \
-  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, N, Storage)
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_VEC(N, Storage)                     \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int8, N, Storage);                  \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, N, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int16, N, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt16, N, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int32, N, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt32, N, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int64, N, Storage);                 \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt64, N, Storage);                \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, N, Storage);               \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, N, Storage);               \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(char, N, Storage);                        \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(signed VTKM_UNUSED_INT_TYPE, N, Storage); \
+  VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(unsigned VTKM_UNUSED_INT_TYPE, N, Storage)
 
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_ALL_SCALAR_T(vtkm::cont::StorageTagBasic);
 
