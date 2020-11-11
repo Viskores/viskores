@@ -88,17 +88,10 @@ struct VTKM_ALWAYS_EXPORT StorageTagDiscard
 {
 };
 
-struct VTKM_CONT_EXPORT BufferMetaDataDiscard : vtkm::cont::internal::BufferMetaData
+struct VTKM_ALWAYS_EXPORT DiscardMetaData
 {
   vtkm::Id NumberOfValues = 0;
-
-  VTKM_CONT ~BufferMetaDataDiscard() override;
-
-  VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
 };
-
-VTKM_CONT_EXPORT vtkm::cont::internal::BufferMetaDataDiscard* GetDiscardMetaData(
-  const vtkm::cont::internal::Buffer& buffer);
 
 template <typename ValueType>
 class Storage<ValueType, StorageTagDiscard>
@@ -118,12 +111,12 @@ public:
                                       vtkm::cont::Token&)
   {
     VTKM_ASSERT(numValues >= 0);
-    vtkm::cont::internal::GetDiscardMetaData(buffers[0])->NumberOfValues = numValues;
+    buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues = numValues;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    return vtkm::cont::internal::GetDiscardMetaData(buffers[0])->NumberOfValues;
+    return buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues;
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer*,

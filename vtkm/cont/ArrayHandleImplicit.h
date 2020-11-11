@@ -91,41 +91,6 @@ struct VTKM_ALWAYS_EXPORT StorageTagImplicit
 namespace internal
 {
 
-struct VTKM_CONT_EXPORT BufferMetaDataImplicit : vtkm::cont::internal::BufferMetaData
-{
-  void* Portal;
-
-  using DeleterType = void(void*);
-  DeleterType* Deleter;
-
-  using CopierType = void*(void*);
-  CopierType* Copier;
-
-  template <typename PortalType>
-  BufferMetaDataImplicit(const PortalType& portal)
-    : Portal(new PortalType(portal))
-    , Deleter([](void* p) { delete reinterpret_cast<PortalType*>(p); })
-    , Copier([](void* p) -> void* { return new PortalType(*reinterpret_cast<PortalType*>(p)); })
-  {
-  }
-
-  VTKM_CONT BufferMetaDataImplicit(const BufferMetaDataImplicit& src);
-
-  BufferMetaDataImplicit& operator=(const BufferMetaDataImplicit&) = delete;
-
-  VTKM_CONT ~BufferMetaDataImplicit() override;
-
-  VTKM_CONT std::unique_ptr<vtkm::cont::internal::BufferMetaData> DeepCopy() const override;
-};
-
-namespace detail
-{
-
-VTKM_CONT_EXPORT vtkm::cont::internal::BufferMetaDataImplicit* GetImplicitMetaData(
-  const vtkm::cont::internal::Buffer& buffer);
-
-} // namespace detail
-
 template <class ArrayPortalType>
 struct VTKM_ALWAYS_EXPORT
   Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
@@ -144,10 +109,7 @@ struct VTKM_ALWAYS_EXPORT
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
-    vtkm::cont::internal::BufferMetaDataImplicit* metadata =
-      detail::GetImplicitMetaData(buffers[0]);
-    VTKM_ASSERT(metadata->Portal);
-    return reinterpret_cast<ArrayPortalType*>(metadata->Portal)->GetNumberOfValues();
+    return buffers[0].GetMetaData<ArrayPortalType>().GetNumberOfValues();
   }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
@@ -170,10 +132,7 @@ struct VTKM_ALWAYS_EXPORT
                                                    vtkm::cont::DeviceAdapterId,
                                                    vtkm::cont::Token&)
   {
-    vtkm::cont::internal::BufferMetaDataImplicit* metadata =
-      detail::GetImplicitMetaData(buffers[0]);
-    VTKM_ASSERT(metadata->Portal);
-    return *reinterpret_cast<ReadPortalType*>(metadata->Portal);
+    return buffers[0].GetMetaData<ArrayPortalType>();
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer*,
@@ -191,8 +150,7 @@ VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> PortalToArrayHandleIm
   const PortalType& portal)
 {
   std::vector<vtkm::cont::internal::Buffer> buffers(1);
-  buffers[0].SetMetaData(std::unique_ptr<vtkm::cont::internal::BufferMetaData>(
-    new vtkm::cont::internal::BufferMetaDataImplicit(portal)));
+  buffers[0].SetMetaData(portal);
   return buffers;
 }
 
