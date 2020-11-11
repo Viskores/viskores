@@ -54,6 +54,8 @@ vtkm::exec::CellLocatorRectilinearGrid CellLocatorRectilinearGrid::PrepareForExe
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
+  this->Update();
+
   using ExecObjType = vtkm::exec::CellLocatorRectilinearGrid;
 
   if (this->Is3D)

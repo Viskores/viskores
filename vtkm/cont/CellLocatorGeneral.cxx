@@ -83,6 +83,7 @@ CellLocatorGeneral::ExecObjType CellLocatorGeneral::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
+  this->Update();
   return this->LocatorImpl.CastAndCall(PrepareFunctor{}, device, token);
 }
 

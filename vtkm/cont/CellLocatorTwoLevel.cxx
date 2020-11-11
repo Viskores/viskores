@@ -482,6 +482,7 @@ CellLocatorTwoLevel::ExecObjType CellLocatorTwoLevel::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
+  this->Update();
   ExecObjType execObject;
   this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this, execObject);
   return execObject;

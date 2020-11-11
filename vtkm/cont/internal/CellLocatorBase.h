@@ -138,7 +138,7 @@ class VTKM_ALWAYS_EXPORT CellLocatorBase : public vtkm::cont::ExecutionObjectBas
 {
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
-  bool Modified = true;
+  mutable bool Modified = true;
 
 public:
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
@@ -167,11 +167,11 @@ public:
     this->SetModified();
   }
 
-  void Update()
+  void Update() const
   {
     if (this->Modified)
     {
-      static_cast<Derived*>(this)->Build();
+      static_cast<Derived*>(const_cast<CellLocatorBase*>(this))->Build();
       this->Modified = false;
     }
   }

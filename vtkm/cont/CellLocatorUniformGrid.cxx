@@ -72,6 +72,7 @@ vtkm::exec::CellLocatorUniformGrid CellLocatorUniformGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId vtkmNotUsed(device),
   vtkm::cont::Token& vtkmNotUsed(token)) const
 {
+  this->Update();
   return vtkm::exec::CellLocatorUniformGrid(
     this->CellDims, this->Origin, this->InvSpacing, this->MaxPoint);
 }
