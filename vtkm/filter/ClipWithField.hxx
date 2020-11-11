@@ -19,6 +19,13 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 
+// Do not instantiation common concrete types unless we are compiling the
+// corresponding TU.
+#if !defined(vtkm_filter_ClipWithFieldExecuteInteger_cxx) || \
+  !defined(vtkm_filter_ClipWithFieldExecuteScalar_cxx)
+#include <vtkm/filter/ClipWithFieldSkipInstantiations.hxx>
+#endif
+
 namespace vtkm
 {
 namespace filter

@@ -111,6 +111,8 @@ set(extra_header_template_sources
   CellSetConnectivity.hxx
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
+  ClipWithFieldSkipInstantiations.hxx
+  ClipWithImplicitFunctionSkipInstantiations.hxx
   ComputeMoments.hxx
   CoordinateSystemTransform.hxx
   CrossProduct.hxx
@@ -157,7 +159,9 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
-  ClipWithField.cxx
+  ClipWithFieldSignedInteger.cxx
+  ClipWithFieldUnsignedInteger.cxx
+  ClipWithFieldScalar.cxx
   ClipWithImplicitFunction.cxx
   PointAverage.cxx
   VectorMagnitude.cxx
@@ -199,6 +203,12 @@ set(gradient_sources_device
   GradientUniformPoints.cxx
   GradientVector.cxx
   )
+
+vtkm_pyexpander_generated_file(ClipWithFieldSkipInstantiations.hxx)
+vtkm_pyexpander_generated_file(ClipWithImplicitFunctionSkipInstantiations.hxx)
+vtkm_pyexpander_generated_file(ClipWithFieldSignedInteger.cxx)
+vtkm_pyexpander_generated_file(ClipWithFieldUnsignedInteger.cxx)
+vtkm_pyexpander_generated_file(ClipWithImplicitFunction.cxx)
 
 set_source_files_properties(Contour.cxx ExtractStructured.cxx ClipWithField.cxx ClipWithImplicitFunction.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 

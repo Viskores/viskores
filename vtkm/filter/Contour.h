@@ -173,7 +173,7 @@ private:
   vtkm::worklet::Contour Worklet;
 };
 
-#ifndef vtkm_filter_ContourExecute_cxx
+#ifndef vtk_m_filter_ContourExecuteInteger_cxx
 
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
@@ -207,6 +207,10 @@ extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour:
 VTKM_DEPRECATED_SUPPRESS_END
 #endif
 
+#endif //!vtk_m_filter_ContourExecuteInteger_cxx
+
+#ifndef vtk_m_filter_ContourExecuteScalar_cxx
+
 extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Float32>&,
@@ -239,7 +243,7 @@ extern template VTKM_FILTER_CONTOUR_TEMPLATE_EXPORT vtkm::cont::DataSet Contour:
 VTKM_DEPRECATED_SUPPRESS_END
 #endif
 
-#endif //!vtkm_filter_ContourExecute_cxx
+#endif //!vtk_m_filter_ContourExecuteScalar_cxx
 }
 } // namespace vtkm::filter
 
