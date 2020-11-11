@@ -284,9 +284,8 @@ struct SerializableTypeString<vtkm::cont::ArrayHandleCast<T, AH>>
 {
   static VTKM_CONT const std::string& Get()
   {
-    static std::string name = "AH_Cast<" + SerializableTypeString<T>::Get() + "," +
-      SerializableTypeString<typename AH::ValueType>::Get() + "," +
-      SerializableTypeString<typename AH::StorageTag>::Get() + ">";
+    static std::string name =
+      "AH_Cast<" + SerializableTypeString<T>::Get() + "," + SerializableTypeString<AH>::Get() + ">";
     return name;
   }
 };
