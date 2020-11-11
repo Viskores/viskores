@@ -29,9 +29,9 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT VTKM_DEPRECATED(
-  1.6,
-  "CellLocator with virtual methods no longer supported. Use CellLocatorGeneral.") CellLocator
+class VTKM_CONT_EXPORT VTKM_DEPRECATED(1.6,
+                                       "CellLocator with virtual methods no longer supported. Use "
+                                       "CellLocatorGeneral or CellLocatorChooser.") CellLocator
   : public vtkm::cont::ExecutionObjectBase
 {
   VTKM_DEPRECATED_SUPPRESS_BEGIN

@@ -55,6 +55,7 @@ set(headers
   BoundsGlobalCompute.h
   CastAndCall.h
   CellLocatorBoundingIntervalHierarchy.h
+  CellLocatorChooser.h
   CellLocatorGeneral.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h

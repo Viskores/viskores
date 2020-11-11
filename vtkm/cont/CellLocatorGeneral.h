@@ -26,6 +26,18 @@ namespace vtkm
 namespace cont
 {
 
+/// \brief A CellLocator that works generally well for any supported cell set.
+///
+/// `CellLocatorGeneral` creates a `CellLocator` that acts like a multiplexer to
+/// switch at runtime to any supported cell set. It is a convenient class to use
+/// when the type of `CellSet` cannot be determined at runtime.
+///
+/// Note that `CellLocatorGeneral` only supports a finite amount of `CellSet` types.
+/// Thus, it is possible to give it a cell set type that is not supported.
+///
+/// Also note that `CellLocatorGeneral` can add a significant amount of code inside
+/// of worklet that uses it, and this might cause some issues with some compilers.
+///
 class VTKM_CONT_EXPORT CellLocatorGeneral
   : public vtkm::cont::internal::CellLocatorBase<CellLocatorGeneral>
 {
