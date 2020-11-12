@@ -360,6 +360,8 @@ void TestArrayHandleSerialization()
 {
   std::cout << "Testing ArrayHandleBasic\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
+  vtkm::testing::Testing::TryTypes(
+    TestArrayHandleBasic(), vtkm::List<char, long, long long, unsigned long, unsigned long long>());
 
   std::cout << "Testing ArrayHandleSOA\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
