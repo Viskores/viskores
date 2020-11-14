@@ -114,7 +114,7 @@ inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id num
     // DEBUG: std::cout << "splitsPerAxis: " << splitsPerAxis;
     vtkm::Id3 blocksPerAxis;
     for (vtkm::IdComponent d = 0; d < 3; ++d)
-      blocksPerAxis[d] = 1 << splitsPerAxis[d];
+      blocksPerAxis[d] = vtkm::Id{ 1 } << splitsPerAxis[d];
     // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
     return blocksPerAxis;
   }
