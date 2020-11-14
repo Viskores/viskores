@@ -1015,7 +1015,7 @@ std::string HierarchicalContourTreeDotGraphPrint(
   const std::string& label, // the label to use as title for the graph
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
     hierarchicalTree, // the hierarchical contour tree itself
-  const unsigned long showMask = vtkm::worklet::contourtree_distributed::
+  const vtkm::Id showMask = vtkm::worklet::contourtree_distributed::
     SHOW_HIERARCHICAL_STANDARD) // mask with flags for what elements to show
 // 		const unsigned long showMask = vtkm::worklet::contourtree_distributed::SHOW_HIERARCHICAL_STANDARD,		// mask with flags for what elements to show
 // 		const VectorType &perNodeValues = VectorType(0))														// an arbitrary vector of values
