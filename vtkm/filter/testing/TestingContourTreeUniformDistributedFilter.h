@@ -113,7 +113,7 @@ inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id num
     }
     // DEBUG: std::cout << "splitsPerAxis: " << splitsPerAxis;
     vtkm::Id3 blocksPerAxis;
-    for (vtkm::Id d = 0; d < 3; ++d)
+    for (vtkm::IdComponent d = 0; d < 3; ++d)
       blocksPerAxis[d] = 1 << splitsPerAxis[d];
     // DEBUG: std::cout << " blocksPerAxis: " << blocksPerAxis << std::endl;
     return blocksPerAxis;
@@ -121,8 +121,8 @@ inline vtkm::Id3 ComputeNumberOfBlocksPerAxis(vtkm::Id3 globalSize, vtkm::Id num
   else
   {
     std::cout << "numberOfBlocks is not a power of two. Splitting along longest axis." << std::endl;
-    vtkm::Id splitAxis = 0;
-    for (vtkm::Id d = 1; d < 3; ++d)
+    vtkm::IdComponent splitAxis = 0;
+    for (vtkm::IdComponent d = 1; d < 3; ++d)
       if (globalSize[d] > globalSize[splitAxis])
         splitAxis = d;
     vtkm::Id3 blocksPerAxis{ 1, 1, 1 };
@@ -140,7 +140,7 @@ inline std::tuple<vtkm::Id3, vtkm::Id3, vtkm::Id3> ComputeBlockExtents(vtkm::Id3
   // DEBUG: std::cout << "Block " << blockNo;
 
   vtkm::Id3 blockIndex, blockOrigin, blockSize;
-  for (vtkm::Id d = 0; d < 3; ++d)
+  for (vtkm::IdComponent d = 0; d < 3; ++d)
   {
     blockIndex[d] = blockNo % blocksPerAxis[d];
     blockNo /= blocksPerAxis[d];
