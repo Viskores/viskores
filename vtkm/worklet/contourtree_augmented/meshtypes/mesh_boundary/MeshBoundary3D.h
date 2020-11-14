@@ -141,7 +141,13 @@ public:
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
           break; // [1] - 1, [0]
         default:
+          // Due to CUDA we cannot throw an exception here, which would make the most
+          // sense
           VTKM_ASSERT(false); // Should not occur, edgeNo < N_INCIDENT_EDGES_2D = 6
+          // Initialize nbrSortIndex to something anyway to prevent compiler warning
+          // Set to the sort index of the vertex itself since there is "no" edge so
+          // that it contains a "sane" value if it should ever be reached.
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex);
           break;
       }
 
