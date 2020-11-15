@@ -79,7 +79,6 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ArcComparator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedOtherStartIndexNNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedSimulatedSimplicityIndexComparator.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVector.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CompressNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ComputeMaxNeighboursWorklet.h>
@@ -536,15 +535,6 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   other.DebugPrint("OTHER ContourTreeMesh", __FILE__, __LINE__);
 #endif
 
-  vtkm::cont::Token allToken;
-  mesh_dem_contourtree_mesh_inc::CombinedVectorExecObj<vtkm::Id> allGlobalIndicesExecObj(
-    this->GlobalMeshIndex, other.GlobalMeshIndex);
-  auto allGlobalIndices = allGlobalIndicesExecObj.PrepareForExecution(DeviceTag(), allToken);
-  mesh_dem_contourtree_mesh_inc::CombinedVectorExecObj<FieldType> allSortedValuesExecObj(
-    this->SortedValues, other.SortedValues);
-  auto allSortedValues = allSortedValuesExecObj.PrepareForExecution(DeviceTag(), allToken);
-  //auto allGlobalIndices = CombinedVector<FieldType(this->thisGlobalMeshIndex, other.GlobalMeshIndex);
-
   // Create combined sort order
   // TODO This vector could potentially be implemented purely as a smart array handle to reduce memory usage
   IdArrayType overallSortOrder;
@@ -555,8 +545,15 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     MarkOther markOtherFunctor;
     auto otherIndices = vtkm::cont::make_ArrayHandleTransform(
       vtkm::cont::ArrayHandleIndex(other.NumVertices), markOtherFunctor);
-    contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType, DeviceTag>
-      cssicFunctor(allSortedValues, allGlobalIndices);
+    contourtree_mesh_inc_ns::CombinedSimulatedSimplicityIndexComparator<FieldType>
+      cssicFunctorExecObj(
+        this->GlobalMeshIndex, other.GlobalMeshIndex, this->SortedValues, other.SortedValues);
+    // TODO FIXME We here need to force the arrays for the comparator onto the CPU by using DeviceAdapterTagSerial
+    //            Instead we should implement the merge of the arrays on the device and not use std::merge
+    vtkm::cont::Token tempToken;
+    auto cssicFunctor =
+      cssicFunctorExecObj.PrepareForExecution(vtkm::cont::DeviceAdapterTagSerial(), tempToken);
+    // Merge the arrays
     std::merge(vtkm::cont::ArrayPortalToIteratorBegin(thisIndices.ReadPortal()),
                vtkm::cont::ArrayPortalToIteratorEnd(thisIndices.ReadPortal()),
                vtkm::cont::ArrayPortalToIteratorBegin(otherIndices.ReadPortal()),
@@ -574,10 +571,12 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   IdArrayType overallSortIndex;
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
-    vtkm::cont::Token token;
-    // Functor return 0,1 for each element of a CombinedVector depending on whethern the current value is different from the next
-    mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext<vtkm::Id, DeviceTag>
-      differentFromNextFunctor(&allGlobalIndices, overallSortOrder, token);
+    // Functor return 0,1 for each element depending on whethern the current value is different from the next
+    vtkm::cont::Token tempToken;
+    mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext<DeviceTag>
+      differentFromNextFunctor(
+        this->GlobalMeshIndex, other.GlobalMeshIndex, overallSortOrder, tempToken);
+    // Array based on the functor
     auto differentFromNextArr = vtkm::cont::make_ArrayHandleTransform(
       vtkm::cont::ArrayHandleIndex(overallSortIndex.GetNumberOfValues() - 1),
       differentFromNextFunctor);
@@ -585,12 +584,15 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     // Compute the exclusive scan of our transformed combined vector
     overallSortIndex.WritePortal().Set(0, 0);
     IdArrayType tempArr;
-    vtkm::cont::Algorithm::ScanInclusive(differentFromNextArr, tempArr);
+    // Here we pass in the DeviceTag to make sure the device we used for CombinedVectorDifferentFromNext
+    // is the same as what we use for the algorithms
+    vtkm::cont::Algorithm::ScanInclusive(DeviceTag(), differentFromNextArr, tempArr);
     vtkm::cont::Algorithm::CopySubRange(
-      tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
+      DeviceTag(), tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
   }
   vtkm::Id numVerticesCombined =
     overallSortIndex.ReadPortal().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
+
 #ifdef DEBUG_PRINT
   std::cout << "OverallSortIndex.size  " << overallSortIndex.GetNumberOfValues() << std::endl;
   PrintIndices("overallSortIndex", overallSortIndex);
