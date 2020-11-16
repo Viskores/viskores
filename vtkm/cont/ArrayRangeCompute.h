@@ -58,31 +58,35 @@ namespace cont
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input, \
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny())
 
-#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(Storage) \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(char, Storage);           \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int8, Storage);     \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt8, Storage);    \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int16, Storage);    \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt16, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int32, Storage);    \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt32, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int64, Storage);    \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt64, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float32, Storage);  \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float64, Storage)
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(Storage)              \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int8, Storage);                  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt8, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int16, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt16, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int32, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt32, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Int64, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::UInt64, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float32, Storage);               \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(vtkm::Float64, Storage);               \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(char, Storage);                        \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(signed VTKM_UNUSED_INT_TYPE, Storage); \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(unsigned VTKM_UNUSED_INT_TYPE, Storage)
 
-#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(N, Storage)       \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(char, N, Storage);          \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int8, N, Storage);    \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, N, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int16, N, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt16, N, Storage);  \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int32, N, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt32, N, Storage);  \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int64, N, Storage);   \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt64, N, Storage);  \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, N, Storage); \
-  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, N, Storage)
+#define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(N, Storage)                     \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int8, N, Storage);                  \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, N, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int16, N, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt16, N, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int32, N, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt32, N, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Int64, N, Storage);                 \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt64, N, Storage);                \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, N, Storage);               \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, N, Storage);               \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(char, N, Storage);                        \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(signed VTKM_UNUSED_INT_TYPE, N, Storage); \
+  VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(unsigned VTKM_UNUSED_INT_TYPE, N, Storage)
 
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(vtkm::cont::StorageTagBasic);
 

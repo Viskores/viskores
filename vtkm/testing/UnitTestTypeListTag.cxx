@@ -171,6 +171,14 @@ void TestLists()
   scalarsAll.AddExpected(vtkm::UInt32());
   scalarsAll.AddExpected(vtkm::Int64());
   scalarsAll.AddExpected(vtkm::UInt64());
+  // Extra types with same layout as above but considered different by C
+  scalarsAll.AddExpected(char());
+  scalarsAll.AddExpected((signed int)0);
+  scalarsAll.AddExpected((unsigned int)0);
+  scalarsAll.AddExpected((signed long)0);
+  scalarsAll.AddExpected((unsigned long)0);
+  scalarsAll.AddExpected((signed long long)0);
+  scalarsAll.AddExpected((unsigned long long)0);
   TryList(scalarsAll, vtkm::TypeListTagScalarAll());
 
   std::cout << "TypeListTagVecCommon" << std::endl;
@@ -268,6 +276,14 @@ void TestLists()
   all.AddExpected(vtkm::Vec4ui_16());
   all.AddExpected(vtkm::Vec4ui_32());
   all.AddExpected(vtkm::Vec4ui_64());
+  // Extra types with same layout as above but considered different by C
+  all.AddExpected(char());
+  all.AddExpected((signed int)0);
+  all.AddExpected((unsigned int)0);
+  all.AddExpected((signed long)0);
+  all.AddExpected((unsigned long)0);
+  all.AddExpected((signed long long)0);
+  all.AddExpected((unsigned long long)0);
   TryList(all, vtkm::TypeListTagAll());
 }
 

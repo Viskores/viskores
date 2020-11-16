@@ -97,7 +97,12 @@ using TypeListScalarAll = vtkm::List<vtkm::Int8,
                                      vtkm::Int64,
                                      vtkm::UInt64,
                                      vtkm::Float32,
-                                     vtkm::Float64>;
+                                     vtkm::Float64,
+                                     // Other base C types that are the same as above but
+                                     // recognized as different by the compiler
+                                     char,
+                                     signed VTKM_UNUSED_INT_TYPE,
+                                     unsigned VTKM_UNUSED_INT_TYPE>;
 
 /// A list of the most commonly use Vec classes. Specifically, these are
 /// vectors of size 2, 3, or 4 containing either unsigned bytes, signed

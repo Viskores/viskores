@@ -49,35 +49,88 @@ std::string GetVariadicSerializableTypeString(const T&)
   return SerializableTypeString<T>::Get();
 }
 
-template <typename T>
-std::string IntTypeString()
-{
-  return (std::is_signed<T>::value ? "I" : "U") + std::to_string(sizeof(T) * 8);
-}
-
 } // internal
 
 /// @cond SERIALIZATION
-#define VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(int_type)                              \
-  template <>                                                                          \
-  struct SerializableTypeString<int_type>                                              \
-  {                                                                                    \
-    static VTKM_CONT std::string Get() { return internal::IntTypeString<int_type>(); } \
+template <>
+struct SerializableTypeString<vtkm::Int8>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "I8";
+    return name;
   }
+};
 
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(char);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(signed char);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(unsigned char);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(signed short);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(unsigned short);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(signed int);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(unsigned int);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(signed long);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(unsigned long);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(signed long long);
-VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL(unsigned long long);
+template <>
+struct SerializableTypeString<vtkm::UInt8>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "U8";
+    return name;
+  }
+};
 
-#undef VTK_M_SERIALIZABLE_INT_TYPE_STRING_IMPL
+template <>
+struct SerializableTypeString<vtkm::Int16>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "I16";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<vtkm::UInt16>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "U16";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<vtkm::Int32>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "I32";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<vtkm::UInt32>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "U32";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<vtkm::Int64>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "I64";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<vtkm::UInt64>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "U64";
+    return name;
+  }
+};
 
 template <>
 struct SerializableTypeString<vtkm::Float32>
@@ -95,6 +148,36 @@ struct SerializableTypeString<vtkm::Float64>
   static VTKM_CONT const std::string& Get()
   {
     static std::string name = "F64";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<char>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "C8";
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<VTKM_UNUSED_INT_TYPE>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "L" + std::to_string(sizeof(VTKM_UNUSED_INT_TYPE) * 8);
+    return name;
+  }
+};
+
+template <>
+struct SerializableTypeString<unsigned VTKM_UNUSED_INT_TYPE>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "UL" + std::to_string(sizeof(unsigned VTKM_UNUSED_INT_TYPE) * 8);
     return name;
   }
 };
