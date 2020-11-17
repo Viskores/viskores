@@ -34,7 +34,7 @@ public:
   using ReadPortalType = vtkm::internal::ArrayPortalBasicRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalBasicWrite<T>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       vtkm::cont::internal::Buffer* buffers,

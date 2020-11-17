@@ -103,7 +103,7 @@ public:
   // you actually try to use this read portal.
   using ReadPortalType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       vtkm::cont::internal::Buffer* buffers,

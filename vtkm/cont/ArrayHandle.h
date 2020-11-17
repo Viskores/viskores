@@ -1109,7 +1109,7 @@ public:
     return true; // different valuetype and/or storage
   }
 
-  VTKM_CONT vtkm::IdComponent GetNumberOfBuffers() const
+  VTKM_CONT constexpr vtkm::IdComponent GetNumberOfBuffers() const
   {
     return StorageType::GetNumberOfBuffers();
   }

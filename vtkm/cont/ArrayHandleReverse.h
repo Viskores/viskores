@@ -127,7 +127,7 @@ public:
   using ReadPortalType = ArrayPortalReverse<typename ArrayHandleType::ReadPortalType>;
   using WritePortalType = ArrayPortalReverse<typename ArrayHandleType::WritePortalType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
     return SourceStorage::GetNumberOfBuffers();
   }

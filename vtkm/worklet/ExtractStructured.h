@@ -414,12 +414,12 @@ public:
   }
 
 private:
-  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates::Superclass;
+  using UniformCoordinatesArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
 
-  using RectilinearCoordinatesArrayHandle = vtkm::cont::ArrayHandleCartesianProduct<
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::Superclass;
+  using RectilinearCoordinatesArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
 
   UniformCoordinatesArrayHandle MapCoordinatesUniform(const UniformCoordinatesArrayHandle& coords)
@@ -448,13 +448,13 @@ private:
     // its dimensionality, but the coordinates are always 3 dimensional.
     // We can map the axis of the cellset to the coordinates by looking at the
     // length of a coordinate axis array.
-    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetStorage().GetFirstArray(),
-                                         this->ValidPoints.GetStorage().GetSecondArray(),
-                                         this->ValidPoints.GetStorage().GetThirdArray() };
+    AxisIndexArrayPoints validIds[3] = { this->ValidPoints.GetFirstArray(),
+                                         this->ValidPoints.GetSecondArray(),
+                                         this->ValidPoints.GetThirdArray() };
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetStorage().GetFirstArray(),
-                                                              coords.GetStorage().GetSecondArray(),
-                                                              coords.GetStorage().GetThirdArray() };
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrays[3] = { coords.GetFirstArray(),
+                                                              coords.GetSecondArray(),
+                                                              coords.GetThirdArray() };
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> xyzs[3];
     int dim = 0;
@@ -487,14 +487,14 @@ private:
       output = self.ProcessPointField(coords);
     }
 
-    VTKM_CONT void operator()(const UniformCoordinatesArrayHandle& coords,
+    VTKM_CONT void operator()(const UniformCoordinatesArrayHandle::Superclass& coords,
                               ExtractStructured& self,
                               vtkm::cont::VariantArrayHandleCommon& output) const
     {
       output = self.MapCoordinatesUniform(coords);
     }
 
-    VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle& coords,
+    VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle::Superclass& coords,
                               ExtractStructured& self,
                               vtkm::cont::VariantArrayHandleCommon& output) const
     {

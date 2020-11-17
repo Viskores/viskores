@@ -18,8 +18,6 @@
 
 namespace vtkm
 {
-namespace exec
-{
 namespace internal
 {
 
@@ -147,8 +145,7 @@ private:
   PortalTypeThird PortalThird;
 };
 }
-}
-} // namespace vtkm::exec::internal
+} // namespace vtkm::internal
 
 namespace vtkm
 {
@@ -201,193 +198,128 @@ struct ArrayHandleCartesianProductTraits
 template <typename T, typename ST1, typename ST2, typename ST3>
 class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
 {
-  using AH1 = vtkm::cont::ArrayHandle<T, ST1>;
-  using AH2 = vtkm::cont::ArrayHandle<T, ST2>;
-  using AH3 = vtkm::cont::ArrayHandle<T, ST3>;
+  using Storage1 = vtkm::cont::internal::Storage<T, ST1>;
+  using Storage2 = vtkm::cont::internal::Storage<T, ST2>;
+  using Storage3 = vtkm::cont::internal::Storage<T, ST3>;
+
+  template <typename Buffs>
+  VTKM_CONT constexpr static Buffs* Buffers1(Buffs* buffers)
+  {
+    return buffers;
+  }
+
+  template <typename Buffs>
+  VTKM_CONT constexpr static Buffs* Buffers2(Buffs* buffers)
+  {
+    return buffers + Storage1::GetNumberOfBuffers();
+  }
+
+  template <typename Buffs>
+  VTKM_CONT constexpr static Buffs* Buffers3(Buffs* buffers)
+  {
+    return buffers + Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers();
+  }
 
 public:
-  using ValueType = vtkm::Vec<typename AH1::ValueType, 3>;
+  using ReadPortalType =
+    vtkm::internal::ArrayPortalCartesianProduct<vtkm::Vec<T, 3>,
+                                                typename Storage1::ReadPortalType,
+                                                typename Storage2::ReadPortalType,
+                                                typename Storage3::ReadPortalType>;
+  using WritePortalType =
+    vtkm::internal::ArrayPortalCartesianProduct<vtkm::Vec<T, 3>,
+                                                typename Storage1::WritePortalType,
+                                                typename Storage2::WritePortalType,
+                                                typename Storage3::WritePortalType>;
 
-  using PortalType =
-    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                      typename AH1::WritePortalType,
-                                                      typename AH2::WritePortalType,
-                                                      typename AH3::WritePortalType>;
-  using PortalConstType =
-    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
-                                                      typename AH1::ReadPortalType,
-                                                      typename AH2::ReadPortalType,
-                                                      typename AH3::ReadPortalType>;
-
-  VTKM_CONT
-  Storage()
-    : FirstArray()
-    , SecondArray()
-    , ThirdArray()
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
+    return Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers() +
+      Storage3::GetNumberOfBuffers();
   }
 
-  VTKM_CONT
-  Storage(const AH1& array1, const AH2& array2, const AH3& array3)
-    : FirstArray(array1)
-    , SecondArray(array2)
-    , ThirdArray(array3)
+  VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
+    return (Storage1::GetNumberOfValues(Buffers1(buffers)) *
+            Storage2::GetNumberOfValues(Buffers2(buffers)) *
+            Storage3::GetNumberOfValues(Buffers3(buffers)));
   }
 
-  VTKM_CONT
-  PortalType GetPortal()
+  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
+                                      vtkm::cont::internal::Buffer* buffers,
+                                      vtkm::CopyFlag vtkmNotUsed(preserve),
+                                      vtkm::cont::Token& vtkmNotUsed(token))
   {
-    return PortalType(this->FirstArray.WritePortal(),
-                      this->SecondArray.WritePortal(),
-                      this->ThirdArray.WritePortal());
+    if (numValues == GetNumberOfValues(buffers))
+    {
+      // In general, we don't allow resizing of the array, but if it was "allocated" to the
+      // correct size, we will allow that.
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    }
   }
 
-  VTKM_CONT
-  PortalConstType GetPortalConst() const
+  VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
+                                                   vtkm::cont::DeviceAdapterId device,
+                                                   vtkm::cont::Token& token)
   {
-    return PortalConstType(
-      this->FirstArray.ReadPortal(), this->SecondArray.ReadPortal(), this->ThirdArray.ReadPortal());
+    return ReadPortalType(Storage1::CreateReadPortal(Buffers1(buffers), device, token),
+                          Storage2::CreateReadPortal(Buffers2(buffers), device, token),
+                          Storage3::CreateReadPortal(Buffers3(buffers), device, token));
   }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
+                                                     vtkm::cont::DeviceAdapterId device,
+                                                     vtkm::cont::Token& token)
   {
-    return this->FirstArray.GetNumberOfValues() * this->SecondArray.GetNumberOfValues() *
-      this->ThirdArray.GetNumberOfValues();
+    return WritePortalType(Storage1::CreateWritePortal(Buffers1(buffers), device, token),
+                           Storage2::CreateWritePortal(Buffers2(buffers), device, token),
+                           Storage3::CreateWritePortal(Buffers3(buffers), device, token));
   }
 
-  VTKM_CONT
-  void Allocate(vtkm::Id /*numberOfValues*/)
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const vtkm::cont::ArrayHandle<T, ST1>& array1,
+    const vtkm::cont::ArrayHandle<T, ST2>& array2,
+    const vtkm::cont::ArrayHandle<T, ST3>& array3)
   {
-    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    std::vector<vtkm::cont::internal::Buffer> destBuffers(
+      static_cast<std::size_t>(GetNumberOfBuffers()));
+    auto destIter = destBuffers.begin();
+
+    destIter = std::copy_n(
+      array1.GetBuffers(), static_cast<std::size_t>(Storage1::GetNumberOfBuffers()), destIter);
+    destIter = std::copy_n(
+      array2.GetBuffers(), static_cast<std::size_t>(Storage2::GetNumberOfBuffers()), destIter);
+    destIter = std::copy_n(
+      array3.GetBuffers(), static_cast<std::size_t>(Storage3::GetNumberOfBuffers()), destIter);
+
+    return destBuffers;
   }
 
-  VTKM_CONT
-  void Shrink(vtkm::Id /*numberOfValues*/)
+  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST1> GetArrayHandle1(
+    const vtkm::cont::internal::Buffer* buffers)
   {
-    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    return vtkm::cont::ArrayHandle<T, ST1>(Buffers1(buffers));
   }
-
-  VTKM_CONT
-  void ReleaseResources()
+  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST2> GetArrayHandle2(
+    const vtkm::cont::internal::Buffer* buffers)
   {
-    // This request is ignored since it is asking to release the resources
-    // of the arrays, which may be used elsewhere.
+    return vtkm::cont::ArrayHandle<T, ST2>(Buffers2(buffers));
   }
-
-  VTKM_CONT
-  const AH1& GetFirstArray() const { return this->FirstArray; }
-
-  VTKM_CONT
-  const AH2& GetSecondArray() const { return this->SecondArray; }
-
-  VTKM_CONT
-  const AH3& GetThirdArray() const { return this->ThirdArray; }
-
-private:
-  AH1 FirstArray;
-  AH2 SecondArray;
-  AH3 ThirdArray;
-};
-
-template <typename T, typename ST1, typename ST2, typename ST3, typename Device>
-class ArrayTransfer<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>, Device>
-{
-public:
-  using ValueType = vtkm::Vec<T, 3>;
-
-private:
-  using AH1 = vtkm::cont::ArrayHandle<T, ST1>;
-  using AH2 = vtkm::cont::ArrayHandle<T, ST2>;
-  using AH3 = vtkm::cont::ArrayHandle<T, ST3>;
-
-  using StorageTag = vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
-  using PortalControl = typename StorageType::PortalType;
-  using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType,
-    typename AH1::template ExecutionTypes<Device>::Portal,
-    typename AH2::template ExecutionTypes<Device>::Portal,
-    typename AH3::template ExecutionTypes<Device>::Portal>;
-
-  using PortalConstExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType,
-    typename AH1::template ExecutionTypes<Device>::PortalConst,
-    typename AH2::template ExecutionTypes<Device>::PortalConst,
-    typename AH3::template ExecutionTypes<Device>::PortalConst>;
-
-  VTKM_CONT
-  ArrayTransfer(StorageType* storage)
-    : FirstArray(storage->GetFirstArray())
-    , SecondArray(storage->GetSecondArray())
-    , ThirdArray(storage->GetThirdArray())
+  VTKM_CONT static vtkm::cont::ArrayHandle<T, ST3> GetArrayHandle3(
+    const vtkm::cont::internal::Buffer* buffers)
   {
+    return vtkm::cont::ArrayHandle<T, ST3>(Buffers3(buffers));
   }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->FirstArray.GetNumberOfValues() * this->SecondArray.GetNumberOfValues() *
-      this->ThirdArray.GetNumberOfValues();
-  }
-
-  VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData), vtkm::cont::Token& token)
-  {
-    return PortalConstExecution(this->FirstArray.PrepareForInput(Device(), token),
-                                this->SecondArray.PrepareForInput(Device(), token),
-                                this->ThirdArray.PrepareForInput(Device(), token));
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData), vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadAllocation(
-      "Cannot write to an ArrayHandleCartesianProduct. It does not make "
-      "sense because there is overlap in the data.");
-  }
-
-  VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues), vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadAllocation(
-      "Cannot write to an ArrayHandleCartesianProduct. It does not make "
-      "sense because there is overlap in the data.");
-  }
-
-  VTKM_CONT
-  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
-  {
-    // Implementation of this method should be unnecessary. The internal
-    // first and second array handles should automatically retrieve the
-    // output data as necessary.
-  }
-
-  VTKM_CONT
-  void Shrink(vtkm::Id /*numberOfValues*/)
-  {
-    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
-  }
-
-  VTKM_CONT
-  void ReleaseResources()
-  {
-    this->FirstArray.ReleaseResourcesExecution();
-    this->SecondArray.ReleaseResourcesExecution();
-    this->ThirdArray.ReleaseResourcesExecution();
-  }
-
-private:
-  AH1 FirstArray;
-  AH2 SecondArray;
-  AH3 ThirdArray;
 };
 } // namespace internal
+
+template <typename T, typename ST1, typename ST2, typename ST3>
+VTKM_ARRAY_HANDLE_NEW_STYLE(
+  T,
+  VTKM_PASS_COMMAS(vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>));
 
 /// ArrayHandleCartesianProduct is a specialization of ArrayHandle. It takes two delegate
 /// array handle and makes a new handle that access the corresponding entries
@@ -421,7 +353,7 @@ public:
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
                               const ThirdHandleType& thirdArray)
-    : Superclass(StorageType(firstArray, secondArray, thirdArray))
+    : Superclass(StorageType::CreateBuffers(firstArray, secondArray, thirdArray))
   {
   }
 
@@ -431,6 +363,19 @@ public:
   /// created for all devices, and it would not be valid for all devices.
   ///
   ~ArrayHandleCartesianProduct() {}
+
+  VTKM_CONT FirstHandleType GetFirstArray() const
+  {
+    return StorageType::GetArrayHandle1(this->GetBuffers());
+  }
+  VTKM_CONT SecondHandleType GetSecondArray() const
+  {
+    return StorageType::GetArrayHandle2(this->GetBuffers());
+  }
+  VTKM_CONT ThirdHandleType GetThirdArray() const
+  {
+    return StorageType::GetArrayHandle3(this->GetBuffers());
+  }
 };
 
 /// A convenience function for creating an ArrayHandleCartesianProduct. It takes the two
@@ -492,10 +437,10 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    auto storage = obj.GetStorage();
-    vtkmdiy::save(bb, storage.GetFirstArray());
-    vtkmdiy::save(bb, storage.GetSecondArray());
-    vtkmdiy::save(bb, storage.GetThirdArray());
+    Type array = obj;
+    vtkmdiy::save(bb, array.GetFirstArray());
+    vtkmdiy::save(bb, array.GetSecondArray());
+    vtkmdiy::save(bb, array.GetThirdArray());
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
