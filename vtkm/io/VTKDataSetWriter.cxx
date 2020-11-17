@@ -327,15 +327,15 @@ void WriteDataSetAsRectilinearGrid(std::ostream& out,
   std::string typeName = vtkm::io::internal::DataTypeName<T>::Name();
   vtkm::cont::ArrayHandle<T> dimArray;
 
-  dimArray = points.GetStorage().GetFirstArray();
+  dimArray = points.GetFirstArray();
   out << "X_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
   OutputFieldFunctor{ out }(dimArray);
 
-  dimArray = points.GetStorage().GetSecondArray();
+  dimArray = points.GetSecondArray();
   out << "Y_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
   OutputFieldFunctor{ out }(dimArray);
 
-  dimArray = points.GetStorage().GetThirdArray();
+  dimArray = points.GetThirdArray();
   out << "Z_COORDINATES " << dimArray.GetNumberOfValues() << " " << typeName << "\n";
   OutputFieldFunctor{ out }(dimArray);
 }
