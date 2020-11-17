@@ -42,6 +42,7 @@ set(common_header_template_sources
   FilterDataSetWithField.hxx
   FilterField.hxx
   Filter.hxx
+  PointAverage.hxx
   Threshold.hxx
   ThresholdPoints.hxx
   )
@@ -53,6 +54,7 @@ set(common_sources_device
   ExtractStructured.cxx
   MapFieldMergeAverage.cxx
   MapFieldPermutation.cxx
+  PointAverage.cxx
   Threshold.cxx
 )
 
@@ -135,7 +137,6 @@ set(extra_header_template_sources
   ParticleDensityNearestGridPoint.hxx
   ParticleAdvection.hxx
   Pathline.hxx
-  PointAverage.hxx
   PointElevation.hxx
   PointTransform.hxx
   Probe.hxx
@@ -159,13 +160,12 @@ set(extra_header_template_sources
   )
 
 set(extra_sources_device
+  ClipWithFieldScalar.cxx
   ClipWithFieldSignedInteger.cxx
   ClipWithFieldUnsignedInteger.cxx
-  ClipWithFieldScalar.cxx
   ClipWithImplicitFunction.cxx
-  PointAverage.cxx
-  VectorMagnitude.cxx
   ExternalFaces.cxx
+  VectorMagnitude.cxx
   particleadvection/Messenger.cxx
   particleadvection/ParticleMessenger.cxx
 )
@@ -199,6 +199,7 @@ set(gradient_header_template_sources
   )
 
 set(gradient_sources_device
+  GradientCartesianPoints.cxx
   GradientScalar.cxx
   GradientUniformPoints.cxx
   GradientVector.cxx

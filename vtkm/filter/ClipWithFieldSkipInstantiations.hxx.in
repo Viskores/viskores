@@ -27,6 +27,7 @@
 #define vtk_m_filter_ClipWithFieldSkipInstantiations_hxx
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/ClipWithField.hxx>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>

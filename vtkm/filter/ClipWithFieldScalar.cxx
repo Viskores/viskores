@@ -12,6 +12,7 @@
 #define vtkm_filter_ClipWithFieldExecuteScalar_cxx
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/ClipWithField.hxx>
 
 namespace vtkm
 {

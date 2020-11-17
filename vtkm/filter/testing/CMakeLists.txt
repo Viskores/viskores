@@ -50,6 +50,7 @@ set(unit_tests
   UnitTestPartitionedDataSetFilters.cxx
   UnitTestPartitionedDataSetHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
+  UnitTestPointAverageCellSetExtrude.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
   UnitTestProbe.cxx

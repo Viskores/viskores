@@ -28,7 +28,7 @@ namespace filter
 /// The method of transformation is based on averaging the data
 /// values of all points used by particular cell.
 ///
-class VTKM_ALWAYS_EXPORT CellAverage : public vtkm::filter::FilterField<CellAverage>
+class VTKM_FILTER_COMMON_EXPORT CellAverage : public vtkm::filter::FilterField<CellAverage>
 {
 public:
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -42,7 +42,7 @@ private:
 };
 
 #ifndef vtkm_filter_CellAverage_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(CellAverage);
+VTKM_FILTER_COMMON_EXPORT_EXECUTE_METHOD(CellAverage);
 #endif
 }
 } // namespace vtkm::filter

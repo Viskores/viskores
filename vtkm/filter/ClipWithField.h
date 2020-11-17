@@ -28,7 +28,8 @@ namespace filter
 /// value are considered outside, and will be discarded. All points that are greater
 /// are kept.
 /// The resulting geometry will not be water tight.
-class VTKM_ALWAYS_EXPORT ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
+class VTKM_FILTER_EXTRA_EXPORT ClipWithField
+  : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
   using SupportedTypes = vtkm::TypeListScalarAll;
@@ -103,13 +104,9 @@ private:
 };
 
 #ifndef vtkm_filter_Clip_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithField);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithField);
 #endif
 }
 } // namespace vtkm::filter
-
-#ifndef vtk_m_filter_ClipWithField_hxx
-#include <vtkm/filter/ClipWithField.hxx>
-#endif
 
 #endif // vtk_m_filter_ClipWithField_h

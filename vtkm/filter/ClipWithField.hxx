@@ -52,11 +52,10 @@ struct ClipWithFieldProcessCoords
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input,
+                                             const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                             const vtkm::filter::FieldMetadata& fieldMeta,
+                                             vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   if (fieldMeta.IsPointField() == false)
   {
