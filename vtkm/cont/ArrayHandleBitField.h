@@ -82,7 +82,7 @@ public:
   using ReadPortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalConstType>;
   using WritePortalType = vtkm::cont::internal::ArrayPortalBitField<BitPortalType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numberOfBits,
                                       vtkm::cont::internal::Buffer* buffers,

@@ -203,19 +203,19 @@ class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, 
   using Storage3 = vtkm::cont::internal::Storage<T, ST3>;
 
   template <typename Buffs>
-  VTKM_CONT static Buffs* Buffers1(Buffs* buffers)
+  VTKM_CONT constexpr static Buffs* Buffers1(Buffs* buffers)
   {
     return buffers;
   }
 
   template <typename Buffs>
-  VTKM_CONT static Buffs* Buffers2(Buffs* buffers)
+  VTKM_CONT constexpr static Buffs* Buffers2(Buffs* buffers)
   {
     return buffers + Storage1::GetNumberOfBuffers();
   }
 
   template <typename Buffs>
-  VTKM_CONT static Buffs* Buffers3(Buffs* buffers)
+  VTKM_CONT constexpr static Buffs* Buffers3(Buffs* buffers)
   {
     return buffers + Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers();
   }
@@ -232,7 +232,7 @@ public:
                                                 typename Storage2::WritePortalType,
                                                 typename Storage3::WritePortalType>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers()
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers()
   {
     return Storage1::GetNumberOfBuffers() + Storage2::GetNumberOfBuffers() +
       Storage3::GetNumberOfBuffers();

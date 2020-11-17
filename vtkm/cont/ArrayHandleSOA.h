@@ -142,7 +142,7 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalSOA<T, vtkm::internal::ArrayPortalBasicWrite<ComponentType>>;
 
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return NUM_COMPONENTS; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return NUM_COMPONENTS; }
 
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       vtkm::cont::internal::Buffer* buffers,

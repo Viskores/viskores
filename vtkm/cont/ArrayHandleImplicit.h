@@ -105,7 +105,7 @@ struct VTKM_ALWAYS_EXPORT
 
   // Implicit array has one buffer that should be empty (NumberOfBytes = 0), but holds
   // the metadata for the array.
-  VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return 1; }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
