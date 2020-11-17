@@ -93,7 +93,7 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHa
   out << "Could not find appropriate cast for array in CastAndCall.\n"
          "Array: ";
   ref.PrintSummary(out);
-  out << "TypeList: " << type.name() << "\n";
+  out << "TypeList: " << vtkm::cont::TypeToString(type) << "\n";
   throw vtkm::cont::ErrorBadValue(out.str());
 }
 
