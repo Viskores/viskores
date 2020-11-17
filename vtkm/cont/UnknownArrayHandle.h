@@ -144,7 +144,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   static std::shared_ptr<UnknownAHContainer> Make(
     const vtkm::cont::ArrayHandle<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceS>>& array)
   {
-    return Make(array.GetStorage().GetArray());
+    vtkm::cont::ArrayHandleCast<TargetT, vtkm::cont::ArrayHandle<SourceT, SourceS>> castArray =
+      array;
+    return Make(castArray.GetSourceArray());
   }
 
   template <typename T, typename... Ss>
