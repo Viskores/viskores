@@ -31,7 +31,7 @@ inline vtkm::Id ParticleAdvectorBase<ResultType>::ComputeTotalNumParticles(vtkm:
 
 template <typename ResultType>
 inline const vtkm::filter::particleadvection::DataSetIntegrator&
-ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) const
+ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) // const
 {
   for (const auto& it : this->Blocks)
     if (it.GetID() == id)
@@ -40,72 +40,94 @@ ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) const
 }
 
 template <typename ResultType>
-inline void ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType& res,
-                                                           vtkm::Id blockId,
-                                                           std::vector<vtkm::Particle>& I,
-                                                           std::vector<vtkm::Particle>& T,
-                                                           std::vector<vtkm::Particle>& A)
+inline void ParticleAdvectorBase<ResultType>::UpdateResultParticle(
+  vtkm::Particle& p,
+  std::vector<vtkm::Particle>& I,
+  std::vector<vtkm::Particle>& T,
+  std::vector<vtkm::Particle>& A,
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapI,
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapA) const
+{
+  if (p.Status.CheckTerminate())
+    T.push_back(p);
+  else
+  {
+    const auto& it = this->ParticleBlockIDsMap.find(p.ID);
+    VTKM_ASSERT(it != this->ParticleBlockIDsMap.end());
+    auto currBIDs = it->second;
+    VTKM_ASSERT(!currBIDs.empty());
+
+    std::vector<vtkm::Id> newIDs;
+    if (p.Status.CheckSpatialBounds() && !p.Status.CheckTookAnySteps())
+      newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
+    else
+      newIDs = this->BoundsMap.FindBlocks(p.Pos, currBIDs);
+
+    //reset the particle status.
+    p.Status = vtkm::ParticleStatus();
+
+    if (newIDs.empty()) //No blocks, we're done.
+    {
+      p.Status.SetTerminate();
+      T.push_back(p);
+    }
+    else
+    {
+      //If we have more than blockId, we want to minimize communication
+      //and put any blocks owned by this rank first.
+      if (newIDs.size() > 1)
+      {
+        for (auto idit = newIDs.begin(); idit != newIDs.end(); idit++)
+        {
+          vtkm::Id bid = *idit;
+          if (this->BoundsMap.FindRank(bid) == this->Rank)
+          {
+            newIDs.erase(idit);
+            newIDs.insert(newIDs.begin(), bid);
+            break;
+          }
+        }
+      }
+
+      int dstRank = this->BoundsMap.FindRank(newIDs[0]);
+      if (dstRank == this->Rank)
+      {
+        A.push_back(p);
+        idsMapA[p.ID] = newIDs;
+      }
+      else
+      {
+        I.push_back(p);
+        idsMapI[p.ID] = newIDs;
+      }
+    }
+  }
+}
+
+template <typename ResultType>
+inline vtkm::Id ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType& res,
+                                                               vtkm::Id blockId)
 {
   vtkm::Id n = res.Particles.GetNumberOfValues();
   auto portal = res.Particles.ReadPortal();
 
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> idsMapI, idsMapA;
+  std::vector<vtkm::Particle> I, T, A;
+
   for (vtkm::Id i = 0; i < n; i++)
   {
+    //auto& p = portal.Get(i);
     vtkm::Particle p = portal.Get(i);
-
-    if (p.Status.CheckTerminate())
-    {
-      T.push_back(p);
-      this->ParticleBlockIDsMap.erase(p.ID);
-    }
-    else
-    {
-      std::vector<vtkm::Id> currBIDs = this->ParticleBlockIDsMap[p.ID];
-      VTKM_ASSERT(!currBIDs.empty());
-
-      std::vector<vtkm::Id> newIDs;
-      if (p.Status.CheckSpatialBounds() && !p.Status.CheckTookAnySteps())
-        newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
-      else
-        newIDs = this->BoundsMap.FindBlocks(p.Pos, currBIDs);
-
-      //reset the particle status.
-      p.Status = vtkm::ParticleStatus();
-
-      if (newIDs.empty()) //No blocks, we're done.
-      {
-        T.push_back(p);
-        this->ParticleBlockIDsMap.erase(p.ID);
-      }
-      else
-      {
-        //If we have more than blockId, we want to minimize communication
-        //and put any blocks owned by this rank first.
-        if (newIDs.size() > 1)
-        {
-          for (auto it = newIDs.begin(); it != newIDs.end(); it++)
-          {
-            vtkm::Id bid = *it;
-            if (this->BoundsMap.FindRank(bid) == this->Rank)
-            {
-              newIDs.erase(it);
-              newIDs.insert(newIDs.begin(), bid);
-              break;
-            }
-          }
-        }
-
-        int dstRank = this->BoundsMap.FindRank(newIDs[0]);
-        this->ParticleBlockIDsMap[p.ID] = newIDs;
-
-        if (dstRank == this->Rank)
-          A.push_back(p);
-        else
-          I.push_back(p);
-      }
-    }
+    this->UpdateResultParticle(p, I, T, A, idsMapI, idsMapA);
   }
+
+  vtkm::Id numTerm = static_cast<vtkm::Id>(T.size());
+  this->UpdateActive(A, idsMapA);
+  this->UpdateInactive(I, idsMapI);
+  this->UpdateTerminated(T, blockId);
+
   this->StoreResult(res, blockId);
+  return numTerm;
 }
 }
 }

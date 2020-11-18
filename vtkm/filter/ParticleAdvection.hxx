@@ -29,6 +29,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ParticleAdvection::ParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<ParticleAdvection>()
+  , UseThreadedAlgorithm(false)
 {
 }
 
@@ -59,7 +60,18 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
     dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
   }
 
-  vtkm::filter::particleadvection::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
+  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
+
+  if (this->UseThreadedAlgorithm)
+    return vtkm::filter::particleadvection::RunAlgo<ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+
+  //  vtkm::filter::particleadvection::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
+  vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm pa(boundsMap, dsi);
   pa.SetNumberOfSteps(this->NumberOfSteps);
   pa.SetStepSize(this->StepSize);
   pa.SetSeeds(this->Seeds);

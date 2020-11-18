@@ -50,10 +50,10 @@ public:
   VTKM_CONT ~ParticleMessenger() {}
 
   VTKM_CONT void Exchange(const std::vector<vtkm::Particle>& outData,
-                          const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
+                          const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                           vtkm::Id numLocalTerm,
                           std::vector<vtkm::Particle>& inData,
-                          std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
+                          std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
                           vtkm::Id& numTerminateMessages);
 
 protected:
@@ -81,7 +81,7 @@ protected:
             template <typename, typename>
             class Container,
             typename Allocator = std::allocator<P>>
-  inline void SendParticles(const std::map<int, Container<P, Allocator>>& m);
+  inline void SendParticles(const std::unordered_map<int, Container<P, Allocator>>& m);
 
   // Send/Recv messages.
   VTKM_CONT void SendMsg(int dst, const std::vector<int>& msg);
@@ -96,11 +96,12 @@ protected:
 
 #endif
 
-  VTKM_CONT void SerialExchange(const std::vector<vtkm::Particle>& outData,
-                                const std::map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
-                                vtkm::Id numLocalTerm,
-                                std::vector<vtkm::Particle>& inData,
-                                std::map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const;
+  VTKM_CONT void SerialExchange(
+    const std::vector<vtkm::Particle>& outData,
+    const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
+    vtkm::Id numLocalTerm,
+    std::vector<vtkm::Particle>& inData,
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const;
 
   static std::size_t CalcParticleBufferSize(std::size_t nParticles, std::size_t numBlockIds = 2);
 };
@@ -127,7 +128,8 @@ inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocat
 
 VTKM_CONT
 template <typename P, template <typename, typename> class Container, typename Allocator>
-inline void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator>>& m)
+inline void ParticleMessenger::SendParticles(
+  const std::unordered_map<int, Container<P, Allocator>>& m)
 {
   for (auto mit = m.begin(); mit != m.end(); mit++)
     if (!mit->second.empty())

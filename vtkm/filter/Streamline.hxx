@@ -29,7 +29,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Streamline::Streamline()
   : vtkm::filter::FilterDataSetWithField<Streamline>()
-  , Worklet()
+  , UseThreadedAlgorithm(false)
 {
 }
 
@@ -59,14 +59,15 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Streamline::PrepareForExecution(
     dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
   }
 
-  vtkm::filter::particleadvection::StreamlineAlgorithm sa(boundsMap, dsi);
-  sa.SetNumberOfSteps(this->NumberOfSteps);
-  sa.SetStepSize(this->StepSize);
-  sa.SetSeeds(this->Seeds);
+  using AlgorithmType = vtkm::filter::particleadvection::StreamlineAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::StreamlineThreadedAlgorithm;
 
-  sa.Go();
-  vtkm::cont::PartitionedDataSet output = sa.GetOutput();
-  return output;
+  if (this->UseThreadedAlgorithm)
+    return vtkm::filter::particleadvection::RunAlgo<ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 //-----------------------------------------------------------------------------

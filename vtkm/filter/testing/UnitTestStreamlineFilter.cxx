@@ -508,7 +508,10 @@ void TestStreamlineFilters()
   {
     for (auto useGhost : flags)
       for (auto useSL : flags)
+      {
+        useSL = false;
         TestPartitionedDataSet(n, useGhost, useSL);
+      }
   }
 
   TestStreamline();

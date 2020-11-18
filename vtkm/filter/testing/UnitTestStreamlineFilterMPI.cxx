@@ -36,7 +36,7 @@ void AddVectorFields(vtkm::cont::PartitionedDataSet& pds,
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
 }
 
-void TestAMRStreamline(bool useSL)
+void TestAMRStreamline(bool useSL, bool useThreaded)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if (comm.size() < 2)
@@ -105,6 +105,7 @@ void TestAMRStreamline(bool useSL)
     if (useSL)
     {
       vtkm::filter::Streamline filter;
+      filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -187,6 +188,7 @@ void TestAMRStreamline(bool useSL)
     else
     {
       vtkm::filter::ParticleAdvection filter;
+      filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -219,7 +221,7 @@ void TestAMRStreamline(bool useSL)
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
+void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool useThreaded)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
@@ -268,6 +270,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
     {
       vtkm::filter::Streamline streamline;
 
+      streamline.SetUseThreadedAlgorithm(useThreaded);
       streamline.SetStepSize(0.1f);
       streamline.SetNumberOfSteps(100000);
       streamline.SetSeeds(seedArray);
@@ -313,6 +316,7 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL)
     {
       vtkm::filter::ParticleAdvection particleAdvection;
 
+      particleAdvection.SetUseThreadedAlgorithm(useThreaded);
       particleAdvection.SetStepSize(0.1f);
       particleAdvection.SetNumberOfSteps(100000);
       particleAdvection.SetSeeds(seedArray);
@@ -356,11 +360,13 @@ void TestStreamlineFiltersMPI()
   {
     for (auto useGhost : flags)
       for (auto useSL : flags)
-        TestPartitionedDataSet(n, useGhost, useSL);
+        for (auto useThreaded : flags)
+          TestPartitionedDataSet(n, useGhost, useSL, useThreaded);
   }
 
   for (auto useSL : flags)
-    TestAMRStreamline(useSL);
+    for (auto useThreaded : flags)
+      TestAMRStreamline(useSL, useThreaded);
 }
 }
 
