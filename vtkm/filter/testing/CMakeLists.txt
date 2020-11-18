@@ -8,6 +8,10 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
+set(headers
+  TestingContourTreeUniformDistributedFilter.h
+)
+
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCellMeasuresFilter.cxx
