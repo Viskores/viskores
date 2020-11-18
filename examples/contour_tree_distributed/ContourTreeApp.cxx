@@ -152,42 +152,6 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
-/*
-struct PrintArrayContentsFunctor
-{
-  template <typename T, typename S>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& array) const
-  {
-      this->PrintArrayPortal(array.GetPortalConstControl());
-  }
-
-private:
-  template <typename PortalType >
-  VTKM_CONT void PrintArrayPortal(const PortalType& portal) const
-  {
-    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
-    {
-      // All ArrayPortal objects have ValueType for the type of each value.
-      using ValueType = typename PortalType::ValueType;
-
-      ValueType value = portal.Get(index);
-      vtkm::IdComponent numComponents =
-        vtkm::VecTraits <ValueType >::GetNumberOfComponents(value);
-      for (vtkm::IdComponent componentIndex = 0; componentIndex < numComponents; componentIndex ++)
-      {
-        std::cout << " " << vtkm::VecTraits<ValueType>::GetComponent(value, componentIndex);
-      }
-      //std::cout << std::endl;
-    }
-  }
-};
-
-template <typename VariantArrayType >
-void PrintArrayContents(const VariantArrayType& array)
-{
-  array.CastAndCall(PrintArrayContentsFunctor());
-}
-*/
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
