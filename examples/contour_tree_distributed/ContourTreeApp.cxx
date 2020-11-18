@@ -209,11 +209,11 @@ int main(int argc, char* argv[])
     useMarchingCubes = true;
     if (useBoundaryExtremaOnly)
     {
-      std::cerr
-        << "Error: Marching cubes connectivity currently only works when using full boundary"
-        << std::endl;
-      MPI_Finalize();
-      return EXIT_FAILURE;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: Marching cubes connectivity currently only works when "
+                 "using full boundary. Enabling the --useFullBoundary option "
+                 "to ensure that the app works.");
+      useBoundaryExtremaOnly = false;
     }
   }
   bool preSplitFiles = false;
