@@ -104,15 +104,17 @@ public:
   VTKM_EXEC_CONT
   inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
   {
-    return IsThis(idx) ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
-                       : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
+    return vtkm::worklet::contourtree_augmented::IsThis(idx)
+      ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
+      : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT
   inline FieldType GetSortedValue(vtkm::Id idx) const
   {
-    return IsThis(idx) ? this->ThisSortedValues.Get(MaskedIndex(idx))
-                       : this->OtherSortedValues.Get(MaskedIndex(idx));
+    return vtkm::worklet::contourtree_augmented::IsThis(idx)
+      ? this->ThisSortedValues.Get(MaskedIndex(idx))
+      : this->OtherSortedValues.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT
