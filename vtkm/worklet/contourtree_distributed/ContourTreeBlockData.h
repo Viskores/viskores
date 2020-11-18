@@ -77,8 +77,6 @@ struct ContourTreeBlockData
 
   // ContourTreeMesh data
   vtkm::Id NumVertices;
-  // TODO Should be able to remove sortOrder here, but we need to figure out what to return in the worklet instead
-  // vtkm::worklet::contourtree_augmented::IdArrayType SortOrder;
   vtkm::cont::ArrayHandle<FieldType> SortedValue;
   vtkm::worklet::contourtree_augmented::IdArrayType GlobalMeshIndex;
   vtkm::worklet::contourtree_augmented::IdArrayType Neighbours;
