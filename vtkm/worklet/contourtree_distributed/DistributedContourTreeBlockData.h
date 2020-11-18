@@ -73,12 +73,16 @@ namespace contourtree_distributed
 template <typename FieldType>
 struct DistributedContourTreeBlockData
 {
+  /// Function required by DIY
   static void* create() { return new DistributedContourTreeBlockData<FieldType>; }
+
+  /// Function required by DIY
   static void destroy(void* b)
   {
     delete static_cast<DistributedContourTreeBlockData<FieldType>*>(b);
   }
 
+  // Block data
   vtkm::Id BlockIndex;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
@@ -104,7 +108,6 @@ struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<Field
                    const vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
   {
     vtkmdiy::save(bb, ctm.NumVertices);
-    //vtkmdiy::save(bb, ctm.SortOrder);
     vtkmdiy::save(bb, ctm.SortedValues);
     vtkmdiy::save(bb, ctm.GlobalMeshIndex);
     vtkmdiy::save(bb, ctm.Neighbours);
@@ -116,7 +119,6 @@ struct Serialization<vtkm::worklet::contourtree_augmented::ContourTreeMesh<Field
                    vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& ctm)
   {
     vtkmdiy::load(bb, ctm.NumVertices);
-    //vtkmdiy::load(bb, ctm.SortOrder);
     vtkmdiy::load(bb, ctm.SortedValues);
     vtkmdiy::load(bb, ctm.GlobalMeshIndex);
     vtkmdiy::load(bb, ctm.Neighbours);
