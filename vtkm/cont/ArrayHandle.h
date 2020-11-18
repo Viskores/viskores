@@ -1587,7 +1587,7 @@ VTKM_CONT inline void CreateBuffersResolveArrays(std::vector<vtkm::cont::interna
 {
   vtkm::cont::internal::Buffer buffer;
   buffer.SetMetaData(metadata);
-  buffers.push_back(buffer);
+  buffers.push_back(std::move(buffer));
   CreateBuffersImpl(buffers, args...);
 }
 
@@ -1624,6 +1624,7 @@ template <typename... Args>
 VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const Args&... args)
 {
   std::vector<vtkm::cont::internal::Buffer> buffers;
+  buffers.reserve(sizeof...(args));
   detail::CreateBuffersImpl(buffers, args...);
   return buffers;
 }
