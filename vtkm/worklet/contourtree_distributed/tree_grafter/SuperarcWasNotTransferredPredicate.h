@@ -68,7 +68,7 @@ namespace tree_grafter
 
 // Uniary predicate used in TreeGrafter.CompressActiveArrays to decide which active superarcs to keep
 template <typename DeviceAdapter>
-class SuperarcWasNotTransferredPredicateImpl : public vtkm::worklet::WorkletMapField
+class SuperarcWasNotTransferredPredicateImpl
 {
 public:
   using IdArrayPortalType =

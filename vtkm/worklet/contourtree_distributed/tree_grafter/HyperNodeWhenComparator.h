@@ -68,7 +68,7 @@ namespace tree_grafter
 
 /// Comparator used  in TreeGrafter::ListNewHypernodes to sort the NewHypernodes arrays
 template <typename DeviceAdapter>
-class HyperNodeWhenComparatorImpl : public vtkm::worklet::WorkletMapField
+class HyperNodeWhenComparatorImpl
 {
 public:
   using IdArrayPortalType =
