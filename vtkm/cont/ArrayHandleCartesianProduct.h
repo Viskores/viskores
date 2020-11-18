@@ -279,25 +279,6 @@ public:
                            Storage3::CreateWritePortal(Buffers3(buffers), device, token));
   }
 
-  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
-    const vtkm::cont::ArrayHandle<T, ST1>& array1,
-    const vtkm::cont::ArrayHandle<T, ST2>& array2,
-    const vtkm::cont::ArrayHandle<T, ST3>& array3)
-  {
-    std::vector<vtkm::cont::internal::Buffer> destBuffers(
-      static_cast<std::size_t>(GetNumberOfBuffers()));
-    auto destIter = destBuffers.begin();
-
-    destIter = std::copy_n(
-      array1.GetBuffers(), static_cast<std::size_t>(Storage1::GetNumberOfBuffers()), destIter);
-    destIter = std::copy_n(
-      array2.GetBuffers(), static_cast<std::size_t>(Storage2::GetNumberOfBuffers()), destIter);
-    destIter = std::copy_n(
-      array3.GetBuffers(), static_cast<std::size_t>(Storage3::GetNumberOfBuffers()), destIter);
-
-    return destBuffers;
-  }
-
   VTKM_CONT static vtkm::cont::ArrayHandle<T, ST1> GetArrayHandle1(
     const vtkm::cont::internal::Buffer* buffers)
   {
@@ -353,7 +334,7 @@ public:
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
                               const ThirdHandleType& thirdArray)
-    : Superclass(StorageType::CreateBuffers(firstArray, secondArray, thirdArray))
+    : Superclass(vtkm::cont::internal::CreateBuffers(firstArray, secondArray, thirdArray))
   {
   }
 

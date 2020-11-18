@@ -1530,6 +1530,107 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   }
   out << "]\n";
 }
+
+namespace internal
+{
+
+namespace detail
+{
+
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>&)
+{
+  // Nothing left to add.
+}
+
+template <typename T, typename S, typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const vtkm::cont::ArrayHandle<T, S>& array,
+                                        const Args&... args)
+{
+  vtkm::cont::internal::Buffer* arrayBuffers = array.GetBuffers();
+  buffers.insert(buffers.end(), arrayBuffers, arrayBuffers + array.GetNumberOfBuffers());
+  CreateBuffersImpl(buffers, args...);
+}
+
+template <typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const vtkm::cont::internal::Buffer& buffer,
+                                        const Args&... args)
+{
+  buffers.push_back(buffer);
+  CreateBuffersImpl(buffers, args...);
+}
+
+template <typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const std::vector<vtkm::cont::internal::Buffer>& addbuffs,
+                                        const Args&... args)
+{
+  buffers.insert(buffers.end(), addbuffs.begin(), addbuffs.end());
+  CreateBuffersImpl(buffers, args...);
+}
+
+template <typename T, typename S, typename... Args>
+VTKM_CONT inline void CreateBuffersResolveArrays(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                                 std::true_type,
+                                                 const vtkm::cont::ArrayHandle<T, S>& array,
+                                                 const Args&... args)
+{
+  CreateBuffersImpl(buffers, array, args...);
+}
+
+template <typename MetaData, typename... Args>
+VTKM_CONT inline void CreateBuffersResolveArrays(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                                 std::false_type,
+                                                 const MetaData& metadata,
+                                                 const Args&... args)
+{
+  vtkm::cont::internal::Buffer buffer;
+  buffer.SetMetaData(metadata);
+  buffers.push_back(std::move(buffer));
+  CreateBuffersImpl(buffers, args...);
+}
+
+template <typename Arg0, typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const Arg0& arg0,
+                                        const Args&... args)
+{
+  // If the argument is a subclass of ArrayHandle, the template resolution will pick this
+  // overload instead of the correct ArrayHandle overload. To resolve that, check to see
+  // if the type is an `ArrayHandle` and use `CreateBuffersResolveArrays` to choose the
+  // right path.
+  using IsArray = typename vtkm::cont::internal::ArrayHandleCheck<Arg0>::type::type;
+  CreateBuffersResolveArrays(buffers, IsArray{}, arg0, args...);
+}
+
+} // namespace detail
+
+/// \brief Create the buffers for an `ArrayHandle` specialization.
+///
+/// When creating an `ArrayHandle` specialization, it is important to build a
+/// `std::vector` of `Buffer` objects. This function simplifies creating
+/// these buffer objects. Simply pass as arguments the things you want in the
+/// buffers. The parameters to `CreateBuffers` are added to the `Buffer` `vector`
+/// in the order provided. The actual object(s) added depends on the type of
+/// parameter:
+///
+///   - `ArrayHandle`: The buffers from the `ArrayHandle` are added to the list.
+///   - `Buffer`: A copy of the buffer is added to the list.
+///   - `std::vector<Buffer>`: A copy of all buffers in this vector are added to the list.
+///   - Anything else: A buffer with the given object attached as metadata is
+///
+template <typename... Args>
+VTKM_CONT inline std::vector<vtkm::cont::internal::Buffer> CreateBuffers(const Args&... args)
+{
+  std::vector<vtkm::cont::internal::Buffer> buffers;
+  buffers.reserve(sizeof...(args));
+  detail::CreateBuffersImpl(buffers, args...);
+  return buffers;
+}
+
+} // namespace internal
+
 }
 } //namespace vtkm::cont
 
