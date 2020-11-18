@@ -73,17 +73,24 @@ public:
   using ControlSignature = void(FieldInOut newVertexId, // Input/Output
                                 FieldIn keptInBract     // input
   );
-  using ExecutionSignature = _1(_1, _2);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   // Default Constructor
   VTKM_EXEC_CONT
   CompressRegularisedNodesCopyNecessaryRegularNodesWorklet() {}
 
-  VTKM_EXEC vtkm::Id operator()(vtkm::Id& newVertexIdIn, const vtkm::Id& keptInBract) const
+  VTKM_EXEC void operator()(vtkm::Id& newVertexIdIn, const vtkm::Id& keptInBract) const
   {
-    return (!vtkm::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn)) ? (keptInBract - 1)
-                                                                                 : newVertexIdIn;
+    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn))
+    {
+      newVertexIdIn = keptInBract - 1;
+    }
+    else
+    {
+      // newVertexIdIn does not change
+    }
+
     // In serial this worklet implements the following operation
     /*
        for (indexType returnIndex = 0; returnIndex < bractVertexSuperset.size(); returnIndex++)
