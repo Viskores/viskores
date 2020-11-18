@@ -143,11 +143,6 @@ public:
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     vtkm::Id componentsSize = ComponentsStorage::GetNumberOfValues(buffers);
-    if (componentsSize % NUM_COMPONENTS != 0)
-    {
-      throw vtkm::cont::ErrorBadValue(
-        "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
-    }
     return componentsSize / NUM_COMPONENTS;
   }
 
@@ -155,6 +150,11 @@ public:
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
   {
+    if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
+    }
     return ReadPortalType(ComponentsStorage::CreateReadPortal(buffers, device, token));
   }
 
@@ -162,6 +162,11 @@ public:
                                                      vtkm::cont::DeviceAdapterId device,
                                                      vtkm::cont::Token& token)
   {
+    if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
+    }
     return WritePortalType(ComponentsStorage::CreateWritePortal(buffers, device, token));
   }
 };
@@ -182,6 +187,11 @@ VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(vtkm::cont::StorageTagGroupVec<S
 /// and give it to a \c ArrayHandleGroupVec with the number of components set
 /// to 3, you get an array that looks like it contains two values of \c Vec
 /// values of size 3 with the data [0,1,2], [3,4,5].
+///
+/// The array of components should have a number of values that divides evenly
+/// with the size of the Vec. If the components array does not divide evenly
+/// into `Vec`s, then a warning will be logged and the extra component values
+/// will be ignored.
 ///
 template <typename ComponentsArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
 class ArrayHandleGroupVec
