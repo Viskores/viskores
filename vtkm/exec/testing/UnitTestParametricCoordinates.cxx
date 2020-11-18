@@ -207,6 +207,7 @@ struct TestPCoordsFunctor
 void TestAllPCoords()
 {
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
+  std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
   std::cout << "======== Float32 ==========================" << std::endl;
