@@ -339,7 +339,6 @@ int main(int argc, char* argv[])
   }
 
   // Redirect stdout to file if we are using MPI with Debugging
-  //#ifdef DEBUG_PRINT
   // From https://www.unix.com/302983597-post2.html
   char cstr_filename[255];
   std::snprintf(cstr_filename, sizeof(cstr_filename), "cout_%d.log", rank);
