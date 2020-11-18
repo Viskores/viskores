@@ -435,9 +435,6 @@ private:
       auto composite =
         vtkm::cont::make_ArrayHandleCompositeVector(compositeInput, compositeInput, compositeInput);
 
-      vtkm::cont::printSummary_ArrayHandle(composite, std::cout);
-      std::cout << std::endl;
-
       vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 3>> result;
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
@@ -473,9 +470,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(constant, result);
 
-      vtkm::cont::printSummary_ArrayHandle(constant, std::cout);
-      std::cout << std::endl;
-
       //verify that the control portal works
       auto resultPortal = result.ReadPortal();
       auto constantPortal = constant.ReadPortal();
@@ -510,9 +504,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(counting, result);
 
-      vtkm::cont::printSummary_ArrayHandle(counting, std::cout);
-      std::cout << std::endl;
-
       //verify that the control portal works
       auto resultPortal = result.ReadPortal();
       auto countingPortal = counting.ReadPortal();
@@ -539,9 +530,6 @@ private:
 
       vtkm::cont::ArrayHandleImplicit<FunctorType> implicit =
         vtkm::cont::make_ArrayHandleImplicit(functor, length);
-
-      vtkm::cont::printSummary_ArrayHandle(implicit, std::cout);
-      std::cout << std::endl;
 
       vtkm::cont::ArrayHandle<ValueType> result;
 
@@ -595,8 +583,6 @@ private:
 
         // concatenate two arrays together
         ConcatenateType concatenate = vtkm::cont::make_ArrayHandleConcatenate(implicit, basic);
-        vtkm::cont::printSummary_ArrayHandle(concatenate, std::cout);
-        std::cout << std::endl;
 
         vtkm::cont::ArrayHandle<ValueType> result;
 
@@ -653,8 +639,6 @@ private:
         PermutationHandleType permutation =
           vtkm::cont::make_ArrayHandlePermutation(counting, implicit);
 
-        vtkm::cont::printSummary_ArrayHandle(permutation, std::cout);
-        std::cout << std::endl;
 
         vtkm::cont::ArrayHandle<ValueType> result;
 
@@ -702,9 +686,6 @@ private:
         ViewHandleType view =
           vtkm::cont::make_ArrayHandleView(implicit, start_pos, counting_length);
 
-        vtkm::cont::printSummary_ArrayHandle(view, std::cout);
-        std::cout << std::endl;
-
         vtkm::cont::ArrayHandle<ValueType> result;
 
         vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
@@ -746,9 +727,6 @@ private:
       input.Allocate(length);
       SetPortal(input.WritePortal());
 
-      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
-      std::cout << std::endl;
-
       vtkm::cont::ArrayHandle<ValueType> result;
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
@@ -785,9 +763,6 @@ private:
 
       input.Allocate(length);
       SetPortal(input.WritePortal());
-
-      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
-      std::cout << std::endl;
 
       vtkm::cont::ArrayHandle<ValueType> result;
 
@@ -830,9 +805,6 @@ private:
       vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<ValueType>, FunctorType>
         countingTransformed = vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
-      vtkm::cont::printSummary_ArrayHandle(countingTransformed, std::cout);
-      std::cout << std::endl;
-
       vtkm::cont::ArrayHandle<OutputValueType> result;
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
@@ -869,9 +841,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(castArray, result);
 
-      vtkm::cont::printSummary_ArrayHandle(castArray, std::cout);
-      std::cout << std::endl;
-
       // verify results
       vtkm::Id length = ARRAY_SIZE;
       auto resultPortal = result.ReadPortal();
@@ -900,9 +869,6 @@ private:
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, castArray);
-
-      vtkm::cont::printSummary_ArrayHandle(castArray, std::cout);
-      std::cout << std::endl;
 
       // verify results
       vtkm::Id length = ARRAY_SIZE;
@@ -935,9 +901,6 @@ private:
 
       this->Invoke(PassThrough{}, multiplexArray, result);
 
-      vtkm::cont::printSummary_ArrayHandle(multiplexArray, std::cout);
-      std::cout << std::endl;
-
       // verify results
       VTKM_TEST_ASSERT(test_equal_portals(result.ReadPortal(), input.ReadPortal()),
                        "CastingArrayHandle failed");
@@ -963,9 +926,6 @@ private:
 
       this->Invoke(PassThrough{}, input, multiplexerArray);
 
-      vtkm::cont::printSummary_ArrayHandle(multiplexerArray, std::cout);
-      std::cout << std::endl;
-
       // verify results
       VTKM_TEST_ASSERT(test_equal_portals(input.ReadPortal(), result.ReadPortal()),
                        "Multiplexing ArrayHandle failed");
@@ -988,9 +948,6 @@ private:
         groupArray(baseArray);
       VTKM_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
                        "Group array reporting wrong array size.");
-
-      vtkm::cont::printSummary_ArrayHandle(groupArray, std::cout);
-      std::cout << std::endl;
 
       vtkm::cont::ArrayHandle<ValueType> resultArray;
 
@@ -1036,11 +993,6 @@ private:
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(baseArray, groupArray);
-
-      vtkm::cont::printSummary_ArrayHandle(groupArray, std::cout);
-      std::cout << std::endl;
-      vtkm::cont::printSummary_ArrayHandle(resultArray, std::cout);
-      std::cout << std::endl;
 
       VTKM_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
                        "Group array reporting wrong array size.");
@@ -1113,10 +1065,6 @@ private:
       sourceArray.Allocate(sourceArraySize);
       SetPortal(sourceArray.WritePortal());
 
-      vtkm::cont::printSummary_ArrayHandle(
-        vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray), std::cout);
-      std::cout << std::endl;
-
       vtkm::cont::ArrayHandle<vtkm::Id> dummyArray;
 
       vtkm::worklet::DispatcherMapField<GroupVariableInputWorklet> dispatcher;
@@ -1172,12 +1120,6 @@ private:
       dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
                         vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray));
 
-      vtkm::cont::printSummary_ArrayHandle(
-        vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray), std::cout);
-      std::cout << std::endl;
-      vtkm::cont::printSummary_ArrayHandle(sourceArray, std::cout);
-      std::cout << std::endl;
-
       CheckPortal(sourceArray.ReadPortal());
     }
   };
@@ -1207,9 +1149,6 @@ private:
       vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<KeyType>,
                                  vtkm::cont::ArrayHandle<ValueType>>
         zip = vtkm::cont::make_ArrayHandleZip(keys, values);
-
-      vtkm::cont::printSummary_ArrayHandle(zip, std::cout);
-      std::cout << std::endl;
 
       vtkm::cont::ArrayHandle<PairType> result;
 
@@ -1276,9 +1215,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, permutation);
 
-      vtkm::cont::printSummary_ArrayHandle(permutation, std::cout);
-      std::cout << std::endl;
-
       //verify that the control portal works
       CheckPortal(permutation.ReadPortal());
     }
@@ -1304,9 +1240,6 @@ private:
       ViewHandleType view = vtkm::cont::make_ArrayHandleView(values, length, length);
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, view);
-
-      vtkm::cont::printSummary_ArrayHandle(view, std::cout);
-      std::cout << std::endl;
 
       //verify that the control portal works
       CheckPortal(view.ReadPortal());
@@ -1335,8 +1268,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, transformed);
 
-      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
-      std::cout << std::endl;
 
       //verify that the control portal works
       auto outputPortal = output.ReadPortal();
@@ -1381,9 +1312,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, transformed);
 
-      vtkm::cont::printSummary_ArrayHandle(transformed, std::cout);
-      std::cout << std::endl;
-
       //verify that the control portal works
       auto outputPortal = output.ReadPortal();
       auto transformedPortal = transformed.ReadPortal();
@@ -1426,9 +1354,6 @@ private:
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;
       dispatcher.Invoke(input, result_zip);
 
-      vtkm::cont::printSummary_ArrayHandle(result_zip, std::cout);
-      std::cout << std::endl;
-
       //now the two arrays we have zipped should have data inside them
       auto keysPortal = result_keys.ReadPortal();
       auto valsPortal = result_values.ReadPortal();
@@ -1460,9 +1385,6 @@ private:
 
       vtkm::worklet::DispatcherMapField<InplaceFunctorPair> dispatcher;
       dispatcher.Invoke(vtkm::cont::make_ArrayHandleZip(inputValues, outputValues));
-
-      vtkm::cont::printSummary_ArrayHandle(outputValues, std::cout);
-      std::cout << std::endl;
 
       CheckPortal(outputValues.ReadPortal());
     }
