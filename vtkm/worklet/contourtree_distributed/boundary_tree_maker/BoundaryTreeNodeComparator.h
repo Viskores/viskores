@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_bract_node_comparator_h
-#define vtk_m_worklet_contourtree_distributed_bract_maker_bract_node_comparator_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_boundary_tree_node_comparator_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_boundary_tree_node_comparator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
@@ -71,7 +71,7 @@ namespace bract_maker
 
 /// device implementation of the comparator used for sorting hyperarcs
 template <typename DeviceAdapter>
-class BRACTNodeComparatorImpl
+class BoundaryTreeNodeComparatorImpl
 {
 public:
   using IdArrayPortalType =
@@ -84,8 +84,8 @@ public:
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  BRACTNodeComparatorImpl(const IdArrayPortalType& regularIdPortal,
-                          const SortIndexPortalType& meshSortIndexPortal)
+  BoundaryTreeNodeComparatorImpl(const IdArrayPortalType& regularIdPortal,
+                                 const SortIndexPortalType& meshSortIndexPortal)
     : RegularIdPortal(regularIdPortal)
     , MeshSortIndexPortal(meshSortIndexPortal)
   { // constructor
@@ -117,15 +117,15 @@ public:
 private:
   IdArrayPortalType RegularIdPortal;
   SortIndexPortalType MeshSortIndexPortal;
-}; // BRACTNodeComparatorImpl
+}; // BoundaryTreeNodeComparatorImpl
 
 /// comparator used to compare hyperarcs for sort
-class BRACTNodeComparator : public vtkm::cont::ExecutionObjectBase
+class BoundaryTreeNodeComparator : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // constructor - takes vectors as parameters
   VTKM_CONT
-  BRACTNodeComparator(
+  BoundaryTreeNodeComparator(
     const vtkm::worklet::contourtree_augmented::IdArrayType& regularId,
     const vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
                                              vtkm::cont::ArrayHandleIndex>& meshSortIndex)
@@ -135,11 +135,11 @@ public:
   } // constructor
 
   template <typename DeviceAdapter>
-  VTKM_CONT BRACTNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
+  VTKM_CONT BoundaryTreeNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
     DeviceAdapter device,
     vtkm::cont::Token& token) const
   {
-    return BRACTNodeComparatorImpl<DeviceAdapter>(
+    return BoundaryTreeNodeComparatorImpl<DeviceAdapter>(
       this->RegularId.PrepareForInput(device, token),
       this->MeshSortIndex.PrepareForInput(device, token));
   }
@@ -150,7 +150,7 @@ private:
   vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
                                      vtkm::cont::ArrayHandleIndex>
     MeshSortIndex;
-}; // BRACTNodeComparator
+}; // BoundaryTreeNodeComparator
 
 } // namespace bract_maker
 } // namespace contourtree_distributed

@@ -70,8 +70,8 @@ class CompressRegularisedNodesCopyNecessaryRegularNodesWorklet
   : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldInOut newVertexId, // Input/Output
-                                FieldIn keptInBract     // input
+  using ControlSignature = void(FieldInOut newVertexId,    // Input/Output
+                                FieldIn keptInBoundaryTree // input
   );
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
@@ -80,11 +80,11 @@ public:
   VTKM_EXEC_CONT
   CompressRegularisedNodesCopyNecessaryRegularNodesWorklet() {}
 
-  VTKM_EXEC void operator()(vtkm::Id& newVertexIdIn, const vtkm::Id& keptInBract) const
+  VTKM_EXEC void operator()(vtkm::Id& newVertexIdIn, const vtkm::Id& keptInBoundaryTree) const
   {
     if (!vtkm::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn))
     {
-      newVertexIdIn = keptInBract - 1;
+      newVertexIdIn = keptInBoundaryTree - 1;
     }
     else
     {
@@ -95,7 +95,7 @@ public:
     /*
        for (indexType returnIndex = 0; returnIndex < bractVertexSuperset.size(); returnIndex++)
       if (!noSuchElement(newVertexID[returnIndex]))
-        newVertexID[returnIndex] = keptInBract[returnIndex]-1;
+        newVertexID[returnIndex] = keptInBoundaryTree[returnIndex]-1;
     */
   }
 }; // CompressRegularisedNodesCopyNecessaryRegularNodesWorklet

@@ -70,10 +70,10 @@ class ListNewNodesCopyIdsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(
-    FieldIn globalIdsForBractMeshIndices, // input iteration index.
-    ExecObject findRegularByGlobal,       // input to findRegularByGlobal
+    FieldIn globalIdsForBoundaryTreeMeshIndices, // input iteration index.
+    ExecObject findRegularByGlobal,              // input to findRegularByGlobal
     WholeArrayOut
-      hierarchicalTreeId // output  (need WholeArrayOut because globalIdsForBractMeshIndices is 1 smaller and need to avoid false resize
+      hierarchicalTreeId // output  (need WholeArrayOut because globalIdsForBoundaryTreeMeshIndices is 1 smaller and need to avoid false resize
   );
 
   using ExecutionSignature = void(InputIndex, _1, _2, _3);

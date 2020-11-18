@@ -63,8 +63,7 @@ namespace worklet
 namespace contourtree_distributed
 {
 
-/// Compute the superarc "to" for every bract node
-/// Part of the BoundaryRestrictedAugmentedContourTree.FindBractSuperarcs function
+/// Compute the superarc "to" for every boundary tree node
 class InitalizeSuperchildrenWorklet : public vtkm::worklet::WorkletMapField
 {
 public:

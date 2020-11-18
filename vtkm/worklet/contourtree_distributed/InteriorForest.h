@@ -85,7 +85,7 @@ class InteriorForest
 { // class InteriorForest
 public:
   // array of vertices in the bract (by mesh index)
-  vtkm::worklet::contourtree_augmented::IdArrayType BractMeshIndices;
+  vtkm::worklet::contourtree_augmented::IdArrayType BoundaryTreeMeshIndices;
 
   // array of flags for whether necessary (i.e. needed in the BRACT)
   vtkm::worklet::contourtree_augmented::IdArrayType IsNecessary;
@@ -117,10 +117,10 @@ inline void InteriorForest::PrintContent(std::ostream& outStream) const
   vtkm::worklet::contourtree_augmented::PrintIndices("Below", this->Below, -1, outStream);
 
   // BRACT Sized Arrays
-  vtkm::worklet::contourtree_augmented::PrintHeader(this->BractMeshIndices.GetNumberOfValues(),
-                                                    outStream);
+  vtkm::worklet::contourtree_augmented::PrintHeader(
+    this->BoundaryTreeMeshIndices.GetNumberOfValues(), outStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "BRACT Mesh Indices", this->BractMeshIndices, -1, outStream);
+    "BRACT Mesh Indices", this->BoundaryTreeMeshIndices, -1, outStream);
 }
 
 inline std::string InteriorForest::DebugPrint(const char* message,
@@ -147,8 +147,8 @@ inline std::string InteriorForest::DebugPrint(const char* message,
 inline std::string InteriorForest::PrintArraySizes() const
 { // PrintArraySizes
   std::stringstream arraySizeLog;
-  arraySizeLog << std::setw(42) << std::left << "    #BractMeshIndices"
-               << ": " << this->BractMeshIndices.GetNumberOfValues() << std::endl
+  arraySizeLog << std::setw(42) << std::left << "    #BoundaryTreeMeshIndices"
+               << ": " << this->BoundaryTreeMeshIndices.GetNumberOfValues() << std::endl
                << std::setw(42) << std::left << "    #IsNecessary"
                << ": " << this->IsNecessary.GetNumberOfValues() << std::endl
                << std::setw(42) << std::left << "    #Above"

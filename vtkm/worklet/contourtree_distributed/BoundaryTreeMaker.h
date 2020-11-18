@@ -67,16 +67,16 @@
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AddTerminalFlagsToUpDownNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BRACTNodeComparator.h>
+#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BoundaryTreeNodeComparator.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/BoundaryVerticesPerSuperArcWorklets.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesCopyNecessaryRegularNodesWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBractSuperarcsWorklet.h>
+#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFindNewSuperarcsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesResolveRootWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesTransferVerticesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/ContourTreeNodeHyperArcComparator.h>
+#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryTreeSuperarcsSuperarcToWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBoundaryVerticesIsNecessaryWorklet.h>
-#include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindBractSuperarcsSuperarcToWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSetSuperparentNecessaryWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/FindNecessaryInteriorSupernodesFindNodesWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/boundary_tree_maker/HyperarcComparator.h>
@@ -145,7 +145,7 @@ public:
 
   // arrays sized to number of boundary vertices
   /// the regular IDs of the boundary vertices (a conservative over-estimate, needed for hierarchical computation)
-  vtkm::worklet::contourtree_augmented::IdArrayType BractVertexSuperset;
+  vtkm::worklet::contourtree_augmented::IdArrayType BoundaryVertexSuperset;
   /// their sort indices (may be redundant, but . . .)
   vtkm::worklet::contourtree_augmented::IdArrayType BoundaryIndices;
   /// the superparents for each boundary vertex
@@ -231,7 +231,7 @@ public:
 
   /// routine that sorts on hyperparent to find BRACT superarcs
   VTKM_CONT
-  void FindBractSuperarcs();
+  void FindBoundaryTreeSuperarcs();
 
   /// compresses out supernodes in the interior that have become regular in the BRACT
   VTKM_CONT
@@ -308,7 +308,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
 
   // Step VI: Use the hyperparents to sort these vertices into contiguous chunks as usual
   //          We will store the BRACT ID for the superarc target this to simplify the next step
-  this->FindBractSuperarcs();
+  this->FindBoundaryTreeSuperarcs();
 
   // Step VII: Suppress interior supernodes that are regular in the BRACT
   //           At the end, we will reset the superarc target from BRACT ID to block ID
@@ -327,7 +327,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
 /// routine to find the set of boundary vertices
 ///
 /// Side-effects: This function updates:
-///   - this->BractVertexSuperset
+///   - this->BoundaryVertexSuperset
 ///   - this->BoundaryIndices
 template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
@@ -336,10 +336,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
 
   // ask the mesh to give us a list of boundary verticels (with their regular indices)
   this->Mesh->GetBoundaryVertices(
-    this->BractVertexSuperset, this->BoundaryIndices, &(this->MeshBoundaryExecutionObject));
+    this->BoundaryVertexSuperset, this->BoundaryIndices, &(this->MeshBoundaryExecutionObject));
   // pull a local copy of the size (they can diverge)
-  this->BoundaryTreeData->NumBoundary = this->BractVertexSuperset.GetNumberOfValues();
-  // Identify the points that are boundary critical and update this->BractVertexSuperset,
+  this->BoundaryTreeData->NumBoundary = this->BoundaryVertexSuperset.GetNumberOfValues();
+  // Identify the points that are boundary critical and update this->BoundaryVertexSuperset,
   // and this->BoundaryIndices accordingly by removing all boundary vertices that are
   // not boundary cirtical, and hence, are not neccessary for merging neighboring data blocks
   if (boundaryCritical)
@@ -348,20 +348,20 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
       isNecessaryWorklet;
     vtkm::cont::ArrayHandle<bool> isBoundaryCritical;
     this->Invoke(isNecessaryWorklet,
-                 this->BractVertexSuperset,
+                 this->BoundaryVertexSuperset,
                  &(this->MeshBoundaryExecutionObject),
                  isBoundaryCritical);
-    vtkm::worklet::contourtree_augmented::IdArrayType necessaryBractVertexSuperset;
+    vtkm::worklet::contourtree_augmented::IdArrayType necessaryBoundaryVertexSuperset;
     vtkm::worklet::contourtree_augmented::IdArrayType necessaryBoundaryIndices;
     vtkm::cont::Algorithm::CopyIf(
-      this->BractVertexSuperset, isBoundaryCritical, necessaryBractVertexSuperset);
-    this->BractVertexSuperset = necessaryBractVertexSuperset;
+      this->BoundaryVertexSuperset, isBoundaryCritical, necessaryBoundaryVertexSuperset);
+    this->BoundaryVertexSuperset = necessaryBoundaryVertexSuperset;
     vtkm::cont::Algorithm::CopyIf(
       this->BoundaryIndices, isBoundaryCritical, necessaryBoundaryIndices);
     this->BoundaryIndices = necessaryBoundaryIndices;
   }
 
-  this->NumBoundary = this->BractVertexSuperset.GetNumberOfValues();
+  this->NumBoundary = this->BoundaryVertexSuperset.GetNumberOfValues();
   this->BoundaryTreeData->NumBoundaryUsed = this->NumBoundary;
 
 #ifdef DEBUG_PRINT
@@ -709,7 +709,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindNecessaryInterior
 /// Side effects: This function updates:
 /// - this->NumNecessary
 /// - this->BoundaryIndices,
-/// - this->BractVertexSuperset
+/// - this->BoundaryVertexSuperset
 template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType,
                        MeshBoundaryExecObjType>::AugmentBoundaryWithNecessaryInteriorSupernodes()
@@ -750,27 +750,27 @@ void BoundaryTreeMaker<MeshType,
   }
   {
     // Create a new resized array and copy the original values to the array
-    vtkm::worklet::contourtree_augmented::IdArrayType tempBractVertexSuperset;
-    tempBractVertexSuperset.Allocate(this->NumBoundary + this->NumNecessary);
+    vtkm::worklet::contourtree_augmented::IdArrayType tempBoundaryVertexSuperset;
+    tempBoundaryVertexSuperset.Allocate(this->NumBoundary + this->NumNecessary);
     vtkm::cont::Algorithm::CopySubRange(
-      this->BractVertexSuperset, // input
-      0,                         // start index
-      this->NumBoundary, // number of values to copy. Same as size of this->BractVertexSuperset
-      tempBractVertexSuperset, // copy to temp
-      0                        // start inserting at 0
+      this->BoundaryVertexSuperset, // input
+      0,                            // start index
+      this->NumBoundary, // number of values to copy. Same as size of this->BoundaryVertexSuperset
+      tempBoundaryVertexSuperset, // copy to temp
+      0                           // start inserting at 0
     );
     // Set the added values to 0
     // TODO: Check if it is really necessary to initalize the new values
     vtkm::cont::Algorithm::CopySubRange(
       vtkm::cont::make_ArrayHandleConstant<vtkm::Id>(0, this->NumBoundary), // set to 0
       0,                                                                    // start index
-      this->NumNecessary,      // number of values to copy
-      tempBractVertexSuperset, // copy to temp
-      this->NumBoundary        // start where our original values end
+      this->NumNecessary,         // number of values to copy
+      tempBoundaryVertexSuperset, // copy to temp
+      this->NumBoundary           // start where our original values end
     );
-    // Set the BractVertexSuperset to our new array
-    this->BractVertexSuperset.ReleaseResources();
-    this->BractVertexSuperset = tempBractVertexSuperset;
+    // Set the BoundaryVertexSuperset to our new array
+    this->BoundaryVertexSuperset.ReleaseResources();
+    this->BoundaryVertexSuperset = tempBoundaryVertexSuperset;
   }
   // Now do the same for the BoundaryIndicies (i.e,. resize while keeping the original values)
   {
@@ -793,7 +793,7 @@ void BoundaryTreeMaker<MeshType,
       tempBoundaryIndices, // copy to temp
       this->NumBoundary    // start where our original values end
     );
-    // Set the BractVertexSuperset to our new array
+    // Set the BoundaryVertexSuperset to our new array
     this->BoundaryIndices.ReleaseResources();
     this->BoundaryIndices = tempBoundaryIndices;
   }
@@ -814,7 +814,7 @@ void BoundaryTreeMaker<MeshType,
                boundaryNecessaryId,
                this->Mesh->SortOrder,
                this->BoundaryIndices,
-               this->BractVertexSuperset);
+               this->BoundaryVertexSuperset);
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -828,12 +828,12 @@ void BoundaryTreeMaker<MeshType,
 ///  Side-effects: This function updates:
 ///  - this->TreeToSuperset
 ///  - this->BoundaryIndices
-///  - this->BractVertexSuperset
+///  - this->BoundaryVertexSuperset
 ///  - this->BoundaryTreeData->Superarcs
 ///  - this->BoundaryTreeId
 template <typename MeshType, typename MeshBoundaryExecObjType>
-void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBractSuperarcs()
-{ // FindBractSuperarcs
+void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuperarcs()
+{ // FindBoundaryTreeSuperarcs
   //  0.  Allocate memory for the tree2superset map
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
@@ -855,7 +855,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBractSuperarcs()
     vtkm::cont::make_ArrayHandlePermutation(this->BoundaryIndices, // index array to permute with
                                             this->Mesh->SortOrder  // value array to be permuted
                                             ),
-    this->BractVertexSuperset // Copy the permuted Mesh->SortOrder to BractVertexSuperset
+    this->BoundaryVertexSuperset // Copy the permuted Mesh->SortOrder to BoundaryVertexSuperset
   );
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info, this->DebugPrint("Vertices Reset", __FILE__, __LINE__));
@@ -864,7 +864,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBractSuperarcs()
   // allocate memory for the superarcs (same size as supernodes for now)
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->BractVertexSuperset.GetNumberOfValues()),
+                                         this->BoundaryVertexSuperset.GetNumberOfValues()),
     this->BoundaryTreeData->Superarcs);
 
   // We would like to connect vertices to their neighbour on the hyperarc as usual
@@ -887,20 +887,20 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBractSuperarcs()
       this->BoundaryTreeId);
     // Fill the relevant values
     auto tempPermutedBoundaryTreeId =
-      vtkm::cont::make_ArrayHandlePermutation(this->BractVertexSuperset, // index array
-                                              this->BoundaryTreeId       // value array
+      vtkm::cont::make_ArrayHandlePermutation(this->BoundaryVertexSuperset, // index array
+                                              this->BoundaryTreeId          // value array
       );
     vtkm::cont::Algorithm::Copy(
       vtkm::cont::ArrayHandleIndex(
-        this->BractVertexSuperset.GetNumberOfValues()), // copy 0,1, ... n
-      tempPermutedBoundaryTreeId // copy to BoundaryTreeId permuted by BractVertexIndex
+        this->BoundaryVertexSuperset.GetNumberOfValues()), // copy 0,1, ... n
+      tempPermutedBoundaryTreeId // copy to BoundaryTreeId permuted by BoundaryTreeVertexSuperset
     );
   }
 
   // We now compute the superarc "to" for every bract node
-  auto superarcToWorklet = bract_maker::FindBractSuperarcsSuperarcToWorklet();
+  auto superarcToWorklet = bract_maker::FindBoundaryTreeSuperarcsSuperarcToWorklet();
   this->Invoke(superarcToWorklet,
-               this->BractVertexSuperset,        // input
+               this->BoundaryVertexSuperset,     // input
                this->BoundaryIndices,            // input
                this->BoundaryTreeId,             // input
                this->ContourTree.Superparents,   // input
@@ -916,7 +916,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBractSuperarcs()
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              this->DebugPrint("Restricted to Boundary", __FILE__, __LINE__));
 #endif
-} // FindBractSuperarcs
+} // FindBoundaryTreeSuperarcs
 
 
 /// compresses out supernodes in the interior that have become regular in the BRACT
@@ -963,14 +963,14 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetUpAndDownNeighbour
   { // local context
     auto tempNoSuchElementArray =
       vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                           this->BractVertexSuperset.GetNumberOfValues());
+                                           this->BoundaryVertexSuperset.GetNumberOfValues());
     vtkm::cont::Algorithm::Copy(tempNoSuchElementArray, this->UpNeighbour);
     vtkm::cont::Algorithm::Copy(tempNoSuchElementArray, this->DownNeighbour);
   } // end local context
 
   auto setUpAndDownNeighboursWorklet = bract_maker::SetUpAndDownNeighboursWorklet();
   this->Invoke(setUpAndDownNeighboursWorklet,
-               this->BractVertexSuperset,         // input
+               this->BoundaryVertexSuperset,      // input
                this->BoundaryTreeData->Superarcs, // input
                this->Mesh->SortIndices,           // input
                this->UpNeighbour,                 // output
@@ -997,12 +997,12 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::IdentifyRegularisedSu
   // it gets reused as an ID
   vtkm::cont::Algorithm::Copy(
     vtkm::cont::make_ArrayHandleConstant(vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->BractVertexSuperset.GetNumberOfValues()),
+                                         this->BoundaryVertexSuperset.GetNumberOfValues()),
     this->NewVertexId);
 
   auto stepOneWorklet = bract_maker::IdentifyRegularisedSupernodesStepOneWorklet();
   this->Invoke(stepOneWorklet,
-               this->BractVertexSuperset,         // input
+               this->BoundaryVertexSuperset,      // input
                this->BoundaryTreeData->Superarcs, // input
                this->Mesh->SortIndices,           // input
                this->UpNeighbour,                 // input
@@ -1013,7 +1013,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::IdentifyRegularisedSu
   //  c.  We also want to flag the leaves and boundary nodes as necessary
   auto stepTwoWorklet = bract_maker::IdentifyRegularisedSupernodesStepTwoWorklet();
   this->Invoke(stepTwoWorklet,
-               this->BractVertexSuperset,         // input
+               this->BoundaryVertexSuperset,      // input
                this->UpNeighbour,                 // input
                this->DownNeighbour,               // input
                this->MeshBoundaryExecutionObject, // input
@@ -1063,7 +1063,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PointerDoubleUpDownNe
   // e. Use pointer-doubling to eliminate regular nodes
   // 1. Compute the number of log steps
   vtkm::Id nLogSteps = 1;
-  for (vtkm::Id shifter = this->BractVertexSuperset.GetNumberOfValues(); shifter != 0;
+  for (vtkm::Id shifter = this->BoundaryVertexSuperset.GetNumberOfValues(); shifter != 0;
        shifter >>= 1)
   {
     nLogSteps++;
@@ -1098,19 +1098,19 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   //      Copy the necessary ones only - this is a compression call in parallel
   // HAC: to use a different array, keeping isNecessary indexed on everything
   //      We now reset it to the size of the return tree
-  vtkm::worklet::contourtree_augmented::IdArrayType keptInBract;
+  vtkm::worklet::contourtree_augmented::IdArrayType keptInBoundaryTree;
   //    Start by creating the ID #s with a partial sum (these will actually start from 1, not 0
   vtkm::cont::Algorithm::ScanInclusive(
     vtkm::cont::make_ArrayHandleTransform(this->NewVertexId, bract_maker::NoSuchElementFunctor()),
-    keptInBract);
+    keptInBoundaryTree);
   // Update newVertexID, i.e., for each element set:
   // if (!noSuchElement(newVertexID[returnIndex]))
-  //      newVertexID[returnIndex] = keptInBract[returnIndex]-1;
+  //      newVertexID[returnIndex] = keptInBoundaryTree[returnIndex]-1;
   auto copyNecessaryRegularNodesWorklet =
     bract_maker::CompressRegularisedNodesCopyNecessaryRegularNodesWorklet();
   this->Invoke(copyNecessaryRegularNodesWorklet,
                this->NewVertexId, // input/output
-               keptInBract        // input
+               keptInBoundaryTree // input
   );
 
 #ifdef DEBUG_PRINT
@@ -1137,7 +1137,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
   // first create the array: start by observing that the last entry is guaranteed
   // to hold the total number of necessary vertices
-  this->NumKept = keptInBract.ReadPortal().Get(keptInBract.GetNumberOfValues() - 1);
+  this->NumKept = keptInBoundaryTree.ReadPortal().Get(keptInBoundaryTree.GetNumberOfValues() - 1);
   // create an array to store the new superarc Ids and initalize it with NO_SUCH_ELEMENT
   vtkm::worklet::contourtree_augmented::IdArrayType newSuperarc;
   vtkm::cont::Algorithm::Copy(
@@ -1174,9 +1174,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   newVertexIndex.Allocate(this->NumKept);
   auto transferVerticesWorklet = bract_maker::CompressRegularisedNodesTransferVerticesWorklet();
   this->Invoke(transferVerticesWorklet,
-               this->BractVertexSuperset, // input
-               this->NewVertexId,         // input
-               newVertexIndex             // output
+               this->BoundaryVertexSuperset, // input
+               this->NewVertexId,            // input
+               newVertexIndex                // output
   );
 
   //vtkm::worklet::contourtree_augmented::PrintHeader(newVertexIndex.GetNumberOfValues(), std::cerr);
@@ -1191,7 +1191,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   vtkm::worklet::contourtree_augmented::IdArrayType vertexSorter;
   vtkm::cont::Algorithm::Copy(vtkm::cont::ArrayHandleIndex(this->NumKept), vertexSorter);
   auto bractNodeComparator =
-    bract_maker::BRACTNodeComparator(newVertexIndex, this->Mesh->SortIndices);
+    bract_maker::BoundaryTreeNodeComparator(newVertexIndex, this->Mesh->SortIndices);
   vtkm::cont::Algorithm::Sort(vertexSorter, bractNodeComparator);
   // 5.1. Compute the reverseSorter
   vtkm::worklet::contourtree_augmented::IdArrayType reverseSorter;
@@ -1224,8 +1224,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
   // now copy the this->BoundaryTreeData->Superarcs
   this->BoundaryTreeData->Superarcs.Shrink(this->NumKept);
-  auto fillBractSuperarcsWorklet = bract_maker::CompressRegularisedNodesFillBractSuperarcsWorklet();
-  this->Invoke(fillBractSuperarcsWorklet,
+  auto fillBoundaryTreeSuperarcsWorklet =
+    bract_maker::CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet();
+  this->Invoke(fillBoundaryTreeSuperarcsWorklet,
                newSuperarc,
                reverseSorter,
                vertexSorter,
@@ -1243,7 +1244,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 /// Side effects: This function updates:
 /// - this->InteriorForestData->Above
 /// - this->InteriorForestData->Below
-/// - this->InteriorForestData->BractMeshIndices
+/// - this->InteriorForestData->BoundaryTreeMeshIndices
 template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
   const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler)
@@ -1259,10 +1260,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
   auto meshGlobalIds =
     this->Mesh
       ->template GetGlobalIdsFromMeshIndices<vtkm::worklet::contourtree_augmented::IdArrayType>(
-        this->BractVertexSuperset, localToGlobalIdRelabeler);
+        this->BoundaryVertexSuperset, localToGlobalIdRelabeler);
   auto setInteriorForestWorklet =
     vtkm::worklet::contourtree_distributed::bract_maker::SetInteriorForestWorklet();
-  // NOTE: We don't need this->BractVertexSuperset as input since meshGlobalIds is already transformed accordingly
+  // NOTE: We don't need this->BoundaryVertexSuperset as input since meshGlobalIds is already transformed accordingly
   this->Invoke(setInteriorForestWorklet,
                this->ContourTree.Supernodes,          // input
                this->InteriorForestData->IsNecessary, // input
@@ -1275,12 +1276,12 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
   );
 
   // now copy the mesh indices of the BRACT's vertices for the TreeGrafter to use
-  InteriorForestData->BractMeshIndices.Allocate(
+  InteriorForestData->BoundaryTreeMeshIndices.Allocate(
     this->BoundaryTreeData->VertexIndex.GetNumberOfValues());
   // per vertex in the bract, convert it to a sort ID and then mesh ID and copy to the InteriorForestData
   vtkm::cont::Algorithm::Copy(vtkm::cont::make_ArrayHandlePermutation(
                                 this->BoundaryTreeData->VertexIndex, this->Mesh->SortOrder),
-                              InteriorForestData->BractMeshIndices);
+                              InteriorForestData->BoundaryTreeMeshIndices);
 } // SetInteriorForest()
 
 
@@ -1324,7 +1325,7 @@ std::string BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::DebugPrint(con
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "Boundary Sort Indices", this->BoundaryIndices, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
-    "Boundary Vertex Superset", this->BractVertexSuperset, -1, resultStream);
+    "Boundary Vertex Superset", this->BoundaryVertexSuperset, -1, resultStream);
   vtkm::worklet::contourtree_augmented::PrintIndices(
     "Boundary Superparents", this->BoundarySuperparents, -1, resultStream);
   resultStream << std::endl;

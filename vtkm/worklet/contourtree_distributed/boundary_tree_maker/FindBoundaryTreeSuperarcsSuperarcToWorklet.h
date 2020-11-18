@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_find_bract_superacrs_superarc_to_worklet_h
-#define vtk_m_worklet_contourtree_distributed_bract_maker_find_bract_superacrs_superarc_to_worklet_h
+#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_find_boundary_tree_superacrs_superarc_to_worklet_h
+#define vtk_m_worklet_contourtree_distributed_bract_maker_find_boundary_tree_superacrs_superarc_to_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -66,8 +66,8 @@ namespace bract_maker
 {
 
 /// Compute the superarc "to" for every bract node
-/// Part of the BoundaryRestrictedAugmentedContourTree.FindBractSuperarcs function
-class FindBractSuperarcsSuperarcToWorklet : public vtkm::worklet::WorkletMapField
+/// Part of the BoundaryRestrictedAugmentedContourTree.FindBoundaryTreeSuperarcs function
+class FindBoundaryTreeSuperarcsSuperarcToWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn bractVertexSuperset,     // input
@@ -86,7 +86,7 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  FindBractSuperarcsSuperarcToWorklet() {}
+  FindBoundaryTreeSuperarcsSuperarcToWorklet() {}
 
   template <typename InFieldPortalType,
             typename MeshSortOrderPortalType,
@@ -244,7 +244,7 @@ public:
     */
   } // operator()()
 
-}; // FindBractSuperarcsSuperarcToWorklet
+}; // FindBoundaryTreeSuperarcsSuperarcToWorklet
 
 
 } // namespace bract_maker

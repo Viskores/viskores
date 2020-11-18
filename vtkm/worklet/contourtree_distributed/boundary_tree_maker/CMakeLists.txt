@@ -19,7 +19,7 @@ set(headers
   FindNecessaryInteriorSetSuperparentNecessaryWorklet.h
   AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h
   AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h
-  FindBractSuperarcsSuperarcToWorklet.h
+  FindBoundaryTreeSuperarcsSuperarcToWorklet.h
   SetUpAndDownNeighboursWorklet.h
   IdentifyRegularisedSupernodesStepOneWorklet.h
   IdentifyRegularisedSupernodesStepTwoWorklet.h
@@ -29,13 +29,13 @@ set(headers
   CompressRegularisedNodesFindNewSuperarcsWorklet.h
   CompressRegularisedNodesResolveRootWorklet.h
   CompressRegularisedNodesTransferVerticesWorklet.h
-  CompressRegularisedNodesFillBractSuperarcsWorklet.h
+  CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h
   SetInteriorForestWorklet.h
   SumFunctor.h
   NoSuchElementFunctor.h
   HyperarcComparator.h
   ContourTreeNodeHyperArcComparator.h
-  BRACTNodeComparator.h
+  BoundarytreeNodeComparator.h
 )
 
 vtkm_declare_headers(${headers})

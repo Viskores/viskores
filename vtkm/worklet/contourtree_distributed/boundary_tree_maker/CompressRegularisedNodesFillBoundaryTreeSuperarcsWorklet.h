@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_bract_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
-#define vtk_m_worklet_contourtree_distributed_bract_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
+#ifndef vtk_m_worklet_contourtree_distributed_boundary_tree_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
+#define vtk_m_worklet_contourtree_distributed_boundary_tree_maker_compress_regularised_nodes_fill_bract_superarcs_worklet_h
 
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
@@ -66,7 +66,8 @@ namespace bract_maker
 {
 
 /// Step 1 of IdentifyRegularisedSupernodes
-class CompressRegularisedNodesFillBractSuperarcsWorklet : public vtkm::worklet::WorkletMapField
+class CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet
+  : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn newSuperarc,
@@ -78,7 +79,7 @@ public:
 
   // Default Constructor
   VTKM_EXEC_CONT
-  CompressRegularisedNodesFillBractSuperarcsWorklet() {}
+  CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet() {}
 
   template <typename InFieldPortalType>
   VTKM_EXEC vtkm::Id operator()(const InFieldPortalType newSuperarcPortal,
@@ -108,7 +109,7 @@ public:
 
     */
   }
-}; // CompressRegularisedNodesFillBractSuperarcsWorklet
+}; // CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet
 
 
 } // namespace bract_maker

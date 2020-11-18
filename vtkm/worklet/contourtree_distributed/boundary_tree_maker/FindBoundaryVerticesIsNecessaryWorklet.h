@@ -71,9 +71,9 @@ namespace bract_maker
 class FindBoundaryVerticesIsNecessaryWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn bractVertexSuperset,          // (input)
-                                ExecObject meshBoundaryExec,          // (input)
-                                FieldOut necessaryBractVertexSuperset // (output)
+  using ControlSignature = void(FieldIn bractVertexSuperset,                 // (input)
+                                ExecObject meshBoundaryExec,                 // (input)
+                                FieldOut necessaryBoundaryTreeVertexSuperset // (output)
   );
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
