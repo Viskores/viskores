@@ -9,12 +9,15 @@
 ##============================================================================
 
 set(headers
+  AdvectorBaseAlgorithm.h
+  AdvectorBaseAlgorithm.hxx
+  AdvectorBaseThreadedAlgorithm.h
   BoundsMap.h
   DataSetIntegrator.h
   Messenger.h
-  ParticleAdvector.h
-  ParticleAdvector.hxx
+  ParticleAdvectionAlgorithm.h
   ParticleMessenger.h
+  StreamlineAlgorithm.h
 )
 
 #-----------------------------------------------------------------------------
