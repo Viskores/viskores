@@ -69,16 +69,6 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
   else
     return vtkm::filter::particleadvection::RunAlgo<AlgorithmType>(
       boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
-
-  //  vtkm::filter::particleadvection::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
-  vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm pa(boundsMap, dsi);
-  pa.SetNumberOfSteps(this->NumberOfSteps);
-  pa.SetStepSize(this->StepSize);
-  pa.SetSeeds(this->Seeds);
-
-  pa.Go();
-  vtkm::cont::PartitionedDataSet output = pa.GetOutput();
-  return output;
 }
 
 //-----------------------------------------------------------------------------
