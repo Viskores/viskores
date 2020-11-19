@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_Streamline_h
 #define vtk_m_filter_Streamline_h
 
+#include <vtkm/Particle.h>
 #include <vtkm/filter/FilterDataSetWithField.h>
 
 namespace vtkm
