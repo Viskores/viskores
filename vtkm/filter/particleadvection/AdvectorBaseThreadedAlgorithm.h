@@ -159,9 +159,4 @@ protected:
 }
 } // namespace vtkm::filter::particleadvection
 
-
-//#ifndef vtk_m_filter_particleadvection_AdvectorBaseThreadedAlgorithm_h
-//#include <vtkm/filter/particleadvection/AdvectorBaseThreadedAlgorithm.hxx>
-//#endif
-
 #endif
