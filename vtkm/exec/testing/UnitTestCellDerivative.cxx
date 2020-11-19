@@ -104,8 +104,6 @@ struct TestDerivativeFunctor
       fieldValues.Append(value);
     }
 
-    std::cout << "    Expected: " << expectedGradient << std::endl;
-
     std::uniform_real_distribution<vtkm::FloatDefault> randomDist;
 
     for (vtkm::IdComponent trial = 0; trial < 5; trial++)
@@ -124,13 +122,10 @@ struct TestDerivativeFunctor
       }
       pcoords = (1 / totalWeight) * pcoords;
 
-      std::cout << "    Test derivative at " << pcoords << std::endl;
-
       vtkm::Vec<FieldType, 3> computedGradient;
       CHECK_CALL(vtkm::exec::CellDerivative(
         fieldValues, worldCoordinates, pcoords, shape, computedGradient));
 
-      std::cout << "     Computed: " << computedGradient << std::endl;
       // Note that some gradients (particularly those near the center of
       // polygons with 5 or more points) are not very precise. Thus the
       // tolarance of the test_equal is raised.
@@ -174,7 +169,6 @@ struct TestDerivativeFunctor
       topDim = numPoints - 1;
     }
 
-    std::cout << "Simple field, " << numPoints << " points" << std::endl;
     for (vtkm::IdComponent fieldComponent = 0;
          fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
          fieldComponent++)
@@ -187,7 +181,6 @@ struct TestDerivativeFunctor
     expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
-    std::cout << "Uneven gradient, " << numPoints << " points" << std::endl;
     for (vtkm::IdComponent fieldComponent = 0;
          fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
          fieldComponent++)
@@ -200,7 +193,6 @@ struct TestDerivativeFunctor
     expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
-    std::cout << "Negative gradient directions, " << numPoints << " points" << std::endl;
     for (vtkm::IdComponent fieldComponent = 0;
          fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
          fieldComponent++)
@@ -213,7 +205,6 @@ struct TestDerivativeFunctor
     expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
-    std::cout << "Random linear field, " << numPoints << " points" << std::endl;
     std::uniform_real_distribution<FieldComponentType> randomDist(-20.0f, 20.0f);
     for (vtkm::IdComponent fieldComponent = 0;
          fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());

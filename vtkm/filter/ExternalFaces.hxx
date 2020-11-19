@@ -18,9 +18,8 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input,
+                                             vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   //1. extract the cell set
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();

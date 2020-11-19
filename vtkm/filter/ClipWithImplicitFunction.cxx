@@ -19,7 +19,7 @@ namespace vtkm
 namespace filter
 {
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ClipWithImplicitFunction);
+VTKM_FILTER_EXTRA_INSTANTIATE_EXECUTE_METHOD(ClipWithImplicitFunction);
 
 template VTKM_FILTER_EXTRA_EXPORT bool ClipWithImplicitFunction::DoMapField(
   vtkm::cont::DataSet&,

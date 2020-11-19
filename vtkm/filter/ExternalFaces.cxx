@@ -9,7 +9,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #define vtkm_filter_ExternalFaces_cxx
+
 #include <vtkm/filter/ExternalFaces.h>
+#include <vtkm/filter/ExternalFaces.hxx>
 
 namespace vtkm
 {
@@ -94,6 +96,8 @@ bool ExternalFaces::MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::
 }
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ExternalFaces);
+template VTKM_FILTER_EXTRA_TEMPLATE_EXPORT vtkm::cont::DataSet ExternalFaces::DoExecute(
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault> policy);
 }
 }

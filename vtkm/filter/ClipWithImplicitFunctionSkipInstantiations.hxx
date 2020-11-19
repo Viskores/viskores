@@ -15,6 +15,7 @@
 #define vtk_m_filter_ClipWithImplicitFunctionSkipInstantiations_hxx
 
 #include <vtkm/filter/ClipWithImplicitFunction.h>
+#include <vtkm/filter/ClipWithImplicitFunction.hxx>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>

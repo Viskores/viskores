@@ -18,9 +18,8 @@ namespace filter
 {
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
-  const vtkm::cont::DataSet& input,
-  vtkm::filter::PolicyBase<DerivedPolicy> policy)
+vtkm::cont::DataSet ExtractStructured::DoExecute(const vtkm::cont::DataSet& input,
+                                                 vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
   const vtkm::cont::CoordinateSystem& coordinates = input.GetCoordinateSystem();

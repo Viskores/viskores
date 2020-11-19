@@ -9,6 +9,7 @@
 //============================================================================
 #define vtkm_filter_ExtractStructured_cxx
 #include <vtkm/filter/ExtractStructured.h>
+#include <vtkm/filter/ExtractStructured.hxx>
 
 #include <vtkm/filter/MapFieldPermutation.h>
 
@@ -60,6 +61,8 @@ void ExtractStructured::PostExecute(const vtkm::cont::PartitionedDataSet&,
 }
 
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(ExtractStructured);
+template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractStructured::DoExecute(
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault> policy);
 }
 }
