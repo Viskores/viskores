@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ParticleAdvector_h
-#define vtk_m_filter_ParticleAdvector_h
+#ifndef vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_h
+#define vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_h
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
@@ -22,12 +22,7 @@
 #include <vtkm/filter/particleadvection/ParticleMessenger.h>
 
 #include <map>
-#include <thread>
 #include <vector>
-
-//TODO:
-// fix inheritance?
-// streamlines...
 
 namespace vtkm
 {
@@ -57,13 +52,13 @@ vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::filter::particleadvection::Bo
 // Base class for particle advector
 //
 template <typename ResultType>
-class VTKM_ALWAYS_EXPORT ParticleAdvectorBase
+class VTKM_ALWAYS_EXPORT AdvectorBaseAlgorithm
 {
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
 public:
-  ParticleAdvectorBase(const vtkm::filter::particleadvection::BoundsMap& bm,
-                       const std::vector<DataSetIntegratorType>& blocks)
+  AdvectorBaseAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
+                        const std::vector<DataSetIntegratorType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumberOfSteps(0)
@@ -99,9 +94,7 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
-
-
-  //Virtuals for advection and getting output.
+  //Advect all the particles.
   virtual void Go()
   {
     vtkm::filter::particleadvection::ParticleMessenger messenger(
@@ -133,7 +126,6 @@ public:
     }
   }
 
-  //  virtual vtkm::cont::PartitionedDataSet GetOutput() = 0;
   inline vtkm::cont::PartitionedDataSet GetOutput();
 
 protected:
@@ -145,9 +137,8 @@ protected:
     this->ParticleBlockIDsMap.clear();
   }
 
-
   inline vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const;
-  inline const DataSetIntegratorType& GetDataSet(vtkm::Id id); // const;
+  inline const DataSetIntegratorType& GetDataSet(vtkm::Id id) const;
   inline void UpdateResultParticle(
     vtkm::Particle& p,
     std::vector<vtkm::Particle>& I,
@@ -196,7 +187,6 @@ protected:
 
     return !particles.empty();
   }
-
 
   virtual void Communicate(vtkm::filter::particleadvection::ParticleMessenger& messenger,
                            vtkm::Id numLocalTerminations,
@@ -255,205 +245,20 @@ protected:
   inline vtkm::Id UpdateResult(const ResultType& res, vtkm::Id blockId);
 
   //Member data
-  std::vector<vtkm::Particle> Active;
-  std::vector<vtkm::Particle> Inactive;
-  std::unordered_map<vtkm::Id, std::vector<vtkm::Particle>> Terminated;
 
+
+  std::vector<vtkm::Particle> Active;
   std::vector<DataSetIntegratorType> Blocks;
   vtkm::filter::particleadvection::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  std::vector<vtkm::Particle> Inactive;
   vtkm::Id NumberOfSteps;
   vtkm::Id NumRanks;
-  vtkm::Id Rank;
-  vtkm::FloatDefault StepSize;
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+  vtkm::Id Rank;
   std::map<vtkm::Id, std::vector<ResultType>> Results;
-};
-
-template <typename ResultType>
-class VTKM_ALWAYS_EXPORT PABaseThreadedAlgorithm : public ParticleAdvectorBase<ResultType>
-{
-public:
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-  PABaseThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                          const std::vector<DataSetIntegratorType>& blocks)
-    : ParticleAdvectorBase<ResultType>(bm, blocks)
-    , Done(false)
-  {
-    //For threaded algorithm, the particles go out of scope in the Work method.
-    //When this happens, they are destructed by the time the Manage thread gets them.
-    for (auto& block : this->Blocks)
-      block.SetCopySeedFlag(true);
-  }
-
-  void Go() override
-  {
-    vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
-    vtkm::Id totalNumSeeds = this->ComputeTotalNumParticles(nLocal);
-
-    std::vector<std::thread> workerThreads;
-    workerThreads.push_back(std::thread(PABaseThreadedAlgorithm::Worker, this));
-    this->Manage(totalNumSeeds);
-    for (auto& t : workerThreads)
-      t.join();
-  }
-
-protected:
-  bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) override
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->ParticleAdvectorBase<ResultType>::GetActiveParticles(particles, blockId);
-  }
-
-  void UpdateActive(const std::vector<vtkm::Particle>& particles,
-                    const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap) override
-  {
-    if (!particles.empty())
-    {
-      std::lock_guard<std::mutex> lock(this->Mutex);
-      this->ParticleAdvectorBase<ResultType>::UpdateActive(particles, idsMap);
-    }
-  }
-
-  bool CheckDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->Done;
-  }
-  void SetDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    this->Done = true;
-  }
-
-  static void Worker(PABaseThreadedAlgorithm* algo) { algo->Work(); }
-
-  void Work()
-  {
-    while (!this->CheckDone())
-    {
-      std::vector<vtkm::Particle> v;
-      vtkm::Id blockId = -1;
-      if (this->GetActiveParticles(v, blockId))
-      {
-        const auto& block = this->GetDataSet(blockId);
-
-        ResultType r;
-        block.Advect(v, this->StepSize, this->NumberOfSteps, r);
-        this->UpdateWorkerResult(blockId, r);
-      }
-    }
-  }
-
-  void Manage(vtkm::Id totalNumSeeds)
-  {
-    vtkm::filter::particleadvection::ParticleMessenger messenger(
-      this->Comm, this->BoundsMap, 1, 128);
-
-    vtkm::Id N = 0;
-    while (N < totalNumSeeds)
-    {
-      std::unordered_map<vtkm::Id, std::vector<ResultType>> workerResults;
-      this->GetWorkerResults(workerResults);
-
-      vtkm::Id numTerm = 0;
-      for (const auto& it : workerResults)
-      {
-        vtkm::Id blockId = it.first;
-        const auto& results = it.second;
-        for (const auto& r : results)
-          numTerm += this->UpdateResult(r, blockId);
-      }
-
-      vtkm::Id numTermMessages = 0;
-      this->Communicate(messenger, numTerm, numTermMessages);
-
-      N += (numTerm + numTermMessages);
-      if (N > totalNumSeeds)
-        throw vtkm::cont::ErrorFilterExecution("Particle count error");
-    }
-
-    //Let the workers know that we are done.
-    this->SetDone();
-  }
-
-  void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<ResultType>>& results)
-  {
-    results.clear();
-
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    if (!this->WorkerResults.empty())
-    {
-      results = this->WorkerResults;
-      this->WorkerResults.clear();
-    }
-  }
-
-  void UpdateWorkerResult(vtkm::Id blockId, const ResultType& result)
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-
-    auto& it = this->WorkerResults[blockId];
-    it.push_back(result);
-  }
-
-  bool Done;
-  std::mutex Mutex;
-  std::unordered_map<vtkm::Id, std::vector<ResultType>> WorkerResults;
-};
-
-
-class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
-  : public ParticleAdvectorBase<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-public:
-  ParticleAdvectionAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                             const std::vector<DataSetIntegratorType>& blocks)
-    : ParticleAdvectorBase<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
-  {
-  }
-};
-
-class VTKM_ALWAYS_EXPORT ParticleAdvectionThreadedAlgorithm
-  : public PABaseThreadedAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-public:
-  ParticleAdvectionThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                                     const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseThreadedAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
-  {
-  }
-};
-
-class VTKM_ALWAYS_EXPORT StreamlineAlgorithm
-  : public ParticleAdvectorBase<vtkm::worklet::StreamlineResult<vtkm::Particle>>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-public:
-  StreamlineAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                      const std::vector<DataSetIntegratorType>& blocks)
-    : ParticleAdvectorBase<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
-  {
-  }
-};
-
-class VTKM_ALWAYS_EXPORT StreamlineThreadedAlgorithm
-  : public PABaseThreadedAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-public:
-  StreamlineThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                              const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseThreadedAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
-  {
-  }
+  vtkm::FloatDefault StepSize;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Particle>> Terminated;
 };
 
 }
@@ -461,8 +266,8 @@ public:
 } // namespace vtkm::filter::particleadvection
 
 
-#ifndef vtk_m_filter_ParticleAdvector_hxx
-#include <vtkm/filter/particleadvection/ParticleAdvector.hxx>
+#ifndef vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_hxx
+#include <vtkm/filter/particleadvection/AdvectorBaseAlgorithm.hxx>
 #endif
 
 #endif

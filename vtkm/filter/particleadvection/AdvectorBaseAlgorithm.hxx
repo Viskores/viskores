@@ -8,8 +8,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_filter_ParticleAdvector_hxx
-#define vtk_m_filter_ParticleAdvector_hxx
+#ifndef vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_hxx
+#define vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_hxx
 
 namespace vtkm
 {
@@ -22,20 +22,20 @@ using PAResultType = vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>;
 using SLResultType = vtkm::worklet::StreamlineResult<vtkm::Particle>;
 
 template <>
-inline void ParticleAdvectorBase<PAResultType>::StoreResult(const PAResultType& vtkmNotUsed(res),
-                                                            vtkm::Id vtkmNotUsed(blockId))
+inline void AdvectorBaseAlgorithm<PAResultType>::StoreResult(const PAResultType& vtkmNotUsed(res),
+                                                             vtkm::Id vtkmNotUsed(blockId))
 {
 }
 
 template <>
-inline void ParticleAdvectorBase<SLResultType>::StoreResult(const SLResultType& res,
-                                                            vtkm::Id blockId)
+inline void AdvectorBaseAlgorithm<SLResultType>::StoreResult(const SLResultType& res,
+                                                             vtkm::Id blockId)
 {
   this->Results[blockId].push_back(res);
 }
 
 template <>
-inline vtkm::cont::PartitionedDataSet ParticleAdvectorBase<PAResultType>::GetOutput()
+inline vtkm::cont::PartitionedDataSet AdvectorBaseAlgorithm<PAResultType>::GetOutput()
 {
   vtkm::cont::PartitionedDataSet output;
 
@@ -69,7 +69,7 @@ inline vtkm::cont::PartitionedDataSet ParticleAdvectorBase<PAResultType>::GetOut
 }
 
 template <>
-inline vtkm::cont::PartitionedDataSet ParticleAdvectorBase<SLResultType>::GetOutput()
+inline vtkm::cont::PartitionedDataSet AdvectorBaseAlgorithm<SLResultType>::GetOutput()
 {
   vtkm::cont::PartitionedDataSet output;
 
@@ -154,7 +154,7 @@ inline vtkm::cont::PartitionedDataSet ParticleAdvectorBase<SLResultType>::GetOut
 }
 
 template <typename ResultType>
-inline vtkm::Id ParticleAdvectorBase<ResultType>::ComputeTotalNumParticles(vtkm::Id numLocal) const
+inline vtkm::Id AdvectorBaseAlgorithm<ResultType>::ComputeTotalNumParticles(vtkm::Id numLocal) const
 {
   long long totalNumParticles = static_cast<long long>(numLocal);
 #ifdef VTKM_ENABLE_MPI
@@ -166,7 +166,7 @@ inline vtkm::Id ParticleAdvectorBase<ResultType>::ComputeTotalNumParticles(vtkm:
 
 template <typename ResultType>
 inline const vtkm::filter::particleadvection::DataSetIntegrator&
-ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) // const
+AdvectorBaseAlgorithm<ResultType>::GetDataSet(vtkm::Id id) const
 {
   for (const auto& it : this->Blocks)
     if (it.GetID() == id)
@@ -175,7 +175,7 @@ ParticleAdvectorBase<ResultType>::GetDataSet(vtkm::Id id) // const
 }
 
 template <typename ResultType>
-inline void ParticleAdvectorBase<ResultType>::UpdateResultParticle(
+inline void AdvectorBaseAlgorithm<ResultType>::UpdateResultParticle(
   vtkm::Particle& p,
   std::vector<vtkm::Particle>& I,
   std::vector<vtkm::Particle>& T,
@@ -240,8 +240,8 @@ inline void ParticleAdvectorBase<ResultType>::UpdateResultParticle(
 }
 
 template <typename ResultType>
-inline vtkm::Id ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType& res,
-                                                               vtkm::Id blockId)
+inline vtkm::Id AdvectorBaseAlgorithm<ResultType>::UpdateResult(const ResultType& res,
+                                                                vtkm::Id blockId)
 {
   vtkm::Id n = res.Particles.GetNumberOfValues();
   auto portal = res.Particles.ReadPortal();
@@ -268,4 +268,4 @@ inline vtkm::Id ParticleAdvectorBase<ResultType>::UpdateResult(const ResultType&
 }
 } // namespace vtkm::filter::particleadvection
 
-#endif
+#endif //vtk_m_filter_particleadvection_AdvectorBaseAlgorithm_hxx
