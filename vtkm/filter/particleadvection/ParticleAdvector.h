@@ -36,6 +36,7 @@ namespace filter
 namespace particleadvection
 {
 using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+
 template <typename AlgorithmType>
 vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::filter::particleadvection::BoundsMap& boundsMap,
                                        const std::vector<DataSetIntegratorType>& dsi,
@@ -51,10 +52,10 @@ vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::filter::particleadvection::Bo
   algo.Go();
   return algo.GetOutput();
 }
+
 //
 // Base class for particle advector
 //
-
 template <typename ResultType>
 class VTKM_ALWAYS_EXPORT ParticleAdvectorBase
 {
@@ -75,70 +76,7 @@ public:
   //Initialize ParticleAdvectorBase
   void SetStepSize(vtkm::FloatDefault stepSize) { this->StepSize = stepSize; }
   void SetNumberOfSteps(vtkm::Id numSteps) { this->NumberOfSteps = numSteps; }
-  virtual void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) = 0;
-
-
-  //Virtuals for advection and getting output.
-  virtual void Go() = 0;
-  virtual vtkm::cont::PartitionedDataSet GetOutput() = 0;
-
-protected:
-  inline vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const;
-  inline const DataSetIntegratorType& GetDataSet(vtkm::Id id); // const;
-  inline void UpdateResultParticle(
-    vtkm::Particle& p,
-    std::vector<vtkm::Particle>& I,
-    std::vector<vtkm::Particle>& T,
-    std::vector<vtkm::Particle>& A,
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapI,
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapA) const;
-
-  virtual void ClearParticles() = 0;
-  virtual void SetSeedArray(const std::vector<vtkm::Particle>& particles,
-                            const std::vector<std::vector<vtkm::Id>>& blockIds) = 0;
-  virtual void Communicate(vtkm::filter::particleadvection::ParticleMessenger& messenger,
-                           vtkm::Id numLocalTerminations,
-                           vtkm::Id& numTermMessages) = 0;
-  virtual bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) = 0;
-  virtual void UpdateActive(const std::vector<vtkm::Particle>& particles,
-                            const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap) = 0;
-  virtual void UpdateInactive(
-    const std::vector<vtkm::Particle>& particles,
-    const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap) = 0;
-  virtual void UpdateTerminated(const std::vector<vtkm::Particle>& particles, vtkm::Id blockId) = 0;
-
-  virtual void StoreResult(const ResultType& vtkmNotUsed(res), vtkm::Id vtkmNotUsed(blockId)) {}
-  inline vtkm::Id UpdateResult(const ResultType& res, vtkm::Id blockId);
-
-  //Member data
-  std::vector<DataSetIntegratorType> Blocks;
-  vtkm::filter::particleadvection::BoundsMap BoundsMap;
-  vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  vtkm::Id NumberOfSteps;
-  vtkm::Id NumRanks;
-  vtkm::Id Rank;
-  vtkm::FloatDefault StepSize;
-  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
-};
-
-//
-// Base algorithm for particle advection.
-// This is a single-threaded algorithm.
-//
-
-template <typename ResultType>
-class VTKM_ALWAYS_EXPORT PABaseAlgorithm : public ParticleAdvectorBase<ResultType>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
-public:
-  PABaseAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                  const std::vector<DataSetIntegratorType>& blocks)
-    : ParticleAdvectorBase<ResultType>(bm, blocks)
-  {
-  }
-
-  void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Particle>& seeds) override
+  void SetSeeds(const vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
   {
     this->ClearParticles();
 
@@ -161,7 +99,10 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
-  void Go() override
+
+
+  //Virtuals for advection and getting output.
+  virtual void Go()
   {
     vtkm::filter::particleadvection::ParticleMessenger messenger(
       this->Comm, this->BoundsMap, 1, 128);
@@ -192,8 +133,11 @@ public:
     }
   }
 
+  //  virtual vtkm::cont::PartitionedDataSet GetOutput() = 0;
+  inline vtkm::cont::PartitionedDataSet GetOutput();
+
 protected:
-  void ClearParticles() override
+  virtual void ClearParticles()
   {
     this->Active.clear();
     this->Inactive.clear();
@@ -201,8 +145,19 @@ protected:
     this->ParticleBlockIDsMap.clear();
   }
 
-  void SetSeedArray(const std::vector<vtkm::Particle>& particles,
-                    const std::vector<std::vector<vtkm::Id>>& blockIds) override
+
+  inline vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const;
+  inline const DataSetIntegratorType& GetDataSet(vtkm::Id id); // const;
+  inline void UpdateResultParticle(
+    vtkm::Particle& p,
+    std::vector<vtkm::Particle>& I,
+    std::vector<vtkm::Particle>& T,
+    std::vector<vtkm::Particle>& A,
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapI,
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMapA) const;
+
+  virtual void SetSeedArray(const std::vector<vtkm::Particle>& particles,
+                            const std::vector<std::vector<vtkm::Id>>& blockIds)
   {
     VTKM_ASSERT(particles.size() == blockIds.size());
 
@@ -218,7 +173,7 @@ protected:
     this->Active.insert(this->Active.end(), particles.begin(), particles.end());
   }
 
-  bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) override
+  virtual bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId)
   {
     particles.clear();
     blockId = -1;
@@ -242,9 +197,10 @@ protected:
     return !particles.empty();
   }
 
-  void Communicate(vtkm::filter::particleadvection::ParticleMessenger& messenger,
-                   vtkm::Id numLocalTerminations,
-                   vtkm::Id& numTermMessages) override
+
+  virtual void Communicate(vtkm::filter::particleadvection::ParticleMessenger& messenger,
+                           vtkm::Id numLocalTerminations,
+                           vtkm::Id& numTermMessages)
   {
 
     std::vector<vtkm::Particle> incoming;
@@ -260,8 +216,8 @@ protected:
     this->UpdateActive(incoming, incomingIDs);
   }
 
-  void UpdateActive(const std::vector<vtkm::Particle>& particles,
-                    const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap) override
+  virtual void UpdateActive(const std::vector<vtkm::Particle>& particles,
+                            const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
   {
     VTKM_ASSERT(particles.size() == idsMap.size());
     if (particles.empty())
@@ -272,8 +228,8 @@ protected:
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
-  void UpdateInactive(const std::vector<vtkm::Particle>& particles,
-                      const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap) override
+  virtual void UpdateInactive(const std::vector<vtkm::Particle>& particles,
+                              const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
   {
     VTKM_ASSERT(particles.size() == idsMap.size());
     if (particles.empty())
@@ -284,7 +240,7 @@ protected:
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
-  void UpdateTerminated(const std::vector<vtkm::Particle>& particles, vtkm::Id blockId) override
+  virtual void UpdateTerminated(const std::vector<vtkm::Particle>& particles, vtkm::Id blockId)
   {
     if (particles.empty())
       return;
@@ -295,21 +251,34 @@ protected:
     it.insert(it.end(), particles.begin(), particles.end());
   }
 
+  inline void StoreResult(const ResultType& res, vtkm::Id blockId);
+  inline vtkm::Id UpdateResult(const ResultType& res, vtkm::Id blockId);
+
+  //Member data
   std::vector<vtkm::Particle> Active;
   std::vector<vtkm::Particle> Inactive;
   std::unordered_map<vtkm::Id, std::vector<vtkm::Particle>> Terminated;
+
+  std::vector<DataSetIntegratorType> Blocks;
+  vtkm::filter::particleadvection::BoundsMap BoundsMap;
+  vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  vtkm::Id NumberOfSteps;
+  vtkm::Id NumRanks;
+  vtkm::Id Rank;
+  vtkm::FloatDefault StepSize;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+  std::map<vtkm::Id, std::vector<ResultType>> Results;
 };
 
-
 template <typename ResultType>
-class VTKM_ALWAYS_EXPORT PABaseThreadedAlgorithm : public PABaseAlgorithm<ResultType>
+class VTKM_ALWAYS_EXPORT PABaseThreadedAlgorithm : public ParticleAdvectorBase<ResultType>
 {
 public:
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
   PABaseThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                           const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseAlgorithm<ResultType>(bm, blocks)
+    : ParticleAdvectorBase<ResultType>(bm, blocks)
     , Done(false)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
@@ -334,7 +303,7 @@ protected:
   bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->PABaseAlgorithm<ResultType>::GetActiveParticles(particles, blockId);
+    return this->ParticleAdvectorBase<ResultType>::GetActiveParticles(particles, blockId);
   }
 
   void UpdateActive(const std::vector<vtkm::Particle>& particles,
@@ -343,7 +312,7 @@ protected:
     if (!particles.empty())
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
-      this->PABaseAlgorithm<ResultType>::UpdateActive(particles, idsMap);
+      this->ParticleAdvectorBase<ResultType>::UpdateActive(particles, idsMap);
     }
   }
 
@@ -436,51 +405,16 @@ protected:
 
 
 class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
-  : public PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
+  : public ParticleAdvectorBase<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
 {
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
 public:
   ParticleAdvectionAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                              const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
+    : ParticleAdvectorBase<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
   {
   }
-
-  vtkm::cont::PartitionedDataSet GetOutput() override
-  {
-    vtkm::cont::PartitionedDataSet output;
-
-    for (const auto& it : this->Terminated)
-    {
-      if (it.second.empty())
-        continue;
-
-      auto particles = vtkm::cont::make_ArrayHandle(it.second, vtkm::CopyFlag::Off);
-      vtkm::cont::ArrayHandle<vtkm::Vec3f> pos;
-      vtkm::cont::ParticleArrayCopy(particles, pos);
-
-      vtkm::cont::DataSet ds;
-      vtkm::cont::CoordinateSystem outCoords("coordinates", pos);
-      ds.AddCoordinateSystem(outCoords);
-
-      //Create vertex cell set
-      vtkm::Id numPoints = pos.GetNumberOfValues();
-      vtkm::cont::CellSetSingleType<> cells;
-      vtkm::cont::ArrayHandleIndex conn(numPoints);
-      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-
-      vtkm::cont::ArrayCopy(conn, connectivity);
-      cells.Fill(numPoints, vtkm::CELL_SHAPE_VERTEX, 1, connectivity);
-      ds.SetCellSet(cells);
-
-      output.AppendPartition(ds);
-    }
-
-    return output;
-  }
-
-protected:
 };
 
 class VTKM_ALWAYS_EXPORT ParticleAdvectionThreadedAlgorithm
@@ -494,150 +428,19 @@ public:
     : PABaseThreadedAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
   {
   }
-
-  vtkm::cont::PartitionedDataSet GetOutput() override
-  {
-    vtkm::cont::PartitionedDataSet output;
-
-    for (const auto& it : this->Terminated)
-    {
-      if (it.second.empty())
-        continue;
-
-      auto particles = vtkm::cont::make_ArrayHandle(it.second, vtkm::CopyFlag::Off);
-      vtkm::cont::ArrayHandle<vtkm::Vec3f> pos;
-      vtkm::cont::ParticleArrayCopy(particles, pos);
-
-      vtkm::cont::DataSet ds;
-      vtkm::cont::CoordinateSystem outCoords("coordinates", pos);
-      ds.AddCoordinateSystem(outCoords);
-
-      //Create vertex cell set
-      vtkm::Id numPoints = pos.GetNumberOfValues();
-      vtkm::cont::CellSetSingleType<> cells;
-      vtkm::cont::ArrayHandleIndex conn(numPoints);
-      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-
-      vtkm::cont::ArrayCopy(conn, connectivity);
-      cells.Fill(numPoints, vtkm::CELL_SHAPE_VERTEX, 1, connectivity);
-      ds.SetCellSet(cells);
-
-      output.AppendPartition(ds);
-    }
-
-    return output;
-  }
-
-protected:
 };
 
 class VTKM_ALWAYS_EXPORT StreamlineAlgorithm
-  : public PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>
+  : public ParticleAdvectorBase<vtkm::worklet::StreamlineResult<vtkm::Particle>>
 {
   using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
 
 public:
   StreamlineAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                       const std::vector<DataSetIntegratorType>& blocks)
-    : PABaseAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
+    : ParticleAdvectorBase<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
   {
   }
-
-  //DAVE dave
-  vtkm::cont::PartitionedDataSet GetOutput() override
-  {
-    vtkm::cont::PartitionedDataSet output;
-
-    for (const auto& it : this->Results)
-    {
-      std::size_t nResults = it.second.size();
-      if (nResults == 0)
-        continue;
-
-      vtkm::cont::DataSet ds;
-      //Easy case with one result.
-      if (nResults == 1)
-      {
-        ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", it.second[0].Positions));
-        ds.SetCellSet(it.second[0].PolyLines);
-      }
-      else
-      {
-        //Append all the results into one data set.
-        vtkm::cont::ArrayHandle<vtkm::Vec3f> appendPts;
-        std::vector<vtkm::Id> posOffsets(nResults);
-
-        const auto& res0 = it.second[0];
-        vtkm::Id totalNumCells = res0.PolyLines.GetNumberOfCells();
-        vtkm::Id totalNumPts = res0.Positions.GetNumberOfValues();
-
-        posOffsets[0] = 0;
-        for (std::size_t i = 1; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          posOffsets[i] = totalNumPts;
-          totalNumPts += res.Positions.GetNumberOfValues();
-          totalNumCells += res.PolyLines.GetNumberOfCells();
-        }
-
-        //Append all the points together.
-        appendPts.Allocate(totalNumPts);
-        for (std::size_t i = 0; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          // copy all values into appendPts starting at offset.
-          vtkm::cont::Algorithm::CopySubRange(
-            res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
-        }
-        vtkm::cont::CoordinateSystem outputCoords =
-          vtkm::cont::CoordinateSystem("coordinates", appendPts);
-        ds.AddCoordinateSystem(outputCoords);
-
-        //Create polylines.
-        std::vector<vtkm::Id> numPtsPerCell(static_cast<std::size_t>(totalNumCells));
-        std::size_t off = 0;
-        for (std::size_t i = 0; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
-          for (vtkm::Id j = 0; j < nCells; j++)
-            numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
-        }
-
-        auto numPointsPerCellArray =
-          vtkm::cont::make_ArrayHandle(numPtsPerCell, vtkm::CopyFlag::Off);
-
-        vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-        vtkm::Id connectivityLen =
-          vtkm::cont::Algorithm::ScanExclusive(numPointsPerCellArray, cellIndex);
-        vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
-        vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-        vtkm::cont::ArrayCopy(connCount, connectivity);
-
-        vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
-        auto polyLineShape = vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(
-          vtkm::CELL_SHAPE_POLY_LINE, totalNumCells);
-        vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
-        auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numPointsPerCellArray);
-
-        vtkm::cont::CellSetExplicit<> polyLines;
-        polyLines.Fill(totalNumPts, cellTypes, connectivity, offsets);
-        ds.SetCellSet(polyLines);
-      }
-      output.AppendPartition(ds);
-    }
-
-    return output;
-  }
-
-protected:
-  virtual void StoreResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
-                           vtkm::Id blockId) override
-  {
-    this->Results[blockId].push_back(res);
-  }
-
-  std::map<vtkm::Id, std::vector<vtkm::worklet::StreamlineResult<vtkm::Particle>>> Results;
 };
 
 class VTKM_ALWAYS_EXPORT StreamlineThreadedAlgorithm
@@ -651,104 +454,7 @@ public:
     : PABaseThreadedAlgorithm<vtkm::worklet::StreamlineResult<vtkm::Particle>>(bm, blocks)
   {
   }
-
-  vtkm::cont::PartitionedDataSet GetOutput() override
-  {
-    vtkm::cont::PartitionedDataSet output;
-
-    for (const auto& it : this->Results)
-    {
-      std::size_t nResults = it.second.size();
-      if (nResults == 0)
-        continue;
-
-      vtkm::cont::DataSet ds;
-      //Easy case with one result.
-      if (nResults == 1)
-      {
-        ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", it.second[0].Positions));
-        ds.SetCellSet(it.second[0].PolyLines);
-      }
-      else
-      {
-        //Append all the results into one data set.
-        vtkm::cont::ArrayHandle<vtkm::Vec3f> appendPts;
-        std::vector<vtkm::Id> posOffsets(nResults);
-
-        const auto& res0 = it.second[0];
-        vtkm::Id totalNumCells = res0.PolyLines.GetNumberOfCells();
-        vtkm::Id totalNumPts = res0.Positions.GetNumberOfValues();
-
-        posOffsets[0] = 0;
-        for (std::size_t i = 1; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          posOffsets[i] = totalNumPts;
-          totalNumPts += res.Positions.GetNumberOfValues();
-          totalNumCells += res.PolyLines.GetNumberOfCells();
-        }
-
-        //Append all the points together.
-        appendPts.Allocate(totalNumPts);
-        for (std::size_t i = 0; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          // copy all values into appendPts starting at offset.
-          vtkm::cont::Algorithm::CopySubRange(
-            res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
-        }
-        vtkm::cont::CoordinateSystem outputCoords =
-          vtkm::cont::CoordinateSystem("coordinates", appendPts);
-        ds.AddCoordinateSystem(outputCoords);
-
-        //Create polylines.
-        std::vector<vtkm::Id> numPtsPerCell(static_cast<std::size_t>(totalNumCells));
-        std::size_t off = 0;
-        for (std::size_t i = 0; i < nResults; i++)
-        {
-          const auto& res = it.second[i];
-          vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
-          for (vtkm::Id j = 0; j < nCells; j++)
-            numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
-        }
-
-        auto numPointsPerCellArray =
-          vtkm::cont::make_ArrayHandle(numPtsPerCell, vtkm::CopyFlag::Off);
-
-        vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-        vtkm::Id connectivityLen =
-          vtkm::cont::Algorithm::ScanExclusive(numPointsPerCellArray, cellIndex);
-        vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
-        vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-        vtkm::cont::ArrayCopy(connCount, connectivity);
-
-        vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
-        auto polyLineShape = vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(
-          vtkm::CELL_SHAPE_POLY_LINE, totalNumCells);
-        vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
-        auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numPointsPerCellArray);
-
-        vtkm::cont::CellSetExplicit<> polyLines;
-        polyLines.Fill(totalNumPts, cellTypes, connectivity, offsets);
-        ds.SetCellSet(polyLines);
-      }
-
-      output.AppendPartition(ds);
-    }
-
-    return output;
-  }
-
-protected:
-  virtual void StoreResult(const vtkm::worklet::StreamlineResult<vtkm::Particle>& res,
-                           vtkm::Id blockId) override
-  {
-    this->Results[blockId].push_back(res);
-  }
-
-  std::map<vtkm::Id, std::vector<vtkm::worklet::StreamlineResult<vtkm::Particle>>> Results;
 };
-
 
 }
 }
