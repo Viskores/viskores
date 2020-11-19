@@ -56,6 +56,18 @@ set(unit_tests
   UnitTestProbe.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestStreamlineFilter.cxx
+  UnitTestStreamSurfaceFilter.cxx
+  UnitTestSurfaceNormalsFilter.cxx
+  UnitTestTetrahedralizeFilter.cxx
+  UnitTestThresholdFilter.cxx
+  UnitTestThresholdPointsFilter.cxx
+  UnitTestTriangulateFilter.cxx
+  UnitTestTubeFilter.cxx
+  UnitTestVectorMagnitudeFilter.cxx
+  UnitTestVertexClusteringFilter.cxx
+  UnitTestWarpScalarFilter.cxx
+  UnitTestWarpVectorFilter.cxx
+  UnitTestZFP.cxx
  )
 
 vtkm_unit_tests(
