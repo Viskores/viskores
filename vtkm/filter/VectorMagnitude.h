@@ -21,13 +21,12 @@ namespace vtkm
 namespace filter
 {
 
-class VTKM_ALWAYS_EXPORT VectorMagnitude : public vtkm::filter::FilterField<VectorMagnitude>
+class VTKM_FILTER_EXTRA_EXPORT VectorMagnitude : public vtkm::filter::FilterField<VectorMagnitude>
 {
 public:
   //currently the VectorMagnitude filter only works on vector data.
   using SupportedTypes = vtkm::TypeListVecCommon;
 
-  VTKM_FILTER_EXTRA_EXPORT
   VectorMagnitude();
 
   template <typename T, typename StorageType, typename DerivedPolicy>
@@ -40,7 +39,7 @@ private:
   vtkm::worklet::Magnitude Worklet;
 };
 #ifndef vtkm_filter_VectorMagnitude_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(VectorMagnitude);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(VectorMagnitude);
 #endif
 }
 } // namespace vtkm::filter

@@ -16,6 +16,6 @@ namespace vtkm
 namespace filter
 {
 //-----------------------------------------------------------------------------
-VTKM_FILTER_INSTANTIATE_EXECUTE_METHOD(CellAverage);
+VTKM_FILTER_COMMON_INSTANTIATE_EXECUTE_METHOD(CellAverage);
 }
 }

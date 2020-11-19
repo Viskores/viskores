@@ -36,10 +36,10 @@ namespace filter
 /// for image processing, subsampling large volumes to reduce data size, or
 /// extracting regions of a volume with interesting data.
 ///
-class VTKM_ALWAYS_EXPORT ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
+class VTKM_FILTER_COMMON_EXPORT ExtractStructured
+  : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
 public:
-  VTKM_FILTER_COMMON_EXPORT
   ExtractStructured();
 
   // Set the bounding box for the volume of interest
@@ -87,8 +87,7 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                              const vtkm::cont::Field& field);
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
@@ -99,8 +98,8 @@ public:
   }
 
 
-  VTKM_FILTER_COMMON_EXPORT VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                                       vtkm::cont::PartitionedDataSet&);
+  VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet&,
+                             vtkm::cont::PartitionedDataSet&);
 
   template <typename DerivedPolicy>
   VTKM_CONT void PostExecute(const vtkm::cont::PartitionedDataSet& input,
@@ -122,13 +121,12 @@ private:
 };
 
 #ifndef vtkm_filter_ExtractStructured_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractStructured);
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractStructured::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
 
-#ifndef vtk_m_filter_ExtractStructured_hxx
-#include <vtkm/filter/ExtractStructured.hxx>
-#endif
 
 #endif // vtk_m_filter_ExtractStructured_h

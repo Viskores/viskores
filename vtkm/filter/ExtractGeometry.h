@@ -37,13 +37,14 @@ namespace filter
 /// This differs from Clip in that Clip will subdivide boundary cells into new
 /// cells, while this filter will not, producing a more 'crinkly' output.
 ///
-class VTKM_ALWAYS_EXPORT ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
+class VTKM_FILTER_COMMON_EXPORT ExtractGeometry
+  : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:
   //currently the ExtractGeometry filter only works on scalar data.
   using SupportedTypes = TypeListScalarAll;
 
-  VTKM_FILTER_COMMON_EXPORT VTKM_CONT ExtractGeometry();
+  VTKM_CONT ExtractGeometry();
 
   // Set the volume of interest to extract
   void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
@@ -82,10 +83,9 @@ public:
 
   template <typename DerivedPolicy>
   vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+                                vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
-  VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                                              const vtkm::cont::Field& field);
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
@@ -104,11 +104,11 @@ private:
 };
 
 #ifndef vtkm_filter_ExtractGeometry_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ExtractGeometry);
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet ExtractGeometry::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/ExtractGeometry.hxx>
 
 #endif // vtk_m_filter_ExtractGeometry_h

@@ -15,6 +15,7 @@
 #define vtkm_filter_ClipWithFieldExecuteSignedInteger_cxx
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/ClipWithField.hxx>
 
 namespace vtkm
 {

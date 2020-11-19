@@ -12,6 +12,7 @@
 #define vtk_m_filter_Gradient_cxx
 
 #include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/Gradient.hxx>
 
 namespace vtkm
 {

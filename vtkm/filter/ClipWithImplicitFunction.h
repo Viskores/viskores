@@ -27,7 +27,7 @@ namespace filter
 /// Clip a dataset using a given implicit function value, such as vtkm::Sphere
 /// or vtkm::Frustum.
 /// The resulting geometry will not be water tight.
-class VTKM_ALWAYS_EXPORT ClipWithImplicitFunction
+class VTKM_FILTER_EXTRA_EXPORT ClipWithImplicitFunction
   : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:
@@ -100,7 +100,7 @@ private:
 };
 
 #ifndef vtkm_filter_ClipWithImplicitFunction_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(ClipWithImplicitFunction);
+VTKM_FILTER_EXTRA_EXPORT_EXECUTE_METHOD(ClipWithImplicitFunction);
 #endif
 }
 } // namespace vtkm::filter
