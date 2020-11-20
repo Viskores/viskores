@@ -32,6 +32,7 @@ public:
                                 const std::vector<DataSetIntegratorType>& blocks)
     : AdvectorBaseAlgorithm<ResultType>(bm, blocks)
     , Done(false)
+    , WorkerIdle(true)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
@@ -42,11 +43,11 @@ public:
   void Go() override
   {
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
-    vtkm::Id totalNumSeeds = this->ComputeTotalNumParticles(nLocal);
+    this->ComputeTotalNumParticles(nLocal);
 
     std::vector<std::thread> workerThreads;
     workerThreads.push_back(std::thread(AdvectorBaseThreadedAlgorithm::Worker, this));
-    this->Manage(totalNumSeeds);
+    this->Manage();
     for (auto& t : workerThreads)
       t.join();
   }
@@ -65,6 +66,7 @@ protected:
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
       this->AdvectorBaseAlgorithm<ResultType>::UpdateActive(particles, idsMap);
+      //      this->WorkAvailableCondition.notify_all();
     }
   }
 
@@ -72,6 +74,15 @@ protected:
   void SetDone() { this->Done = true; }
 
   static void Worker(AdvectorBaseThreadedAlgorithm* algo) { algo->Work(); }
+
+  void WorkerWait()
+  {
+    this->WorkerIdle = true;
+
+    //    std::cout<<"Worker wait..."<<std::endl;
+    //    std::unique_lock<std::mutex> lock(this->WorkAvailMutex);
+    //    this->WorkAvailableCondition.wait(lock);
+  }
 
   void Work()
   {
@@ -81,23 +92,27 @@ protected:
       vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
+        this->WorkerIdle = false;
         const auto& block = this->GetDataSet(blockId);
 
         ResultType r;
         block.Advect(v, this->StepSize, this->NumberOfSteps, r);
         this->UpdateWorkerResult(blockId, r);
       }
+      else
+        this->WorkerWait();
     }
   }
 
-  void Manage(vtkm::Id totalNumSeeds)
+  void Manage()
   {
     vtkm::filter::particleadvection::ParticleMessenger messenger(
       this->Comm, this->BoundsMap, 1, 128);
 
-    vtkm::Id N = 0;
-    while (N < totalNumSeeds)
+    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
+      //      if (this->Rank == 0) std::cout<<" M: "<<this->TotalNumTerminatedParticles<<" "<<this->TotalNumParticles<<std::endl;
+
       std::unordered_map<vtkm::Id, std::vector<ResultType>> workerResults;
       this->GetWorkerResults(workerResults);
 
@@ -112,14 +127,37 @@ protected:
 
       vtkm::Id numTermMessages = 0;
       this->Communicate(messenger, numTerm, numTermMessages);
+      //this->WorkAvailableCondition.notify_all();
 
-      N += (numTerm + numTermMessages);
-      if (N > totalNumSeeds)
+      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
+      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
+
+      //      if (numTerm + numTermMessages > 0)
+      //        this->WorkAvailableCondition.notify_all();
+      //      this->WorkAvailableCondition.notify_all();
     }
 
     //Let the workers know that we are done.
+    std::cout << this->Rank << " DONE" << std::endl;
     this->SetDone();
+    //    this->WorkAvailableCondition.notify_all();
+  }
+
+  bool GetBlockAndWait(const vtkm::Id& numLocalTerm) override
+  {
+    return false;
+    /*
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    bool val = this->AdvectorBaseAlgorithm<ResultType>::GetBlockAndWait(numLocalTerm);
+    if (val && this->WorkerIdle)
+        val = true;
+    else
+        val = false;
+    if (this->Rank == 0) std::cout<<" M: GBW: val= "<<val<<" ((wi= "<<this->WorkerIdle<<" Asz= "<<this->Active.size()<<std::endl;
+
+    return val;
+      */
   }
 
   void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<ResultType>>& results)
@@ -142,9 +180,12 @@ protected:
     it.push_back(result);
   }
 
+  std::mutex WorkAvailMutex;
+  std::condition_variable WorkAvailableCondition;
   std::atomic<bool> Done;
   std::mutex Mutex;
   std::unordered_map<vtkm::Id, std::vector<ResultType>> WorkerResults;
+  std::atomic<bool> WorkerIdle;
 };
 
 }

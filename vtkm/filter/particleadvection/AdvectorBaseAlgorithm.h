@@ -59,6 +59,8 @@ public:
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
     , StepSize(0)
+    , TotalNumParticles(0)
+    , TotalNumTerminatedParticles(0)
   {
   }
 
@@ -95,15 +97,17 @@ public:
       this->Comm, this->BoundsMap, 1, 128);
 
     vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
-    vtkm::Id totalNumSeeds = this->ComputeTotalNumParticles(nLocal);
+    this->ComputeTotalNumParticles(nLocal);
+    this->TotalNumTerminatedParticles = 0;
 
-    vtkm::Id N = 0;
-    while (N < totalNumSeeds)
+    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
       std::vector<vtkm::Particle> v;
       vtkm::Id numTerm = 0, blockId = -1;
+      std::size_t numV = 0;
       if (GetActiveParticles(v, blockId))
       {
+        numV = v.size();
         const auto& block = this->GetDataSet(blockId);
 
         ResultType r;
@@ -114,8 +118,8 @@ public:
       vtkm::Id numTermMessages = 0;
       this->Communicate(messenger, numTerm, numTermMessages);
 
-      N += (numTerm + numTermMessages);
-      if (N > totalNumSeeds)
+      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
+      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
     }
   }
@@ -131,14 +135,14 @@ protected:
     this->ParticleBlockIDsMap.clear();
   }
 
-  vtkm::Id ComputeTotalNumParticles(vtkm::Id numLocal) const
+  void ComputeTotalNumParticles(const vtkm::Id& numLocal)
   {
-    long long totalNumParticles = static_cast<long long>(numLocal);
+    long long total = static_cast<long long>(numLocal);
 #ifdef VTKM_ENABLE_MPI
     MPI_Comm mpiComm = vtkmdiy::mpi::mpi_cast(this->Comm.handle());
-    MPI_Allreduce(MPI_IN_PLACE, &totalNumParticles, 1, MPI_LONG_LONG, MPI_SUM, mpiComm);
+    MPI_Allreduce(MPI_IN_PLACE, &total, 1, MPI_LONG_LONG, MPI_SUM, mpiComm);
 #endif
-    return static_cast<vtkm::Id>(totalNumParticles);
+    this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
   const DataSetIntegratorType& GetDataSet(vtkm::Id id) const
@@ -257,7 +261,6 @@ protected:
                            vtkm::Id numLocalTerminations,
                            vtkm::Id& numTermMessages)
   {
-
     std::vector<vtkm::Particle> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingIDs;
     numTermMessages = 0;
@@ -266,7 +269,9 @@ protected:
                        numLocalTerminations,
                        incoming,
                        incomingIDs,
-                       numTermMessages);
+                       numTermMessages,
+                       this->GetBlockAndWait(numLocalTerminations));
+
     this->Inactive.clear();
     this->UpdateActive(incoming, incomingIDs);
   }
@@ -329,6 +334,23 @@ protected:
     return numTerm;
   }
 
+  virtual bool GetBlockAndWait(const vtkm::Id& numLocalTerm)
+  {
+    //There are only two cases where blocking would deadlock.
+    //1. There are active particles.
+    //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
+    //So, if neither are true, we can safely block and wait for communication to come in.
+
+    if (this->Active.empty() &&
+        (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+    {
+      std::cout << " BLOCK!! rank= " << this->Rank << std::endl;
+      return true;
+    }
+
+    return false;
+  }
+
   inline void StoreResult(const ResultType& res, vtkm::Id blockId);
 
   //Member data
@@ -343,6 +365,8 @@ protected:
   vtkm::Id Rank;
   std::map<vtkm::Id, std::vector<ResultType>> Results;
   vtkm::FloatDefault StepSize;
+  vtkm::Id TotalNumParticles;
+  vtkm::Id TotalNumTerminatedParticles;
   std::unordered_map<vtkm::Id, std::vector<vtkm::Particle>> Terminated;
 };
 
