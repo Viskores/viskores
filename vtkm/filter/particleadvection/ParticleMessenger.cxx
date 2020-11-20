@@ -89,7 +89,8 @@ void ParticleMessenger::Exchange(
   vtkm::Id numLocalTerm,
   std::vector<vtkm::Particle>& inData,
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
-  vtkm::Id& numTerminateMessages)
+  vtkm::Id& numTerminateMessages,
+  bool blockAndWait)
 {
   numTerminateMessages = 0;
   inDataBlockIDsMap.clear();
@@ -109,10 +110,16 @@ void ParticleMessenger::Exchange(
     sendData[dstRank].push_back(std::make_pair(p, bids));
   }
 
+  //Do all the sends first.
+  if (numLocalTerm > 0)
+    SendAllMsg({ MSG_TERMINATE, static_cast<int>(numLocalTerm) });
+  this->SendParticles(sendData);
+  this->CheckPendingSendRequests();
+
   //Check if we have anything coming in.
   std::vector<ParticleRecvCommType> particleData;
   std::vector<MsgCommType> msgData;
-  if (RecvAny(&msgData, &particleData, false))
+  if (RecvAny(&msgData, &particleData, blockAndWait))
   {
     for (const auto& it : particleData)
       for (const auto& v : it.second)
@@ -129,13 +136,6 @@ void ParticleMessenger::Exchange(
         numTerminateMessages += static_cast<vtkm::Id>(m.second[1]);
     }
   }
-
-  //Do all the sending...
-  if (numLocalTerm > 0)
-    SendAllMsg({ MSG_TERMINATE, static_cast<int>(numLocalTerm) });
-
-  this->SendParticles(sendData);
-  this->CheckPendingSendRequests();
 #endif
 }
 

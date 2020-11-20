@@ -54,7 +54,8 @@ public:
                           vtkm::Id numLocalTerm,
                           std::vector<vtkm::Particle>& inData,
                           std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
-                          vtkm::Id& numTerminateMessages);
+                          vtkm::Id& numTerminateMessages,
+                          bool blockAndWait = false);
 
 protected:
 #ifdef VTKM_ENABLE_MPI
