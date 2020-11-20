@@ -388,6 +388,15 @@ void Write(std::ostream& out, const vtkm::cont::DataSet& dataSet)
 {
   // The Paraview parser cannot handle scientific notation:
   out << std::fixed;
+  // This causes a big problem for the dataset writer.
+  // Fixed point and floating point are fundamentally different.
+  // This is a workaround, but until Paraview supports parsing floats,
+  // this is as good as we can do.
+#ifdef VTKM_USE_DOUBLE_PRECISION
+  out << std::setprecision(18);
+#else
+  out << std::setprecision(10);
+#endif
   out << "# vtk DataFile Version 3.0" << '\n';
   out << "vtk output" << '\n';
   out << "ASCII" << '\n';
