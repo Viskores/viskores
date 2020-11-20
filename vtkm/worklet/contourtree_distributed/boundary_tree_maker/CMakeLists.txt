@@ -35,7 +35,7 @@ set(headers
   NoSuchElementFunctor.h
   HyperarcComparator.h
   ContourTreeNodeHyperArcComparator.h
-  BoundarytreeNodeComparator.h
+  BoundaryTreeNodeComparator.h
 )
 
 vtkm_declare_headers(${headers})
