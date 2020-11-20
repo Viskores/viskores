@@ -24,7 +24,7 @@ namespace filter
 
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt8>&,
+  const vtkm::cont::ArrayHandle<unsigned char>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
@@ -32,7 +32,7 @@ template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::cont::ArrayHandle<unsigned char, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 VTKM_DEPRECATED_SUPPRESS_END
@@ -40,7 +40,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt16>&,
+  const vtkm::cont::ArrayHandle<unsigned short>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
@@ -48,7 +48,7 @@ template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt16, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::cont::ArrayHandle<unsigned short, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 VTKM_DEPRECATED_SUPPRESS_END
@@ -56,7 +56,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt32>&,
+  const vtkm::cont::ArrayHandle<unsigned int>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
@@ -64,7 +64,7 @@ template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt32, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::cont::ArrayHandle<unsigned int, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 VTKM_DEPRECATED_SUPPRESS_END
@@ -72,7 +72,7 @@ VTKM_DEPRECATED_SUPPRESS_END
 
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt64>&,
+  const vtkm::cont::ArrayHandle<unsigned long>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
@@ -80,7 +80,23 @@ template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet&,
-  const vtkm::cont::ArrayHandle<vtkm::UInt64, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::cont::ArrayHandle<unsigned long, vtkm::cont::StorageTagVirtual>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+VTKM_DEPRECATED_SUPPRESS_END
+#endif
+
+template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<unsigned long long>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+template VTKM_FILTER_EXTRA_EXPORT vtkm::cont::DataSet ClipWithField::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<unsigned long long, vtkm::cont::StorageTagVirtual>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 VTKM_DEPRECATED_SUPPRESS_END
