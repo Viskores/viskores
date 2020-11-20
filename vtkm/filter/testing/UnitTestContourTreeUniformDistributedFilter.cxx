@@ -92,10 +92,12 @@ public:
     TestContourTreeUniformDistributed5x6x7(4, false);
     TestContourTreeUniformDistributed5x6x7(8, false);
     TestContourTreeUniformDistributed5x6x7(16, false);
+#if 0
     TestContourTreeUniformDistributed5x6x7(2, true);
     TestContourTreeUniformDistributed5x6x7(4, true);
     TestContourTreeUniformDistributed5x6x7(8, true);
     TestContourTreeUniformDistributed5x6x7(16, true);
+#endif
   }
 };
 }

@@ -98,9 +98,11 @@ public:
     TestContourTreeUniformDistributed5x6x7(4, false, rank, size);
     TestContourTreeUniformDistributed5x6x7(8, false, rank, size);
     TestContourTreeUniformDistributed5x6x7(16, false, rank, size);
+#if 0
     TestContourTreeUniformDistributed5x6x7(4, true, rank, size);
     TestContourTreeUniformDistributed5x6x7(8, true, rank, size);
     TestContourTreeUniformDistributed5x6x7(16, true, rank, size);
+#endif
   }
 };
 }
