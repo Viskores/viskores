@@ -128,7 +128,6 @@ void InitLogging(int& argc, char* argv[])
   SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
   loguru::init(argc, argv);
 
-  LOG_F(INFO, "Logging initialized.");
 #else  // VTKM_ENABLE_LOGGING
   (void)argc;
   (void)argv;
