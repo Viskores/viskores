@@ -12,6 +12,7 @@
 #define vtk_m_filter_ContourExecuteInteger_cxx
 
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Contour.hxx>
 
 namespace vtkm
 {

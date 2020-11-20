@@ -118,10 +118,9 @@ compilation of VTK-m. Instead of doing the compilation, instead you will be give
 ./reproduce_ci_env.py run rhel8
 ```
 
-To compile VTK-m from the the interactive shell you would do the following:
+To compile VTK-m from the the interactive shell with the settings of the CI job you would do the following:
 ```
-> src]# cd build/
-> build]# cmake --build .
+> src]# bash /run-gitlab-stage.sh
 ```
 
 # How to Add/Update Kitware Gitlab CI

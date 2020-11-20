@@ -67,9 +67,8 @@ namespace filter
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+vtkm::cont::DataSet ExtractGeometry::DoExecute(const vtkm::cont::DataSet& input,
+                                               vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {
   // extract the input cell set and coordinates
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();

@@ -27,6 +27,7 @@
 #define vtkm_filter_ClipWithFieldExecuteUnsignedInteger_cxx
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/ClipWithField.hxx>
 
 namespace vtkm
 {
@@ -35,7 +36,7 @@ namespace filter
 
 $py(
 # These values are taken from vtkm/TypeList.h
-types = ["vtkm::UInt8", "vtkm::UInt16", "vtkm::UInt32", "vtkm::UInt64"]
+types = ["unsigned char", "unsigned short", "unsigned int", "unsigned long", "unsigned long long"]
 )\
 \
 $for(TYPE in types)\

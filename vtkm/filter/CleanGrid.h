@@ -37,10 +37,9 @@ namespace filter
 /// \todo Add a feature to merge points that are coincident or within a
 /// tolerance.
 ///
-class VTKM_ALWAYS_EXPORT CleanGrid : public vtkm::filter::FilterDataSet<CleanGrid>
+class VTKM_FILTER_COMMON_EXPORT CleanGrid : public vtkm::filter::FilterDataSet<CleanGrid>
 {
 public:
-  VTKM_FILTER_COMMON_EXPORT
   CleanGrid();
 
   /// When the CompactPointFields flag is true, the filter will identify any
@@ -87,7 +86,6 @@ public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
                                           vtkm::filter::PolicyBase<Policy> policy);
 
-  VTKM_FILTER_COMMON_EXPORT
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
@@ -106,9 +104,8 @@ private:
   bool RemoveDegenerateCells;
   bool FastMerge;
 
-  VTKM_FILTER_COMMON_EXPORT vtkm::cont::DataSet GenerateOutput(
-    const vtkm::cont::DataSet& inData,
-    vtkm::cont::CellSetExplicit<>& outputCellSet);
+  vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& inData,
+                                     vtkm::cont::CellSetExplicit<>& outputCellSet);
 
   vtkm::worklet::RemoveUnusedPoints PointCompactor;
   vtkm::worklet::RemoveDegenerateCells CellCompactor;
@@ -116,11 +113,11 @@ private:
 };
 
 #ifndef vtkm_filter_CleanGrid_cxx
-VTKM_FILTER_EXPORT_EXECUTE_METHOD(CleanGrid);
+extern template VTKM_FILTER_COMMON_TEMPLATE_EXPORT vtkm::cont::DataSet CleanGrid::DoExecute(
+  const vtkm::cont::DataSet&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 #endif
 }
 } // namespace vtkm::filter
-
-#include <vtkm/filter/CleanGrid.hxx>
 
 #endif //vtk_m_filter_CleanGrid_h

@@ -49,7 +49,7 @@ struct ClipWithImplicitFunctionProcessCoords
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
-inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
+vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
   vtkm::filter::PolicyBase<DerivedPolicy> policy)
 {

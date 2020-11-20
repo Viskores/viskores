@@ -27,6 +27,7 @@
 #define vtkm_filter_ClipWithFieldExecuteSignedInteger_cxx
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/ClipWithField.hxx>
 
 namespace vtkm
 {
@@ -35,7 +36,7 @@ namespace filter
 
 $py(
 # These values are taken from vtkm/TypeList.h
-types = [ "vtkm::Int8",  "vtkm::Int16", "vtkm::Int32", "vtkm::Int64"]
+types = [ "char", "signed char", "short", "int", "long", "long long" ]
 )\
 \
 $for(TYPE in types)\
