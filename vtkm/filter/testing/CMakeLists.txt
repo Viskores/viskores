@@ -13,7 +13,7 @@ set(unit_tests
   UnitTestCellMeasuresFilter.cxx
   UnitTestCellSetConnectivityFilter.cxx
   UnitTestCleanGrid.cxx
-  UnitTestClipWithFieldFilter.cxx
+#  UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourFilter.cxx
   UnitTestContourFilterNormals.cxx

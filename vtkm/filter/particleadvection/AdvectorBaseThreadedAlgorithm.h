@@ -68,16 +68,8 @@ protected:
     }
   }
 
-  bool CheckDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->Done;
-  }
-  void SetDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    this->Done = true;
-  }
+  bool CheckDone() const { return this->Done; }
+  void SetDone() { this->Done = true; }
 
   static void Worker(AdvectorBaseThreadedAlgorithm* algo) { algo->Work(); }
 
@@ -150,7 +142,7 @@ protected:
     it.push_back(result);
   }
 
-  bool Done;
+  std::atomic<bool> Done;
   std::mutex Mutex;
   std::unordered_map<vtkm::Id, std::vector<ResultType>> WorkerResults;
 };
