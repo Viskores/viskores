@@ -341,10 +341,9 @@ protected:
     //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
     //So, if neither are true, we can safely block and wait for communication to come in.
 
-    if (this->Active.empty() &&
+    if (this->Active.empty() && this->Inactive.empty() &&
         (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
     {
-      std::cout << " BLOCK!! rank= " << this->Rank << std::endl;
       return true;
     }
 

@@ -56,7 +56,11 @@ protected:
   bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->AdvectorBaseAlgorithm<ResultType>::GetActiveParticles(particles, blockId);
+    bool val = this->AdvectorBaseAlgorithm<ResultType>::GetActiveParticles(particles, blockId);
+
+    this->WorkerIdle = !val;
+
+    return val;
   }
 
   void UpdateActive(const std::vector<vtkm::Particle>& particles,
@@ -77,8 +81,7 @@ protected:
 
   void WorkerWait()
   {
-    this->WorkerIdle = true;
-
+    //    this->WorkerIdle = true;
     //    std::cout<<"Worker wait..."<<std::endl;
     //    std::unique_lock<std::mutex> lock(this->WorkAvailMutex);
     //    this->WorkAvailableCondition.wait(lock);
@@ -92,7 +95,6 @@ protected:
       vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        this->WorkerIdle = false;
         const auto& block = this->GetDataSet(blockId);
 
         ResultType r;
@@ -139,25 +141,16 @@ protected:
     }
 
     //Let the workers know that we are done.
-    std::cout << this->Rank << " DONE" << std::endl;
     this->SetDone();
     //    this->WorkAvailableCondition.notify_all();
   }
 
   bool GetBlockAndWait(const vtkm::Id& numLocalTerm) override
   {
-    return false;
-    /*
     std::lock_guard<std::mutex> lock(this->Mutex);
-    bool val = this->AdvectorBaseAlgorithm<ResultType>::GetBlockAndWait(numLocalTerm);
-    if (val && this->WorkerIdle)
-        val = true;
-    else
-        val = false;
-    if (this->Rank == 0) std::cout<<" M: GBW: val= "<<val<<" ((wi= "<<this->WorkerIdle<<" Asz= "<<this->Active.size()<<std::endl;
 
-    return val;
-      */
+    return (this->AdvectorBaseAlgorithm<ResultType>::GetBlockAndWait(numLocalTerm) &&
+            this->WorkerIdle && this->WorkerResults.empty());
   }
 
   void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<ResultType>>& results)
