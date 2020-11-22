@@ -51,6 +51,10 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
     + sizeof(vtkm::UInt8)                           // Status
     + sizeof(vtkm::FloatDefault);                   // Time
 
+  //If this assert fires, vtkm::Particle changed
+  //and pSize should be updated.
+  VTKM_ASSERT(pSize == sizeof(vtkm::Particle));
+
   return
     // rank
     sizeof(int)
@@ -72,7 +76,8 @@ void ParticleMessenger::SerialExchange(
   const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
   vtkm::Id vtkmNotUsed(numLocalTerm),
   std::vector<vtkm::Particle>& inData,
-  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
+  bool vtkmNotUsed(blockAndWait)) const
 {
   for (auto& p : outData)
   {
@@ -96,7 +101,8 @@ void ParticleMessenger::Exchange(
   inDataBlockIDsMap.clear();
 
   if (this->NumRanks == 1)
-    return this->SerialExchange(outData, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap);
+    return this->SerialExchange(
+      outData, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap, blockAndWait);
 
 #ifdef VTKM_ENABLE_MPI
 

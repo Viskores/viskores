@@ -102,7 +102,8 @@ protected:
     const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
     vtkm::Id numLocalTerm,
     std::vector<vtkm::Particle>& inData,
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const;
+    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
+    bool blockAndWait) const;
 
   static std::size_t CalcParticleBufferSize(std::size_t nParticles, std::size_t numBlockIds = 2);
 };

@@ -104,10 +104,8 @@ public:
     {
       std::vector<vtkm::Particle> v;
       vtkm::Id numTerm = 0, blockId = -1;
-      std::size_t numV = 0;
       if (GetActiveParticles(v, blockId))
       {
-        numV = v.size();
         const auto& block = this->GetDataSet(blockId);
 
         ResultType r;
