@@ -51,9 +51,15 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
     + sizeof(vtkm::UInt8)                           // Status
     + sizeof(vtkm::FloatDefault);                   // Time
 
+#ifdef NDEBUG
+  vtkmdiy::MemoryBuffer buff;
+  vtkm::Particle p;
+  vtkm::diy::save(buff, p);
+
   //If this assert fires, vtkm::Particle changed
   //and pSize should be updated.
-  //  VTKM_ASSERT(pSize == sizeof(vtkm::Particle));
+  VTKM_ASSERT(pSize == buff.size());
+#endif
 
   return
     // rank
