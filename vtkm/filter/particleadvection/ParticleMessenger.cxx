@@ -53,7 +53,7 @@ std::size_t ParticleMessenger::CalcParticleBufferSize(std::size_t nParticles, st
 
   //If this assert fires, vtkm::Particle changed
   //and pSize should be updated.
-  VTKM_ASSERT(pSize == sizeof(vtkm::Particle));
+  //  VTKM_ASSERT(pSize == sizeof(vtkm::Particle));
 
   return
     // rank
