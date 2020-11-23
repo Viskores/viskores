@@ -216,7 +216,7 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 0);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
   }
 
@@ -228,7 +228,7 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 1);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), array.ReadPortal()));
   }
 

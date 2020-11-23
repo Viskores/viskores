@@ -398,7 +398,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
     MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 0);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 0);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
@@ -410,7 +410,7 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
     MultiplexerType multiplexArray = sourceArray.template AsMultiplexer<MultiplexerType>();
 
     VTKM_TEST_ASSERT(multiplexArray.IsValid());
-    VTKM_TEST_ASSERT(multiplexArray.GetStorage().GetArrayHandleVariant().GetIndex() == 1);
+    VTKM_TEST_ASSERT(multiplexArray.GetArrayHandleVariant().GetIndex() == 1);
     VTKM_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 }
