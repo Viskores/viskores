@@ -32,7 +32,7 @@ public:
                                 const std::vector<DataSetIntegratorType>& blocks)
     : AdvectorBaseAlgorithm<ResultType>(bm, blocks)
     , Done(false)
-    , WorkerIdle(true)
+    , WorkAvailable(false)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
@@ -57,9 +57,8 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     bool val = this->AdvectorBaseAlgorithm<ResultType>::GetActiveParticles(particles, blockId);
-
-    this->WorkerIdle = !val;
-
+    //this->WorkerIdle = !val;
+    this->WorkAvailable = val;
     return val;
   }
 
@@ -70,21 +69,46 @@ protected:
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
       this->AdvectorBaseAlgorithm<ResultType>::UpdateActive(particles, idsMap);
-      //      this->WorkAvailableCondition.notify_all();
+
+      //Let workers know there is new work
+      this->WorkAvailableCondition.notify_all();
+      this->WorkAvailable = true;
     }
   }
 
-  bool CheckDone() const { return this->Done; }
-  void SetDone() { this->Done = true; }
+  bool CheckDone()
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    return this->Done;
+  }
+
+  void SetDone()
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    this->Done = true;
+    this->WorkAvailable = true;
+    this->WorkAvailableCondition.notify_all();
+  }
 
   static void Worker(AdvectorBaseThreadedAlgorithm* algo) { algo->Work(); }
 
   void WorkerWait()
   {
-    //    this->WorkerIdle = true;
-    //    std::cout<<"Worker wait..."<<std::endl;
-    //    std::unique_lock<std::mutex> lock(this->WorkAvailMutex);
-    //    this->WorkAvailableCondition.wait(lock);
+    std::unique_lock<std::mutex> lock(this->Mutex);
+    this->WorkAvailableCondition.wait(lock, [this] { return WorkAvailable == true; });
+
+    /*
+    bool wait = false;
+    //std::unique_lock<std::mutex> lock(this->WorkAvailMutex);
+    std::unique_lock<std::mutex> lock(this->Mutex);
+
+    {
+      std::lock_guard<std::mutex> lock2(this->Mutex);
+      wait = !this->WorkAvailable;
+    }
+    if (wait)
+      this->WorkAvailableCondition.wait(lock);
+      */
   }
 
   void Work()
@@ -113,8 +137,6 @@ protected:
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
-      //      if (this->Rank == 0) std::cout<<" M: "<<this->TotalNumTerminatedParticles<<" "<<this->TotalNumParticles<<std::endl;
-
       std::unordered_map<vtkm::Id, std::vector<ResultType>> workerResults;
       this->GetWorkerResults(workerResults);
 
@@ -129,20 +151,14 @@ protected:
 
       vtkm::Id numTermMessages = 0;
       this->Communicate(messenger, numTerm, numTermMessages);
-      //this->WorkAvailableCondition.notify_all();
 
       this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
       if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
         throw vtkm::cont::ErrorFilterExecution("Particle count error");
-
-      //      if (numTerm + numTermMessages > 0)
-      //        this->WorkAvailableCondition.notify_all();
-      //      this->WorkAvailableCondition.notify_all();
     }
 
     //Let the workers know that we are done.
     this->SetDone();
-    //    this->WorkAvailableCondition.notify_all();
   }
 
   bool GetBlockAndWait(const vtkm::Id& numLocalTerm) override
@@ -150,7 +166,7 @@ protected:
     std::lock_guard<std::mutex> lock(this->Mutex);
 
     return (this->AdvectorBaseAlgorithm<ResultType>::GetBlockAndWait(numLocalTerm) &&
-            this->WorkerIdle && this->WorkerResults.empty());
+            !this->WorkAvailable && this->WorkerResults.empty());
   }
 
   void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<ResultType>>& results)
@@ -173,12 +189,12 @@ protected:
     it.push_back(result);
   }
 
-  std::mutex WorkAvailMutex;
-  std::condition_variable WorkAvailableCondition;
   std::atomic<bool> Done;
   std::mutex Mutex;
   std::unordered_map<vtkm::Id, std::vector<ResultType>> WorkerResults;
-  std::atomic<bool> WorkerIdle;
+  //std::mutex WorkAvailMutex;
+  std::condition_variable WorkAvailableCondition;
+  bool WorkAvailable;
 };
 
 }
