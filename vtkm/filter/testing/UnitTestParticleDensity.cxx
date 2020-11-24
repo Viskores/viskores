@@ -17,10 +17,28 @@
 void TestNGP()
 {
   const vtkm::Id N = 1000000;
+#if 0
+  // This is a better way to create this array, but I am temporarily breaking this
+  // functionality (November 2020) so that I can split up merge requests that move
+  // ArrayHandles to the new buffer types. This should be restored once
+  // ArrayHandleTransform is converted to the new type.
   auto composite = vtkm::cont::make_ArrayHandleCompositeVector(
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xceed),
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xdeed),
     vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xabba));
+#else
+  vtkm::cont::ArrayHandle<vtkm::Float32> componentArray0;
+  vtkm::cont::ArrayHandle<vtkm::Float32> componentArray1;
+  vtkm::cont::ArrayHandle<vtkm::Float32> componentArray2;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xceed),
+                        componentArray0);
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xdeed),
+                        componentArray1);
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleRandomUniformReal<vtkm::Float32>(N, 0xabba),
+                        componentArray2);
+  auto composite =
+    vtkm::cont::make_ArrayHandleCompositeVector(componentArray0, componentArray1, componentArray2);
+#endif
   vtkm::cont::ArrayHandle<vtkm::Vec3f> positions;
   vtkm::cont::ArrayCopy(composite, positions);
 
