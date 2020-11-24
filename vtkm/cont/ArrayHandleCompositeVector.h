@@ -248,8 +248,8 @@ class Storage<vtkm::Vec<T, static_cast<vtkm::IdComponent>(sizeof...(StorageTags)
 public:
   using ReadPortalType =
     vtkm::internal::ArrayPortalCompositeVector<typename StorageFor<StorageTags>::ReadPortalType...>;
-  using WritePortalType =
-    vtkm::internal::ArrayPortalCompositeVector<typename StorageFor<StorageTags>::ReadPortalType...>;
+  using WritePortalType = vtkm::internal::ArrayPortalCompositeVector<
+    typename StorageFor<StorageTags>::WritePortalType...>;
 
 private:
   // Hoop to jump through to use Storage::ResizeBuffer in an initializer list.
@@ -379,6 +379,23 @@ public:
   VTKM_CONT static ArrayTupleType GetArrayTuple(const vtkm::cont::internal::Buffer* buffers)
   {
     return GetArrayTupleImpl(IndexList{}, buffers);
+  }
+};
+
+// Special degenerative case when there is only one array being composited
+template <typename T, typename StorageTag>
+struct Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, StorageTag>
+{
+  VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(
+    const vtkm::cont::ArrayHandle<T, StorageTag>& array)
+  {
+    return vtkm::cont::internal::CreateBuffers(array);
+  }
+
+  VTKM_CONT static vtkm::Tuple<vtkm::cont::ArrayHandle<T, StorageTag>> GetArrayTuple(
+    const vtkm::cont::internal::Buffer* buffers)
+  {
+    return vtkm::cont::ArrayHandle<T, StorageTag>(buffers);
   }
 };
 
