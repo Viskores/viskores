@@ -16,8 +16,10 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+#include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
+#include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
 #include <vtkm/exec/kokkos/internal/TaskBasic.h>
 
@@ -95,21 +97,8 @@ private:
     DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagKokkos>,
     vtkm::cont::DeviceAdapterTagKokkos>;
 
-  constexpr static vtkm::Id ErrorMessageMaxLength = 1024;
-  using ErrorMessageStorage =
-    Kokkos::DualView<char*, Kokkos::LayoutLeft, Kokkos::DefaultExecutionSpace>;
-
-  VTKM_CONT static void CheckForErrors(ErrorMessageStorage& errorMessageStorage)
-  {
-    errorMessageStorage.template modify<ErrorMessageStorage::execution_space>();
-    errorMessageStorage.template sync<ErrorMessageStorage::host_mirror_space>();
-    if (errorMessageStorage.h_view(0) != '\0')
-    {
-      auto excep = vtkm::cont::ErrorExecution(errorMessageStorage.h_view.data());
-      errorMessageStorage.h_view(0) = '\0'; // clear
-      throw excep;
-    }
-  }
+  VTKM_CONT_EXPORT static vtkm::exec::internal::ErrorMessageBuffer GetErrorMessageBufferInstance();
+  VTKM_CONT_EXPORT static void CheckForErrors();
 
 public:
   template <typename IndicesStorage>
@@ -157,7 +146,7 @@ public:
 
     kokkos::internal::KokkosViewConstExec<T> viewIn(portalIn.GetArray(), inSize);
     kokkos::internal::KokkosViewExec<T> viewOut(portalOut.GetArray(), inSize);
-    Kokkos::deep_copy(Kokkos::DefaultExecutionSpace{}, viewOut, viewIn);
+    Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), viewOut, viewIn);
   }
 
   template <typename WType, typename IType>
@@ -173,15 +162,12 @@ public:
       return;
     }
 
-    ErrorMessageStorage errorMessageStorage;
-    errorMessageStorage.realloc(ErrorMessageMaxLength);
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorMessageStorage.d_view.data(),
-                                                          ErrorMessageMaxLength);
-    functor.SetErrorMessageBuffer(errorMessage);
+    functor.SetErrorMessageBuffer(GetErrorMessageBufferInstance());
 
-    Kokkos::parallel_for(static_cast<std::size_t>(numInstances), functor);
-
-    CheckForErrors(errorMessageStorage);
+    Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace, vtkm::Id> policy(
+      vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, numInstances);
+    Kokkos::parallel_for(policy, functor);
+    CheckForErrors(); // synchronizes
   }
 
   template <typename WType, typename IType>
@@ -197,21 +183,21 @@ public:
       return;
     }
 
-    ErrorMessageStorage errorMessageStorage;
-    errorMessageStorage.realloc(ErrorMessageMaxLength);
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorMessageStorage.d_view.data(),
-                                                          ErrorMessageMaxLength);
-    functor.SetErrorMessageBuffer(errorMessage);
+    functor.SetErrorMessageBuffer(GetErrorMessageBufferInstance());
 
-    Kokkos::MDRangePolicy<Kokkos::Rank<3>, Kokkos::IndexType<vtkm::Id>> policy(
-      { 0, 0, 0 }, { rangeMax[0], rangeMax[1], rangeMax[2] });
+    Kokkos::MDRangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace,
+                          Kokkos::Rank<3>,
+                          Kokkos::IndexType<vtkm::Id>>
+      policy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(),
+             { 0, 0, 0 },
+             { rangeMax[0], rangeMax[1], rangeMax[2] });
+
     Kokkos::parallel_for(
       policy, KOKKOS_LAMBDA(vtkm::Id i, vtkm::Id j, vtkm::Id k) {
         auto flatIdx = i + (j * rangeMax[0]) + (k * rangeMax[0] * rangeMax[1]);
         functor(vtkm::Id3(i, j, k), flatIdx);
       });
-
-    CheckForErrors(errorMessageStorage);
+    CheckForErrors(); // synchronizes
   }
 
   template <class Functor>
@@ -238,9 +224,16 @@ private:
   {
     vtkm::cont::Token token;
     auto portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
-
     kokkos::internal::KokkosViewExec<T> view(portal.GetArray(), portal.GetNumberOfValues());
+
+    // We use per-thread execution spaces so that the threads can execute independently without
+    // requiring global synchronizations.
+    // Currently, there is no way to specify the execution space for sort and therefore it
+    // executes in the default execution space.
+    // Therefore, we need explicit syncs here.
+    vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
     Kokkos::sort(view);
+    vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
   }
 
   template <typename T>
@@ -260,7 +253,10 @@ public:
     SortImpl(values, comp, typename std::is_scalar<T>::type{});
   }
 
-  VTKM_CONT static void Synchronize() {}
+  VTKM_CONT static void Synchronize()
+  {
+    vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
+  }
 };
 
 template <>

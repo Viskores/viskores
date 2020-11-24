@@ -7,34 +7,23 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-
 #include <vtkm/cont/kokkos/internal/DeviceAdapterMemoryManagerKokkos.h>
 
 #include <vtkm/cont/kokkos/DeviceAdapterKokkos.h>
-#include <vtkm/cont/kokkos/internal/ViewTypes.h>
-
-#include <sstream>
+#include <vtkm/cont/kokkos/internal/KokkosAlloc.h>
+#include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
 namespace
 {
 
 void* KokkosAllocate(vtkm::BufferSizeType size)
 {
-  try
-  {
-    return Kokkos::kokkos_malloc(static_cast<std::size_t>(size));
-  }
-  catch (...) // the type of error thrown is not well documented
-  {
-    std::ostringstream err;
-    err << "Failed to allocate " << size << " bytes on Kokkos device";
-    throw vtkm::cont::ErrorBadAllocation(err.str());
-  }
+  return vtkm::cont::kokkos::internal::Allocate(static_cast<std::size_t>(size));
 }
 
 void KokkosDelete(void* memory)
 {
-  Kokkos::kokkos_free(memory);
+  vtkm::cont::kokkos::internal::Free(memory);
 }
 
 void KokkosReallocate(void*& memory,
@@ -45,16 +34,7 @@ void KokkosReallocate(void*& memory,
   VTKM_ASSERT(memory == container);
   if (newSize > oldSize)
   {
-    try
-    {
-      memory = container = Kokkos::kokkos_realloc(memory, static_cast<std::size_t>(newSize));
-    }
-    catch (...)
-    {
-      std::ostringstream err;
-      err << "Failed to re-allocate " << newSize << " bytes on Kokkos device";
-      throw vtkm::cont::ErrorBadAllocation(err.str());
-    }
+    memory = container = vtkm::cont::kokkos::internal::Reallocate(container, newSize);
   }
 }
 }
@@ -108,7 +88,7 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyHostToD
     static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewExec<vtkm::UInt8> destView(
     static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(destView, srcView);
+  Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 
 vtkm::cont::internal::BufferInfo
@@ -140,7 +120,8 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceT
     static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewCont<vtkm::UInt8> destView(
     static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(destView, srcView);
+  Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+  vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
 }
 
 vtkm::cont::internal::BufferInfo
@@ -163,7 +144,7 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagKokkos>::CopyDeviceT
     static_cast<vtkm::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   vtkm::cont::kokkos::internal::KokkosViewExec<vtkm::UInt8> destView(
     static_cast<vtkm::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(destView, srcView);
+  Kokkos::deep_copy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 }
 }
