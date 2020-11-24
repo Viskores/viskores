@@ -85,7 +85,6 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     this->Done = true;
-    this->WorkerActivate = true;
     this->WorkerActivateCondition.notify_all();
   }
 
@@ -94,7 +93,7 @@ protected:
   void WorkerWait()
   {
     std::unique_lock<std::mutex> lock(this->Mutex);
-    this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate == true; });
+    this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate || Done; });
   }
 
   void Work()
