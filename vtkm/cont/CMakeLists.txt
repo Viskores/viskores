@@ -110,6 +110,7 @@ set(headers
   Serialization.h
   Storage.h
   StorageExtrude.h
+  StorageImplicit.h # Deprecated, rolled into ArrayHandleImplicit.h
   StorageList.h
   StorageListTag.h
   Timer.h
