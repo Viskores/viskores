@@ -19,7 +19,7 @@
 #include <vtkm/cont/ParticleArrayCopy.h>
 #include <vtkm/filter/particleadvection/BoundsMap.h>
 #include <vtkm/filter/particleadvection/DataSetIntegrator.h>
-#include <vtkm/filter/particleadvection/ParticleAdvector.h>
+#include <vtkm/filter/particleadvection/ParticleAdvectionAlgorithm.h>
 
 namespace vtkm
 {
@@ -29,6 +29,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ParticleAdvection::ParticleAdvection()
   : vtkm::filter::FilterDataSetWithField<ParticleAdvection>()
+  , UseThreadedAlgorithm(false)
 {
 }
 
@@ -59,14 +60,15 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet ParticleAdvection::PrepareForExe
     dsi.push_back(DataSetIntegratorType(input.GetPartition(i), blockId, activeField));
   }
 
-  vtkm::filter::particleadvection::ParticleAdvectionAlgorithm pa(boundsMap, dsi);
-  pa.SetNumberOfSteps(this->NumberOfSteps);
-  pa.SetStepSize(this->StepSize);
-  pa.SetSeeds(this->Seeds);
+  using AlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::ParticleAdvectionThreadedAlgorithm;
 
-  pa.Go();
-  vtkm::cont::PartitionedDataSet output = pa.GetOutput();
-  return output;
+  if (this->UseThreadedAlgorithm)
+    return vtkm::filter::particleadvection::RunAlgo<ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 //-----------------------------------------------------------------------------

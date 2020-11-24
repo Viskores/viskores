@@ -225,8 +225,7 @@ public:
       vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_POLY_LINE, numSeeds);
     vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
 
-    auto numIndices = vtkm::cont::make_ArrayHandleCast(numPoints, vtkm::IdComponent());
-    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numIndices);
+    auto offsets = vtkm::cont::ConvertNumIndicesToOffsets(numPoints);
     polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, offsets);
   }
 };
