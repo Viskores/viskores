@@ -36,6 +36,7 @@ public:
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
+    //Set the copy flag so the std::vector is copied into the ArrayHandle
     for (auto& block : this->Blocks)
       block.SetCopySeedFlag(true);
   }
