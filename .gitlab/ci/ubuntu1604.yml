@@ -102,6 +102,7 @@ test:ubuntu1604_gcc48:
     - vtkm
     - docker
     - linux
+    - privileged
   extends:
     - .ubuntu1604
     - .cmake_test_linux
