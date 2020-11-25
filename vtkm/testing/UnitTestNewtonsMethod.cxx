@@ -79,8 +79,6 @@ void TestNewtonsMethodTemplate()
     {
       for (initialGuess[2] = 0.25f; initialGuess[2] <= 1; initialGuess[2] += 0.25f)
       {
-        std::cout << "   " << initialGuess << std::endl;
-
         auto result = vtkm::NewtonsMethod(
           EvaluateJacobian<T>(), EvaluateFunctions<T>(), desiredOutput, initialGuess, T(1e-6));
 
