@@ -277,7 +277,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
 
     for (const opt::Option* opt = options[UNKNOWN]; opt != nullptr; opt = opt->next())
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Unknown option to Initialize: " << opt->name << "\n");
       if ((opts & InitializeOptions::ErrorOnBadOption) != InitializeOptions::None)
       {
         std::cerr << "Unknown option: " << opt->name << std::endl;

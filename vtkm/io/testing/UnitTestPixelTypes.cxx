@@ -32,7 +32,6 @@ void TestPixelTypeOperations(const vtkm::UInt16& numPixels = 10)
     {
       pixelVal += (i + j) << (shift * 8);
     }
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "pixelVal[" << i << "] = " << pixelVal);
 
     PixelType pixel(pixelVal);
     pixelVector[i] = pixel;
