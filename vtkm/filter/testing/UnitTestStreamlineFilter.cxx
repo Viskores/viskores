@@ -76,6 +76,44 @@ void TestStreamline()
   }
 }
 
+void TestPathlineSimple()
+{
+  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  vtkm::cont::DataSet inData1 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
+  vtkm::cont::DataSet inData2 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
+  vtkm::Id numPoints = inData1.GetCellSet().GetNumberOfPoints();
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField1;
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(1, 0, 0), numPoints),
+                        vectorField1);
+  inData1.AddPointField("vectorvar", vectorField1);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField2;
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(0, 1, 0), numPoints),
+                        vectorField2);
+  inData2.AddPointField("vectorvar", vectorField2);
+
+  vtkm::filter::Pathline pathlines;
+  // Specify the seeds.
+  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  seedArray.Allocate(2);
+  seedArray.WritePortal().Set(0, vtkm::Particle({ 0, 0, 0 }, 0));
+  seedArray.WritePortal().Set(1, vtkm::Particle({ 1, 1, 1 }, 1));
+  pathlines.SetActiveField("vectorvar");
+  pathlines.SetStepSize(0.1f);
+  pathlines.SetNumberOfSteps(100);
+  pathlines.SetSeeds(seedArray);
+  pathlines.SetPreviousTime(0.0f);
+  pathlines.SetNextTime(1.0f);
+  pathlines.SetNextDataSet(inData2);
+  auto output = pathlines.Execute(inData1);
+
+  //Validate the result is correct.
+  vtkm::cont::CoordinateSystem coords = output.GetCoordinateSystem();
+  VTKM_TEST_ASSERT(coords.GetNumberOfPoints() == 77, "Wrong number of coordinates");
+
+  vtkm::cont::DynamicCellSet dcells = output.GetCellSet();
+  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 2, "Wrong number of cells");
+}
+
 void TestPathline()
 {
   const vtkm::Id3 dims(5, 5, 5);
@@ -515,6 +553,7 @@ void TestStreamlineFilters()
   }
 
   TestStreamline();
+  TestPathlineSimple();
   TestPathline();
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
