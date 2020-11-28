@@ -336,6 +336,22 @@ struct TestArrayHandleReverse
   }
 };
 
+struct TestArrayHandleSwizzle
+{
+  template <typename T>
+  void operator()(T) const
+  {
+    constexpr vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<T>::NUM_COMPONENTS;
+    vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> map;
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
+    {
+      map[i] = NUM_COMPONENTS - (i + 1);
+    }
+    auto array = vtkm::cont::make_ArrayHandleSwizzle(RandomArrayHandle<T>::Make(ArraySize), map);
+    RunTest(array);
+  }
+};
+
 
 vtkm::cont::ArrayHandleUniformPointCoordinates MakeRandomArrayHandleUniformPointCoordinates()
 {
@@ -392,6 +408,9 @@ void TestArrayHandleSerialization()
 
   std::cout << "Testing ArrayHandleReverse\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleReverse(), TestTypesList());
+
+  std::cout << "Testing ArrayHandleSwizzle\n";
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSwizzle(), TestTypesList());
 
   std::cout << "Testing ArrayHandleUniformPointCoordinates\n";
   TestArrayHandleUniformPointCoordinates();

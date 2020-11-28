@@ -662,7 +662,9 @@ private:
 
 public:
   VTKM_CONT
-  ArrayHandleTransform(const ArrayHandleType& handle, const FunctorType& functor = FunctorType())
+  ArrayHandleTransform(const ArrayHandleType& handle,
+                       const FunctorType& functor = FunctorType{},
+                       internal::NullFunctorType = internal::NullFunctorType{})
     : Superclass(StorageType(handle, functor))
   {
   }
