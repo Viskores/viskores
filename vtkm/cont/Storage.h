@@ -94,8 +94,12 @@ class Storage
   : public vtkm::cont::internal::UndefinedStorage
 {
 public:
+  // TODO: Deprecate these
   using PortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
   using PortalConstType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
+
+  using ReadPortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
+  using WritePortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
 };
 #else  //VTKM_DOXYGEN_ONLY
 {
