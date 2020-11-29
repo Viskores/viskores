@@ -45,7 +45,6 @@ using Handle64 = vtkm::cont::ArrayHandle<vtkm::Float64>;
 template <typename Scalar>
 void Test1D(int rate)
 {
-  std::cout << "Testing ZFP 1d:" << std::endl;
   vtkm::Id dims = 256;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
@@ -74,15 +73,13 @@ void Test1D(int rate)
     auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
-      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
-                << std::endl;
+      VTKM_TEST_ASSERT(test_equal(oport.Get(i), fPortal.Get(i), 0.8));
     }
   }
 }
 template <typename Scalar>
 void Test2D(int rate)
 {
-  std::cout << "Testing ZFP 2d:" << std::endl;
   vtkm::Id2 dims(16, 16);
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
@@ -110,15 +107,13 @@ void Test2D(int rate)
     auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
-      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
-                << std::endl;
+      VTKM_TEST_ASSERT(test_equal(oport.Get(i), fPortal.Get(i), 0.8));
     }
   }
 }
 template <typename Scalar>
 void Test3D(int rate)
 {
-  std::cout << "Testing ZFP 3d:" << std::endl;
   vtkm::Id3 dims(4, 4, 4);
   //vtkm::Id3 dims(4,4,7);
   //vtkm::Id3 dims(8,8,8);
@@ -151,8 +146,9 @@ void Test3D(int rate)
     auto oport = decoded.ReadPortal();
     for (int i = 0; i < 4; i++)
     {
-      std::cout << oport.Get(i) << " " << fPortal.Get(i) << " " << oport.Get(i) - fPortal.Get(i)
-                << std::endl;
+      // Note the huge tolerance: This filter is clearly wrong.
+      // See Issue #582.
+      VTKM_TEST_ASSERT(test_equal(oport.Get(i), fPortal.Get(i), 0.8));
     }
   }
 }
