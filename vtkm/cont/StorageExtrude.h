@@ -159,6 +159,8 @@ public:
 private:
   vtkm::cont::ArrayHandle<T> Array;
   vtkm::Int32 NumberOfPlanes;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename T, typename Device>
@@ -451,6 +453,8 @@ public:
 private:
   vtkm::Int32 NumberOfPlanes;
   bool UseCylindrical;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename T, typename Device>

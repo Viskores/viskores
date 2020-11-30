@@ -284,6 +284,8 @@ private:
     : VirtualStorage(virtualStorage)
   {
   }
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 VTKM_DEPRECATED_SUPPRESS_END
 

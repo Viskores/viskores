@@ -30,6 +30,7 @@ set(headers
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
   ReverseConnectivityBuilder.h
+  StorageDeprecated.h
   StorageError.h
   TransferInfo.h
   Variant.h

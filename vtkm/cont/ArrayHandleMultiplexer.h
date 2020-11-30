@@ -340,6 +340,8 @@ public:
   {
     return this->ArrayHandleVariant;
   }
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 

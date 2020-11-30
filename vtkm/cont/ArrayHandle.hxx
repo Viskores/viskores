@@ -250,14 +250,9 @@ vtkm::Id ArrayHandle<T, S>::GetNumberOfValues(LockType& lock) const
 }
 
 template <typename T, typename S>
-void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
+void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues, vtkm::cont::Token& token)
 {
   VTKM_ASSERT(numberOfValues >= 0);
-
-  // A Token should not be declared within the scope of a lock. when the token goes out of scope
-  // it will attempt to aquire the lock, which is undefined behavior of the thread already has
-  // the lock.
-  vtkm::cont::Token token;
 
   if (numberOfValues > 0)
   {
@@ -293,7 +288,7 @@ void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
     // If we are shrinking to 0, there is nothing to save and we might as well
     // free up memory. Plus, some storage classes expect that data will be
     // deallocated when the size goes to zero.
-    this->Allocate(0);
+    this->Allocate(0, token);
   }
 }
 

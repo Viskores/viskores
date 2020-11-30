@@ -260,6 +260,8 @@ private:
   SourceArrayHandleType SourceArray;
   OffsetsArrayHandleType OffsetsArray;
   bool Valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename SourcePortal,
