@@ -14,7 +14,8 @@
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
-#include <vtkm/cont/kokkos/internal/ViewTypes.h>
+#include <vtkm/cont/kokkos/internal/KokkosAlloc.h>
+#include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
 namespace vtkm
 {
@@ -45,17 +46,24 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagKok
       // will be wrong.
       vtkm::cont::kokkos::internal::KokkosViewConstCont<vtkm::UInt8> hbuffer(
         reinterpret_cast<const vtkm::UInt8*>(this->ControlObject), sizeof(VirtualDerivedType));
-      auto dbuffer = Kokkos::create_mirror_view_and_copy(Kokkos::DefaultExecutionSpace{}, hbuffer);
-      auto deviceTarget = reinterpret_cast<const VirtualDerivedType*>(dbuffer.data());
+
+      auto deviceTarget = static_cast<VirtualDerivedType*>(
+        vtkm::cont::kokkos::internal::Allocate(sizeof(VirtualDerivedType)));
+      vtkm::cont::kokkos::internal::KokkosViewExec<vtkm::UInt8> dbuffer(
+        reinterpret_cast<vtkm::UInt8*>(deviceTarget), sizeof(VirtualDerivedType));
+      Kokkos::deep_copy(
+        vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), dbuffer, hbuffer);
 
       if (this->ExecutionObject == nullptr)
       {
         // Allocate memory for the object that will eventually be a correct copy on the device.
-        auto executionObjectPtr = this->ExecutionObject =
-          static_cast<VirtualDerivedType*>(Kokkos::kokkos_malloc(sizeof(VirtualDerivedType)));
+        auto executionObjectPtr = this->ExecutionObject = static_cast<VirtualDerivedType*>(
+          vtkm::cont::kokkos::internal::Allocate(sizeof(VirtualDerivedType)));
         // Initialize the device object
+        Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace> policy(
+          vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, 1);
         Kokkos::parallel_for(
-          "ConstructVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
+          "ConstructVirtualObject", policy, KOKKOS_LAMBDA(const int&) {
             new (executionObjectPtr) VirtualDerivedType(*deviceTarget);
           });
       }
@@ -63,11 +71,15 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagKok
       {
         auto executionObjectPtr = this->ExecutionObject;
         // Initialize the device object
+        Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace> policy(
+          vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, 1);
         Kokkos::parallel_for(
-          "UpdateVirtualObject", 1, KOKKOS_LAMBDA(const int&) {
+          "UpdateVirtualObject", policy, KOKKOS_LAMBDA(const int&) {
             *executionObjectPtr = *deviceTarget;
           });
       }
+
+      vtkm::cont::kokkos::internal::Free(deviceTarget);
     }
 
     return this->ExecutionObject;
@@ -80,13 +92,13 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagKok
       auto executionObjectPtr = this->ExecutionObject;
       this->ExecutionObject = nullptr;
 
-      Kokkos::DefaultExecutionSpace execSpace;
+      Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace> policy(
+        vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, 1);
       Kokkos::parallel_for(
-        "DeleteVirtualObject",
-        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(execSpace, 0, 1),
-        KOKKOS_LAMBDA(const int&) { executionObjectPtr->~VirtualDerivedType(); });
-      execSpace.fence();
-      Kokkos::kokkos_free(executionObjectPtr);
+        "DeleteVirtualObject", policy, KOKKOS_LAMBDA(const int&) {
+          executionObjectPtr->~VirtualDerivedType();
+        });
+      vtkm::cont::kokkos::internal::Free(executionObjectPtr);
     }
   }
 

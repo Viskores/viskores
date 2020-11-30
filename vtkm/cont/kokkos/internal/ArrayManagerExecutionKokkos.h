@@ -17,13 +17,10 @@
 #include <vtkm/cont/Storage.h>
 
 #include <vtkm/cont/kokkos/internal/DeviceAdapterTagKokkos.h>
-#include <vtkm/cont/kokkos/internal/ViewTypes.h>
+#include <vtkm/cont/kokkos/internal/KokkosAlloc.h>
+#include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
 #include <vtkm/internal/ArrayPortalBasic.h>
-
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <Kokkos_Core.hpp>
-VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <limits>
 
@@ -105,7 +102,14 @@ public:
 
     vtkm::cont::kokkos::internal::KokkosViewConstExec<T> deviceView(
       this->DeviceArray, static_cast<std::size_t>(this->DeviceArrayLength));
-    auto hostView = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, deviceView);
+    auto hostView = Kokkos::create_mirror_view(deviceView);
+    if (hostView.data() != deviceView.data())
+    {
+      Kokkos::realloc(hostView, this->DeviceArrayLength);
+      Kokkos::deep_copy(
+        vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), hostView, deviceView);
+    }
+    vtkm::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
 
     storage->Allocate(this->DeviceArrayLength);
     std::copy_n(hostView.data(),
@@ -128,7 +132,7 @@ public:
   ///
   VTKM_CONT void ReleaseResources()
   {
-    Kokkos::kokkos_free(this->DeviceArray);
+    vtkm::cont::kokkos::internal::Free(this->DeviceArray);
     this->DeviceArray = nullptr;
     this->DeviceArrayLength = 0;
   }
@@ -144,11 +148,12 @@ private:
     {
       if (!this->DeviceArray)
       {
-        this->DeviceArray = static_cast<T*>(Kokkos::kokkos_malloc(size));
+        this->DeviceArray = static_cast<T*>(vtkm::cont::kokkos::internal::Allocate(size));
       }
       else
       {
-        this->DeviceArray = static_cast<T*>(Kokkos::kokkos_realloc(this->DeviceArray, size));
+        this->DeviceArray =
+          static_cast<T*>(vtkm::cont::kokkos::internal::Reallocate(this->DeviceArray, size));
       }
     }
     catch (...)
@@ -171,7 +176,8 @@ private:
     vtkm::cont::kokkos::internal::KokkosViewExec<T> deviceView(self->DeviceArray,
                                                                self->DeviceArrayLength);
 
-    Kokkos::deep_copy(deviceView, hostView);
+    Kokkos::deep_copy(
+      vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), deviceView, hostView);
   }
 
   template <typename S>
@@ -190,7 +196,8 @@ private:
     vtkm::cont::kokkos::internal::KokkosViewExec<T> deviceView(
       self->DeviceArray, static_cast<std::size_t>(self->DeviceArrayLength));
 
-    Kokkos::deep_copy(deviceView, hostView);
+    Kokkos::deep_copy(
+      vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), deviceView, hostView);
   }
 
   VTKM_CONT

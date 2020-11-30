@@ -15,16 +15,20 @@ set(headers
   DeviceAdapterRuntimeDetectorKokkos.h
   DeviceAdapterTagKokkos.h
   Initialize.h
-  ViewTypes.h
+  KokkosAlloc.h
+  KokkosTypes.h
   VirtualObjectTransferKokkos.h)
 
 vtkm_declare_headers(${headers})
 
 if (TARGET vtkm::kokkos)
   set(sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterMemoryManagerKokkos.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/Initialize.cxx)
+    ${CMAKE_CURRENT_SOURCE_DIR}/Initialize.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/KokkosAlloc.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/KokkosTypes.cxx)
   target_sources(vtkm_cont PRIVATE ${sources})
 
   if (TARGET vtkm::kokkos_cuda)
