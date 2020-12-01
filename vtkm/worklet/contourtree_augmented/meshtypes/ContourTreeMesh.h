@@ -571,6 +571,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   IdArrayType overallSortIndex;
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
+    // Here we enforce the DeviceTag to make sure the device we used for
+    // CombinedVectorDifferentFromNext is the same as what we use for the algorithms
+    vtkm::cont::ScopedRuntimeDeviceTracker(DeviceTag{});
+
     // Functor return 0,1 for each element depending on whethern the current value is different from the next
     vtkm::cont::Token tempToken;
     mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext<DeviceTag>
@@ -584,11 +588,12 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     // Compute the exclusive scan of our transformed combined vector
     overallSortIndex.WritePortal().Set(0, 0);
     IdArrayType tempArr;
-    // Here we pass in the DeviceTag to make sure the device we used for CombinedVectorDifferentFromNext
-    // is the same as what we use for the algorithms
-    vtkm::cont::Algorithm::ScanInclusive(DeviceTag(), differentFromNextArr, tempArr);
+
+    // perform algorithms on the combined vector. Note the device is enforced by the
+    // ScopedRuntimeDeviceTracker for the block
+    vtkm::cont::Algorithm::ScanInclusive(differentFromNextArr, tempArr);
     vtkm::cont::Algorithm::CopySubRange(
-      DeviceTag(), tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
+      tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);
   }
   vtkm::Id numVerticesCombined =
     overallSortIndex.ReadPortal().Get(overallSortIndex.GetNumberOfValues() - 1) + 1;
