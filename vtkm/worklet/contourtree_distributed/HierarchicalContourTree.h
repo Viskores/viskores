@@ -141,8 +141,7 @@ public:
   // how many rounds of fan-in were used to construct it
   vtkm::Id NumRounds;
 
-  // TODO: HAC to confirm where the next 6 arrays are used.
-  // HAC:  these arrays store the numbers of reg/super/hyper nodes at each level of the hierarchy
+  // The following arrays store the numbers of reg/super/hyper nodes at each level of the hierarchy
   // They are filled in from the top down, and are fundamentally CPU side control variables
   // They will be needed for hypersweeps.
 
@@ -266,17 +265,20 @@ void HierarchicalContourTree<FieldType>::Initialize(
   this->FirstHypernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
     this->NumIterations.ReadPortal().Get(this->NumRounds) + 2);
 
-  // now copy in the details
-  // TODO: These arrays are allocated above. Make sure Copy does not shrink the size of the array if it is allocated larger
-  vtkm::cont::Algorithm::Copy(
-    tree.FirstSupernodePerIteration,
+  // now copy in the details. Use CopySubRagnge to ensure that the Copy does not shrink the size
+  // of the array as the arrays are in this case allocated above to the approbriate size
+  vtkm::cont::Algorithm::CopySubRange(
+    tree.FirstSupernodePerIteration,                     // copy this
+    0,                                                   // start at index 0
+    tree.FirstSupernodePerIteration.GetNumberOfValues(), // copy all values
     this->FirstSupernodePerIteration[static_cast<std::size_t>(this->NumRounds)]);
-  vtkm::cont::Algorithm::Copy(
+  vtkm::cont::Algorithm::CopySubRange(
     tree.FirstHypernodePerIteration,
+    0,                                                   // start at index 0
+    tree.FirstHypernodePerIteration.GetNumberOfValues(), // copy all values
     this->FirstHypernodePerIteration[static_cast<std::size_t>(this->NumRounds)]);
 
   // set the sizes for the arrays
-  // vtkm::Id treeSize = tree.Superparents.GetNumberOfValues(); // TODO: defined in original code but seems to be unused
   this->RegularNodeGlobalIds.Allocate(tree.Nodes.GetNumberOfValues());
   this->DataValues.Allocate(mesh.SortedValues.GetNumberOfValues());
   this->RegularNodeSortOrder.Allocate(tree.Nodes.GetNumberOfValues());
