@@ -395,10 +395,7 @@ public:
         return highSupernode;
       } // node between low & high
     }   // descending hyperarc
-
-    // paranoia - return a known bad value
-    return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-  } // FindSuperArcForUnknownNode()
+  }     // FindSuperArcForUnknownNode()
 
 private:
   // these are used to make it simpler to search through the hierarchy
