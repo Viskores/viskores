@@ -300,6 +300,7 @@ public:
 #endif
 
         // Log the contour tree timiing stats
+        (void)rank; // Suppress unused variable warning if logging is disabled.
         VTKM_LOG_S(this->TimingsLogLevel,
                    std::endl
                      << "    ---------------- Contour Tree Worklet Timings ------------------"

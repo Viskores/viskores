@@ -132,6 +132,7 @@ void SaveAfterFanInResults(
   vtkm::Id rank,
   vtkm::cont::LogLevel logLevel)
 {
+  (void)logLevel; // Suppress unused variable warning if logging is disabled
   VTKM_LOG_S(logLevel,
              "Fan In Complete" << std::endl
                                << "# of CTs: " << blockData->ContourTrees.size() << std::endl
