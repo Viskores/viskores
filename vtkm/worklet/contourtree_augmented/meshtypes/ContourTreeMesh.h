@@ -573,7 +573,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   {
     // Here we enforce the DeviceTag to make sure the device we used for
     // CombinedVectorDifferentFromNext is the same as what we use for the algorithms
-    vtkm::cont::ScopedRuntimeDeviceTracker(DeviceTag{});
+    vtkm::cont::ScopedRuntimeDeviceTracker deviceScope(DeviceTag{});
 
     // Functor return 0,1 for each element depending on whethern the current value is different from the next
     vtkm::cont::Token tempToken;
