@@ -293,9 +293,18 @@ public:
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
   {
-    return ReadPortalType(
-      SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
-      buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token));
+    if (device == vtkm::cont::DeviceAdapterTagUndefined{})
+    {
+      return ReadPortalType(
+        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        buffers[0].GetMetaData<FunctorManager>().PrepareForControl());
+    }
+    else
+    {
+      return ReadPortalType(
+        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token));
+    }
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer*,
@@ -379,10 +388,20 @@ public:
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
   {
-    return ReadPortalType(
-      SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
-      buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token),
-      buffers[1].GetMetaData<InverseFunctorManager>().PrepareForExecution(device, token));
+    if (device == vtkm::cont::DeviceAdapterTagUndefined{})
+    {
+      return ReadPortalType(
+        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        buffers[0].GetMetaData<FunctorManager>().PrepareForControl(),
+        buffers[1].GetMetaData<InverseFunctorManager>().PrepareForControl());
+    }
+    else
+    {
+      return ReadPortalType(
+        SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
+        buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token),
+        buffers[1].GetMetaData<InverseFunctorManager>().PrepareForExecution(device, token));
+    }
   }
 
   VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer* buffers,
