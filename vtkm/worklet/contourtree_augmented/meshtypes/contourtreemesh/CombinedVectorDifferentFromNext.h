@@ -64,9 +64,8 @@
 #define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionAndControlObjectBase.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -77,41 +76,49 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
-// be 1 element shorter than the input arrays
-template <typename T, typename DeviceAdapter>
+/// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
+/// be 1 element shorter than the input arrays
+template <typename DeviceAdapter>
 class CombinedVectorDifferentFromNext
 {
 public:
-  typedef typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-    DeviceAdapter>::PortalConst SortOrderPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   VTKM_EXEC_CONT
-  CombinedVectorDifferentFromNext()
-    : DataArray()
-  {
-  }
+  CombinedVectorDifferentFromNext() {}
 
   VTKM_CONT
-  CombinedVectorDifferentFromNext(CombinedVector<T, DeviceAdapter>* inDataArray,
+  CombinedVectorDifferentFromNext(const IdArrayType& thisGlobalMeshIndex,
+                                  const IdArrayType& otherGlobalMeshIndex,
                                   const IdArrayType& sortOrder,
                                   vtkm::cont::Token& token)
-    : DataArray(inDataArray)
   {
     this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->ThisGlobalMeshIndex = thisGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
+    this->OtherGlobalMeshIndex = otherGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
+  }
+
+  VTKM_EXEC_CONT
+  inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+  {
+    return vtkm::worklet::contourtree_augmented::IsThis(idx)
+      ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
+      : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id i) const
   {
-    vtkm::Id currGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i)];
-    vtkm::Id nextGlobalIdx = (*this->DataArray)[this->OverallSortOrderPortal.Get(i + 1)];
+    vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
+    vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
     return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
   }
 
 private:
-  SortOrderPortalType OverallSortOrderPortal;
-  const CombinedVector<T, DeviceAdapter>* DataArray;
+  IdPortalType OverallSortOrderPortal;
+  IdPortalType ThisGlobalMeshIndex;
+  IdPortalType OtherGlobalMeshIndex;
 };
 
 

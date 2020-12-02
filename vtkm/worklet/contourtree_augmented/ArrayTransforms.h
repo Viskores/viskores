@@ -75,7 +75,7 @@ namespace contourtree_augmented
 
 // permute routines
 template <typename ValueType, typename ArrayType>
-void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
+inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
 { // permuteValues()
   using transform_type =
     vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>;

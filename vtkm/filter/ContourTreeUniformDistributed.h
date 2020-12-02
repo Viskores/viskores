@@ -57,7 +57,11 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
-#include <vtkm/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
+#include <vtkm/worklet/contourtree_augmented/DataSetMesh.h>
+#include <vtkm/worklet/contourtree_distributed/BoundaryTree.h>
+#include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
+#include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 
 #include <vtkm/filter/FilterField.h>
 
@@ -90,36 +94,59 @@ public:
   using SupportedTypes = vtkm::TypeListScalarAll;
   ///
   /// Create the contour tree filter
-  /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
-  ///                             connectivity should be used. Valid only for 3D input data. Default is false.
-  VTKM_CONT
-  ContourTreeUniformDistributed(bool useMarchingCubes = false);
-
-  ///
-  /// Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
-  ///
-  /// Note: Only used when running on a multi-block dataset.
   /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
   /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
   /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
-  ///                               with respect to blocksPerDim
+  ///                              with respect to blocksPerDim
   /// @param[in] localBlockOrigins  Array with the (x,y,z) origin (with regard to mesh index) of each
-  ///                               local data block
+  ///                              local data block
   /// @param[in] localBlockSizes    Array with the sizes (i.e., extends in number of mesh points) of each
-  ///                               local data block
+  ///                             local data block
+  /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
+  ///                            connectivity should be used. Valid only for 3D input data. Default is false.
+  /// @param[in] saveDotFiles Save debug dot output files for the distributed contour tree compute.
+  /// @param[in] timingsLogLevel Set the vtkm::cont:LogLevel to be used to record timings information
+  ///                            specific to the computation of the hierachical contour tree
+  /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
+  ///                         about the various trees computed as part of the hierarchical contour tree compute
   VTKM_CONT
-  void SetSpatialDecomposition(vtkm::Id3 blocksPerDim,
-                               vtkm::Id3 globalSize,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
-                               const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes);
+  ContourTreeUniformDistributed(
+    vtkm::Id3 blocksPerDim, // TODO/FIXME: Possibly pass SpatialDecomposition object instead
+    vtkm::Id3 globalSize,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockOrigins,
+    const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockSizes,
+    bool useBoundaryExtremaOnly = true,
+    bool useMarchingCubes = false,
+    bool saveDotFiles = false,
+    vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf,
+    vtkm::cont::LogLevel treeLogLevel = vtkm::cont::LogLevel::Info);
 
-  /// Output field "saddlePeak" wich is pairs of vertex ids indicating saddle and peak of contour
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
   template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
-                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                          const vtkm::filter::FieldMetadata& fieldMeta,
-                                          vtkm::filter::PolicyBase<DerivedPolicy> policy);
+  VTKM_CONT void ComputeLocalTree(const vtkm::Id blockIndex,
+                                  const vtkm::cont::DataSet& input,
+                                  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                  const vtkm::filter::FieldMetadata& fieldMeta,
+                                  vtkm::filter::PolicyBase<DerivedPolicy> policy);
+
+  /// Implement per block contour tree computation after the MeshType has been discovered
+  template <typename T,
+            typename StorageType,
+            typename DerivedPolicy,
+            typename MeshType,
+            typename MeshBoundaryExecType>
+  VTKM_CONT void ComputeLocalTreeImpl(const vtkm::Id blockIndex,
+                                      const vtkm::cont::DataSet& input,
+                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                      const vtkm::filter::FieldMetadata& fieldMeta,
+                                      vtkm::filter::PolicyBase<DerivedPolicy> policy,
+                                      MeshType& mesh,
+                                      MeshBoundaryExecType& meshBoundaryExecObject);
 
   //@{
   /// when operating on vtkm::cont::MultiBlock we want to
@@ -150,19 +177,39 @@ public:
   //@}
 
 private:
+  /// Use only boundary critical points in the parallel merge to reduce communication. Disabling this should only be needed for performance testing.
+  bool UseBoundaryExtremaOnly;
+
   /// Use marching cubes connectivity for computing the contour tree
   bool UseMarchingCubes;
 
-  /// The contour tree computed by the filter
-  vtkm::worklet::contourtree_augmented::ContourTree ContourTreeData;
+  /// Save dot files for all tree computations
+  bool SaveDotFiles;
+
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
+
+  /// Log level to be used for outputting metadata about the trees. Default is vtkm::cont::LogLevel::Info
+  vtkm::cont::LogLevel TreeLogLevel = vtkm::cont::LogLevel::Info;
+
+  /// Information about the spatial decomposition
+  vtkm::worklet::contourtree_distributed::SpatialDecomposition MultiBlockSpatialDecomposition;
+
+  /// Intermediate results (one per local data block)...
+  /// ... local mesh information needed at end of fan out
+  std::vector<vtkm::worklet::contourtree_augmented::DataSetMesh> LocalMeshes;
+  /// ... local contour trees etc. computed during fan in and used during fan out
+  std::vector<vtkm::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
+  std::vector<vtkm::worklet::contourtree_distributed::BoundaryTree> LocalBoundaryTrees;
+  std::vector<vtkm::worklet::contourtree_distributed::InteriorForest> LocalInteriorForests;
+
+  /// The hierarchical trees computed by the filter (array with one entry per block)
+  // TODO/FIXME: We need to find a way to store the final hieararchical trees somewhere.
+  // Currently we cannot do this here as it is a template on FieldType
+  //
+  //std::vector<vtkm::worklet::contourtree_distributed::HierarchicalContourTree> HierarchicalContourTrees;
   /// Number of iterations used to compute the contour tree
   vtkm::Id NumIterations;
-  /// Array with the sorted order of the mesh vertices
-  vtkm::worklet::contourtree_augmented::IdArrayType MeshSortOrder;
-
-  /// Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
-  std::unique_ptr<vtkm::worklet::contourtree_distributed::MultiBlockContourTreeHelper>
-    MultiBlockTreeHelper;
 };
 
 } // namespace filter

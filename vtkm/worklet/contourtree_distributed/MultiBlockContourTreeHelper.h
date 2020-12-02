@@ -66,7 +66,6 @@
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
 
-
 namespace vtkm
 {
 namespace worklet
@@ -98,6 +97,7 @@ public:
   VTKM_CONT
   ~MultiBlockContourTreeHelper(void)
   {
+    // FIXME: This shouldn't be necessary as arrays will get deleted anyway
     LocalContourTrees.clear();
     LocalSortOrders.clear();
   }
@@ -201,7 +201,6 @@ public:
   SpatialDecomposition MultiBlockSpatialDecomposition;
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
   std::vector<vtkm::worklet::contourtree_augmented::IdArrayType> LocalSortOrders;
-
 }; // end MultiBlockContourTreeHelper
 
 } // namespace contourtree_distributed

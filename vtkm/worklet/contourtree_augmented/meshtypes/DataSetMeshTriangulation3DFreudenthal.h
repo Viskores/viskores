@@ -106,7 +106,8 @@ private:
 };                // class DataSetMeshTriangulation
 
 // creates input mesh
-DataSetMeshTriangulation3DFreudenthal::DataSetMeshTriangulation3DFreudenthal(vtkm::Id3 meshSize)
+inline DataSetMeshTriangulation3DFreudenthal::DataSetMeshTriangulation3DFreudenthal(
+  vtkm::Id3 meshSize)
   : DataSetMesh(meshSize)
 
 {
@@ -123,16 +124,16 @@ DataSetMeshTriangulation3DFreudenthal::DataSetMeshTriangulation3DFreudenthal(vtk
                                  vtkm::CopyFlag::Off);
 }
 
-void DataSetMeshTriangulation3DFreudenthal::SetPrepareForExecutionBehavior(bool getMax)
+inline void DataSetMeshTriangulation3DFreudenthal::SetPrepareForExecutionBehavior(bool getMax)
 {
   this->UseGetMax = getMax;
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename DeviceTag>
-MeshStructureFreudenthal3D<DeviceTag> DataSetMeshTriangulation3DFreudenthal::PrepareForExecution(
-  DeviceTag,
-  vtkm::cont::Token& token) const
+inline MeshStructureFreudenthal3D<DeviceTag>
+DataSetMeshTriangulation3DFreudenthal::PrepareForExecution(DeviceTag,
+                                                           vtkm::cont::Token& token) const
 {
   return MeshStructureFreudenthal3D<DeviceTag>(this->MeshSize,
                                                m3d_freudenthal::N_INCIDENT_EDGES,
@@ -145,12 +146,13 @@ MeshStructureFreudenthal3D<DeviceTag> DataSetMeshTriangulation3DFreudenthal::Pre
                                                token);
 }
 
-MeshBoundary3DExec DataSetMeshTriangulation3DFreudenthal::GetMeshBoundaryExecutionObject() const
+inline MeshBoundary3DExec DataSetMeshTriangulation3DFreudenthal::GetMeshBoundaryExecutionObject()
+  const
 {
   return MeshBoundary3DExec(this->MeshSize, this->SortIndices);
 }
 
-void DataSetMeshTriangulation3DFreudenthal::GetBoundaryVertices(
+inline void DataSetMeshTriangulation3DFreudenthal::GetBoundaryVertices(
   IdArrayType& boundaryVertexArray,       // output
   IdArrayType& boundarySortIndexArray,    // output
   MeshBoundary3DExec* meshBoundaryExecObj // input

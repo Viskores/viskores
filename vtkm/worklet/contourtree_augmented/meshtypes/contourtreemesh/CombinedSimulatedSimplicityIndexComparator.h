@@ -65,7 +65,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVector.h>
 
 namespace vtkm
 {
@@ -77,43 +76,76 @@ namespace mesh_dem_contourtree_mesh_inc
 {
 
 
-// comparator used for initial sort of data values
+/// Implementation of the comparator used initial sort of data values in ContourTreeMesh<FieldType>::MergeWith
 template <typename FieldType, typename DeviceAdapter>
-class CombinedSimulatedSimplicityIndexComparator
+class CombinedSimulatedSimplicityIndexComparatorImpl
 {
 public:
-  typedef CombinedVector<FieldType, DeviceAdapter> CombinedDataVector;
-  typedef CombinedVector<vtkm::Id, DeviceAdapter> CombinedIndexVector;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using ValuePortalType = typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
 
   VTKM_CONT
-  CombinedSimulatedSimplicityIndexComparator(const CombinedDataVector& val,
-                                             const CombinedIndexVector& idx)
-    : Values(val)
-    , Indices(idx)
+  CombinedSimulatedSimplicityIndexComparatorImpl(
+    const IdArrayType& thisGlobalMeshIndex,
+    const IdArrayType& otherGlobalMeshIndex,
+    const vtkm::cont::ArrayHandle<FieldType>& thisSortedValues,
+    const vtkm::cont::ArrayHandle<FieldType>& otherSortedValues,
+    vtkm::cont::Token& token)
   {
+    this->ThisGlobalMeshIndex = thisGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
+    this->OtherGlobalMeshIndex = otherGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
+    ;
+    this->ThisSortedValues = thisSortedValues.PrepareForInput(DeviceAdapter(), token);
+    this->OtherSortedValues = otherSortedValues.PrepareForInput(DeviceAdapter(), token);
+  }
+
+  VTKM_EXEC_CONT
+  inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+  {
+    return vtkm::worklet::contourtree_augmented::IsThis(idx)
+      ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
+      : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
+  }
+
+  VTKM_EXEC_CONT
+  inline FieldType GetSortedValue(vtkm::Id idx) const
+  {
+    return vtkm::worklet::contourtree_augmented::IsThis(idx)
+      ? this->ThisSortedValues.Get(MaskedIndex(idx))
+      : this->OtherSortedValues.Get(MaskedIndex(idx));
   }
 
   VTKM_EXEC_CONT
   bool operator()(vtkm::Id i, vtkm::Id j) const
   { // operator()
     // get values
-    FieldType val_i = this->Values[i];
-    FieldType val_j = this->Values[j];
+    FieldType val_i = this->GetSortedValue(i);
+    FieldType val_j = this->GetSortedValue(j);
 
     // value comparison
     if (val_i < val_j)
+    {
       return true;
+    }
     if (val_j < val_i)
+    {
       return false;
+    }
 
     // get indices
-    vtkm::Id idx_i = this->Indices[i];
-    vtkm::Id idx_j = this->Indices[j];
+    vtkm::Id idx_i = this->GetGlobalMeshIndex(i);
+    vtkm::Id idx_j = this->GetGlobalMeshIndex(j);
     // index comparison for simulated simplicity
     if (idx_i < idx_j)
+    {
       return true;
+    }
     if (idx_j < idx_i)
+    {
       return false;
+    }
 
     // fallback - always false
     return false;
@@ -149,9 +181,51 @@ public:
   } // operator()
 
 private:
-  const CombinedDataVector& Values;
-  const CombinedIndexVector& Indices;
+  IdPortalType ThisGlobalMeshIndex;
+  IdPortalType OtherGlobalMeshIndex;
+  ValuePortalType ThisSortedValues;
+  ValuePortalType OtherSortedValues;
 };
+
+
+/// Execution object for the comparator used initial sort of data values in ContourTreeMesh<FieldType>::MergeWith
+template <typename FieldType>
+class CombinedSimulatedSimplicityIndexComparator : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  // constructor
+  VTKM_CONT
+  CombinedSimulatedSimplicityIndexComparator(
+    const IdArrayType& thisGlobalMeshIndex,
+    const IdArrayType& otherGlobalMeshIndex,
+    const vtkm::cont::ArrayHandle<FieldType>& thisSortedValues,
+    const vtkm::cont::ArrayHandle<FieldType>& otherSortedValues)
+    : ThisGlobalMeshIndex(thisGlobalMeshIndex)
+    , OtherGlobalMeshIndex(otherGlobalMeshIndex)
+    , ThisSortedValues(thisSortedValues)
+    , OtherSortedValues(otherSortedValues)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  VTKM_CONT CombinedSimulatedSimplicityIndexComparatorImpl<FieldType, DeviceAdapter>
+  PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
+  {
+    return CombinedSimulatedSimplicityIndexComparatorImpl<FieldType, DeviceAdapter>(
+      this->ThisGlobalMeshIndex,
+      this->OtherGlobalMeshIndex,
+      this->ThisSortedValues,
+      this->OtherSortedValues,
+      token);
+  }
+
+private:
+  IdArrayType ThisGlobalMeshIndex;
+  IdArrayType OtherGlobalMeshIndex;
+  vtkm::cont::ArrayHandle<FieldType> ThisSortedValues;
+  vtkm::cont::ArrayHandle<FieldType> OtherSortedValues;
+
+}; // CombinedSimulatedSimplicityIndexComparator
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented
