@@ -351,6 +351,8 @@ private:
   ArrayHandleType Array;
   FunctorManager Functor;
   bool Valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
@@ -455,6 +457,8 @@ private:
   FunctorManager Functor;
   InverseFunctorManager InverseFunctor;
   bool Valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename ArrayHandleType, typename FunctorType, typename Device>

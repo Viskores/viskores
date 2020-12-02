@@ -195,6 +195,8 @@ private:
   IndexArrayType IndexArray;
   ValueArrayType ValueArray;
   bool Valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename T, typename IndexStorageTag, typename ValueStorageTag, typename Device>

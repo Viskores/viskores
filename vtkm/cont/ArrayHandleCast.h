@@ -131,6 +131,11 @@ struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>
     typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass;
 
   using Superclass::Superclass;
+
+  using Superclass::GetNumberOfValues;
+  using typename Superclass::PortalConstType;
+  using typename Superclass::PortalType;
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename TargetT, typename SourceT, typename SourceStorage, typename Device>

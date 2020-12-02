@@ -211,6 +211,8 @@ private:
   vtkm::Id StartIndex;
   vtkm::Id NumValues;
   bool Valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename T, typename ST, typename Device>

@@ -244,6 +244,8 @@ private:
   ArrayHandleType1 array1;
   ArrayHandleType2 array2;
   bool valid;
+
+  VTKM_STORAGE_OLD_STYLE;
 }; // class Storage
 
 template <typename T, typename ST1, typename ST2, typename Device>

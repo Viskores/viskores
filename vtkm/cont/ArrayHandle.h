@@ -36,6 +36,7 @@
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/Buffer.h>
+#include <vtkm/cont/internal/StorageDeprecated.h>
 
 namespace vtkm
 {
@@ -291,6 +292,8 @@ private:
   using MutexType = std::mutex;
   using LockType = std::unique_lock<MutexType>;
 
+  mutable vtkm::cont::internal::Buffer BufferAsStorageWrapper;
+
 public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
   using ValueType = T;
@@ -309,6 +312,23 @@ public:
     typename StorageType::PortalType;
   using PortalConstControl VTKM_DEPRECATED(1.6, "Use ArrayHandle::ReadPortalType instead.") =
     typename StorageType::PortalConstType;
+
+  // Handle the fact that the ArrayHandle design has changed.
+  VTKM_STATIC_ASSERT_MSG((std::is_same<typename StorageType::HasOldBridge, std::true_type>::value),
+                         "ArrayHandle design has changed. To support old-style arrays, have the "
+                         "Storage implementation subclass StorageDeprecated.");
+  VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers() { return 1; }
+  VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
+  {
+    this->BufferAsStorageWrapper.SetMetaData(*this);
+    return &this->BufferAsStorageWrapper;
+  }
+
+  VTKM_CONT ArrayHandle(const vtkm::cont::internal::Buffer* buffers)
+  {
+    VTKM_ASSERT(buffers[0].MetaDataIsType<ArrayHandle>());
+    *this = buffers[0].GetMetaData<ArrayHandle>();
+  }
 
   /// Constructs an empty ArrayHandle. Typically used for output or
   /// intermediate arrays that will be filled by a VTKm algorithm.
@@ -481,20 +501,19 @@ public:
   VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
-    // A Token should not be declared within the scope of a lock. when the token goes out of scope
-    // it will attempt to aquire the lock, which is undefined behavior of the thread already has
-    // the lock.
     vtkm::cont::Token token;
-    {
-      LockType lock = this->GetLock();
-      this->WaitToWrite(lock, token);
-      this->ReleaseResourcesExecutionInternal(lock, token);
-      this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
-      // Set to false and then to true to ensure anything pointing to an array before the allocate
-      // is invalidated.
-      this->Internals->SetControlArrayValid(lock, false);
-      this->Internals->SetControlArrayValid(lock, true);
-    }
+    this->Allocate(numberOfValues, token);
+  }
+  VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::cont::Token& token)
+  {
+    LockType lock = this->GetLock();
+    this->WaitToWrite(lock, token);
+    this->ReleaseResourcesExecutionInternal(lock, token);
+    this->Internals->GetControlArray(lock)->Allocate(numberOfValues);
+    // Set to false and then to true to ensure anything pointing to an array before the allocate
+    // is invalidated.
+    this->Internals->SetControlArrayValid(lock, false);
+    this->Internals->SetControlArrayValid(lock, true);
   }
 
   /// \brief Reduces the size of the array without changing its values.
@@ -505,7 +524,12 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  void Shrink(vtkm::Id numberOfValues);
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues)
+  {
+    vtkm::cont::Token token;
+    this->Shrink(numberOfValues, token);
+  }
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues, vtkm::cont::Token& token);
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).

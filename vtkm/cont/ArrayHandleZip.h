@@ -218,6 +218,8 @@ public:
 private:
   FirstHandleType FirstArray;
   SecondHandleType SecondArray;
+
+  VTKM_STORAGE_OLD_STYLE;
 };
 
 template <typename T1, typename T2, typename ST1, typename ST2, typename Device>
