@@ -1273,14 +1273,7 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
 #endif
 
   // B.  Next, we transfer the data values
-  // NOTE: Originally the data values were initalized with NO_SUCH_ELEMENT but a simply allocate should suffice
-  this->ResizeVector<FieldType>(
-    hierarchicalTree.DataValues,
-    totalNNodes,
-    static_cast<FieldType>(0)); // TODO/FIXME: Changed from NO_SUCH_ELEMENT to 0. Check.
-  // TODO/FIXME: Check why
-  //hierarchicalTree.DataValues.Allocate(totalNNodes);
-  // is not sufficient
+  hierarchicalTree.DataValues.Allocate(totalNNodes, vtkm::CopyFlag::On);
 
   auto meshValuesPermuted = vtkm::cont::make_ArrayHandlePermutation(this->NewNodes, meshDataValues);
   // copy all of mesh->DataValue(newNodes[newNode]) to the end of hierarchicalTree.DataValues starting at nOldNodes
