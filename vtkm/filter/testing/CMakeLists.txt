@@ -36,6 +36,7 @@ set(unit_tests
   UnitTestGhostCellRemove.cxx
   UnitTestHistogramFilter.cxx
   UnitTestImageConnectivityFilter.cxx
+  UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
   UnitTestLagrangianFilter.cxx
   UnitTestLagrangianStructuresFilter.cxx
@@ -68,11 +69,33 @@ set(unit_tests
   UnitTestWarpScalarFilter.cxx
   UnitTestWarpVectorFilter.cxx
   UnitTestZFP.cxx
- )
+)
+
+set(libraries
+  vtkm_filter
+  vtkm_io
+  vtkm_source
+)
+
+if (VTKm_ENABLE_RENDERING)
+  set(libraries
+    ${libraries}
+    vtkm_rendering
+  )
+
+  set(unit_tests
+    ${unit_tests}
+    RegressionTestContourFilter.cxx
+    RegressionTestPointTransform.cxx
+    RegressionTestSplitSharpEdges.cxx
+    RegressionTestStreamline.cxx
+    RegressionTestSurfaceNormals.cxx
+  )
+endif (VTKm_ENABLE_RENDERING)
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
-  LIBRARIES vtkm_filter vtkm_source vtkm_io
+  LIBRARIES ${libraries}
   ALL_BACKENDS
   USE_VTKM_JOB_POOL
   )

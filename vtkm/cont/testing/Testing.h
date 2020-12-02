@@ -39,8 +39,9 @@ namespace testing
 enum TestOptionsIndex
 {
   TEST_UNKNOWN,
-  DATADIR,    // base dir containing test data files
-  BASELINEDIR // base dir for regression test images
+  DATADIR,     // base dir containing test data files
+  BASELINEDIR, // base dir for regression test images
+  WRITEDIR     // base dir for generated regression test images
 };
 
 struct TestVtkmArg : public opt::Arg
@@ -114,6 +115,13 @@ public:
   static VTKM_CONT const std::string RegressionImagePath(const std::string& filename)
   {
     return GetRegressionTestImageBasePath() + filename;
+  }
+
+  static VTKM_CONT const std::string GetWriteDirBasePath() { return SetAndGetWriteDirBasePath(); }
+
+  static VTKM_CONT const std::string WriteDirPath(const std::string& filename)
+  {
+    return GetWriteDirBasePath() + filename;
   }
 
   template <class Func>
@@ -227,6 +235,22 @@ private:
     return RegressionTestImageBasePath;
   }
 
+  static std::string& SetAndGetWriteDirBasePath(std::string path = "")
+  {
+    static std::string WriteDirBasePath;
+
+    if (path != "")
+    {
+      WriteDirBasePath = path;
+      if ((WriteDirBasePath.back() != '/') && (WriteDirBasePath.back() != '\\'))
+      {
+        WriteDirBasePath = WriteDirBasePath + '/';
+      }
+    }
+
+    return WriteDirBasePath;
+  }
+
   // Method to parse the extra arguments given to unit tests
   static VTKM_CONT void ParseAdditionalTestArgs(int& argc, char* argv[])
   {
@@ -252,6 +276,16 @@ private:
                         "\tPath to the base dir "
                         "for regression test "
                         "images" });
+      usage.push_back({ WRITEDIR,
+                        0,
+                        "",
+                        "write-dir",
+                        TestVtkmArg::Required,
+                        "  --write-dir "
+                        "<write-dir-path> "
+                        "\tPath to the write dir "
+                        "to store generated "
+                        "regression test images" });
       // Required to collect unknown arguments when help is off.
       usage.push_back({ TEST_UNKNOWN, 0, "", "", TestVtkmArg::Unknown, "" });
       usage.push_back({ 0, 0, 0, 0, 0, 0 });
@@ -280,6 +314,11 @@ private:
       if (options[BASELINEDIR])
       {
         SetAndGetRegressionImageBasePath(options[BASELINEDIR].arg);
+      }
+
+      if (options[WRITEDIR])
+      {
+        SetAndGetWriteDirBasePath(options[WRITEDIR].arg);
       }
 
       for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())

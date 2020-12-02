@@ -75,6 +75,7 @@ set(extra_headers
   GhostCellRemove.h
   Histogram.h
   ImageConnectivity.h
+  ImageDifference.h
   ImageMedian.h
   Lagrangian.h
   LagrangianStructures.h
@@ -126,6 +127,7 @@ set(extra_header_template_sources
   GhostCellRemove.hxx
   Histogram.hxx
   ImageConnectivity.hxx
+  ImageDifference.hxx
   ImageMedian.hxx
   Lagrangian.hxx
   LagrangianStructures.hxx

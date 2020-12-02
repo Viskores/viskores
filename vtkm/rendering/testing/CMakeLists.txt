@@ -10,7 +10,8 @@
 
 set(headers
   RenderTest.h
-  )
+  Testing.h
+)
 
 vtkm_declare_headers(${headers})
 

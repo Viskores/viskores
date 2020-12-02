@@ -173,6 +173,14 @@ stages:
     #for running failed tests multiple times so failures
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
@@ -180,6 +188,14 @@ stages:
   interruptible: true
   script:
     - "ctest-latest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
 
 include:
   - local: '/.gitlab/ci/centos7.yml'
