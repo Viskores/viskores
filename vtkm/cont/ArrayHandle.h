@@ -292,7 +292,7 @@ private:
   using MutexType = std::mutex;
   using LockType = std::unique_lock<MutexType>;
 
-  mutable vtkm::cont::internal::Buffer FakeBuffer;
+  mutable vtkm::cont::internal::Buffer BufferAsStorageWrapper;
 
 public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
@@ -320,8 +320,8 @@ public:
   VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers() { return 1; }
   VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
   {
-    this->FakeBuffer.SetMetaData(*this);
-    return &this->FakeBuffer;
+    this->BufferAsStorageWrapper.SetMetaData(*this);
+    return &this->BufferAsStorageWrapper;
   }
 
   VTKM_CONT ArrayHandle(const vtkm::cont::internal::Buffer* buffers)
