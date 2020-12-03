@@ -119,12 +119,12 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, true>
 
 } // namespace detail
 
-template <typename TargetT, typename SourceT, typename SourceStorage>
-struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage>>
-  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass
+template <typename TargetT, typename SourceT, typename SourceStorage_>
+struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage_>>
+  : detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass
 {
   using Superclass =
-    typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage>::StorageSuperclass;
+    typename detail::ArrayHandleCastTraits<TargetT, SourceT, SourceStorage_>::StorageSuperclass;
 
   using Superclass::Superclass;
 };
