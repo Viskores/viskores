@@ -1594,6 +1594,11 @@ VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer
   CreateBuffersImpl(buffers, args...);
 }
 
+template <typename Arg0, typename... Args>
+VTKM_CONT inline void CreateBuffersImpl(std::vector<vtkm::cont::internal::Buffer>& buffers,
+                                        const Arg0& arg0,
+                                        const Args&... args);
+
 template <typename T, typename S, typename... Args>
 VTKM_CONT inline void CreateBuffersResolveArrays(std::vector<vtkm::cont::internal::Buffer>& buffers,
                                                  std::true_type,

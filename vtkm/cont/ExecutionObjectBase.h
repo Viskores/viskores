@@ -90,6 +90,7 @@ struct HasPrepareForExecutionDeprecated
                   ::vtkm::cont::internal::HasPrepareForExecutionDeprecated<execObject>::value, \
                 "Provided type does not have requisite PrepareForExecution method.")
 
+///@{
 /// \brief Gets the object to use in the execution environment from an ExecutionObject.
 ///
 /// An execution object (that is, an object inheriting from `vtkm::cont::ExecutionObjectBase`) is
@@ -106,6 +107,18 @@ VTKM_CONT auto CallPrepareForExecution(T&& execObject, Device device, vtkm::cont
 
   return execObject.PrepareForExecution(device, token);
 }
+
+template <typename T>
+VTKM_CONT auto CallPrepareForExecution(T&& execObject,
+                                       vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token)
+  -> decltype(execObject.PrepareForExecution(device, token))
+{
+  VTKM_IS_EXECUTION_OBJECT(T);
+
+  return execObject.PrepareForExecution(device, token);
+}
+///@}
 
 // If you get a deprecation warning at this function, it means that an ExecutionObject is using the
 // old style PrepareForExecution. Update its PrepareForExecution method to accept both a device and
