@@ -151,6 +151,7 @@ set(sources
   Initialize.cxx
   Logging.cxx
   RuntimeDeviceTracker.cxx
+  Storage.cxx
   Token.cxx
   TryExecute.cxx
   )

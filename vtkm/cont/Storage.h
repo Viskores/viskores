@@ -18,10 +18,16 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
+#include <vtkm/Flags.h>
 #include <vtkm/StaticAssert.h>
 
-#include <vtkm/cont/vtkm_cont_export.h>
-#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/internal/ArrayPortalDummy.h>
+
+#include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/Token.h>
+
+#include <vtkm/cont/internal/Buffer.h>
 
 namespace vtkm
 {
@@ -172,6 +178,48 @@ public:
   void ReleaseResources();
 };
 #endif // VTKM_DOXYGEN_ONLY
+
+namespace detail
+{
+
+VTKM_CONT_EXPORT void StorageNoResizeImpl(vtkm::Id currentNumValues,
+                                          vtkm::Id requestedNumValues,
+                                          std::string storageTagName);
+
+} // namespace detail
+
+template <typename StorageType>
+struct StorageTraits;
+
+template <typename T, typename S>
+struct StorageTraits<vtkm::cont::internal::Storage<T, S>>
+{
+  using ValueType = T;
+  using Tag = S;
+};
+
+#define VTKM_STORAGE_NO_RESIZE                                                                     \
+  VTKM_CONT static void ResizeBuffers(                                                             \
+    vtkm::Id numValues, vtkm::cont::internal::Buffer* buffers, vtkm::CopyFlag, vtkm::cont::Token&) \
+  {                                                                                                \
+    vtkm::cont::internal::detail::StorageNoResizeImpl(                                             \
+      GetNumberOfValues(buffers),                                                                  \
+      numValues,                                                                                   \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>());     \
+  }                                                                                                \
+  using ResizeBuffersEatComma = void
+
+#define VTKM_STORAGE_NO_WRITE_PORTAL                                                           \
+  using WritePortalType = vtkm::internal::ArrayPortalDummy<                                    \
+    typename vtkm::cont::internal::StorageTraits<Storage>::ValueType>;                         \
+  VTKM_CONT static WritePortalType CreateWritePortal(                                          \
+    vtkm::cont::internal::Buffer*, vtkm::cont::DeviceAdapterId, vtkm::cont::Token&)            \
+  {                                                                                            \
+    throw vtkm::cont::ErrorBadAllocation(                                                      \
+      "Cannot write to arrays with storage type of " +                                         \
+      vtkm::cont::TypeToString<typename vtkm::cont::internal::StorageTraits<Storage>::Tag>()); \
+  }                                                                                            \
+  using CreateWritePortalEatComma = void
 
 } // namespace internal
 }

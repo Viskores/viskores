@@ -252,15 +252,13 @@ class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueT
   static constexpr vtkm::IdComponent NUM_METADATA_BUFFERS = 1;
 
 public:
+  VTKM_STORAGE_NO_RESIZE;
+  VTKM_STORAGE_NO_WRITE_PORTAL;
+
   using ReadPortalType =
     vtkm::internal::ArrayPortalTransform<ValueType,
                                          typename ArrayHandleType::ReadPortalType,
                                          typename FunctorManager::FunctorType>;
-
-  // Note that this array is read only, so you really should only be getting the const
-  // version of the portal. If you actually try to write to this portal, you will
-  // get an error.
-  using WritePortalType = ReadPortalType;
 
   VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers()
   {
@@ -270,23 +268,6 @@ public:
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {
     return SourceStorage::GetNumberOfValues(buffers + NUM_METADATA_BUFFERS);
-  }
-
-  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
-                                      vtkm::CopyFlag vtkmNotUsed(preserve),
-                                      vtkm::cont::Token& vtkmNotUsed(token))
-  {
-    if (numValues == GetNumberOfValues(buffers))
-    {
-      // In general, we don't allow resizing of the array, but if it was "allocated" to the
-      // correct size, we will allow that.
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadAllocation(
-        "ArrayHandleTransform is read only. It cannot be allocated.");
-    }
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
@@ -305,14 +286,6 @@ public:
         SourceStorage::CreateReadPortal(buffers + NUM_METADATA_BUFFERS, device, token),
         buffers[0].GetMetaData<FunctorManager>().PrepareForExecution(device, token));
     }
-  }
-
-  VTKM_CONT static WritePortalType CreateWritePortal(vtkm::cont::internal::Buffer*,
-                                                     vtkm::cont::DeviceAdapterId,
-                                                     vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadType(
-      "ArrayHandleTransform is read only. Cannot get writable portal.");
   }
 
   VTKM_CONT static std::vector<vtkm::cont::internal::Buffer> CreateBuffers(

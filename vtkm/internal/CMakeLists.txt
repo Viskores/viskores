@@ -49,6 +49,7 @@ vtkm_install_headers(vtkm/internal
 
 set(headers
   ArrayPortalBasic.h
+  ArrayPortalDummy.h
   ArrayPortalHelpers.h
   ArrayPortalUniformPointCoordinates.h
   ArrayPortalValueReference.h

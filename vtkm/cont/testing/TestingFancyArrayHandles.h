@@ -343,8 +343,6 @@ private:
         vtkm::cont::ArrayCopy(soaArray, basicArray);
         VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
         CheckPortal(basicArray.ReadPortal());
-
-        soaArray.ReleaseResources();
       }
 
       {
@@ -373,6 +371,9 @@ private:
             vtkm::cont::make_ArrayHandleSOA(vtkm::CopyFlag::Off, vector0, vector1, vector2);
           VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
           CheckPortal(soaArray.ReadPortal());
+
+          // Make sure calling ReleaseResources does not result in error.
+          soaArray.ReleaseResources();
         }
 
         {
