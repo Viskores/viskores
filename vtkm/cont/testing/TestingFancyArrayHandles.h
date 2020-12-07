@@ -343,6 +343,8 @@ private:
         vtkm::cont::ArrayCopy(soaArray, basicArray);
         VTKM_TEST_ASSERT(basicArray.GetNumberOfValues() == ARRAY_SIZE);
         CheckPortal(basicArray.ReadPortal());
+
+        soaArray.ReleaseResources();
       }
 
       {
@@ -453,6 +455,8 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_c, vtkm::Vec<ValueType, 3>(value)),
                          "CompositeVector Handle Failed");
       }
+
+      composite.ReleaseResources();
     }
   };
 
@@ -480,6 +484,8 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_v, value), "Counting Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Counting Handle Control Failed");
       }
+
+      constant.ReleaseResources();
     }
   };
 
@@ -516,6 +522,8 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Counting Handle Control Failed");
         component_value = ComponentType(component_value + ComponentType(1));
       }
+
+      counting.ReleaseResources();
     }
   };
 
@@ -547,6 +555,8 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
       }
+
+      implicit.ReleaseResources();
     }
   };
 
@@ -608,6 +618,8 @@ private:
           VTKM_TEST_ASSERT(test_equal(result_v, control_value),
                            "ArrayHandleConcatenate as Input Failed");
         }
+
+        concatenate.ReleaseResources();
       }
     }
   };
@@ -660,6 +672,8 @@ private:
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
         }
+
+        permutation.ReleaseResources();
       }
     }
   };
@@ -706,6 +720,8 @@ private:
           VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Implicit Handle Failed");
           VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Implicit Handle Failed");
         }
+
+        view.ReleaseResources();
       }
     }
   };
@@ -743,6 +759,8 @@ private:
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VTKM_TEST_ASSERT(test_equal(result_v, control_value), "Transform Handle Control Failed");
       }
+
+      transformed.ReleaseResources();
     }
   };
 
@@ -823,6 +841,8 @@ private:
                          "Transform Counting Handle Control Failed");
         component_value = ComponentType(component_value + ComponentType(1));
       }
+
+      countingTransformed.ReleaseResources();
     }
   };
 
@@ -850,6 +870,8 @@ private:
         VTKM_TEST_ASSERT(resultPortal.Get(i) == static_cast<CastToType>(inputPortal.Get(i)),
                          "Casting ArrayHandle Failed");
       }
+
+      castArray.ReleaseResources();
     }
   };
 
@@ -904,6 +926,8 @@ private:
       // verify results
       VTKM_TEST_ASSERT(test_equal_portals(result.ReadPortal(), input.ReadPortal()),
                        "CastingArrayHandle failed");
+
+      multiplexArray.ReleaseResources();
     }
   };
 
@@ -971,6 +995,8 @@ private:
           totalIndex++;
         }
       }
+
+      groupArray.ReleaseResources();
     }
   };
 
@@ -1067,11 +1093,14 @@ private:
 
       vtkm::cont::ArrayHandle<vtkm::Id> dummyArray;
 
+      auto groupVecArray = vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray);
+
       vtkm::worklet::DispatcherMapField<GroupVariableInputWorklet> dispatcher;
-      dispatcher.Invoke(vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray),
-                        dummyArray);
+      dispatcher.Invoke(groupVecArray, dummyArray);
 
       dummyArray.ReadPortal();
+
+      groupVecArray.ReleaseResources();
     }
   };
 
@@ -1164,6 +1193,8 @@ private:
                                      ValueType(static_cast<ValueComponentType>(i)));
         VTKM_TEST_ASSERT(test_equal(result_v, correct_value), "ArrayHandleZip Failed as input");
       }
+
+      zip.ReleaseResources();
     }
   };
 
@@ -1187,6 +1218,8 @@ private:
 
       // No output to verify since none is stored in memory. Just checking that
       // this compiles/runs without errors.
+
+      discard.ReleaseResources();
     }
   };
 
