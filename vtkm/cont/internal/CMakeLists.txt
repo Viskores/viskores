@@ -10,8 +10,6 @@
 
 set(headers
   ArrayHandleExecutionManager.h
-  ArrayManagerExecution.h
-  ArrayManagerExecutionShareWithControl.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
   AtomicInterfaceControl.h

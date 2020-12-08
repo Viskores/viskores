@@ -8,7 +8,6 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
 #include <vtkm/cont/openmp/internal/FunctorsOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelQuickSortOpenMP.h>
 #include <vtkm/cont/openmp/internal/ParallelRadixSortOpenMP.h>

@@ -15,7 +15,6 @@
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterMemoryManagerSerial.h>
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
 #include <vtkm/cont/serial/internal/VirtualObjectTransferSerial.h>
 // clang-format on

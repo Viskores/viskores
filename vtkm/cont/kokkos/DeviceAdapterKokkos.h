@@ -16,7 +16,6 @@
 
 #if !defined(VTKM_KOKKOS_CUDA) || defined(VTKM_CUDA)
 
-#include <vtkm/cont/kokkos/internal/ArrayManagerExecutionKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterAlgorithmKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterMemoryManagerKokkos.h>
 #include <vtkm/cont/kokkos/internal/DeviceAdapterRuntimeDetectorKokkos.h>

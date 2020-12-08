@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionSerial.h
   DeviceAdapterAlgorithmSerial.h
   DeviceAdapterMemoryManagerSerial.h
   DeviceAdapterRuntimeDetectorSerial.h

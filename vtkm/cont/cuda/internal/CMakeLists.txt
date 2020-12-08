@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionCuda.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterMemoryManagerCuda.h

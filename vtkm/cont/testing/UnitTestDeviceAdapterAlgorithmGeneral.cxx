@@ -80,24 +80,6 @@ class DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagTestAlgorithmGenera
   }
 };
 
-template <typename T, class StorageTag>
-class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public vtkm::cont::internal::
-      ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
-{
-public:
-  using Superclass =
-    vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>;
-  using ValueType = typename Superclass::ValueType;
-  using PortalType = typename Superclass::PortalType;
-  using PortalConstType = typename Superclass::PortalConstType;
-
-  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag>* storage)
-    : Superclass(storage)
-  {
-  }
-};
-
 template <typename TargetClass>
 struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> final
   : public VirtualObjectTransferShareWithControl<TargetClass>
