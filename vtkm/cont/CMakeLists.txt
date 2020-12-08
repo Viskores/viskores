@@ -25,8 +25,6 @@ set(headers
   ArrayHandleDecorator.h
   ArrayHandleDiscard.h
   ArrayHandleExtractComponent.h
-  ArrayHandleExtrudeCoords.h
-  ArrayHandleExtrudeField.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -113,7 +111,6 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageExtrude.h
   StorageImplicit.h # Deprecated, rolled into ArrayHandleImplicit.h
   StorageList.h
   StorageListTag.h

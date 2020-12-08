@@ -13,7 +13,7 @@
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/ConnectivityExtrude.h>
@@ -164,7 +164,7 @@ private:
 
 template <typename T>
 CellSetExtrude make_CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& conn,
-                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
                                    const vtkm::cont::ArrayHandle<vtkm::Int32>& nextNode,
                                    bool periodic = true)
 {
@@ -175,26 +175,26 @@ CellSetExtrude make_CellSetExtrude(const vtkm::cont::ArrayHandle<vtkm::Int32>& c
 
 template <typename T>
 CellSetExtrude make_CellSetExtrude(const std::vector<vtkm::Int32>& conn,
-                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
                                    const std::vector<vtkm::Int32>& nextNode,
                                    bool periodic = true)
 {
   return CellSetExtrude{ vtkm::cont::make_ArrayHandle(conn, vtkm::CopyFlag::On),
                          static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
-                         coords.GetNumberOfPlanes(),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPlanes()),
                          vtkm::cont::make_ArrayHandle(nextNode, vtkm::CopyFlag::On),
                          periodic };
 }
 
 template <typename T>
 CellSetExtrude make_CellSetExtrude(std::vector<vtkm::Int32>&& conn,
-                                   const vtkm::cont::ArrayHandleExtrudeCoords<T>& coords,
+                                   const vtkm::cont::ArrayHandleXGCCoordinates<T>& coords,
                                    std::vector<vtkm::Int32>&& nextNode,
                                    bool periodic = true)
 {
   return CellSetExtrude{ vtkm::cont::make_ArrayHandleMove(std::move(conn)),
                          static_cast<vtkm::Int32>(coords.GetNumberOfPointsPerPlane()),
-                         coords.GetNumberOfPlanes(),
+                         static_cast<vtkm::Int32>(coords.GetNumberOfPlanes()),
                          vtkm::cont::make_ArrayHandleMove(std::move(nextNode)),
                          periodic };
 }

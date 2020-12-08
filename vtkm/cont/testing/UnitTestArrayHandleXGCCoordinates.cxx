@@ -13,7 +13,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/testing/Testing.h>
 
 
@@ -91,11 +91,11 @@ void verify_results(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S> const& handle)
 }
 
 
-int TestArrayHandleExtrude()
+int TestArrayHandleXGCCoordinates()
 {
   const int numPlanes = 8;
 
-  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(
+  auto coords = vtkm::cont::make_ArrayHandleXGCCoordinates(
     vtkm::cont::make_ArrayHandle(points_rz, vtkm::CopyFlag::Off), numPlanes, false);
 
   VTKM_TEST_ASSERT(coords.GetNumberOfValues() ==
@@ -116,8 +116,8 @@ int TestArrayHandleExtrude()
 
 } // end namespace anonymous
 
-int UnitTestArrayHandleExtrude(int argc, char* argv[])
+int UnitTestArrayHandleXGCCoordinates(int argc, char* argv[])
 {
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleExtrude, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleXGCCoordinates, argc, argv);
 }

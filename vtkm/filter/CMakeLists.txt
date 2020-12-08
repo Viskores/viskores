@@ -26,7 +26,6 @@ set(common_headers
   MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
-  PolicyExtrude.h
   Threshold.h
   ThresholdPoints.h
   )
