@@ -1426,6 +1426,8 @@ private:
 
   using ScalarTypesToTest = vtkm::List<vtkm::UInt8, vtkm::FloatDefault>;
 
+  using VectorTypesToTest = vtkm::List<vtkm::Vec2i_8, vtkm::Vec3f_32>;
+
   using ZipTypesToTest = vtkm::List<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
                                     vtkm::Pair<vtkm::Float64, vtkm::Vec4ui_8>,
                                     vtkm::Pair<vtkm::Vec3f_32, vtkm::Vec4i_8>>;
@@ -1449,12 +1451,12 @@ private:
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleSOA as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsInput(),
-                                       HandleTypesToTest());
+                                       VectorTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleSOA as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
-        TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsOutput(), HandleTypesToTest());
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsOutput(), VectorTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;

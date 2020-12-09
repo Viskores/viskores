@@ -378,7 +378,7 @@ void TestArrayHandleSerialization()
     TestArrayHandleBasic(), vtkm::List<char, long, long long, unsigned long, unsigned long long>());
 
   std::cout << "Testing ArrayHandleSOA\n";
-  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesList());
+  vtkm::testing::Testing::TryTypes(TestArrayHandleSOA(), TestTypesListVec());
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
   vtkm::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(), TestTypesListScalar());

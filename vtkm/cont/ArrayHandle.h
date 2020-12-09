@@ -1002,6 +1002,10 @@ VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::DeviceAdapterId ArrayHandleGetDeviceAdapt
 template <typename T, typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT ArrayHandleNewStyle : public internal::ArrayHandleBase
 {
+  VTKM_STATIC_ASSERT_MSG(
+    (internal::IsValidArrayHandle<T, StorageTag_>::value),
+    "Attempted to create an ArrayHandle with an invalid type/storage combination.");
+
 public:
   using ValueType = T;
   using StorageTag = StorageTag_;
