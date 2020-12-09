@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionKokkos.h
   DeviceAdapterAlgorithmKokkos.h
   DeviceAdapterMemoryManagerKokkos.h
   DeviceAdapterRuntimeDetectorKokkos.h

@@ -16,7 +16,6 @@
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/internal/ParallelRadixSortInterface.h>
 
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
 #include <vtkm/cont/tbb/internal/ParallelSortTBB.hxx>

@@ -9,7 +9,6 @@
 ##============================================================================
 
 set(headers
-  ArrayManagerExecutionOpenMP.h
   DeviceAdapterAlgorithmOpenMP.h
   DeviceAdapterMemoryManagerOpenMP.h
   DeviceAdapterRuntimeDetectorOpenMP.h
