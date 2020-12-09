@@ -24,6 +24,12 @@ template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 
+template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32, vtkm::cont::StorageTagSOA>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
@@ -37,6 +43,12 @@ VTKM_DEPRECATED_SUPPRESS_END
 template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet&,
   const vtkm::cont::ArrayHandle<vtkm::Vec3f_64>&,
+  const vtkm::filter::FieldMetadata&,
+  vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
+
+template VTKM_FILTER_GRADIENT_EXPORT vtkm::cont::DataSet Gradient::DoExecute(
+  const vtkm::cont::DataSet&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64, vtkm::cont::StorageTagSOA>&,
   const vtkm::filter::FieldMetadata&,
   vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>);
 

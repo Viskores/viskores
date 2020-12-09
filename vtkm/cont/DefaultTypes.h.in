@@ -59,13 +59,10 @@ namespace internal
 using StorageListField = vtkm::ListAppend<
   vtkm::cont::StorageListBasic,
   vtkm::List<
-    vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag,
-    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                            vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>>;
+    vtkm::cont::StorageTagUniformPoints,
+    vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic,
+                                           vtkm::cont::StorageTagBasic>>>;
 
 }
 }
