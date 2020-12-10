@@ -153,7 +153,8 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   static std::shared_ptr<UnknownAHContainer> Make(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<Ss...>>& array)
   {
-    auto&& variant = array.GetStorage().GetArrayHandleVariant();
+    auto&& variant = vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<T, Ss>...>(array)
+                       .GetArrayHandleVariant();
     if (variant.IsValid())
     {
       return variant.CastAndCall(MakeUnknownAHContainerFunctor{});
@@ -518,7 +519,8 @@ struct UnknownArrayHandleMultplexerCastTry
         // but at this point we have already found a better array to put inside.
         return;
       }
-      outputArray.GetStorage().SetArray(unknownArray.AsArrayHandle<ArrayType>());
+      outputArray = vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<T, Ss>...>(
+        unknownArray.AsArrayHandle<ArrayType>());
       converted = true;
     }
   }
