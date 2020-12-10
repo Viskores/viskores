@@ -416,17 +416,20 @@ void TryAsMultiplexer(T, ArrayVariantType sourceArray)
   }
 }
 
-template <typename T>
-void TryDefaultType(T)
+struct TryDefaultType
 {
-  vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
+  template <typename T>
+  void operator()(T) const
+  {
+    vtkm::cont::VariantArrayHandle array = CreateArrayVariant(T());
 
-  CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS, true);
+    CheckArrayVariant(array, vtkm::VecTraits<T>::NUM_COMPONENTS, true);
 
-  TryNewInstance(T(), array);
+    TryNewInstance(T(), array);
 
-  TryAsMultiplexer(T(), array);
-}
+    TryAsMultiplexer(T(), array);
+  }
+};
 
 struct TryBasicVTKmType
 {
@@ -471,18 +474,18 @@ void TryCastToArrayHandle(const ArrayHandleType& array)
 void TryCastToArrayHandle()
 {
   std::cout << "  Normal array handle." << std::endl;
-  vtkm::Id buffer[ARRAY_SIZE];
+  vtkm::FloatDefault buffer[ARRAY_SIZE];
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    buffer[index] = TestValue(index, vtkm::Id());
+    buffer[index] = TestValue(index, vtkm::FloatDefault());
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Id> array =
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> array =
     vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE, vtkm::CopyFlag::On);
   TryCastToArrayHandle(array);
 
   std::cout << "  Cast array handle." << std::endl;
-  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleCast(array, vtkm::FloatDefault()));
+  TryCastToArrayHandle(vtkm::cont::make_ArrayHandleCast<vtkm::Id>(array));
 
   std::cout << "  Composite vector array handle." << std::endl;
   TryCastToArrayHandle(vtkm::cont::make_ArrayHandleCompositeVector(array, array));
@@ -495,7 +498,8 @@ void TryCastToArrayHandle()
   TryCastToArrayHandle(countingArray);
 
   std::cout << "  Group vec array handle" << std::endl;
-  vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::Id>, 2> groupVecArray(array);
+  vtkm::cont::ArrayHandleGroupVec<vtkm::cont::ArrayHandle<vtkm::FloatDefault>, 2> groupVecArray(
+    array);
   TryCastToArrayHandle(groupVecArray);
 
   std::cout << "  Implicit array handle." << std::endl;
@@ -522,18 +526,7 @@ void TryCastToArrayHandle()
 void TestVariantArrayHandle()
 {
   std::cout << "Try common types with default type lists." << std::endl;
-  std::cout << "*** vtkm::Id **********************" << std::endl;
-  TryDefaultType(vtkm::Id());
-  std::cout << "*** vtkm::FloatDefault ************" << std::endl;
-  TryDefaultType(vtkm::FloatDefault());
-  std::cout << "*** vtkm::Float32 *****************" << std::endl;
-  TryDefaultType(vtkm::Float32());
-  std::cout << "*** vtkm::Float64 *****************" << std::endl;
-  TryDefaultType(vtkm::Float64());
-  std::cout << "*** vtkm::Vec<Float32,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec3f_32());
-  std::cout << "*** vtkm::Vec<Float64,3> **********" << std::endl;
-  TryDefaultType(vtkm::Vec3f_64());
+  vtkm::testing::Testing::TryTypes(TryDefaultType{}, VTKM_DEFAULT_TYPE_LIST{});
 
   std::cout << "Try exemplar VTK-m types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryBasicVTKmType());

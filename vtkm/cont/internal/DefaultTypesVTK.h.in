@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtkmDefaultTypes_h
-#define vtkmDefaultTypes_h
+#ifndef vtk_m_cont_internal_DefaultTypesVTK_h
+#define vtk_m_cont_internal_DefaultTypesVTK_h
 
 // This configures the default types to use when compiling VTK-m for use as an
 // accelerator in VTK.
@@ -105,4 +105,4 @@ using CellListAllOutVTK = vtkm::ListAppend<CellListStructuredOutVTK, CellListUns
 #define VTKM_DEFAULT_CELL_SET_LIST_STRUCTURED ::tovtkm::CellListStructuredInVTK
 #define VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED ::tovtkm::CellListUnstructuredInVTK
 
-#endif //vtkmDefaultTypes_h
+#endif //vtk_m_cont_internal_DefaultTypesVTK_h

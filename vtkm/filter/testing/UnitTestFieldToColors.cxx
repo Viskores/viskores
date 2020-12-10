@@ -18,7 +18,7 @@ void TestFieldToColors()
 {
   //faux input field
   constexpr vtkm::Id nvals = 8;
-  constexpr int data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
+  constexpr vtkm::FloatDefault data[nvals] = { -1, 0, 10, 20, 30, 40, 50, 60 };
 
   //build a color table with clamping off and verify that sampling works
   vtkm::Range range{ 0.0, 50.0 };
