@@ -14,8 +14,10 @@
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/ArrayHandleXGCCoordinates.h>
+#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <algorithm>
 
 namespace
 {
@@ -90,6 +92,22 @@ void verify_results(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S> const& handle)
   }
 }
 
+template <typename T>
+void test_range(const vtkm::cont::ArrayHandleXGCCoordinates<T>& handle)
+{
+  auto x_result = std::minmax_element(correct_x_coords.begin(), correct_x_coords.end());
+  auto y_result = std::minmax_element(correct_y_coords.begin(), correct_y_coords.end());
+  auto z_result = std::minmax_element(correct_z_coords.begin(), correct_z_coords.end());
+
+  auto range = vtkm::cont::ArrayRangeCompute(handle);
+  auto rangePortal = range.ReadPortal();
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(0).Min, *x_result.first), "incorrect min for x");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(0).Max, *x_result.second), "incorrect max for x");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(1).Min, *y_result.first), "incorrect min for y");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(1).Max, *y_result.second), "incorrect max for y");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(2).Min, *z_result.first), "incorrect min for z");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(2).Max, *z_result.second), "incorrect max for z");
+}
 
 int TestArrayHandleXGCCoordinates()
 {
@@ -110,6 +128,8 @@ int TestArrayHandleXGCCoordinates()
   vtkm::worklet::DispatcherMapField<CopyValue> dispatcher;
   dispatcher.Invoke(coords, output1D);
   verify_results(output1D);
+
+  test_range(coords);
 
   return 0;
 }
