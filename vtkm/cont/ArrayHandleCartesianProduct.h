@@ -221,6 +221,8 @@ class Storage<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<ST1, ST2, 
   }
 
 public:
+  VTKM_STORAGE_NO_RESIZE;
+
   using ReadPortalType =
     vtkm::internal::ArrayPortalCartesianProduct<vtkm::Vec<T, 3>,
                                                 typename Storage1::ReadPortalType,
@@ -243,22 +245,6 @@ public:
     return (Storage1::GetNumberOfValues(Buffers1(buffers)) *
             Storage2::GetNumberOfValues(Buffers2(buffers)) *
             Storage3::GetNumberOfValues(Buffers3(buffers)));
-  }
-
-  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
-                                      vtkm::CopyFlag vtkmNotUsed(preserve),
-                                      vtkm::cont::Token& vtkmNotUsed(token))
-  {
-    if (numValues == GetNumberOfValues(buffers))
-    {
-      // In general, we don't allow resizing of the array, but if it was "allocated" to the
-      // correct size, we will allow that.
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
-    }
   }
 
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,

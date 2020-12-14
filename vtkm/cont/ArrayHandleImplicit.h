@@ -97,11 +97,10 @@ struct VTKM_ALWAYS_EXPORT
 {
   VTKM_IS_TRIVIALLY_COPYABLE(ArrayPortalType);
 
-  using ReadPortalType = ArrayPortalType;
+  VTKM_STORAGE_NO_RESIZE;
+  VTKM_STORAGE_NO_WRITE_PORTAL;
 
-  // Note that this portal is almost certainly read-only, so you will probably get
-  // an error if you try to write to it.
-  using WritePortalType = ArrayPortalType;
+  using ReadPortalType = ArrayPortalType;
 
   // Implicit array has one buffer that should be empty (NumberOfBytes = 0), but holds
   // the metadata for the array.
@@ -112,34 +111,11 @@ struct VTKM_ALWAYS_EXPORT
     return buffers[0].GetMetaData<ArrayPortalType>().GetNumberOfValues();
   }
 
-  VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
-                                      vtkm::cont::internal::Buffer* buffers,
-                                      vtkm::CopyFlag,
-                                      vtkm::cont::Token&)
-  {
-    if (numValues == GetNumberOfValues(buffers))
-    {
-      // In general, we don't allow resizing of the array, but if it was "allocated" to the
-      // correct size, we will allow that.
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadAllocation("Cannot allocate/resize implicit arrays.");
-    }
-  }
-
   VTKM_CONT static ReadPortalType CreateReadPortal(const vtkm::cont::internal::Buffer* buffers,
                                                    vtkm::cont::DeviceAdapterId,
                                                    vtkm::cont::Token&)
   {
     return buffers[0].GetMetaData<ArrayPortalType>();
-  }
-
-  VTKM_CONT static WritePortalType CreateWritePortal(const vtkm::cont::internal::Buffer*,
-                                                     vtkm::cont::DeviceAdapterId,
-                                                     vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadAllocation("Cannot write to implicit arrays.");
   }
 };
 
