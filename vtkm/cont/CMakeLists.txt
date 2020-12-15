@@ -220,6 +220,11 @@ vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK
   )
 if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
   set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
+  vtkm_option(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
+  mark_as_advanced(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+    set(VTKM_ADD_XGC_DEFAULT_TYPES TRUE)
+  endif()
 endif()
 
 vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT
