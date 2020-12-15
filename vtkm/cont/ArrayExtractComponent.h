@@ -53,7 +53,7 @@ ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
 
   using BaseComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
   vtkm::Id numValues = src.GetNumberOfValues();
-  vtkm::cont::ArrayHandleStride<BaseComponentType> dest;
+  vtkm::cont::ArrayHandleBasic<BaseComponentType> dest;
   dest.Allocate(numValues);
   auto srcPortal = src.ReadPortal();
   auto destPortal = dest.WritePortal();
@@ -63,7 +63,7 @@ ArrayExtractComponentFallback(const vtkm::cont::ArrayHandle<T, S>& src,
                    vtkm::internal::GetFlatVecComponent(srcPortal.Get(arrayIndex), componentIndex));
   }
 
-  return dest;
+  return vtkm::cont::ArrayHandleStride<BaseComponentType>(dest, numValues, 1, 0);
 }
 
 template <typename S>

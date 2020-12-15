@@ -157,6 +157,8 @@ class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagStride>
   using StrideInfo = vtkm::internal::ArrayStrideInfo;
 
 public:
+  VTKM_STORAGE_NO_RESIZE;
+
   using ReadPortalType = vtkm::internal::ArrayPortalStrideRead<T>;
   using WritePortalType = vtkm::internal::ArrayPortalStrideWrite<T>;
 
@@ -166,42 +168,6 @@ public:
   }
 
   VTKM_CONT static vtkm::IdComponent GetNumberOfBuffers() { return 2; }
-
-  VTKM_CONT static void ResizeBuffers(vtkm::Id numberOfValues,
-                                      vtkm::cont::internal::Buffer* buffers,
-                                      vtkm::CopyFlag preserve,
-                                      vtkm::cont::Token& token)
-  {
-    StrideInfo& info = GetInfo(buffers);
-
-    vtkm::Id arraySize;
-    if (info.Modulo < 1)
-    {
-      if (info.Offset < info.Stride)
-      {
-        arraySize = numberOfValues * info.Stride;
-      }
-      else
-      {
-        // This is probably an uncommon case. Offset is most often used to identify components
-        // in AOS arrays. That must not be the case here.
-        arraySize = (numberOfValues - 1) * info.Stride + info.Offset + 1;
-      }
-    }
-    else
-    {
-      arraySize = info.Modulo;
-    }
-    if (info.Divisor > 1)
-    {
-      arraySize /= info.Divisor;
-    }
-
-    buffers[1].SetNumberOfBytes(
-      vtkm::internal::NumberOfValuesToNumberOfBytes<T>(arraySize), preserve, token);
-
-    info.NumberOfValues = numberOfValues;
-  }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(const vtkm::cont::internal::Buffer* buffers)
   {

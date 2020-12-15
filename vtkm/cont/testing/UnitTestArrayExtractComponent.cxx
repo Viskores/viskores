@@ -150,7 +150,7 @@ void DoTest()
     {
       vtkm::cont::ArrayHandleStride<vtkm::Vec3f> strideArray(
         originalArray, ARRAY_SIZE, STRIDE, offset);
-      CheckOutputArray(strideArray);
+      CheckInputArray(strideArray);
     }
   }
 
