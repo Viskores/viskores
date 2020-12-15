@@ -206,6 +206,10 @@ set(gradient_sources_device
   GradientVector.cxx
   )
 
+if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  list(APPEND gradient_sources_device GradientXGCPoints.cxx)
+endif()
+
 vtkm_pyexpander_generated_file(ClipWithFieldSkipInstantiations.hxx)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionSkipInstantiations.hxx)
 vtkm_pyexpander_generated_file(ClipWithFieldSignedInteger.cxx)

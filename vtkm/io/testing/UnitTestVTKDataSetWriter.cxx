@@ -97,6 +97,19 @@ struct CheckSameCoordinateSystem
     VTKM_TEST_ASSERT(
       test_equal_portals(originalPortal.GetThirdPortal(), filePortal.GetThirdPortal()));
   }
+
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+  // Just added to fix compilation errors when building with XGC types added to default types
+  // An XGC data set wouldn't be directly written out to a VTK file, it should be converted
+  // to an explicit grid first and then written out.
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagXGCCoordinates>&,
+                  const vtkm::cont::CoordinateSystem&) const
+  {
+    throw vtkm::cont::ErrorBadType("UnitTestVTKDataSetWriter::CheckSameCoordinateSystem() shouldn't"
+                                   " be called on ArrayHandleXGCCoordinates");
+  }
+#endif
 };
 
 void CheckWrittenReadData(const vtkm::cont::DataSet& originalData,
