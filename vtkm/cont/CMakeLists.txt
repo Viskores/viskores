@@ -44,6 +44,7 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
+  ArrayHandleXGCCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
