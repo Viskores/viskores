@@ -327,6 +327,12 @@ function(vtkm_add_target_information uses_vtkm_target)
     endforeach()
   endif()
 
+  if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  elseif(TARGET vtkm::kokkos_hip)
+    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "HIP")
+  endif()
+
   # Validate that following:
   #   - We are building with CUDA enabled.
   #   - We are building a VTK-m library or a library that wants cross library
@@ -335,7 +341,6 @@ function(vtkm_add_target_information uses_vtkm_target)
   # This is required as CUDA currently doesn't support device side calls across
   # dynamic library boundaries.
   if((TARGET vtkm::cuda) OR (TARGET vtkm::kokkos_cuda))
-    set_source_files_properties(${VTKm_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
     foreach(target IN LISTS targets)
       get_target_property(lib_type ${target} TYPE)
       if (TARGET vtkm::cuda)

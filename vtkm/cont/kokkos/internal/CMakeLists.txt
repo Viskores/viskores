@@ -32,7 +32,10 @@ if (TARGET vtkm::kokkos)
 
   if (TARGET vtkm::kokkos_cuda)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE CUDA)
+  elseif(TARGET vtkm::kokkos_hip)
+    set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
   endif()
+
 else()
   target_sources(vtkm_cont PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorKokkos.cxx)

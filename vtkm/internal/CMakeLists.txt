@@ -33,6 +33,8 @@ endif()
 
 if (TARGET vtkm::kokkos_cuda)
   set(VTKM_KOKKOS_CUDA ON)
+elseif(TARGET vtkm::kokkos_hip)
+  set(VTKM_KOKKOS_HIP ON)
 endif()
 
 set(VTKM_ENABLE_LOGGING ${VTKm_ENABLE_LOGGING})
