@@ -201,11 +201,8 @@ ENV GITLAB_CI=1 \
 COPY . /src
 ENV $gitlab_env
 WORKDIR /src
-#Let git fix issues from copying across OS (such as windows EOL)
-#Note that this will remove any changes not committed.
 RUN echo "$before_script || true" >> /setup-gitlab-env.sh && \
     echo "$script || true" >> /run-gitlab-stage.sh && \
-    git reset --hard && \
     bash /setup-gitlab-env.sh
 ''')
 
