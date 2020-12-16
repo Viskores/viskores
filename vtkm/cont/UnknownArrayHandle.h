@@ -93,6 +93,14 @@ static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
 }
 
 template <typename T, typename S>
+static void UnknownAHAllocate(void* mem, vtkm::Id numValues)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  arrayHandle->Allocate(numValues);
+}
+
+template <typename T, typename S>
 static std::vector<vtkm::cont::internal::Buffer>
 UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
 {
@@ -147,7 +155,10 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   DeleteType* DeleteFunction;
 
   using NewInstanceType = void*();
-  NewInstanceType& NewInstance;
+  NewInstanceType* NewInstance;
+
+  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>();
+  NewInstanceBasicType* NewInstanceBasic;
 
   using NumberOfValuesType = vtkm::Id(void*);
   NumberOfValuesType* NumberOfValues;
@@ -155,6 +166,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using NumberOfComponentsType = vtkm::IdComponent();
   NumberOfComponentsType* NumberOfComponents;
   NumberOfComponentsType* NumberOfComponentsFlat;
+
+  using AllocateType = void(void*, vtkm::Id);
+  AllocateType* Allocate;
 
   using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
                                                                          vtkm::IdComponent,
@@ -209,23 +223,45 @@ private:
   UnknownAHContainer(const UnknownAHContainer&) = default;
 
   template <typename T, typename S>
-  explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
-    : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
-    , ValueType(typeid(T))
-    , StorageType(typeid(S))
-    , BaseComponentType(typeid(typename vtkm::VecTraits<T>::BaseComponentType))
-    , DeleteFunction(detail::UnknownAHDelete<T, S>)
-    , NewInstance(detail::UnknownADNewInstance<T, S>)
-    , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
-    , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
-    , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
-    , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
-    , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
-    , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
-    , PrintSummary(detail::UnknownAHPrintSummary<T, S>)
-  {
-  }
+  explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array);
 };
+
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+{
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
+{
+  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
+                                 vtkm::cont::TypeToString<T>());
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic()
+{
+  return UnknownADNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+}
+
+template <typename T, typename S>
+inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
+  : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
+  , ValueType(typeid(T))
+  , StorageType(typeid(S))
+  , BaseComponentType(typeid(typename vtkm::VecTraits<T>::BaseComponentType))
+  , DeleteFunction(detail::UnknownAHDelete<T, S>)
+  , NewInstance(detail::UnknownADNewInstance<T, S>)
+  , NewInstanceBasic(detail::UnknownADNewInstanceBasic<T>)
+  , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
+  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
+  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
+  , Allocate(detail::UnknownAHAllocate<T, S>)
+  , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
+  , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
+  , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
+  , PrintSummary(detail::UnknownAHPrintSummary<T, S>)
+{
+}
 
 template <typename T, typename S>
 inline std::shared_ptr<UnknownAHContainer> MakeUnknownAHContainerFunctor::operator()(
@@ -296,15 +332,16 @@ public:
   /// returns a new `UnknownArrayHandle` for it. This method is convenient when
   /// creating output arrays that should be the same type as some input array.
   ///
-  VTKM_CONT UnknownArrayHandle NewInstance() const
-  {
-    UnknownArrayHandle newArray;
-    if (this->Container)
-    {
-      newArray.Container = this->Container->MakeNewInstance();
-    }
-    return newArray;
-  }
+  VTKM_CONT UnknownArrayHandle NewInstance() const;
+
+  /// \brief Create a new `ArrayHandleBasic` with the same `ValueType` as this array.
+  ///
+  /// This method creates a new `ArrayHandleBasic` that has the same `ValueType` as the
+  /// array held by this one and returns a new `UnknownArrayHandle` for it. This method
+  /// is convenient when creating output arrays that should have the same types of values
+  /// of the input, but the input might not be a writable array.
+  ///
+  VTKM_CONT UnknownArrayHandle NewInstanceBasic() const;
 
   /// Returns true if this array matches the ValueType template argument.
   ///
@@ -364,17 +401,7 @@ public:
 
   /// \brief Returns the number of values in the array.
   ///
-  VTKM_CONT vtkm::Id GetNumberOfValues() const
-  {
-    if (this->Container)
-    {
-      return this->Container->NumberOfValues(this->Container->ArrayHandlePointer);
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
   /// \brief Returns the number of components for each value in the array.
   ///
@@ -384,17 +411,7 @@ public:
   /// at runtime, this method will return 0 (because there is no consistent answer).
   ///
   VTKM_CONT VTKM_DEPRECATED(1.6, "Use GetNumberOfComponentsFlat.") vtkm::IdComponent
-    GetNumberOfComponents() const
-  {
-    if (this->Container)
-    {
-      return this->Container->NumberOfComponents();
-    }
-    else
-    {
-      return 0;
-    }
-  }
+    GetNumberOfComponents() const;
 
   /// \brief Returns the total number of components for each value in the array.
   ///
@@ -408,18 +425,11 @@ public:
   /// If the array holds `Vec`-like objects that have the number of components that can vary
   /// at runtime, this method will return 0 (because there is no consistent answer).
   ///
-  VTKM_CONT
-  vtkm::IdComponent GetNumberOfComponentsFlat() const
-  {
-    if (this->Container)
-    {
-      return this->Container->NumberOfComponentsFlat();
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT vtkm::IdComponent GetNumberOfComponentsFlat() const;
+
+  /// \brief Reallocate the data in the array.
+  ///
+  VTKM_CONT void Allocate(vtkm::Id numValues) const;
 
   /// \brief Determine if the contained array can be passed to the given array type.
   ///
@@ -586,35 +596,13 @@ public:
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
-  VTKM_CONT void ReleaseResourcesExecution() const
-  {
-    if (this->Container)
-    {
-      this->Container->ReleaseResourcesExecution(this->Container->ArrayHandlePointer);
-    }
-  }
+  VTKM_CONT void ReleaseResourcesExecution() const;
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT void ReleaseResources() const
-  {
-    if (this->Container)
-    {
-      this->Container->ReleaseResources(this->Container->ArrayHandlePointer);
-    }
-  }
+  VTKM_CONT void ReleaseResources() const;
 
-  VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const
-  {
-    if (this->Container)
-    {
-      this->Container->PrintSummary(this->Container->ArrayHandlePointer, out, full);
-    }
-    else
-    {
-      out << "null UnknownArrayHandle" << std::endl;
-    }
-  }
+  VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const;
 };
 
 //=============================================================================

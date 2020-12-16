@@ -94,6 +94,103 @@ VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(std::type_index type)
   return this->Container->BaseComponentType == type;
 }
 
+VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
+{
+  UnknownArrayHandle newArray;
+  if (this->Container)
+  {
+    newArray.Container = this->Container->MakeNewInstance();
+  }
+  return newArray;
+}
+
+VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
+{
+  UnknownArrayHandle newArray;
+  if (this->Container)
+  {
+    newArray.Container = this->Container->NewInstanceBasic();
+  }
+  return newArray;
+}
+
+VTKM_CONT vtkm::Id UnknownArrayHandle::GetNumberOfValues() const
+{
+  if (this->Container)
+  {
+    return this->Container->NumberOfValues(this->Container->ArrayHandlePointer);
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponents() const
+{
+  if (this->Container)
+  {
+    return this->Container->NumberOfComponents();
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+VTKM_CONT vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponentsFlat() const
+{
+  if (this->Container)
+  {
+    return this->Container->NumberOfComponentsFlat();
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+VTKM_CONT void UnknownArrayHandle::Allocate(vtkm::Id numValues) const
+{
+  if (this->Container)
+  {
+    this->Container->Allocate(this->Container->ArrayHandlePointer, numValues);
+  }
+  else
+  {
+    throw vtkm::cont::ErrorBadAllocation(
+      "Cannot allocate UnknownArrayHandle that does not contain an array.");
+  }
+}
+
+VTKM_CONT void UnknownArrayHandle::ReleaseResourcesExecution() const
+{
+  if (this->Container)
+  {
+    this->Container->ReleaseResourcesExecution(this->Container->ArrayHandlePointer);
+  }
+}
+
+VTKM_CONT void UnknownArrayHandle::ReleaseResources() const
+{
+  if (this->Container)
+  {
+    this->Container->ReleaseResources(this->Container->ArrayHandlePointer);
+  }
+}
+
+VTKM_CONT void UnknownArrayHandle::PrintSummary(std::ostream& out, bool full) const
+{
+  if (this->Container)
+  {
+    this->Container->PrintSummary(this->Container->ArrayHandlePointer, out, full);
+  }
+  else
+  {
+    out << "null UnknownArrayHandle" << std::endl;
+  }
+}
+
 namespace detail
 {
 
