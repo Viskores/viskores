@@ -83,6 +83,17 @@ VTKM_CONT bool UnknownArrayHandle::IsStorageTypeImpl(std::type_index type) const
   return this->Container->StorageType == type;
 }
 
+VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(std::type_index type) const
+{
+  if (!this->Container)
+  {
+    return false;
+  }
+
+  // Needs optimization based on platform. OSX cannot compare typeid across translation units?
+  return this->Container->BaseComponentType == type;
+}
+
 namespace detail
 {
 

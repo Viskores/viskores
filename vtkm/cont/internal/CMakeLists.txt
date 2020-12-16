@@ -10,6 +10,7 @@
 
 set(headers
   ArrayHandleExecutionManager.h
+  ArrayPortalFromExtractedComponents.h
   ArrayPortalFromIterators.h
   ArrayTransfer.h
   AtomicInterfaceControl.h
