@@ -42,6 +42,13 @@ struct TotalNumComponents<T, vtkm::VecTraitsTagSingleComponent>
   static constexpr vtkm::IdComponent value = 1;
 };
 
+template <typename T>
+using FlattenVec = vtkm::Vec<typename vtkm::VecTraits<T>::BaseComponentType,
+                             vtkm::internal::TotalNumComponents<T>::value>;
+
+template <typename T>
+using IsFlatVec = typename std::is_same<T, FlattenVec<T>>::type;
+
 namespace detail
 {
 
@@ -191,15 +198,6 @@ VTKM_EXEC_CONT void CopyVecFlatToNested(const vtkm::Vec<T, N>& flatVec, NestedVe
 
 } // namespace internal
 
-namespace detail
-{
-
-template <typename T>
-using VecFlatSuperclass = vtkm::Vec<typename vtkm::VecTraits<T>::BaseComponentType,
-                                    vtkm::internal::TotalNumComponents<T>::value>;
-
-} // namespace detail
-
 /// \brief Treat a `Vec` or `Vec`-like object as a flat `Vec`.
 ///
 /// The `VecFlat` template wraps around another object that is a nested `Vec` object
@@ -222,10 +220,14 @@ using VecFlatSuperclass = vtkm::Vec<typename vtkm::VecTraits<T>::BaseComponentTy
 /// the `IsSizeStatic` field is `vtkm::VecTraitsTagSizeStatic` (that is, the `NUM_COMPONENTS`
 /// constant is defined).
 ///
+template <typename T, bool = internal::IsFlatVec<T>::value>
+class VecFlat;
+
+// Case where T is not a vtkm::Vec<T, N> where T is not a Vec.
 template <typename T>
-class VecFlat : public detail::VecFlatSuperclass<T>
+class VecFlat<T, false> : public internal::FlattenVec<T>
 {
-  using Superclass = detail::VecFlatSuperclass<T>;
+  using Superclass = internal::FlattenVec<T>;
 
 public:
   using Superclass::Superclass;
@@ -247,6 +249,32 @@ public:
   }
 };
 
+// Specialization of VecFlat where the Vec is already flat Vec
+template <typename T>
+class VecFlat<T, true> : public T
+{
+public:
+  using T::T;
+  VecFlat() = default;
+
+  VTKM_EXEC_CONT VecFlat(const T& src)
+    : T(src)
+  {
+  }
+
+  VTKM_EXEC_CONT VecFlat& operator=(const T& src)
+  {
+    this->T::operator=(src);
+    return *this;
+  }
+
+  VTKM_EXEC_CONT VecFlat& operator=(T&& src)
+  {
+    this->T::operator=(std::move(src));
+    return *this;
+  }
+};
+
 /// \brief Converts a `Vec`-like object to a `VecFlat`.
 ///
 template <typename T>
@@ -256,12 +284,12 @@ VTKM_EXEC_CONT vtkm::VecFlat<T> make_VecFlat(const T& vec)
 }
 
 template <typename T>
-struct TypeTraits<vtkm::VecFlat<T>> : TypeTraits<detail::VecFlatSuperclass<T>>
+struct TypeTraits<vtkm::VecFlat<T>> : TypeTraits<internal::FlattenVec<T>>
 {
 };
 
 template <typename T>
-struct VecTraits<vtkm::VecFlat<T>> : VecTraits<detail::VecFlatSuperclass<T>>
+struct VecTraits<vtkm::VecFlat<T>> : VecTraits<internal::FlattenVec<T>>
 {
 };
 
