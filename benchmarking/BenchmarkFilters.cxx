@@ -776,15 +776,15 @@ struct Arg : vtkm::cont::internal::option::Arg
   {
     if ((option.arg != nullptr) && (option.arg[0] != '\0'))
     {
+      return vtkm::cont::internal::option::ARG_OK;
+    }
+    else
+    {
       if (msg)
       {
         std::cerr << "Option " << option.name << " requires an argument." << std::endl;
       }
       return vtkm::cont::internal::option::ARG_ILLEGAL;
-    }
-    else
-    {
-      return vtkm::cont::internal::option::ARG_OK;
     }
   }
 };
