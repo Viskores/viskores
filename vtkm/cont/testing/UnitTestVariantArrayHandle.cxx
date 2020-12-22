@@ -241,13 +241,13 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
   arrayVariant.CopyTo(castArray1);
   VTKM_TEST_ASSERT(arrayVariant.CanConvert<ArrayHandleType>(), "Did not query handle correctly.");
   //VTKM_TEST_ASSERT(array == castArray1, "Did not get back same array.");
-  auto result = vtkm::cont::testing::test_equal_ArrayHandles(array, castArray1);
+  auto result = test_equal_ArrayHandles(array, castArray1);
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 
 
   ArrayHandleType castArray2 = arrayVariant.Cast<ArrayHandleType>();
   //VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
-  result = vtkm::cont::testing::test_equal_ArrayHandles(array, castArray2);
+  result = test_equal_ArrayHandles(array, castArray2);
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 

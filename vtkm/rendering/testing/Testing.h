@@ -24,13 +24,6 @@
 #include <sstream>
 #include <vector>
 
-namespace vtkm
-{
-namespace rendering
-{
-namespace testing
-{
-
 /// \brief Tests multiple image files against a provided view pointer for differences
 ///
 /// This function tests multiple files provided via fileNames against the rendered
@@ -43,17 +36,16 @@ namespace testing
 /// missing the image will be generated for that file and the test will continue.
 ///
 template <typename ViewType>
-inline vtkm::cont::testing::TestEqualResult test_equal_images(
-  const std::shared_ptr<ViewType> view,
-  const std::vector<std::string>& fileNames,
-  const vtkm::FloatDefault& threshold = 0.05f,
-  const vtkm::IdComponent& radius = 0,
-  const bool& average = false,
-  const bool& writeDiff = true,
-  const bool& returnOnPass = true)
+inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
+                                         const std::vector<std::string>& fileNames,
+                                         const vtkm::FloatDefault& threshold = 0.05f,
+                                         const vtkm::IdComponent& radius = 0,
+                                         const bool& average = false,
+                                         const bool& writeDiff = true,
+                                         const bool& returnOnPass = true)
 {
   vtkm::cont::ScopedRuntimeDeviceTracker runtime(vtkm::cont::DeviceAdapterTagAny{});
-  vtkm::cont::testing::TestEqualResult testResults;
+  TestEqualResult testResults;
 
   if (fileNames.empty())
   {
@@ -70,7 +62,7 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
   for (const auto& fileName : fileNames)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "testing image file: " << fileName);
-    vtkm::cont::testing::TestEqualResult imageResult;
+    TestEqualResult imageResult;
     vtkm::cont::DataSet imageDataSet;
 
     try
@@ -139,13 +131,12 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
 }
 
 template <typename ViewType>
-inline vtkm::cont::testing::TestEqualResult test_equal_images(
-  const std::shared_ptr<ViewType> view,
-  const std::string& fileName,
-  const vtkm::FloatDefault& threshold = 0.05f,
-  const vtkm::IdComponent& radius = 0,
-  const bool& average = false,
-  const bool& writeDiff = true)
+inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
+                                         const std::string& fileName,
+                                         const vtkm::FloatDefault& threshold = 0.05f,
+                                         const vtkm::IdComponent& radius = 0,
+                                         const bool& average = false,
+                                         const bool& writeDiff = true)
 {
   std::vector<std::string> fileNames{ fileName };
   return test_equal_images(view, fileNames, threshold, radius, average, writeDiff);
@@ -165,14 +156,13 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images(
 /// test_equal_images will then be called on the vector of valid fileNames
 ///
 template <typename ViewType>
-inline vtkm::cont::testing::TestEqualResult test_equal_images_matching_name(
-  const std::shared_ptr<ViewType> view,
-  const std::string& fileName,
-  const vtkm::FloatDefault& threshold = 0.05f,
-  const vtkm::IdComponent& radius = 0,
-  const bool& average = false,
-  const bool& writeDiff = true,
-  const bool& returnOnPass = true)
+inline TestEqualResult test_equal_images_matching_name(const std::shared_ptr<ViewType> view,
+                                                       const std::string& fileName,
+                                                       const vtkm::FloatDefault& threshold = 0.05f,
+                                                       const vtkm::IdComponent& radius = 0,
+                                                       const bool& average = false,
+                                                       const bool& writeDiff = true,
+                                                       const bool& returnOnPass = true)
 {
   std::vector<std::string> fileNames;
   auto found = fileName.rfind(".");
@@ -196,9 +186,5 @@ inline vtkm::cont::testing::TestEqualResult test_equal_images_matching_name(
   return test_equal_images(view, fileNames, threshold, radius, average, writeDiff, returnOnPass);
 }
 
-
-} // vtkm::rendering::testing
-} // vtkm::rendering
-} // vtkm
 
 #endif // vtk_m_rendering_testing_Testing_h

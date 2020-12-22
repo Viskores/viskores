@@ -336,6 +336,10 @@ private:
   }
 };
 
+}
+}
+} // namespace vtkm::cont::testing
+
 //============================================================================
 class TestEqualResult
 {
@@ -638,8 +642,5 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
 
   return result;
 }
-}
-}
-} // namespace vtkm::cont::testing
 
 #endif //vtk_m_cont_internal_Testing_h

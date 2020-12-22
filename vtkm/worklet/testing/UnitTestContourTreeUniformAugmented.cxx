@@ -80,8 +80,7 @@ private:
                             vtkm::worklet::contourtree_augmented::IdArrayType& expected,
                             std::string arrayName) const
   {
-    vtkm::cont::testing::TestEqualResult testResult =
-      vtkm::cont::testing::test_equal_ArrayHandles(result, expected);
+    TestEqualResult testResult = test_equal_ArrayHandles(result, expected);
     if (!testResult)
     {
       std::cout << arrayName << " sizes; result=" << result.GetNumberOfValues()
