@@ -341,30 +341,6 @@ private:
 } // namespace vtkm::cont::testing
 
 //============================================================================
-class TestEqualResult
-{
-public:
-  void PushMessage(const std::string& msg) { this->Messages.push_back(msg); }
-
-  const std::vector<std::string>& GetMessages() const { return this->Messages; }
-
-  std::string GetMergedMessage() const
-  {
-    std::string msg;
-    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
-      msg += (msg.empty() ? "" : ": ");
-      msg += next;
-    });
-
-    return msg;
-  }
-
-  operator bool() const { return this->Messages.empty(); }
-
-private:
-  std::vector<std::string> Messages;
-};
-
 namespace detail
 {
 

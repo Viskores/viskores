@@ -247,8 +247,7 @@ void CheckCastToArrayHandle(const ArrayHandleType& array)
 
   ArrayHandleType castArray2 = arrayVariant.Cast<ArrayHandleType>();
   //VTKM_TEST_ASSERT(array == castArray2, "Did not get back same array.");
-  result = test_equal_ArrayHandles(array, castArray2);
-  VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(array, castArray2));
 }
 
 // A vtkm::Vec if NumComps > 1, otherwise a scalar
