@@ -114,6 +114,42 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
   return newArray;
 }
 
+VTKM_CONT std::string UnknownArrayHandle::GetValueTypeName() const
+{
+  if (this->Container)
+  {
+    return vtkm::cont::TypeToString(this->Container->ValueType);
+  }
+  else
+  {
+    return "";
+  }
+}
+
+VTKM_CONT std::string UnknownArrayHandle::GetBaseComponentTypeName() const
+{
+  if (this->Container)
+  {
+    return vtkm::cont::TypeToString(this->Container->BaseComponentType);
+  }
+  else
+  {
+    return "";
+  }
+}
+
+VTKM_CONT std::string UnknownArrayHandle::GetStorageTypeName() const
+{
+  if (this->Container)
+  {
+    return vtkm::cont::TypeToString(this->Container->StorageType);
+  }
+  else
+  {
+    return "";
+  }
+}
+
 VTKM_CONT vtkm::Id UnknownArrayHandle::GetNumberOfValues() const
 {
   if (this->Container)
