@@ -21,16 +21,31 @@ namespace
 
 struct DoMapFieldMerge
 {
-  bool CalledMap = false;
-
-  template <typename T, typename S>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& inputArray,
+  template <typename BaseComponentType>
+  void operator()(BaseComponentType,
+                  const vtkm::cont::UnknownArrayHandle& input,
                   const vtkm::worklet::internal::KeysBase& keys,
-                  vtkm::cont::VariantArrayHandle& output)
+                  vtkm::cont::UnknownArrayHandle& output,
+                  bool& called) const
   {
-    vtkm::cont::ArrayHandle<T> outputArray = vtkm::worklet::AverageByKey::Run(keys, inputArray);
-    output = vtkm::cont::VariantArrayHandle(outputArray);
-    this->CalledMap = true;
+    if (!input.IsBaseComponentType<BaseComponentType>())
+    {
+      return;
+    }
+
+    output = input.NewInstanceBasic();
+    output.Allocate(keys.GetInputRange());
+
+    vtkm::IdComponent numComponents = input.GetNumberOfComponentsFlat();
+    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+    {
+      vtkm::worklet::AverageByKey::Run(
+        keys,
+        input.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::On),
+        output.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::Off));
+    }
+
+    called = true;
   }
 };
 
@@ -43,10 +58,14 @@ bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
   vtkm::cont::VariantArrayHandle outputArray;
-  DoMapFieldMerge functor;
-  inputField.GetData().ResetTypes<vtkm::TypeListAll>().CastAndCall(
-    vtkm::filter::PolicyDefault::StorageList{}, functor, keys, outputArray);
-  if (functor.CalledMap)
+  bool calledMap = false;
+  vtkm::ListForEach(DoMapFieldMerge{},
+                    vtkm::TypeListScalarAll{},
+                    inputField.GetData(),
+                    keys,
+                    outputArray,
+                    calledMap);
+  if (calledMap)
   {
     outputField = vtkm::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
   }
@@ -54,7 +73,7 @@ bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
   }
-  return functor.CalledMap;
+  return calledMap;
 }
 
 bool vtkm::filter::MapFieldMergeAverage(const vtkm::cont::Field& inputField,

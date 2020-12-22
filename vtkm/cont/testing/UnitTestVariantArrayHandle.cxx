@@ -71,6 +71,8 @@ namespace vtkm
 template <>
 struct VecTraits<UnusualType> : VecTraits<UnusualType::T>
 {
+  using ComponentType = UnusualType;
+  using BaseComponentType = UnusualType;
 };
 
 } // namespace vtkm
@@ -145,9 +147,9 @@ void BasicArrayVariantChecks(const vtkm::cont::VariantArrayHandleBase<TypeList>&
 {
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
                    "Dynamic array reports unexpected size.");
-  std::cout << "array.GetNumberOfComponents() = " << array.GetNumberOfComponents() << ", "
+  std::cout << "array.GetNumberOfComponents() = " << array.GetNumberOfComponentsFlat() << ", "
             << "numComponents = " << numComponents << "\n";
-  VTKM_TEST_ASSERT(array.GetNumberOfComponents() == numComponents,
+  VTKM_TEST_ASSERT(array.GetNumberOfComponentsFlat() == numComponents,
                    "Dynamic array reports unexpected number of components.");
 }
 

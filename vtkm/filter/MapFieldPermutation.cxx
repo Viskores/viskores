@@ -53,20 +53,36 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
 
 struct DoMapFieldPermutation
 {
-  bool CalledMap = false;
-
-  template <typename T, typename S>
-  void operator()(const vtkm::cont::ArrayHandle<T, S>& inputArray,
+  template <typename BaseComponentType>
+  void operator()(BaseComponentType,
+                  const vtkm::cont::UnknownArrayHandle& input,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
-                  vtkm::cont::VariantArrayHandle& output,
-                  vtkm::Float64 invalidValue)
+                  vtkm::cont::UnknownArrayHandle& output,
+                  vtkm::Float64 invalidValue,
+                  bool& called) const
   {
-    vtkm::cont::ArrayHandle<T> outputArray;
-    MapPermutationWorklet<T> worklet(vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
+    if (!input.IsBaseComponentType<BaseComponentType>())
+    {
+      return;
+    }
+
+    output = input.NewInstanceBasic();
+    output.Allocate(permutation.GetNumberOfValues());
+
+    vtkm::IdComponent numComponents = input.GetNumberOfComponentsFlat();
+
+    MapPermutationWorklet<BaseComponentType> worklet(
+      vtkm::cont::internal::CastInvalidValue<BaseComponentType>(invalidValue));
     vtkm::cont::Invoker invoke;
-    invoke(worklet, permutation, inputArray, outputArray);
-    output = vtkm::cont::VariantArrayHandle(outputArray);
-    this->CalledMap = true;
+    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+    {
+      invoke(worklet,
+             permutation,
+             input.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::On),
+             output.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::Off));
+    }
+
+    called = true;
   }
 };
 
@@ -81,10 +97,15 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
   vtkm::cont::VariantArrayHandle outputArray;
-  DoMapFieldPermutation functor;
-  inputField.GetData().ResetTypes<vtkm::TypeListAll>().CastAndCall(
-    vtkm::filter::PolicyDefault::StorageList{}, functor, permutation, outputArray, invalidValue);
-  if (functor.CalledMap)
+  bool calledMap = false;
+  vtkm::ListForEach(DoMapFieldPermutation{},
+                    vtkm::TypeListScalarAll{},
+                    inputField.GetData(),
+                    permutation,
+                    outputArray,
+                    invalidValue,
+                    calledMap);
+  if (calledMap)
   {
     outputField = vtkm::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
   }
@@ -92,7 +113,7 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
   }
-  return functor.CalledMap;
+  return calledMap;
 }
 
 VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(

@@ -13,6 +13,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/TypeTraits.h>
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>
@@ -435,6 +436,44 @@ using ArrayHandleMultiplexerFromListTag VTKM_DEPRECATED(
 ///
 template <typename List>
 using ArrayHandleMultiplexerFromList = vtkm::ListApply<List, ArrayHandleMultiplexer>;
+
+namespace internal
+{
+
+namespace detail
+{
+
+struct ArrayExtractComponentMultiplexerFunctor
+{
+  template <typename ArrayType>
+  auto operator()(const ArrayType& array,
+                  vtkm::IdComponent componentIndex,
+                  vtkm::CopyFlag allowCopy) const
+    -> decltype(vtkm::cont::ArrayExtractComponent(array, componentIndex, allowCopy))
+  {
+    return vtkm::cont::internal::ArrayExtractComponentImpl<typename ArrayType::StorageTag>{}(
+      array, componentIndex, allowCopy);
+  }
+};
+
+} // namespace detail
+
+template <typename... Ss>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagMultiplexer<Ss...>>
+{
+  template <typename T>
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagMultiplexer<Ss...>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy)
+  {
+    vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<T, Ss>...> array(src);
+    return array.GetArrayHandleVariant().CastAndCall(
+      detail::ArrayExtractComponentMultiplexerFunctor{}, componentIndex, allowCopy);
+  }
+};
+
+} // namespace internal
 
 } // namespace cont
 

@@ -68,7 +68,7 @@ struct AverageByKey
   template <typename InArrayType, typename OutArrayType>
   VTKM_CONT static void Run(const vtkm::worklet::internal::KeysBase& keys,
                             const InArrayType& inValues,
-                            OutArrayType& outAverages)
+                            const OutArrayType& outAverages)
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "AverageByKey::Run");
 

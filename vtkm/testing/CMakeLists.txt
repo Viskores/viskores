@@ -42,6 +42,7 @@ set(unit_tests
   UnitTestVecFromPortal.cxx
   UnitTestVecFromPortalPermute.cxx
   UnitTestVectorAnalysis.cxx
+  UnitTestVecFlat.cxx
   UnitTestVecTraits.cxx
   UnitTestVecVariable.cxx
   )

@@ -34,6 +34,7 @@ vtkm_declare_headers(${headers})
 set(unit_tests
   UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
+  UnitTestArrayExtractComponent.cxx
   UnitTestArrayGetValues.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx

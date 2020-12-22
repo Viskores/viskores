@@ -12,6 +12,7 @@
 
 #include <vtkm/Assert.h>
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Token.h>
@@ -358,6 +359,103 @@ VTKM_CONT
   return ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>(
     first, second, third);
 }
+
+//--------------------------------------------------------------------------------
+// Specialization of ArrayExtractComponent
+namespace internal
+{
+
+template <typename... STs>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagCartesianProduct<STs...>>
+{
+  template <typename T>
+  vtkm::cont::ArrayHandleStride<T> AdjustStrideForComponent(
+    const vtkm::cont::ArrayHandleStride<T>& componentArray,
+    const vtkm::Id3& dims,
+    vtkm::IdComponent component,
+    vtkm::Id totalNumValues) const
+  {
+    VTKM_ASSERT(componentArray.GetModulo() == 0);
+    VTKM_ASSERT(componentArray.GetDivisor() == 1);
+
+    vtkm::Id modulo = 0;
+    if (component < 2)
+    {
+      modulo = dims[component];
+    }
+
+    vtkm::Id divisor = 1;
+    for (vtkm::IdComponent c = 0; c < component; ++c)
+    {
+      divisor *= dims[c];
+    }
+
+    return vtkm::cont::ArrayHandleStride<T>(componentArray.GetBasicArray(),
+                                            totalNumValues,
+                                            componentArray.GetStride(),
+                                            componentArray.GetOffset(),
+                                            modulo,
+                                            divisor);
+  }
+
+  template <typename T, typename ST, typename CartesianArrayType>
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>
+  GetStrideForComponentArray(const vtkm::cont::ArrayHandle<T, ST>& componentArray,
+                             const CartesianArrayType& cartesianArray,
+                             vtkm::IdComponent subIndex,
+                             vtkm::IdComponent productIndex,
+                             vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> strideArray =
+      ArrayExtractComponentImpl<ST>{}(componentArray, subIndex, allowCopy);
+    if ((strideArray.GetModulo() != 0) || (strideArray.GetDivisor() != 1))
+    {
+      // If the sub array has its own modulo and/or divisor, that will likely interfere
+      // with this math. Give up and fall back to simple copy.
+      constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
+      return vtkm::cont::internal::ArrayExtractComponentFallback(
+        cartesianArray, (productIndex * NUM_SUB_COMPONENTS) + subIndex, allowCopy);
+    }
+
+    vtkm::Id3 dims = { cartesianArray.GetFirstArray().GetNumberOfValues(),
+                       cartesianArray.GetSecondArray().GetNumberOfValues(),
+                       cartesianArray.GetThirdArray().GetNumberOfValues() };
+
+    return this->AdjustStrideForComponent(
+      strideArray, dims, productIndex, cartesianArray.GetNumberOfValues());
+  }
+
+  template <typename T>
+  vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType> operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, vtkm::cont::StorageTagCartesianProduct<STs...>>&
+      src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, STs>...> array(src);
+    constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
+    vtkm::IdComponent subIndex = componentIndex % NUM_SUB_COMPONENTS;
+    vtkm::IdComponent productIndex = componentIndex / NUM_SUB_COMPONENTS;
+
+    switch (productIndex)
+    {
+      case 0:
+        return this->GetStrideForComponentArray(
+          array.GetFirstArray(), array, subIndex, productIndex, allowCopy);
+      case 1:
+        return this->GetStrideForComponentArray(
+          array.GetSecondArray(), array, subIndex, productIndex, allowCopy);
+      case 2:
+        return this->GetStrideForComponentArray(
+          array.GetThirdArray(), array, subIndex, productIndex, allowCopy);
+      default:
+        throw vtkm::cont::ErrorBadValue("Invalid component index to ArrayExtractComponent.");
+    }
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

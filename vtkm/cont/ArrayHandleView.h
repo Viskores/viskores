@@ -13,6 +13,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/Deprecated.h>
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
 
@@ -328,6 +329,10 @@ public:
     : Superclass(StorageType(array, startIndex, numValues))
   {
   }
+
+  VTKM_CONT ArrayHandleType GetSourceArray() const { return this->GetStorage().GetArray(); }
+
+  VTKM_CONT vtkm::Id GetStartIndex() const { return this->GetStorage().GetStartIndex(); }
 };
 
 template <typename ArrayHandleType>
@@ -339,6 +344,39 @@ ArrayHandleView<ArrayHandleType> make_ArrayHandleView(const ArrayHandleType& arr
 
   return ArrayHandleView<ArrayHandleType>(array, startIndex, numValues);
 }
+
+namespace internal
+{
+
+template <typename StorageTag>
+struct ArrayExtractComponentImpl<StorageTagView<StorageTag>>
+{
+  template <typename T>
+  using StrideArrayType =
+    vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>;
+
+  template <typename T>
+  StrideArrayType<T> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagView<StorageTag>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleView<vtkm::cont::ArrayHandle<T, StorageTag>> srcArray(src);
+    StrideArrayType<T> subArray =
+      ArrayExtractComponentImpl<StorageTag>{}(srcArray.GetSourceArray(), componentIndex, allowCopy);
+    // Narrow the array by adjusting the size and offset.
+    return StrideArrayType<T>(subArray.GetBasicArray(),
+                              srcArray.GetNumberOfValues(),
+                              subArray.GetStride(),
+                              subArray.GetOffset() +
+                                (subArray.GetStride() * srcArray.GetStartIndex()),
+                              subArray.GetModulo(),
+                              subArray.GetDivisor());
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

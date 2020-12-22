@@ -10,6 +10,7 @@
 #ifndef vtk_m_ArrayHandleCompositeVector_h
 #define vtk_m_ArrayHandleCompositeVector_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/Deprecated.h>
@@ -454,6 +455,68 @@ VTKM_CONT ArrayHandleCompositeVector<ArrayTs...> make_ArrayHandleCompositeVector
   (void)checkArrayHandles;
   return ArrayHandleCompositeVector<ArrayTs...>(arrays...);
 }
+
+//--------------------------------------------------------------------------------
+// Specialization of ArrayExtractComponent
+namespace internal
+{
+
+namespace detail
+{
+
+template <typename T>
+struct ExtractComponentCompositeVecFunctor
+{
+  using ResultArray = vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>;
+
+  ResultArray operator()(vtkm::IdComponent, vtkm::IdComponent, vtkm::CopyFlag) const
+  {
+    throw vtkm::cont::ErrorBadValue("Invalid component index given to ArrayExtractComponent.");
+  }
+
+  template <typename A0, typename... As>
+  ResultArray operator()(vtkm::IdComponent compositeIndex,
+                         vtkm::IdComponent subIndex,
+                         vtkm::CopyFlag allowCopy,
+                         const A0& array0,
+                         const As&... arrays) const
+  {
+    if (compositeIndex == 0)
+    {
+      return vtkm::cont::internal::ArrayExtractComponentImpl<typename A0::StorageTag>{}(
+        array0, subIndex, allowCopy);
+    }
+    else
+    {
+      return (*this)(--compositeIndex, subIndex, allowCopy, arrays...);
+    }
+  }
+};
+
+} // namespace detail
+
+template <typename... StorageTags>
+struct ArrayExtractComponentImpl<StorageTagCompositeVec<StorageTags...>>
+{
+  template <typename T, vtkm::IdComponent NUM_COMPONENTS>
+  typename detail::ExtractComponentCompositeVecFunctor<T>::ResultArray operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, NUM_COMPONENTS>,
+                                  vtkm::cont::StorageTagCompositeVec<StorageTags...>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<T, StorageTags>...> array(src);
+    constexpr vtkm::IdComponent NUM_SUB_COMPONENTS = vtkm::VecFlat<T>::NUM_COMPONENTS;
+
+    return array.GetArrayTuple().Apply(detail::ExtractComponentCompositeVecFunctor<T>{},
+                                       componentIndex / NUM_SUB_COMPONENTS,
+                                       componentIndex % NUM_SUB_COMPONENTS,
+                                       allowCopy);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

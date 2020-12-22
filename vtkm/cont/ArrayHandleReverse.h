@@ -11,6 +11,7 @@
 #ifndef vtk_m_cont_ArrayHandleReverse_h
 #define vtk_m_cont_ArrayHandleReverse_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
@@ -205,6 +206,39 @@ VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleTyp
 {
   return ArrayHandleReverse<HandleType>(handle);
 }
+
+namespace internal
+{
+
+template <typename StorageTag>
+struct ArrayExtractComponentImpl<vtkm::cont::StorageTagReverse<StorageTag>>
+{
+  template <typename T>
+  using StrideArrayType =
+    vtkm::cont::ArrayHandleStride<typename vtkm::VecTraits<T>::BaseComponentType>;
+
+  template <typename T>
+  StrideArrayType<T> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagReverse<StorageTag>>& src,
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy) const
+  {
+    vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<T, StorageTag>> srcArray(src);
+    StrideArrayType<T> subArray =
+      ArrayExtractComponentImpl<StorageTag>{}(srcArray.GetSourceArray(), componentIndex, allowCopy);
+    // Reverse the array by starting at the end and striding backward
+    return StrideArrayType<T>(subArray.GetBasicArray(),
+                              srcArray.GetNumberOfValues(),
+                              -subArray.GetStride(),
+                              subArray.GetOffset() +
+                                (subArray.GetStride() * (subArray.GetNumberOfValues() - 1)),
+                              subArray.GetModulo(),
+                              subArray.GetDivisor());
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

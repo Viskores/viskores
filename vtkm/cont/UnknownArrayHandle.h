@@ -12,11 +12,14 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
-
+#include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/DefaultTypes.h>
+
+#include <vtkm/cont/internal/ArrayPortalFromExtractedComponents.h>
 
 #include <memory>
 #include <typeindex>
@@ -70,6 +73,44 @@ static vtkm::IdComponent UnknownAHNumberOfComponents()
   return UnknownAHNumberOfComponentsImpl<T>::Value;
 }
 
+template <typename T, typename StaticSize = typename vtkm::VecTraits<T>::IsSizeStatic>
+struct UnknownAHNumberOfComponentsFlatImpl;
+template <typename T>
+struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic>
+{
+  static constexpr vtkm::IdComponent Value = vtkm::VecFlat<T>::NUM_COMPONENTS;
+};
+template <typename T>
+struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable>
+{
+  static constexpr vtkm::IdComponent Value = 0;
+};
+
+template <typename T>
+static vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
+{
+  return UnknownAHNumberOfComponentsFlatImpl<T>::Value;
+}
+
+template <typename T, typename S>
+static void UnknownAHAllocate(void* mem, vtkm::Id numValues)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  arrayHandle->Allocate(numValues);
+}
+
+template <typename T, typename S>
+static std::vector<vtkm::cont::internal::Buffer>
+UnknownAHExtractComponent(void* mem, vtkm::IdComponent componentIndex, vtkm::CopyFlag allowCopy)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  auto componentArray = vtkm::cont::ArrayExtractComponent(*arrayHandle, componentIndex, allowCopy);
+  vtkm::cont::internal::Buffer* buffers = componentArray.GetBuffers();
+  return std::vector<vtkm::cont::internal::Buffer>(buffers, buffers + 2);
+}
+
 template <typename T, typename S>
 static void UnknownAHReleaseResources(void* mem)
 {
@@ -108,18 +149,31 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
 
   std::type_index ValueType;
   std::type_index StorageType;
+  std::type_index BaseComponentType;
 
   using DeleteType = void(void*);
   DeleteType* DeleteFunction;
 
   using NewInstanceType = void*();
-  NewInstanceType& NewInstance;
+  NewInstanceType* NewInstance;
+
+  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>();
+  NewInstanceBasicType* NewInstanceBasic;
 
   using NumberOfValuesType = vtkm::Id(void*);
   NumberOfValuesType* NumberOfValues;
 
   using NumberOfComponentsType = vtkm::IdComponent();
   NumberOfComponentsType* NumberOfComponents;
+  NumberOfComponentsType* NumberOfComponentsFlat;
+
+  using AllocateType = void(void*, vtkm::Id);
+  AllocateType* Allocate;
+
+  using ExtractComponentType = std::vector<vtkm::cont::internal::Buffer>(void*,
+                                                                         vtkm::IdComponent,
+                                                                         vtkm::CopyFlag);
+  ExtractComponentType* ExtractComponent;
 
   using ReleaseResourcesType = void(void*);
   ReleaseResourcesType* ReleaseResources;
@@ -169,20 +223,45 @@ private:
   UnknownAHContainer(const UnknownAHContainer&) = default;
 
   template <typename T, typename S>
-  explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
-    : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
-    , ValueType(typeid(T))
-    , StorageType(typeid(S))
-    , DeleteFunction(detail::UnknownAHDelete<T, S>)
-    , NewInstance(detail::UnknownADNewInstance<T, S>)
-    , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
-    , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
-    , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
-    , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
-    , PrintSummary(detail::UnknownAHPrintSummary<T, S>)
-  {
-  }
+  explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array);
 };
+
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+{
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
+{
+  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
+                                 vtkm::cont::TypeToString<T>());
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic()
+{
+  return UnknownADNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+}
+
+template <typename T, typename S>
+inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array)
+  : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
+  , ValueType(typeid(T))
+  , StorageType(typeid(S))
+  , BaseComponentType(typeid(typename vtkm::VecTraits<T>::BaseComponentType))
+  , DeleteFunction(detail::UnknownAHDelete<T, S>)
+  , NewInstance(detail::UnknownADNewInstance<T, S>)
+  , NewInstanceBasic(detail::UnknownADNewInstanceBasic<T>)
+  , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
+  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
+  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
+  , Allocate(detail::UnknownAHAllocate<T, S>)
+  , ExtractComponent(detail::UnknownAHExtractComponent<T, S>)
+  , ReleaseResources(detail::UnknownAHReleaseResources<T, S>)
+  , ReleaseResourcesExecution(detail::UnknownAHReleaseResourcesExecution<T, S>)
+  , PrintSummary(detail::UnknownAHPrintSummary<T, S>)
+{
+}
 
 template <typename T, typename S>
 inline std::shared_ptr<UnknownAHContainer> MakeUnknownAHContainerFunctor::operator()(
@@ -233,6 +312,7 @@ class VTKM_CONT_EXPORT UnknownArrayHandle
 
   VTKM_CONT bool IsValueTypeImpl(std::type_index type) const;
   VTKM_CONT bool IsStorageTypeImpl(std::type_index type) const;
+  VTKM_CONT bool IsBaseComponentTypeImpl(std::type_index type) const;
 
 public:
   VTKM_CONT UnknownArrayHandle() = default;
@@ -252,15 +332,16 @@ public:
   /// returns a new `UnknownArrayHandle` for it. This method is convenient when
   /// creating output arrays that should be the same type as some input array.
   ///
-  VTKM_CONT UnknownArrayHandle NewInstance() const
-  {
-    UnknownArrayHandle newArray;
-    if (this->Container)
-    {
-      newArray.Container = this->Container->MakeNewInstance();
-    }
-    return newArray;
-  }
+  VTKM_CONT UnknownArrayHandle NewInstance() const;
+
+  /// \brief Create a new `ArrayHandleBasic` with the same `ValueType` as this array.
+  ///
+  /// This method creates a new `ArrayHandleBasic` that has the same `ValueType` as the
+  /// array held by this one and returns a new `UnknownArrayHandle` for it. This method
+  /// is convenient when creating output arrays that should have the same types of values
+  /// of the input, but the input might not be a writable array.
+  ///
+  VTKM_CONT UnknownArrayHandle NewInstanceBasic() const;
 
   /// Returns true if this array matches the ValueType template argument.
   ///
@@ -276,6 +357,23 @@ public:
   VTKM_CONT bool IsStorageType() const
   {
     return this->IsStorageTypeImpl(typeid(StorageType));
+  }
+
+  /// \brief Returns true if this array's `ValueType` has the provided base component type.
+  ///
+  /// The base component type is the recursive component type of any `Vec`-like object. So
+  /// if the array's `ValueType` is `vtkm::Vec<vtkm::Float32, 3>`, then the base component
+  /// type will be `vtkm::Float32`. Likewise, if the `ValueType` is
+  /// `vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>, 2>`, then the base component type is still
+  /// `vtkm::Float32`.
+  ///
+  /// If the `ValueType` is not `Vec`-like type, then the base component type is the same.
+  /// So a `ValueType` of `vtkm::Float32` has a base component type of `vtkm::Float32`.
+  ///
+  template <typename BaseComponentType>
+  VTKM_CONT bool IsBaseComponentType() const
+  {
+    return this->IsBaseComponentTypeImpl(typeid(BaseComponentType));
   }
 
   /// Returns true if this array matches the ArrayHandleType template argument.
@@ -303,17 +401,7 @@ public:
 
   /// \brief Returns the number of values in the array.
   ///
-  VTKM_CONT vtkm::Id GetNumberOfValues() const
-  {
-    if (this->Container)
-    {
-      return this->Container->NumberOfValues(this->Container->ArrayHandlePointer);
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
   /// \brief Returns the number of components for each value in the array.
   ///
@@ -322,17 +410,26 @@ public:
   /// If the array holds `Vec`-like objects that have the number of components that can vary
   /// at runtime, this method will return 0 (because there is no consistent answer).
   ///
-  VTKM_CONT vtkm::IdComponent GetNumberOfComponents() const
-  {
-    if (this->Container)
-    {
-      return this->Container->NumberOfComponents();
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT VTKM_DEPRECATED(1.6, "Use GetNumberOfComponentsFlat.") vtkm::IdComponent
+    GetNumberOfComponents() const;
+
+  /// \brief Returns the total number of components for each value in the array.
+  ///
+  /// If the array holds `vtkm::Vec` objects, this will return the total number of components
+  /// in each value assuming the object is flattened out to one level of `Vec` objects.
+  /// If the array holds a basic C type (such as `float`), this will return 1.
+  /// If the array holds a simple `Vec` (such as `vtkm::Vec3f`), this will return the number
+  /// of components (in this case 3).
+  /// If the array holds a hierarchy of `Vec`s (such as `vtkm::Vec<vtkm::Vec3f, 2>`), this will
+  /// return the total number of vecs (in this case 6).
+  /// If the array holds `Vec`-like objects that have the number of components that can vary
+  /// at runtime, this method will return 0 (because there is no consistent answer).
+  ///
+  VTKM_CONT vtkm::IdComponent GetNumberOfComponentsFlat() const;
+
+  /// \brief Reallocate the data in the array.
+  ///
+  VTKM_CONT void Allocate(vtkm::Id numValues) const;
 
   /// \brief Determine if the contained array can be passed to the given array type.
   ///
@@ -396,6 +493,97 @@ public:
   VTKM_DEPRECATED_SUPPRESS_END
 #endif
 
+  /// \brief Extract a component of the array.
+  ///
+  /// This method returns an array that holds the data for a given flat component of the data.
+  /// The `BaseComponentType` has to be specified and must match the contained array (i.e.
+  /// the result of `IsBaseComponentType` must succeed for the given type).
+  ///
+  /// This method treats each value in the array as a flat `Vec` even if it is a `Vec` of
+  /// `Vec`s. For example, if the array actually holds values of type `Vec<Vec<T, 3>, 2>`,
+  /// it is treated as if it holds a `Vec<T, 6>`. See `vtkm::VecFlat` for details on how
+  /// vectors are flattened.
+  ///
+  /// The point of using `ExtractComponent` over `AsArrayHandle` is that it drastically reduces
+  /// the amount of types you have to try. Most of the type the base component type is one of
+  /// the basic C types (i.e. `int`, `long`, `float`, etc.). You do not need to know what shape
+  /// the containing `Vec` is in, nor do you need to know the actual storage of the array.
+  ///
+  /// Note that the type of the array returned is `ArrayHandleStride`. Using this type of
+  /// array handle has a slight overhead over basic arrays like `ArrayHandleBasic` and
+  /// `ArrayHandleSOA`.
+  ///
+  /// When extracting a component of an array, a shallow pointer to the data is returned
+  /// whenever possible. However, in some circumstances it is impossible to conform the
+  /// array. In these cases, the data are by default copied. If copying the data would
+  /// cause problems (for example, you are writing into the array), you can select the
+  /// optional `allowCopy` flag to `vtkm::CopyFlag::Off`. In this case, an exception
+  /// will be thrown if the result cannot be represented by a shallow copy.
+  ///
+  template <typename BaseComponentType>
+  VTKM_CONT vtkm::cont::ArrayHandleStride<BaseComponentType> ExtractComponent(
+    vtkm::IdComponent componentIndex,
+    vtkm::CopyFlag allowCopy = vtkm::CopyFlag::On) const
+  {
+    using ComponentArrayType = vtkm::cont::ArrayHandleStride<BaseComponentType>;
+    if (!this->IsBaseComponentType<BaseComponentType>())
+    {
+      VTKM_LOG_CAST_FAIL(*this, ComponentArrayType);
+      throwFailedDynamicCast(vtkm::cont::TypeToString(*this),
+                             "component array of " + vtkm::cont::TypeToString<BaseComponentType>());
+    }
+
+    auto buffers = this->Container->ExtractComponent(
+      this->Container->ArrayHandlePointer, componentIndex, allowCopy);
+    return ComponentArrayType(buffers);
+  }
+
+  ///@{
+  ///  \brief Convenience portal to access all components (in control environment).
+  ///
+  /// This method returns a portal that allows you to access all the values in the contained
+  /// portal by knowing only the type of the base component. The `BaseComponentType` has to
+  /// be specified and must match the contained array (i.e.the result of `IsBaseComponentType`
+  ///  must succeed for the given type).
+  ///
+  /// Note that the returned portal is not thread safe, but you may safely create multiple portals
+  /// for multiple threads.
+  ///
+  template <typename BaseComponentType>
+  VTKM_CONT vtkm::cont::internal::ArrayPortalFromExtractedComponents<
+    typename vtkm::cont::ArrayHandleStride<BaseComponentType>::ReadPortalType>
+  ReadPortalForBaseComponentType() const
+  {
+    vtkm::IdComponent numComponents = this->GetNumberOfComponentsFlat();
+    vtkm::cont::internal::ArrayPortalFromExtractedComponents<
+      typename vtkm::cont::ArrayHandleStride<BaseComponentType>::ReadPortalType>
+      portal(numComponents);
+    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+    {
+      auto array = this->ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::On);
+      portal.AddArray(array, array.ReadPortal());
+    }
+    return portal;
+  }
+
+  template <typename BaseComponentType>
+  VTKM_CONT vtkm::cont::internal::ArrayPortalFromExtractedComponents<
+    typename vtkm::cont::ArrayHandleStride<BaseComponentType>::WritePortalType>
+  WritePortalForBaseComponentType() const
+  {
+    vtkm::IdComponent numComponents = this->GetNumberOfComponentsFlat();
+    vtkm::cont::internal::ArrayPortalFromExtractedComponents<
+      typename vtkm::cont::ArrayHandleStride<BaseComponentType>::WritePortalType>
+      portal(numComponents);
+    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+    {
+      auto array = this->ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::Off);
+      portal.AddArray(array, array.WritePortal());
+    }
+    return portal;
+  }
+  ///@}
+
   /// \brief Call a functor using the underlying array type.
   ///
   /// `CastAndCall` attempts to cast the held array to a specific value type,
@@ -408,35 +596,13 @@ public:
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
   ///
-  VTKM_CONT void ReleaseResourcesExecution() const
-  {
-    if (this->Container)
-    {
-      this->Container->ReleaseResourcesExecution(this->Container->ArrayHandlePointer);
-    }
-  }
+  VTKM_CONT void ReleaseResourcesExecution() const;
 
   /// Releases all resources in both the control and execution environments.
   ///
-  VTKM_CONT void ReleaseResources() const
-  {
-    if (this->Container)
-    {
-      this->Container->ReleaseResources(this->Container->ArrayHandlePointer);
-    }
-  }
+  VTKM_CONT void ReleaseResources() const;
 
-  VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const
-  {
-    if (this->Container)
-    {
-      this->Container->PrintSummary(this->Container->ArrayHandlePointer, out, full);
-    }
-    else
-    {
-      out << "null UnknownArrayHandle" << std::endl;
-    }
-  }
+  VTKM_CONT void PrintSummary(std::ostream& out, bool full = false) const;
 };
 
 //=============================================================================
