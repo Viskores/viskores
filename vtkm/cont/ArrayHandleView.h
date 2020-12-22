@@ -182,6 +182,16 @@ public:
     return vtkm::cont::internal::CreateBuffers(vtkm::internal::ViewIndices(startIndex, numValues),
                                                array);
   }
+
+  VTKM_CONT static ArrayHandleType GetSourceArray(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return ArrayHandleType(buffers + 1);
+  }
+
+  VTKM_CONT static vtkm::Id GetStartIndex(const vtkm::cont::internal::Buffer* buffers)
+  {
+    return buffers[0].GetMetaData<vtkm::internal::ViewIndices>().StartIndex;
+  }
 };
 
 } // namespace internal
@@ -214,9 +224,15 @@ public:
   {
   }
 
-  VTKM_CONT ArrayHandleType GetSourceArray() const { return this->GetStorage().GetArray(); }
+  VTKM_CONT ArrayHandleType GetSourceArray() const
+  {
+    return this->GetStorage().GetSourceArray(this->GetBuffers());
+  }
 
-  VTKM_CONT vtkm::Id GetStartIndex() const { return this->GetStorage().GetStartIndex(); }
+  VTKM_CONT vtkm::Id GetStartIndex() const
+  {
+    return this->GetStorage().GetStartIndex(this->GetBuffers());
+  }
 };
 
 template <typename ArrayHandleType>
