@@ -16,10 +16,9 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
+#include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/DefaultTypes.h>
-
-#include <vtkm/cont/internal/ArrayPortalFromExtractedComponents.h>
 
 #include <memory>
 #include <typeindex>
@@ -553,51 +552,55 @@ public:
     return ComponentArrayType(buffers);
   }
 
-  ///@{
-  ///  \brief Convenience portal to access all components (in control environment).
+  /// \brief Extract the array knowing only the component type of the array.
   ///
-  /// This method returns a portal that allows you to access all the values in the contained
-  /// portal by knowing only the type of the base component. The `BaseComponentType` has to
-  /// be specified and must match the contained array (i.e.the result of `IsBaseComponentType`
-  ///  must succeed for the given type).
+  /// This method returns an `ArrayHandle` that points to the data in the array. This method
+  /// differs from `AsArrayHandle` because you do not need to know the exact `ValueType` and
+  /// `StorageTag` of the array. Instead, you only need to know the base component type.
   ///
-  /// Note that the returned portal is not thread safe, but you may safely create multiple portals
-  /// for multiple threads.
+  /// `ExtractArrayFromComponents` works by calling the `ExtractComponent` method and then
+  /// combining them together in a fancy `ArrayHandle`. This allows you to ignore the storage
+  /// type of the underlying array as well as any `Vec` structure of the value type. However,
+  /// it also places some limitations on how the data can be pulled from the data.
+  ///
+  /// First, you have to specify the base component type. This must match the data in the
+  /// underlying array (as reported by `IsBaseComponentType`).
+  ///
+  /// Second, the array returned will have the `Vec`s flattened. For example, if the underlying
+  /// array has a `ValueType` of `Vec<Vec<T, 3>, 3>`, then this method will tread the data as
+  /// if it was `Vec<T, 9>`. There is no way to get an array with `Vec` of `Vec` values.
+  ///
+  /// Third, because the `Vec` length of the values in the returned `ArrayHandle` must be
+  /// determined at runtime, that can break many assumptions of using `Vec` objects. The
+  /// type is not going to be a `Vec<T,N>` type but rather an internal class that is intended
+  /// to behave like that. The type should behave mostly like a `Vec`, but will have some
+  /// differences that can lead to unexpected behavior. For example, this `Vec`-like object
+  /// will not have a `NUM_COMPONENTS` constant static expression because it is not known
+  /// at compile time. (Use the `GetNumberOfComponents` method instead.) And for the same
+  /// reason you will not be able to pass these objects to classes overloaded or templated
+  /// on the `Vec` type. Also, these `Vec`-like objects cannot be created as new instances.
+  /// Thus, you will likely have to iterate over all components rather than do operations on
+  /// the whole `Vec`.
+  ///
+  /// Fourth, because `ExtractArrayFromComponents` uses `ExtractComponent` to pull data from
+  /// the array (which in turn uses `ArrayExtractComponent`), there are some `ArrayHandle` types
+  /// that will require copying data to a new array. This could be problematic in cases where
+  /// you want to write to the array. To prevent data from being copied, set the optional
+  ///  `allowCopy` to `vtkm::CopyFlag::Off`. This will cause an exception to be thrown if
+  /// the resulting array cannot reference the memory held in this `UnknownArrayHandle`.
   ///
   template <typename BaseComponentType>
-  VTKM_CONT vtkm::cont::internal::ArrayPortalFromExtractedComponents<
-    typename vtkm::cont::ArrayHandleStride<BaseComponentType>::ReadPortalType>
-  ReadPortalForBaseComponentType() const
+  VTKM_CONT vtkm::cont::ArrayHandleRecombineVec<BaseComponentType> ExtractArrayFromComponents(
+    vtkm::CopyFlag allowCopy = vtkm::CopyFlag::On) const
   {
+    vtkm::cont::ArrayHandleRecombineVec<BaseComponentType> result;
     vtkm::IdComponent numComponents = this->GetNumberOfComponentsFlat();
-    vtkm::cont::internal::ArrayPortalFromExtractedComponents<
-      typename vtkm::cont::ArrayHandleStride<BaseComponentType>::ReadPortalType>
-      portal(numComponents);
     for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
     {
-      auto array = this->ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::On);
-      portal.AddArray(array, array.ReadPortal());
+      result.AppendComponentArray(this->ExtractComponent<BaseComponentType>(cIndex, allowCopy));
     }
-    return portal;
+    return result;
   }
-
-  template <typename BaseComponentType>
-  VTKM_CONT vtkm::cont::internal::ArrayPortalFromExtractedComponents<
-    typename vtkm::cont::ArrayHandleStride<BaseComponentType>::WritePortalType>
-  WritePortalForBaseComponentType() const
-  {
-    vtkm::IdComponent numComponents = this->GetNumberOfComponentsFlat();
-    vtkm::cont::internal::ArrayPortalFromExtractedComponents<
-      typename vtkm::cont::ArrayHandleStride<BaseComponentType>::WritePortalType>
-      portal(numComponents);
-    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
-    {
-      auto array = this->ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::Off);
-      portal.AddArray(array, array.WritePortal());
-    }
-    return portal;
-  }
-  ///@}
 
   /// \brief Call a functor using the underlying array type.
   ///
