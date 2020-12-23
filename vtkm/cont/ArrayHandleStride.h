@@ -208,7 +208,7 @@ public:
 template <typename T>
 VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagStride);
 
-/// \brief An `ArrayHandle` that access a basic array with strides and offsets.
+/// \brief An `ArrayHandle` that accesses a basic array with strides and offsets.
 ///
 /// `ArrayHandleStride` is a simple `ArrayHandle` that accesses data with a prescribed
 /// stride and offset. You specify the stride and offset at construction. So when a portal

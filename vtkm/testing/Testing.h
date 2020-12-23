@@ -22,6 +22,7 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/VecVariable.h>
 
 #include <vtkm/cont/Logging.h>
 
@@ -538,19 +539,13 @@ namespace detail
 template <typename T1, typename T2>
 struct TestEqualImpl
 {
+  template <typename Dimensionality1, typename Dimensionality2>
   VTKM_EXEC_CONT bool DoIt(T1 vector1,
                            T2 vector2,
                            vtkm::Float64 tolerance,
-                           vtkm::TypeTraitsVectorTag) const
+                           Dimensionality1,
+                           Dimensionality2) const
   {
-    // If you get a compiler error here, it means you are comparing a vector to
-    // a scalar, in which case the types are non-comparable.
-    VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
-                                         vtkm::TypeTraitsVectorTag>::type::value) ||
-                             (std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
-                                           vtkm::TypeTraitsMatrixTag>::type::value),
-                           "Trying to compare a vector with a scalar.");
-
     using Traits1 = vtkm::VecTraits<T1>;
     using Traits2 = vtkm::VecTraits<T2>;
 
@@ -575,18 +570,33 @@ struct TestEqualImpl
     return true;
   }
 
-  VTKM_EXEC_CONT bool DoIt(T1 matrix1,
-                           T2 matrix2,
+  VTKM_EXEC_CONT bool DoIt(T1 scalar1,
+                           T2 scalar2,
                            vtkm::Float64 tolerance,
-                           vtkm::TypeTraitsMatrixTag) const
+                           vtkm::TypeTraitsScalarTag,
+                           vtkm::TypeTraitsScalarTag) const
   {
-    // For the purposes of comparison, treat matrices the same as vectors.
-    return this->DoIt(matrix1, matrix2, tolerance, vtkm::TypeTraitsVectorTag());
+    // Do all comparisons using 64-bit floats.
+    return test_equal(
+      static_cast<vtkm::Float64>(scalar1), static_cast<vtkm::Float64>(scalar2), tolerance);
   }
 
-  VTKM_EXEC_CONT bool DoIt(vtkm::Float64 value1,
-                           vtkm::Float64 value2,
-                           vtkm::Float64 tolerance) const
+  VTKM_EXEC_CONT bool operator()(T1 value1, T2 value2, vtkm::Float64 tolerance) const
+  {
+    return this->DoIt(value1,
+                      value2,
+                      tolerance,
+                      typename vtkm::TypeTraits<T1>::DimensionalityTag(),
+                      typename vtkm::TypeTraits<T2>::DimensionalityTag());
+  }
+};
+
+template <>
+struct TestEqualImpl<vtkm::Float64, vtkm::Float64>
+{
+  VTKM_EXEC_CONT bool operator()(vtkm::Float64 value1,
+                                 vtkm::Float64 value2,
+                                 vtkm::Float64 tolerance) const
   {
     // Handle non-finites. Normally, non-finites are never "equal" to each other (for valid
     // mathematical reasons), but for testing purposes if the two values are the same type of
@@ -632,47 +642,6 @@ struct TestEqualImpl
     {
       return false;
     }
-  }
-
-  VTKM_EXEC_CONT bool DoIt(T1 scalar1,
-                           T2 scalar2,
-                           vtkm::Float64 tolerance,
-                           vtkm::TypeTraitsScalarTag) const
-  {
-    // If you get a compiler error here, it means you are comparing a scalar to
-    // a vector, in which case the types are non-comparable.
-    VTKM_STATIC_ASSERT_MSG((std::is_same<typename vtkm::TypeTraits<T2>::DimensionalityTag,
-                                         vtkm::TypeTraitsScalarTag>::type::value),
-                           "Trying to compare a scalar with a vector.");
-
-    // Do all comparisons using 64-bit floats.
-    return DoIt(
-      static_cast<vtkm::Float64>(scalar1), static_cast<vtkm::Float64>(scalar2), tolerance);
-  }
-
-  VTKM_EXEC_CONT bool operator()(T1 value1, T2 value2, vtkm::Float64 tolerance) const
-  {
-    return this->DoIt(
-      value1, value2, tolerance, typename vtkm::TypeTraits<T1>::DimensionalityTag());
-  }
-};
-
-// Special cases of test equal where a scalar is compared with a Vec of size 1,
-// which we will allow.
-template <typename T>
-struct TestEqualImpl<vtkm::Vec<T, 1>, T>
-{
-  VTKM_EXEC_CONT bool operator()(vtkm::Vec<T, 1> value1, T value2, vtkm::Float64 tolerance) const
-  {
-    return test_equal(value1[0], value2, tolerance);
-  }
-};
-template <typename T>
-struct TestEqualImpl<T, vtkm::Vec<T, 1>>
-{
-  VTKM_EXEC_CONT bool operator()(T value1, vtkm::Vec<T, 1> value2, vtkm::Float64 tolerance) const
-  {
-    return test_equal(value1, value2[0], tolerance);
   }
 };
 

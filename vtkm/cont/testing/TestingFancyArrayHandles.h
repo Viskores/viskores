@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
@@ -222,12 +223,12 @@ public:
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn, FieldOut);
-    using ExecutionSignature = _2(_1);
+    using ExecutionSignature = void(_1, _2);
 
-    template <class ValueType>
-    VTKM_EXEC ValueType operator()(const ValueType& inValue) const
+    template <typename InValue, typename OutValue>
+    VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
     {
-      return inValue;
+      outValue = inValue;
     }
   };
 
@@ -1154,6 +1155,78 @@ private:
     }
   };
 
+  struct TestRecombineVecAsInput
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      vtkm::cont::ArrayHandle<T> baseArray;
+      baseArray.Allocate(ARRAY_SIZE);
+      SetPortal(baseArray.WritePortal());
+
+      using VTraits = vtkm::VecTraits<T>;
+      vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
+      for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
+      {
+        recombinedArray.AppendComponentArray(vtkm::cont::ArrayExtractComponent(baseArray, cIndex));
+      }
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
+
+      vtkm::cont::ArrayHandle<T> outputArray;
+      vtkm::cont::Invoker invoke;
+      invoke(PassThrough{}, recombinedArray, outputArray);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+    }
+  };
+
+  // RecombineVecAsOutput is a bit strange because it contains Vecs of
+  // lengths not known until runtime. The unintended consequence is that
+  // a simple FieldOut does not work because the variable Vec-like always
+  // has to point back to the array portals. Instead, you need to use something
+  // like a FieldInOut.
+  struct PassThroughWithInOut : public vtkm::worklet::WorkletMapField
+  {
+    using ControlSignature = void(FieldIn, FieldInOut);
+    using ExecutionSignature = void(_1, _2);
+
+    template <typename InValue, typename OutValue>
+    VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
+    {
+      outValue = inValue;
+    }
+  };
+
+  struct TestRecombineVecAsOutput
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      vtkm::cont::ArrayHandle<T> baseArray;
+      baseArray.Allocate(ARRAY_SIZE);
+      SetPortal(baseArray.WritePortal());
+
+      vtkm::cont::ArrayHandle<T> outputArray;
+      outputArray.Allocate(ARRAY_SIZE); // Cannot resize after recombine
+
+      using VTraits = vtkm::VecTraits<T>;
+      vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
+      for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
+      {
+        recombinedArray.AppendComponentArray(
+          vtkm::cont::ArrayExtractComponent(outputArray, cIndex));
+      }
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
+
+      vtkm::cont::Invoker invoke;
+      invoke(PassThroughWithInOut{}, baseArray, recombinedArray);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+    }
+  };
+
   struct TestZipAsInput
   {
     template <typename KeyType, typename ValueType>
@@ -1554,6 +1627,17 @@ private:
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecVariableAsOutput(),
         ScalarTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleRecombineVec as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestRecombineVecAsInput(), HandleTypesToTest{});
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleRecombineVec as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestRecombineVecAsOutput(),
+        HandleTypesToTest{});
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;

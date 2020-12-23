@@ -110,17 +110,6 @@ struct MetaDataManager
 
   MetaDataManager() = default;
 
-  MetaDataManager(void* data,
-                  const std::string& type,
-                  vtkm::cont::internal::detail::DeleterType* deleter,
-                  vtkm::cont::internal::detail::CopierType* copier)
-    : Data(data)
-    , Type(type)
-    , Deleter(deleter)
-    , Copier(copier)
-  {
-  }
-
   ~MetaDataManager()
   {
     if (this->Data != nullptr)
@@ -131,20 +120,23 @@ struct MetaDataManager
     }
   }
 
-  MetaDataManager(const MetaDataManager& src)
+  // We don't know how much information is the metadata, and copying it could be expensive.
+  // Thus, we want to be intentional about copying the metadata only for deep copies.
+  MetaDataManager(const MetaDataManager& src) = delete;
+  MetaDataManager& operator=(const MetaDataManager& src) = delete;
+
+  void Initialize(void* data,
+                  const std::string& type,
+                  vtkm::cont::internal::detail::DeleterType* deleter,
+                  vtkm::cont::internal::detail::CopierType* copier)
   {
-    if (src.Data != nullptr)
-    {
-      VTKM_ASSERT(src.Copier);
-      VTKM_ASSERT(src.Deleter);
-      this->Data = src.Copier(src.Data);
-      this->Type = src.Type;
-      this->Deleter = src.Deleter;
-      this->Copier = src.Copier;
-    }
+    Data = data;
+    Type = type;
+    Deleter = deleter;
+    Copier = copier;
   }
 
-  MetaDataManager& operator=(const MetaDataManager& src)
+  void DeepCopyFrom(const MetaDataManager& src)
   {
     if (this->Data != nullptr)
     {
@@ -162,7 +154,6 @@ struct MetaDataManager
       this->Deleter = src.Deleter;
       this->Copier = src.Copier;
     }
-    return *this;
   }
 };
 
@@ -599,7 +590,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
                 srcInternals->GetHostBuffer(srcLock).GetPointer(),
                 static_cast<std::size_t>(size));
 
-    destInternals->MetaData = srcInternals->MetaData;
+    destInternals->MetaData.DeepCopyFrom(srcInternals->MetaData);
   }
 
   static void CopyOnDevice(
@@ -641,7 +632,7 @@ struct VTKM_NEVER_EXPORT BufferHelper
 
     destInternals->SetNumberOfBytes(destLock, srcInternals->GetNumberOfBytes(srcLock));
 
-    destInternals->MetaData = srcInternals->MetaData;
+    destInternals->MetaData.DeepCopyFrom(srcInternals->MetaData);
   }
 };
 
@@ -710,7 +701,7 @@ void Buffer::SetMetaData(void* data,
                          detail::DeleterType* deleter,
                          detail::CopierType* copier) const
 {
-  this->Internals->MetaData = MetaDataManager(data, type, deleter, copier);
+  this->Internals->MetaData.Initialize(data, type, deleter, copier);
 }
 
 void* Buffer::GetMetaData(const std::string& type) const
@@ -881,7 +872,7 @@ void Buffer::DeepCopyFrom(const vtkm::cont::internal::Buffer& src) const
                                              src.Internals->GetNumberOfBytes(srcLock),
                                              vtkm::CopyFlag::Off,
                                              token);
-      dest.Internals->MetaData = src.Internals->MetaData;
+      dest.Internals->MetaData.DeepCopyFrom(src.Internals->MetaData);
     }
   }
 }
