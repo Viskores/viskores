@@ -343,6 +343,21 @@ public:
   ///
   VTKM_CONT UnknownArrayHandle NewInstanceBasic() const;
 
+  /// \brief Returns the name of the value type stored in the array.
+  ///
+  /// Returns an empty string if no array is stored.
+  VTKM_CONT std::string GetValueTypeName() const;
+
+  /// \brief Returns the name of the base component of the value type stored in the array.
+  ///
+  /// Returns an empty string if no array is stored.
+  VTKM_CONT std::string GetBaseComponentTypeName() const;
+
+  /// \brief Returns the name of the storage tag for the array.
+  ///
+  /// Returns an empty string if no array is stored.
+  VTKM_CONT std::string GetStorageTypeName() const;
+
   /// Returns true if this array matches the ValueType template argument.
   ///
   template <typename ValueType>

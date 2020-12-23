@@ -24,8 +24,8 @@ void TestLinear()
 
   vtkm::cont::Invoker invoker;
   invoker(vtkm::worklet::connectivity::PointerJumping{}, parents);
-  VTKM_TEST_ASSERT(vtkm::cont::testing::test_equal_ArrayHandles(
-    vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, N - 1), parents));
+  VTKM_TEST_ASSERT(
+    test_equal_ArrayHandles(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, N - 1), parents));
 }
 
 void TestPointerJumping()

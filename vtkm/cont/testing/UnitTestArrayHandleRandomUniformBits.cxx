@@ -27,7 +27,7 @@ void TestArrayHandleRandomUniformBits()
                                                                 0x6cb1a07c91f81109 });
 
 
-  auto result = vtkm::cont::testing::test_equal_ArrayHandles(actual0, expected0);
+  auto result = test_equal_ArrayHandles(actual0, expected0);
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 
   // initialize with seed = 100, could be "iteration number" in actual use case.
@@ -43,7 +43,7 @@ void TestArrayHandleRandomUniformBits()
                                                                   0xb7dcb35fea8c27ac,
                                                                   0x9c7b779e88270c45,
                                                                   0x7325b123dc32e01d });
-  auto result100 = vtkm::cont::testing::test_equal_ArrayHandles(actual100, expected100);
+  auto result100 = test_equal_ArrayHandles(actual100, expected100);
   VTKM_TEST_ASSERT(result, result.GetMergedMessage());
 }
 

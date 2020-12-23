@@ -68,16 +68,14 @@ public:
   template <typename ArrayHandle1, typename ArrayHandle2>
   VTKM_CONT void operator()(const ArrayHandle1& array1, const ArrayHandle2& array2) const
   {
-    auto result = vtkm::cont::testing::test_equal_ArrayHandles(array1, array2);
-    VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1, array2));
   }
 
   VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
                             const vtkm::cont::UnknownArrayHandle& array2) const
   {
-    auto result = vtkm::cont::testing::test_equal_ArrayHandles(
-      array1.ResetTypes<vtkm::TypeListAll, StorageList>(),
-      array2.ResetTypes<vtkm::TypeListAll, StorageList>());
+    VTKM_TEST_ASSERT(test_equal_ArrayHandles(array1.ResetTypes<vtkm::TypeListAll, StorageList>(),
+                                             array2.ResetTypes<vtkm::TypeListAll, StorageList>()));
   }
 };
 

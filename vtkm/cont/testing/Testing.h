@@ -25,6 +25,8 @@
 #include <vtkm/cont/UnknownArrayHandle.h>
 #include <vtkm/cont/VariantArrayHandle.h>
 
+#include <vtkm/cont/testing/vtkm_cont_testing_export.h>
+
 #include <vtkm/thirdparty/diy/diy.h>
 
 namespace opt = vtkm::cont::internal::option;
@@ -336,134 +338,41 @@ private:
   }
 };
 
+}
+}
+} // namespace vtkm::cont::testing
+
 //============================================================================
-class TestEqualResult
-{
-public:
-  void PushMessage(const std::string& msg) { this->Messages.push_back(msg); }
-
-  const std::vector<std::string>& GetMessages() const { return this->Messages; }
-
-  std::string GetMergedMessage() const
-  {
-    std::string msg;
-    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
-      msg += (msg.empty() ? "" : ": ");
-      msg += next;
-    });
-
-    return msg;
-  }
-
-  operator bool() const { return this->Messages.empty(); }
-
-private:
-  std::vector<std::string> Messages;
-};
-
-namespace detail
-{
-
-struct TestEqualArrayHandle
-{
-  template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T1, StorageTag1>&,
-                            const vtkm::cont::ArrayHandle<T2, StorageTag2>&,
-                            TestEqualResult& result) const
-  {
-    result.PushMessage("types don't match");
-    return;
-  }
-
-  template <typename T, typename StorageTag1, typename StorageTag2>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag1>& array1,
-                            const vtkm::cont::ArrayHandle<T, StorageTag2>& array2,
-                            TestEqualResult& result) const
-  {
-    if (array1.GetNumberOfValues() != array2.GetNumberOfValues())
-    {
-      result.PushMessage("sizes don't match");
-      return;
-    }
-    auto portal1 = array1.ReadPortal();
-    auto portal2 = array2.ReadPortal();
-    for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
-    {
-      if (!test_equal(portal1.Get(i), portal2.Get(i)))
-      {
-        result.PushMessage(std::string("values don't match at index ") + std::to_string(i));
-        return;
-      }
-    }
-  }
-
-  template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList>& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCall(*this, array1, result);
-  }
-
-  template <typename T, typename StorageTag, typename TypeList>
-  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList>& array1,
-                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
-                            TestEqualResult& result) const
-  {
-    array1.CastAndCall(*this, array2, result);
-  }
-
-  template <typename TypeList1, typename TypeList2>
-  VTKM_CONT void operator()(const vtkm::cont::VariantArrayHandleBase<TypeList1>& array1,
-                            const vtkm::cont::VariantArrayHandleBase<TypeList2>& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCall(*this, array1, result);
-  }
-
-  template <typename T, typename StorageTag>
-  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& array1,
-                            const vtkm::cont::UnknownArrayHandle& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
-      *this, array1, result);
-  }
-
-  template <typename T, typename StorageTag>
-  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
-                            const vtkm::cont::ArrayHandle<T, StorageTag>& array2,
-                            TestEqualResult& result) const
-  {
-    array1.CastAndCallForTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG, StorageTag>>(
-      *this, array2, result);
-  }
-
-  VTKM_CONT void operator()(const vtkm::cont::UnknownArrayHandle& array1,
-                            const vtkm::cont::UnknownArrayHandle& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCallForTypes<vtkm::TypeListAll, VTKM_DEFAULT_STORAGE_LIST>(*this, array1, result);
-  }
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT void operator()(const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
-                            const vtkm::cont::UncertainArrayHandle<TypeList, StorageList>& array2,
-                            TestEqualResult& result) const
-  {
-    array2.CastAndCall(*this, array1, result);
-  }
-};
-} // detail
-
-template <typename ArrayHandle1, typename ArrayHandle2>
-inline VTKM_CONT TestEqualResult test_equal_ArrayHandles(const ArrayHandle1& array1,
-                                                         const ArrayHandle2& array2)
+template <typename T1, typename T2, typename StorageTag1, typename StorageTag2>
+VTKM_CONT TestEqualResult
+test_equal_ArrayHandles(const vtkm::cont::ArrayHandle<T1, StorageTag1>& array1,
+                        const vtkm::cont::ArrayHandle<T2, StorageTag2>& array2)
 {
   TestEqualResult result;
-  detail::TestEqualArrayHandle{}(array1, array2, result);
+
+  if (array1.GetNumberOfValues() != array2.GetNumberOfValues())
+  {
+    result.PushMessage("Arrays have different sizes.");
+    return result;
+  }
+
+  auto portal1 = array1.ReadPortal();
+  auto portal2 = array2.ReadPortal();
+  for (vtkm::Id i = 0; i < portal1.GetNumberOfValues(); ++i)
+  {
+    if (!test_equal(portal1.Get(i), portal2.Get(i)))
+    {
+      result.PushMessage("Values don't match at index " + std::to_string(i));
+      break;
+    }
+  }
+
   return result;
 }
+
+VTKM_CONT_TESTING_EXPORT TestEqualResult
+test_equal_ArrayHandles(const vtkm::cont::UnknownArrayHandle& array1,
+                        const vtkm::cont::UnknownArrayHandle& array2);
 
 namespace detail
 {
@@ -638,8 +547,5 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
 
   return result;
 }
-}
-}
-} // namespace vtkm::cont::testing
 
 #endif //vtk_m_cont_internal_Testing_h

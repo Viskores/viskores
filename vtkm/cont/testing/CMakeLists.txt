@@ -29,8 +29,6 @@ set(headers
   TestingVirtualObjectHandle.h
   )
 
-vtkm_declare_headers(${headers})
-
 set(unit_tests
   UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
@@ -90,6 +88,22 @@ set(unit_tests
   UnitTestUnknownArrayHandle.cxx
   UnitTestVariantArrayHandle.cxx
   )
+
+set(library_sources
+  TestEqualArrayHandles.cxx
+  )
+
+set(library_sources_device
+  TestEqualArrayHandles.cxx # Really doesn't need device, but currently includes device headers
+  )
+
+vtkm_library(
+  NAME vtkm_cont_testing
+  SOURCES ${library_sources}
+  DEVICE_SOURCES ${library_sources_device}
+  HEADERS ${headers}
+  )
+target_link_libraries(vtkm_cont_testing PUBLIC vtkm_cont)
 
 vtkm_unit_tests(SOURCES ${unit_tests} DEFINES VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG)
 

@@ -25,11 +25,13 @@
 
 #include <vtkm/cont/Logging.h>
 
+#include <algorithm>
 #include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include <math.h>
 
@@ -70,6 +72,30 @@
 /// Causes a test to fail with the given \a messages. At least one argument must be given.
 
 #define VTKM_TEST_FAIL(...) ::vtkm::testing::Testing::TestFail(__FILE__, __LINE__, __VA_ARGS__)
+
+class TestEqualResult
+{
+public:
+  void PushMessage(const std::string& msg) { this->Messages.push_back(msg); }
+
+  const std::vector<std::string>& GetMessages() const { return this->Messages; }
+
+  std::string GetMergedMessage() const
+  {
+    std::string msg;
+    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
+      msg += (msg.empty() ? "" : ": ");
+      msg += next;
+    });
+
+    return msg;
+  }
+
+  operator bool() const { return this->Messages.empty(); }
+
+private:
+  std::vector<std::string> Messages;
+};
 
 namespace vtkm
 {
@@ -345,6 +371,14 @@ public:
                                bool condition)
   {
     Assert(conditionString, file, line, condition, "Test assertion failed");
+  }
+
+  static VTKM_CONT void Assert(const std::string& conditionString,
+                               const std::string& file,
+                               vtkm::Id line,
+                               const TestEqualResult& result)
+  {
+    Assert(conditionString, file, line, static_cast<bool>(result), result.GetMergedMessage());
   }
 
   template <typename... Ts>

@@ -68,7 +68,7 @@ function(vtkm_create_test_executable
   set_property(TARGET ${prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
-  target_link_libraries(${prog} PRIVATE vtkm_cont ${libraries})
+  target_link_libraries(${prog} PRIVATE vtkm_cont_testing ${libraries})
 
   if(use_job_pool)
     vtkm_setup_job_pool()

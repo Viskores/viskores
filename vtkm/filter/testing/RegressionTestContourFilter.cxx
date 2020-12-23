@@ -53,8 +53,7 @@ void TestContourFilterWedge()
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
     result, "gyroid", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.08));
 
-  VTKM_TEST_ASSERT(
-    vtkm::rendering::testing::test_equal_images_matching_name(view, "contour-wedge.png"));
+  VTKM_TEST_ASSERT(test_equal_images_matching_name(view, "contour-wedge.png"));
 }
 
 void TestContourFilter()

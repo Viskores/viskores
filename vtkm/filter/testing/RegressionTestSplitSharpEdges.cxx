@@ -51,7 +51,7 @@ void TestSplitSharpEdges()
   auto view = vtkm::rendering::testing::GetViewPtr<M, C, V3>(
     result, "pointvar", canvas, mapper, scene, colorTable, static_cast<vtkm::FloatDefault>(0.0));
 
-  VTKM_TEST_ASSERT(vtkm::rendering::testing::test_equal_images(view, "split-sharp-edges.png"));
+  VTKM_TEST_ASSERT(test_equal_images(view, "split-sharp-edges.png"));
 }
 } // namespace
 
