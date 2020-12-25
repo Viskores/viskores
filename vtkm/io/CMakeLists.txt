@@ -30,17 +30,17 @@ set(headers
   VTKStructuredGridReader.h
   VTKStructuredPointsReader.h
   VTKUnstructuredGridReader.h
-)
+  )
 
 set(template_sources
   PixelTypes.hxx
-)
+  )
 
 set(sources
   FileUtils.cxx
   DecodePNG.cxx
   EncodePNG.cxx
-)
+  )
 
 # TODO: None of these codes actually use a device. Rather, they access ArrayHandle, and we
 # currently need to ensure that ArrayHandle is correctly compiled for all devices. This is
@@ -65,6 +65,17 @@ set(device_sources
   VTKUnstructuredGridReader.cxx
   )
 
+if (VTKm_ENABLE_HDF5_IO)
+  set(headers
+    ${headers}
+    ImageReaderHDF5_IM.h
+    ImageWriterHDF5_IM.h)
+  set(device_sources
+    ${device_sources}
+    ImageReaderHDF5_IM.cxx
+    ImageWriterHDF5_IM.cxx)
+endif ()
+
 vtkm_declare_headers(
   ${headers}
   ${template_sources}
@@ -79,7 +90,9 @@ vtkm_library(
 )
 
 target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
-
+if (VTKm_ENABLE_HDF5_IO)
+  target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES})
+endif()
 add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)

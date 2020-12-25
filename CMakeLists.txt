@@ -92,6 +92,11 @@ endif()
 vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+vtkm_option(VTKm_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
+if (VTKm_ENABLE_HDF5_IO)
+  find_package(HDF5 COMPONENTS HL)
+endif()
+
 # VTK-m will turn on logging by default, but will set the default
 # logging level to WARN.  This option should not be visible by default
 # in the GUI, as ERROR and WARN level logging should not interfere
