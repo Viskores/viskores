@@ -18,7 +18,7 @@ set(unit_tests
 
 set(unit_test_libraries vtkm_lodepng vtkm_io)
 
-if(VTKm_ENABLE_RENDERING)
+if(TARGET vtkm_rendering)
   set(unit_tests ${unit_tests}
     UnitTestImageWriter.cxx
     )

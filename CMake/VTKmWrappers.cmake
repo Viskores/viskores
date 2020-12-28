@@ -33,7 +33,7 @@ function(vtkm_get_kit_name kitvar)
   # Optional second argument to get dir_prefix.
   if (${ARGC} GREATER 1)
     set(${ARGV1} "${dir_prefix}" PARENT_SCOPE)
-  endif (${ARGC} GREATER 1)
+  endif ()
 endfunction(vtkm_get_kit_name)
 
 #-----------------------------------------------------------------------------

@@ -82,7 +82,7 @@ set(libraries
   vtkm_source
 )
 
-if (VTKm_ENABLE_RENDERING)
+if (TARGET vtkm_rendering)
   set(libraries
     ${libraries}
     vtkm_rendering
@@ -96,7 +96,7 @@ if (VTKm_ENABLE_RENDERING)
     RegressionTestStreamline.cxx
     RegressionTestSurfaceNormals.cxx
   )
-endif (VTKm_ENABLE_RENDERING)
+endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
