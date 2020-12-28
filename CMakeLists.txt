@@ -220,7 +220,7 @@ if (VTKm_ENABLE_TESTING)
   # Setup compiler flags for dynamic analysis if needed
   include(testing/VTKmCompilerDynamicAnalysisFlags)
 
-endif (VTKm_ENABLE_TESTING)
+endif()
 
 #-----------------------------------------------------------------------------
 # Check basic type sizes.
