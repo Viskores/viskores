@@ -1722,7 +1722,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y)
 ///
 template <typename T>
 static inline VTKM_EXEC_CONT T Min(const T& x, const T& y);
-#ifdef VTKM_USE_STL
+#if defined(VTKM_USE_STL) && !defined(VTKM_HIP)
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
   return (std::min)(x, y);
@@ -1731,7 +1731,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y)
 {
   return (std::min)(x, y);
 }
-#else // !VTKM_USE_STL
+#else // !VTKM_USE_STL OR HIP
 static inline VTKM_EXEC_CONT vtkm::Float32 Min(vtkm::Float32 x, vtkm::Float32 y)
 {
 #ifdef VTKM_CUDA
