@@ -82,14 +82,10 @@ set(libraries
   vtkm_source
 )
 
-if (TARGET vtkm_rendering)
-  set(libraries
-    ${libraries}
-    vtkm_rendering
-  )
+if (VTKm_ENABLE_RENDERING)
+  list(APPEND libraries vtkm_rendering)
 
-  set(unit_tests
-    ${unit_tests}
+  list(APPEND unit_tests
     RegressionTestContourFilter.cxx
     RegressionTestPointTransform.cxx
     RegressionTestSplitSharpEdges.cxx
