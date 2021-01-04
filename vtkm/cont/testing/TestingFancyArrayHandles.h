@@ -1181,23 +1181,6 @@ private:
     }
   };
 
-  // RecombineVecAsOutput is a bit strange because it contains Vecs of
-  // lengths not known until runtime. The unintended consequence is that
-  // a simple FieldOut does not work because the variable Vec-like always
-  // has to point back to the array portals. Instead, you need to use something
-  // like a FieldInOut.
-  struct PassThroughWithInOut : public vtkm::worklet::WorkletMapField
-  {
-    using ControlSignature = void(FieldIn, FieldInOut);
-    using ExecutionSignature = void(_1, _2);
-
-    template <typename InValue, typename OutValue>
-    VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
-    {
-      outValue = inValue;
-    }
-  };
-
   struct TestRecombineVecAsOutput
   {
     template <typename T>
@@ -1221,7 +1204,7 @@ private:
       VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
 
       vtkm::cont::Invoker invoke;
-      invoke(PassThroughWithInOut{}, baseArray, recombinedArray);
+      invoke(PassThrough{}, baseArray, recombinedArray);
 
       VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
     }
