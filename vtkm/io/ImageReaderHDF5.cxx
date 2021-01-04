@@ -23,22 +23,31 @@ void ImageReaderHDF5::Read()
   // need to find width, height and pixel type.
   auto fileid = H5Fopen(this->FileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-  if (!H5IMis_image(fileid, "image"))
+  const auto fieldName = this->PointFieldName.c_str();
+  if (!H5IMis_image(fileid, fieldName))
     throw vtkm::io::ErrorIO{ "Not an HDF5 image file" };
 
   hsize_t width, height, nplanes;
   hssize_t npals;
   char interlace[16];
-  if (H5IMget_image_info(fileid, "image", &width, &height, &nplanes, interlace, &npals) < 0)
+  if (H5IMget_image_info(fileid, fieldName, &width, &height, &nplanes, interlace, &npals) < 0)
     throw vtkm::io ::ErrorIO{ "Can not get image info" };
 
   // We don't use the H5IMread_image() since it only supports 8 bit pixel.
   hid_t did;
-  if ((did = H5Dopen2(fileid, "image", H5P_DEFAULT)) < 0)
+  if ((did = H5Dopen2(fileid, fieldName, H5P_DEFAULT)) < 0)
     throw vtkm::io::ErrorIO{ "Can not open image dataset" };
 
   if (strncmp(interlace, "INTERLACE_PIXEL", 15) != 0)
-    throw vtkm::io::ErrorIO{ "Unsupported interlace mode" };
+  {
+    std::string message = "Unsupported interlace mode: ";
+    message += interlace;
+    message +=
+      ". Currently, only the INTERLACE_PIXEL mode is supported. See "
+      "https://portal.hdfgroup.org/display/HDF5/HDF5+Image+and+Palette+Specification%2C+Version+1.2"
+      " for more details on the HDF5 image convention.";
+    throw vtkm::io::ErrorIO{ message };
+  }
 
   std::vector<unsigned char> buffer;
   auto type_size = H5LDget_dset_type_size(did, nullptr);

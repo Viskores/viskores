@@ -11,7 +11,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/ImageReaderPNG.h>
 #include <vtkm/io/ImageReaderPNM.h>
-#include <vtkm/io/ImageWriterHDF5.h>
 #include <vtkm/io/ImageWriterPNG.h>
 #include <vtkm/io/ImageWriterPNM.h>
 #include <vtkm/io/PixelTypes.h>
@@ -19,7 +18,6 @@
 #include <vtkm/rendering/Color.h>
 
 #include <string>
-#include <vtkm/io/ImageReaderHDF5.h>
 
 namespace
 {
@@ -131,45 +129,6 @@ void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas,
   }
 }
 
-void TestReadAndWriteHDF5(const vtkm::rendering::Canvas& canvas,
-                          std::string filename,
-                          vtkm::io::ImageWriterBase::PixelDepth pixelDepth)
-{
-  std::cout << "TestReadAndWriteHDF5 - " << filename << std::endl;
-  bool throws = false;
-  try
-  {
-    vtkm::io::ImageWriterHDF5 writer(filename);
-    vtkm::cont::DataSet dataSet;
-    writer.WriteDataSet(dataSet);
-  }
-  catch (const vtkm::cont::Error&)
-  {
-    throws = true;
-  }
-  VTKM_TEST_ASSERT(throws, "Fill Image did not throw with empty data");
-
-  {
-    vtkm::io::ImageWriterHDF5 writer(filename);
-    writer.SetPixelDepth(pixelDepth);
-    writer.WriteDataSet(canvas.GetDataSet());
-  }
-  {
-    vtkm::io::ImageReaderHDF5 reader(filename);
-    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
-  }
-  {
-    vtkm::io::ImageWriterHDF5 writer(filename);
-    writer.SetPixelDepth(pixelDepth);
-    writer.WriteDataSet(canvas.GetDataSet());
-  }
-  {
-    vtkm::io::ImageReaderHDF5 reader(filename);
-    vtkm::cont::DataSet dataSet = reader.ReadDataSet();
-    TestFilledImage(dataSet, reader.GetPointFieldName(), canvas);
-  }
-}
-
 void TestBaseImageMethods(const vtkm::rendering::Canvas& canvas)
 {
   TestCreateImageDataSet(canvas);
@@ -187,12 +146,6 @@ void TestPNGImage(const vtkm::rendering::Canvas& canvas)
   TestReadAndWritePNG(canvas, "pngRGB16Test.png", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
-void TestHDF5Image(const vtkm::rendering::Canvas& canvas)
-{
-  TestReadAndWriteHDF5(canvas, "hdf5RGB8Test.h5", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_8);
-  TestReadAndWriteHDF5(canvas, "hdf5RGB16Test.h5", vtkm::io::ImageWriterBase::PixelDepth::PIXEL_16);
-}
-
 void TestImage()
 {
   vtkm::rendering::Canvas canvas(16, 16);
@@ -208,7 +161,6 @@ void TestImage()
   TestBaseImageMethods(canvas);
   TestPNMImage(canvas);
   TestPNGImage(canvas);
-  TestHDF5Image(canvas);
 }
 }
 

@@ -35,6 +35,9 @@ public:
   ImageWriterHDF5(const ImageWriterHDF5&) = delete;
   ImageWriterHDF5& operator=(const ImageWriterHDF5&) = delete;
 
+  VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet,
+                              const std::string& colorField = {});
+
 protected:
   VTKM_CONT void Write(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels) override;
 
@@ -43,6 +46,8 @@ private:
   VTKM_CONT herr_t WriteToFile(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels);
 
   hid_t fileid = 0;
+  // FIXME: a hack for the moment, design a better API.
+  std::string fieldName;
 
   static constexpr auto IMAGE_CLASS = "IMAGE";
   static constexpr auto IMAGE_VERSION = "1.2";

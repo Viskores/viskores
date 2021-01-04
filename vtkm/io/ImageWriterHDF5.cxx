@@ -35,6 +35,13 @@ namespace io
 {
 ImageWriterHDF5::~ImageWriterHDF5() noexcept = default;
 
+void ImageWriterHDF5::WriteDataSet(const vtkm::cont::DataSet& dataSet,
+                                   const std::string& colorField)
+{
+  this->fieldName = colorField;
+  Superclass::WriteDataSet(dataSet, colorField);
+}
+
 template <typename PixelType>
 herr_t ImageWriterHDF5::WriteToFile(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels)
 {
@@ -56,7 +63,7 @@ herr_t ImageWriterHDF5::WriteToFile(vtkm::Id width, vtkm::Id height, const Color
   }
 
   // Shamelessly copied from H5IMmake_image_24bit() implementation.
-  auto dset_name = "image";
+  auto dset_name = this->fieldName.c_str();
 
   // The image is stored as height*width*3 array of UCHAR/UINT16, i.e. INTERLACE_PIXEL
   hsize_t dims[] = { hsize_t(height), hsize_t(width), 3 };
