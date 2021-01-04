@@ -172,15 +172,30 @@ void TestLists()
   scalarsAll.AddExpected(vtkm::UInt32());
   scalarsAll.AddExpected(vtkm::Int64());
   scalarsAll.AddExpected(vtkm::UInt64());
-  // Extra types with same layout as above but considered different by C
-  scalarsAll.AddExpected(char());
-  scalarsAll.AddExpected((signed int)0);
-  scalarsAll.AddExpected((unsigned int)0);
-  scalarsAll.AddExpected((signed long)0);
-  scalarsAll.AddExpected((unsigned long)0);
-  scalarsAll.AddExpected((signed long long)0);
-  scalarsAll.AddExpected((unsigned long long)0);
   TryList(scalarsAll, vtkm::TypeListScalarAll());
+
+  std::cout << "TypeListBaseC" << std::endl;
+  TypeSet baseC;
+  baseC.AddExpected(vtkm::Float32());
+  baseC.AddExpected(vtkm::Float64());
+  baseC.AddExpected(vtkm::Int8());
+  baseC.AddExpected(vtkm::UInt8());
+  baseC.AddExpected(vtkm::Int16());
+  baseC.AddExpected(vtkm::UInt16());
+  baseC.AddExpected(vtkm::Int32());
+  baseC.AddExpected(vtkm::UInt32());
+  baseC.AddExpected(vtkm::Int64());
+  baseC.AddExpected(vtkm::UInt64());
+  // Extra types with same layout as above but considered different by C
+  baseC.AddExpected(bool());
+  baseC.AddExpected(char());
+  baseC.AddExpected((signed int)0);
+  baseC.AddExpected((unsigned int)0);
+  baseC.AddExpected((signed long)0);
+  baseC.AddExpected((unsigned long)0);
+  baseC.AddExpected((signed long long)0);
+  baseC.AddExpected((unsigned long long)0);
+  TryList(baseC, vtkm::TypeListBaseC());
 
   std::cout << "TypeListVecCommon" << std::endl;
   TypeSet vecCommon;
@@ -277,14 +292,6 @@ void TestLists()
   all.AddExpected(vtkm::Vec4ui_16());
   all.AddExpected(vtkm::Vec4ui_32());
   all.AddExpected(vtkm::Vec4ui_64());
-  // Extra types with same layout as above but considered different by C
-  all.AddExpected(char());
-  all.AddExpected((signed int)0);
-  all.AddExpected((unsigned int)0);
-  all.AddExpected((signed long)0);
-  all.AddExpected((unsigned long)0);
-  all.AddExpected((signed long long)0);
-  all.AddExpected((unsigned long long)0);
   TryList(all, vtkm::TypeListAll());
 }
 

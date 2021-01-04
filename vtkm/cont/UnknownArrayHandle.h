@@ -142,13 +142,50 @@ struct MakeUnknownAHContainerFunctor
   std::shared_ptr<UnknownAHContainer> operator()(const vtkm::cont::ArrayHandle<T, S>& array) const;
 };
 
+struct VTKM_CONT_EXPORT UnknownAHComponentInfo
+{
+  std::type_index Type;
+  bool IsIntegral;
+  bool IsFloat;
+  bool IsSigned;
+  std::size_t Size;
+
+  UnknownAHComponentInfo() = delete;
+
+  bool operator==(const UnknownAHComponentInfo& rhs);
+
+  template <typename T>
+  static UnknownAHComponentInfo Make()
+  {
+    return UnknownAHComponentInfo{ typeid(T),
+                                   std::is_integral<T>::value,
+                                   std::is_floating_point<T>::value,
+                                   std::is_signed<T>::value,
+                                   sizeof(T) };
+  }
+
+private:
+  UnknownAHComponentInfo(std::type_index&& type,
+                         bool isIntegral,
+                         bool isFloat,
+                         bool isSigned,
+                         std::size_t size)
+    : Type(std::move(type))
+    , IsIntegral(isIntegral)
+    , IsFloat(isFloat)
+    , IsSigned(isSigned)
+    , Size(size)
+  {
+  }
+};
+
 struct VTKM_CONT_EXPORT UnknownAHContainer
 {
   void* ArrayHandlePointer;
 
   std::type_index ValueType;
   std::type_index StorageType;
-  std::type_index BaseComponentType;
+  UnknownAHComponentInfo BaseComponentType;
 
   using DeleteType = void(void*);
   DeleteType* DeleteFunction;
@@ -247,7 +284,8 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   : ArrayHandlePointer(new vtkm::cont::ArrayHandle<T, S>(array))
   , ValueType(typeid(T))
   , StorageType(typeid(S))
-  , BaseComponentType(typeid(typename vtkm::VecTraits<T>::BaseComponentType))
+  , BaseComponentType(
+      UnknownAHComponentInfo::Make<typename vtkm::VecTraits<T>::BaseComponentType>())
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
   , NewInstance(detail::UnknownADNewInstance<T, S>)
   , NewInstanceBasic(detail::UnknownADNewInstanceBasic<T>)
@@ -311,7 +349,7 @@ class VTKM_CONT_EXPORT UnknownArrayHandle
 
   VTKM_CONT bool IsValueTypeImpl(std::type_index type) const;
   VTKM_CONT bool IsStorageTypeImpl(std::type_index type) const;
-  VTKM_CONT bool IsBaseComponentTypeImpl(std::type_index type) const;
+  VTKM_CONT bool IsBaseComponentTypeImpl(const detail::UnknownAHComponentInfo& type) const;
 
 public:
   VTKM_CONT UnknownArrayHandle() = default;
@@ -387,7 +425,7 @@ public:
   template <typename BaseComponentType>
   VTKM_CONT bool IsBaseComponentType() const
   {
-    return this->IsBaseComponentTypeImpl(typeid(BaseComponentType));
+    return this->IsBaseComponentTypeImpl(detail::UnknownAHComponentInfo::Make<BaseComponentType>());
   }
 
   /// Returns true if this array matches the ArrayHandleType template argument.

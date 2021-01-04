@@ -59,6 +59,20 @@ std::shared_ptr<UnknownAHContainer> UnknownAHContainer::MakeNewInstance() const
   return newContainer;
 }
 
+bool UnknownAHComponentInfo::operator==(const UnknownAHComponentInfo& rhs)
+{
+  if (this->IsIntegral || this->IsFloat)
+  {
+    return ((this->IsIntegral == rhs.IsIntegral) && (this->IsFloat == rhs.IsFloat) &&
+            (this->IsSigned == rhs.IsSigned) && (this->Size == rhs.Size));
+  }
+  else
+  {
+    // Needs optimization based on platform. OSX cannot compare typeid across translation units?
+    return this->Type == rhs.Type;
+  }
+}
+
 } // namespace detail
 
 VTKM_CONT bool UnknownArrayHandle::IsValueTypeImpl(std::type_index type) const
@@ -83,7 +97,8 @@ VTKM_CONT bool UnknownArrayHandle::IsStorageTypeImpl(std::type_index type) const
   return this->Container->StorageType == type;
 }
 
-VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(std::type_index type) const
+VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(
+  const detail::UnknownAHComponentInfo& type) const
 {
   if (!this->Container)
   {
