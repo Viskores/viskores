@@ -68,12 +68,12 @@ set(device_sources
 if (VTKm_ENABLE_HDF5_IO)
   set(headers
     ${headers}
-    ImageReaderHDF5_IM.h
-    ImageWriterHDF5_IM.h)
+    ImageReaderHDF5.h
+    ImageWriterHDF5.h)
   set(device_sources
     ${device_sources}
-    ImageReaderHDF5_IM.cxx
-    ImageWriterHDF5_IM.cxx)
+    ImageReaderHDF5.cxx
+    ImageWriterHDF5.cxx)
 endif ()
 
 vtkm_declare_headers(

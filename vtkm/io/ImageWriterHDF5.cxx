@@ -5,7 +5,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 #include <vtkm/io/ErrorIO.h>
-#include <vtkm/io/ImageWriterHDF5_IM.h>
+#include <vtkm/io/ImageWriterHDF5.h>
 #include <vtkm/io/PixelTypes.h>
 
 namespace

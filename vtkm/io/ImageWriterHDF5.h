@@ -7,8 +7,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_io_ImageWriterHDF5_IM_H
-#define vtk_m_io_ImageWriterHDF5_IM_H
+#ifndef vtk_m_io_ImageWriterHDF5_H
+#define vtk_m_io_ImageWriterHDF5_H
 
 #include <vtkm/io/ImageWriterBase.h>
 
@@ -49,4 +49,4 @@ private:
 };
 }
 }
-#endif //vtk_m_io_ImageWriterHDF5_IM_H
+#endif //vtk_m_io_ImageWriterHDF5_H

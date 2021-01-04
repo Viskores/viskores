@@ -11,7 +11,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/ImageReaderPNG.h>
 #include <vtkm/io/ImageReaderPNM.h>
-#include <vtkm/io/ImageWriterHDF5_IM.h>
+#include <vtkm/io/ImageWriterHDF5.h>
 #include <vtkm/io/ImageWriterPNG.h>
 #include <vtkm/io/ImageWriterPNM.h>
 #include <vtkm/io/PixelTypes.h>
@@ -19,7 +19,7 @@
 #include <vtkm/rendering/Color.h>
 
 #include <string>
-#include <vtkm/io/ImageReaderHDF5_IM.h>
+#include <vtkm/io/ImageReaderHDF5.h>
 
 namespace
 {
