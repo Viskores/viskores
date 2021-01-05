@@ -121,6 +121,13 @@ function(do_verify root_dir prefix)
     cont/StorageVirtual.hxx
     )
 
+  if (NOT VTKm_ENABLE_HDF5_IO)
+    set(file_exceptions ${file_exceptions}
+      io/ImageWriterHDF5.h
+      io/ImageReaderHDF5.h
+      )
+  endif()
+
   #by default every header in a testing directory doesn't need to be installed
   set(directory_exceptions ".*/testing" )
   # These exceptions should be based on the status of the associated
