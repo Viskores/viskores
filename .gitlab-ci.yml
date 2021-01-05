@@ -81,7 +81,7 @@
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-#  image: "kitware/vtkm:ci-ubuntu1804_cuda11.1-20201016"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11.1-20201016"
   extends:
     - .docker_image
 
