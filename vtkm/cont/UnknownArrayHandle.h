@@ -626,6 +626,10 @@ public:
   ///  `allowCopy` to `vtkm::CopyFlag::Off`. This will cause an exception to be thrown if
   /// the resulting array cannot reference the memory held in this `UnknownArrayHandle`.
   ///
+  /// Fifth, component arrays are extracted using `ArrayHandleStride` as the representation
+  /// for each component. This array adds a slight overhead for each lookup as it performs the
+  /// arithmetic for finding the index of each component.
+  ///
   template <typename BaseComponentType>
   VTKM_CONT vtkm::cont::ArrayHandleRecombineVec<BaseComponentType> ExtractArrayFromComponents(
     vtkm::CopyFlag allowCopy = vtkm::CopyFlag::On) const
@@ -641,12 +645,39 @@ public:
 
   /// \brief Call a functor using the underlying array type.
   ///
-  /// `CastAndCall` attempts to cast the held array to a specific value type,
+  /// `CastAndCallForTypes` attempts to cast the held array to a specific value type,
   /// and then calls the given functor with the cast array. You must specify
   /// the `TypeList` and `StorageList` as template arguments.
   ///
+  /// After the functor argument you may add any number of arguments that will be
+  /// passed to the functor after the converted `ArrayHandle`.
+  ///
   template <typename TypeList, typename StorageList, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallForTypes(Functor&& functor, Args&&... args) const;
+
+  /// \brief Call a functor on an array extracted from the components.
+  ///
+  /// `CastAndCallWithExtractedArray` behaves similarly to `CastAndCallForTypes`.
+  /// It converts the contained data to an `ArrayHandle` and calls a functor with
+  /// that `ArrayHandle` (and any number of optionally specified arguments).
+  ///
+  /// The advantage of `CastAndCallWithExtractedArray` is that you do not need to
+  /// specify any `TypeList` or `StorageList`. Instead, it internally uses
+  /// `ExtractArrayFromComponents` to work with most `ArrayHandle` types with only
+  /// about 10 instances of the functor. In contrast, calling `CastAndCallForTypes`
+  /// with, for example, `VTKM_DEFAULT_TYPE_LIST` and `VTKM_DEFAULT_STORAGE_LIST`
+  /// results in many more instances of the functor but handling many fewer types
+  /// of `ArrayHandle`.
+  ///
+  /// There are, however, costs to using this method. Details of these costs are
+  /// documented for the `ExtractArrayFromComponents` method, but briefly they
+  /// are that `Vec` types get flattened, the resulting array has a strange `Vec`-like
+  /// value type that has many limitations on its use, there is an overhead for
+  /// retrieving each value from the array, and there is a potential that data
+  /// must be copied.
+  ///
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallWithExtractedArray(Functor&& functor, Args&&... args) const;
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
@@ -816,10 +847,8 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHa
 
 } // namespace detail
 
-
-
 template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
-VTKM_CONT void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args) const
+inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args) const
 {
   using crossProduct = detail::ListAllArrayTypes<TypeList, StorageTagList>;
 
@@ -843,6 +872,59 @@ void CastAndCall(const UnknownArrayHandle& handle, Functor&& f, Args&&... args)
 {
   handle.CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
     std::forward<Functor>(f), std::forward<Args>(args)...);
+}
+
+namespace detail
+{
+
+struct UnknownArrayHandleTryExtract
+{
+  template <typename T, typename Functor, typename... Args>
+  void operator()(T,
+                  Functor&& f,
+                  bool& called,
+                  const vtkm::cont::UnknownArrayHandle& unknownArray,
+                  Args&&... args) const
+  {
+    if (!called && unknownArray.IsBaseComponentType<T>())
+    {
+      called = true;
+      auto extractedArray = unknownArray.ExtractArrayFromComponents<T>();
+      VTKM_LOG_CAST_SUCC(unknownArray, extractedArray);
+
+      // If you get a compile error here, it means that you have called
+      // CastAndCallWithExtractedArray for a vtkm::cont::UnknownArrayHandle and the arguments of
+      // the functor do not match those being passed. This is often because it is calling the
+      // functor with an ArrayHandle type that was not expected. Add overloads to the functor to
+      // accept all possible array types or constrain the types tried for the CastAndCall. Note
+      // that the functor will be called with an array of type that is different than the actual
+      // type of the `ArrayHandle` stored in the `UnknownArrayHandle`.
+      f(extractedArray, std::forward<Args>(args)...);
+    }
+  }
+};
+
+} // namespace detail
+
+template <typename Functor, typename... Args>
+inline void UnknownArrayHandle::CastAndCallWithExtractedArray(Functor&& functor,
+                                                              Args&&... args) const
+{
+  bool called = false;
+  vtkm::ListForEach(detail::UnknownArrayHandleTryExtract{},
+                    vtkm::TypeListScalarAll{},
+                    std::forward<Functor>(functor),
+                    called,
+                    *this,
+                    std::forward<Args>(args)...);
+  if (!called)
+  {
+    // Throw an exception.
+    // The message will be a little wonky because the types are just the value types, not the
+    // full type to cast to.
+    VTKM_LOG_CAST_FAIL(*this, vtkm::TypeListScalarAll);
+    detail::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
+  }
 }
 
 namespace internal
