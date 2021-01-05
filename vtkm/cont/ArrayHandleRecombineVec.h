@@ -68,20 +68,16 @@ public:
 
   VTKM_EXEC_CONT vtkm::Id GetIndex() const { return this->Index; }
 
+  VTKM_EXEC_CONT RecombineVec& operator=(const RecombineVec& src)
+  {
+    this->DoCopy(src);
+    return *this;
+  }
+
   template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
   VTKM_EXEC_CONT RecombineVec& operator=(const T& src)
   {
-    using VTraits = vtkm::VecTraits<T>;
-    vtkm::IdComponent numComponents = VTraits::GetNumberOfComponents(src);
-    if (numComponents > this->GetNumberOfComponents())
-    {
-      numComponents = this->GetNumberOfComponents();
-    }
-    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
-    {
-      this->Portals[cIndex].Set(this->Index, VTraits::GetComponent(src, cIndex));
-    }
-
+    this->DoCopy(src);
     return *this;
   }
 
@@ -93,6 +89,33 @@ public:
     vtkm::Vec<ComponentType, N> result;
     this->CopyInto(result);
     return result;
+  }
+
+private:
+  template <typename T>
+  VTKM_EXEC_CONT void DoCopy(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    vtkm::IdComponent numComponents = VTraits::GetNumberOfComponents(src);
+    if (numComponents > 1)
+    {
+      if (numComponents > this->GetNumberOfComponents())
+      {
+        numComponents = this->GetNumberOfComponents();
+      }
+      for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+      {
+        this->Portals[cIndex].Set(this->Index, VTraits::GetComponent(src, cIndex));
+      }
+    }
+    else
+    {
+      // Special case when copying from a scalar
+      for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+      {
+        this->Portals[cIndex].Set(this->Index, VTraits::GetComponent(src, 0));
+      }
+    }
   }
 };
 

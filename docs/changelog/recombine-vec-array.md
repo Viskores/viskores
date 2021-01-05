@@ -18,3 +18,9 @@ you to use the functionality to transform the unknown array handle to a
 form of `ArrayHandle` that depends only on this base component type. This
 method internally uses a new `ArrayHandleRecombineVec` class, but this
 class is mostly intended for internal use by this class.
+
+As an added convenience, `UnknownArrayHandle` now also provides the
+`CastAndCallWithExtractedArray` method. This method works like other
+`CastAndCall`s except that it uses the `ExtractArrayFromComponents` feature
+to allow you to handle most `ArrayHandle` types with few template
+instances.
