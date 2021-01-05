@@ -94,7 +94,10 @@ vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
 vtkm_option(VTKm_ENABLE_HDF5_IO "Enable HDF5 support" OFF)
 if (VTKm_ENABLE_HDF5_IO)
-  find_package(HDF5 COMPONENTS HL)
+  find_package(HDF5 REQUIRED COMPONENTS HL)
+  if (HDF5_FOUND)
+    include_directories(${HDF5_INCLUDE_DIR})
+  endif()
 endif()
 
 # VTK-m will turn on logging by default, but will set the default
