@@ -91,6 +91,117 @@ public:
     return result;
   }
 
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator+=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] += VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator-=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] -= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator*=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] *= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator/=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] /= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator%=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] %= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator&=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] &= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator|=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] |= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator^=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] ^= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator>>=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] >>= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+  template <typename T, typename = typename std::enable_if<vtkm::HasVecTraits<T>::value>::type>
+  VTKM_EXEC_CONT RecombineVec& operator<<=(const T& src)
+  {
+    using VTraits = vtkm::VecTraits<T>;
+    VTKM_ASSERT(this->GetNumberOfComponents() == VTraits::GetNumberOfComponents(src));
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
+    {
+      (*this)[cIndex] <<= VTraits::GetComponent(src, cIndex);
+    }
+    return *this;
+  }
+
 private:
   template <typename T>
   VTKM_EXEC_CONT void DoCopy(const T& src)
@@ -157,6 +268,13 @@ struct VecTraits<vtkm::internal::RecombineVec<PortalType>>
   static ComponentType GetComponent(const VecType& vector, vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
+  }
+
+  VTKM_EXEC_CONT static void SetComponent(const VecType& vector,
+                                          vtkm::IdComponent componentIndex,
+                                          const ComponentType& component)
+  {
+    vector[componentIndex] = component;
   }
 
   template <vtkm::IdComponent destSize>
