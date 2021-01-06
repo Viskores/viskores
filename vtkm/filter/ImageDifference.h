@@ -35,16 +35,31 @@ public:
 
   VTKM_CONT ImageDifference();
 
-  VTKM_CONT vtkm::IdComponent GetRadius() const { return this->Radius; }
-  VTKM_CONT void SetRadius(const vtkm::IdComponent& radius) { this->Radius = radius; }
-
-  VTKM_CONT vtkm::FloatDefault GetThreshold() const { return this->Threshold; }
-  VTKM_CONT void SetThreshold(const vtkm::FloatDefault& threshold) { this->Threshold = threshold; }
-
-  VTKM_CONT bool GetAveragePixels() const { return this->AveragePixels; }
-  VTKM_CONT void SetAveragePixels(const bool& averagePixels)
+  VTKM_CONT vtkm::IdComponent GetAverageRadius() const { return this->AverageRadius; }
+  VTKM_CONT void SetAverageRadius(const vtkm::IdComponent& averageRadius)
   {
-    this->AveragePixels = averagePixels;
+    this->AverageRadius = averageRadius;
+  }
+
+  VTKM_CONT vtkm::IdComponent GetPixelShiftRadius() const { return this->PixelShiftRadius; }
+  VTKM_CONT void SetPixelShiftRadius(const vtkm::IdComponent& pixelShiftRadius)
+  {
+    this->PixelShiftRadius = pixelShiftRadius;
+  }
+
+  VTKM_CONT vtkm::FloatDefault GetAllowedPixelErrorRatio() const
+  {
+    return this->AllowedPixelErrorRatio;
+  }
+  VTKM_CONT void SetAllowedPixelErrorRatio(const vtkm::FloatDefault& pixelErrorRatio)
+  {
+    this->AllowedPixelErrorRatio = pixelErrorRatio;
+  }
+
+  VTKM_CONT vtkm::FloatDefault GetPixelDiffThreshold() const { return this->PixelDiffThreshold; }
+  VTKM_CONT void SetPixelDiffThreshold(const vtkm::FloatDefault& threshold)
+  {
+    this->PixelDiffThreshold = threshold;
   }
 
   VTKM_CONT bool GetImageDiffWithinThreshold() const { return this->ImageDiffWithinThreshold; }
@@ -91,9 +106,10 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  vtkm::IdComponent Radius;
-  vtkm::FloatDefault Threshold;
-  bool AveragePixels;
+  vtkm::IdComponent AverageRadius;
+  vtkm::IdComponent PixelShiftRadius;
+  vtkm::FloatDefault AllowedPixelErrorRatio;
+  vtkm::FloatDefault PixelDiffThreshold;
   bool ImageDiffWithinThreshold;
   std::string SecondaryFieldName;
   vtkm::cont::Field::Association SecondaryFieldAssociation;

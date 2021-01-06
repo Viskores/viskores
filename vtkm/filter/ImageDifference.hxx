@@ -12,7 +12,6 @@
 
 #include <vtkm/filter/ImageDifference.h>
 
-#include <vtkm/BinaryOperators.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Logging.h>
@@ -25,11 +24,25 @@ namespace vtkm
 namespace filter
 {
 
+namespace detail
+{
+struct GreaterThanThreshold
+{
+  GreaterThanThreshold(const vtkm::FloatDefault& thresholdError)
+    : ThresholdError(thresholdError)
+  {
+  }
+  VTKM_EXEC_CONT bool operator()(const vtkm::FloatDefault& x) const { return x > ThresholdError; }
+  vtkm::FloatDefault ThresholdError;
+};
+} // namespace detail
+
 inline VTKM_CONT ImageDifference::ImageDifference()
   : vtkm::filter::FilterField<ImageDifference>()
-  , Radius(0)
-  , Threshold(0.05f)
-  , AveragePixels(false)
+  , AverageRadius(0)
+  , PixelShiftRadius(0)
+  , AllowedPixelErrorRatio(0.0001f)
+  , PixelDiffThreshold(0.05f)
   , ImageDiffWithinThreshold(true)
   , SecondaryFieldName("image-2")
   , SecondaryFieldAssociation(vtkm::cont::Field::Association::ANY)
@@ -64,10 +77,11 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   vtkm::cont::ArrayHandle<T, StorageType> secondaryOutput;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageType> thresholdOutput;
 
-  if (this->AveragePixels && this->Radius > 0)
+  if (this->AverageRadius > 0)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Performing Average with radius: " << this->Radius);
-    auto averageWorklet = vtkm::worklet::AveragePointNeighborhood(this->Radius);
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+               "Performing Average with radius: " << this->AverageRadius);
+    auto averageWorklet = vtkm::worklet::AveragePointNeighborhood(this->AverageRadius);
     this->Invoke(averageWorklet, cellSet, primary, primaryOutput);
     this->Invoke(averageWorklet, cellSet, secondary, secondaryOutput);
   }
@@ -79,10 +93,11 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
       secondaryField.GetData().template Cast<vtkm::cont::ArrayHandle<T, StorageType>>();
   }
 
-  if (this->Radius > 0)
+  if (this->PixelShiftRadius > 0)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Diffing image in Neighborhood");
-    auto diffWorklet = vtkm::worklet::ImageDifferenceNeighborhood(this->Radius, this->Threshold);
+    auto diffWorklet =
+      vtkm::worklet::ImageDifferenceNeighborhood(this->PixelShiftRadius, this->PixelDiffThreshold);
     this->Invoke(diffWorklet, cellSet, primaryOutput, secondaryOutput, diffOutput, thresholdOutput);
   }
   else
@@ -92,17 +107,26 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
     this->Invoke(diffWorklet, primaryOutput, secondaryOutput, diffOutput, thresholdOutput);
   }
 
-  // Dummy calculate the threshold.  If any value is greater than the min our images
-  // are not similar enough.
-  vtkm::FloatDefault maxThreshold =
-    vtkm::cont::Algorithm::Reduce(thresholdOutput, vtkm::FloatDefault(0), vtkm::Maximum());
-  if (maxThreshold > this->Threshold)
+
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageType> errorPixels;
+  vtkm::cont::Algorithm::CopyIf(thresholdOutput,
+                                thresholdOutput,
+                                errorPixels,
+                                detail::GreaterThanThreshold(this->PixelDiffThreshold));
+  if (errorPixels.GetNumberOfValues() >
+      thresholdOutput.GetNumberOfValues() * this->AllowedPixelErrorRatio)
   {
     this->ImageDiffWithinThreshold = false;
   }
 
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "Difference within threshold: " << this->ImageDiffWithinThreshold);
+             "Difference within threshold: "
+               << this->ImageDiffWithinThreshold
+               << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
+               << ", with total number of pixels: " << thresholdOutput.GetNumberOfValues()
+               << ", and an allowable percentage of errored pixels: "
+               << this->AllowedPixelErrorRatio << ", with a total summed threshold error: "
+               << vtkm::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));
 
   vtkm::cont::DataSet clone;
   clone.CopyStructure(input);
