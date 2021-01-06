@@ -131,9 +131,6 @@ struct Storage<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceStorage_>>
 
 } // namespace internal
 
-template <typename T1, typename T2, typename S>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T1, VTKM_PASS_COMMAS(vtkm::cont::StorageTagCast<T2, S>));
-
 /// \brief Cast the values of an array to the specified type, on demand.
 ///
 /// ArrayHandleCast is a specialization of ArrayHandleTransform. Given an ArrayHandle

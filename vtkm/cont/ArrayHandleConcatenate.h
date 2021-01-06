@@ -245,9 +245,6 @@ namespace vtkm
 namespace cont
 {
 
-template <typename T, typename S1, typename S2>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(StorageTagConcatenate<S1, S2>));
-
 template <typename ArrayHandleType1, typename ArrayHandleType2>
 class ArrayHandleConcatenate
   : public vtkm::cont::ArrayHandle<typename ArrayHandleType1::ValueType,

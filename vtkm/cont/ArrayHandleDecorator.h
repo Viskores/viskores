@@ -590,11 +590,6 @@ struct DecoratorHandleTraits
 
 } // namespace internal
 
-template <typename T, typename DecoratorImplT, typename... ArrayTs>
-VTKM_ARRAY_HANDLE_NEW_STYLE(
-  T,
-  VTKM_PASS_COMMAS(internal::StorageTagDecorator<DecoratorImplT, ArrayTs...>));
-
 /// \brief A fancy ArrayHandle that can be used to modify the results from one
 /// or more source ArrayHandle.
 ///

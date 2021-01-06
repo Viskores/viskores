@@ -144,10 +144,6 @@ struct ArrayHandleDiscardTraits
 
 } // end namespace internal
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagDiscard);
-
 /// ArrayHandleDiscard is a write-only array that discards all data written to
 /// it. This can be used to save memory when a filter provides optional outputs
 /// that are not needed.

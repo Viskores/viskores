@@ -196,10 +196,6 @@ public:
 
 } // namespace internal
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
-template <typename T, typename S>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagView<S>);
-
 template <typename ArrayHandleType>
 class ArrayHandleView
   : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,

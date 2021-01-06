@@ -201,10 +201,6 @@ public:
 };
 } // namespace internal
 
-template <typename T1, typename S1, typename T2, typename S2>
-VTKM_ARRAY_HANDLE_NEW_STYLE(VTKM_PASS_COMMAS(vtkm::Pair<T1, T2>),
-                            VTKM_PASS_COMMAS(vtkm::cont::StorageTagZip<S1, S2>));
-
 /// ArrayHandleZip is a specialization of ArrayHandle. It takes two delegate
 /// array handle and makes a new handle that access the corresponding entries
 /// in these arrays as a pair.

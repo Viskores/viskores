@@ -33,17 +33,17 @@ template class VTKM_CONT_EXPORT Storage<vtkm::Float64, StorageTagStride>;
 
 } // namespace internal
 
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<char, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Int8, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::UInt8, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Int16, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::UInt16, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Int32, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::UInt32, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Int64, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::UInt64, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Float32, StorageTagStride>;
-template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Float64, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<char, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Int8, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::UInt8, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Int16, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::UInt16, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Int32, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::UInt32, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Int64, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::UInt64, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Float32, StorageTagStride>;
+template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Float64, StorageTagStride>;
 
 }
 } // namespace vtkm::cont

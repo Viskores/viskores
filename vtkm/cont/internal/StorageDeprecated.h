@@ -25,11 +25,11 @@ namespace vtkm
 namespace cont
 {
 
-template <typename T, typename S>
-class ArrayHandle;
-
 namespace internal
 {
+
+template <typename T, typename S>
+class ArrayHandleDeprecated;
 
 namespace detail
 {
@@ -98,7 +98,7 @@ class StorageDeprecated
   using T = typename detail::StorageTemplateParams<StorageType>::ValueType;
   using StorageTag = typename detail::StorageTemplateParams<StorageType>::StorageTag;
 
-  using ArrayType = vtkm::cont::ArrayHandle<T, StorageTag>;
+  using ArrayType = vtkm::cont::internal::ArrayHandleDeprecated<T, StorageTag>;
 
   VTKM_CONT static ArrayType GetArray(const vtkm::cont::internal::Buffer* buffers)
   {

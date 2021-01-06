@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/Buffer.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>

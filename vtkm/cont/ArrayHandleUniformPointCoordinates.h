@@ -37,9 +37,6 @@ struct Storage<vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints>
 
 } // namespace internal
 
-template <>
-VTKM_ARRAY_HANDLE_NEW_STYLE(vtkm::Vec3f, vtkm::cont::StorageTagUniformPoints);
-
 /// ArrayHandleUniformPointCoordinates is a specialization of ArrayHandle. It
 /// contains the information necessary to compute the point coordinates in a
 /// uniform orthogonal grid (extent, origin, and spacing) and implicitly

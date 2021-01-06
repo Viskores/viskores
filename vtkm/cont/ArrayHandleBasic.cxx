@@ -41,11 +41,11 @@ VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
 
 } // namespace internal
 
-#define VTKM_ARRAYHANDLE_INSTANTIATE(Type)                                                  \
-  template class VTKM_CONT_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>;               \
-  template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandleNewStyle<vtkm::Vec<Type, 4>, StorageTagBasic>;
+#define VTKM_ARRAYHANDLE_INSTANTIATE(Type)                                          \
+  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;               \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>; \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>; \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_ARRAYHANDLE_INSTANTIATE(char)
 VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int8)

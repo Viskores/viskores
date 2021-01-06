@@ -83,9 +83,6 @@ struct Storage<T, vtkm::cont::StorageTagCounting> : Storage<T, StorageTagCountin
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagCounting);
-
 /// ArrayHandleCounting is a specialization of ArrayHandle. By default it
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length

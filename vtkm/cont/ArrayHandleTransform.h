@@ -416,9 +416,6 @@ public:
 
 } // namespace internal
 
-template <typename T, typename A, typename F, typename IF>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(internal::StorageTagTransform<A, F, IF>));
-
 /// \brief Implicitly transform values of one array to another with a functor.
 ///
 /// ArrayHandleTransforms is a specialization of ArrayHandle. It takes a

@@ -211,9 +211,6 @@ public:
 
 } // namespace internal
 
-template <typename T, typename S1, typename S2>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(vtkm::cont::StorageTagGroupVecVariable<S1, S2>));
-
 /// \brief Fancy array handle that groups values into vectors of different sizes.
 ///
 /// It is sometimes the case that you need to run a worklet with an input or

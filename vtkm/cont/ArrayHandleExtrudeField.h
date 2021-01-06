@@ -13,10 +13,15 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageExtrude.h>
 
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
+
 namespace vtkm
 {
 namespace cont
 {
+
+template <typename T>
+VTKM_ARRAY_HANDLE_DEPRECATED(T, vtkm::cont::internal::StorageTagExtrude);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleExtrudeField

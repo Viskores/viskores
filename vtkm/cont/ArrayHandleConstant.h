@@ -51,9 +51,6 @@ struct Storage<T, vtkm::cont::StorageTagConstant> : Storage<T, StorageTagConstan
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagConstant);
-
 /// \brief An array handle with a constant value.
 ///
 /// ArrayHandleConstant is an implicit array handle with a constant value. A
