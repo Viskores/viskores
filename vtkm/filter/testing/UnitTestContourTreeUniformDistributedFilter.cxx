@@ -70,24 +70,22 @@ public:
     TestContourTreeUniformDistributed8x9(4);
     TestContourTreeUniformDistributed8x9(8);
     TestContourTreeUniformDistributed8x9(16);
-#if 0
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::DataPath("rectilinear/vanc.ct_txt"),
+                        Testing::RegressionImagePath("vanc.ct_txt"),
                         2);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::DataPath("rectilinear/vanc.ct_txt"),
+                        Testing::RegressionImagePath("vanc.ct_txt"),
                         4);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::DataPath("rectilinear/vanc.ct_txt"),
+                        Testing::RegressionImagePath("vanc.ct_txt"),
                         8);
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
-                        Testing::DataPath("rectilinear/vanc.ct_txt"),
+                        Testing::RegressionImagePath("vanc.ct_txt"),
                         16);
-#endif
     TestContourTreeUniformDistributed5x6x7(2, false);
     TestContourTreeUniformDistributed5x6x7(4, false);
     TestContourTreeUniformDistributed5x6x7(8, false);
