@@ -53,20 +53,20 @@ struct launchComputePass4
             typename MeshSums,
             typename PointType,
             typename NormalType>
-  VTKM_CONT bool operator()(DeviceAdapterTag device,
-                            vtkm::Id vtkmNotUsed(newPointSize),
-                            T isoval,
-                            const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
-                            vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
-                            const MeshSums& metaDataSums,
-                            const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMin,
-                            const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMax,
-                            const vtkm::cont::ArrayHandle<vtkm::Int32>& metaDataNumTris,
-                            vtkm::worklet::contour::CommonState& sharedState,
-                            vtkm::cont::ArrayHandle<vtkm::Id>& triangle_topology,
-                            PointType& points,
-                            NormalType& normals) const
+  VTKM_CONT bool LaunchXAxis(DeviceAdapterTag device,
+                             vtkm::Id vtkmNotUsed(newPointSize),
+                             T isoval,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             const MeshSums& metaDataSums,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMin,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMax,
+                             const vtkm::cont::ArrayHandle<vtkm::Int32>& metaDataNumTris,
+                             vtkm::worklet::contour::CommonState& sharedState,
+                             vtkm::cont::ArrayHandle<vtkm::Id>& triangle_topology,
+                             PointType& points,
+                             NormalType& normals) const
   {
     vtkm::cont::Invoker invoke(device);
     if (sharedState.GenerateNormals)
@@ -118,25 +118,26 @@ struct launchComputePass4
     return true;
   }
 
-  template <typename T,
+  template <typename DeviceAdapterTag,
+            typename T,
             typename StorageTagField,
             typename MeshSums,
             typename PointType,
             typename NormalType>
-  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device,
-                            vtkm::Id newPointSize,
-                            T isoval,
-                            const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
-                            vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
-                            const MeshSums& metaDataSums,
-                            const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMin,
-                            const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMax,
-                            const vtkm::cont::ArrayHandle<vtkm::Int32>& metaDataNumTris,
-                            vtkm::worklet::contour::CommonState& sharedState,
-                            vtkm::cont::ArrayHandle<vtkm::Id>& triangle_topology,
-                            PointType& points,
-                            NormalType& normals) const
+  VTKM_CONT bool LaunchYAxis(DeviceAdapterTag device,
+                             vtkm::Id newPointSize,
+                             T isoval,
+                             const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
+                             vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
+                             vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
+                             const MeshSums& metaDataSums,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMin,
+                             const vtkm::cont::ArrayHandle<vtkm::Id>& metaDataMax,
+                             const vtkm::cont::ArrayHandle<vtkm::Int32>& metaDataNumTris,
+                             vtkm::worklet::contour::CommonState& sharedState,
+                             vtkm::cont::ArrayHandle<vtkm::Id>& triangle_topology,
+                             PointType& points,
+                             NormalType& normals) const
   {
     vtkm::cont::Invoker invoke(device);
 
@@ -171,6 +172,24 @@ struct launchComputePass4
            normals);
 
     return true;
+  }
+
+  template <typename DeviceAdapterTag, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
+  {
+    return this->LaunchXAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagKokkos device, Args&&... args) const
+  {
+    return this->LaunchYAxis(device, std::forward<Args>(args)...);
   }
 };
 }

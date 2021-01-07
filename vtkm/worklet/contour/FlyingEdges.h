@@ -109,11 +109,11 @@ vtkm::cont::CellSetSingleType<> execute(
     {
       VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "FlyingEdges Pass1");
 
-      // We have different logic for CUDA compared to Shared memory systems
+      // We have different logic for GPU's compared to Shared memory systems
       // since this is the first touch of lots of the arrays, and will effect
       // NUMA perf.
       //
-      // Additionally CUDA does significantly better when you do an initial fill
+      // Additionally GPU's does significantly better when you do an initial fill
       // and write only non-below values
       //
       ComputePass1<ValueType> worklet1(isoval, pdims);
