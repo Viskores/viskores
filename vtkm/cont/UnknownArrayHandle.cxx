@@ -22,7 +22,21 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 
-using UnknownSerializationTypes = vtkm::TypeListAll;
+namespace
+{
+
+template <vtkm::IdComponent N>
+struct ScalarToVec
+{
+  template <typename T>
+  using Transform = vtkm::Vec<T, N>;
+};
+
+template <vtkm::IdComponent N>
+using AllVec = vtkm::ListTransform<vtkm::TypeListBaseC, ScalarToVec<N>::template Transform>;
+
+using UnknownSerializationTypes =
+  vtkm::ListAppend<vtkm::TypeListBaseC, AllVec<2>, AllVec<3>, AllVec<4>>;
 using UnknownSerializationStorage =
   vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST,
                    vtkm::List<vtkm::cont::StorageTagBasic,
@@ -40,6 +54,8 @@ using UnknownSerializationStorage =
                               vtkm::cont::StorageTagReverse<vtkm::cont::StorageTagBasic>,
                               vtkm::cont::StorageTagSOA,
                               vtkm::cont::StorageTagUniformPoints>>;
+
+} // anonymous namespace
 
 namespace vtkm
 {
