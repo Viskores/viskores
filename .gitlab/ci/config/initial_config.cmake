@@ -76,6 +76,9 @@ foreach(option IN LISTS options)
   elseif(kokkos STREQUAL option)
     set(VTKm_ENABLE_KOKKOS "ON" CACHE STRING "")
 
+  elseif(hdf5 STREQUAL option)
+    set(VTKm_ENABLE_HDF5_IO "ON" CACHE STRING "")
+
   elseif(maxwell STREQUAL option)
     set(VTKm_CUDA_Architecture "maxwell" CACHE STRING "")
 

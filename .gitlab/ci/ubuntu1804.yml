@@ -16,7 +16,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared"
+    VTKM_SETTINGS: "tbb+openmp+mpi+shared+hdf5"
 
 test:ubuntu1804_gcc9:
   tags:
