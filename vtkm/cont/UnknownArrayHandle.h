@@ -425,8 +425,7 @@ public:
   /// If the array holds `Vec`-like objects that have the number of components that can vary
   /// at runtime, this method will return 0 (because there is no consistent answer).
   ///
-  VTKM_CONT VTKM_DEPRECATED(1.6, "Use GetNumberOfComponentsFlat.") vtkm::IdComponent
-    GetNumberOfComponents() const;
+  VTKM_CONT vtkm::IdComponent GetNumberOfComponents() const;
 
   /// \brief Returns the total number of components for each value in the array.
   ///
