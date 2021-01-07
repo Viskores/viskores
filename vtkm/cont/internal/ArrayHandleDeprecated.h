@@ -65,7 +65,8 @@ public:
   // Handle the fact that the ArrayHandle design has changed.
   VTKM_STATIC_ASSERT_MSG((std::is_same<typename StorageType::HasOldBridge, std::true_type>::value),
                          "ArrayHandle design has changed. To support old-style arrays, have the "
-                         "Storage implementation subclass StorageDeprecated.");
+                         "Storage implementation declare VTKM_STORAGE_OLD_STYLE at the bottom "
+                         "of its implementation.");
   VTKM_CONT static constexpr vtkm::IdComponent GetNumberOfBuffers() { return 1; }
   VTKM_CONT vtkm::cont::internal::Buffer* GetBuffers() const
   {
