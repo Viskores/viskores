@@ -172,14 +172,15 @@ public:
   /// This operation is typically used in a loop. For example usage,
   /// an atomic multiplication may be implemented using compare-exchange as follows:
   ///
-  /// ```
-  /// AtomicArrayExecutionObject<vtkm::Int32, ...> arr = ...;
+  /// ```cpp
+  /// AtomicArrayExecutionObject<vtkm::Int32, ...> atomicArray = ...;
   ///
   /// // Compare-exchange multiplication:
-  /// vtkm::Int32 current = arr->Get(idx); // Load the current value at idx
+  /// vtkm::Int32 current = atomicArray.Get(idx); // Load the current value at idx
+  /// vtkm::Int32 newVal;
   /// do {
-  ///   vtkm::Int32 newVal = current * multFactor; // the actual multiplication
-  /// } while (!arr->CompareExchange(idx, &current, newVal));
+  ///   newVal = current * multFactor; // the actual multiplication
+  /// } while (!atomicArray.CompareExchange(idx, &current, newVal));
   /// ```
   ///
   /// The while condition here updates \a newVal what the proper multiplication
@@ -190,6 +191,15 @@ public:
   /// the target element was not modified by the compare-exchange call. If this happens, the
   /// loop body re-executes using the new value of \a current and tries again until
   /// it succeeds.
+  ///
+  /// Note that for demonstration purposes, the previous code is unnecessarily verbose.
+  /// We can express the same atomic operation more succinctly with just two lines where
+  /// \a newVal is just computed in place.
+  ///
+  /// ```cpp
+  /// vtkm::Int32 current = atomicArray.Get(idx); // Load the current value at idx
+  /// while (!atomicArray.CompareExchange(idx, &current, current * multFactor));
+  /// ```
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
