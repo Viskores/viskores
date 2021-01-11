@@ -443,14 +443,15 @@ void TryExtractComponent()
 
   VTKM_TEST_ASSERT(unknownArray.GetNumberOfComponentsFlat() == FlatVec::NUM_COMPONENTS);
 
-  auto componentPortal = unknownArray.ReadPortalForBaseComponentType<ComponentType>();
-
   auto originalPortal = originalArray.ReadPortal();
+  auto extractedArray = unknownArray.ExtractArrayFromComponents<ComponentType>();
+  VTKM_TEST_ASSERT(extractedArray.GetNumberOfComponents() == FlatVec::NUM_COMPONENTS);
+  auto extractedPortal = extractedArray.ReadPortal();
   for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
   {
     FlatVec originalData = originalPortal.Get(valueIndex);
-    auto componentData = componentPortal.Get(valueIndex);
-    VTKM_TEST_ASSERT(test_equal(originalData, componentData));
+    auto extractedData = extractedPortal.Get(valueIndex);
+    VTKM_TEST_ASSERT(test_equal(originalData, extractedData));
   }
 }
 

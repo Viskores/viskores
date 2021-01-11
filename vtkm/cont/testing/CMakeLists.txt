@@ -36,6 +36,7 @@ set(unit_tests
   UnitTestArrayGetValues.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
+  UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
@@ -52,7 +53,6 @@ set(unit_tests
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayHandleVirtual.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocatorGeneral.cxx
