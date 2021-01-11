@@ -19,9 +19,6 @@
 
 #include <vtkm/internal/ArrayPortalValueReference.h>
 
-#include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
-#include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
-
 namespace vtkm
 {
 namespace internal
@@ -470,31 +467,8 @@ struct ArrayExtractComponentImpl<vtkm::cont::internal::StorageTagRecombineVec>
 }
 } // namespace vtkm::cont
 
-namespace vtkm
-{
-namespace exec
-{
-namespace arg
-{
-
-// The `Fetch` for direct array out breaks for `ArrayHandleRecombineVec` because the `Load`
-// method attempts to create a `vtkm::internal::RecombineVec` with a default constructor,
-// which does not exist. Instead, have the direct out `Fetch` behave like the direct in/out
-// `Fetch`, which loads the initial value from the array. The actual load will not load the
-// data but rather set up the portals in the returned object, which is necessary for the
-// later `Store` to work anyway.
-template <typename SourcePortalType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
-             vtkm::exec::arg::AspectTagDefault,
-             vtkm::internal::ArrayPortalRecombineVec<SourcePortalType>>
-  : Fetch<vtkm::exec::arg::FetchTagArrayDirectInOut,
-          vtkm::exec::arg::AspectTagDefault,
-          vtkm::internal::ArrayPortalRecombineVec<SourcePortalType>>
-{
-};
-
-}
-}
-} // namespace vtkm::exec::arg
+//=============================================================================
+// Specializations of worklet arguments using ArrayHandleGropuVecVariable
+#include <vtkm/exec/arg/FetchTagArrayDirectOutArrayHandleRecombineVec.h>
 
 #endif //vtk_m_cont_ArrayHandleRecombineVec_h
