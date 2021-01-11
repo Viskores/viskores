@@ -25,15 +25,18 @@
 namespace
 {
 
-template <vtkm::IdComponent N>
-struct ScalarToVec
+template <vtkm::IdComponent N, typename ScalarList>
+struct AllVecImpl;
+template <vtkm::IdComponent N, typename... Scalars>
+struct AllVecImpl<N, vtkm::List<Scalars...>>
 {
-  template <typename T>
-  using Transform = vtkm::Vec<T, N>;
+  using type = vtkm::List<vtkm::Vec<Scalars, N>...>;
 };
 
+// Normally I would implement this with vtkm::ListTransform, but that is causing an ICE in GCC 4.8.
+// This implementation is not much different.
 template <vtkm::IdComponent N>
-using AllVec = vtkm::ListTransform<vtkm::TypeListBaseC, ScalarToVec<N>::template Transform>;
+using AllVec = typename AllVecImpl<N, vtkm::TypeListBaseC>::type;
 
 using UnknownSerializationTypes =
   vtkm::ListAppend<vtkm::TypeListBaseC, AllVec<2>, AllVec<3>, AllVec<4>>;
