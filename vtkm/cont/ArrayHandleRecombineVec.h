@@ -33,6 +33,8 @@ class RecombineVec
 public:
   using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;
 
+  RecombineVec(const RecombineVec&) = default;
+
   VTKM_EXEC_CONT RecombineVec(const vtkm::VecCConst<PortalType>& portals, vtkm::Id index)
     : Portals(portals)
     , Index(index)
