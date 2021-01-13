@@ -23,7 +23,7 @@ namespace detail
 VTKM_DEPRECATED_SUPPRESS_BEGIN
 vtkm::cont::ArrayHandleVirtualCoordinates CoordDataDepWrapper::ToArray() const
 {
-  return this->Cast<vtkm::cont::ArrayHandleVirtualCoordinates>();
+  return this->AsArrayHandle<vtkm::cont::ArrayHandleVirtualCoordinates>();
 }
 VTKM_DEPRECATED_SUPPRESS_END
 
