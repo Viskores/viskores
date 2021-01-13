@@ -35,7 +35,7 @@ namespace cont
 
 /// constructors for points / whole mesh
 VTKM_CONT
-Field::Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data)
+Field::Field(std::string name, Association association, const vtkm::cont::UnknownArrayHandle& data)
   : Name(name)
   , FieldAssociation(association)
   , Data(data)

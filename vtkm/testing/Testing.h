@@ -129,6 +129,7 @@ VTK_M_BASIC_TYPE(vtkm::Int64, I64);
 VTK_M_BASIC_TYPE(vtkm::UInt64, UI64);
 
 // types without vtkm::typedefs:
+VTK_M_BASIC_TYPE(bool, bool);
 VTK_M_BASIC_TYPE(char, char);
 VTK_M_BASIC_TYPE(long, long);
 VTK_M_BASIC_TYPE(unsigned long, unsigned long);

@@ -22,7 +22,24 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 
-using UnknownSerializationTypes = vtkm::TypeListAll;
+namespace
+{
+
+template <vtkm::IdComponent N, typename ScalarList>
+struct AllVecImpl;
+template <vtkm::IdComponent N, typename... Scalars>
+struct AllVecImpl<N, vtkm::List<Scalars...>>
+{
+  using type = vtkm::List<vtkm::Vec<Scalars, N>...>;
+};
+
+// Normally I would implement this with vtkm::ListTransform, but that is causing an ICE in GCC 4.8.
+// This implementation is not much different.
+template <vtkm::IdComponent N>
+using AllVec = typename AllVecImpl<N, vtkm::TypeListBaseC>::type;
+
+using UnknownSerializationTypes =
+  vtkm::ListAppend<vtkm::TypeListBaseC, AllVec<2>, AllVec<3>, AllVec<4>>;
 using UnknownSerializationStorage =
   vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST,
                    vtkm::List<vtkm::cont::StorageTagBasic,
@@ -41,6 +58,8 @@ using UnknownSerializationStorage =
                               vtkm::cont::StorageTagSOA,
                               vtkm::cont::StorageTagUniformPoints>>;
 
+} // anonymous namespace
+
 namespace vtkm
 {
 namespace cont
@@ -57,6 +76,20 @@ std::shared_ptr<UnknownAHContainer> UnknownAHContainer::MakeNewInstance() const
   std::shared_ptr<UnknownAHContainer> newContainer(new UnknownAHContainer(*this));
   newContainer->ArrayHandlePointer = this->NewInstance();
   return newContainer;
+}
+
+bool UnknownAHComponentInfo::operator==(const UnknownAHComponentInfo& rhs)
+{
+  if (this->IsIntegral || this->IsFloat)
+  {
+    return ((this->IsIntegral == rhs.IsIntegral) && (this->IsFloat == rhs.IsFloat) &&
+            (this->IsSigned == rhs.IsSigned) && (this->Size == rhs.Size));
+  }
+  else
+  {
+    // Needs optimization based on platform. OSX cannot compare typeid across translation units?
+    return this->Type == rhs.Type;
+  }
 }
 
 } // namespace detail
@@ -83,7 +116,8 @@ VTKM_CONT bool UnknownArrayHandle::IsStorageTypeImpl(std::type_index type) const
   return this->Container->StorageType == type;
 }
 
-VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(std::type_index type) const
+VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(
+  const detail::UnknownAHComponentInfo& type) const
 {
   if (!this->Container)
   {
