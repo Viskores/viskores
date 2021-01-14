@@ -108,7 +108,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   }
 
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageType> errorPixels;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> errorPixels;
   vtkm::cont::Algorithm::CopyIf(thresholdOutput,
                                 thresholdOutput,
                                 errorPixels,
