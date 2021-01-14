@@ -91,8 +91,10 @@ vtkm_library(
 
 target_link_libraries(vtkm_io PUBLIC vtkm_cont PRIVATE vtkm_lodepng)
 if (VTKm_ENABLE_HDF5_IO)
+  target_include_directories(vtkm_io PRIVATE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIR}>)
   target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES})
 endif()
+
 add_subdirectory(internal)
 add_subdirectory(reader)
 add_subdirectory(writer)
