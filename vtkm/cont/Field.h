@@ -58,13 +58,13 @@ public:
   Field() = default;
 
   VTKM_CONT
-  Field(std::string name, Association association, const vtkm::cont::VariantArrayHandle& data);
+  Field(std::string name, Association association, const vtkm::cont::UnknownArrayHandle& data);
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
-    : Field(name, association, vtkm::cont::VariantArrayHandle{ data })
+    : Field(name, association, vtkm::cont::UnknownArrayHandle{ data })
   {
   }
 

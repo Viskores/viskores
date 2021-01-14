@@ -128,20 +128,17 @@ struct VTKM_ALWAYS_EXPORT StorageTagSOA
 namespace internal
 {
 
-template <typename T>
-class VTKM_ALWAYS_EXPORT Storage<T, vtkm::cont::StorageTagSOA>
+template <typename ComponentType, vtkm::IdComponent NUM_COMPONENTS>
+class VTKM_ALWAYS_EXPORT
+  Storage<vtkm::Vec<ComponentType, NUM_COMPONENTS>, vtkm::cont::StorageTagSOA>
 {
-  VTKM_STATIC_ASSERT(vtkm::HasVecTraits<T>::value);
-  using VTraits = vtkm::VecTraits<T>;
-
-  using ComponentType = typename VTraits::ComponentType;
-  static constexpr vtkm::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
+  using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
 public:
   using ReadPortalType =
-    vtkm::internal::ArrayPortalSOA<T, vtkm::internal::ArrayPortalBasicRead<ComponentType>>;
+    vtkm::internal::ArrayPortalSOA<ValueType, vtkm::internal::ArrayPortalBasicRead<ComponentType>>;
   using WritePortalType =
-    vtkm::internal::ArrayPortalSOA<T, vtkm::internal::ArrayPortalBasicWrite<ComponentType>>;
+    vtkm::internal::ArrayPortalSOA<ValueType, vtkm::internal::ArrayPortalBasicWrite<ComponentType>>;
 
   VTKM_CONT constexpr static vtkm::IdComponent GetNumberOfBuffers() { return NUM_COMPONENTS; }
 
@@ -203,9 +200,6 @@ public:
 };
 
 } // namespace internal
-
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagSOA);
 
 /// \brief An `ArrayHandle` that for Vecs stores each component in a separate physical array.
 ///
@@ -632,7 +626,6 @@ namespace cont
 {
 
 #define VTKM_ARRAYHANDLE_SOA_EXPORT(Type)                                                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagSOA>;               \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagSOA>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagSOA>; \
   extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagSOA>;

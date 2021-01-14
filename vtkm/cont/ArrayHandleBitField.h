@@ -136,9 +136,6 @@ public:
 } // end namespace internal
 
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagBitField);
-
 /// The ArrayHandleBitField class is a boolean-valued ArrayHandle that is backed
 /// by a BitField.
 ///

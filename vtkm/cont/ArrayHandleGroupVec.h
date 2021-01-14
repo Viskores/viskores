@@ -174,9 +174,6 @@ public:
 
 } // namespace internal
 
-template <typename T, vtkm::IdComponent N, typename S>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(vtkm::cont::StorageTagGroupVec<S, N>));
-
 /// \brief Fancy array handle that groups values into vectors.
 ///
 /// It is sometimes the case that an array is stored such that consecutive

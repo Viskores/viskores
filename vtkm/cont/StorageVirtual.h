@@ -15,6 +15,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
+#include <vtkm/cont/internal/StorageDeprecated.h>
 #include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/internal/ArrayPortalVirtual.h>
 

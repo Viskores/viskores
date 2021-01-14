@@ -32,6 +32,7 @@
 #     - tbb
 #     - openmp
 #     - mpich2
+#     - hdf5
 #   * .gitlab/ci/docker/ubuntu1804/cuda11.1/
 #     - cuda
 #     - gcc 7
@@ -75,8 +76,7 @@
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-#  image: "kitware/vtkm:ci-ubuntu1804-20201016"
-  image: "ollielo/vtkm:ci-ubuntu1804-01042020"
+  image: "kitware/vtkm:ci-ubuntu1804-20210107"
   extends:
     - .docker_image
 

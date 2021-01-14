@@ -12,8 +12,9 @@
 
 #include <vtkm/cont/StorageVirtual.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/TransferInfo.h>
 
+#include <vtkm/cont/internal/ArrayTransfer.h>
+#include <vtkm/cont/internal/TransferInfo.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 

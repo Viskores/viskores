@@ -170,9 +170,6 @@ namespace vtkm
 namespace cont
 {
 
-template <typename T, typename ArrayT>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagExtractComponent<ArrayT>);
-
 /// \brief A fancy ArrayHandle that turns a vector array into a scalar array by
 /// slicing out a single component of each vector.
 ///

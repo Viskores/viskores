@@ -86,7 +86,8 @@ struct OutputArrayDataFunctor
   template <typename T>
   VTKM_CONT void operator()(T, const vtkm::cont::UnknownArrayHandle& array, std::ostream& out) const
   {
-    auto portal = array.ReadPortalForBaseComponentType<T>();
+    auto componentArray = array.ExtractArrayFromComponents<T>();
+    auto portal = componentArray.ReadPortal();
 
     vtkm::Id numValues = portal.GetNumberOfValues();
     for (vtkm::Id valueIndex = 0; valueIndex < numValues; ++valueIndex)

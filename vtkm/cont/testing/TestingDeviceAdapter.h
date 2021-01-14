@@ -29,6 +29,7 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/Timer.h>
 
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <vtkm/cont/testing/Testing.h>

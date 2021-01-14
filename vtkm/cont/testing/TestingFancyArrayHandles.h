@@ -24,6 +24,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleView.h>
@@ -222,12 +223,12 @@ public:
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn, FieldOut);
-    using ExecutionSignature = _2(_1);
+    using ExecutionSignature = void(_1, _2);
 
-    template <class ValueType>
-    VTKM_EXEC ValueType operator()(const ValueType& inValue) const
+    template <typename InValue, typename OutValue>
+    VTKM_EXEC void operator()(const InValue& inValue, OutValue& outValue) const
     {
-      return inValue;
+      outValue = inValue;
     }
   };
 
@@ -1154,6 +1155,61 @@ private:
     }
   };
 
+  struct TestRecombineVecAsInput
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      vtkm::cont::ArrayHandle<T> baseArray;
+      baseArray.Allocate(ARRAY_SIZE);
+      SetPortal(baseArray.WritePortal());
+
+      using VTraits = vtkm::VecTraits<T>;
+      vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
+      for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
+      {
+        recombinedArray.AppendComponentArray(vtkm::cont::ArrayExtractComponent(baseArray, cIndex));
+      }
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
+
+      vtkm::cont::ArrayHandle<T> outputArray;
+      vtkm::cont::Invoker invoke;
+      invoke(PassThrough{}, recombinedArray, outputArray);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+    }
+  };
+
+  struct TestRecombineVecAsOutput
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      vtkm::cont::ArrayHandle<T> baseArray;
+      baseArray.Allocate(ARRAY_SIZE);
+      SetPortal(baseArray.WritePortal());
+
+      vtkm::cont::ArrayHandle<T> outputArray;
+      outputArray.Allocate(ARRAY_SIZE); // Cannot resize after recombine
+
+      using VTraits = vtkm::VecTraits<T>;
+      vtkm::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
+      for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
+      {
+        recombinedArray.AppendComponentArray(
+          vtkm::cont::ArrayExtractComponent(outputArray, cIndex));
+      }
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
+      VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
+
+      vtkm::cont::Invoker invoke;
+      invoke(PassThrough{}, baseArray, recombinedArray);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(baseArray, outputArray));
+    }
+  };
+
   struct TestZipAsInput
   {
     template <typename KeyType, typename ValueType>
@@ -1426,6 +1482,8 @@ private:
 
   using ScalarTypesToTest = vtkm::List<vtkm::UInt8, vtkm::FloatDefault>;
 
+  using VectorTypesToTest = vtkm::List<vtkm::Vec2i_8, vtkm::Vec3f_32>;
+
   using ZipTypesToTest = vtkm::List<vtkm::Pair<vtkm::UInt8, vtkm::Id>,
                                     vtkm::Pair<vtkm::Float64, vtkm::Vec4ui_8>,
                                     vtkm::Pair<vtkm::Vec3f_32, vtkm::Vec4i_8>>;
@@ -1449,12 +1507,12 @@ private:
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleSOA as Input" << std::endl;
       vtkm::testing::Testing::TryTypes(TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsInput(),
-                                       HandleTypesToTest());
+                                       VectorTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleSOA as Output" << std::endl;
       vtkm::testing::Testing::TryTypes(
-        TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsOutput(), HandleTypesToTest());
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestSOAAsOutput(), VectorTypesToTest());
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleCompositeVector as Input" << std::endl;
@@ -1554,6 +1612,17 @@ private:
       vtkm::testing::Testing::TryTypes(
         TestingFancyArrayHandles<DeviceAdapterTag>::TestGroupVecVariableAsOutput(),
         ScalarTypesToTest());
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleRecombineVec as Input" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestRecombineVecAsInput(), HandleTypesToTest{});
+
+      std::cout << "-------------------------------------------" << std::endl;
+      std::cout << "Testing ArrayHandleRecombineVec as Output" << std::endl;
+      vtkm::testing::Testing::TryTypes(
+        TestingFancyArrayHandles<DeviceAdapterTag>::TestRecombineVecAsOutput(),
+        HandleTypesToTest{});
 
       std::cout << "-------------------------------------------" << std::endl;
       std::cout << "Testing ArrayHandleZip as Input" << std::endl;

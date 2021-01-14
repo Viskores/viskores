@@ -19,7 +19,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       software-properties-common
 
 # extra dependencies for charm machine
-#RUN add-apt-repository ppa:jonathonf/gcc-9.2
 RUN add-apt-repository ppa:jonathonf/gcc
 RUN apt-get update && apt-get install -y --no-install-recommends \
       clang-8 \

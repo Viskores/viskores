@@ -402,9 +402,6 @@ struct Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, S
 
 } // namespace internal
 
-template <typename T, typename... Ss>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagCompositeVec<Ss...>);
-
 /// \brief An \c ArrayHandle that combines components from other arrays.
 ///
 /// \c ArrayHandleCompositeVector is a specialization of \c ArrayHandle that

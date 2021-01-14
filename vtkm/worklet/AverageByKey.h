@@ -27,36 +27,30 @@ struct AverageByKey
   struct AverageWorklet : public vtkm::worklet::WorkletReduceByKey
   {
     using ControlSignature = void(KeysIn keys, ValuesIn valuesIn, ReducedValuesOut averages);
-    using ExecutionSignature = _3(_2);
+    using ExecutionSignature = void(_2, _3);
     using InputDomain = _1;
 
-    template <typename ValuesVecType>
-    VTKM_EXEC typename ValuesVecType::ComponentType operator()(const ValuesVecType& valuesIn) const
+    template <typename ValuesVecType, typename OutType>
+    VTKM_EXEC void operator()(const ValuesVecType& valuesIn, OutType& sum) const
     {
-      using FieldType = typename ValuesVecType::ComponentType;
-      FieldType sum = valuesIn[0];
+      sum = valuesIn[0];
       for (vtkm::IdComponent index = 1; index < valuesIn.GetNumberOfComponents(); ++index)
       {
-        FieldType component = valuesIn[index];
-        // FieldType constructor is for when OutType is a Vec.
-        // static_cast is for when FieldType is a small int that gets promoted to int32.
-        sum = static_cast<FieldType>(sum + component);
+        sum += valuesIn[index];
       }
 
       // To get the average, we (of course) divide the sum by the amount of values, which is
       // returned from valuesIn.GetNumberOfComponents(). To do this, we need to cast the number of
       // components (returned as a vtkm::IdComponent) to a FieldType. This is a little more complex
-      // than it first seems because FieldType might be a Vec type. If you just try a
-      // static_cast<FieldType>(), it will use the constructor to FieldType which might be a Vec
-      // constructor expecting the type of the component. So, get around this problem by first
-      // casting to the component type of the field and then constructing a field value from that.
-      // We use the VecTraits class to make this work regardless of whether FieldType is a real Vec
-      // or just a scalar.
-      using ComponentType = typename vtkm::VecTraits<FieldType>::ComponentType;
-      // FieldType constructor is for when OutType is a Vec.
-      // static_cast is for when FieldType is a small int that gets promoted to int32.
-      return static_cast<FieldType>(
-        sum / FieldType(static_cast<ComponentType>(valuesIn.GetNumberOfComponents())));
+      // than it first seems because FieldType might be a Vec type or a Vec-like type that cannot
+      // be constructed. To do this safely, we will do a component-wise divide.
+      using VTraits = vtkm::VecTraits<OutType>;
+      using ComponentType = typename VTraits::ComponentType;
+      ComponentType divisor = static_cast<ComponentType>(valuesIn.GetNumberOfComponents());
+      for (vtkm::IdComponent cIndex = 0; cIndex < VTraits::GetNumberOfComponents(sum); ++cIndex)
+      {
+        VTraits::SetComponent(sum, cIndex, VTraits::GetComponent(sum, cIndex) / divisor);
+      }
     }
   };
 

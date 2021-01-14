@@ -172,9 +172,6 @@ public:
 
 } // namespace internal
 
-template <typename T, typename IS, typename VS>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, VTKM_PASS_COMMAS(vtkm::cont::StorageTagPermutation<IS, VS>));
-
 /// \brief Implicitly permutes the values in an array.
 ///
 /// ArrayHandlePermutation is a specialization of ArrayHandle. It takes two

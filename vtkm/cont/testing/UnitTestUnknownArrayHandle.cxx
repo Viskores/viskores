@@ -428,6 +428,26 @@ void TryAsArrayHandle()
   TryAsArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
 }
 
+struct CheckExtractedArray
+{
+  template <typename ExtractedArray, typename OriginalArray>
+  void operator()(const ExtractedArray& extractedArray, const OriginalArray& originalArray) const
+  {
+    using ValueType = typename OriginalArray::ValueType;
+    using FlatVec = vtkm::VecFlat<ValueType>;
+
+    VTKM_TEST_ASSERT(extractedArray.GetNumberOfComponents() == FlatVec::NUM_COMPONENTS);
+    auto originalPortal = originalArray.ReadPortal();
+    auto extractedPortal = extractedArray.ReadPortal();
+    for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
+    {
+      FlatVec originalData = originalPortal.Get(valueIndex);
+      auto extractedData = extractedPortal.Get(valueIndex);
+      VTKM_TEST_ASSERT(test_equal(originalData, extractedData));
+    }
+  }
+};
+
 template <typename ArrayHandleType>
 void TryExtractComponent()
 {
@@ -443,21 +463,18 @@ void TryExtractComponent()
 
   VTKM_TEST_ASSERT(unknownArray.GetNumberOfComponentsFlat() == FlatVec::NUM_COMPONENTS);
 
-  auto componentPortal = unknownArray.ReadPortalForBaseComponentType<ComponentType>();
+  CheckExtractedArray{}(unknownArray.ExtractArrayFromComponents<ComponentType>(), originalArray);
 
-  auto originalPortal = originalArray.ReadPortal();
-  for (vtkm::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
-  {
-    FlatVec originalData = originalPortal.Get(valueIndex);
-    auto componentData = componentPortal.Get(valueIndex);
-    VTKM_TEST_ASSERT(test_equal(originalData, componentData));
-  }
+  unknownArray.CastAndCallWithExtractedArray(CheckExtractedArray{}, originalArray);
 }
 
 void TryExtractComponent()
 {
   std::cout << "  Scalar array." << std::endl;
   TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>();
+
+  std::cout << "  Equivalent scalar." << std::endl;
+  TryExtractComponent<vtkm::cont::ArrayHandle<VTKM_UNUSED_INT_TYPE>>();
 
   std::cout << "  Basic Vec." << std::endl;
   TryExtractComponent<vtkm::cont::ArrayHandle<vtkm::Id3>>();

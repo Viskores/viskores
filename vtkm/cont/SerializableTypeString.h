@@ -153,6 +153,16 @@ struct SerializableTypeString<vtkm::Float64>
 };
 
 template <>
+struct SerializableTypeString<bool>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "B8";
+    return name;
+  }
+};
+
+template <>
 struct SerializableTypeString<char>
 {
   static VTKM_CONT const std::string& Get()

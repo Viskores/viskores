@@ -37,9 +37,12 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
 
   using ControlSignature = void(FieldIn permutationIndex, WholeArrayIn input, FieldOut output);
 
-  template <typename InputPortalType>
-  VTKM_EXEC void operator()(vtkm::Id permutationIndex, InputPortalType inputPortal, T& output) const
+  template <typename InputPortalType, typename OutputType>
+  VTKM_EXEC void operator()(vtkm::Id permutationIndex,
+                            InputPortalType inputPortal,
+                            OutputType& output) const
   {
+    VTKM_STATIC_ASSERT(vtkm::HasVecTraits<OutputType>::value);
     if ((permutationIndex >= 0) && (permutationIndex < inputPortal.GetNumberOfValues()))
     {
       output = inputPortal.Get(permutationIndex);
@@ -53,36 +56,21 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
 
 struct DoMapFieldPermutation
 {
-  template <typename BaseComponentType>
-  void operator()(BaseComponentType,
-                  const vtkm::cont::UnknownArrayHandle& input,
+  template <typename InputArrayType>
+  void operator()(const InputArrayType& input,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& permutation,
                   vtkm::cont::UnknownArrayHandle& output,
-                  vtkm::Float64 invalidValue,
-                  bool& called) const
+                  vtkm::Float64 invalidValue) const
   {
-    if (!input.IsBaseComponentType<BaseComponentType>())
-    {
-      return;
-    }
-
-    output = input.NewInstanceBasic();
-    output.Allocate(permutation.GetNumberOfValues());
-
-    vtkm::IdComponent numComponents = input.GetNumberOfComponentsFlat();
+    using BaseComponentType = typename InputArrayType::ValueType::ComponentType;
 
     MapPermutationWorklet<BaseComponentType> worklet(
       vtkm::cont::internal::CastInvalidValue<BaseComponentType>(invalidValue));
-    vtkm::cont::Invoker invoke;
-    for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
-    {
-      invoke(worklet,
-             permutation,
-             input.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::On),
-             output.ExtractComponent<BaseComponentType>(cIndex, vtkm::CopyFlag::Off));
-    }
-
-    called = true;
+    vtkm::cont::Invoker{}(
+      worklet,
+      permutation,
+      input,
+      output.ExtractArrayFromComponents<BaseComponentType>(vtkm::CopyFlag::Off));
   }
 };
 
@@ -96,24 +84,20 @@ VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(
 {
   VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-  vtkm::cont::VariantArrayHandle outputArray;
-  bool calledMap = false;
-  vtkm::ListForEach(DoMapFieldPermutation{},
-                    vtkm::TypeListScalarAll{},
-                    inputField.GetData(),
-                    permutation,
-                    outputArray,
-                    invalidValue,
-                    calledMap);
-  if (calledMap)
+  vtkm::cont::UnknownArrayHandle outputArray = inputField.GetData().NewInstanceBasic();
+  outputArray.Allocate(permutation.GetNumberOfValues());
+  try
   {
+    inputField.GetData().CastAndCallWithExtractedArray(
+      DoMapFieldPermutation{}, permutation, outputArray, invalidValue);
     outputField = vtkm::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
+    return true;
   }
-  else
+  catch (...)
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Warn, "Faild to map field " << inputField.GetName());
+    return false;
   }
-  return calledMap;
 }
 
 VTKM_FILTER_COMMON_EXPORT VTKM_CONT bool vtkm::filter::MapFieldPermutation(

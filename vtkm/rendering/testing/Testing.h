@@ -38,9 +38,10 @@
 template <typename ViewType>
 inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
                                          const std::vector<std::string>& fileNames,
+                                         const vtkm::IdComponent& averageRadius = 0,
+                                         const vtkm::IdComponent& pixelShiftRadius = 0,
+                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
                                          const vtkm::FloatDefault& threshold = 0.05f,
-                                         const vtkm::IdComponent& radius = 0,
-                                         const bool& average = false,
                                          const bool& writeDiff = true,
                                          const bool& returnOnPass = true)
 {
@@ -95,9 +96,10 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("baseline-image");
     filter.SetSecondaryField("generated-image");
-    filter.SetThreshold(threshold);
-    filter.SetRadius(radius);
-    filter.SetAveragePixels(average);
+    filter.SetAverageRadius(averageRadius);
+    filter.SetPixelShiftRadius(pixelShiftRadius);
+    filter.SetAllowedPixelErrorRatio(allowedPixelErrorRatio);
+    filter.SetPixelDiffThreshold(threshold);
     auto resultDataSet = filter.Execute(imageDataSet);
 
     if (!filter.GetImageDiffWithinThreshold())
@@ -133,13 +135,15 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 template <typename ViewType>
 inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
                                          const std::string& fileName,
+                                         const vtkm::IdComponent& averageRadius = 0,
+                                         const vtkm::IdComponent& pixelShiftRadius = 0,
+                                         const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
                                          const vtkm::FloatDefault& threshold = 0.05f,
-                                         const vtkm::IdComponent& radius = 0,
-                                         const bool& average = false,
                                          const bool& writeDiff = true)
 {
   std::vector<std::string> fileNames{ fileName };
-  return test_equal_images(view, fileNames, threshold, radius, average, writeDiff);
+  return test_equal_images(
+    view, fileNames, averageRadius, pixelShiftRadius, allowedPixelErrorRatio, threshold, writeDiff);
 }
 
 /// \brief Tests multiple images in the format `fileName#.png`
@@ -156,13 +160,15 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
 /// test_equal_images will then be called on the vector of valid fileNames
 ///
 template <typename ViewType>
-inline TestEqualResult test_equal_images_matching_name(const std::shared_ptr<ViewType> view,
-                                                       const std::string& fileName,
-                                                       const vtkm::FloatDefault& threshold = 0.05f,
-                                                       const vtkm::IdComponent& radius = 0,
-                                                       const bool& average = false,
-                                                       const bool& writeDiff = true,
-                                                       const bool& returnOnPass = true)
+inline TestEqualResult test_equal_images_matching_name(
+  const std::shared_ptr<ViewType> view,
+  const std::string& fileName,
+  const vtkm::IdComponent& averageRadius = 0,
+  const vtkm::IdComponent& pixelShiftRadius = 0,
+  const vtkm::FloatDefault& allowedPixelErrorRatio = 0.0001f,
+  const vtkm::FloatDefault& threshold = 0.05f,
+  const bool& writeDiff = true,
+  const bool& returnOnPass = true)
 {
   std::vector<std::string> fileNames;
   auto found = fileName.rfind(".");
@@ -183,7 +189,14 @@ inline TestEqualResult test_equal_images_matching_name(const std::shared_ptr<Vie
     }
     fileNames.emplace_back(fileNameStream.str());
   }
-  return test_equal_images(view, fileNames, threshold, radius, average, writeDiff, returnOnPass);
+  return test_equal_images(view,
+                           fileNames,
+                           averageRadius,
+                           pixelShiftRadius,
+                           allowedPixelErrorRatio,
+                           threshold,
+                           writeDiff,
+                           returnOnPass);
 }
 
 

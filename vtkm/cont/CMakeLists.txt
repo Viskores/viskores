@@ -33,6 +33,7 @@ set(headers
   ArrayHandleIndex.h
   ArrayHandleMultiplexer.h
   ArrayHandlePermutation.h
+  ArrayHandleRecombineVec.h
   ArrayHandleReverse.h
   ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
@@ -126,7 +127,6 @@ set(headers
   )
 
 set(template_sources
-  ArrayHandle.hxx
   ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   CellSetExtrude.hxx
@@ -217,12 +217,36 @@ endif()
 vtkm_get_kit_name(kit_name kit_dir)
 
 # Some custom types included with VTK-m
-vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK "Compile VTK-m algorithms for use with types from VTK." OFF)
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK
+  "Compile VTK-m algorithms for use with types from VTK."
+  OFF
+  )
 if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
   set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
 endif()
 
-mark_as_advanced(VTKm_USE_DEFAULT_TYPES_FOR_VTK)
+vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT
+  "Compile VTK-m algorithms for use with types from Ascent."
+  OFF
+  )
+if (VTKm_USE_DEFAULT_TYPES_FOR_ASCENT)
+  set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesAscent.h.in")
+  if (VTKm_USE_64BIT_IDS)
+    message(SEND_ERROR
+      "When VTKm_USE_DEFAULT_TYPES_FOR_ASCENT is ON, VTKm_USE_64BIT_IDS must be set to OFF"
+      )
+  endif()
+  if (NOT VTKm_USE_DOUBLE_PRECISION)
+    message(SEND_ERROR
+      "When VTKm_USE_DEFAULT_TYPES_FOR_ASCENT is ON, VTKm_USE_DOUBLE_PRECISION must be set to ON"
+      )
+  endif()
+endif()
+
+mark_as_advanced(
+  VTKm_USE_DEFAULT_TYPES_FOR_VTK
+  VTKm_USE_DEFAULT_TYPES_FOR_ASCENT
+  )
 
 if (VTKm_DEFAULT_TYPES_HEADER)
   set(VTK_M_HAS_DEFAULT_TYPES_HEADER TRUE)

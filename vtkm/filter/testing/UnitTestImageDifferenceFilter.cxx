@@ -102,8 +102,8 @@ void TestImageDifference()
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
-    filter.SetThreshold(0.05f);
-    filter.SetRadius(0);
+    filter.SetPixelDiffThreshold(0.05f);
+    filter.SetPixelShiftRadius(0);
     vtkm::cont::DataSet result = filter.Execute(dataSet);
 
     std::vector<vtkm::Vec4f> expectedDiff = {
@@ -125,9 +125,9 @@ void TestImageDifference()
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
-    filter.SetThreshold(0.05f);
-    filter.SetRadius(1);
-    filter.SetAveragePixels(true);
+    filter.SetPixelDiffThreshold(0.05f);
+    filter.SetPixelShiftRadius(1);
+    filter.SetAverageRadius(1);
     vtkm::cont::DataSet result = filter.Execute(dataSet);
 
     std::vector<vtkm::Vec4f> expectedDiff = {
@@ -149,8 +149,8 @@ void TestImageDifference()
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
-    filter.SetThreshold(0.05f);
-    filter.SetRadius(0);
+    filter.SetPixelDiffThreshold(0.05f);
+    filter.SetPixelShiftRadius(0);
     vtkm::cont::DataSet result = filter.Execute(dataSet);
 
     std::vector<vtkm::Vec4f> expectedDiff = {
@@ -167,14 +167,38 @@ void TestImageDifference()
   }
 
   {
+    VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Non Matching Images (Different R pixel)");
+    auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(3));
+    vtkm::filter::ImageDifference filter;
+    filter.SetPrimaryField("primary");
+    filter.SetSecondaryField("secondary");
+    filter.SetPixelDiffThreshold(0.05f);
+    filter.SetPixelShiftRadius(0);
+    filter.SetAllowedPixelErrorRatio(1.00f);
+    vtkm::cont::DataSet result = filter.Execute(dataSet);
+
+    std::vector<vtkm::Vec4f> expectedDiff = {
+      { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 },
+      { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 },
+      { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 },
+      { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 },
+      { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }
+    };
+    std::vector<vtkm::FloatDefault> expectedThreshold = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                                          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+    CheckResult(
+      expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), true);
+  }
+
+  {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info,
                "Non Matching Images (Different R pixel), Large Threshold");
     auto dataSet = FillDataSet(static_cast<vtkm::FloatDefault>(3));
     vtkm::filter::ImageDifference filter;
     filter.SetPrimaryField("primary");
     filter.SetSecondaryField("secondary");
-    filter.SetThreshold(3.0f);
-    filter.SetRadius(0);
+    filter.SetPixelDiffThreshold(3.0f);
+    filter.SetPixelShiftRadius(0);
     vtkm::cont::DataSet result = filter.Execute(dataSet);
 
     std::vector<vtkm::Vec4f> expectedDiff = {

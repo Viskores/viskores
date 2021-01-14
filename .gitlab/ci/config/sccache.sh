@@ -10,7 +10,7 @@ readonly tarball="$filename.tar.gz"
 cd .gitlab
 
 echo "$sha256sum  $tarball" > sccache.sha256sum
-curl -OL "https://github.com/robertmaynard/sccache/releases/download/$version/$tarball"
+curl --insecure -OL "https://github.com/robertmaynard/sccache/releases/download/$version/$tarball"
 sha256sum --check sccache.sha256sum
 tar xf "$tarball"
 #mv "$filename/sccache" .

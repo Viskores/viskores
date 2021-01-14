@@ -44,6 +44,13 @@ struct CheckSameCoordinateSystem
     CheckSameField{}(originalArray, fileCoords);
   }
 
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagSOA>& originalArray,
+                  const vtkm::cont::CoordinateSystem& fileCoords) const
+  {
+    CheckSameField{}(originalArray, fileCoords);
+  }
+
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
   VTKM_DEPRECATED_SUPPRESS_BEGIN
   template <typename T>

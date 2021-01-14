@@ -19,16 +19,16 @@ set(unit_tests
 set(unit_test_libraries vtkm_lodepng vtkm_io)
 
 if(VTKm_ENABLE_RENDERING)
-  set(unit_tests ${unit_tests}
+  list(APPEND unit_tests
     UnitTestImageWriter.cxx
-    )
+  )
 
   if (VTKm_ENABLE_HDF5_IO)
-    set(unit_tests ${unit_tests}
+    list(APPEND unit_tests
       UnitTestHDF5Image.cxx)
   endif()
 
-  set(unit_test_libraries ${unit_test_libraries} vtkm_rendering)
+  list(APPEND unit_test_libraries vtkm_rendering)
 endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests} ALL_BACKENDS LIBRARIES ${unit_test_libraries})

@@ -160,11 +160,6 @@ struct ArrayHandleImplicitTraits
 
 } // namespace detail
 
-// This can go away once ArrayHandle is replaced with ArrayHandleNewStyle
-template <typename PortalType>
-VTKM_ARRAY_HANDLE_NEW_STYLE(typename PortalType::ValueType,
-                            vtkm::cont::StorageTagImplicit<PortalType>);
-
 /// \brief An \c ArrayHandle that computes values on the fly.
 ///
 /// \c ArrayHandleImplicit is a specialization of ArrayHandle.

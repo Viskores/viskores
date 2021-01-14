@@ -66,6 +66,11 @@ struct select_AxisToSum<vtkm::cont::DeviceAdapterTagCuda>
 {
   using type = SumYAxis;
 };
+template <>
+struct select_AxisToSum<vtkm::cont::DeviceAdapterTagKokkos>
+{
+  using type = SumYAxis;
+};
 
 inline vtkm::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const vtkm::Id3& pdims)
 {

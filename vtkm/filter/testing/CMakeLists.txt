@@ -83,20 +83,16 @@ set(libraries
 )
 
 if (VTKm_ENABLE_RENDERING)
-  set(libraries
-    ${libraries}
-    vtkm_rendering
-  )
+  list(APPEND libraries vtkm_rendering)
 
-  set(unit_tests
-    ${unit_tests}
+  list(APPEND unit_tests
     RegressionTestContourFilter.cxx
     RegressionTestPointTransform.cxx
     RegressionTestSplitSharpEdges.cxx
     RegressionTestStreamline.cxx
     RegressionTestSurfaceNormals.cxx
   )
-endif (VTKm_ENABLE_RENDERING)
+endif()
 
 vtkm_unit_tests(
   SOURCES ${unit_tests}
