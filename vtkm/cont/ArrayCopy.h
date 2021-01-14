@@ -15,6 +15,7 @@
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/VariantArrayHandle.h>
 
 #include <vtkm/cont/internal/ArrayHandleDeprecated.h>
 
@@ -158,16 +159,6 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
   // Static dispatch cases 1 & 2
   detail::ArrayCopyImpl(source, destination, std::integral_constant<bool, !IsOldStyle::value>{});
 }
-
-// Forward declaration
-// Cannot include UncertainArrayHandle.h here due to circular dependency.
-template <typename ValueList, typename StorageList>
-class UncertainArrayHandle;
-
-// Forward declaration
-// Cannot include VariantArrayHandle.h here due to circular dependency.
-template <typename TypeList>
-class VariantArrayHandleBase;
 
 namespace detail
 {

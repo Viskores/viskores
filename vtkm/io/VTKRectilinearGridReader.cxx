@@ -10,6 +10,8 @@
 
 #include <vtkm/io/VTKRectilinearGridReader.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+
 namespace vtkm
 {
 namespace io

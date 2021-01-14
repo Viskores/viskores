@@ -11,7 +11,6 @@
 #define vtk_m_cont_CellSetExtrude_h
 
 #include <vtkm/TopologyElementTag.h>
-#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleExtrudeCoords.h>
