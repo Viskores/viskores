@@ -204,9 +204,6 @@ public:
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagSOA);
-
 /// \brief An `ArrayHandle` that for Vecs stores each component in a separate physical array.
 ///
 /// `ArrayHandleSOA` behaves like a regular `ArrayHandle` (with a basic storage) except that

@@ -16,6 +16,8 @@
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
+
 #include <vtkm/cont/vtkm_cont_export.h>
 
 // TODO: When virtual arrays are available, compile the implementation in a .cxx/.cu file. Common
@@ -149,11 +151,12 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
                          "Cannot copy to a read-only array with a different "
                          "type than the source.");
 
-  using IsNewStyle =
-    std::is_base_of<vtkm::cont::ArrayHandleNewStyle<InValueType, InStorage>, InArrayType>;
+  using IsOldStyle =
+    std::is_base_of<vtkm::cont::internal::ArrayHandleDeprecated<InValueType, InStorage>,
+                    InArrayType>;
 
   // Static dispatch cases 1 & 2
-  detail::ArrayCopyImpl(source, destination, std::integral_constant<bool, IsNewStyle::value>{});
+  detail::ArrayCopyImpl(source, destination, std::integral_constant<bool, !IsOldStyle::value>{});
 }
 
 // Forward declaration

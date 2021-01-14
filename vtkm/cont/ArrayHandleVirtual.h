@@ -15,8 +15,9 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
-
 #include <vtkm/cont/StorageVirtual.h>
+
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
 
 #include <memory>
 
@@ -29,8 +30,11 @@ namespace vtkm
 namespace cont
 {
 
-
 VTKM_DEPRECATED_SUPPRESS_BEGIN
+
+template <typename T>
+VTKM_ARRAY_HANDLE_DEPRECATED(T, vtkm::cont::StorageTagVirtual);
+
 template <typename T>
 class VTKM_ALWAYS_EXPORT VTKM_DEPRECATED(1.6) ArrayHandleVirtual
   : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>

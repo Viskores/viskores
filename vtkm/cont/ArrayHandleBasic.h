@@ -11,6 +11,7 @@
 #define vtk_m_cont_ArrayHandleBasic_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/SerializableTypeString.h>
 #include <vtkm/cont/Serialization.h>
 #include <vtkm/cont/Storage.h>
@@ -69,9 +70,6 @@ public:
 };
 
 } // namespace internal
-
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagBasic);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, vtkm::cont::StorageTagBasic>
@@ -383,14 +381,13 @@ VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 } // namespace internal
 
-#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                         \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<Type, StorageTagBasic>; \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                             \
-    ArrayHandleNewStyle<vtkm::Vec<Type, 4>, StorageTagBasic>;
+#define VTKM_ARRAYHANDLE_EXPORT(Type)                                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>; \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                     \
+    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT                                     \
+    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                 \
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 VTKM_ARRAYHANDLE_EXPORT(char)
 VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)

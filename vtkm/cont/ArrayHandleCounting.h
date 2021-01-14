@@ -120,9 +120,6 @@ struct Storage<T, typename std::enable_if<CanCount<T>::value, vtkm::cont::Storag
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagCounting);
-
 /// ArrayHandleCounting is a specialization of ArrayHandle. By default it
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length

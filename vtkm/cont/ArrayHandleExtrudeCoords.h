@@ -14,10 +14,16 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
+#include <vtkm/cont/internal/ArrayHandleDeprecated.h>
+
 namespace vtkm
 {
 namespace cont
 {
+
+template <typename T>
+VTKM_ARRAY_HANDLE_DEPRECATED(VTKM_PASS_COMMAS(vtkm::Vec<T, 3>),
+                             vtkm::cont::internal::StorageTagExtrude);
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleExtrudeCoords

@@ -284,11 +284,6 @@ public:
 };
 } // namespace internal
 
-template <typename T, typename ST1, typename ST2, typename ST3>
-VTKM_ARRAY_HANDLE_NEW_STYLE(
-  T,
-  VTKM_PASS_COMMAS(vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>));
-
 /// ArrayHandleCartesianProduct is a specialization of ArrayHandle. It takes two delegate
 /// array handle and makes a new handle that access the corresponding entries
 /// in these arrays as a pair.

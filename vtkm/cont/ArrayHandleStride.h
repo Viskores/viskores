@@ -205,9 +205,6 @@ public:
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagStride);
-
 /// \brief An `ArrayHandle` that accesses a basic array with strides and offsets.
 ///
 /// `ArrayHandleStride` is a simple `ArrayHandle` that accesses data with a prescribed
@@ -393,19 +390,17 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Float64, StorageTa
 
 } // namespace internal
 
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<char, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::Int8, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::UInt8, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::Int16, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::UInt16, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::Int32, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::UInt32, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::Int64, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleNewStyle<vtkm::UInt64, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT
-  ArrayHandleNewStyle<vtkm::Float32, StorageTagStride>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT
-  ArrayHandleNewStyle<vtkm::Float64, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<char, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int8, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt8, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int16, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt16, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int32, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt32, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int64, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt64, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float32, StorageTagStride>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float64, StorageTagStride>;
 
 }
 } // namespace vtkm::cont

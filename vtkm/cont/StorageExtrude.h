@@ -16,6 +16,9 @@
 
 #include <vtkm/cont/ErrorBadType.h>
 
+#include <vtkm/cont/internal/ArrayTransfer.h>
+#include <vtkm/cont/internal/StorageDeprecated.h>
+
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 

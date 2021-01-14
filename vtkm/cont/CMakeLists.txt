@@ -127,7 +127,6 @@ set(headers
   )
 
 set(template_sources
-  ArrayHandle.hxx
   ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
   CellSetExtrude.hxx

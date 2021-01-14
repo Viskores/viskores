@@ -45,9 +45,6 @@ struct Storage<vtkm::Id, vtkm::cont::StorageTagIndex> : Storage<vtkm::Id, Storag
 
 } // namespace internal
 
-template <>
-VTKM_ARRAY_HANDLE_NEW_STYLE(vtkm::Id, vtkm::cont::StorageTagIndex);
-
 /// \brief An implicit array handle containing the its own indices.
 ///
 /// \c ArrayHandleIndex is an implicit array handle containing the values

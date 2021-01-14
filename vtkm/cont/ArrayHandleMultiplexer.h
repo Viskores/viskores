@@ -353,9 +353,6 @@ struct ArrayHandleMultiplexerTraits
 };
 } // namespace detail
 
-template <typename T, typename... Ss>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagMultiplexer<Ss...>);
-
 /// \brief An ArrayHandle that can behave like several other handles.
 ///
 /// An \c ArrayHandleMultiplexer simply redirects its calls to another \c ArrayHandle. However

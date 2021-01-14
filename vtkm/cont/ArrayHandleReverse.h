@@ -163,9 +163,6 @@ public:
 
 } // namespace internal
 
-template <typename T, typename S>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::StorageTagReverse<S>);
-
 /// \brief Reverse the order of an array, on demand.
 ///
 /// ArrayHandleReverse is a specialization of ArrayHandle. Given an ArrayHandle,

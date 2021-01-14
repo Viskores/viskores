@@ -529,9 +529,6 @@ public:
 
 } // namespace internal
 
-template <typename T>
-VTKM_ARRAY_HANDLE_NEW_STYLE(T, vtkm::cont::internal::StorageTagRecombineVec);
-
 /// \brief A grouping of `ArrayHandleStride`s into an `ArrayHandle` of `Vec`s.
 ///
 /// The main intention of `ArrayHandleStride` is to pull out a component of an
