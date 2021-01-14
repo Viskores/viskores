@@ -59,6 +59,10 @@ void TryCopy()
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);
+
+    output.ReleaseResources();
+    vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle(input), output);
+    TestValues(input, output);
   }
 
   {

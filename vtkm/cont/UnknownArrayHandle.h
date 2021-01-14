@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/DefaultTypes.h>
 
 #include <memory>
