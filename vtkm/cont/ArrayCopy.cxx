@@ -71,6 +71,42 @@ struct UnknownCopyFunctor1
   void operator()(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out) const
   {
     out.Allocate(in.GetNumberOfValues());
+
+    this->DoIt(in,
+               out,
+               typename std::is_same<vtkm::FloatDefault,
+                                     typename InArrayType::ValueType::ComponentType>::type{});
+  }
+
+  template <typename InArrayType>
+  void DoIt(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out, std::false_type) const
+  {
+    // Source is not float.
+    using BaseComponentType = typename InArrayType::ValueType::ComponentType;
+    if (out.IsBaseComponentType<BaseComponentType>())
+    {
+      // Arrays have the same base component type. Copy directly.
+      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<BaseComponentType>(), in);
+    }
+    else if (out.IsBaseComponentType<vtkm::FloatDefault>())
+    {
+      // Can copy anything to default float.
+      UnknownCopyFunctor2{}(out.ExtractArrayFromComponents<vtkm::FloatDefault>(), in);
+    }
+    else
+    {
+      // Arrays have different base types. To reduce the number of template paths from nxn to 3n,
+      // copy first to a temp array of default float.
+      vtkm::cont::UnknownArrayHandle temp = out.NewInstanceFloatBasic();
+      (*this)(in, temp);
+      vtkm::cont::ArrayCopy(temp, out);
+    }
+  }
+
+  template <typename InArrayType>
+  void DoIt(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out, std::true_type) const
+  {
+    // Source array is FloatDefault. That should be copiable to anything.
     out.CastAndCallWithExtractedArray(UnknownCopyFunctor2{}, in);
   }
 };
