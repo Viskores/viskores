@@ -126,14 +126,16 @@ struct DoVariantTestWorklet
     std::cout << "Create and run dispatcher with unknown arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
 
-    vtkm::cont::UnknownArrayHandle inputVariant(inputHandle);
+    using UncertainArrayType =
+      vtkm::cont::UncertainArrayHandle<vtkm::List<T>, VTKM_DEFAULT_STORAGE_LIST>;
+    UncertainArrayType inputVariant(inputHandle);
 
     { //Verify we can pass by value
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       vtkm::cont::UnknownArrayHandle outputVariant(outputHandle);
       vtkm::cont::UnknownArrayHandle inoutVariant(inoutHandle);
       dispatcher.Invoke(
-        inputVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
+        inputVariant.template ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
         outputVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>(),
         inoutVariant.ResetTypes<vtkm::List<T>, vtkm::List<VTKM_DEFAULT_STORAGE_TAG>>());
       CheckPortal(outputHandle.ReadPortal());
@@ -141,8 +143,8 @@ struct DoVariantTestWorklet
     }
 
     { //Verify we can pass by pointer
-      vtkm::cont::UnknownArrayHandle outputVariant(outputHandle);
-      vtkm::cont::UnknownArrayHandle inoutVariant(inoutHandle);
+      UncertainArrayType outputVariant(outputHandle);
+      UncertainArrayType inoutVariant(inoutHandle);
 
       vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
       dispatcher.Invoke(&inputVariant, outputHandle, inoutHandle);

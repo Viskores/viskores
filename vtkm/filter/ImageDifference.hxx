@@ -75,7 +75,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   vtkm::cont::ArrayHandle<T, StorageType> diffOutput;
   vtkm::cont::ArrayHandle<T, StorageType> primaryOutput;
   vtkm::cont::ArrayHandle<T, StorageType> secondaryOutput;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageType> thresholdOutput;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> thresholdOutput;
 
   if (this->AverageRadius > 0)
   {
