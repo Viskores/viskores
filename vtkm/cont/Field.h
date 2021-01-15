@@ -17,7 +17,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/VariantArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
@@ -78,8 +78,8 @@ public:
 
   VTKM_CONT const std::string& GetName() const { return this->Name; }
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
-  const vtkm::cont::VariantArrayHandle& GetData() const;
-  vtkm::cont::VariantArrayHandle& GetData();
+  const vtkm::cont::UnknownArrayHandle& GetData() const;
+  vtkm::cont::UnknownArrayHandle& GetData();
 
   VTKM_CONT bool IsFieldCell() const { return this->FieldAssociation == Association::CELL_SET; }
   VTKM_CONT bool IsFieldPoint() const { return this->FieldAssociation == Association::POINTS; }
@@ -113,18 +113,12 @@ public:
 
   VTKM_CONT void GetRange(vtkm::Range* range) const;
 
+  VTKM_CONT void SetData(const vtkm::cont::UnknownArrayHandle& newdata);
+
   template <typename T, typename StorageTag>
   VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
   {
-    this->Data = newdata;
-    this->ModifiedFlag = true;
-  }
-
-  template <typename TypeList>
-  VTKM_CONT void SetData(const vtkm::cont::VariantArrayHandleBase<TypeList>& newdata)
-  {
-    this->Data = vtkm::cont::VariantArrayHandle(newdata);
-    this->ModifiedFlag = true;
+    this->SetData(vtkm::cont::UnknownArrayHandle(newdata));
   }
 
   VTKM_CONT
@@ -141,7 +135,7 @@ private:
   std::string Name; ///< name of field
 
   Association FieldAssociation = Association::ANY;
-  vtkm::cont::VariantArrayHandle Data;
+  vtkm::cont::UnknownArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
 
@@ -244,7 +238,7 @@ vtkm::cont::Field make_FieldPoint(std::string name, const vtkm::cont::ArrayHandl
 
 /// Convenience function to build point fields from vtkm::cont::VariantArrayHandle
 inline vtkm::cont::Field make_FieldPoint(std::string name,
-                                         const vtkm::cont::VariantArrayHandle& data)
+                                         const vtkm::cont::UnknownArrayHandle& data)
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::POINTS, data);
 }
@@ -259,7 +253,7 @@ vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle
 
 /// Convenience function to build cell fields from vtkm::cont::VariantArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
-                                        const vtkm::cont::VariantArrayHandle& data)
+                                        const vtkm::cont::UnknownArrayHandle& data)
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::CELL_SET, data);
 }
@@ -291,7 +285,7 @@ namespace vtkm
 namespace cont
 {
 template <typename TypeList = VTKM_DEFAULT_TYPE_LIST>
-struct SerializableField
+struct VTKM_DEPRECATED(1.6, "You can now directly serialize Field.") SerializableField
 {
   SerializableField() = default;
 
@@ -302,21 +296,21 @@ struct SerializableField
 
   vtkm::cont::Field Field;
 };
-
-// Cannot directly serialize fields with a vtkm::ListUniversal type list since there has to
-// be a finite number of types to serialize. Do the best possible by serializing all basic
-// VTK-m types.
-template <>
-struct SerializableField<vtkm::ListUniversal> : SerializableField<vtkm::TypeListAll>
-{
-  using SerializableField<vtkm::TypeListAll>::SerializableField;
-};
 } // namespace cont
 } // namespace vtkm
 
 namespace mangled_diy_namespace
 {
 
+template <>
+struct VTKM_CONT_EXPORT Serialization<vtkm::cont::Field>
+{
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::Field& field);
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::Field& field);
+};
+
+// Implement deprecated code
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 template <typename TypeList>
 struct Serialization<vtkm::cont::SerializableField<TypeList>>
 {
@@ -326,34 +320,15 @@ private:
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
   {
-    const auto& field = serializable.Field;
-
-    vtkmdiy::save(bb, field.GetName());
-    vtkmdiy::save(bb, static_cast<int>(field.GetAssociation()));
-    vtkmdiy::save(bb, field.GetData().ResetTypes(TypeList{}));
+    Serialization<vtkm::cont::Field>::save(bb, serializable.Field);
   }
 
   static VTKM_CONT void load(BinaryBuffer& bb, Type& serializable)
   {
-    auto& field = serializable.Field;
-
-    std::string name;
-    vtkmdiy::load(bb, name);
-    int assocVal = 0;
-    vtkmdiy::load(bb, assocVal);
-
-    auto assoc = static_cast<vtkm::cont::Field::Association>(assocVal);
-    vtkm::cont::VariantArrayHandleBase<TypeList> data;
-    vtkmdiy::load(bb, data);
-    field = vtkm::cont::Field(name, assoc, vtkm::cont::VariantArrayHandle(data));
+    Serialization<vtkm::cont::Field>::load(bb, serializable.Field);
   }
 };
-
-template <>
-struct Serialization<vtkm::cont::SerializableField<vtkm::ListUniversal>>
-  : Serialization<vtkm::cont::SerializableField<vtkm::TypeListAll>>
-{
-};
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 
 } // diy
 /// @endcond SERIALIZATION

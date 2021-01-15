@@ -24,8 +24,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
@@ -482,21 +481,21 @@ private:
     template <typename T, typename S>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& coords,
                               ExtractStructured& self,
-                              vtkm::cont::VariantArrayHandleCommon& output) const
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
       output = self.ProcessPointField(coords);
     }
 
     VTKM_CONT void operator()(const UniformCoordinatesArrayHandle::Superclass& coords,
                               ExtractStructured& self,
-                              vtkm::cont::VariantArrayHandleCommon& output) const
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
       output = self.MapCoordinatesUniform(coords);
     }
 
     VTKM_CONT void operator()(const RectilinearCoordinatesArrayHandle::Superclass& coords,
                               ExtractStructured& self,
-                              vtkm::cont::VariantArrayHandleCommon& output) const
+                              vtkm::cont::UnknownArrayHandle& output) const
     {
       output = self.MapCoordinatesRectilinear(coords);
     }
@@ -505,10 +504,9 @@ private:
   friend MapCoordinatesFunctor;
 
 public:
-  vtkm::cont::VariantArrayHandleCommon MapCoordinates(
-    const vtkm::cont::CoordinateSystem& coordinates)
+  vtkm::cont::UnknownArrayHandle MapCoordinates(const vtkm::cont::CoordinateSystem& coordinates)
   {
-    vtkm::cont::VariantArrayHandleCommon output;
+    vtkm::cont::UnknownArrayHandle output;
     vtkm::cont::CastAndCall(coordinates, MapCoordinatesFunctor{}, *this, output);
     return output;
   }

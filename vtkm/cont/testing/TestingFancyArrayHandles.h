@@ -471,6 +471,9 @@ private:
 
       vtkm::cont::ArrayHandleConstant<ValueType> constant =
         vtkm::cont::make_ArrayHandleConstant(value, ARRAY_SIZE);
+
+      VTKM_TEST_ASSERT(constant.GetValue() == value);
+
       vtkm::cont::ArrayHandle<ValueType> result;
 
       vtkm::worklet::DispatcherMapField<PassThrough> dispatcher;

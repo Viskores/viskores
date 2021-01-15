@@ -107,5 +107,15 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
   return rangeArray;
 }
+
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
+  vtkm::cont::DeviceAdapterId)
+{
+  vtkm::cont::ArrayHandle<vtkm::Range> result;
+  result.Allocate(1);
+  result.WritePortal().Set(0, vtkm::Range(0, input.GetNumberOfValues() - 1));
+  return result;
+}
 }
 } // namespace vtkm::cont
