@@ -28,18 +28,24 @@ void ImageReaderHDF5::Read()
 
   const auto fieldName = this->PointFieldName.c_str();
   if (!H5IMis_image(fileid, fieldName))
+  {
     throw vtkm::io::ErrorIO{ "Not an HDF5 image file" };
+  }
 
   hsize_t width, height, nplanes;
   hssize_t npals;
   char interlace[16];
   if (H5IMget_image_info(fileid, fieldName, &width, &height, &nplanes, interlace, &npals) < 0)
+  {
     throw vtkm::io ::ErrorIO{ "Can not get image info" };
+  }
 
   // We don't use the H5IMread_image() since it only supports 8 bit pixel.
   hid_t did;
   if ((did = H5Dopen2(fileid, fieldName, H5P_DEFAULT)) < 0)
+  {
     throw vtkm::io::ErrorIO{ "Can not open image dataset" };
+  }
 
   if (strncmp(interlace, "INTERLACE_PIXEL", 15) != 0)
   {
@@ -81,9 +87,13 @@ void ImageReaderHDF5::Read()
     {
       vtkm::Id hdfIndex = static_cast<vtkm::Id>(yIndex * width + xIndex);
       if (type_size == 1)
+      {
         portal.Set(vtkmIndex, vtkm::io::RGBPixel_8(buffer.data(), hdfIndex).ToVec4f());
+      }
       else
+      {
         portal.Set(vtkmIndex, vtkm::io::RGBPixel_16(buffer.data(), hdfIndex).ToVec4f());
+      }
       vtkmIndex++;
     }
   }
