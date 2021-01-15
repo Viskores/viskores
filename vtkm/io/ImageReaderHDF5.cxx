@@ -11,6 +11,9 @@
 #include <vtkm/io/ImageReaderHDF5.h>
 #include <vtkm/io/PixelTypes.h>
 
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
 namespace vtkm
 {
 namespace io

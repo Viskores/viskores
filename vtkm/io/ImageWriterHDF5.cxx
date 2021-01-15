@@ -12,6 +12,9 @@
 #include <vtkm/io/ImageWriterHDF5.h>
 #include <vtkm/io/PixelTypes.h>
 
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
 namespace
 {
 // FIXME: why does HDF5 want to call H5open() for something macro?

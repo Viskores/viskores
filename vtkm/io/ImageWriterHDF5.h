@@ -12,9 +12,6 @@
 
 #include <vtkm/io/ImageWriterBase.h>
 
-#include <hdf5.h>
-#include <hdf5_hl.h>
-
 namespace vtkm
 {
 namespace io
@@ -43,9 +40,9 @@ protected:
 
 private:
   template <typename PixelType>
-  VTKM_CONT herr_t WriteToFile(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels);
+  VTKM_CONT int WriteToFile(vtkm::Id width, vtkm::Id height, const ColorArrayType& pixels);
 
-  hid_t fileid = 0;
+  std::int64_t fileid = 0;
   // FIXME: a hack for the moment, design a better API.
   std::string fieldName;
 
