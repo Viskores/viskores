@@ -52,8 +52,8 @@ public:
   /// `ArrayHandle` of `vtkm::Vec4f_32`). If no color field name is given,
   /// the first point field that matches this criteria is written.
   ///
-  VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet);
-  VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet, const std::string& colorField);
+  VTKM_CONT virtual void WriteDataSet(const vtkm::cont::DataSet& dataSet,
+                                      const std::string& colorField = {});
   ///@}
 
   enum class PixelDepth

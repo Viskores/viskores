@@ -129,7 +129,6 @@ void TestReadAndWritePNM(const vtkm::rendering::Canvas& canvas,
   }
 }
 
-
 void TestBaseImageMethods(const vtkm::rendering::Canvas& canvas)
 {
   TestCreateImageDataSet(canvas);

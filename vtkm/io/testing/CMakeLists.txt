@@ -23,6 +23,11 @@ if(VTKm_ENABLE_RENDERING)
     UnitTestImageWriter.cxx
   )
 
+  if (VTKm_ENABLE_HDF5_IO)
+    list(APPEND unit_tests
+      UnitTestHDF5Image.cxx)
+  endif()
+
   list(APPEND unit_test_libraries vtkm_rendering)
 endif()
 

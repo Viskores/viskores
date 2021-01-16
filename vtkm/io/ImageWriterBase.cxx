@@ -29,11 +29,6 @@ ImageWriterBase::ImageWriterBase(const std::string& filename)
 
 ImageWriterBase::~ImageWriterBase() noexcept {}
 
-void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet)
-{
-  this->WriteDataSet(dataSet, std::string{});
-}
-
 void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
                                    const std::string& colorFieldName)
 {
