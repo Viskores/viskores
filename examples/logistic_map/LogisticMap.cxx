@@ -8,7 +8,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <cmath>
 #include <iostream>
+#include <vector>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/io/ImageWriterPNG.h>
 
@@ -38,7 +40,7 @@ int main()
 
   vtkm::Vec4f v(1.0, 0.5, 0.0, 0.0);
   std::vector<vtkm::Vec4f> pixelValues(width * height, vtkm::Vec4f(0, 0, 0, 0));
-  int iterates = 0;
+  size_t iterates = 0;
   // We don't need more iterates than pixels of height,
   // by the pigeonhole principle.
   while (iterates++ < height)
@@ -54,9 +56,10 @@ int main()
     }
   }
 
-  ds.AddPointField("pixels", pixelValues);
+  std::string colorFieldName = "pixels";
+  ds.AddPointField(colorFieldName, pixelValues);
   std::string filename = "logistic.png";
   vtkm::io::ImageWriterPNG writer(filename);
-  writer.WriteDataSet(ds);
+  writer.WriteDataSet(ds, colorFieldName);
   std::cout << "Now open " << filename << "\n";
 }
