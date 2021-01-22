@@ -385,7 +385,7 @@ public:
                 rays.U,
                 rays.V,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
     else
@@ -394,7 +394,7 @@ public:
         NodalScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
-                scalarField.GetData().ResetTypes(ScalarRenderingTypes()),
+                vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
                 triangles);
     }
   } // Run
