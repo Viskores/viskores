@@ -762,14 +762,13 @@ int main(int argc, char* argv[])
     if (numLevels > 0) // if compute isovalues
     {
 // Get the data values for computing the explicit branch decomposition
-// TODO Can we cast the handle we get from GetData() instead of doing a CopyTo?
 #ifdef WITH_MPI
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+      result.GetPartitions()[0].GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = true;
 #else
       vtkm::cont::ArrayHandle<ValueType> dataField;
-      useDataSet.GetField(0).GetData().CopyTo(dataField);
+      useDataSet.GetField(0).GetData().AsArrayHandle(dataField);
       bool dataFieldIsSorted = false;
 #endif
 
@@ -844,7 +843,7 @@ int main(int argc, char* argv[])
 
   //vtkm::cont::Field resultField =  result.GetField();
   //vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > saddlePeak;
-  //resultField.GetData().CopyTo(saddlePeak);
+  //resultField.GetData().AsArrayHandle(saddlePeak);
 
   // Dump out contour tree for comparison
   if (rank == 0 && printContourTree)

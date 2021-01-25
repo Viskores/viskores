@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 
   vtkm::cont::Field resultField = output.GetField("saddlePeak");
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-  resultField.GetData().CopyTo(saddlePeak);
+  resultField.GetData().AsArrayHandle(saddlePeak);
 
   return 0;
 }

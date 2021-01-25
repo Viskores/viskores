@@ -33,7 +33,7 @@ void TestEntropy()
 
   ///// get entropy from resultEntropy /////
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
-  resultEntropy.GetField("entropy").GetData().CopyTo(entropy);
+  resultEntropy.GetField("entropy").GetData().AsArrayHandle(entropy);
   vtkm::cont::ArrayHandle<vtkm::Float64>::ReadPortalType portal = entropy.ReadPortal();
   vtkm::Float64 entropyFromFilter = portal.Get(0);
 

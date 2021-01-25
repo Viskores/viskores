@@ -44,9 +44,10 @@ public:
     FieldHandle fieldArray;
 
     if (fieldData.IsType<FieldHandle>())
-      fieldArray = fieldData.Cast<FieldHandle>();
+      fieldArray = fieldData.AsArrayHandle<FieldHandle>();
     else
-      vtkm::cont::ArrayCopy(fieldData.ResetTypes<vtkm::TypeListFieldVec3>(), fieldArray);
+      vtkm::cont::ArrayCopy(
+        fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
 
     this->Eval = std::shared_ptr<GridEvalType>(new GridEvalType(ds, fieldArray));
   }

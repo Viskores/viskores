@@ -34,9 +34,9 @@ void TestVertexClustering()
 
   using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   FieldArrayType pointvar = clustering.ProcessPointField(
-    dataSet.GetPointField("pointvar").GetData().Cast<FieldArrayType>());
-  FieldArrayType cellvar =
-    clustering.ProcessCellField(dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>());
+    dataSet.GetPointField("pointvar").GetData().AsArrayHandle<FieldArrayType>());
+  FieldArrayType cellvar = clustering.ProcessCellField(
+    dataSet.GetCellField("cellvar").GetData().AsArrayHandle<FieldArrayType>());
 
   // test
   const vtkm::Id output_pointIds = 18;

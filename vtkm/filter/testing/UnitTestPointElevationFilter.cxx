@@ -75,7 +75,7 @@ void TestPointElevationNoPolicy()
   VTKM_TEST_ASSERT(result.HasPointField("height"), "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("height").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("height").GetData().AsArrayHandle(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
   auto coordsPortal = coordinates.ReadPortal();
   auto resultPortal = resultArrayHandle.ReadPortal();
@@ -106,7 +106,7 @@ void TestPointElevationWithPolicy()
   VTKM_TEST_ASSERT(result.HasPointField("elevation"), "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  result.GetPointField("elevation").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("elevation").GetData().AsArrayHandle(resultArrayHandle);
   auto coordinates = inputData.GetCoordinateSystem().GetDataAsMultiplexer();
   auto coordsPortal = coordinates.ReadPortal();
   auto resultPortal = resultArrayHandle.ReadPortal();

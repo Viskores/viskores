@@ -18,7 +18,7 @@ namespace
 void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
-  ds.GetCellField("Normals").GetData().CopyTo(normals);
+  ds.GetCellField("Normals").GetData().AsArrayHandle(normals);
 
   vtkm::Vec3f expected[8] = { { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f },
                               { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
@@ -37,7 +37,7 @@ void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
-  ds.GetPointField("Normals").GetData().CopyTo(normals);
+  ds.GetPointField("Normals").GetData().AsArrayHandle(normals);
 
   vtkm::Vec3f expected[8] = { { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
                               { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },

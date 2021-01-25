@@ -41,7 +41,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
@@ -71,7 +71,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 98), "Wrong result for ExtractPoints");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
-    output.GetField("pointvar").GetData().CopyTo(outPointData);
+    output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
 
     VTKM_TEST_ASSERT(
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),

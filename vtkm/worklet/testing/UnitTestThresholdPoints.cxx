@@ -109,7 +109,9 @@ public:
     OutCellSetType outCellSet;
     outCellSet =
       threshold.Run(dataset.GetCellSet(),
-                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    dataset.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes(vtkm::TypeListFieldScalar{}, VTKM_DEFAULT_STORAGE_LIST{}),
                     ValuesBetween(40.0f, 71.0f));
     outDataSet.SetCellSet(outCellSet);
 
@@ -118,7 +120,7 @@ public:
 
     vtkm::cont::Field pointField = outDataSet.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-    pointField.GetData().CopyTo(pointFieldArray);
+    pointField.GetData().AsArrayHandle(pointFieldArray);
     VTKM_TEST_ASSERT(pointFieldArray.ReadPortal().Get(12) == 50.0f, "Wrong point field data");
   }
 
@@ -140,7 +142,9 @@ public:
     OutCellSetType outCellSet;
     outCellSet =
       threshold.Run(dataset.GetCellSet(),
-                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    dataset.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes(vtkm::TypeListFieldScalar{}, VTKM_DEFAULT_STORAGE_LIST{}),
                     ValuesAbove(1.0f));
     outDataSet.SetCellSet(outCellSet);
 
@@ -165,7 +169,9 @@ public:
     OutCellSetType outCellSet;
     outCellSet =
       threshold.Run(dataset.GetCellSet(),
-                    dataset.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+                    dataset.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes(vtkm::TypeListFieldScalar{}, VTKM_DEFAULT_STORAGE_LIST{}),
                     ValuesBelow(50.0f));
     outDataSet.SetCellSet(outCellSet);
 

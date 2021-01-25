@@ -60,7 +60,9 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
                    "Output field could not be found or was improper.");
 
   vtkm::cont::CastAndCall(
-    result.ResetTypes(vtkm::TypeListFieldScalar{}), CheckCellMeasuresFunctor{}, expected);
+    result.ResetTypes(vtkm::TypeListFieldScalar{}, VTKM_DEFAULT_STORAGE_LIST{}),
+    CheckCellMeasuresFunctor{},
+    expected);
 }
 
 void TestCellMeasures()

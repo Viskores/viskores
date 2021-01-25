@@ -95,7 +95,7 @@ const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
       this->PlaneSize,
       this->RowSize,
       this->GetCellSet().template Cast<Structured3DType>(),
-      this->GetCoordinates().GetData().template Cast<RectilinearType>());
+      this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>());
   }
   else
   {
@@ -107,7 +107,7 @@ const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
       this->PlaneSize,
       this->RowSize,
       this->GetCellSet().template Cast<Structured2DType>(),
-      this->GetCoordinates().GetData().template Cast<RectilinearType>());
+      this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>());
   }
   if (!success)
   {

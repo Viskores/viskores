@@ -45,8 +45,8 @@ void CheckResult(const std::vector<vtkm::Vec4f>& expectedDiff,
 
   vtkm::cont::ArrayHandle<vtkm::Vec4f> outputArray;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> thresholdArray;
-  output.GetPointField("image-diff").GetData().CopyTo(outputArray);
-  output.GetPointField("threshold-output").GetData().CopyTo(thresholdArray);
+  output.GetPointField("image-diff").GetData().AsArrayHandle(outputArray);
+  output.GetPointField("threshold-output").GetData().AsArrayHandle(thresholdArray);
 
   VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == static_cast<vtkm::Id>(expectedDiff.size()),
                    "Field sizes wrong");

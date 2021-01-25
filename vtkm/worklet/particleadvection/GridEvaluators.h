@@ -181,7 +181,7 @@ public:
     {
       auto arr = dataSet.GetCellField("vtkmGhostCells").GetData();
       if (arr.IsType<GhostCellArrayType>())
-        this->GhostCellArray = arr.Cast<GhostCellArrayType>();
+        this->GhostCellArray = arr.AsArrayHandle<GhostCellArrayType>();
       else
         throw vtkm::cont::ErrorInternal("vtkmGhostCells not of type vtkm::UInt8");
     }

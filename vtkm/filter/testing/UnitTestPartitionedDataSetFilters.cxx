@@ -89,9 +89,9 @@ void Result_Verify(const vtkm::cont::PartitionedDataSet& result,
                      "result vectors' size incorrect");
 
     vtkm::cont::ArrayHandle<T> partitionArray;
-    result.GetPartition(j).GetField(outputFieldName).GetData().CopyTo(partitionArray);
+    result.GetPartition(j).GetField(outputFieldName).GetData().AsArrayHandle(partitionArray);
     vtkm::cont::ArrayHandle<T> sDataSetArray;
-    partitionResult.GetField(outputFieldName).GetData().CopyTo(sDataSetArray);
+    partitionResult.GetField(outputFieldName).GetData().AsArrayHandle(sDataSetArray);
 
     const vtkm::Id numValues = result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues();
     for (vtkm::Id i = 0; i < numValues; i++)

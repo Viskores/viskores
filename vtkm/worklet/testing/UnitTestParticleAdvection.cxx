@@ -836,9 +836,10 @@ void TestParticleAdvectionFile(const std::string& fname,
   // If types match, do a simple cast.
   // If not, need to copy it into the appropriate type.
   if (fieldData.IsType<FieldHandle>())
-    fieldArray = fieldData.Cast<FieldHandle>();
+    fieldArray = fieldData.AsArrayHandle<FieldHandle>();
   else
-    vtkm::cont::ArrayCopy(fieldData.ResetTypes<vtkm::TypeListFieldVec3>(), fieldArray);
+    vtkm::cont::ArrayCopy(
+      fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
 
   FieldType velocities(fieldArray);
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);

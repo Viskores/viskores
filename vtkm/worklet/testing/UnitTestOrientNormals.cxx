@@ -352,8 +352,8 @@ void TestOrientNormals(bool testPoints, bool testCells)
 
     const auto pointNormalField = dataset.GetPointField("normals");
     const auto cellNormalField = dataset.GetCellField("normals");
-    auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
-    auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
+    auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
+    auto cellNormals = cellNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunPointAndCellNormals(cells, coords, pointNormals, cellNormals);
   }
@@ -361,7 +361,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   {
     std::cerr << "Testing point normals...\n";
     const auto pointNormalField = dataset.GetPointField("normals");
-    auto pointNormals = pointNormalField.GetData().Cast<NormalArrayT>();
+    auto pointNormals = pointNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunPointNormals(cells, coords, pointNormals);
   }
@@ -369,7 +369,7 @@ void TestOrientNormals(bool testPoints, bool testCells)
   {
     std::cerr << "Testing cell normals...\n";
     const auto cellNormalField = dataset.GetCellField("normals");
-    auto cellNormals = cellNormalField.GetData().Cast<NormalArrayT>();
+    auto cellNormals = cellNormalField.GetData().AsArrayHandle<NormalArrayT>();
 
     vtkm::worklet::OrientNormals::RunCellNormals(cells, coords, cellNormals);
   }

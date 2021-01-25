@@ -82,8 +82,8 @@ void TestTubeFilters()
   VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == 36, "Wrong number of cells");
 
   //Validate the point field
-  auto ptArr =
-    output.GetField("pointVar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>();
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> ptArr;
+  output.GetField("pointVar").GetData().AsArrayHandle(ptArr);
   VTKM_TEST_ASSERT(ptArr.GetNumberOfValues() == 22, "Wrong number of values in point field");
 
   std::vector<vtkm::FloatDefault> ptVals = { 0,  0,  0,  0,  1,  1,  1,  2,  2,  2,  2,
@@ -95,8 +95,8 @@ void TestTubeFilters()
 
 
   //Validate the cell field
-  auto cellArr =
-    output.GetField("cellVar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::FloatDefault>>();
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellArr;
+  output.GetField("cellVar").GetData().AsArrayHandle(cellArr);
   VTKM_TEST_ASSERT(cellArr.GetNumberOfValues() == 36, "Wrong number of values in cell field");
   std::vector<vtkm::FloatDefault> cellVals = { 100, 100, 100, 100, 100, 100, 101, 101, 101,
                                                101, 101, 101, 100, 100, 100, 101, 101, 101,

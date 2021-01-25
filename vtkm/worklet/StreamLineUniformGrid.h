@@ -331,7 +331,7 @@ public:
     vtkm::Id3 vdims = inCellSet.GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-    InDataSet.GetField("vecData").GetData().CopyTo(fieldArray);
+    InDataSet.GetField("vecData").GetData().AsArrayHandle(fieldArray);
 
     // Generate random seeds for starting streamlines
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedPosArray;

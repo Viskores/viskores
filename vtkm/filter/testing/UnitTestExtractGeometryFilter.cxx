@@ -42,7 +42,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 21.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 42.f, "Wrong cell field data");
@@ -69,7 +69,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(55) == 63.f, "Wrong cell field data");
@@ -96,7 +96,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(63) == 63.f, "Wrong cell field data");
@@ -122,7 +122,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
 
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().CopyTo(outCellData);
+    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 0.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(55) == 63.f, "Wrong cell field data");

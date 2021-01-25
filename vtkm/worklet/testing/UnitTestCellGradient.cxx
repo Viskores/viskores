@@ -26,7 +26,7 @@ void TestCellGradientUniform2D()
   vtkm::cont::ArrayHandle<vtkm::Float32> input;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> result;
 
-  dataSet.GetField("pointvar").GetData().CopyTo(input);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(input);
 
   vtkm::worklet::CellGradient gradient;
   result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
@@ -49,7 +49,7 @@ void TestCellGradientUniform3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> input;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> result;
 
-  dataSet.GetField("pointvar").GetData().CopyTo(input);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(input);
 
   vtkm::worklet::CellGradient gradient;
   result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);
@@ -218,7 +218,7 @@ void TestCellGradientExplicit()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> input;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> result;
-  dataSet.GetField("pointvar").GetData().CopyTo(input);
+  dataSet.GetField("pointvar").GetData().AsArrayHandle(input);
 
   vtkm::worklet::CellGradient gradient;
   result = gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input);

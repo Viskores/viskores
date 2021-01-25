@@ -61,7 +61,7 @@ public:
 
       //verify the cellvar result
       vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
-      result.GetField("cellvar").GetData().CopyTo(cellFieldArrayOut);
+      result.GetField("cellvar").GetData().AsArrayHandle(cellFieldArrayOut);
 
       vtkm::cont::Algorithm::Sort(cellFieldArrayOut);
       {
@@ -151,7 +151,7 @@ public:
     dataSet.GetCellSet().CopyTo(cellSet);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-    dataSet.GetPointField("gyroid").GetData().CopyTo(fieldArray);
+    dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
 
     vtkm::worklet::Contour isosurfaceFilter;
     isosurfaceFilter.SetMergeDuplicatePoints(false);

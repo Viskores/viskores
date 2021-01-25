@@ -126,7 +126,7 @@ void TestSplitSharpEdgesSplitEveryEdge(vtkm::cont::DataSet& simpleCube,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 24,
@@ -171,7 +171,7 @@ void TestSplitSharpEdgesNoSplit(vtkm::cont::DataSet& simpleCube,
                       newCellset);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> pointvar;
-  simpleCube.GetPointField("pointvar").GetData().CopyTo(pointvar);
+  simpleCube.GetPointField("pointvar").GetData().AsArrayHandle(pointvar);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointFields =
     splitSharpEdges.ProcessPointField(pointvar);
   VTKM_TEST_ASSERT(newCoords.GetNumberOfValues() == 8,

@@ -87,8 +87,12 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_explicit::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
-                    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+  dispatcher.Invoke(dataSet.GetField("cellvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    dataSet.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
                     &cellset,
                     result);
 

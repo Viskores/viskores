@@ -72,7 +72,7 @@ CoordinateSystem::GetData() const
 VTKM_CONT vtkm::cont::CoordinateSystem::MultiplexerArrayType
 CoordinateSystem::GetDataAsMultiplexer() const
 {
-  return this->GetData().AsMultiplexer<MultiplexerArrayType>();
+  return this->GetData().AsArrayHandle<MultiplexerArrayType>();
 }
 
 VTKM_CONT
