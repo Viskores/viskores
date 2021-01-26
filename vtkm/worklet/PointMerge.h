@@ -430,7 +430,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec3f> concretePoints;
     if (points.template IsType<decltype(concretePoints)>())
     {
-      concretePoints = points.template Cast<decltype(concretePoints)>();
+      points.AsArrayHandle(concretePoints);
     }
     else
     {

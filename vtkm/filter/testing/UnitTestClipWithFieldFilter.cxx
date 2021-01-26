@@ -68,7 +68,7 @@ void TestClipExplicit()
 
   auto temp = outputData.GetField("scalars").GetData();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  temp.CopyTo(resultArrayHandle);
+  temp.AsArrayHandle(resultArrayHandle);
 
   vtkm::Float32 expected[7] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
   for (int i = 0; i < 7; ++i)

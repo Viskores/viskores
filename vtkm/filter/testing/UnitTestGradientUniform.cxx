@@ -81,7 +81,7 @@ void TestCellGradientUniform3DWithVectorField()
                    "vec gradients should generate qcriterion");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> resultArrayHandle;
-  result.GetCellField("vec_gradient").GetData().CopyTo(resultArrayHandle);
+  result.GetCellField("vec_gradient").GetData().AsArrayHandle(resultArrayHandle);
   vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
@@ -133,7 +133,7 @@ void TestPointGradientUniform3DWithVectorField()
   VTKM_TEST_ASSERT(result.HasPointField("vec_gradient"), "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec3f_64, 3>> resultArrayHandle;
-  result.GetPointField("vec_gradient").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("vec_gradient").GetData().AsArrayHandle(resultArrayHandle);
   vtkm::Vec<vtkm::Vec3f_64, 3> expected[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.1, 60.1, 60.1 } },

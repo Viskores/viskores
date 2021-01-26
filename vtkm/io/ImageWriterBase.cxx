@@ -75,7 +75,7 @@ void ImageWriterBase::WriteDataSet(const vtkm::cont::DataSet& dataSet,
     }
   }
 
-  this->Write(width, height, colorField.GetData().Cast<ColorArrayType>());
+  this->Write(width, height, colorField.GetData().AsArrayHandle<ColorArrayType>());
 }
 }
 } // namespace vtkm::io

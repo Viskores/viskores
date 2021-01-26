@@ -29,7 +29,7 @@ void TestImageMedian()
 
   VTKM_TEST_ASSERT(result.HasPointField("median"), "Field missing.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetPointField("median").GetData().CopyTo(resultArrayHandle);
+  result.GetPointField("median").GetData().AsArrayHandle(resultArrayHandle);
 
   auto cells = result.GetCellSet().Cast<vtkm::cont::CellSetStructured<3>>();
   auto pdims = cells.GetPointDimensions();

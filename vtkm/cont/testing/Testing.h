@@ -468,10 +468,8 @@ inline VTKM_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset1,
   return result;
 }
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
 inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
-                                                   const vtkm::cont::Field& f2,
-                                                   FieldTypeList fTtypes = FieldTypeList())
+                                                   const vtkm::cont::Field& f2)
 {
   TestEqualResult result;
 
@@ -487,8 +485,7 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
     return result;
   }
 
-  result =
-    test_equal_ArrayHandles(f1.GetData().ResetTypes(fTtypes), f2.GetData().ResetTypes(fTtypes));
+  result = test_equal_ArrayHandles(f1.GetData(), f2.GetData());
   if (!result)
   {
     result.PushMessage("data doesn't match");
@@ -497,12 +494,10 @@ inline VTKM_CONT TestEqualResult test_equal_Fields(const vtkm::cont::Field& f1,
   return result;
 }
 
-template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST,
-          typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST>
+template <typename CellSetTypes = VTKM_DEFAULT_CELL_SET_LIST>
 inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& ds1,
                                                      const vtkm::cont::DataSet& ds2,
-                                                     CellSetTypes ctypes = CellSetTypes(),
-                                                     FieldTypeList fTtypes = FieldTypeList())
+                                                     CellSetTypes ctypes = CellSetTypes())
 {
   TestEqualResult result;
   if (ds1.GetNumberOfCoordinateSystems() != ds2.GetNumberOfCoordinateSystems())
@@ -537,7 +532,7 @@ inline VTKM_CONT TestEqualResult test_equal_DataSets(const vtkm::cont::DataSet& 
   }
   for (vtkm::IdComponent i = 0; i < ds1.GetNumberOfFields(); ++i)
   {
-    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i), fTtypes);
+    result = test_equal_Fields(ds1.GetField(i), ds2.GetField(i));
     if (!result)
     {
       result.PushMessage(std::string("fields don't match at index ") + std::to_string(i));

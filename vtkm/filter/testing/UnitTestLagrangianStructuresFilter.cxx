@@ -343,7 +343,7 @@ void Test2DLCS()
   vtkm::cont::DataSet outputData = lagrangianStructures.Execute(inputData);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
-  outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
+  outputData.GetField("FTLE").GetData().AsArrayHandle(FTLEField);
   auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
 }
 
@@ -387,7 +387,7 @@ void Test3DLCS()
     vtkm::cont::DataSet outputData = lagrangianStructures.Execute(input);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> FTLEField;
-    outputData.GetField("FTLE").GetData().CopyTo(FTLEField);
+    outputData.GetField("FTLE").GetData().AsArrayHandle(FTLEField);
     auxiliary::ValidateLCSFilterResult(FTLEField, visitHandle, diffHandle);
   }
 }

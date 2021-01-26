@@ -45,7 +45,7 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   VTKM_TEST_ASSERT((cellIds == vtkm::Id4(1, 2, 5, 4)), "Bad cell ids: ", cellIds);
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outPointField;
-  outData.GetField("pointvar").GetData().CopyTo(outPointField);
+  outData.GetField("pointvar").GetData().AsArrayHandle(outPointField);
   VTKM_TEST_ASSERT(outPointField.GetNumberOfValues() == 6,
                    "Wrong point field size: ",
                    outPointField.GetNumberOfValues());
@@ -57,7 +57,7 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
                    outPointField.ReadPortal().Get(1));
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outCellField;
-  outData.GetField("cellvar").GetData().CopyTo(outCellField);
+  outData.GetField("cellvar").GetData().AsArrayHandle(outCellField);
   VTKM_TEST_ASSERT(outCellField.GetNumberOfValues() == 2, "Wrong cell field size.");
   VTKM_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(0), 100.1),
                    "Bad cell field value",

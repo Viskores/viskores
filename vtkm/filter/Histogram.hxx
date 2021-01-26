@@ -86,7 +86,8 @@ public:
 
   void SetLocalHistogram(vtkm::Id index, const vtkm::cont::Field& field)
   {
-    this->SetLocalHistogram(index, field.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Id>>());
+    this->SetLocalHistogram(index,
+                            field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>());
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> ReduceAll() const

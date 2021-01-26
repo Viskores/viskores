@@ -328,7 +328,7 @@ public:
     Serialization<vtkm::cont::Field>::load(bb, serializable.Field);
   }
 };
-VTKM_DEPRECATED_SUPPRESS_BEGIN
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // diy
 /// @endcond SERIALIZATION

@@ -680,7 +680,9 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
     auto currField =
       currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     vtkm::cont::ArrayHandle<FieldType> fieldData;
-    vtkm::cont::ArrayCopy(currField.GetData().ResetTypes(vtkm::List<FieldType>{}), fieldData);
+    vtkm::cont::ArrayCopy(
+      currField.GetData().ResetTypes(vtkm::List<FieldType>{}, VTKM_DEFAULT_STORAGE_LIST{}),
+      fieldData);
 
     // ... compute and store the actual mesh
     localDataBlocks[bi]->ContourTreeMeshes.emplace_back(this->LocalBoundaryTrees[bi].VertexIndex,
@@ -914,7 +916,9 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
       auto currField =
         currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
       vtkm::cont::ArrayHandle<FieldType> fieldData;
-      vtkm::cont::ArrayCopy(currField.GetData().ResetTypes(vtkm::List<FieldType>{}), fieldData);
+      vtkm::cont::ArrayCopy(
+        currField.GetData().ResetTypes(vtkm::List<FieldType>{}, VTKM_DEFAULT_STORAGE_LIST{}),
+        fieldData);
       auto localToGlobalIdRelabeler = vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
         this->MultiBlockSpatialDecomposition.LocalBlockOrigins.ReadPortal().Get(
           blockData->BlockIndex),

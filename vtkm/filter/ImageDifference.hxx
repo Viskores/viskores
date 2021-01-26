@@ -89,8 +89,7 @@ inline VTKM_CONT vtkm::cont::DataSet ImageDifference::DoExecute(
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Not performing average");
     primaryOutput = primary;
-    secondaryOutput =
-      secondaryField.GetData().template Cast<vtkm::cont::ArrayHandle<T, StorageType>>();
+    secondaryField.GetData().AsArrayHandle(secondaryOutput);
   }
 
   if (this->PixelShiftRadius > 0)

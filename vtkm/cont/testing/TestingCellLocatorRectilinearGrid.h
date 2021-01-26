@@ -185,7 +185,7 @@ public:
     vtkm::cont::ArrayHandle<bool> match;
     vtkm::cont::Token token;
     LocatorWorklet<DeviceAdapter> worklet(
-      bounds, dims, coords.GetData().template Cast<RectilinearType>(), token);
+      bounds, dims, coords.GetData().template AsArrayHandle<RectilinearType>(), token);
 
     vtkm::worklet::DispatcherMapField<LocatorWorklet<DeviceAdapter>> dispatcher(worklet);
     dispatcher.SetDevice(DeviceAdapter());

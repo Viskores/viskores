@@ -56,10 +56,10 @@ void Test1D(int rate)
   if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
+    const vtkm::Id size = dynField.AsArrayHandle<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto fPortal = dynField.AsArrayHandle<Handle64>().ReadPortal();
     auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
@@ -91,10 +91,10 @@ void Test2D(int rate)
   if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
+    const vtkm::Id size = dynField.AsArrayHandle<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto fPortal = dynField.AsArrayHandle<Handle64>().ReadPortal();
     auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {
@@ -129,10 +129,10 @@ void Test3D(int rate)
   if (vtkm::cont::IsType<Handle64>(dynField))
   {
     vtkm::cont::ArrayHandle<Scalar> handle;
-    const vtkm::Id size = dynField.Cast<Handle64>().GetNumberOfValues();
+    const vtkm::Id size = dynField.AsArrayHandle<Handle64>().GetNumberOfValues();
     handle.Allocate(size);
 
-    auto fPortal = dynField.Cast<Handle64>().ReadPortal();
+    auto fPortal = dynField.AsArrayHandle<Handle64>().ReadPortal();
     auto hPortal = handle.WritePortal();
     for (vtkm::Id i = 0; i < size; ++i)
     {

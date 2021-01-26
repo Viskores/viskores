@@ -376,7 +376,7 @@ private:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Run the specific test
     CallTestContourTreeAugmentedSteps(
@@ -725,7 +725,7 @@ public:
     vtkm::Id3 meshSize{ pointDimensions2D[0], pointDimensions2D[1], 1 };
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -791,7 +791,7 @@ public:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;
@@ -864,7 +864,7 @@ public:
     vtkm::Id3 pointDimensions = cellSet.GetPointDimensions();
 
     vtkm::cont::ArrayHandle<vtkm::Float32> field;
-    dataSet.GetField("pointvar").GetData().CopyTo(field);
+    dataSet.GetField("pointvar").GetData().AsArrayHandle(field);
 
     // Create the worklet and run it
     vtkm::worklet::ContourTreeAugmented contourTreeWorklet;

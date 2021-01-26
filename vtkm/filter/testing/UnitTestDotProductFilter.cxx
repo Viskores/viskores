@@ -79,7 +79,7 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& field1,
   VTKM_TEST_ASSERT(result.HasPointField("dotproduct"), "Output field is missing.");
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray;
-  result.GetPointField("dotproduct").GetData().CopyTo(outputArray);
+  result.GetPointField("dotproduct").GetData().AsArrayHandle(outputArray);
 
   auto v1Portal = field1.ReadPortal();
   auto v2Portal = field2.ReadPortal();

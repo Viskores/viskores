@@ -35,6 +35,14 @@ struct DeduceFilterFieldTypes
   using PList = typename DerivedPolicy::FieldTypeList;
   using TypeList = vtkm::ListIntersect<ListOfTypes, PList>;
 };
+
+template <typename DerivedPolicy, typename ListOfStorage>
+struct DeduceFilterFieldStorage
+{
+  using PList = typename DerivedPolicy::StorageList;
+  using StorageList = vtkm::ListAppend<ListOfStorage, PList>;
+};
+
 }
 }
 

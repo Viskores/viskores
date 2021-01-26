@@ -124,9 +124,9 @@ void DataSet_Compare(vtkm::cont::DataSet& leftDataSet, vtkm::cont::DataSet& righ
   for (vtkm::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
   {
     vtkm::cont::ArrayHandle<vtkm::Float32> lDataArray;
-    leftDataSet.GetField(j).GetData().CopyTo(lDataArray);
+    leftDataSet.GetField(j).GetData().AsArrayHandle(lDataArray);
     vtkm::cont::ArrayHandle<vtkm::Float32> rDataArray;
-    rightDataSet.GetField(j).GetData().CopyTo(rDataArray);
+    rightDataSet.GetField(j).GetData().AsArrayHandle(rDataArray);
     VTKM_TEST_ASSERT(lDataArray == rDataArray, "field value info incorrect");
   }
   return;

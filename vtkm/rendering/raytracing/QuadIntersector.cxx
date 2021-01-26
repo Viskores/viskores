@@ -458,7 +458,7 @@ void QuadIntersector::IntersectionDataImp(Ray<Precision>& rays,
     detail::GetScalar<Precision>(vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
-            scalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+            vtkm::rendering::raytracing::GetScalarFieldArray(scalarField),
             QuadIds);
 }
 

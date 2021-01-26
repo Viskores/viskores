@@ -110,8 +110,12 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
-                    dataSet.GetField("pointvar").GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+  dispatcher.Invoke(dataSet.GetField("cellvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
+                    dataSet.GetField("pointvar")
+                      .GetData()
+                      .ResetTypes<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(),
                     // We know that the cell set is a structured 2D grid and
                     // The worklet does not work with general types because
                     // of the way we get cell indices. We need to make that

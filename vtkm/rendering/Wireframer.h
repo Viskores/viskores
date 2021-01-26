@@ -545,7 +545,7 @@ private:
       vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
       plotterDispatcher.SetDevice(DeviceTag());
       plotterDispatcher.Invoke(
-        PointIndices, Coordinates, ScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+        PointIndices, Coordinates, vtkm::rendering::raytracing::GetScalarFieldArray(ScalarField));
     }
 
     BufferConverter converter;

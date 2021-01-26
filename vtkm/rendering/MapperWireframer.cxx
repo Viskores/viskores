@@ -261,7 +261,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::worklet::DispatcherMapField<Convert1DCoordinates>(
       Convert1DCoordinates(this->LogarithmY, this->LogarithmX))
       .Invoke(coords.GetData(),
-              inScalarField.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+              vtkm::rendering::raytracing::GetScalarFieldArray(inScalarField),
               newCoords,
               newScalars);
 

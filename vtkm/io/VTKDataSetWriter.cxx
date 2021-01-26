@@ -337,17 +337,17 @@ void WriteDataSetAsStructured(std::ostream& out,
   {
     // uniform is written as "structured points"
     WriteDataSetAsStructuredPoints(
-      out, coordSystem.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(), cellSet);
+      out, coordSystem.AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>(), cellSet);
   }
   else if (coordSystem.IsType<ArrayHandleRectilinearCoordinates<vtkm::Float32>>())
   {
     WriteDataSetAsRectilinearGrid(
-      out, coordSystem.Cast<ArrayHandleRectilinearCoordinates<vtkm::Float32>>(), cellSet);
+      out, coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float32>>(), cellSet);
   }
   else if (coordSystem.IsType<ArrayHandleRectilinearCoordinates<vtkm::Float64>>())
   {
     WriteDataSetAsRectilinearGrid(
-      out, coordSystem.Cast<ArrayHandleRectilinearCoordinates<vtkm::Float64>>(), cellSet);
+      out, coordSystem.AsArrayHandle<ArrayHandleRectilinearCoordinates<vtkm::Float64>>(), cellSet);
   }
   else
   {

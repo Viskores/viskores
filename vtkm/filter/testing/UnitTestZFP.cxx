@@ -30,8 +30,8 @@ void TestZFP1DFilter(vtkm::Float64 rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make1DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
   vtkm::filter::ZFPCompressor1D compressor;
@@ -46,7 +46,7 @@ void TestZFP1DFilter(vtkm::Float64 rate)
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < field.GetNumberOfValues(); i++)
@@ -61,8 +61,8 @@ void TestZFP2DFilter(vtkm::Float64 rate)
   vtkm::cont::DataSet dataset = testDataSet.Make2DUniformDataSet2();
   auto dynField = dataset.GetField("pointvar").GetData();
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
 
@@ -80,7 +80,7 @@ void TestZFP2DFilter(vtkm::Float64 rate)
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < dynField.GetNumberOfValues(); i++)
@@ -95,8 +95,8 @@ void TestZFP3DFilter(vtkm::Float64 rate)
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataset = testDataSet.Make3DUniformDataSet3(dims);
   auto dynField = dataset.GetField("pointvar").GetData();
-  vtkm::cont::ArrayHandle<vtkm::Float64> field =
-    dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  vtkm::cont::ArrayHandle<vtkm::Float64> field;
+  dynField.AsArrayHandle(field);
   auto oport = field.ReadPortal();
 
 
@@ -112,7 +112,7 @@ void TestZFP3DFilter(vtkm::Float64 rate)
   auto decompress = decompressor.Execute(compressed);
   dynField = decompress.GetField("decompressed").GetData();
 
-  field = dynField.Cast<vtkm::cont::ArrayHandle<vtkm::Float64>>();
+  dynField.AsArrayHandle(field);
   auto port = field.ReadPortal();
 
   for (int i = 0; i < dynField.GetNumberOfValues(); i++)

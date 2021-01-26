@@ -134,7 +134,7 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(vtkm::cont::DataSet& simpleCubeWith
   auto newCoords = result.GetCoordinateSystem().GetDataAsMultiplexer();
   auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
-  result.GetField("pointvar").GetData().CopyTo(newPointvarField);
+  result.GetField("pointvar").GetData().AsArrayHandle(newPointvarField);
 
   for (vtkm::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
@@ -169,7 +169,7 @@ void TestSplitSharpEdgesFilterNoSplit(vtkm::cont::DataSet& simpleCubeWithSN,
     result.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
   auto newCoordsP = newCoords.ReadPortal();
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> newPointvarField;
-  result.GetField("pointvar").GetData().CopyTo(newPointvarField);
+  result.GetField("pointvar").GetData().AsArrayHandle(newPointvarField);
 
   for (vtkm::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {

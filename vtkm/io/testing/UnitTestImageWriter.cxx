@@ -36,8 +36,9 @@ void TestFilledImage(vtkm::cont::DataSet& dataSet,
                    "wrong image dimensions");
   VTKM_TEST_ASSERT(pointField.GetData().template IsType<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>(),
                    "wrong ArrayHandle type");
-  auto pixelPortal =
-    pointField.GetData().template Cast<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>().ReadPortal();
+  auto pixelPortal = pointField.GetData()
+                       .template AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec4f_32>>()
+                       .ReadPortal();
 
   auto colorPortal = canvas.GetColorBuffer().ReadPortal();
 

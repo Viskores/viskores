@@ -712,7 +712,7 @@ public:
     auto coordData = coord.GetData();
     if (coordData.IsType<CartesianArrayHandle>())
     {
-      const auto vertices = coordData.Cast<CartesianArrayHandle>();
+      const auto vertices = coordData.AsArrayHandle<CartesianArrayHandle>();
       const auto vertsSize = vertices.GetNumberOfValues();
       const auto tmp = vtkm::cont::ArrayGetValues({ 0, vertsSize - 1 }, vertices);
       MinPoint = tmp[0];
@@ -720,7 +720,7 @@ public:
     }
     else
     {
-      auto vertices = coordData.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      auto vertices = coordData.AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       auto Coordinates = vertices.ReadPortal();
 
       MinPoint = Coordinates.GetOrigin();

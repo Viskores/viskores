@@ -53,7 +53,7 @@ void CellLocatorUniformGrid::Build()
     throw vtkm::cont::ErrorBadType("Cells are not 2D or 3D structured type.");
   }
 
-  UniformType uniformCoords = coords.GetData().Cast<UniformType>();
+  UniformType uniformCoords = coords.GetData().AsArrayHandle<UniformType>();
   auto coordsPortal = uniformCoords.ReadPortal();
   this->Origin = coordsPortal.GetOrigin();
 

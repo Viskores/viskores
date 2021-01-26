@@ -100,7 +100,7 @@ class Redistributor
                       vtkm::Id currentIdx) const
       {
         vtkm::cont::ArrayHandle<T> farray =
-          field.GetData().template Cast<vtkm::cont::ArrayHandle<T>>();
+          field.GetData().template AsArrayHandle<vtkm::cont::ArrayHandle<T>>();
         vtkm::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
       }
     };

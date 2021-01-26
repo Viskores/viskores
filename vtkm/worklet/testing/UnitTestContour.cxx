@@ -192,9 +192,9 @@ void TestContourUniformGrid()
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  dataSet.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  dataSet.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  dataSet.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
   vtkm::worklet::Contour contour;
   contour.SetMergeDuplicatePoints(false);
@@ -311,7 +311,7 @@ void TestContourExplicit()
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
   DataSetGenerator::DataArrayHandle contourArray;
-  contourField.GetData().CopyTo(contourArray);
+  contourField.GetData().AsArrayHandle(contourArray);
   Vec3Handle vertices;
   Vec3Handle normals;
 
@@ -326,12 +326,12 @@ void TestContourExplicit()
   vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
 
   DataSetGenerator::DataArrayHandle projectedArray;
-  projectedField.GetData().CopyTo(projectedArray);
+  projectedField.GetData().AsArrayHandle(projectedArray);
 
   scalars = Contour.ProcessPointField(projectedArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  dataSet.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArrayOut;
   cellFieldArrayOut = Contour.ProcessCellField(cellFieldArray);
@@ -372,9 +372,9 @@ void TestContourClipped()
   vtkm::cont::CellSetExplicit<> cellSet;
   clipped.GetCellSet().CopyTo(cellSet);
   vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
-  clipped.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  clipped.GetField("nodevar").GetData().AsArrayHandle(pointFieldArray);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
-  clipped.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+  clipped.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
   std::vector<vtkm::Float32> contourValue{ 0.5f };
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> verticesArray;

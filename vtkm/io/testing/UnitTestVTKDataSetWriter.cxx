@@ -30,7 +30,7 @@ struct CheckSameField
                   const vtkm::cont::Field& fileField) const
   {
     vtkm::cont::ArrayHandle<T> fileArray;
-    fileField.GetData().CopyTo(fileArray);
+    fileField.GetData().AsArrayHandle(fileArray);
     VTKM_TEST_ASSERT(test_equal_portals(originalArray.ReadPortal(), fileArray.ReadPortal()));
   }
 };
@@ -67,7 +67,7 @@ struct CheckSameCoordinateSystem
   {
     VTKM_TEST_ASSERT(fileCoords.GetData().IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>());
     vtkm::cont::ArrayHandleUniformPointCoordinates fileArray =
-      fileCoords.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      fileCoords.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
     auto originalPortal = originalArray.ReadPortal();
     auto filePortal = fileArray.ReadPortal();
     VTKM_TEST_ASSERT(test_equal(originalPortal.GetOrigin(), filePortal.GetOrigin()));
@@ -87,7 +87,7 @@ struct CheckSameCoordinateSystem
   {
     VTKM_TEST_ASSERT(fileCoords.GetData().IsType<ArrayHandleRectilinearCoords<T>>());
     ArrayHandleRectilinearCoords<T> fileArray =
-      fileCoords.GetData().Cast<ArrayHandleRectilinearCoords<T>>();
+      fileCoords.GetData().AsArrayHandle<ArrayHandleRectilinearCoords<T>>();
     auto originalPortal = originalArray.ReadPortal();
     auto filePortal = fileArray.ReadPortal();
     VTKM_TEST_ASSERT(

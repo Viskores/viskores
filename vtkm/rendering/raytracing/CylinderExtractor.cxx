@@ -288,7 +288,7 @@ void CylinderExtractor::SetVaryingRadius(const vtkm::Float32 minRadius,
   Radii.Allocate(this->CylIds.GetNumberOfValues());
   vtkm::worklet::DispatcherMapField<detail::FieldRadius>(
     detail::FieldRadius(minRadius, maxRadius, range))
-    .Invoke(this->CylIds, this->Radii, field.GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+    .Invoke(this->CylIds, this->Radii, vtkm::rendering::raytracing::GetScalarFieldArray(field));
 }
 
 

@@ -829,7 +829,8 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   {
     vtkm::cont::Token token;
     vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-    vertices = Coordinates.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    vertices =
+      Coordinates.GetData().AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
     UniformLocator<Device> locator(vertices, Cellset, token);
 
     if (isAssocPoints)
@@ -843,12 +844,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 meshEpsilon,
                                                 token));
       samplerDispatcher.SetDevice(Device());
-      samplerDispatcher.Invoke(rays.Dir,
-                               rays.Origin,
-                               rays.MinDistance,
-                               rays.MaxDistance,
-                               rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+      samplerDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
     else
     {
@@ -865,14 +867,14 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                 rays.MinDistance,
                 rays.MaxDistance,
                 rays.Buffers.at(0).Buffer,
-                ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+                vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
   }
   else
   {
     vtkm::cont::Token token;
     CartesianArrayHandle vertices;
-    vertices = Coordinates.GetData().Cast<CartesianArrayHandle>();
+    vertices = Coordinates.GetData().AsArrayHandle<CartesianArrayHandle>();
     RectilinearLocator<Device> locator(vertices, Cellset, token);
     if (isAssocPoints)
     {
@@ -886,12 +888,13 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                       meshEpsilon,
                                                       token));
       samplerDispatcher.SetDevice(Device());
-      samplerDispatcher.Invoke(rays.Dir,
-                               rays.Origin,
-                               rays.MinDistance,
-                               rays.MaxDistance,
-                               rays.Buffers.at(0).Buffer,
-                               ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+      samplerDispatcher.Invoke(
+        rays.Dir,
+        rays.Origin,
+        rays.MinDistance,
+        rays.MaxDistance,
+        rays.Buffers.at(0).Buffer,
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
     else
     {
@@ -911,7 +914,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
         rays.MinDistance,
         rays.MaxDistance,
         rays.Buffers.at(0).Buffer,
-        ScalarField->GetData().ResetTypes(vtkm::TypeListFieldScalar()));
+        vtkm::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
   }
 

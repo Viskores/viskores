@@ -133,10 +133,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf =
-      probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>(), 0.0f);
-    auto cf =
-      probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>(), 0.0f);
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
 
@@ -156,10 +156,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf =
-      probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>(), 0.0f);
-    auto cf =
-      probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>(), 0.0f);
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
 
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());
@@ -180,10 +180,10 @@ private:
     vtkm::worklet::Probe probe;
     probe.Run(input.GetCellSet(), input.GetCoordinateSystem(), geometry.GetCoordinateSystem());
 
-    auto pf =
-      probe.ProcessPointField(input.GetField("pointdata").GetData().Cast<FieldArrayType>(), 0.0f);
-    auto cf =
-      probe.ProcessCellField(input.GetField("celldata").GetData().Cast<FieldArrayType>(), 0.0f);
+    auto pf = probe.ProcessPointField(
+      input.GetField("pointdata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
+    auto cf = probe.ProcessCellField(
+      input.GetField("celldata").GetData().AsArrayHandle<FieldArrayType>(), 0.0f);
 
     auto hp = probe.GetHiddenPointsField();
     auto hc = probe.GetHiddenCellsField(geometry.GetCellSet());

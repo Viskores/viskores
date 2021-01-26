@@ -97,7 +97,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims)
   std::uniform_real_distribution<vtkm::FloatDefault> warpFactor(-0.10f, 0.10f);
   auto inPointsPortal = uniformDs.GetCoordinateSystem()
                           .GetData()
-                          .template Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>()
+                          .template AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>()
                           .ReadPortal();
   vtkm::cont::ArrayHandle<PointType> points;
   points.Allocate(inPointsPortal.GetNumberOfValues());
