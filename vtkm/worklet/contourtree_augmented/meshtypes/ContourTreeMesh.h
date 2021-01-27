@@ -290,7 +290,7 @@ inline void ContourTreeMesh<FieldType>::PrintContent(std::ostream& outStream /*=
   PrintIndices("FirstNeighbour", FirstNeighbour, -1, outStream);
   outStream << "MaxNeighbours=" << MaxNeighbours << std::endl;
   outStream << "mGetMax=" << mGetMax << std::endl;
-} // DebugPrint()
+} // PrintContent()
 
 // debug routine
 template <typename FieldType>
@@ -298,7 +298,6 @@ inline void ContourTreeMesh<FieldType>::DebugPrint(const char* message,
                                                    const char* fileName,
                                                    long lineNum) const
 { // DebugPrint()
-#ifdef DEBUG_PRINT
   std::cout << "---------------------------" << std::endl;
   std::cout << std::setw(30) << std::left << fileName << ":" << std::right << std::setw(4)
             << lineNum << std::endl;
@@ -308,11 +307,6 @@ inline void ContourTreeMesh<FieldType>::DebugPrint(const char* message,
   std::cout << std::endl;
 
   PrintContent(std::cout);
-#else
-  (void)message;
-  (void)fileName;
-  (void)lineNum;
-#endif
 } // DebugPrint()
 
 // create the contour tree mesh from contour tree data
