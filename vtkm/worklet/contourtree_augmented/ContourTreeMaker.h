@@ -218,14 +218,6 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     CompressActiveSupernodes();
     this->ContourTreeResult.NumIterations++;
 
-    if (this->ContourTreeResult.NumIterations >
-        this->ContourTreeResult.Supernodes.GetNumberOfValues())
-    {
-      throw vtkm::cont::ErrorBadValue(
-        std::string("Number of iterations in contour tree exceeds number of supernodes likely due "
-                    "to bad input mesh: nSupernodes=") +
-        std::to_string(this->ContourTreeResult.Supernodes.GetNumberOfValues()));
-    }
   } // loop until no active vertices remaining
 
   // test for final edges meeting
