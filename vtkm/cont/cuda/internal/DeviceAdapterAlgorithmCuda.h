@@ -1094,7 +1094,7 @@ public:
       numBits = BitFieldToUnorderedSetPortal<vtkm::UInt64>(bitsPortal, indicesPortal);
     }
 
-    indices.Shrink(numBits);
+    indices.Allocate(numBits, vtkm::CopyFlag::On);
     return numBits;
   }
 
@@ -1107,7 +1107,7 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
     if (inSize <= 0)
     {
-      output.Shrink(inSize);
+      output.Allocate(inSize, vtkm::CopyFlag::On);
       return;
     }
     vtkm::cont::Token token;
@@ -1125,7 +1125,7 @@ public:
     vtkm::Id size = stencil.GetNumberOfValues();
     if (size <= 0)
     {
-      output.Shrink(size);
+      output.Allocate(size, vtkm::CopyFlag::On);
       return;
     }
 
@@ -1140,7 +1140,7 @@ public:
                              ::vtkm::NotZeroInitialized()); //yes on the stencil
     }
 
-    output.Shrink(newSize);
+    output.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class SIn, class SStencil, class SOut, class UnaryPredicate>
@@ -1154,7 +1154,7 @@ public:
     vtkm::Id size = stencil.GetNumberOfValues();
     if (size <= 0)
     {
-      output.Shrink(size);
+      output.Allocate(size, vtkm::CopyFlag::On);
       return;
     }
 
@@ -1168,7 +1168,7 @@ public:
                              unary_predicate);
     }
 
-    output.Shrink(newSize);
+    output.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class SIn, class SOut>
@@ -1364,8 +1364,8 @@ public:
         binary_functor);
     }
 
-    keys_output.Shrink(reduced_size);
-    values_output.Shrink(reduced_size);
+    keys_output.Allocate(reduced_size, vtkm::CopyFlag::On);
+    values_output.Allocate(reduced_size, vtkm::CopyFlag::On);
   }
 
   template <typename T, class SIn, class SOut>
@@ -1782,7 +1782,7 @@ public:
       newSize = UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token));
     }
 
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class Storage, class BinaryCompare>
@@ -1798,7 +1798,7 @@ public:
         UniquePortal(values.PrepareForInPlace(DeviceAdapterTagCuda(), token), binary_compare);
     }
 
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class SIn, class SVal, class SOut>

@@ -80,7 +80,7 @@ public:
                          output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
                          unary_predicate);
     token.DetachFromAll();
-    output.Shrink(outputSize);
+    output.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -191,8 +191,8 @@ public:
       values_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB(), token),
       binary_functor);
     token.DetachFromAll();
-    keys_output.Shrink(outputSize);
-    values_output.Shrink(outputSize);
+    keys_output.Allocate(outputSize, vtkm::CopyFlag::On);
+    values_output.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   template <typename T, class CIn, class COut>
@@ -338,7 +338,7 @@ public:
       outputSize =
         tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB(), token), binary_compare);
     }
-    values.Shrink(outputSize);
+    values.Allocate(outputSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT static void Synchronize()

@@ -501,7 +501,7 @@ public:
     vtkm::Id length = input.GetNumberOfValues();
     if (length == 0)
     {
-      output.Shrink(0);
+      output.ReleaseResources();
       return initialValue;
     }
     if (length == 1)

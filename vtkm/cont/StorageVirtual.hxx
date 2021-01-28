@@ -134,7 +134,7 @@ template <typename T, typename S>
 void StorageVirtualImpl<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   this->DropAllPortals();
-  this->Handle.Shrink(numberOfValues);
+  this->Handle.Allocate(numberOfValues, vtkm::CopyFlag::On);
 }
 
 struct PortalWrapperToDevice

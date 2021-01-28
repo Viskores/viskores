@@ -527,7 +527,7 @@ public:
   }
   ///@}
 
-  /// Deprecate this.
+  VTKM_DEPRECATED(1.6, "Use Allocate(n, vtkm::CopyFlag::On) instead of Shrink(n).")
   VTKM_CONT void Shrink(vtkm::Id numberOfValues)
   {
     this->Allocate(numberOfValues, vtkm::CopyFlag::On);

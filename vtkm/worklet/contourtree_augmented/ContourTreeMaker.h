@@ -648,7 +648,7 @@ inline void ContourTreeMaker::AugmentMergeTrees()
     splitSort.ReleaseResources();
 
     // 4. Resize the supernode array accordingly
-    this->ContourTreeResult.Supernodes.Shrink(nSupernodes);
+    this->ContourTreeResult.Supernodes.Allocate(nSupernodes, vtkm::CopyFlag::On);
     */
 
   // 1. Allocate an array that is guaranteed to be big enough

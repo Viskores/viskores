@@ -146,7 +146,7 @@ public:
 
     numBits = static_cast<vtkm::Id>(popCount.load(std::memory_order_seq_cst));
 
-    indices.Shrink(numBits);
+    indices.Allocate(numBits, vtkm::CopyFlag::On);
     return numBits;
   }
 
@@ -458,7 +458,7 @@ public:
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
     if (numValues == 0)
     {
-      handle.Shrink(0);
+      handle.ReleaseResources();
       return;
     }
 
@@ -680,7 +680,7 @@ public:
     vtkm::Id numValues = input.GetNumberOfValues();
     if (numValues <= 0)
     {
-      output.Shrink(0);
+      output.ReleaseResources();
       return initialValue;
     }
 

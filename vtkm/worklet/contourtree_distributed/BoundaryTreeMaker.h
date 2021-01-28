@@ -1223,7 +1223,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
     this->BoundaryTreeData->VertexIndex);
 
   // now copy the this->BoundaryTreeData->Superarcs
-  this->BoundaryTreeData->Superarcs.Shrink(this->NumKept);
+  this->BoundaryTreeData->Superarcs.Allocate(this->NumKept, vtkm::CopyFlag::On);
   auto fillBoundaryTreeSuperarcsWorklet =
     bract_maker::CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet();
   this->Invoke(fillBoundaryTreeSuperarcsWorklet,
