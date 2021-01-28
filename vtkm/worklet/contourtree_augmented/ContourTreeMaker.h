@@ -308,8 +308,8 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // now we compress both the hypernodes & Hyperarcs
   IdArrayType newHypernodePosition;
-  OnefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
+  OneIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
     this->ContourTreeResult.WhenTransferred, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
