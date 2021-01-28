@@ -313,22 +313,38 @@ public:
           caseNo |= (vtkm::UInt8)(1 << vtxNo);
         }
       }
+
+      const auto& vertex_permutation = CubeVertexPermutationsPortal.Get(permIndex);
       if (getMaxComponents)
       {
         for (int edgeNo = 0; edgeNo < 3; ++edgeNo)
         {
           if (InCubeConnectionsSixPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[0]];
+            const auto& edge = LinkVertexConnectionsSixPortal.Get(edgeNo);
+            vtkm::IdComponent edge0 = edge[0];
+            vtkm::IdComponent edge1 = edge[1];
+            VTKM_ASSERT(0 <= edge0 && edge0 < CubeVertexPermutations_PermVecLength);
+            VTKM_ASSERT(0 <= edge1 && edge1 < CubeVertexPermutations_PermVecLength);
+            int root0 = vertex_permutation[edge0];
+            int root1 = vertex_permutation[edge1];
+            VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
             while (parentId[root0] != root0)
+            {
               root0 = parentId[root0];
-            int root1 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsSixPortal.Get(edgeNo)[1]];
+              VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            }
             while (parentId[root1] != root1)
+            {
               root1 = parentId[root1];
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
+            }
             if (root0 != root1)
+            {
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
               parentId[root1] = root0;
+            }
           }
         }
       }
@@ -338,16 +354,30 @@ public:
         {
           if (InCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<vtkm::Id>(1) << edgeNo))
           {
-            int root0 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[0]];
+            const auto& edge = LinkVertexConnectionsEighteenPortal.Get(edgeNo);
+            vtkm::IdComponent edge0 = edge[0];
+            vtkm::IdComponent edge1 = edge[1];
+            VTKM_ASSERT(0 <= edge0 && edge0 < CubeVertexPermutations_PermVecLength);
+            VTKM_ASSERT(0 <= edge1 && edge1 < CubeVertexPermutations_PermVecLength);
+            int root0 = vertex_permutation[edge0];
+            int root1 = vertex_permutation[edge1];
+            VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
             while (parentId[root0] != root0)
+            {
               root0 = parentId[root0];
-            int root1 = CubeVertexPermutationsPortal.Get(
-              permIndex)[LinkVertexConnectionsEighteenPortal.Get(edgeNo)[1]];
+              VTKM_ASSERT(0 <= root0 && root0 < N_ALL_NEIGHBOURS);
+            }
             while (parentId[root1] != root1)
+            {
               root1 = parentId[root1];
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
+            }
             if (root0 != root1)
+            {
+              VTKM_ASSERT(0 <= root1 && root1 < N_ALL_NEIGHBOURS);
               parentId[root1] = root0;
+            }
           }
         }
       }
