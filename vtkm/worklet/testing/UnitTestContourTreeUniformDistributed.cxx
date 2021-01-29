@@ -71,50 +71,6 @@ struct MergeContourTreeMeshFunctor
   }
 };
 
-template <typename T>
-bool ArraysEqual(const vtkm::cont::ArrayHandle<T>& result,
-                 const vtkm::cont::ArrayHandle<T>& expected)
-{
-  bool are_equal = true;
-  if (result.GetNumberOfValues() == expected.GetNumberOfValues())
-  {
-    auto result_portal = result.ReadPortal();
-    auto expected_portal = expected.ReadPortal();
-
-    for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
-    {
-      if (result_portal.Get(i) != expected_portal.Get(i))
-      {
-        are_equal = false;
-        break;
-      }
-    }
-  }
-  else
-  {
-    are_equal = false;
-  }
-  if (!are_equal)
-  {
-    std::cerr << "Mismatch error." << std::endl;
-    std::cerr << "Expected array of length " << expected.GetNumberOfValues() << ": ";
-    auto expected_portal = expected.ReadPortal();
-    for (vtkm::Id i = 0; i < expected.GetNumberOfValues(); ++i)
-    {
-      std::cerr << expected_portal.Get(i) << " ";
-    }
-    std::cerr << std::endl;
-    std::cerr << "Got array of length " << result.GetNumberOfValues() << ": ";
-    auto result_portal = result.ReadPortal();
-    for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
-    {
-      std::cerr << result_portal.Get(i) << " ";
-    }
-    std::cerr << std::endl;
-  }
-  return are_equal;
-}
-
 template <typename FieldType>
 void TestContourTreeMeshCombine(const std::string& mesh1_filename,
                                 const std::string& mesh2_filename,
@@ -129,14 +85,15 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> combinedContourTreeMesh;
   combinedContourTreeMesh.Load(combined_filename.c_str());
   VTKM_TEST_ASSERT(
-    ArraysEqual(contourTreeMesh2.SortedValues, combinedContourTreeMesh.SortedValues));
+    test_equal_ArrayHandles(contourTreeMesh2.SortedValues, combinedContourTreeMesh.SortedValues));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
+                                           combinedContourTreeMesh.GlobalMeshIndex));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
+                                           combinedContourTreeMesh.GlobalMeshIndex));
   VTKM_TEST_ASSERT(
-    ArraysEqual(contourTreeMesh2.GlobalMeshIndex, combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(
-    ArraysEqual(contourTreeMesh2.GlobalMeshIndex, combinedContourTreeMesh.GlobalMeshIndex));
-  VTKM_TEST_ASSERT(ArraysEqual(contourTreeMesh2.Neighbours, combinedContourTreeMesh.Neighbours));
-  VTKM_TEST_ASSERT(
-    ArraysEqual(contourTreeMesh2.FirstNeighbour, combinedContourTreeMesh.FirstNeighbour));
+    test_equal_ArrayHandles(contourTreeMesh2.Neighbours, combinedContourTreeMesh.Neighbours));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.FirstNeighbour,
+                                           combinedContourTreeMesh.FirstNeighbour));
   VTKM_TEST_ASSERT(contourTreeMesh2.NumVertices == combinedContourTreeMesh.NumVertices);
   VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbours == combinedContourTreeMesh.MaxNeighbours);
 }
