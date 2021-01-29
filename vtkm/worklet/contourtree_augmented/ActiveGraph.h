@@ -287,9 +287,9 @@ inline void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
             vtkm::cont::ArrayPortalToIteratorBegin(inverseIndex.WritePortal()) + 1);
     */
   IdArrayType inverseIndex;
-  OnefIfCritical oneIfCriticalFunctor;
+  OneIfCritical oneIfCriticalFunctor;
   auto oneIfCriticalArrayHandle =
-    vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfCritical>(outDegrees, oneIfCriticalFunctor);
+    vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfCritical>(outDegrees, oneIfCriticalFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
@@ -656,8 +656,8 @@ inline void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
             vtkm::cont::ArrayPortalToIteratorBegin(newSupernodePosition.GetPortalControl()) + 1);*/
 
   IdArrayType newSupernodePosition;
-  OnefIfSupernode oneIfSupernodeFunctor;
-  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfSupernode>(
+  OneIfSupernode oneIfSupernodeFunctor;
+  auto oneIfSupernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfSupernode>(
     this->Hyperarcs, oneIfSupernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
@@ -679,8 +679,8 @@ inline void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
              vtkm::cont::ArrayPortalToIteratorBegin(newHypernodePosition.GetPortalControl()) + 1);
     */
   IdArrayType newHypernodePosition;
-  OnefIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OnefIfHypernode>(
+  OneIfHypernode oneIfHypernodeFunctor;
+  auto oneIfHypernodeArrayHandle = vtkm::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
     this->Hyperarcs, oneIfHypernodeFunctor);
   vtkm::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
