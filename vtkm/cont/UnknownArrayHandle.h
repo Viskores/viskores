@@ -40,7 +40,7 @@ static void UnknownAHDelete(void* mem)
 }
 
 template <typename T, typename S>
-static void* UnknownADNewInstance()
+static void* UnknownAHNewInstance()
 {
   return new vtkm::cont::ArrayHandle<T, S>;
 }
@@ -195,6 +195,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
 
   using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>();
   NewInstanceBasicType* NewInstanceBasic;
+  NewInstanceBasicType* NewInstanceFloatBasic;
 
   using NumberOfValuesType = vtkm::Id(void*);
   NumberOfValuesType* NumberOfValues;
@@ -263,20 +264,40 @@ private:
 };
 
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
 }
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
 {
   throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
                                  vtkm::cont::TypeToString<T>());
 }
 template <typename T>
-static std::shared_ptr<UnknownAHContainer> UnknownADNewInstanceBasic()
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
 {
-  return UnknownADNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+}
+
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+  vtkm::VecTraitsTagSizeStatic)
+{
+  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+  vtkm::VecTraitsTagSizeVariable)
+{
+  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
+                                 vtkm::cont::TypeToString<T>());
+}
+template <typename T>
+static std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
+{
+  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -287,8 +308,9 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , BaseComponentType(
       UnknownAHComponentInfo::Make<typename vtkm::VecTraits<T>::BaseComponentType>())
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
-  , NewInstance(detail::UnknownADNewInstance<T, S>)
-  , NewInstanceBasic(detail::UnknownADNewInstanceBasic<T>)
+  , NewInstance(detail::UnknownAHNewInstance<T, S>)
+  , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)
+  , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T>)
   , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
   , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
@@ -379,6 +401,24 @@ public:
   /// of the input, but the input might not be a writable array.
   ///
   VTKM_CONT UnknownArrayHandle NewInstanceBasic() const;
+
+  /// \brief Create a new `ArrayHandleBasic` with the base component of `FloatDefault`
+  ///
+  /// This method creates a new `ArrayHandleBasic` that has a `ValueType` that is similar
+  /// to the array held by this one except that the base component type is replaced with
+  /// `vtkm::FloatDefault`. For example, if the contained array has `vtkm::Int32` value types,
+  /// the returned array will have `vtkm::FloatDefault` value types. If the contained array
+  /// has `vtkm::Id3` value types, the returned array will have `vtkm::Vec3f` value types.
+  /// If the contained array already has `vtkm::FloatDefault` as the base component (e.g.
+  /// `vtkm::FloatDefault`, `vtkm::Vec3f`, `vtkm::Vec<vtkm::Vec2f, 3>`), then the value type
+  /// will be preserved.
+  ///
+  /// The created array is returned in a new `UnknownArrayHandle`.
+  ///
+  /// This method is used to convert an array of an unknown type to an array of an almost
+  /// known type.
+  ///
+  VTKM_CONT UnknownArrayHandle NewInstanceFloatBasic() const;
 
   /// \brief Returns the name of the value type stored in the array.
   ///

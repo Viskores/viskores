@@ -148,6 +148,16 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
   return newArray;
 }
 
+VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceFloatBasic() const
+{
+  UnknownArrayHandle newArray;
+  if (this->Container)
+  {
+    newArray.Container = this->Container->NewInstanceFloatBasic();
+  }
+  return newArray;
+}
+
 VTKM_CONT std::string UnknownArrayHandle::GetValueTypeName() const
 {
   if (this->Container)
