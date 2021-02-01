@@ -72,6 +72,7 @@
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/io/ErrorIO.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h> // This is needed only as an unused default argument.
@@ -90,7 +91,6 @@
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/UpdateCombinedNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/ComputeMeshBoundaryContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/mesh_boundary/MeshBoundaryContourTreeMesh.h>
-
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h> // TODO remove should not be needed
 
@@ -274,7 +274,7 @@ private:
 
   // Internal helper function to Load 1D index array from file
   template <typename ValueType>
-  void LoadVector(std::istream& is, const vtkm::cont::ArrayHandle<ValueType>& vec);
+  void LoadVector(std::istream& is, vtkm::cont::ArrayHandle<ValueType>& vec);
 
 }; // ContourTreeMesh
 
@@ -810,6 +810,10 @@ template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::Load(const char* filename)
 {
   std::ifstream is(filename);
+  if (!is.is_open())
+  {
+    throw vtkm::io::ErrorIO(std::string("Unable to open file: ") + std::string(filename));
+  }
   LoadVector(is, this->SortedValues);
   LoadVector(is, this->GlobalMeshIndex);
   LoadVector(is, this->Neighbours);
@@ -827,7 +831,7 @@ inline void ContourTreeMesh<FieldType>::SaveVector(
   const vtkm::cont::ArrayHandle<ValueType>& vec) const
 {
   vtkm::Id numVals = vec.GetNumberOfValues();
-  //os.write(reinterpret_cast<const char*>(&numVals), sizeof(ValueType));
+  //os.write(rXeinterpret_cast<const char*>(&numVals), sizeof(ValueType));
   os << numVals << ": ";
   auto vecPortal = vec.ReadPortal();
   for (vtkm::Id i = 0; i < numVals; ++i)
@@ -839,16 +843,22 @@ inline void ContourTreeMesh<FieldType>::SaveVector(
 template <typename FieldType>
 template <typename ValueType>
 inline void ContourTreeMesh<FieldType>::LoadVector(std::istream& is,
-                                                   const vtkm::cont::ArrayHandle<ValueType>& vec)
+                                                   vtkm::cont::ArrayHandle<ValueType>& vec)
 {
   vtkm::Id numVals;
-  is.read(reinterpret_cast<char*>(&numVals), sizeof(ValueType));
+  is >> numVals;
+  char colon = is.get();
+  if (colon != ':')
+  {
+    throw vtkm::io::ErrorIO("Error parsing file");
+  }
+
   vec.Allocate(numVals);
   auto vecPortal = vec.WritePortal();
-  vtkm::Id val;
+  ValueType val;
   for (vtkm::Id i = 0; i < numVals; ++i)
   {
-    is.read(reinterpret_cast<char*>(val), sizeof(ValueType));
+    is >> val;
     vecPortal.Set(i, val);
   }
 }

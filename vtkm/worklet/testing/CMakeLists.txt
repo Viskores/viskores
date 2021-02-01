@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestContour.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestContourTreeUniformAugmented.cxx
+  UnitTestContourTreeUniformDistributed.cxx
   UnitTestCoordinateSystemTransform.cxx
   UnitTestCosmoTools.cxx
   UnitTestCrossProduct.cxx

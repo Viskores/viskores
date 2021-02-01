@@ -50,55 +50,66 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#include "TestingContourTreeUniformDistributedFilter.h"
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
+
+#include <vtkm/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 namespace
 {
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
-using vtkm::filter::testing::contourtree_uniform_distributed::
-  TestContourTreeUniformDistributed5x6x7;
-using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
 
-class TestContourTreeUniformDistributedFilter
+// Functor needed so we can discover the FieldType and DeviceAdapter template parameters to call MergeWith
+struct MergeContourTreeMeshFunctor
 {
-public:
-  void operator()() const
+  template <typename DeviceAdapterTag, typename FieldType>
+  bool operator()(DeviceAdapterTag,
+                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& in,
+                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& out) const
   {
-    using vtkm::cont::testing::Testing;
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeUniformDistributed5x6x7(2, false);
-    TestContourTreeUniformDistributed5x6x7(4, false);
-    TestContourTreeUniformDistributed5x6x7(8, false);
-    TestContourTreeUniformDistributed5x6x7(16, false);
-    TestContourTreeUniformDistributed5x6x7(2, true);
-    TestContourTreeUniformDistributed5x6x7(4, true);
-    TestContourTreeUniformDistributed5x6x7(8, true);
-    TestContourTreeUniformDistributed5x6x7(16, true);
+    out.template MergeWith<DeviceAdapterTag>(in);
+    return true;
   }
 };
+
+template <typename FieldType>
+void TestContourTreeMeshCombine(const std::string& mesh1_filename,
+                                const std::string& mesh2_filename,
+                                const std::string& combined_filename)
+{
+  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh1;
+  contourTreeMesh1.Load(mesh1_filename.c_str());
+  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh2;
+  contourTreeMesh2.Load(mesh2_filename.c_str());
+  vtkm::cont::TryExecute(MergeContourTreeMeshFunctor{}, contourTreeMesh1, contourTreeMesh2);
+  // Result is written to contourTreeMesh2
+  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> combinedContourTreeMesh;
+  combinedContourTreeMesh.Load(combined_filename.c_str());
+  VTKM_TEST_ASSERT(
+    test_equal_ArrayHandles(contourTreeMesh2.SortedValues, combinedContourTreeMesh.SortedValues));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
+                                           combinedContourTreeMesh.GlobalMeshIndex));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.GlobalMeshIndex,
+                                           combinedContourTreeMesh.GlobalMeshIndex));
+  VTKM_TEST_ASSERT(
+    test_equal_ArrayHandles(contourTreeMesh2.Neighbours, combinedContourTreeMesh.Neighbours));
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(contourTreeMesh2.FirstNeighbour,
+                                           combinedContourTreeMesh.FirstNeighbour));
+  VTKM_TEST_ASSERT(contourTreeMesh2.NumVertices == combinedContourTreeMesh.NumVertices);
+  VTKM_TEST_ASSERT(contourTreeMesh2.MaxNeighbours == combinedContourTreeMesh.MaxNeighbours);
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+void TestContourTreeUniformDistributed()
 {
-  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
+  using vtkm::cont::testing::Testing;
+  TestContourTreeMeshCombine<vtkm::FloatDefault>(
+    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh1.ctm"),
+    Testing::DataPath("misc/5x6_7_MC_Rank0_Block0_Round1_BeforeCombineMesh2.ctm"),
+    Testing::RegressionImagePath("5x6_7_MC_Rank0_Block0_Round1_CombinedMesh.ctm"));
+}
+
+} // anonymous namespace
+
+int UnitTestContourTreeUniformDistributed(int argc, char* argv[])
+{
+  return vtkm::cont::testing::Testing::Run(TestContourTreeUniformDistributed, argc, argv);
 }
