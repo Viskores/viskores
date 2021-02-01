@@ -954,6 +954,14 @@ struct UnknownArrayHandleTry
   }
 };
 
+} // namespace detail
+
+namespace internal
+{
+
+namespace detail
+{
+
 template <typename T>
 struct IsUndefinedArrayType
 {
@@ -963,20 +971,21 @@ struct IsUndefinedArrayType<vtkm::List<T, S>> : vtkm::cont::internal::IsInvalidA
 {
 };
 
+} // namespace detail
+
 template <typename ValueTypeList, typename StorageTypeList>
 using ListAllArrayTypes =
-  vtkm::ListRemoveIf<vtkm::ListCross<ValueTypeList, StorageTypeList>, IsUndefinedArrayType>;
-
+  vtkm::ListRemoveIf<vtkm::ListCross<ValueTypeList, StorageTypeList>, detail::IsUndefinedArrayType>;
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(const vtkm::cont::UnknownArrayHandle&,
                                                 const std::type_info&);
 
-} // namespace detail
+} // namespace internal
 
 template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
 inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args) const
 {
-  using crossProduct = detail::ListAllArrayTypes<TypeList, StorageTagList>;
+  using crossProduct = internal::ListAllArrayTypes<TypeList, StorageTagList>;
 
   bool called = false;
   vtkm::ListForEach(detail::UnknownArrayHandleTry{},
@@ -989,7 +998,7 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
   {
     // throw an exception
     VTKM_LOG_CAST_FAIL(*this, TypeList);
-    detail::ThrowCastAndCallException(*this, typeid(TypeList));
+    internal::ThrowCastAndCallException(*this, typeid(TypeList));
   }
 }
 
@@ -1064,7 +1073,7 @@ inline void UnknownArrayHandle::CastAndCallWithExtractedArray(Functor&& functor,
     // The message will be a little wonky because the types are just the value types, not the
     // full type to cast to.
     VTKM_LOG_CAST_FAIL(*this, vtkm::TypeListScalarAll);
-    detail::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
+    internal::ThrowCastAndCallException(*this, typeid(vtkm::TypeListScalarAll));
   }
 }
 
