@@ -787,9 +787,9 @@ inline void ActiveGraph::SetSuperArcs(MergeTree& tree)
 inline void ActiveGraph::SetHyperArcs(MergeTree& tree)
 { // SetHyperArcs()
   //      1.      Allocate memory for hypertree
-  tree.Hypernodes.Shrink(
-    this
-      ->NumHypernodes); // Has been allocated previously. The values are needed but the size may be too large.
+  tree.Hypernodes.Allocate(
+    this->NumHypernodes, // Has been allocated previously.
+    vtkm::CopyFlag::On); // The values are needed but the size may be too large.
   tree.Hyperarcs.ReleaseResources();
   tree.Hyperarcs.Allocate(this->NumHypernodes); // Has not been allocated yet
 

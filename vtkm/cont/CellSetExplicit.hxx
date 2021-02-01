@@ -325,7 +325,7 @@ VTKM_CONT
 void CellSetExplicit<SST, CST, OST>::CompleteAddingCells(vtkm::Id numPoints)
 {
   this->Data->NumberOfPoints = numPoints;
-  this->Data->CellPointIds.Connectivity.Shrink(this->Data->ConnectivityAdded);
+  this->Data->CellPointIds.Connectivity.Allocate(this->Data->ConnectivityAdded, vtkm::CopyFlag::On);
   this->Data->CellPointIds.ElementsValid = true;
 
   if (this->Data->NumberOfCellsAdded != this->GetNumberOfCells())

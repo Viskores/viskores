@@ -139,7 +139,7 @@ public:
       }
     }
 
-    output.Shrink(writePos);
+    output.Allocate(writePos, vtkm::CopyFlag::On);
   }
 
   template <typename T, typename U, class CIn, class COut>
@@ -263,8 +263,8 @@ public:
       VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
       if (numberOfKeys == 0)
       {
-        keys_output.Shrink(0);
-        values_output.Shrink(0);
+        keys_output.ReleaseResources();
+        values_output.ReleaseResources();
         return;
       }
 
@@ -300,8 +300,8 @@ public:
 
     //now we need to shrink to the correct number of keys/values
     //writePos is zero-based so add 1 to get correct length
-    keys_output.Shrink(writePos + 1);
-    values_output.Shrink(writePos + 1);
+    keys_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
+    values_output.Allocate(writePos + 1, vtkm::CopyFlag::On);
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -545,7 +545,7 @@ public:
     auto end = std::unique(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
     vtkm::Id newSize = static_cast<vtkm::Id>(end - iterators.GetBegin());
     token.DetachFromAll();
-    values.Shrink(newSize);
+    values.Allocate(newSize, vtkm::CopyFlag::On);
   }
 
   VTKM_CONT static void Synchronize()

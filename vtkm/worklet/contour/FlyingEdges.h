@@ -89,9 +89,9 @@ vtkm::cont::CellSetSingleType<> execute(
   // Since sharedState can be re-used between invocations of contour,
   // we need to make sure we reset the size of the Interpolation
   // arrays so we don't execute Pass5 over an array that is too large
-  sharedState.InterpolationEdgeIds.Shrink(0);
-  sharedState.InterpolationWeights.Shrink(0);
-  sharedState.CellIdMap.Shrink(0);
+  sharedState.InterpolationEdgeIds.ReleaseResources();
+  sharedState.InterpolationWeights.ReleaseResources();
+  sharedState.CellIdMap.ReleaseResources();
 
   vtkm::cont::ArrayHandle<vtkm::Id> triangle_topology;
   for (std::size_t i = 0; i < isovalues.size(); ++i)

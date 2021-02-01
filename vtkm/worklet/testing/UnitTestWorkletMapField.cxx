@@ -88,7 +88,7 @@ struct DoStaticTestWorklet
     CheckPortal(inoutHandleAsPtr.ReadPortal());
 
     std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
-    inputHandle.Shrink(ARRAY_SIZE / 2);
+    inputHandle.Allocate(ARRAY_SIZE / 2, vtkm::CopyFlag::On);
     bool exceptionThrown = false;
     try
     {

@@ -172,7 +172,7 @@ private:
                        "Uninitialized array does not give portal with zero values.");
       vtkm::cont::Token token;
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      arrayHandle.Shrink(0);
+      arrayHandle.Allocate(0, vtkm::CopyFlag::On);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.ReleaseResourcesExecution();
       arrayHandle = vtkm::cont::ArrayHandle<T>();
@@ -526,7 +526,7 @@ private:
       array_handle_testing::CheckArray(arrayHandle);
 
       std::cout << "Try shrinking the array." << std::endl;
-      arrayHandle.Shrink(ARRAY_SIZE);
+      arrayHandle.Allocate(ARRAY_SIZE, vtkm::CopyFlag::On);
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "Array size did not shrink correctly.");
       array_handle_testing::CheckArray(arrayHandle);

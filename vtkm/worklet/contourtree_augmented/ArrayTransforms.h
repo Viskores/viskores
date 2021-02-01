@@ -90,7 +90,7 @@ inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType
   }
   else if (permNumValues < outNumValues)
   {
-    output.Shrink(permNumValues);
+    output.Allocate(permNumValues, vtkm::CopyFlag::On);
   } // else the output has already the correct size
 
   // The following is equivalent to doing the following in serial

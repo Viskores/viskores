@@ -475,7 +475,7 @@ struct DecoratorTests
       VTKM_TEST_ASSERT(test_equal(a2Portal.Get(4), 7));
     }
 
-    decor.Shrink(3);
+    decor.Allocate(3, vtkm::CopyFlag::On);
     VTKM_TEST_ASSERT(decor.GetNumberOfValues() == 3);
     {
       auto decorPortal = decor.ReadPortal();
@@ -554,8 +554,8 @@ struct ResizableDecorImpl
     else
     {
       // Resize each to 2*newSize:
-      a1.Shrink(2 * newSize);
-      a2.Shrink(2 * newSize);
+      a1.Allocate(2 * newSize, vtkm::CopyFlag::On);
+      a2.Allocate(2 * newSize, vtkm::CopyFlag::On);
     }
   }
 };
@@ -624,7 +624,7 @@ void ResizeTest()
     threw = false;
     try
     {
-      decor.Shrink(3);
+      decor.Allocate(3, vtkm::CopyFlag::On);
     }
     catch (vtkm::cont::ErrorBadType& e)
     {
