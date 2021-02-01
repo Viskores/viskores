@@ -28,7 +28,7 @@ class VTKM_ALWAYS_EXPORT ConnectivityExtrude
 {
 private:
   using Int32HandleType = vtkm::cont::ArrayHandle<vtkm::Int32>;
-  using Int32PortalType = typename Int32HandleType::template ExecutionTypes<Device>::PortalConst;
+  using Int32PortalType = typename Int32HandleType::ReadPortalType;
 
 public:
   using ConnectivityPortalType = Int32PortalType;
@@ -98,7 +98,7 @@ class ReverseConnectivityExtrude
 {
 private:
   using Int32HandleType = vtkm::cont::ArrayHandle<vtkm::Int32>;
-  using Int32PortalType = typename Int32HandleType::template ExecutionTypes<Device>::PortalConst;
+  using Int32PortalType = typename Int32HandleType::ReadPortalType;
 
 public:
   using ConnectivityPortalType = Int32PortalType;

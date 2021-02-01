@@ -125,9 +125,9 @@ class SphereLeafIntersector
 {
 public:
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   using FloatHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  using FloatPortal = typename FloatHandle::ExecutionTypes<Device>::PortalConst;
+  using FloatPortal = typename FloatHandle::ReadPortalType;
   IdArrayPortal PointIds;
   FloatPortal Radii;
 

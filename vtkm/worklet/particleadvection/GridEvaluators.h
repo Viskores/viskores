@@ -22,7 +22,6 @@
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/worklet/particleadvection/CellInterpolationHelper.h>
 #include <vtkm/worklet/particleadvection/Field.h>
@@ -36,7 +35,7 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldType>
+template <typename FieldType>
 class ExecutionGridEvaluator
 {
   using GhostCellArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
@@ -51,13 +50,14 @@ public:
                          const vtkm::Bounds& bounds,
                          const FieldType& field,
                          const GhostCellArrayType& ghostCells,
+                         vtkm::cont::DeviceAdapterId device,
                          vtkm::cont::Token& token)
     : Bounds(bounds)
-    , Field(field.PrepareForExecution(DeviceAdapter(), token))
-    , GhostCells(ghostCells.PrepareForInput(DeviceAdapter(), token))
+    , Field(field.PrepareForExecution(device, token))
+    , GhostCells(ghostCells.PrepareForInput(device, token))
     , HaveGhostCells(ghostCells.GetNumberOfValues() > 0)
-    , InterpolationHelper(interpolationHelper->PrepareForExecution(DeviceAdapter(), token))
-    , Locator(locator->PrepareForExecution(DeviceAdapter(), token))
+    , InterpolationHelper(interpolationHelper->PrepareForExecution(device, token))
+    , Locator(locator->PrepareForExecution(device, token))
   {
   }
 
@@ -143,8 +143,7 @@ private:
     return false;
   }
 
-  using GhostCellPortal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
+  using GhostCellPortal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType;
 
   vtkm::Bounds Bounds;
   const vtkm::worklet::particleadvection::ExecutionField* Field;
@@ -198,17 +197,17 @@ public:
     this->InitializeLocator(coordinates, cellset);
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecutionGridEvaluator<DeviceAdapter, FieldType> PrepareForExecution(
-    DeviceAdapter,
+  VTKM_CONT ExecutionGridEvaluator<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return ExecutionGridEvaluator<DeviceAdapter, FieldType>(this->Locator,
-                                                            this->InterpolationHelper,
-                                                            this->Bounds,
-                                                            this->Field,
-                                                            this->GhostCellArray,
-                                                            token);
+    return ExecutionGridEvaluator<FieldType>(this->Locator,
+                                             this->InterpolationHelper,
+                                             this->Bounds,
+                                             this->Field,
+                                             this->GhostCellArray,
+                                             device,
+                                             token);
   }
 
 private:

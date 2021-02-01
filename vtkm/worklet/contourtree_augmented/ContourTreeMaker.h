@@ -793,7 +793,7 @@ struct LeafChainsToContourTree
   inline bool operator()(DeviceAdapter device, Args&&... args) const
   {
     vtkm::cont::Token token;
-    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree<DeviceAdapter> worklet(
+    contourtree_maker_inc_ns::TransferLeafChains_TransferToContourTree worklet(
       this->NumIterations, // (input)
       this->IsJoin,        // (input)
       this->Outdegree,     // (input)
@@ -801,6 +801,7 @@ struct LeafChainsToContourTree
       this->Outbound,      // (input)
       this->Inbound,       // (input)
       this->Inwards,       // (input)
+      device,
       token);
     vtkm::worklet::DispatcherMapField<decltype(worklet)> dispatcher(worklet);
     dispatcher.SetDevice(device);
@@ -894,6 +895,10 @@ inline void ContourTreeMaker::TransferLeafChains(bool isJoin)
 
 
   // loop through the active vertices
+  // Note: there are better and safer ways to pass these arrays (e.g. in/outdegree) to
+  // a worklet. You could pass them as WholeArrayIn ControlSignature arguments. Or
+  // you could build a subclass of vtkm::cont::ExecutionObjectBase and pass that in
+  // as an ExecObject.
   details::LeafChainsToContourTree task(this->ContourTreeResult.NumIterations, // (input)
                                         isJoin,                                // (input)
                                         outdegree,                             // (input)

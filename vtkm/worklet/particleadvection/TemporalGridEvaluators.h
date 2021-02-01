@@ -21,13 +21,13 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename DeviceAdapter, typename FieldType>
+template <typename FieldType>
 class ExecutionTemporalGridEvaluator
 {
 private:
   using GridEvaluator = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
   using ExecutionGridEvaluator =
-    vtkm::worklet::particleadvection::ExecutionGridEvaluator<DeviceAdapter, FieldType>;
+    vtkm::worklet::particleadvection::ExecutionGridEvaluator<FieldType>;
 
 public:
   VTKM_CONT
@@ -38,9 +38,10 @@ public:
                                  const vtkm::FloatDefault timeOne,
                                  const GridEvaluator& evaluatorTwo,
                                  const vtkm::FloatDefault timeTwo,
+                                 vtkm::cont::DeviceAdapterId device,
                                  vtkm::cont::Token& token)
-    : EvaluatorOne(evaluatorOne.PrepareForExecution(DeviceAdapter(), token))
-    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(DeviceAdapter(), token))
+    : EvaluatorOne(evaluatorOne.PrepareForExecution(device, token))
+    , EvaluatorTwo(evaluatorTwo.PrepareForExecution(device, token))
     , TimeOne(timeOne)
     , TimeTwo(timeTwo)
     , TimeDiff(timeTwo - timeOne)
@@ -162,13 +163,12 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType> PrepareForExecution(
-    DeviceAdapter,
+  VTKM_CONT ExecutionTemporalGridEvaluator<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return ExecutionTemporalGridEvaluator<DeviceAdapter, FieldType>(
-      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, token);
+    return ExecutionTemporalGridEvaluator<FieldType>(
+      this->EvaluatorOne, this->TimeOne, this->EvaluatorTwo, this->TimeTwo, device, token);
   }
 
 private:

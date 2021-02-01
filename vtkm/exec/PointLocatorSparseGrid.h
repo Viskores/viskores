@@ -31,10 +31,8 @@ class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid : public vtkm::exec::PointLocato
 {
 public:
   using CoordPortalType =
-    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
 
   PointLocatorSparseGrid() = default;

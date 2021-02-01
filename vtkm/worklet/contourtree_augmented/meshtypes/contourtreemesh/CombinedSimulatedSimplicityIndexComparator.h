@@ -77,14 +77,12 @@ namespace mesh_dem_contourtree_mesh_inc
 
 
 /// Implementation of the comparator used initial sort of data values in ContourTreeMesh<FieldType>::MergeWith
-template <typename FieldType, typename DeviceAdapter>
+template <typename FieldType>
 class CombinedSimulatedSimplicityIndexComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using ValuePortalType = typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
+  using ValuePortalType = typename vtkm::cont::ArrayHandle<FieldType>::ReadPortalType;
 
   VTKM_CONT
   CombinedSimulatedSimplicityIndexComparatorImpl(
@@ -92,13 +90,14 @@ public:
     const IdArrayType& otherGlobalMeshIndex,
     const vtkm::cont::ArrayHandle<FieldType>& thisSortedValues,
     const vtkm::cont::ArrayHandle<FieldType>& otherSortedValues,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
   {
-    this->ThisGlobalMeshIndex = thisGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
-    this->OtherGlobalMeshIndex = otherGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
+    this->ThisGlobalMeshIndex = thisGlobalMeshIndex.PrepareForInput(device, token);
+    this->OtherGlobalMeshIndex = otherGlobalMeshIndex.PrepareForInput(device, token);
     ;
-    this->ThisSortedValues = thisSortedValues.PrepareForInput(DeviceAdapter(), token);
-    this->OtherSortedValues = otherSortedValues.PrepareForInput(DeviceAdapter(), token);
+    this->ThisSortedValues = thisSortedValues.PrepareForInput(device, token);
+    this->OtherSortedValues = otherSortedValues.PrepareForInput(device, token);
   }
 
   VTKM_EXEC_CONT
@@ -207,16 +206,16 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT CombinedSimulatedSimplicityIndexComparatorImpl<FieldType, DeviceAdapter>
-  PrepareForExecution(DeviceAdapter, vtkm::cont::Token& token)
+  VTKM_CONT CombinedSimulatedSimplicityIndexComparatorImpl<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token)
   {
-    return CombinedSimulatedSimplicityIndexComparatorImpl<FieldType, DeviceAdapter>(
-      this->ThisGlobalMeshIndex,
-      this->OtherGlobalMeshIndex,
-      this->ThisSortedValues,
-      this->OtherSortedValues,
-      token);
+    return CombinedSimulatedSimplicityIndexComparatorImpl<FieldType>(this->ThisGlobalMeshIndex,
+                                                                     this->OtherGlobalMeshIndex,
+                                                                     this->ThisSortedValues,
+                                                                     this->OtherSortedValues,
+                                                                     device,
+                                                                     token);
   }
 
 private:

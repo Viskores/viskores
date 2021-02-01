@@ -520,7 +520,7 @@ struct TestingBitField
 
   struct ArrayHandleBitFieldChecker : vtkm::exec::FunctorBase
   {
-    using PortalType = typename ArrayHandleBitField::ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalType = vtkm::cont::ArrayHandleBitField::WritePortalType;
 
     PortalType Portal;
     bool InvertReference;

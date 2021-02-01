@@ -67,13 +67,11 @@ namespace tree_grafter
 {
 
 // Uniary predicate used in TreeGrafter.CompressActiveArrays to decide which active superarcs to keep
-template <typename DeviceAdapter>
 class SuperarcWasNotTransferredPredicateImpl
 {
 public:
   using IdArrayPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -109,12 +107,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SuperarcWasNotTransferredPredicateImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT SuperarcWasNotTransferredPredicateImpl
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return SuperarcWasNotTransferredPredicateImpl<DeviceAdapter>(
+    return SuperarcWasNotTransferredPredicateImpl(
       this->WhenTransferred.PrepareForInput(device, token));
   }
 

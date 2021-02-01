@@ -70,12 +70,10 @@ namespace bract_maker
 
 
 // device implementation of the ContourTreeNodeHyperArcComparator
-template <typename DeviceAdapter>
 class ContourTreeNodeHyperArcComparatorImpl
 {
 public:
-  using IdArrayPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
@@ -143,14 +141,11 @@ public:
   { // constructor
   } // constructor
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeNodeHyperArcComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT ContourTreeNodeHyperArcComparatorImpl
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return ContourTreeNodeHyperArcComparatorImpl<DeviceAdapter>(
-      this->Superarcs.PrepareForInput(device, token),
-      this->Superparents.PrepareForInput(device, token));
+    return ContourTreeNodeHyperArcComparatorImpl(this->Superarcs.PrepareForInput(device, token),
+                                                 this->Superparents.PrepareForInput(device, token));
   }
 
 private:

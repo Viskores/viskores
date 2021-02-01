@@ -302,7 +302,7 @@ public:
 
   // TODO: Deprecate this
   template <typename Device>
-  struct ExecutionTypes
+  struct VTKM_DEPRECATED(1.6, "Use ReadPortalType and WritePortalType.") ExecutionTypes
   {
     using Portal = WritePortalType;
     using PortalConst = ReadPortalType;

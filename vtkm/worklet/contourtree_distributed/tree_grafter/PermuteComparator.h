@@ -67,13 +67,10 @@ namespace tree_grafter
 {
 
 /// Comparator used  in TreeGrafter::ListNewSupernodes to sort the NewSupernodes arrays
-template <typename DeviceAdapter>
 class PermuteComparatorImpl : public vtkm::worklet::WorkletMapField
 {
 public:
-  using IdArrayPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -123,11 +120,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT PermuteComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter device,
-                                                                     vtkm::cont::Token& token) const
+  VTKM_CONT PermuteComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                      vtkm::cont::Token& token) const
   {
-    return PermuteComparatorImpl<DeviceAdapter>(this->LookupArray.PrepareForInput(device, token));
+    return PermuteComparatorImpl(this->LookupArray.PrepareForInput(device, token));
   }
 
 private:

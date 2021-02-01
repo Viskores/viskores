@@ -55,14 +55,12 @@ struct CheckPermutationFunctor : vtkm::exec::FunctorBase
 };
 
 template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT CheckPermutationFunctor<
-  typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
+VTKM_CONT CheckPermutationFunctor<typename PermutedArrayHandleType::ReadPortalType>
 make_CheckPermutationFunctor(const PermutedArrayHandleType& permutedArray,
                              Device,
                              vtkm::cont::Token& token)
 {
-  using PermutedPortalType =
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst;
+  using PermutedPortalType = typename PermutedArrayHandleType::ReadPortalType;
   CheckPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInput(Device(), token);
   return functor;
@@ -86,14 +84,12 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
 };
 
 template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT InPlacePermutationFunctor<
-  typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
+VTKM_CONT InPlacePermutationFunctor<typename PermutedArrayHandleType::WritePortalType>
 make_InPlacePermutationFunctor(PermutedArrayHandleType& permutedArray,
                                Device,
                                vtkm::cont::Token& token)
 {
-  using PermutedPortalType =
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal;
+  using PermutedPortalType = typename PermutedArrayHandleType::WritePortalType;
   InPlacePermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInPlace(Device(), token);
   return functor;
@@ -137,14 +133,12 @@ struct OutputPermutationFunctor : vtkm::exec::FunctorBase
 };
 
 template <typename PermutedArrayHandleType, typename Device>
-VTKM_CONT OutputPermutationFunctor<
-  typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
+VTKM_CONT OutputPermutationFunctor<typename PermutedArrayHandleType::WritePortalType>
 make_OutputPermutationFunctor(PermutedArrayHandleType& permutedArray,
                               Device,
                               vtkm::cont::Token& token)
 {
-  using PermutedPortalType =
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal;
+  using PermutedPortalType = typename PermutedArrayHandleType::WritePortalType;
   OutputPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForOutput(ARRAY_SIZE, Device(), token);
   return functor;

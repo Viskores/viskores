@@ -44,8 +44,8 @@ protected:
   using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using CartesianArrayHandle =
     vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
-  using DefaultConstHandle = typename DefaultHandle::ExecutionTypes<Device>::PortalConst;
-  using CartesianConstPortal = typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using DefaultConstHandle = typename DefaultHandle::ReadPortalType;
+  using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
@@ -187,7 +187,7 @@ class UniformLocator
 {
 protected:
   using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
-  using UniformConstPortal = typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
   vtkm::Id3 PointDimensions;
   vtkm::Vec3f_32 Origin;
@@ -298,7 +298,7 @@ class Sampler : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ReadPortalType;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;
@@ -495,7 +495,7 @@ class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
 {
 private:
   using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
-  using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using ColorArrayPortal = typename ColorArrayHandle::ReadPortalType;
   ColorArrayPortal ColorMap;
   vtkm::Id ColorMapSize;
   vtkm::Float32 MinScalar;

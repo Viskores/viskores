@@ -73,9 +73,8 @@ private:
   using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
   using FloatCastHandle = vtkm::cont::ArrayHandleCast<vtkm::FloatDefault, IdArrayHandle>;
 
-  using IdPortalType = typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
-  using IdPortalConstType =
-    typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using IdPortalType = typename IdArrayHandle::WritePortalType;
+  using IdPortalConstType = typename IdArrayHandle::ReadPortalType;
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
@@ -172,7 +171,7 @@ public:
   struct OverlapKernel
   {
     using ArrayType = ArrayHandle<bool>;
-    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalType = typename ArrayType::WritePortalType;
 
     PortalType TrackerPortal;
     PortalType ValidPortal;
@@ -788,7 +787,7 @@ private:
 
     {
       using BoolArray = ArrayHandle<bool>;
-      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      using BoolPortal = typename BoolArray::WritePortalType;
       BoolArray tracker;
       BoolArray valid;
 
@@ -832,7 +831,7 @@ private:
       static const vtkm::Id3 dims{ DIM_SIZE, DIM_SIZE, DIM_SIZE };
 
       using BoolArray = ArrayHandle<bool>;
-      using BoolPortal = typename BoolArray::template ExecutionTypes<DeviceAdapterTag>::Portal;
+      using BoolPortal = typename BoolArray::WritePortalType;
       BoolArray tracker;
       BoolArray valid;
 

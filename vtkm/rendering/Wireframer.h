@@ -303,7 +303,7 @@ public:
   }
 
 private:
-  using ColorMapPortalConst = typename ColorMapHandle::ExecutionTypes<DeviceTag>::PortalConst;
+  using ColorMapPortalConst = typename ColorMapHandle::ReadPortalType;
 
   VTKM_EXEC
   void TransformWorldToViewport(vtkm::Vec3f_32& point) const

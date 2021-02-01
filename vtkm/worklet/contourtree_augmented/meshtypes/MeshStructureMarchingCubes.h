@@ -69,38 +69,31 @@ namespace contourtree_augmented
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructureMarchingCubes : public data_set_mesh::MeshStructure3D<DeviceAdapter>
+class MeshStructureMarchingCubes : public data_set_mesh::MeshStructure3D
 {
 public:
   // EdgeBoundaryDetectionMasks types
   using EdgeBoundaryDetectionMasksPortalType =
-    typename m3d_marchingcubes::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
   // Sort indicies types
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   // CubeVertexPermutations types
   using CubeVertexPermutationsPortalType =
-    typename m3d_marchingcubes::CubeVertexPermutationsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::CubeVertexPermutationsType::ReadPortalType;
 
   // linkVertexConnection types
   using LinkVertexConnectionsPortalType =
-    typename m3d_marchingcubes::LinkVertexConnectionsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_marchingcubes::LinkVertexConnectionsType::ReadPortalType;
   // inCubeConnection types
 
-  using InCubeConnectionsPortalType =
-    typename m3d_marchingcubes::InCubeConnectionsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using InCubeConnectionsPortalType = m3d_marchingcubes::InCubeConnectionsType::ReadPortalType;
 
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureMarchingCubes()
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure3D()
     , GetMax(false)
   {
   }
@@ -117,24 +110,23 @@ public:
     const m3d_marchingcubes::LinkVertexConnectionsType& LinkVertexConnectionsEighteenIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsSixIn,
     const m3d_marchingcubes::InCubeConnectionsType& InCubeConnectionsEighteenIn,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>(meshSize)
+    : data_set_mesh::MeshStructure3D(meshSize)
     , GetMax(getmax)
   {
-    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
-    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(device, token);
+    this->SortOrderPortal = sortOrder.PrepareForInput(device, token);
     this->EdgeBoundaryDetectionMasksPortal =
-      EdgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
-    this->CubeVertexPermutationsPortal =
-      CubeVertexPermutationsIn.PrepareForInput(DeviceAdapter(), token);
+      EdgeBoundaryDetectionMasksIn.PrepareForInput(device, token);
+    this->CubeVertexPermutationsPortal = CubeVertexPermutationsIn.PrepareForInput(device, token);
     this->LinkVertexConnectionsSixPortal =
-      LinkVertexConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+      LinkVertexConnectionsSixIn.PrepareForInput(device, token);
     this->LinkVertexConnectionsEighteenPortal =
-      LinkVertexConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
-    this->InCubeConnectionsSixPortal =
-      InCubeConnectionsSixIn.PrepareForInput(DeviceAdapter(), token);
+      LinkVertexConnectionsEighteenIn.PrepareForInput(device, token);
+    this->InCubeConnectionsSixPortal = InCubeConnectionsSixIn.PrepareForInput(device, token);
     this->InCubeConnectionsEighteenPortal =
-      InCubeConnectionsEighteenIn.PrepareForInput(DeviceAdapter(), token);
+      InCubeConnectionsEighteenIn.PrepareForInput(device, token);
   }
 
   VTKM_EXEC

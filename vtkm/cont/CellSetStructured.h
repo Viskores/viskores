@@ -104,26 +104,32 @@ public:
   template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;
 
+  template <typename VisitTopology, typename IncidentTopology>
+  using ExecConnectivityType =
+    vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
+
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct ExecutionTypes
+  struct VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+    ExecutionTypes
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(VisitTopology);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(IncidentTopology);
-    using ExecObjectType =
-      vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
+    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
   };
 
-  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
-  PrepareForInput(DeviceAdapter, VisitTopology, IncidentTopology, vtkm::cont::Token&) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(vtkm::cont::DeviceAdapterId,
+                                                                        VisitTopology,
+                                                                        IncidentTopology,
+                                                                        vtkm::cont::Token&) const;
 
-  template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
+  template <typename VisitTopology, typename IncidentTopology>
   VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  typename ExecutionTypes<DeviceAdapter, VisitTopology, IncidentTopology>::ExecObjectType
-    PrepareForInput(DeviceAdapter device,
-                    VisitTopology visitTopology,
-                    IncidentTopology incidentTopology) const
+  ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    VisitTopology visitTopology,
+    IncidentTopology incidentTopology) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, visitTopology, incidentTopology, token);

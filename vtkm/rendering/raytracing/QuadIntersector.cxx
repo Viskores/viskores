@@ -104,7 +104,7 @@ class QuadLeafIntersector
 public:
   using IdType = vtkm::Vec<vtkm::Id, 5>;
   using IdHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 5>>;
-  using IdArrayPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdArrayPortal = typename IdHandle::ReadPortalType;
   IdArrayPortal QuadIds;
 
   QuadLeafIntersector() {}

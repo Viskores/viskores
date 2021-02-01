@@ -158,8 +158,8 @@ class VTKM_ALWAYS_EXPORT MeshConnUnstructured : public MeshConnectivityBase
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
   using UCharHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
-  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
-  using UCharConstPortal = typename UCharHandle::ExecutionTypes<Device>::PortalConst;
+  using IdConstPortal = typename IdHandle::ReadPortalType;
+  using UCharConstPortal = typename UCharHandle::ReadPortalType;
 
   // Constant Portals for the execution Environment
   //FaceConn
@@ -230,10 +230,10 @@ class MeshConnSingleType : public MeshConnectivityBase
 {
 protected:
   using IdHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
-  using IdConstPortal = typename IdHandle::ExecutionTypes<Device>::PortalConst;
+  using IdConstPortal = typename IdHandle::ReadPortalType;
 
   using CountingHandle = typename vtkm::cont::ArrayHandleCounting<vtkm::Id>;
-  using CountingPortal = typename CountingHandle::ExecutionTypes<Device>::PortalConst;
+  using CountingPortal = typename CountingHandle::ReadPortalType;
   // Constant Portals for the execution Environment
   IdConstPortal FaceConnPortal;
   IdConstPortal CellConnectivityPortal;

@@ -123,12 +123,9 @@ template <typename Device>
 class ExecutionConnectivityExplicit
 {
 private:
-  using UInt8Portal =
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<Device>::Portal;
-  using IdComponentPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<Device>::Portal;
-  using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
+  using UInt8Portal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::WritePortalType;
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::WritePortalType;
+  using IdPortal = typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType;
 
 public:
   VTKM_CONT

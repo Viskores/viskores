@@ -87,12 +87,10 @@ private:
   using FloatVec3 = vtkm::internal::cl_uniform_bins::FloatVec3;
 
   template <typename T>
-  using ArrayPortalConst =
-    typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using ArrayPortalConst = typename vtkm::cont::ArrayHandle<T>::ReadPortalType;
 
   using CoordsPortalType =
-    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
 
   using CellSetP2CExecType =
     decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},

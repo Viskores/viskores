@@ -67,13 +67,10 @@ namespace tree_grafter
 {
 
 /// Comparator used  in TreeGrafter::ListNewHypernodes to sort the NewHypernodes arrays
-template <typename DeviceAdapter>
 class HyperNodeWhenComparatorImpl
 {
 public:
-  using IdArrayPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -121,13 +118,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT HyperNodeWhenComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT HyperNodeWhenComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                            vtkm::cont::Token& token) const
   {
-    return HyperNodeWhenComparatorImpl<DeviceAdapter>(
-      this->WhenTransferred.PrepareForInput(device, token));
+    return HyperNodeWhenComparatorImpl(this->WhenTransferred.PrepareForInput(device, token));
   }
 
 private:

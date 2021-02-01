@@ -144,6 +144,12 @@ class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
 
     using NumIndicesArrayType =
       vtkm::cont::ArrayHandleDecorator<detail::NumIndicesDecorator, OffsetsArrayType>;
+
+    // Should this be unified with ConnectivityType?
+    using ExecConnectivityType =
+      vtkm::exec::ConnectivityExplicit<typename ShapesArrayType::ReadPortalType,
+                                       typename ConnectivityArrayType::ReadPortalType,
+                                       typename OffsetsArrayType::ReadPortalType>;
   };
 
   using ConnTypes =
@@ -216,7 +222,7 @@ public:
             const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>& offsets);
 
   template <typename Device, typename VisitTopology, typename IncidentTopology>
-  struct ExecutionTypes
+  struct VTKM_DEPRECATED(1.6, "Use ExecConnectivityType.") ExecutionTypes
   {
   private:
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
@@ -229,29 +235,32 @@ public:
     using ConnAT = typename Chooser::ConnectivityArrayType;
     using OffsetsAT = typename Chooser::OffsetsArrayType;
 
-    using ShapesET = typename ShapesAT::template ExecutionTypes<Device>;
-    using ConnET = typename ConnAT::template ExecutionTypes<Device>;
-    using OffsetsET = typename OffsetsAT::template ExecutionTypes<Device>;
-
   public:
-    using ShapesPortalType = typename ShapesET::PortalConst;
-    using ConnectivityPortalType = typename ConnET::PortalConst;
-    using OffsetsPortalType = typename OffsetsET::PortalConst;
+    using ShapesPortalType = typename ShapesAT::ReadPortalType;
+    using ConnectivityPortalType = typename ConnAT::ReadPortalType;
+    using OffsetsPortalType = typename OffsetsAT::ReadPortalType;
 
     using ExecObjectType =
       vtkm::exec::ConnectivityExplicit<ShapesPortalType, ConnectivityPortalType, OffsetsPortalType>;
   };
 
-  template <typename Device, typename VisitTopology, typename IncidentTopology>
-  VTKM_CONT typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
-  PrepareForInput(Device, VisitTopology, IncidentTopology, vtkm::cont::Token&) const;
+  template <typename VisitTopology, typename IncidentTopology>
+  using ExecConnectivityType =
+    typename ConnectivityChooser<VisitTopology, IncidentTopology>::ExecConnectivityType;
 
-  template <typename Device, typename VisitTopology, typename IncidentTopology>
+  template <typename VisitTopology, typename IncidentTopology>
+  VTKM_CONT ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
+    vtkm::cont::DeviceAdapterId,
+    VisitTopology,
+    IncidentTopology,
+    vtkm::cont::Token&) const;
+
+  template <typename VisitTopology, typename IncidentTopology>
   VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  VTKM_CONT typename ExecutionTypes<Device, VisitTopology, IncidentTopology>::ExecObjectType
-    PrepareForInput(Device device,
-                    VisitTopology visitTopology,
-                    IncidentTopology incidentTopology) const
+  VTKM_CONT ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    VisitTopology visitTopology,
+    IncidentTopology incidentTopology) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, visitTopology, incidentTopology, token);

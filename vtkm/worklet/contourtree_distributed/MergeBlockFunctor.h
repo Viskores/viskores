@@ -70,20 +70,6 @@ namespace worklet
 namespace contourtree_distributed
 {
 
-// Functor needed so we can discover the FieldType and DeviceAdapter template parameters to call MergeWith
-struct MergeFunctor
-{
-  template <typename DeviceAdapterTag, typename FieldType>
-  bool operator()(DeviceAdapterTag,
-                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& in,
-                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& out) const
-  {
-    out.template MergeWith<DeviceAdapterTag>(in);
-    return true;
-  }
-};
-
-
 // Functor used by DIY reduce the merge data blocks in parallel
 template <typename FieldType>
 void MergeBlockFunctor(
@@ -136,7 +122,7 @@ void MergeBlockFunctor(
       contourTreeMeshOut.FirstNeighbour = block->FirstNeighbour;
       contourTreeMeshOut.MaxNeighbours = block->MaxNeighbours;
       // Merge the two contour tree meshes
-      vtkm::cont::TryExecute(MergeFunctor{}, contourTreeMeshIn, contourTreeMeshOut);
+      contourTreeMeshOut.MergeWith(contourTreeMeshIn);
 
       // Compute the origin and size of the new block
       vtkm::Id3 globalSize = block->GlobalSize;

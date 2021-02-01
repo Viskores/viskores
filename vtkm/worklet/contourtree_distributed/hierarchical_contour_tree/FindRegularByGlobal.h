@@ -66,24 +66,23 @@ namespace contourtree_distributed
 
 
 /// Device implementation of FindRegularByGlobal for the HierarchicalContourTree
-template <typename DeviceTag>
 class FindRegularByGlobalDeviceData
 {
 public:
   using IndicesPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceTag>::PortalConst;
+    typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   VTKM_CONT
   FindRegularByGlobalDeviceData(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token,
     const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeSortOrder,
     const vtkm::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds)
   {
     // Prepare the arrays for input and store the array portals
     // so that they can be used inside a workelt
-    this->RegularNodeSortOrder = regularNodeSortOrder.PrepareForInput(DeviceTag(), token);
-    this->RegularNodeGlobalIds = regularNodeGlobalIds.PrepareForInput(DeviceTag(), token);
+    this->RegularNodeSortOrder = regularNodeSortOrder.PrepareForInput(device, token);
+    this->RegularNodeGlobalIds = regularNodeGlobalIds.PrepareForInput(device, token);
   }
 
   /// Define also as an operator so that we can use it in ArrayHandleTransform directly
@@ -177,13 +176,11 @@ public:
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  FindRegularByGlobalDeviceData<DeviceTag> PrepareForExecution(DeviceTag,
-                                                               vtkm::cont::Token& token) const
+  VTKM_CONT FindRegularByGlobalDeviceData PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                              vtkm::cont::Token& token) const
   {
-    return FindRegularByGlobalDeviceData<DeviceTag>(
-      token, this->RegularNodeSortOrder, this->RegularNodeGlobalIds);
+    return FindRegularByGlobalDeviceData(
+      device, token, this->RegularNodeSortOrder, this->RegularNodeGlobalIds);
   }
 
 private:

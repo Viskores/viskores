@@ -56,7 +56,7 @@ struct ImplicitTests
     //verify that the execution portal works
     vtkm::cont::Token token;
     using Device = vtkm::cont::DeviceAdapterTagSerial;
-    using CEPortal = typename ImplicitHandle::template ExecutionTypes<Device>::PortalConst;
+    using CEPortal = typename ImplicitHandle::ReadPortalType;
     CEPortal execPortal = implicit.PrepareForInput(Device(), token);
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {

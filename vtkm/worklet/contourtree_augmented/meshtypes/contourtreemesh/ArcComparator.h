@@ -78,19 +78,19 @@ namespace mesh_dem_contourtree_mesh_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class ArcComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
-  ArcComparatorImpl(const IdArrayType& ct_arcs, vtkm::cont::Token& token)
-  { // constructor
-    this->ArcsPortal = ct_arcs.PrepareForInput(DeviceAdapter(), token);
-  } // constructor
+  ArcComparatorImpl(const IdArrayType& ct_arcs,
+                    vtkm::cont::DeviceAdapterId device,
+                    vtkm::cont::Token& token)
+    : ArcsPortal(ct_arcs.PrepareForInput(device, token))
+  {
+  }
 
   // () operator - gets called to do comparison
   VTKM_EXEC
@@ -125,11 +125,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ArcComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter,
-                                                                 vtkm::cont::Token& token) const
+  VTKM_CONT ArcComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                  vtkm::cont::Token& token) const
   {
-    return ArcComparatorImpl<DeviceAdapter>(this->Arcs, token);
+    return ArcComparatorImpl(this->Arcs, device, token);
   }
 
 private:

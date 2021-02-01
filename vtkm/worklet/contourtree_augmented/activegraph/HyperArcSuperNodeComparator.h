@@ -68,12 +68,10 @@ namespace active_graph_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class HyperArcSuperNodeComparatorImpl
 {
 public:
-  using IdArrayPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = typename IdArrayType::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
@@ -132,15 +130,12 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT HyperArcSuperNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT HyperArcSuperNodeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                                vtkm::cont::Token& token) const
   {
-    return HyperArcSuperNodeComparatorImpl<DeviceAdapter>(
-      this->Hyperparents.PrepareForInput(device, token),
-      this->SuperID.PrepareForInput(device, token),
-      this->IsJoinTree);
+    return HyperArcSuperNodeComparatorImpl(this->Hyperparents.PrepareForInput(device, token),
+                                           this->SuperID.PrepareForInput(device, token),
+                                           this->IsJoinTree);
   }
 
 private:

@@ -67,13 +67,10 @@ namespace tree_grafter
 {
 
 /// Comparator used  in TreeGrafter::ListNewSupernodes to sort the NewSupernodes arrays
-template <typename DeviceAdapter>
 class SuperNodeWhenComparatorImpl
 {
 public:
-  using IdArrayPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   // Default Constructor
   VTKM_EXEC_CONT
@@ -185,18 +182,15 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT SuperNodeWhenComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT SuperNodeWhenComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                            vtkm::cont::Token& token) const
   {
-    return SuperNodeWhenComparatorImpl<DeviceAdapter>(
-      this->WhenTransferred.PrepareForInput(device, token),
-      this->HierarchicalHyperparent.PrepareForInput(device, token),
-      this->HierarchicalHyperId.PrepareForInput(device, token),
-      this->HierarchicalHyperarc.PrepareForInput(device, token),
-      this->ContourTreeSupernodes.PrepareForInput(device, token),
-      this->SupernodeType.PrepareForInput(device, token));
+    return SuperNodeWhenComparatorImpl(this->WhenTransferred.PrepareForInput(device, token),
+                                       this->HierarchicalHyperparent.PrepareForInput(device, token),
+                                       this->HierarchicalHyperId.PrepareForInput(device, token),
+                                       this->HierarchicalHyperarc.PrepareForInput(device, token),
+                                       this->ContourTreeSupernodes.PrepareForInput(device, token),
+                                       this->SupernodeType.PrepareForInput(device, token));
   }
 
 private:
