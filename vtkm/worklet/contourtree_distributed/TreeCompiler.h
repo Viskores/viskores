@@ -57,6 +57,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
 
@@ -222,42 +223,36 @@ inline std::istream& operator>>(std::istream& inStream, SupernodeOnSuperarc& nod
 inline void TreeCompiler::AddHierarchicalTree(const vtkm::cont::DataSet& addedTree)
 { // TreeCompiler::AddHierarchicalTree()
   // Copy relevant tree content to STL arrays
-  vtkm::cont::VariantArrayHandle dataValues_array = addedTree.GetField("DataValues").GetData();
+  vtkm::cont::UnknownArrayHandle dataValues_array = addedTree.GetField("DataValues").GetData();
   std::vector<vtkm::FloatDefault> dataValues(dataValues_array.GetNumberOfValues());
   auto dataValues_handle = vtkm::cont::make_ArrayHandle(dataValues, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(dataValues_array.ResetTypes(vtkm::TypeListScalarAll{}), dataValues_handle);
+  vtkm::cont::ArrayCopy(dataValues_array, dataValues_handle);
   dataValues_handle.SyncControlArray();
 
   auto regularNodeGlobalIds_array = addedTree.GetField("RegularNodeGlobalIds").GetData();
   std::vector<vtkm::Id> regularNodeGlobalIds(regularNodeGlobalIds_array.GetNumberOfValues());
   auto regularNodeGlobalIds_handle =
     vtkm::cont::make_ArrayHandle(regularNodeGlobalIds, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(
-    regularNodeGlobalIds_array.ResetTypes<vtkm::TypeListId, VTKM_DEFAULT_STORAGE_LIST>(),
-    regularNodeGlobalIds_handle);
+  vtkm::cont::ArrayCopy(regularNodeGlobalIds_array, regularNodeGlobalIds_handle);
   regularNodeGlobalIds_handle
     .SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   auto superarcs_array = addedTree.GetField("Superarcs").GetData();
   std::vector<vtkm::Id> added_tree_superarcs(superarcs_array.GetNumberOfValues());
   auto superarcs_handle = vtkm::cont::make_ArrayHandle(added_tree_superarcs, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(superarcs_array.ResetTypes<vtkm::TypeListId, VTKM_DEFAULT_STORAGE_LIST>(),
-                        superarcs_handle);
+  vtkm::cont::ArrayCopy(superarcs_array, superarcs_handle);
   superarcs_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   auto supernodes_array = addedTree.GetField("Supernodes").GetData();
   std::vector<vtkm::Id> added_tree_supernodes(supernodes_array.GetNumberOfValues());
   auto supernodes_handle = vtkm::cont::make_ArrayHandle(added_tree_supernodes, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(supernodes_array.ResetTypes<vtkm::TypeListId, VTKM_DEFAULT_STORAGE_LIST>(),
-                        supernodes_handle);
+  vtkm::cont::ArrayCopy(supernodes_array, supernodes_handle);
   supernodes_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   auto superparents_array = addedTree.GetField("Superparents").GetData();
   std::vector<vtkm::Id> superparents(superparents_array.GetNumberOfValues());
   auto superparents_handle = vtkm::cont::make_ArrayHandle(superparents, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(
-    superparents_array.ResetTypes<vtkm::TypeListId, VTKM_DEFAULT_STORAGE_LIST>(),
-    superparents_handle);
+  vtkm::cont::ArrayCopy(superparents_array, superparents_handle);
   superparents_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   // loop through all of the supernodes in the hierarchical tree
