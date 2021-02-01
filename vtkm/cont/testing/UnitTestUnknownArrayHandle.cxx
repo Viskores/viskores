@@ -302,6 +302,14 @@ void TryNewInstance(vtkm::cont::UnknownArrayHandle originalArray)
   }
   CheckUnknownArray<vtkm::List<T>, VTKM_DEFAULT_STORAGE_LIST>(newArray,
                                                               vtkm::VecTraits<T>::NUM_COMPONENTS);
+
+  std::cout << "Get a new instance as a float array and make sure the type is as expected."
+            << std::endl;
+  vtkm::cont::UnknownArrayHandle floatArray = originalArray.NewInstanceFloatBasic();
+  vtkm::cont::ArrayHandle<
+    typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>>
+    staticFloatArray;
+  floatArray.AsArrayHandle(staticFloatArray);
 }
 
 template <typename T>
