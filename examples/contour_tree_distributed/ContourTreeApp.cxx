@@ -411,6 +411,7 @@ int main(int argc, char* argv[])
   auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
   auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
+  // Read the pre-split data files
   if (preSplitFiles)
   {
     for (int blockNo = 0; blockNo < blocksPerRank; ++blockNo)
@@ -564,7 +565,7 @@ int main(int argc, char* argv[])
       }
 
       // Read data
-      using ValueType = vtkm::FloatDefault;
+      using ValueType = vtkm::Float64;
       std::vector<ValueType> values(numVertices);
       if (filename.compare(filename.length() - 5, 5, ".bdem") == 0)
       {
@@ -669,13 +670,17 @@ int main(int argc, char* argv[])
                    << "    Number of dimensions: " << nDims << std::endl);
     }
   }
+  // Read single-block data and split it for the ranks
   else
   {
     vtkm::cont::DataSet inDataSet;
-    using ValueType = vtkm::FloatDefault;
+    // Currently FloatDefualt would be fine, but it could cause problems if we ever
+    // read binary files here.
+    using ValueType = vtkm::Float64;
     std::vector<ValueType> values;
     std::vector<vtkm::Id> dims;
 
+    // Read BOV data file
     if (filename.compare(filename.length() - 3, 3, "bov") == 0)
     {
       std::cout << "Reading BOV file" << std::endl;
@@ -700,10 +705,12 @@ int main(int argc, char* argv[])
       auto tempFieldData = inDataSet.GetField(0).GetData();
       values.resize(static_cast<std::size_t>(tempFieldData.GetNumberOfValues()));
       auto valuesHandle = vtkm::cont::make_ArrayHandle(values, vtkm::CopyFlag::Off);
-      vtkm::cont::ArrayCopy(tempFieldData.ResetTypes(vtkm::List<ValueType>{}), valuesHandle);
+      vtkm::cont::ArrayCopy(
+        tempFieldData.ResetTypes<vtkm::List<ValueType>, VTKM_DEFAULT_STORAGE_LIST>(), valuesHandle);
       valuesHandle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
     }
-    else // Read ASCII data input
+    // Read ASCII data input
+    else
     {
       std::cout << "Reading ASCII file" << std::endl;
       std::ifstream inFile(filename);
