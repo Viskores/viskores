@@ -218,7 +218,8 @@ private:
       }
       for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
       {
-        this->Portals[cIndex].Set(this->Index, VTraits::GetComponent(src, cIndex));
+        this->Portals[cIndex].Set(this->Index,
+                                  static_cast<ComponentType>(VTraits::GetComponent(src, cIndex)));
       }
     }
     else
@@ -226,7 +227,8 @@ private:
       // Special case when copying from a scalar
       for (vtkm::IdComponent cIndex = 0; cIndex < this->GetNumberOfComponents(); ++cIndex)
       {
-        this->Portals[cIndex].Set(this->Index, VTraits::GetComponent(src, 0));
+        this->Portals[cIndex].Set(this->Index,
+                                  static_cast<ComponentType>(VTraits::GetComponent(src, 0)));
       }
     }
   }
