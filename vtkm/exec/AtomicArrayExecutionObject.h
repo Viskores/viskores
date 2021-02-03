@@ -78,8 +78,12 @@ public:
 
   // How does this even work?
   template <typename PortalType>
+#ifndef VTKM_MSVC
+  // Some versions of visual studio seem to have a bug that causes an error with the
+  // deprecated attribute at this location.
   VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
-  AtomicArrayExecutionObject(const PortalType& portal)
+#endif
+    AtomicArrayExecutionObject(const PortalType& portal)
     : Superclass(portal)
   {
   }
