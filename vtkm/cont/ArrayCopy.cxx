@@ -26,7 +26,7 @@ struct CopyWorklet : vtkm::worklet::WorkletMapField
   using InputDomain = _1;
 
   template <typename InType, typename OutType>
-  void operator()(const InType& in, OutType& out) const
+  VTKM_EXEC void operator()(const InType& in, OutType& out) const
   {
     out = in;
   }
@@ -68,7 +68,7 @@ struct UnknownCopyFunctor2
 struct UnknownCopyFunctor1
 {
   template <typename InArrayType>
-  void operator()(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out) const
+  void operator()(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out) const
   {
     out.Allocate(in.GetNumberOfValues());
 
@@ -79,7 +79,7 @@ struct UnknownCopyFunctor1
   }
 
   template <typename InArrayType>
-  void DoIt(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out, std::false_type) const
+  void DoIt(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out, std::false_type) const
   {
     // Source is not float.
     using BaseComponentType = typename InArrayType::ValueType::ComponentType;
@@ -104,7 +104,7 @@ struct UnknownCopyFunctor1
   }
 
   template <typename InArrayType>
-  void DoIt(const InArrayType& in, const vtkm::cont::UnknownArrayHandle& out, std::true_type) const
+  void DoIt(const InArrayType& in, vtkm::cont::UnknownArrayHandle& out, std::true_type) const
   {
     // Source array is FloatDefault. That should be copiable to anything.
     out.CastAndCallWithExtractedArray(UnknownCopyFunctor2{}, in);
@@ -119,9 +119,14 @@ namespace cont
 {
 
 void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-               const vtkm::cont::UnknownArrayHandle& destination)
+               vtkm::cont::UnknownArrayHandle& destination)
 {
-  destination.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, source);
+  if (!destination.IsValid())
+  {
+    destination = source.NewInstanceBasic();
+  }
+
+  source.CastAndCallWithExtractedArray(UnknownCopyFunctor1{}, destination);
 }
 
 }

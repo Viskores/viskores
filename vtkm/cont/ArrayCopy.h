@@ -162,7 +162,7 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& 
 
 
 VTKM_CONT_EXPORT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
-                                const vtkm::cont::UnknownArrayHandle& destination);
+                                vtkm::cont::UnknownArrayHandle& destination);
 
 template <typename T, typename S>
 VTKM_CONT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
@@ -175,7 +175,10 @@ VTKM_CONT void ArrayCopy(const vtkm::cont::UnknownArrayHandle& source,
   }
   else
   {
-    ArrayCopy(source, vtkm::cont::UnknownArrayHandle(destination));
+    vtkm::cont::UnknownArrayHandle destWrapper(destination);
+    ArrayCopy(source, destWrapper);
+    // Destination array should not change, but just in case.
+    destWrapper.AsArrayHandle(destination);
   }
 }
 
