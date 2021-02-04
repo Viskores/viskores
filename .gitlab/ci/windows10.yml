@@ -4,7 +4,7 @@
   timeout:  2 hours
   interruptible: true
   before_script:
-    - .gitlab/ci/config/setup_vs_powershell.ps1
+    - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
@@ -43,13 +43,19 @@
   timeout:  50 minutes
   interruptible: true
   before_script:
-    - .gitlab/ci/config/setup_vs_powershell.ps1
+    - Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
   script:
     #Need to use our custom ctest-latest symlink
     #This will allow us to use 3.17+ which has support
     #for running failed tests multiple times so failures
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
+
+.windows_vs2019:
+  variables:
+    VCVARSALL: "${VS160COMNTOOLS}\\..\\..\\VC\\Auxiliary\\Build\\vcvarsall.bat"
+    VCVARSPLATFORM: "x64"
+    VCVARSVERSION: "14.25"
 
 # Build on windows10 with Visual Studio
 # Will have CUDA 10.2 once build issues are resolved
@@ -58,10 +64,12 @@ build:windows_vs2019:
     - vtkm # Since this is a bare runner, pin to a project.
     - build
     - windows
-    - vs2019
     - shell
+    - vs2019
+    - msvc-19.25
     - large-memory
   extends:
+    - .windows_vs2019
     - .cmake_build_windows
     - .only-default
   variables:
@@ -77,9 +85,12 @@ test:windows_vs2019:
     - test
     - windows
     - shell
+    - vs2019
+    - msvc-19.25
     - cuda-rt
     - turing
   extends:
+    - .windows_vs2019
     - .cmake_test_windows
     - .only-default
   dependencies:
