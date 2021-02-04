@@ -55,8 +55,8 @@
 # Will have CUDA 10.2 once build issues are resolved
 build:windows_vs2019:
   tags:
+    - vtkm # Since this is a bare runner, pin to a project.
     - build
-    - vtkm
     - windows
     - vs2019
     - shell
@@ -73,8 +73,8 @@ build:windows_vs2019:
 
 test:windows_vs2019:
   tags:
+    - vtkm # Since this is a bare runner, pin to a project.
     - test
-    - vtkm
     - windows
     - shell
     - cuda-rt
