@@ -311,7 +311,7 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArrayExecutionObject<T, DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
   template <typename T>
@@ -335,7 +335,7 @@ public:
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArrayExecutionObject<T, DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArrayExecutionObject<T> AArray;
   };
 
   class VirtualObjectTransferKernel

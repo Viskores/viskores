@@ -48,7 +48,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
@@ -74,7 +74,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagVirtual>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T>;
   using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>

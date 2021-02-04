@@ -51,8 +51,46 @@ struct MakeUnsigned<vtkm::Int64>
 };
 }
 
+template <typename T, typename... MaybeDevice>
+class AtomicArrayExecutionObject;
+
 template <typename T, typename Device>
-class AtomicArrayExecutionObject
+class VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
+  AtomicArrayExecutionObject<T, Device> : public AtomicArrayExecutionObject<T>
+{
+  using Superclass = AtomicArrayExecutionObject<T>;
+
+public:
+  AtomicArrayExecutionObject() = default;
+
+  // This constructor is deprecated in VTK-m 1.6.
+  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
+  AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle)
+    : Superclass(handle, Device{})
+  {
+  }
+
+  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
+  AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle, vtkm::cont::Token& token)
+    : Superclass(handle, Device{}, token)
+  {
+  }
+
+  // How does this even work?
+  template <typename PortalType>
+#ifndef VTKM_MSVC
+  // Some versions of visual studio seem to have a bug that causes an error with the
+  // deprecated attribute at this location.
+  VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject no longer uses Device template parameter.")
+#endif
+    AtomicArrayExecutionObject(const PortalType& portal)
+    : Superclass(portal)
+  {
+  }
+};
+
+template <typename T>
+class AtomicArrayExecutionObject<T>
 {
   // Checks if PortalType has a GetIteratorBegin() method that returns a
   // pointer.
@@ -68,21 +106,25 @@ public:
   AtomicArrayExecutionObject() = default;
 
   // This constructor is deprecated in VTK-m 1.6.
-  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle)
-    : Data{ handle.PrepareForInPlace(Device{}).GetIteratorBegin() }
+  VTKM_CONT VTKM_DEPRECATED(1.6, "AtomicArrayExecutionObject constructor needs token.")
+    AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle,
+                               vtkm::cont::DeviceAdapterId device)
+    : Data{ handle.PrepareForInPlace(device).GetIteratorBegin() }
     , NumberOfValues{ handle.GetNumberOfValues() }
   {
-    using PortalType = decltype(handle.PrepareForInPlace(Device{}));
+    using PortalType = decltype(handle.PrepareForInPlace(device));
     VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
                            "Source portal must return a pointer from "
                            "GetIteratorBegin().");
   }
 
-  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle, vtkm::cont::Token& token)
-    : Data{ handle.PrepareForInPlace(Device{}, token).GetIteratorBegin() }
+  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T> handle,
+                                       vtkm::cont::DeviceAdapterId device,
+                                       vtkm::cont::Token& token)
+    : Data{ handle.PrepareForInPlace(device, token).GetIteratorBegin() }
     , NumberOfValues{ handle.GetNumberOfValues() }
   {
-    using PortalType = decltype(handle.PrepareForInPlace(Device{}, token));
+    using PortalType = decltype(handle.PrepareForInPlace(device, token));
     VTKM_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
                            "Source portal must return a pointer from "
                            "GetIteratorBegin().");
@@ -173,7 +215,7 @@ public:
   /// an atomic multiplication may be implemented using compare-exchange as follows:
   ///
   /// ```cpp
-  /// AtomicArrayExecutionObject<vtkm::Int32, ...> atomicArray = ...;
+  /// AtomicArrayExecutionObject<vtkm::Int32> atomicArray = ...;
   ///
   /// // Compare-exchange multiplication:
   /// vtkm::Int32 current = atomicArray.Get(idx); // Load the current value at idx

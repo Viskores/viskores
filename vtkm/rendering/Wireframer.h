@@ -147,8 +147,7 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle =
-    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64>;
   using AtomicPackedFrameBuffer = vtkm::cont::AtomicArray<vtkm::Int64>;
 
   using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayIn);
