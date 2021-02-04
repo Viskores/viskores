@@ -705,8 +705,7 @@ int main(int argc, char* argv[])
       auto tempFieldData = inDataSet.GetField(0).GetData();
       values.resize(static_cast<std::size_t>(tempFieldData.GetNumberOfValues()));
       auto valuesHandle = vtkm::cont::make_ArrayHandle(values, vtkm::CopyFlag::Off);
-      vtkm::cont::ArrayCopy(
-        tempFieldData.ResetTypes<vtkm::List<ValueType>, VTKM_DEFAULT_STORAGE_LIST>(), valuesHandle);
+      vtkm::cont::ArrayCopy(tempFieldData, valuesHandle);
       valuesHandle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
     }
     // Read ASCII data input

@@ -15,6 +15,7 @@
 /// Reference: Computational Physics 2nd Edition, Nicholas Giordano & Hisao Nakanishi
 
 #include <iomanip>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleRandomUniformReal.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>

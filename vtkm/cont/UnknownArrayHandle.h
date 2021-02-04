@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
+#include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/DefaultTypes.h>
 
 #include <memory>
@@ -384,6 +385,14 @@ public:
   }
 
   UnknownArrayHandle& operator=(const vtkm::cont::UnknownArrayHandle&) = default;
+
+  /// \brief Returns whether an array is stored in this `UnknownArrayHandle`.
+  ///
+  /// If the `UnknownArrayHandle` is constructed without an `ArrayHandle`, it
+  /// will not have an underlying type, and therefore the operations will be
+  /// invalid. It is still possible to set this `UnknownArrayHandle` to an
+  /// `ArrayHandle`.
+  VTKM_CONT bool IsValid() const;
 
   /// \brief Create a new array of the same type as this array.
   ///

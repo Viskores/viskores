@@ -12,6 +12,7 @@
 #define vtk_m_filter_particle_density_ngp_hxx
 
 #include "ParticleDensityNearestGridPoint.h"
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/filter/PolicyBase.h>

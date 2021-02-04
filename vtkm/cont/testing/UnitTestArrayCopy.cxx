@@ -11,6 +11,8 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/UncertainArrayHandle.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -21,16 +23,20 @@ namespace
 
 static constexpr vtkm::Id ARRAY_SIZE = 10;
 
-template <typename RefPortalType, typename TestPortalType>
-void TestValues(const RefPortalType& refPortal, const TestPortalType& testPortal)
+template <typename RefArrayType, typename TestArrayType>
+void TestValues(const RefArrayType& refArray, const TestArrayType& testArray)
 {
-  const vtkm::Id arraySize = refPortal.GetNumberOfValues();
-  VTKM_TEST_ASSERT(arraySize == testPortal.GetNumberOfValues(), "Wrong array size.");
+  auto result = test_equal_ArrayHandles(refArray, testArray);
+  VTKM_TEST_ASSERT(result, result.GetMergedMessage());
+}
 
-  for (vtkm::Id index = 0; index < arraySize; ++index)
-  {
-    VTKM_TEST_ASSERT(test_equal(refPortal.Get(index), testPortal.Get(index)), "Got bad value.");
-  }
+template <typename ValueType>
+vtkm::cont::ArrayHandle<ValueType> MakeInputArray()
+{
+  vtkm::cont::ArrayHandle<ValueType> input;
+  input.Allocate(ARRAY_SIZE);
+  SetPortal(input.WritePortal());
+  return input;
 }
 
 template <typename ValueType>
@@ -39,42 +45,78 @@ void TryCopy()
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
              "Trying type: " << vtkm::testing::TypeName<ValueType>::Name());
 
-  { // implicit -> basic
+  {
+    std::cout << "implicit -> basic" << std::endl;
     vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.ReadPortal(), output.ReadPortal());
+    TestValues(input, output);
   }
 
-  { // basic -> basic
-    vtkm::cont::ArrayHandleIndex source(ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<vtkm::Id> input;
-    vtkm::cont::ArrayCopy(source, input);
+  {
+    std::cout << "basic -> basic" << std::endl;
+    vtkm::cont::ArrayHandle<vtkm::Id> input = MakeInputArray<vtkm::Id>();
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.ReadPortal(), output.ReadPortal());
+    TestValues(input, output);
+
+    output.ReleaseResources();
+    vtkm::cont::ArrayCopy(vtkm::cont::UnknownArrayHandle(input), output);
+    TestValues(input, output);
   }
 
-  { // implicit -> implicit (index)
+  {
+    std::cout << "implicit -> implicit (index)" << std::endl;
     vtkm::cont::ArrayHandleIndex input(ARRAY_SIZE);
     vtkm::cont::ArrayHandleIndex output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.ReadPortal(), output.ReadPortal());
+    TestValues(input, output);
   }
 
-  { // implicit -> implicit (constant)
+  {
+    std::cout << "implicit -> implicit (constant)" << std::endl;
     vtkm::cont::ArrayHandleConstant<int> input(41, ARRAY_SIZE);
     vtkm::cont::ArrayHandleConstant<int> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.ReadPortal(), output.ReadPortal());
+    TestValues(input, output);
   }
 
-  { // implicit -> implicit (base->derived, constant)
+  {
+    std::cout << "implicit -> implicit (base->derived, constant)" << std::endl;
     vtkm::cont::ArrayHandle<int, vtkm::cont::StorageTagConstant> input =
       vtkm::cont::make_ArrayHandleConstant<int>(41, ARRAY_SIZE);
     vtkm::cont::ArrayHandleConstant<int> output;
     vtkm::cont::ArrayCopy(input, output);
-    TestValues(input.ReadPortal(), output.ReadPortal());
+    TestValues(input, output);
+  }
+
+  using TypeList = vtkm::ListAppend<vtkm::TypeListField, vtkm::List<ValueType, vtkm::UInt8>>;
+  using StorageList = VTKM_DEFAULT_STORAGE_LIST;
+  using UnknownArray = vtkm::cont::UnknownArrayHandle;
+  using UncertainArray = vtkm::cont::UncertainArrayHandle<TypeList, StorageList>;
+
+  {
+    std::cout << "unknown -> unknown" << std::endl;
+    UnknownArray input = MakeInputArray<ValueType>();
+    UnknownArray output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "uncertain -> basic (same type)" << std::endl;
+    UncertainArray input = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "uncertain -> basic (different type)" << std::endl;
+    UncertainArray input = MakeInputArray<vtkm::UInt8>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    vtkm::cont::ArrayCopy(input, output);
+    TestValues(input, output);
   }
 }
 

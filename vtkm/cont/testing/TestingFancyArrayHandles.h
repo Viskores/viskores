@@ -11,6 +11,7 @@
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>

@@ -7,6 +7,7 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCast.h>

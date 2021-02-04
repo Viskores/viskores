@@ -128,6 +128,11 @@ VTKM_CONT bool UnknownArrayHandle::IsBaseComponentTypeImpl(
   return this->Container->BaseComponentType == type;
 }
 
+VTKM_CONT bool UnknownArrayHandle::IsValid() const
+{
+  return static_cast<bool>(this->Container);
+}
+
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
 {
   UnknownArrayHandle newArray;

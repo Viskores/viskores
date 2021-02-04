@@ -838,8 +838,7 @@ void TestParticleAdvectionFile(const std::string& fname,
   if (fieldData.IsType<FieldHandle>())
     fieldArray = fieldData.AsArrayHandle<FieldHandle>();
   else
-    vtkm::cont::ArrayCopy(
-      fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
+    vtkm::cont::ArrayCopy(fieldData, fieldArray);
 
   FieldType velocities(fieldArray);
   GridEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(), velocities);

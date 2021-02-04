@@ -12,7 +12,7 @@
 #include <vtkm/Deprecated.h>
 #include <vtkm/cont/CellSetExplicit.h>
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayGetValues.h>
 #include <vtkm/cont/ArrayHandleDecorator.h>
 #include <vtkm/cont/Logging.h>
@@ -479,9 +479,9 @@ void CellSetExplicit<SST, CST, OST>::DeepCopy(const CellSet* src)
   const auto ct = vtkm::TopologyElementTagCell{};
   const auto pt = vtkm::TopologyElementTagPoint{};
 
-  vtkm::cont::ArrayCopy(other->GetShapesArray(ct, pt), shapes);
-  vtkm::cont::ArrayCopy(other->GetConnectivityArray(ct, pt), conn);
-  vtkm::cont::ArrayCopy(other->GetOffsetsArray(ct, pt), offsets);
+  shapes.DeepCopyFrom(other->GetShapesArray(ct, pt));
+  conn.DeepCopyFrom(other->GetConnectivityArray(ct, pt));
+  offsets.DeepCopyFrom(other->GetOffsetsArray(ct, pt));
 
   this->Fill(other->GetNumberOfPoints(), shapes, conn, offsets);
 }
