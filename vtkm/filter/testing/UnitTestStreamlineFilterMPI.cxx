@@ -403,7 +403,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, 
 void TestStreamlineFiltersMPI()
 {
   std::vector<bool> flags = { true, false };
-  std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
+  //std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
+  std::vector<FilterType> filterTypes = { STREAMLINE, PATHLINE };
 
   for (int n = 1; n < 3; n++)
   {
