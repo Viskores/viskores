@@ -1,5 +1,22 @@
+.windows_build:
+  variables:
+    # Note that shell runners only support runners with a single
+    # concurrency level. We can't use `$CI_CONCURRENCY_ID` because this may
+    # change between the build and test stages which CMake doesn't support.
+    # Even if we could, it could change if other runners on the machine
+    # could run at the same time, so we drop it.
+    GIT_CLONE_PATH: "$CI_BUILDS_DIR\\vtkm ci"
+
+.windows_vs2019:
+  variables:
+    VCVARSALL: "${VS160COMNTOOLS}\\..\\..\\VC\\Auxiliary\\Build\\vcvarsall.bat"
+    VCVARSPLATFORM: "x64"
+    VCVARSVERSION: "14.25"
 
 .cmake_build_windows: &cmake_build_windows
+  extends:
+    - .windows_build
+    - .windows_vs2019
   stage: build
   timeout:  2 hours
   interruptible: true
@@ -39,6 +56,9 @@
 
 
 .cmake_test_windows: &cmake_test_windows
+  extends:
+    - .windows_build
+    - .windows_vs2019
   stage: test
   timeout:  50 minutes
   interruptible: true
@@ -51,18 +71,12 @@
     #due to system load are not reported
     - "ctest-latest -VV -S .gitlab/ci/ctest_test.cmake"
 
-.windows_vs2019:
-  variables:
-    VCVARSALL: "${VS160COMNTOOLS}\\..\\..\\VC\\Auxiliary\\Build\\vcvarsall.bat"
-    VCVARSPLATFORM: "x64"
-    VCVARSVERSION: "14.25"
-
 # Build on windows10 with Visual Studio
 # Will have CUDA 10.2 once build issues are resolved
 build:windows_vs2019:
   tags:
     - vtkm # Since this is a bare runner, pin to a project.
-    - concurrent
+    - nonconcurrent
     - build
     - windows
     - shell
@@ -70,7 +84,6 @@ build:windows_vs2019:
     - msvc-19.25
     - large-memory
   extends:
-    - .windows_vs2019
     - .cmake_build_windows
     - .only-default
   variables:
@@ -83,7 +96,7 @@ build:windows_vs2019:
 test:windows_vs2019:
   tags:
     - vtkm # Since this is a bare runner, pin to a project.
-    - concurrent
+    - nonconcurrent
     - test
     - windows
     - shell
@@ -92,7 +105,6 @@ test:windows_vs2019:
     - cuda-rt
     - turing
   extends:
-    - .windows_vs2019
     - .cmake_test_windows
     - .only-default
   dependencies:
