@@ -86,7 +86,7 @@ void TestParticleArrayCopy()
       vec.push_back(vtkm::Particle(vtkm::Vec3f(x, y, z), pid));
       pid++;
     }
-    auto ah = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::Off);
+    auto ah = vtkm::cont::make_ArrayHandle(vec, vtkm::CopyFlag::On);
     particleVec.push_back(ah);
     totalNumParticles += ah.GetNumberOfValues();
   }
@@ -105,10 +105,6 @@ void TestParticleArrayCopy()
     {
       auto p = portal.Get(i);
       auto pRes = resPortal.Get(resIdx);
-      if (!(p.Pos == pRes))
-        std::cout << resIdx << ": i= " << i << " " << p.Pos << " " << pRes
-                  << "  diff= " << p.Pos - pRes << std::endl;
-
       VTKM_TEST_ASSERT(p.Pos == pRes, "Positions do not match");
       resIdx++;
     }
