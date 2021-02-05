@@ -48,15 +48,10 @@ inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::PrepareForExecution(
     throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
   if (this->Seeds.GetNumberOfValues() == 0)
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-
   if (this->NextDataSet.GetNumberOfPartitions() != input.GetNumberOfPartitions())
     throw vtkm::cont::ErrorFilterExecution("Number of partitions do not match");
-
   if (!(this->PreviousTime < this->NextTime))
     throw vtkm::cont::ErrorFilterExecution("Previous time must be less than Next time.");
-
-  if (this->NextDataSet.GetNumberOfPartitions() == 0)
-    return vtkm::cont::PartitionedDataSet();
 
   std::string activeField = this->GetActiveFieldName();
   vtkm::filter::particleadvection::BoundsMap boundsMap(input);
