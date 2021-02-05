@@ -22,28 +22,29 @@ namespace filter
 namespace particleadvection
 {
 
-class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
-  : public AdvectorBaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
-{
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
+using DSIType = vtkm::filter::particleadvection::DataSetIntegrator;
 
+class VTKM_ALWAYS_EXPORT ParticleAdvectionAlgorithm
+  : public AdvectorBaseAlgorithm<DSIType, vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
+{
 public:
   ParticleAdvectionAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                             const std::vector<DataSetIntegratorType>& blocks)
-    : AdvectorBaseAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm, blocks)
+                             const std::vector<DSIType>& blocks)
+    : AdvectorBaseAlgorithm<DSIType, vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm,
+                                                                                             blocks)
   {
   }
 };
 
 class VTKM_ALWAYS_EXPORT ParticleAdvectionThreadedAlgorithm
-  : public AdvectorBaseThreadedAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
+  : public AdvectorBaseThreadedAlgorithm<DSIType,
+                                         vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>
 {
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
 public:
   ParticleAdvectionThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
-                                     const std::vector<DataSetIntegratorType>& blocks)
-    : AdvectorBaseThreadedAlgorithm<vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm,
+                                     const std::vector<DSIType>& blocks)
+    : AdvectorBaseThreadedAlgorithm<DSIType,
+                                    vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>>(bm,
                                                                                             blocks)
   {
   }

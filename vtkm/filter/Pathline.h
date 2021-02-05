@@ -38,7 +38,14 @@ public:
   void SetNextTime(vtkm::FloatDefault t) { this->NextTime = t; }
 
   VTKM_CONT
-  void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->NextDataSet = ds; }
+  void SetNextDataSet(const vtkm::cont::DataSet& ds)
+  {
+    this->NextDataSet = vtkm::cont::PartitionedDataSet(ds);
+  }
+
+  VTKM_CONT
+  void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->NextDataSet = pds; }
+
 
   VTKM_CONT
   void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
@@ -49,11 +56,15 @@ public:
   VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds);
 
-  template <typename T, typename StorageType, typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
+  VTKM_CONT
+  bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
+
+  VTKM_CONT
+  void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
+
+  template <typename DerivedPolicy>
+  vtkm::cont::PartitionedDataSet PrepareForExecution(
+    const vtkm::cont::PartitionedDataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
@@ -62,13 +73,13 @@ public:
                                     vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
 private:
-  vtkm::worklet::Streamline Worklet;
   vtkm::FloatDefault StepSize;
   vtkm::FloatDefault PreviousTime;
   vtkm::FloatDefault NextTime;
-  vtkm::cont::DataSet NextDataSet;
+  vtkm::cont::PartitionedDataSet NextDataSet;
   vtkm::Id NumberOfSteps;
   vtkm::cont::ArrayHandle<vtkm::Particle> Seeds;
+  bool UseThreadedAlgorithm;
 };
 }
 } // namespace vtkm::filter

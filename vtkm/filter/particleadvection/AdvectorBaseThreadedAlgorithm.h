@@ -22,15 +22,14 @@ namespace filter
 namespace particleadvection
 {
 
-template <typename ResultType>
-class VTKM_ALWAYS_EXPORT AdvectorBaseThreadedAlgorithm : public AdvectorBaseAlgorithm<ResultType>
+template <typename DataSetIntegratorType, typename ResultType>
+class VTKM_ALWAYS_EXPORT AdvectorBaseThreadedAlgorithm
+  : public AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>
 {
 public:
-  using DataSetIntegratorType = vtkm::filter::particleadvection::DataSetIntegrator;
-
   AdvectorBaseThreadedAlgorithm(const vtkm::filter::particleadvection::BoundsMap& bm,
                                 const std::vector<DataSetIntegratorType>& blocks)
-    : AdvectorBaseAlgorithm<ResultType>(bm, blocks)
+    : AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>(bm, blocks)
     , Done(false)
     , WorkerActivate(false)
   {
@@ -57,7 +56,8 @@ protected:
   bool GetActiveParticles(std::vector<vtkm::Particle>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    bool val = this->AdvectorBaseAlgorithm<ResultType>::GetActiveParticles(particles, blockId);
+    bool val = this->AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>::GetActiveParticles(
+      particles, blockId);
     this->WorkerActivate = val;
     return val;
   }
@@ -68,7 +68,8 @@ protected:
     if (!particles.empty())
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
-      this->AdvectorBaseAlgorithm<ResultType>::UpdateActive(particles, idsMap);
+      this->AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>::UpdateActive(particles,
+                                                                                   idsMap);
 
       //Let workers know there is new work
       this->WorkerActivateCondition.notify_all();
@@ -106,7 +107,6 @@ protected:
       if (this->GetActiveParticles(v, blockId))
       {
         const auto& block = this->GetDataSet(blockId);
-
         ResultType r;
         block.Advect(v, this->StepSize, this->NumberOfSteps, r);
         this->UpdateWorkerResult(blockId, r);
@@ -127,11 +127,10 @@ protected:
       this->GetWorkerResults(workerResults);
 
       vtkm::Id numTerm = 0;
-      for (const auto& it : workerResults)
+      for (auto& it : workerResults)
       {
         vtkm::Id blockId = it.first;
-        const auto& results = it.second;
-        for (const auto& r : results)
+        for (auto& r : it.second)
           numTerm += this->UpdateResult(r, blockId);
       }
 
@@ -151,7 +150,8 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
 
-    return (this->AdvectorBaseAlgorithm<ResultType>::GetBlockAndWait(numLocalTerm) &&
+    return (this->AdvectorBaseAlgorithm<DataSetIntegratorType, ResultType>::GetBlockAndWait(
+              numLocalTerm) &&
             !this->WorkerActivate && this->WorkerResults.empty());
   }
 

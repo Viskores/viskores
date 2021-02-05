@@ -15,6 +15,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/RK4Integrator.h>
+#include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
 
 #include <memory>
 #include <vector>
@@ -26,30 +27,18 @@ namespace filter
 namespace particleadvection
 {
 
-class VTKM_ALWAYS_EXPORT DataSetIntegrator
+template <typename GridEvalType>
+class VTKM_ALWAYS_EXPORT DataSetIntegratorBase
 {
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
-
 public:
-  DataSetIntegrator(const vtkm::cont::DataSet& ds, vtkm::Id id, std::string fieldNm)
-    : ActiveField(ds.GetField(fieldNm))
-    , CopySeedArray(false)
+  DataSetIntegratorBase(bool copySeeds = false, vtkm::Id id = -1)
+    : CopySeedArray(copySeeds)
     , Eval(nullptr)
     , ID(id)
   {
-    auto fieldData = this->ActiveField.GetData();
-    FieldHandle fieldArray;
-
-    if (fieldData.IsType<FieldHandle>())
-      fieldArray = fieldData.AsArrayHandle<FieldHandle>();
-    else
-      vtkm::cont::ArrayCopy(fieldData, fieldArray);
-
-    this->Eval = std::shared_ptr<GridEvalType>(new GridEvalType(ds, fieldArray));
   }
+
+  ~DataSetIntegratorBase() = default;
 
   vtkm::Id GetID() const { return this->ID; }
   void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
@@ -66,46 +55,88 @@ public:
     this->DoAdvect(seedArray, rk4, maxSteps, result);
   }
 
-private:
+protected:
+  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  using FieldHandleType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+
   template <typename ResultType>
   inline void DoAdvect(vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
                        const RK4Type& rk4,
                        vtkm::Id maxSteps,
                        ResultType& result) const;
 
-  vtkm::cont::Field ActiveField;
+  FieldHandleType GetFieldHandle(const vtkm::cont::DataSet& ds, const std::string& fieldNm)
+  {
+    if (!ds.HasField(fieldNm))
+      throw vtkm::cont::ErrorFilterExecution("Field " + fieldNm + " not found on dataset.");
+
+    FieldHandleType fieldArray;
+    auto fieldData = ds.GetField(fieldNm).GetData();
+    if (fieldData.IsType<FieldHandleType>())
+      fieldArray = fieldData.AsArrayHandle<FieldHandleType>();
+    else
+      vtkm::cont::ArrayCopy(
+        fieldData.ResetTypes<vtkm::TypeListFieldVec3, VTKM_DEFAULT_STORAGE_LIST>(), fieldArray);
+
+    return fieldArray;
+  }
+
   bool CopySeedArray;
   std::shared_ptr<GridEvalType> Eval;
   vtkm::Id ID;
 };
 
-//-----
-// Specialization for ParticleAdvection worklet
-template <>
-inline void DataSetIntegrator::DoAdvect(
-  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-  const RK4Type& rk4,
-  vtkm::Id maxSteps,
-  vtkm::worklet::ParticleAdvectionResult<vtkm::Particle>& result) const
+class VTKM_ALWAYS_EXPORT DataSetIntegrator
+  : public DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
+      vtkm::worklet::particleadvection::VelocityField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>>
 {
-  vtkm::worklet::ParticleAdvection Worklet;
-  result = Worklet.Run(rk4, seeds, maxSteps);
-}
+public:
+  DataSetIntegrator(const vtkm::cont::DataSet& ds, vtkm::Id id, const std::string& fieldNm)
+    : DataSetIntegratorBase<vtkm::worklet::particleadvection::GridEvaluator<
+        vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>>(false, id)
+  {
+    auto fieldArray = this->GetFieldHandle(ds, fieldNm);
 
-//-----
-// Specialization for Streamline worklet
-template <>
-inline void DataSetIntegrator::DoAdvect(
-  vtkm::cont::ArrayHandle<vtkm::Particle>& seeds,
-  const RK4Type& rk4,
-  vtkm::Id maxSteps,
-  vtkm::worklet::StreamlineResult<vtkm::Particle>& result) const
+    using EvalType = vtkm::worklet::particleadvection::GridEvaluator<
+      vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>;
+
+    this->Eval = std::shared_ptr<EvalType>(new EvalType(ds, fieldArray));
+  }
+};
+
+class VTKM_ALWAYS_EXPORT TemporalDataSetIntegrator
+  : public DataSetIntegratorBase<vtkm::worklet::particleadvection::TemporalGridEvaluator<
+      vtkm::worklet::particleadvection::VelocityField<vtkm::cont::ArrayHandle<vtkm::Vec3f>>>>
 {
-  vtkm::worklet::Streamline Worklet;
-  result = Worklet.Run(rk4, seeds, maxSteps);
-}
+  using FieldHandleType = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+
+public:
+  TemporalDataSetIntegrator(const vtkm::cont::DataSet& ds1,
+                            vtkm::FloatDefault t1,
+                            const vtkm::cont::DataSet& ds2,
+                            vtkm::FloatDefault t2,
+                            vtkm::Id id,
+                            const std::string& fieldNm)
+    : DataSetIntegratorBase<vtkm::worklet::particleadvection::TemporalGridEvaluator<
+        vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>>(false, id)
+  {
+    auto fieldArray1 = this->GetFieldHandle(ds1, fieldNm);
+    auto fieldArray2 = this->GetFieldHandle(ds2, fieldNm);
+
+    using EvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<
+      vtkm::worklet::particleadvection::VelocityField<FieldHandleType>>;
+
+    this->Eval =
+      std::shared_ptr<EvalType>(new EvalType(ds1, t1, fieldArray1, ds2, t2, fieldArray2));
+  }
+};
+
 }
 }
 } // namespace vtkm::filter::particleadvection
 
+#ifndef vtk_m_filter_particleadvection_DataSetIntegrator_hxx
+#include <vtkm/filter/particleadvection/DataSetIntegrator.hxx>
 #endif
+
+#endif //vtk_m_filter_DataSetIntegrator_h

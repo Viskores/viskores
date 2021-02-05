@@ -554,6 +554,7 @@ void TestStreamlineFilters()
   TestStreamline();
   TestPathlineSimple();
   TestPathline();
+
   for (auto useSL : flags)
     TestAMRStreamline(useSL);
 
