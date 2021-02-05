@@ -105,6 +105,10 @@ void TestParticleArrayCopy()
     {
       auto p = portal.Get(i);
       auto pRes = resPortal.Get(resIdx);
+      if (!(p.Pos == pRes))
+        std::cout << resIdx << ": i= " << i << " " << p.Pos << " " << pRes
+                  << "  diff= " << p.Pos - pRes << std::endl;
+
       VTKM_TEST_ASSERT(p.Pos == pRes, "Positions do not match");
       resIdx++;
     }
