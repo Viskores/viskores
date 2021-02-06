@@ -14,6 +14,7 @@ set(headers
   AdvectorBaseThreadedAlgorithm.h
   BoundsMap.h
   DataSetIntegrator.h
+  DataSetIntegrator.hxx
   Messenger.h
   ParticleAdvectionAlgorithm.h
   ParticleMessenger.h

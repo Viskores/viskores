@@ -31,6 +31,17 @@ VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
   vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos,
   bool CopyTerminatedOnly = false);
 
+
+/// \brief Copy fields in vtkm::Particle to standard types.
+///
+/// Given a std::vector of \c ArrayHandle of vtkm::Particle, this function copies the
+/// position field into an \c ArrayHandle of \c Vec3f objects.
+///
+template <typename ParticleType>
+VTKM_ALWAYS_EXPORT inline void ParticleArrayCopy(
+  const std::vector<vtkm::cont::ArrayHandle<ParticleType, vtkm::cont::StorageTagBasic>>& inputs,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f, vtkm::cont::StorageTagBasic>& outPos);
+
 /// \brief Copy all fields in vtkm::Particle to standard types.
 ///
 /// Given an \c ArrayHandle of vtkm::Particle, this function copies the

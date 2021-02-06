@@ -11,15 +11,14 @@
 #ifndef vtk_m_filter_Pathline_hxx
 #define vtk_m_filter_Pathline_hxx
 
+#include <vtkm/filter/Pathline.h>
+
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/worklet/particleadvection/Field.h>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
-#include <vtkm/worklet/particleadvection/IntegratorBase.h>
-#include <vtkm/worklet/particleadvection/Particles.h>
-#include <vtkm/worklet/particleadvection/RK4Integrator.h>
-#include <vtkm/worklet/particleadvection/TemporalGridEvaluators.h>
+#include <vtkm/filter/particleadvection/BoundsMap.h>
+#include <vtkm/filter/particleadvection/DataSetIntegrator.h>
+#include <vtkm/filter/particleadvection/StreamlineAlgorithm.h>
 
 namespace vtkm
 {
@@ -29,7 +28,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT Pathline::Pathline()
   : vtkm::filter::FilterDataSetWithField<Pathline>()
-  , Worklet()
+  , UseThreadedAlgorithm(false)
 {
 }
 
@@ -40,58 +39,45 @@ inline VTKM_CONT void Pathline::SetSeeds(vtkm::cont::ArrayHandle<vtkm::Particle>
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename StorageType, typename DerivedPolicy>
-inline VTKM_CONT vtkm::cont::DataSet Pathline::DoExecute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+template <typename DerivedPolicy>
+inline VTKM_CONT vtkm::cont::PartitionedDataSet Pathline::PrepareForExecution(
+  const vtkm::cont::PartitionedDataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  //Check for some basics.
+  if (this->GetUseCoordinateSystemAsField())
+    throw vtkm::cont::ErrorFilterExecution("Coordinate system as field not supported");
   if (this->Seeds.GetNumberOfValues() == 0)
-  {
     throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
-  }
+  if (this->NextDataSet.GetNumberOfPartitions() != input.GetNumberOfPartitions())
+    throw vtkm::cont::ErrorFilterExecution("Number of partitions do not match");
+  if (!(this->PreviousTime < this->NextTime))
+    throw vtkm::cont::ErrorFilterExecution("Previous time must be less than Next time.");
 
-  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet();
-  const vtkm::cont::DynamicCellSet& cells2 = this->NextDataSet.GetCellSet();
-  const vtkm::cont::CoordinateSystem& coords =
-    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
-  const vtkm::cont::CoordinateSystem& coords2 =
-    this->NextDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+  std::string activeField = this->GetActiveFieldName();
+  vtkm::filter::particleadvection::BoundsMap boundsMap(input);
+  using DSIType = vtkm::filter::particleadvection::TemporalDataSetIntegrator;
+  std::vector<DSIType> dsi;
 
-  auto field2 = vtkm::cont::Cast<vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>>(
-    this->NextDataSet.GetField(this->GetActiveFieldName()).GetData());
-
-  if (!fieldMeta.IsPointField())
+  for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
-    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+    vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
+    auto dsPrev = input.GetPartition(i);
+    auto dsNext = this->NextDataSet.GetPartition(i);
+    if (!dsPrev.HasPointField(activeField) || !dsNext.HasPointField(activeField))
+      throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
+    dsi.push_back(
+      DSIType(dsPrev, this->PreviousTime, dsNext, this->NextTime, blockId, activeField));
   }
 
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
-  using FieldType = vtkm::worklet::particleadvection::VelocityField<FieldHandle>;
-  using GridEvalType = vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldType>;
-  using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+  using AlgorithmType = vtkm::filter::particleadvection::PathlineAlgorithm;
+  using ThreadedAlgorithmType = vtkm::filter::particleadvection::PathlineThreadedAlgorithm;
 
-  FieldType velocities(field);
-  FieldType velocities2(field2);
-  GridEvalType eval(
-    coords, cells, velocities, this->PreviousTime, coords2, cells2, velocities2, this->NextTime);
-  RK4Type rk4(eval, this->StepSize);
-
-  vtkm::worklet::Streamline streamline;
-  vtkm::worklet::StreamlineResult<vtkm::Particle> res;
-
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  vtkm::cont::ArrayCopy(this->Seeds, seedArray);
-  res = Worklet.Run(rk4, seedArray, this->NumberOfSteps);
-
-  vtkm::cont::DataSet outData;
-  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.Positions);
-  outData.SetCellSet(res.PolyLines);
-  outData.AddCoordinateSystem(outputCoords);
-
-  return outData;
+  if (this->GetUseThreadedAlgorithm())
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, ThreadedAlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
+  else
+    return vtkm::filter::particleadvection::RunAlgo<DSIType, AlgorithmType>(
+      boundsMap, dsi, this->NumberOfSteps, this->StepSize, this->Seeds);
 }
 
 //-----------------------------------------------------------------------------

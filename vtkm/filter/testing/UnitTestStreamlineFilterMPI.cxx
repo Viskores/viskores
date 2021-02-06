@@ -10,13 +10,20 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/ParticleAdvection.h>
+#include <vtkm/filter/Pathline.h>
 #include <vtkm/filter/Streamline.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
-
 #include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
 {
+
+enum FilterType
+{
+  PARTICLE_ADVECTION,
+  STREAMLINE,
+  PATHLINE
+};
 
 vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, const vtkm::Vec3f& vec)
 {
@@ -36,7 +43,22 @@ void AddVectorFields(vtkm::cont::PartitionedDataSet& pds,
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
 }
 
-void TestAMRStreamline(bool useSL, bool useThreaded)
+template <typename FilterType>
+void SetFilter(FilterType& filter,
+               vtkm::FloatDefault stepSize,
+               vtkm::Id numSteps,
+               const std::string& fieldName,
+               vtkm::cont::ArrayHandle<vtkm::Particle> seedArray,
+               bool useThreaded)
+{
+  filter.SetStepSize(stepSize);
+  filter.SetNumberOfSteps(numSteps);
+  filter.SetSeeds(seedArray);
+  filter.SetActiveField(fieldName);
+  filter.SetUseThreadedAlgorithm(useThreaded);
+}
+
+void TestAMRStreamline(FilterType fType, bool useThreaded)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if (comm.size() < 2)
@@ -102,16 +124,30 @@ void TestAMRStreamline(bool useSL, bool useThreaded)
     seedArray = vtkm::cont::make_ArrayHandle({ p0, p1 });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
-    if (useSL)
-    {
-      vtkm::filter::Streamline filter;
-      filter.SetUseThreadedAlgorithm(useThreaded);
-      filter.SetStepSize(0.1f);
-      filter.SetNumberOfSteps(100000);
-      filter.SetSeeds(seedArray);
+    vtkm::FloatDefault stepSize = 0.1f;
+    vtkm::Id numSteps = 100000;
 
-      filter.SetActiveField(fieldName);
-      auto out = filter.Execute(pds);
+    if (fType == STREAMLINE || fType == PATHLINE)
+    {
+      vtkm::cont::PartitionedDataSet out;
+
+      if (fType == STREAMLINE)
+      {
+        vtkm::filter::Streamline streamline;
+        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        out = streamline.Execute(pds);
+      }
+      else if (fType == PATHLINE)
+      {
+        vtkm::filter::Pathline pathline;
+        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+        //Create timestep 2
+        auto pds2 = vtkm::cont::PartitionedDataSet(pds);
+        pathline.SetPreviousTime(0);
+        pathline.SetNextTime(10);
+        pathline.SetNextDataSet(pds2);
+        out = pathline.Execute(pds);
+      }
 
       if (comm.rank() <= 1)
         VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
@@ -185,7 +221,7 @@ void TestAMRStreamline(bool useSL, bool useThreaded)
                          "Seed final location in wrong location");
       }
     }
-    else
+    else if (fType == PARTICLE_ADVECTION)
     {
       vtkm::filter::ParticleAdvection filter;
       filter.SetUseThreadedAlgorithm(useThreaded);
@@ -221,7 +257,44 @@ void TestAMRStreamline(bool useSL, bool useThreaded)
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool useThreaded)
+void ValidateOutput(const vtkm::cont::DataSet& out,
+                    vtkm::Id numSeeds,
+                    vtkm::Range xMaxRange,
+                    FilterType fType)
+{
+  //Validate the result is correct.
+  VTKM_TEST_ASSERT(out.GetNumberOfCoordinateSystems() == 1,
+                   "Wrong number of coordinate systems in the output dataset");
+
+  vtkm::cont::DynamicCellSet dcells = out.GetCellSet();
+  VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
+  auto coords = out.GetCoordinateSystem().GetDataAsMultiplexer();
+  auto ptPortal = coords.ReadPortal();
+
+  if (fType == STREAMLINE || fType == PATHLINE)
+  {
+    vtkm::cont::CellSetExplicit<> explicitCells;
+    VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
+    explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
+    for (vtkm::Id j = 0; j < numSeeds; j++)
+    {
+      vtkm::cont::ArrayHandle<vtkm::Id> indices;
+      explicitCells.GetIndices(j, indices);
+      vtkm::Id nPts = indices.GetNumberOfValues();
+      auto iPortal = indices.ReadPortal();
+      vtkm::Vec3f lastPt = ptPortal.Get(iPortal.Get(nPts - 1));
+      VTKM_TEST_ASSERT(xMaxRange.Contains(lastPt[0]), "Wrong end point for seed");
+    }
+  }
+  else if (fType == PARTICLE_ADVECTION)
+  {
+    VTKM_TEST_ASSERT(out.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
+    for (vtkm::Id i = 0; i < numSeeds; i++)
+      VTKM_TEST_ASSERT(xMaxRange.Contains(ptPortal.Get(i)[0]), "Wrong end point for seed");
+  }
+}
+
+void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, FilterType fType, bool useThreaded)
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
@@ -243,6 +316,9 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool u
     z1 = z1 + 1;
   }
 
+  vtkm::FloatDefault time0 = 0;
+  vtkm::FloatDefault time1 = (numDims - 1) * (nPerRank * comm.size());
+
   std::vector<vtkm::Bounds> bounds;
   for (vtkm::Id i = 0; i < nPerRank; i++)
   {
@@ -251,14 +327,28 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool u
     x1 += dx;
   }
 
-  std::vector<vtkm::cont::PartitionedDataSet> allPDs;
+  std::vector<vtkm::Range> xMaxRanges;
+  for (const auto& b : bounds)
+  {
+    auto xMax = b.X.Max;
+    if (useGhost)
+      xMax = xMax - 1;
+    xMaxRanges.push_back(vtkm::Range(xMax, xMax + static_cast<vtkm::FloatDefault>(.5)));
+  }
+
+
+  std::vector<vtkm::cont::PartitionedDataSet> allPDS, allPDS2;
   const vtkm::Id3 dims(numDims, numDims, numDims);
-  allPDs = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
+  allPDS = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
+  allPDS2 = vtkm::worklet::testing::CreateAllDataSets(bounds, dims, useGhost);
 
   vtkm::Vec3f vecX(1, 0, 0);
   std::string fieldName = "vec";
-  for (auto& pds : allPDs)
+  vtkm::FloatDefault stepSize = 0.1f;
+  vtkm::Id numSteps = 100000;
+  for (std::size_t n = 0; n < allPDS.size(); n++)
   {
+    auto pds = allPDS[n];
     AddVectorFields(pds, fieldName, vecX);
 
     vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
@@ -266,89 +356,45 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool u
                                                vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
-    if (useSL)
+    if (fType == STREAMLINE)
     {
       vtkm::filter::Streamline streamline;
-
-      streamline.SetUseThreadedAlgorithm(useThreaded);
-      streamline.SetStepSize(0.1f);
-      streamline.SetNumberOfSteps(100000);
-      streamline.SetSeeds(seedArray);
-
-      streamline.SetActiveField(fieldName);
+      SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = streamline.Execute(pds);
 
       for (vtkm::Id i = 0; i < nPerRank; i++)
-      {
-        auto inputDS = pds.GetPartition(i);
-        auto outputDS = out.GetPartition(i);
-        VTKM_TEST_ASSERT(outputDS.GetNumberOfCoordinateSystems() == 1,
-                         "Wrong number of coordinate systems in the output dataset");
-
-        vtkm::cont::DynamicCellSet dcells = outputDS.GetCellSet();
-        VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
-
-        auto coords = outputDS.GetCoordinateSystem().GetDataAsMultiplexer();
-        auto ptPortal = coords.ReadPortal();
-
-        vtkm::cont::CellSetExplicit<> explicitCells;
-
-        VTKM_TEST_ASSERT(dcells.IsType<vtkm::cont::CellSetExplicit<>>(), "Wrong cell type.");
-        explicitCells = dcells.Cast<vtkm::cont::CellSetExplicit<>>();
-
-        vtkm::FloatDefault xMax = bounds[static_cast<std::size_t>(i)].X.Max;
-        if (useGhost)
-          xMax = xMax - 1;
-        vtkm::Range xMaxRange(xMax, xMax + static_cast<vtkm::FloatDefault>(.5));
-
-        for (vtkm::Id j = 0; j < numSeeds; j++)
-        {
-          vtkm::cont::ArrayHandle<vtkm::Id> indices;
-          explicitCells.GetIndices(j, indices);
-          vtkm::Id nPts = indices.GetNumberOfValues();
-          auto iPortal = indices.ReadPortal();
-          vtkm::Vec3f lastPt = ptPortal.Get(iPortal.Get(nPts - 1));
-          VTKM_TEST_ASSERT(xMaxRange.Contains(lastPt[0]), "Wrong end point for seed");
-        }
-      }
+        ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
     }
-    else
+    else if (fType == PARTICLE_ADVECTION)
     {
       vtkm::filter::ParticleAdvection particleAdvection;
-
-      particleAdvection.SetUseThreadedAlgorithm(useThreaded);
-      particleAdvection.SetStepSize(0.1f);
-      particleAdvection.SetNumberOfSteps(100000);
-      particleAdvection.SetSeeds(seedArray);
-
-      particleAdvection.SetActiveField(fieldName);
+      SetFilter(particleAdvection, stepSize, numSteps, fieldName, seedArray, useThreaded);
       auto out = particleAdvection.Execute(pds);
 
       //Particles end up in last rank.
       if (comm.rank() == comm.size() - 1)
       {
         VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
-        auto ds = out.GetPartition(0);
-        //Validate the result is correct.
-        VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                         "Wrong number of coordinate systems in the output dataset");
-
-        vtkm::FloatDefault xMax = bounds[bounds.size() - 1].X.Max;
-        if (useGhost)
-          xMax = xMax - 1;
-        vtkm::Range xMaxRange(xMax, xMax + static_cast<vtkm::FloatDefault>(.5));
-
-        auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
-        VTKM_TEST_ASSERT(ds.GetNumberOfPoints() == numSeeds, "Wrong number of coordinates");
-        auto ptPortal = coords.ReadPortal();
-        for (vtkm::Id i = 0; i < numSeeds; i++)
-          VTKM_TEST_ASSERT(xMaxRange.Contains(ptPortal.Get(i)[0]), "Wrong end point for seed");
-
-        vtkm::cont::DynamicCellSet dcells = ds.GetCellSet();
-        VTKM_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
+        ValidateOutput(out.GetPartition(0), numSeeds, xMaxRanges[xMaxRanges.size() - 1], fType);
       }
       else
         VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
+    }
+    else if (fType == PATHLINE)
+    {
+      auto pds2 = allPDS2[n];
+      AddVectorFields(pds2, fieldName, vecX);
+
+      vtkm::filter::Pathline pathline;
+      SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded);
+
+      pathline.SetPreviousTime(time0);
+      pathline.SetNextTime(time1);
+      pathline.SetNextDataSet(pds2);
+
+      auto out = pathline.Execute(pds);
+      for (vtkm::Id i = 0; i < nPerRank; i++)
+        ValidateOutput(out.GetPartition(i), numSeeds, xMaxRanges[i], fType);
     }
   }
 }
@@ -356,17 +402,19 @@ void TestPartitionedDataSet(vtkm::Id nPerRank, bool useGhost, bool useSL, bool u
 void TestStreamlineFiltersMPI()
 {
   std::vector<bool> flags = { true, false };
+  std::vector<FilterType> filterTypes = { PARTICLE_ADVECTION, STREAMLINE, PATHLINE };
+
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
-      for (auto useSL : flags)
+      for (auto fType : filterTypes)
         for (auto useThreaded : flags)
-          TestPartitionedDataSet(n, useGhost, useSL, useThreaded);
+          TestPartitionedDataSet(n, useGhost, fType, useThreaded);
   }
 
-  for (auto useSL : flags)
+  for (auto fType : filterTypes)
     for (auto useThreaded : flags)
-      TestAMRStreamline(useSL, useThreaded);
+      TestAMRStreamline(fType, useThreaded);
 }
 }
 

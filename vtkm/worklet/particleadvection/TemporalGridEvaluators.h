@@ -121,6 +121,21 @@ private:
 public:
   VTKM_CONT TemporalGridEvaluator() = default;
 
+  VTKM_CONT TemporalGridEvaluator(const vtkm::cont::DataSet& ds1,
+                                  const vtkm::FloatDefault t1,
+                                  const FieldType& field1,
+                                  const vtkm::cont::DataSet& ds2,
+                                  const vtkm::FloatDefault t2,
+                                  const FieldType& field2)
+    : EvaluatorOne(GridEvaluator(ds1, field1))
+    , EvaluatorTwo(GridEvaluator(ds2, field2))
+    , TimeOne(t1)
+    , TimeTwo(t2)
+
+  {
+  }
+
+
   VTKM_CONT TemporalGridEvaluator(GridEvaluator& evaluatorOne,
                                   const vtkm::FloatDefault timeOne,
                                   GridEvaluator& evaluatorTwo,
