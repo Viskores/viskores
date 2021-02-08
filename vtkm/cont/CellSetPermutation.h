@@ -268,6 +268,41 @@ struct CellSetPermutationTraits<
   using Superclass = CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>;
 };
 
+template <typename VisitTopology,
+          typename IncidentTopology,
+          typename OriginalCellSetType,
+          typename PermutationArrayHandleType>
+struct CellSetPermutationConnectivityChooser;
+
+template <typename OriginalCellSetType, typename PermutationArrayHandleType>
+struct CellSetPermutationConnectivityChooser<vtkm::TopologyElementTagCell,
+                                             vtkm::TopologyElementTagPoint,
+                                             OriginalCellSetType,
+                                             PermutationArrayHandleType>
+{
+  using ExecPortalType = typename PermutationArrayHandleType::ReadPortalType;
+  using OrigExecObjectType =
+    typename OriginalCellSetType::template ExecConnectivityType<vtkm::TopologyElementTagCell,
+                                                                vtkm::TopologyElementTagPoint>;
+
+  using ExecConnectivityType =
+    vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<ExecPortalType, OrigExecObjectType>;
+};
+
+template <typename OriginalCellSetType, typename PermutationArrayHandleType>
+struct CellSetPermutationConnectivityChooser<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
+                                             OriginalCellSetType,
+                                             PermutationArrayHandleType>
+{
+  using ConnectivityPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
+  using NumIndicesPortalType = typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType;
+  using OffsetPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
+
+  using ExecConnectivityType =
+    vtkm::exec::ConnectivityPermutedVisitPointsWithCells<ConnectivityPortalType, OffsetPortalType>;
+};
+
 } // internal
 
 template <typename OriginalCellSetType_,
@@ -405,46 +440,19 @@ public:
     return this->FullCellSet.GetNumberOfPoints();
   }
 
-private:
-  template <typename VisitTopology, typename IncidentTopology>
-  struct ConnectivityChooser;
-
-  template <>
-  struct ConnectivityChooser<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
-  {
-    using ExecPortalType = typename PermutationArrayHandleType::ReadPortalType;
-    using OrigExecObjectType =
-      typename OriginalCellSetType::template ExecConnectivityType<vtkm::TopologyElementTagCell,
-                                                                  vtkm::TopologyElementTagPoint>;
-
-    using ExecConnectivityType =
-      vtkm::exec::ConnectivityPermutedVisitCellsWithPoints<ExecPortalType, OrigExecObjectType>;
-  };
-
-  template <>
-  struct ConnectivityChooser<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
-  {
-    using ConnectivityPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
-    using NumIndicesPortalType =
-      typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType;
-    using OffsetPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
-
-    using ExecConnectivityType =
-      vtkm::exec::ConnectivityPermutedVisitPointsWithCells<ConnectivityPortalType,
-                                                           OffsetPortalType>;
-  };
-
 public:
+  template <typename VisitTopology, typename IncidentTopology>
+  using ExecConnectivityType = typename internal::CellSetPermutationConnectivityChooser<
+    VisitTopology,
+    IncidentTopology,
+    OriginalCellSetType,
+    PermutationArrayHandleType>::ExecConnectivityType;
+
   template <typename Device, typename VisitTopology, typename IncidentTopology>
   struct VTKM_DEPRECATED(1.6, "Use ExecConnectivityType.") ExecutionTypes
   {
-    using ExecObjectType =
-      typename ConnectivityChooser<VisitTopology, IncidentTopology>::ExecConnectivityType;
+    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
   };
-
-  template <typename VisitTopology, typename IncidentTopology>
-  using ExecConnectivityType =
-    typename ConnectivityChooser<VisitTopology, IncidentTopology>::ExecConnectivityType;
 
   VTKM_CONT ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
   PrepareForInput(vtkm::cont::DeviceAdapterId device,
