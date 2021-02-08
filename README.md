@@ -64,7 +64,7 @@ effort.
 VTK-m Requires:
 
   + C++11 Compiler. VTK-m has been confirmed to work with the following
-      + GCC 4.8+
+      + GCC 5.4+
       + Clang 5.0+
       + XCode 5.0+
       + MSVC 2015+
@@ -103,7 +103,7 @@ Optional dependencies are:
 
 VTK-m has been tested on the following configurations:c
   + On Linux
-      + GCC 4.8.5, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
+      + GCC 5.4.0, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
       + CMake 3.12, 3.13, 3.16, 3.17
       + CUDA 9.2, 10.2, 11.0, 11.1 
       + TBB 4.4 U2, 2017 U7
