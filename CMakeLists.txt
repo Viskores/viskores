@@ -12,6 +12,14 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project (VTKm)
 
+# We only allow c++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# When using C++14 support make sure you use the standard C++ extensions rather
+# than compiler-specific versions of the extensions (to preserve portability).
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
@@ -163,9 +171,6 @@ mark_as_advanced(
   )
 
 #-----------------------------------------------------------------------------
-# When using C++11 support make sure you use the standard C++ extensions rather
-# than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS Off)
 
 # Setup default build types
 include(VTKmBuildType)

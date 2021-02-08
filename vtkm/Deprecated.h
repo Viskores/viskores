@@ -62,7 +62,7 @@
 
 #if defined(__NVCC__)
 // Currently nvcc has zero support deprecated attributes
-#elif __cplusplus >= 201402L
+#elif __cplusplus >= 201402L && !defined(VTKM_GCC)
 
 // C++14 and better supports [[deprecated]]
 // Except in these cases:
