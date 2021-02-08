@@ -20,6 +20,7 @@
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/StableSortIndices.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <algorithm>
 #include <cmath>

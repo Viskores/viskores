@@ -18,12 +18,33 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/exec/ConnectivityExtrude.h>
 #include <vtkm/exec/arg/ThreadIndicesExtrude.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
 namespace cont
 {
+
+namespace detail
+{
+
+template <typename VisitTopology, typename IncidentTopology>
+struct CellSetExtrudeConnectivityChooser;
+
+template <>
+struct CellSetExtrudeConnectivityChooser<vtkm::TopologyElementTagCell,
+                                         vtkm::TopologyElementTagPoint>
+{
+  using ExecConnectivityType = vtkm::exec::ConnectivityExtrude;
+};
+
+template <>
+struct CellSetExtrudeConnectivityChooser<vtkm::TopologyElementTagPoint,
+                                         vtkm::TopologyElementTagCell>
+{
+  using ExecConnectivityType = vtkm::exec::ReverseConnectivityExtrude;
+};
+
+} // namespace detail
 
 class VTKM_CONT_EXPORT CellSetExtrude : public CellSet
 {
@@ -79,61 +100,49 @@ public:
 
   bool GetIsPeriodic() const { return this->IsPeriodic; }
 
-  template <typename DeviceAdapter>
-  using ConnectivityP2C = vtkm::exec::ConnectivityExtrude<DeviceAdapter>;
-  template <typename DeviceAdapter>
-  using ConnectivityC2P = vtkm::exec::ReverseConnectivityExtrude<DeviceAdapter>;
+  template <typename VisitTopology, typename IncidentTopology>
+  using ExecConnectivityType =
+    typename detail::CellSetExtrudeConnectivityChooser<VisitTopology,
+                                                       IncidentTopology>::ExecConnectivityType;
 
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct ExecutionTypes;
-
-  template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
+  struct VTKM_DEPRECATED(1.6, "Use ExecConnectivityType.") ExecutionTypes
   {
-    using ExecObjectType = ConnectivityP2C<DeviceAdapter>;
+    using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
   };
 
-  template <typename DeviceAdapter>
-  struct ExecutionTypes<DeviceAdapter, vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
-  {
-    using ExecObjectType = ConnectivityC2P<DeviceAdapter>;
-  };
+  vtkm::exec::ConnectivityExtrude PrepareForInput(vtkm::cont::DeviceAdapterId,
+                                                  vtkm::TopologyElementTagCell,
+                                                  vtkm::TopologyElementTagPoint,
+                                                  vtkm::cont::Token&) const;
 
-  template <typename Device>
-  ConnectivityP2C<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagCell,
-                                          vtkm::TopologyElementTagPoint,
-                                          vtkm::cont::Token&) const;
+  vtkm::exec::ReverseConnectivityExtrude PrepareForInput(vtkm::cont::DeviceAdapterId,
+                                                         vtkm::TopologyElementTagPoint,
+                                                         vtkm::TopologyElementTagCell,
+                                                         vtkm::cont::Token&) const;
 
-  template <typename Device>
-  ConnectivityC2P<Device> PrepareForInput(Device,
-                                          vtkm::TopologyElementTagPoint,
-                                          vtkm::TopologyElementTagCell,
-                                          vtkm::cont::Token&) const;
-
-  template <typename Device>
   VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  ConnectivityP2C<Device> PrepareForInput(Device device,
-                                          vtkm::TopologyElementTagCell visitTopology,
-                                          vtkm::TopologyElementTagPoint incidentTopology) const
+  vtkm::exec::ConnectivityExtrude PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::TopologyElementTagCell visitTopology,
+    vtkm::TopologyElementTagPoint incidentTopology) const
   {
     vtkm::cont::Token token;
     return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
-  template <typename Device>
   VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
-  ConnectivityC2P<Device> PrepareForInput(Device device,
-                                          vtkm::TopologyElementTagPoint visitTopology,
-                                          vtkm::TopologyElementTagCell incidentTopology) const
+  vtkm::exec::ReverseConnectivityExtrude PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::TopologyElementTagPoint visitTopology,
+    vtkm::TopologyElementTagCell incidentTopology) const
   {
     vtkm::cont::Token token;
-    this->PrepareForInput(device, visitTopology, incidentTopology, token);
+    return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
 private:
-  template <typename Device>
-  void BuildReverseConnectivity(Device);
+  void BuildReverseConnectivity();
 
   bool IsPeriodic;
 
@@ -249,7 +258,5 @@ public:
 
 } // diy
 /// @endcond SERIALIZATION
-
-#include <vtkm/cont/CellSetExtrude.hxx>
 
 #endif // vtk_m_cont_CellSetExtrude.h

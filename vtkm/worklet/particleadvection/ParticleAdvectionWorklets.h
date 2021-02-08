@@ -21,7 +21,7 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/Particle.h>
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/particleadvection/IntegratorBase.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 

@@ -25,6 +25,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {

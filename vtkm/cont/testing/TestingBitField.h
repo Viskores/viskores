@@ -17,6 +17,8 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/worklet/WorkletMapField.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>

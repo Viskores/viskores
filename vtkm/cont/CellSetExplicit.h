@@ -145,7 +145,6 @@ class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
     using NumIndicesArrayType =
       vtkm::cont::ArrayHandleDecorator<detail::NumIndicesDecorator, OffsetsArrayType>;
 
-    // Should this be unified with ConnectivityType?
     using ExecConnectivityType =
       vtkm::exec::ConnectivityExplicit<typename ShapesArrayType::ReadPortalType,
                                        typename ConnectivityArrayType::ReadPortalType,
