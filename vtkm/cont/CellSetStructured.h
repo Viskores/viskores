@@ -144,7 +144,7 @@ public:
 
   void PrintSummary(std::ostream& out) const override
   {
-    out << "  StructuredCellSet: " << std::endl;
+    out << "  StructuredCellSet:\n";
     this->Structure.PrintSummary(out);
   }
 
