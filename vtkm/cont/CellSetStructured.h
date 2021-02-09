@@ -102,7 +102,11 @@ public:
   }
 
   template <typename TopologyElement>
-  SchedulingRangeType GetSchedulingRange(TopologyElement) const;
+  SchedulingRangeType GetSchedulingRange(TopologyElement) const
+  {
+    VTKM_IS_TOPOLOGY_ELEMENT_TAG(TopologyElement);
+    return this->Structure.GetSchedulingRange(TopologyElement());
+  }
 
   template <typename VisitTopology, typename IncidentTopology>
   using ExecConnectivityType =
@@ -122,7 +126,10 @@ public:
   ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(vtkm::cont::DeviceAdapterId,
                                                                         VisitTopology,
                                                                         IncidentTopology,
-                                                                        vtkm::cont::Token&) const;
+                                                                        vtkm::cont::Token&) const
+  {
+    return ExecConnectivityType<VisitTopology, IncidentTopology>(this->Structure);
+  }
 
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
@@ -135,7 +142,11 @@ public:
     return this->PrepareForInput(device, visitTopology, incidentTopology, token);
   }
 
-  void PrintSummary(std::ostream& out) const override;
+  void PrintSummary(std::ostream& out) const override
+  {
+    out << "  StructuredCellSet: " << std::endl;
+    this->Structure.PrintSummary(out);
+  }
 
   // Cannot use the default implementation of the destructor because the CUDA compiler
   // will attempt to create it for device, and then it will fail when it tries to call
@@ -230,7 +241,5 @@ public:
 
 } // diy
 /// @endcond SERIALIZATION
-
-#include <vtkm/cont/CellSetStructured.hxx>
 
 #endif //vtk_m_cont_CellSetStructured_h
