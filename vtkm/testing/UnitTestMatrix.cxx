@@ -46,7 +46,6 @@ struct MatrixTest
 
   static void BasicCreation()
   {
-    std::cout << "Basic creation." << std::endl;
     MatrixType matrix(5);
     FOR_ROW_COL(matrix)
     {
@@ -56,7 +55,6 @@ struct MatrixTest
 
   static void BasicAccessors()
   {
-    std::cout << "Basic accessors." << std::endl;
     MatrixType matrix;
     MatrixType value = TestValue(0, MatrixType());
     FOR_ROW_COL(matrix) { matrix[row][col] = ComponentType(value(row, col) * 2); }
@@ -87,7 +85,6 @@ struct MatrixTest
     const MatrixType const_matrix = TestValue(0, MatrixType());
     MatrixType matrix;
 
-    std::cout << "Access by row or column" << std::endl;
     FOR_ROW_COL(matrix)
     {
       RowType rowvec = vtkm::MatrixGetRow(const_matrix, row);
@@ -96,7 +93,6 @@ struct MatrixTest
       VTKM_TEST_ASSERT(test_equal(columnvec[row], const_matrix(row, col)), "Bad get col.");
     }
 
-    std::cout << "Set a row." << std::endl;
     for (vtkm::IdComponent row = 0; row < NUM_ROWS; row++)
     {
       RowType rowvec = vtkm::MatrixGetRow(const_matrix, NUM_ROWS - row - 1);
@@ -108,7 +104,6 @@ struct MatrixTest
                        "Rows not set right.");
     }
 
-    std::cout << "Set a column." << std::endl;
     for (vtkm::IdComponent col = 0; col < NUM_COLS; col++)
     {
       ColumnType colvec = vtkm::MatrixGetColumn(const_matrix, NUM_COLS - col - 1);
@@ -123,7 +118,6 @@ struct MatrixTest
 
   static void Multiply()
   {
-    std::cout << "Try multiply." << std::endl;
     const MatrixType leftFactor = TestValue(0, MatrixType());
     vtkm::Matrix<T, NUM_COLS, 4> rightFactor = TestValue(1, vtkm::Matrix<T, NUM_COLS, 4>());
 
@@ -137,7 +131,6 @@ struct MatrixTest
                        "Matrix multiple wrong.");
     }
 
-    std::cout << "Vector multiply." << std::endl;
     MatrixType matrixFactor;
     vtkm::Vec<T, NUM_ROWS> leftVector(2);
     vtkm::Vec<T, NUM_COLS> rightVector;
@@ -165,8 +158,6 @@ struct MatrixTest
 
   static void Identity()
   {
-    std::cout << "Check identity" << std::endl;
-
     MatrixType originalMatrix = TestValue(0, MatrixType());
 
     vtkm::Matrix<T, NUM_COLS, NUM_COLS> identityMatrix;
@@ -179,8 +170,6 @@ struct MatrixTest
 
   static void Transpose()
   {
-    std::cout << "Check transpose" << std::endl;
-
     MatrixType originalMatrix = TestValue(0, MatrixType());
 
     vtkm::Matrix<T, NUM_COLS, NUM_ROWS> transMatrix = vtkm::MatrixTranspose(originalMatrix);
@@ -193,8 +182,6 @@ struct MatrixTest
 
   static void Run()
   {
-    std::cout << "-- " << NUM_ROWS << " x " << NUM_COLS << std::endl;
-
     BasicCreation();
     BasicAccessors();
     RowColAccessors();
@@ -365,15 +352,12 @@ struct SquareMatrixTest
 
   static void CheckMatrixSize()
   {
-    std::cout << "Check reported matrix size." << std::endl;
     VTKM_TEST_ASSERT(MatrixType::NUM_ROWS == SIZE, "Matrix has wrong size.");
     VTKM_TEST_ASSERT(MatrixType::NUM_COLUMNS == SIZE, "Matrix has wrong size.");
   }
 
   static void LUPFactor()
   {
-    std::cout << "Test LUP-factorization" << std::endl;
-
     MatrixType A;
     NonSingularMatrix(A);
     const MatrixType originalMatrix = A;
@@ -439,8 +423,6 @@ struct SquareMatrixTest
 
   static void SolveLinearSystem()
   {
-    std::cout << "Solve a linear system" << std::endl;
-
     MatrixType A;
     vtkm::Vec<T, SIZE> b;
     NonSingularMatrix(A);
@@ -461,26 +443,18 @@ struct SquareMatrixTest
     MatrixType singularMatrix;
     SingularMatrix(singularMatrix);
 
-    // On some some compilers in release mode this creation of a matrix and
-    // than solving the linear system breaks if we don't first print the values.
-    // I believe this somehow was tickling a compiler optimization bug.
-    // But for now we will live with a bit more console output to work around
-    // the issue
-    PrintMatrix(singularMatrix);
     x = vtkm::SolveLinearSystem(singularMatrix, b, valid);
-    //
-    // We need to print the results of the SolveLinearSystem to screen to
-    // make sure the compiler doesn't optimize out the operation which
-    // previously was happening
-    std::cout << "Result: " << x << std::endl;
+    for (vtkm::IdComponent i = 0; i < SIZE; ++i)
+    {
+      VTKM_TEST_ASSERT(vtkm::IsNan(x[i]),
+                       "Expected values of solution to singular matrix to be NaNs");
+    }
 
     VTKM_TEST_ASSERT(!valid, "Expected matrix to be declared singular.");
   }
 
   static void Invert()
   {
-    std::cout << "Invert a matrix." << std::endl;
-
     MatrixType A;
     NonSingularMatrix(A);
     bool valid;
@@ -502,8 +476,6 @@ struct SquareMatrixTest
 
   static void Determinant()
   {
-    std::cout << "Compute a determinant." << std::endl;
-
     MatrixType A;
     NonSingularMatrix(A);
 
@@ -523,8 +495,6 @@ struct SquareMatrixTest
 
   static void Run()
   {
-    std::cout << "-- " << SIZE << " x " << SIZE << std::endl;
-
     CheckMatrixSize();
     LUPFactor();
     SolveLinearSystem();
@@ -595,7 +565,6 @@ void TestMatrices()
   //  vtkm::testing::Testing::TryTypes(MatrixTestFunctor(),
   //                                   vtkm::TypeListScalarAll());
 
-  std::cout << "****** Square tests" << std::endl;
   vtkm::testing::Testing::TryTypes(SquareMatrixTestFunctor(), vtkm::TypeListFieldScalar());
 
   //  std::cout << "***** Vector multiply tests" << std::endl;

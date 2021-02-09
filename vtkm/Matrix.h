@@ -298,9 +298,23 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Siz
                                                              vtkm::IdComponent topCornerIndex)
 {
   // Compute values for upper triangle on row topCornerIndex
-  for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
+  if (A(topCornerIndex, topCornerIndex) == 0)
   {
-    A(topCornerIndex, colIndex) /= A(topCornerIndex, topCornerIndex);
+    for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
+    {
+      A(topCornerIndex, colIndex) = std::numeric_limits<T>::quiet_NaN();
+    }
+  }
+  else
+  {
+    // Let's make the reciprocal approximation here.
+    // Doesn't make things much fast for small 'Size',
+    // but definitely improves performance as 'Size' gets large.
+    T rAdiag = 1 / A(topCornerIndex, topCornerIndex);
+    for (vtkm::IdComponent colIndex = topCornerIndex + 1; colIndex < Size; colIndex++)
+    {
+      A(topCornerIndex, colIndex) *= rAdiag;
+    }
   }
 
   // Update the rest of the matrix for calculations on subsequent rows
@@ -314,7 +328,7 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Siz
 }
 
 /// Performs an LUP-factorization on the given matrix using Crout's method. The
-/// LU-factorization takes a matrix A and decomposes it into a lower triangular
+/// LU-factorization takes a matrix A  and decomposes it into a lower triangular
 /// matrix L and upper triangular matrix U such that A = LU. The
 /// LUP-factorization also allows permutation of A, which makes the
 /// decomposition always possible so long as A is not singular. In addition to
@@ -389,7 +403,14 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> MatrixLUPSolve(
     {
       y[rowIndex] -= LU(rowIndex, colIndex) * y[colIndex];
     }
-    y[rowIndex] /= LU(rowIndex, rowIndex);
+    if (LU(rowIndex, rowIndex) == 0)
+    {
+      y[rowIndex] = std::numeric_limits<T>::quiet_NaN();
+    }
+    else
+    {
+      y[rowIndex] /= LU(rowIndex, rowIndex);
+    }
   }
 
   // Now that we have y, we can easily solve Ux = y for x.
