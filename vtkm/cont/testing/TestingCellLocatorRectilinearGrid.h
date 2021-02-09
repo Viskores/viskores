@@ -29,11 +29,10 @@ class LocatorWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using AxisPortalType = typename AxisHandle::ReadPortalType;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using RectilinearPortalType =
-    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
   LocatorWorklet(vtkm::Bounds& bounds,
                  vtkm::Id3& dims,

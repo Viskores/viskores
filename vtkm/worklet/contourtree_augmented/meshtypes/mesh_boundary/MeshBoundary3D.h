@@ -73,25 +73,26 @@ namespace worklet
 namespace contourtree_augmented
 {
 
-template <typename DeviceTag>
-class MeshBoundary3D : public vtkm::cont::ExecutionObjectBase
+class MeshBoundary3D
 {
 public:
   // Sort indicies types
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceTag>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   VTKM_EXEC_CONT
   MeshBoundary3D()
-    : MeshStructure(data_set_mesh::MeshStructure3D<DeviceTag>(vtkm::Id3{ 0, 0, 0 }))
+    : MeshStructure(data_set_mesh::MeshStructure3D(vtkm::Id3{ 0, 0, 0 }))
   {
   }
 
   VTKM_CONT
-  MeshBoundary3D(vtkm::Id3 meshSize, const IdArrayType& inSortIndices, vtkm::cont::Token& token)
-    : MeshStructure(data_set_mesh::MeshStructure3D<DeviceTag>(meshSize))
+  MeshBoundary3D(vtkm::Id3 meshSize,
+                 const IdArrayType& inSortIndices,
+                 vtkm::cont::DeviceAdapterId device,
+                 vtkm::cont::Token& token)
+    : MeshStructure(data_set_mesh::MeshStructure3D(meshSize))
   {
-    this->SortIndicesPortal = inSortIndices.PrepareForInput(DeviceTag(), token);
+    this->SortIndicesPortal = inSortIndices.PrepareForInput(device, token);
   }
 
   VTKM_EXEC_CONT
@@ -259,14 +260,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  const data_set_mesh::MeshStructure3D<DeviceTag>& GetMeshStructure() const
-  {
-    return this->MeshStructure;
-  }
+  const data_set_mesh::MeshStructure3D& GetMeshStructure() const { return this->MeshStructure; }
 
 protected:
   // 3D Mesh size parameters
-  data_set_mesh::MeshStructure3D<DeviceTag> MeshStructure;
+  data_set_mesh::MeshStructure3D MeshStructure;
   SortIndicesPortalType SortIndicesPortal;
 };
 
@@ -281,11 +279,10 @@ public:
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  MeshBoundary3D<DeviceTag> PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
+  VTKM_CONT MeshBoundary3D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                               vtkm::cont::Token& token) const
   {
-    return MeshBoundary3D<DeviceTag>(this->MeshSize, this->SortIndices, token);
+    return MeshBoundary3D(this->MeshSize, this->SortIndices, device, token);
   }
 
 protected:

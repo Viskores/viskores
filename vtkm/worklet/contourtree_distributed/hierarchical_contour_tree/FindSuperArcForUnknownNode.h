@@ -66,18 +66,17 @@ namespace contourtree_distributed
 
 
 /// Device implementation of FindSuperArcForUnknownNode for the HierarchicalContourTree
-template <typename FieldType, typename DeviceTag>
+template <typename FieldType>
 class FindSuperArcForUnknownNodeDeviceData
 {
 public:
   using IndicesPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceTag>::PortalConst;
-  using DataPortalType =
-    typename vtkm::cont::ArrayHandle<FieldType>::template ExecutionTypes<DeviceTag>::PortalConst;
+    typename vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
+  using DataPortalType = typename vtkm::cont::ArrayHandle<FieldType>::ReadPortalType;
 
   VTKM_CONT
   FindSuperArcForUnknownNodeDeviceData(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token,
     const vtkm::worklet::contourtree_augmented::IdArrayType& superparents,
     const vtkm::worklet::contourtree_augmented::IdArrayType& supernodes,
@@ -93,17 +92,17 @@ public:
   {
     // Prepare the arrays for input and store the array portals
     // so that they can be used inside a workelt
-    this->Superparents = superparents.PrepareForInput(DeviceTag(), token);
-    this->Supernodes = supernodes.PrepareForInput(DeviceTag(), token);
-    this->Superarcs = superarcs.PrepareForInput(DeviceTag(), token);
-    this->Superchildren = superchildren.PrepareForInput(DeviceTag(), token);
-    this->WhichRound = whichRound.PrepareForInput(DeviceTag(), token);
-    this->WhichIteration = whichIteration.PrepareForInput(DeviceTag(), token);
-    this->Hyperparents = hyperparents.PrepareForInput(DeviceTag(), token);
-    this->Hypernodes = hypernodes.PrepareForInput(DeviceTag(), token);
-    this->Hyperarcs = hyperarcs.PrepareForInput(DeviceTag(), token);
-    this->RegularNodeGlobalIds = regularNodeGlobalIds.PrepareForInput(DeviceTag(), token);
-    this->DataValues = dataValues.PrepareForInput(DeviceTag(), token);
+    this->Superparents = superparents.PrepareForInput(device, token);
+    this->Supernodes = supernodes.PrepareForInput(device, token);
+    this->Superarcs = superarcs.PrepareForInput(device, token);
+    this->Superchildren = superchildren.PrepareForInput(device, token);
+    this->WhichRound = whichRound.PrepareForInput(device, token);
+    this->WhichIteration = whichIteration.PrepareForInput(device, token);
+    this->Hyperparents = hyperparents.PrepareForInput(device, token);
+    this->Hypernodes = hypernodes.PrepareForInput(device, token);
+    this->Hyperarcs = hyperarcs.PrepareForInput(device, token);
+    this->RegularNodeGlobalIds = regularNodeGlobalIds.PrepareForInput(device, token);
+    this->DataValues = dataValues.PrepareForInput(device, token);
   }
 
   /// routine to find the superarc to which a given global Id/value pair maps
@@ -457,24 +456,23 @@ public:
   {
   }
 
-  VTKM_CONT
-  template <typename DeviceTag>
-  FindSuperArcForUnknownNodeDeviceData<FieldType, DeviceTag> PrepareForExecution(
-    DeviceTag,
+  VTKM_CONT FindSuperArcForUnknownNodeDeviceData<FieldType> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token) const
   {
-    return FindSuperArcForUnknownNodeDeviceData<FieldType, DeviceTag>(token,
-                                                                      this->Superparents,
-                                                                      this->Supernodes,
-                                                                      this->Superarcs,
-                                                                      this->Superchildren,
-                                                                      this->WhichRound,
-                                                                      this->WhichIteration,
-                                                                      this->Hyperparents,
-                                                                      this->Hypernodes,
-                                                                      this->Hyperarcs,
-                                                                      this->RegularNodeGlobalIds,
-                                                                      this->DataValues);
+    return FindSuperArcForUnknownNodeDeviceData<FieldType>(device,
+                                                           token,
+                                                           this->Superparents,
+                                                           this->Supernodes,
+                                                           this->Superarcs,
+                                                           this->Superchildren,
+                                                           this->WhichRound,
+                                                           this->WhichIteration,
+                                                           this->Hyperparents,
+                                                           this->Hypernodes,
+                                                           this->Hyperarcs,
+                                                           this->RegularNodeGlobalIds,
+                                                           this->DataValues);
   }
 
 private:

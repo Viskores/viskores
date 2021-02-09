@@ -17,6 +17,8 @@
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/worklet/WorkletMapField.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -520,7 +522,7 @@ struct TestingBitField
 
   struct ArrayHandleBitFieldChecker : vtkm::exec::FunctorBase
   {
-    using PortalType = typename ArrayHandleBitField::ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalType = vtkm::cont::ArrayHandleBitField::WritePortalType;
 
     PortalType Portal;
     bool InvertReference;

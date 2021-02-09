@@ -70,17 +70,15 @@ namespace bract_maker
 
 
 /// device implementation of the comparator used for sorting hyperarcs
-template <typename DeviceAdapter>
 class BoundaryTreeNodeComparatorImpl
 {
 public:
-  using IdArrayPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleMultiplexer here
-  using SortIndexPortalType = typename vtkm::cont::ArrayHandleMultiplexer<
-    vtkm::cont::ArrayHandle<vtkm::Id>,
-    vtkm::cont::ArrayHandleIndex>::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  //typename vtkm::cont::ArrayHandleVirtual<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdArrayPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
+  // The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array.
+  // That is why we use a ArrayHandleMultiplexer here.
+  using SortIndexPortalType =
+    vtkm::cont::ArrayHandleMultiplexer<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                       vtkm::cont::ArrayHandleIndex>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
@@ -134,14 +132,11 @@ public:
   { // constructor
   } // constructor
 
-  template <typename DeviceAdapter>
-  VTKM_CONT BoundaryTreeNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT BoundaryTreeNodeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                               vtkm::cont::Token& token) const
   {
-    return BoundaryTreeNodeComparatorImpl<DeviceAdapter>(
-      this->RegularId.PrepareForInput(device, token),
-      this->MeshSortIndex.PrepareForInput(device, token));
+    return BoundaryTreeNodeComparatorImpl(this->RegularId.PrepareForInput(device, token),
+                                          this->MeshSortIndex.PrepareForInput(device, token));
   }
 
 private:

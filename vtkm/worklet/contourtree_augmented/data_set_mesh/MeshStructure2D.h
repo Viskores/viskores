@@ -65,7 +65,6 @@ namespace data_set_mesh
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
 class MeshStructure2D
 {
 public:

@@ -417,11 +417,8 @@ private:
   class ScanExclusiveOperator
   {
   private:
-    using ArrayPortalIn =
-      typename ArrayHandle<T,
-                           StorageIn>::template ExecutionTypes<DeviceAdapterTagKokkos>::PortalConst;
-    using ArrayPortalOut =
-      typename ArrayHandle<T, StorageOut>::template ExecutionTypes<DeviceAdapterTagKokkos>::Portal;
+    using ArrayPortalIn = typename ArrayHandle<T, StorageIn>::ReadPortalType;
+    using ArrayPortalOut = typename ArrayHandle<T, StorageOut>::WritePortalType;
 
   public:
     KOKKOS_INLINE_FUNCTION
@@ -547,11 +544,8 @@ private:
   class ScanInclusiveOperator
   {
   private:
-    using ArrayPortalIn =
-      typename ArrayHandle<T,
-                           StorageIn>::template ExecutionTypes<DeviceAdapterTagKokkos>::PortalConst;
-    using ArrayPortalOut =
-      typename ArrayHandle<T, StorageOut>::template ExecutionTypes<DeviceAdapterTagKokkos>::Portal;
+    using ArrayPortalIn = typename ArrayHandle<T, StorageIn>::ReadPortalType;
+    using ArrayPortalOut = typename ArrayHandle<T, StorageOut>::WritePortalType;
 
   public:
     KOKKOS_INLINE_FUNCTION

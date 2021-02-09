@@ -272,14 +272,11 @@ private:
 
   using VisitType = vtkm::TopologyElementTagCell;
   using IncidentType = vtkm::TopologyElementTagPoint;
-  using NodePortal = typename NodeArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using CellIdPortal =
-    typename CellIdArrayHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using CellSetPortal = typename CellSetType::
-    template ExecutionTypes<DeviceAdapter, VisitType, IncidentType>::ExecObjectType;
-  using CoordsPortal =
-    typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using NodePortal = typename NodeArrayHandle::ReadPortalType;
+  using CellIdPortal = typename CellIdArrayHandle::ReadPortalType;
+  using CellSetPortal =
+    typename CellSetType::template ExecConnectivityType<VisitType, IncidentType>;
+  using CoordsPortal = typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
 
   NodePortal Nodes;
   CellIdPortal CellIds;

@@ -40,8 +40,7 @@ namespace
 
 struct TestExecObject
 {
-  using PortalType =
-    vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<vtkm::cont::DeviceAdapterTagCuda>::Portal;
+  using PortalType = vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType;
 
   VTKM_EXEC_CONT
   TestExecObject(PortalType portal)

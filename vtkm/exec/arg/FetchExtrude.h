@@ -30,9 +30,9 @@ template <typename FetchType, typename ExecObjectType>
 struct Fetch<FetchType, vtkm::exec::arg::AspectTagIncidentElementIndices, ExecObjectType>
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device, typename ScatterAndMaskMode>
+  template <typename ScatterAndMaskMode>
   VTKM_EXEC auto Load(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude<Device>,
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ConnectivityExtrude,
                                                     ScatterAndMaskMode>& indices,
     const ExecObjectType&) const -> vtkm::Vec<vtkm::Id, 6>
   {
@@ -135,9 +135,9 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename Device, typename ScatterAndMaskMode>
+  template <typename ScatterAndMaskMode>
   VTKM_EXEC auto Load(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude<Device>,
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<vtkm::exec::ReverseConnectivityExtrude,
                                                     ScatterAndMaskMode>& indices,
     const vtkm::exec::ArrayPortalExtrude<T>& points)
     -> decltype(points.Get(indices.GetIndexLogical()))

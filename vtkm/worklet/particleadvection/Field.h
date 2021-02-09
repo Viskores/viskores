@@ -13,8 +13,10 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/VecVariable.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/exec/CellInterpolate.h>
 
 namespace vtkm
@@ -38,16 +40,17 @@ public:
                         vtkm::VecVariable<vtkm::Vec3f, 2>& value) const = 0;
 };
 
-template <typename DeviceAdapter, typename FieldArrayType>
+template <typename FieldArrayType>
 class ExecutionVelocityField : public vtkm::worklet::particleadvection::ExecutionField
 {
 public:
-  using FieldPortalType =
-    typename FieldArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using FieldPortalType = typename FieldArrayType::ReadPortalType;
 
   VTKM_CONT
-  ExecutionVelocityField(FieldArrayType velocityValues, vtkm::cont::Token& token)
-    : VelocityValues(velocityValues.PrepareForInput(DeviceAdapter(), token))
+  ExecutionVelocityField(FieldArrayType velocityValues,
+                         vtkm::cont::DeviceAdapterId device,
+                         vtkm::cont::Token& token)
+    : VelocityValues(velocityValues.PrepareForInput(device, token))
   {
   }
 
@@ -69,19 +72,19 @@ private:
   FieldPortalType VelocityValues;
 };
 
-template <typename DeviceAdapter, typename FieldArrayType>
+template <typename FieldArrayType>
 class ExecutionElectroMagneticField : public vtkm::worklet::particleadvection::ExecutionField
 {
 public:
-  using FieldPortalType =
-    typename FieldArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using FieldPortalType = typename FieldArrayType::ReadPortalType;
 
   VTKM_CONT
   ExecutionElectroMagneticField(FieldArrayType electricValues,
                                 FieldArrayType magneticValues,
+                                vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
-    : ElectricValues(electricValues.PrepareForInput(DeviceAdapter(), token))
-    , MagneticValues(magneticValues.PrepareForInput(DeviceAdapter(), token))
+    : ElectricValues(electricValues.PrepareForInput(device, token))
+    , MagneticValues(magneticValues.PrepareForInput(device, token))
   {
   }
 
@@ -131,32 +134,14 @@ public:
   {
   }
 
-  struct VelocityFieldFunctor
-  {
-    template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(DeviceAdapter,
-                              FieldArrayType fieldValues,
-                              HandleType& execHandle,
-                              vtkm::cont::Token& token) const
-    {
-      using ExecutionType = ExecutionVelocityField<DeviceAdapter, FieldArrayType>;
-      ExecutionType* execObject = new ExecutionType(fieldValues, token);
-      execHandle.Reset(execObject);
-      return true;
-    }
-  };
-
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                             vtkm::cont::Token& token) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(
-      deviceId, VelocityFieldFunctor(), this->FieldValues, this->ExecHandle, token);
-    if (!success)
-    {
-      throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
-    }
-    return this->ExecHandle.PrepareForExecution(deviceId, token);
+    using ExecutionType = ExecutionVelocityField<FieldArrayType>;
+    ExecutionType* execObject = new ExecutionType(this->FieldValues, device, token);
+    this->ExecHandle.Reset(execObject);
+    return this->ExecHandle.PrepareForExecution(device, token);
   }
 
 private:
@@ -175,37 +160,15 @@ public:
   {
   }
 
-  struct ElectroMagneticFieldFunctor
-  {
-    template <typename DeviceAdapter>
-    VTKM_CONT bool operator()(DeviceAdapter,
-                              FieldArrayType electricField,
-                              FieldArrayType magneticField,
-                              HandleType& execHandle,
-                              vtkm::cont::Token& token) const
-    {
-      using ExecutionType = ExecutionElectroMagneticField<DeviceAdapter, FieldArrayType>;
-      ExecutionType* execObject = new ExecutionType(electricField, magneticField, token);
-      execHandle.Reset(execObject);
-      return true;
-    }
-  };
-
   VTKM_CONT
-  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId deviceId,
+  const ExecutionField* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                             vtkm::cont::Token& token) const override
   {
-    const bool success = vtkm::cont::TryExecuteOnDevice(deviceId,
-                                                        ElectroMagneticFieldFunctor(),
-                                                        this->ElectricField,
-                                                        this->MagneticField,
-                                                        this->ExecHandle,
-                                                        token);
-    if (!success)
-    {
-      throwFailedRuntimeDeviceTransfer("SingleCellTypeInterpolationHelper", deviceId);
-    }
-    return this->ExecHandle.PrepareForExecution(deviceId, token);
+    using ExecutionType = ExecutionElectroMagneticField<FieldArrayType>;
+    ExecutionType* execObject =
+      new ExecutionType(this->ElectricField, this->MagneticField, device, token);
+    this->ExecHandle.Reset(execObject);
+    return this->ExecHandle.PrepareForExecution(device, token);
   }
 
 private:

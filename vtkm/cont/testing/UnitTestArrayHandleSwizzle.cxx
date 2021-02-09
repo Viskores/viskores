@@ -146,7 +146,7 @@ struct SwizzleTests
     bool operator()(DeviceTag, SwizzleHandleType& swizzle) const
     {
       vtkm::cont::Token token;
-      using Portal = typename SwizzleHandleType::template ExecutionTypes<DeviceTag>::Portal;
+      using Portal = typename SwizzleHandleType::WritePortalType;
       WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag(), token));
       Algo::Schedule(functor, swizzle.GetNumberOfValues());
       return true;

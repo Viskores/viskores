@@ -124,8 +124,8 @@ class LinearBVHBuilder::GatherVecCast : public vtkm::worklet::WorkletMapField
 private:
   using Vec4IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id4>;
   using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec4i_32>;
-  using PortalConst = typename Vec4IdArrayHandle::ExecutionTypes<DeviceAdapterTag>::PortalConst;
-  using Portal = typename Vec4IntArrayHandle::ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PortalConst = typename Vec4IdArrayHandle::ReadPortalType;
+  using Portal = typename Vec4IntArrayHandle::WritePortalType;
 
 private:
   PortalConst InputPortal;

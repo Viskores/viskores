@@ -70,29 +70,23 @@ namespace contourtree_augmented
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
-class MeshStructureFreudenthal3D : public data_set_mesh::MeshStructure3D<DeviceAdapter>
+class MeshStructureFreudenthal3D : public data_set_mesh::MeshStructure3D
 {
 public:
-  using SortIndicesPortalType =
-    typename IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using SortIndicesPortalType = IdArrayType::ReadPortalType;
 
   using EdgeBoundaryDetectionMasksPortalType =
-    typename m3d_freudenthal::EdgeBoundaryDetectionMasksType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_freudenthal::EdgeBoundaryDetectionMasksType::ReadPortalType;
 
-  using NeighbourOffsetsPortalType =
-    typename m3d_freudenthal::NeighbourOffsetsType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using NeighbourOffsetsPortalType = m3d_freudenthal::NeighbourOffsetsType::ReadPortalType;
 
   using LinkComponentCaseTablePortalType =
-    typename m3d_freudenthal::LinkComponentCaseTableType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+    m3d_freudenthal::LinkComponentCaseTableType::ReadPortalType;
 
   // Default constructor needed to make the CUDA build work
   VTKM_EXEC_CONT
   MeshStructureFreudenthal3D()
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>()
+    : data_set_mesh::MeshStructure3D()
     , GetMax(false)
     , NumIncidentEdge(m3d_freudenthal::N_INCIDENT_EDGES)
   {
@@ -108,22 +102,22 @@ public:
     const m3d_freudenthal::EdgeBoundaryDetectionMasksType& edgeBoundaryDetectionMasksIn,
     const m3d_freudenthal::NeighbourOffsetsType& neighbourOffsetsIn,
     const m3d_freudenthal::LinkComponentCaseTableType& linkComponentCaseTableIn,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
-    : data_set_mesh::MeshStructure3D<DeviceAdapter>(meshSize)
+    : data_set_mesh::MeshStructure3D(meshSize)
     , GetMax(getmax)
     , NumIncidentEdge(nincident_edges)
   {
-    this->SortIndicesPortal = sortIndices.PrepareForInput(DeviceAdapter(), token);
-    this->SortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
+    this->SortIndicesPortal = sortIndices.PrepareForInput(device, token);
+    this->SortOrderPortal = sortOrder.PrepareForInput(device, token);
     this->EdgeBoundaryDetectionMasksPortal =
-      edgeBoundaryDetectionMasksIn.PrepareForInput(DeviceAdapter(), token);
-    this->NeighbourOffsetsPortal = neighbourOffsetsIn.PrepareForInput(DeviceAdapter(), token);
-    this->LinkComponentCaseTablePortal =
-      linkComponentCaseTableIn.PrepareForInput(DeviceAdapter(), token);
+      edgeBoundaryDetectionMasksIn.PrepareForInput(device, token);
+    this->NeighbourOffsetsPortal = neighbourOffsetsIn.PrepareForInput(device, token);
+    this->LinkComponentCaseTablePortal = linkComponentCaseTableIn.PrepareForInput(device, token);
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m3d_freudenthal::N_INCIDENT_EDGES; }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return m3d_freudenthal::N_INCIDENT_EDGES; }
 
 
   VTKM_EXEC

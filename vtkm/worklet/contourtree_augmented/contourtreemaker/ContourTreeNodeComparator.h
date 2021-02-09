@@ -68,12 +68,10 @@ namespace contourtree_maker_inc
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class ContourTreeNodeComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   IdPortalType SuperparentsPortal;
   IdPortalType SuperarcsPortal;
@@ -82,10 +80,11 @@ public:
   VTKM_CONT
   ContourTreeNodeComparatorImpl(const IdArrayType& superparents,
                                 const IdArrayType& superarcs,
+                                vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
   {
-    this->SuperparentsPortal = superparents.PrepareForInput(DeviceAdapter(), token);
-    this->SuperarcsPortal = superarcs.PrepareForInput(DeviceAdapter(), token);
+    this->SuperparentsPortal = superparents.PrepareForInput(device, token);
+    this->SuperarcsPortal = superarcs.PrepareForInput(device, token);
   }
 
   // () operator - gets called to do comparison
@@ -123,12 +122,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT ContourTreeNodeComparatorImpl<DeviceAdapter> PrepareForExecution(
-    DeviceAdapter,
-    vtkm::cont::Token& token)
+  VTKM_CONT ContourTreeNodeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                              vtkm::cont::Token& token)
   {
-    return ContourTreeNodeComparatorImpl<DeviceAdapter>(this->Superparents, this->Superarcs, token);
+    return ContourTreeNodeComparatorImpl(this->Superparents, this->Superarcs, device, token);
   }
 
 private:

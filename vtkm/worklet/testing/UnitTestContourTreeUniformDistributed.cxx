@@ -58,19 +58,6 @@
 namespace
 {
 
-// Functor needed so we can discover the FieldType and DeviceAdapter template parameters to call MergeWith
-struct MergeContourTreeMeshFunctor
-{
-  template <typename DeviceAdapterTag, typename FieldType>
-  bool operator()(DeviceAdapterTag,
-                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& in,
-                  vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& out) const
-  {
-    out.template MergeWith<DeviceAdapterTag>(in);
-    return true;
-  }
-};
-
 template <typename FieldType>
 void TestContourTreeMeshCombine(const std::string& mesh1_filename,
                                 const std::string& mesh2_filename,
@@ -80,7 +67,7 @@ void TestContourTreeMeshCombine(const std::string& mesh1_filename,
   contourTreeMesh1.Load(mesh1_filename.c_str());
   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMesh2;
   contourTreeMesh2.Load(mesh2_filename.c_str());
-  vtkm::cont::TryExecute(MergeContourTreeMeshFunctor{}, contourTreeMesh1, contourTreeMesh2);
+  contourTreeMesh2.MergeWith(contourTreeMesh1);
   // Result is written to contourTreeMesh2
   vtkm::worklet::contourtree_augmented::ContourTreeMesh<FieldType> combinedContourTreeMesh;
   combinedContourTreeMesh.Load(combined_filename.c_str());

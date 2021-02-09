@@ -34,7 +34,7 @@ class WaterTightLeafIntersector
 {
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:
@@ -87,7 +87,7 @@ class MollerTriLeafIntersector
   //protected:
 public:
   using Id4Handle = vtkm::cont::ArrayHandle<vtkm::Id4>;
-  using Id4ArrayPortal = typename Id4Handle::ExecutionTypes<Device>::PortalConst;
+  using Id4ArrayPortal = typename Id4Handle::ReadPortalType;
   Id4ArrayPortal Triangles;
 
 public:

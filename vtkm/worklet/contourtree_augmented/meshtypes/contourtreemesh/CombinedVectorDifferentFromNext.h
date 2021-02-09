@@ -76,27 +76,24 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-/// transform functor to compute if element i is different from element i+1 in an arrays. The resulting array should hence
-/// be 1 element shorter than the input arrays
-template <typename DeviceAdapter>
-class CombinedVectorDifferentFromNext
+/// transform functor to compute if element i is different from element i+1 in an arrays. The
+/// resulting array should hence be 1 element shorter than the input arrays
+class CombinedVectorDifferentFromNextExecObj
 {
 public:
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
 
   VTKM_EXEC_CONT
-  CombinedVectorDifferentFromNext() {}
+  CombinedVectorDifferentFromNextExecObj() {}
 
   VTKM_CONT
-  CombinedVectorDifferentFromNext(const IdArrayType& thisGlobalMeshIndex,
-                                  const IdArrayType& otherGlobalMeshIndex,
-                                  const IdArrayType& sortOrder,
-                                  vtkm::cont::Token& token)
+  CombinedVectorDifferentFromNextExecObj(const IdPortalType& thisGlobalMeshIndex,
+                                         const IdPortalType& otherGlobalMeshIndex,
+                                         const IdPortalType& sortOrder)
+    : OverallSortOrderPortal(sortOrder)
+    , ThisGlobalMeshIndex(thisGlobalMeshIndex)
+    , OtherGlobalMeshIndex(otherGlobalMeshIndex)
   {
-    this->OverallSortOrderPortal = sortOrder.PrepareForInput(DeviceAdapter(), token);
-    this->ThisGlobalMeshIndex = thisGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
-    this->OtherGlobalMeshIndex = otherGlobalMeshIndex.PrepareForInput(DeviceAdapter(), token);
   }
 
   VTKM_EXEC_CONT
@@ -119,6 +116,41 @@ private:
   IdPortalType OverallSortOrderPortal;
   IdPortalType ThisGlobalMeshIndex;
   IdPortalType OtherGlobalMeshIndex;
+};
+
+class CombinedVectorDifferentFromNext : public vtkm::cont::ExecutionAndControlObjectBase
+{
+  IdArrayType OverallSortOrder;
+  IdArrayType ThisGlobalMeshIndex;
+  IdArrayType OtherGlobalMeshIndex;
+
+public:
+  CombinedVectorDifferentFromNext() = default;
+
+  CombinedVectorDifferentFromNext(const IdArrayType& thisGlobalMeshIndex,
+                                  const IdArrayType& otherGlobalMeshIndex,
+                                  const IdArrayType& sortOrder)
+    : OverallSortOrder(sortOrder)
+    , ThisGlobalMeshIndex(thisGlobalMeshIndex)
+    , OtherGlobalMeshIndex(otherGlobalMeshIndex)
+  {
+  }
+
+  VTKM_CONT CombinedVectorDifferentFromNextExecObj
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  {
+    return CombinedVectorDifferentFromNextExecObj(
+      this->ThisGlobalMeshIndex.PrepareForInput(device, token),
+      this->OtherGlobalMeshIndex.PrepareForInput(device, token),
+      this->OverallSortOrder.PrepareForInput(device, token));
+  }
+
+  VTKM_CONT CombinedVectorDifferentFromNextExecObj PrepareForControl() const
+  {
+    return CombinedVectorDifferentFromNextExecObj(this->ThisGlobalMeshIndex.ReadPortal(),
+                                                  this->OtherGlobalMeshIndex.ReadPortal(),
+                                                  this->OverallSortOrder.ReadPortal());
+  }
 };
 
 

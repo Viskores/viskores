@@ -91,9 +91,8 @@ public:
   // mesh depended helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
 
-  template <typename DeviceTag>
-  MeshStructureMarchingCubes<DeviceTag> PrepareForExecution(DeviceTag,
-                                                            vtkm::cont::Token& token) const;
+  MeshStructureMarchingCubes PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                 vtkm::cont::Token& token) const;
 
   DataSetMeshTriangulation3DMarchingCubes(vtkm::Id3 meshSize);
 
@@ -161,22 +160,22 @@ inline void DataSetMeshTriangulation3DMarchingCubes::SetPrepareForExecutionBehav
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename DeviceTag>
-inline MeshStructureMarchingCubes<DeviceTag>
-DataSetMeshTriangulation3DMarchingCubes::PrepareForExecution(DeviceTag,
-                                                             vtkm::cont::Token& token) const
+inline MeshStructureMarchingCubes DataSetMeshTriangulation3DMarchingCubes::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
-  return MeshStructureMarchingCubes<DeviceTag>(this->MeshSize,
-                                               this->UseGetMax,
-                                               this->SortIndices,
-                                               this->SortOrder,
-                                               this->EdgeBoundaryDetectionMasks,
-                                               this->CubeVertexPermutations,
-                                               this->LinkVertexConnectionsSix,
-                                               this->LinkVertexConnectionsEighteen,
-                                               this->InCubeConnectionsSix,
-                                               this->InCubeConnectionsEighteen,
-                                               token);
+  return MeshStructureMarchingCubes(this->MeshSize,
+                                    this->UseGetMax,
+                                    this->SortIndices,
+                                    this->SortOrder,
+                                    this->EdgeBoundaryDetectionMasks,
+                                    this->CubeVertexPermutations,
+                                    this->LinkVertexConnectionsSix,
+                                    this->LinkVertexConnectionsEighteen,
+                                    this->InCubeConnectionsSix,
+                                    this->InCubeConnectionsEighteen,
+                                    device,
+                                    token);
 }
 
 inline MeshBoundary3DExec DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject()

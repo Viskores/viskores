@@ -33,7 +33,7 @@ class ExecutionWholeArray
 public:
   using ValueType = T;
   using HandleType = vtkm::cont::ArrayHandle<T, StorageTag>;
-  using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PortalType = typename HandleType::WritePortalType;
 
   VTKM_CONT
   ExecutionWholeArray()
@@ -97,7 +97,7 @@ class ExecutionWholeArrayConst
 public:
   using ValueType = T;
   using HandleType = vtkm::cont::ArrayHandle<T, StorageTag>;
-  using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using PortalType = typename HandleType::ReadPortalType;
 
   VTKM_CONT
   ExecutionWholeArrayConst()

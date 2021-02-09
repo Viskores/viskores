@@ -83,12 +83,10 @@ namespace mesh_dem_contourtree_mesh_inc
 {
 
 // Worklet for computing the sort indices from the sort order
-template <typename DeviceAdapter>
 class MeshStructureContourTreeMesh
 {
 public:
-  typedef typename cpp2_ns::IdArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst
-    IdArrayPortalType;
+  using IdArrayPortalType = typename cpp2_ns::IdArrayType::ReadPortalType;
 
   // Default constucture. Needed for the CUDA built to work
   VTKM_EXEC_CONT
@@ -103,19 +101,20 @@ public:
                                const cpp2_ns::IdArrayType firstNeighbour,
                                const vtkm::Id maxneighbours,
                                bool getmax,
+                               vtkm::cont::DeviceAdapterId device,
                                vtkm::cont::Token& token)
     : MaxNeighbours(maxneighbours)
     , GetMax(getmax)
   {
-    this->NeighboursPortal = neighbours.PrepareForInput(DeviceAdapter(), token);
-    this->FirstNeighbourPortal = firstNeighbour.PrepareForInput(DeviceAdapter(), token);
+    this->NeighboursPortal = neighbours.PrepareForInput(device, token);
+    this->FirstNeighbourPortal = firstNeighbour.PrepareForInput(device, token);
   }
 
   VTKM_EXEC
   vtkm::Id GetNumberOfVertices() const { return this->FirstNeighbourPortal.GetNumberOfValues(); }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return this->MaxNeighbours; }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return this->MaxNeighbours; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id neighbourNo) const

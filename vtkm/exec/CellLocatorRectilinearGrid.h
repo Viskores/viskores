@@ -39,9 +39,8 @@ private:
   using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using RectilinearType =
     vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-  using AxisPortalType = typename AxisHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
-  using RectilinearPortalType =
-    typename RectilinearType::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using AxisPortalType = typename AxisHandle::ReadPortalType;
+  using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
 public:
   VTKM_CONT

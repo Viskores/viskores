@@ -67,20 +67,18 @@ namespace contourtree_distributed
 
 
 // comparator used for initial sort of data values
-template <typename DeviceAdapter>
 class PermuteComparatorImpl
 {
 public:
-  using IdPortalType =
-    typename vtkm::worklet::contourtree_augmented::IdArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::worklet::contourtree_augmented::IdArrayType::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VTKM_CONT
   PermuteComparatorImpl(const vtkm::worklet::contourtree_augmented::IdArrayType& lookup,
+                        vtkm::cont::DeviceAdapterId device,
                         vtkm::cont::Token& token)
+    : LookupPortal(lookup.PrepareForInput(device, token))
   { // constructor
-    LookupPortal = lookup.PrepareForInput(DeviceAdapter(), token);
   } // constructor
 
   // () operator - gets called to do comparison
@@ -130,11 +128,10 @@ public:
   {
   }
 
-  template <typename DeviceAdapter>
-  VTKM_CONT PermuteComparatorImpl<DeviceAdapter> PrepareForExecution(DeviceAdapter,
-                                                                     vtkm::cont::Token& token) const
+  VTKM_CONT PermuteComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                      vtkm::cont::Token& token) const
   {
-    return PermuteComparatorImpl<DeviceAdapter>(this->Lookup, token);
+    return PermuteComparatorImpl(this->Lookup, device, token);
   }
 
 private:

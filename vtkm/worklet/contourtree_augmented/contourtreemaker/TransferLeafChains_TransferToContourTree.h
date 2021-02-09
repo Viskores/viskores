@@ -75,7 +75,6 @@ namespace contourtree_maker_inc
 //              ii. we use inwards as the superarc
 // c. for all other vertics
 //              ignore
-template <typename DeviceAdapter>
 class TransferLeafChains_TransferToContourTree : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -90,8 +89,7 @@ public:
   using InputDomain = _1;
 
   // vtkm only allows 9 parameters for the operator so we need to do these inputs manually via the constructor
-  using IdPortalType =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
   IdPortalType OutdegreePortal;
   IdPortalType IndegreePortal;
   IdPortalType OutboundPortal;
@@ -109,15 +107,16 @@ public:
                                            const IdArrayType& outbound,
                                            const IdArrayType& inbound,
                                            const IdArrayType& inwards,
+                                           vtkm::cont::DeviceAdapterId device,
                                            vtkm::cont::Token& token)
     : NumIterations(nIterations)
     , isJoin(IsJoin)
   {
-    this->OutdegreePortal = outdegree.PrepareForInput(DeviceAdapter(), token);
-    this->IndegreePortal = indegree.PrepareForInput(DeviceAdapter(), token);
-    this->OutboundPortal = outbound.PrepareForInput(DeviceAdapter(), token);
-    this->InboundPortal = inbound.PrepareForInput(DeviceAdapter(), token);
-    this->InwardsPortal = inwards.PrepareForInput(DeviceAdapter(), token);
+    this->OutdegreePortal = outdegree.PrepareForInput(device, token);
+    this->IndegreePortal = indegree.PrepareForInput(device, token);
+    this->OutboundPortal = outbound.PrepareForInput(device, token);
+    this->InboundPortal = inbound.PrepareForInput(device, token);
+    this->InwardsPortal = inwards.PrepareForInput(device, token);
   }
 
 

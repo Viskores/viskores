@@ -67,10 +67,10 @@
 #include <fstream>
 #include <iostream>
 #include <vtkm/Types.h>
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/io/ErrorIO.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -123,9 +123,8 @@ public:
   //Mesh dependent helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
 
-  template <typename DeviceTag>
-  contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag> PrepareForExecution(
-    DeviceTag,
+  contourtree_mesh_inc_ns::MeshStructureContourTreeMesh PrepareForExecution(
+    vtkm::cont::DeviceAdapterId,
     vtkm::cont::Token& token) const;
 
   ContourTreeMesh() {}
@@ -165,7 +164,6 @@ public:
   vtkm::Id GetNumberOfVertices() const { return this->NumVertices; }
 
   // Combine two ContourTreeMeshes
-  template <typename DeviceTag>
   void MergeWith(ContourTreeMesh<FieldType>& other);
 
   // Save/Load the mesh helpers
@@ -506,12 +504,12 @@ inline void ContourTreeMesh<FieldType>::SetPrepareForExecutionBehavior(bool getM
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
 template <typename FieldType>
-template <typename DeviceTag>
-contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag> inline ContourTreeMesh<
-  FieldType>::PrepareForExecution(DeviceTag, vtkm::cont::Token& token) const
+contourtree_mesh_inc_ns::MeshStructureContourTreeMesh inline ContourTreeMesh<
+  FieldType>::PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                  vtkm::cont::Token& token) const
 {
-  return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh<DeviceTag>(
-    this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax, token);
+  return contourtree_mesh_inc_ns::MeshStructureContourTreeMesh(
+    this->Neighbours, this->FirstNeighbour, this->MaxNeighbours, this->mGetMax, device, token);
 }
 
 struct NotNoSuchElement
@@ -521,7 +519,6 @@ struct NotNoSuchElement
 
 // Combine two ContourTreeMeshes
 template <typename FieldType>
-template <typename DeviceTag>
 inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& other)
 { // Merge With
 #ifdef DEBUG_PRINT
@@ -565,16 +562,11 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   IdArrayType overallSortIndex;
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
-    // Here we enforce the DeviceTag to make sure the device we used for
-    // CombinedVectorDifferentFromNext is the same as what we use for the algorithms
-    vtkm::cont::ScopedRuntimeDeviceTracker deviceScope(DeviceTag{});
-
     // Functor return 0,1 for each element depending on whethern the current value is different from the next
-    vtkm::cont::Token tempToken;
-    mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext<DeviceTag>
-      differentFromNextFunctor(
-        this->GlobalMeshIndex, other.GlobalMeshIndex, overallSortOrder, tempToken);
+    mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext differentFromNextFunctor(
+      this->GlobalMeshIndex, other.GlobalMeshIndex, overallSortOrder);
     // Array based on the functor
+    // TODO: This should really use ArrayHandleDecorator, not ArrayHandleTransform
     auto differentFromNextArr = vtkm::cont::make_ArrayHandleTransform(
       vtkm::cont::ArrayHandleIndex(overallSortIndex.GetNumberOfValues() - 1),
       differentFromNextFunctor);
@@ -583,8 +575,6 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     overallSortIndex.WritePortal().Set(0, 0);
     IdArrayType tempArr;
 
-    // perform algorithms on the combined vector. Note the device is enforced by the
-    // ScopedRuntimeDeviceTracker for the block
     vtkm::cont::Algorithm::ScanInclusive(differentFromNextArr, tempArr);
     vtkm::cont::Algorithm::CopySubRange(
       tempArr, 0, tempArr.GetNumberOfValues(), overallSortIndex, 1);

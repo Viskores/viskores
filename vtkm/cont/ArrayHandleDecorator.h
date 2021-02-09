@@ -228,19 +228,6 @@ using GetWritePortalType =
 template <typename ArrayT>
 using GetReadPortalType = typename std::decay<ArrayT>::type::ReadPortalType;
 
-template <typename ArrayT,
-          typename Device,
-          typename Portal =
-            typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::Portal,
-          typename PortalConst =
-            typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst>
-using GetPortalExecutionType =
-  typename brigand::if_<vtkm::internal::PortalSupportsSets<Portal>, Portal, PortalConst>::type;
-
-template <typename ArrayT, typename Device>
-using GetPortalConstExecutionType =
-  typename std::decay<ArrayT>::type::template ExecutionTypes<Device>::PortalConst;
-
 // Get portal objects:
 // See note above -- we swap in const portals sometimes.
 template <typename ArrayT>

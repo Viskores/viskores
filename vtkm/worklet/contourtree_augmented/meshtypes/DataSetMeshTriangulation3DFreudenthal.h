@@ -87,9 +87,8 @@ public:
   // Mesh helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
 
-  template <typename DeviceTag>
-  MeshStructureFreudenthal3D<DeviceTag> PrepareForExecution(DeviceTag,
-                                                            vtkm::cont::Token& token) const;
+  MeshStructureFreudenthal3D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                 vtkm::cont::Token& token) const;
 
   DataSetMeshTriangulation3DFreudenthal(vtkm::Id3 meshSize);
 
@@ -130,20 +129,20 @@ inline void DataSetMeshTriangulation3DFreudenthal::SetPrepareForExecutionBehavio
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename DeviceTag>
-inline MeshStructureFreudenthal3D<DeviceTag>
-DataSetMeshTriangulation3DFreudenthal::PrepareForExecution(DeviceTag,
-                                                           vtkm::cont::Token& token) const
+inline MeshStructureFreudenthal3D DataSetMeshTriangulation3DFreudenthal::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
-  return MeshStructureFreudenthal3D<DeviceTag>(this->MeshSize,
-                                               m3d_freudenthal::N_INCIDENT_EDGES,
-                                               this->UseGetMax,
-                                               this->SortIndices,
-                                               this->SortOrder,
-                                               this->EdgeBoundaryDetectionMasks,
-                                               this->NeighbourOffsets,
-                                               this->LinkComponentCaseTable,
-                                               token);
+  return MeshStructureFreudenthal3D(this->MeshSize,
+                                    m3d_freudenthal::N_INCIDENT_EDGES,
+                                    this->UseGetMax,
+                                    this->SortIndices,
+                                    this->SortOrder,
+                                    this->EdgeBoundaryDetectionMasks,
+                                    this->NeighbourOffsets,
+                                    this->LinkComponentCaseTable,
+                                    device,
+                                    token);
 }
 
 inline MeshBoundary3DExec DataSetMeshTriangulation3DFreudenthal::GetMeshBoundaryExecutionObject()

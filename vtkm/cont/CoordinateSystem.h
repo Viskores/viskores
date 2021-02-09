@@ -83,7 +83,7 @@ public:
 
   template <typename Device>
   VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::PortalConst
+    typename ArrayHandleVirtualCoordinates::ReadPortalType
     PrepareForInput(Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForInput(device, token);
@@ -91,7 +91,7 @@ public:
 
   template <typename Device>
   VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::Portal
+    typename ArrayHandleVirtualCoordinates::WritePortalType
     PrepareForInPlace(Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForInPlace(device, token);
@@ -99,7 +99,7 @@ public:
 
   template <typename Device>
   VTKM_CONT VTKM_DEPRECATED(1.6, "CoordinateSystem::GetData() now returns an UncertainArrayHandle.")
-    typename ArrayHandleVirtualCoordinates::ExecutionTypes<Device>::Portal
+    typename ArrayHandleVirtualCoordinates::WritePortalType
     PrepareForOutput(vtkm::Id numberOfValues, Device device, vtkm::cont::Token& token) const
   {
     return this->ToArray().PrepareForOutput(numberOfValues, device, token);

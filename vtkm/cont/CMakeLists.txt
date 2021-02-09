@@ -129,8 +129,6 @@ set(headers
 set(template_sources
   ArrayRangeCompute.hxx # Deprecated, replaced with ArrayRangeComputeTemplate.h
   CellSetExplicit.hxx
-  CellSetExtrude.hxx
-  CellSetStructured.hxx
   ParticleArrayCopy.hxx
   VirtualObjectHandle.hxx
   )

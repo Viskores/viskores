@@ -82,9 +82,8 @@ public:
   //Mesh dependent helper functions
   void SetPrepareForExecutionBehavior(bool getMax);
 
-  template <typename DeviceTag>
-  MeshStructureFreudenthal2D<DeviceTag> PrepareForExecution(DeviceTag,
-                                                            vtkm::cont::Token& token) const;
+  MeshStructureFreudenthal2D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                 vtkm::cont::Token& token) const;
 
   DataSetMeshTriangulation2DFreudenthal(vtkm::Id2 meshSize);
 
@@ -117,18 +116,18 @@ inline void DataSetMeshTriangulation2DFreudenthal::SetPrepareForExecutionBehavio
 }
 
 // Get VTKM execution object that represents the structure of the mesh and provides the mesh helper functions on the device
-template <typename DeviceTag>
-inline MeshStructureFreudenthal2D<DeviceTag>
-DataSetMeshTriangulation2DFreudenthal::PrepareForExecution(DeviceTag,
-                                                           vtkm::cont::Token& token) const
+inline MeshStructureFreudenthal2D DataSetMeshTriangulation2DFreudenthal::PrepareForExecution(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
 {
-  return MeshStructureFreudenthal2D<DeviceTag>(vtkm::Id2{ this->MeshSize[0], this->MeshSize[1] },
-                                               m2d_freudenthal::N_INCIDENT_EDGES,
-                                               this->UseGetMax,
-                                               this->SortIndices,
-                                               this->SortOrder,
-                                               this->EdgeBoundaryDetectionMasks,
-                                               token);
+  return MeshStructureFreudenthal2D(vtkm::Id2{ this->MeshSize[0], this->MeshSize[1] },
+                                    m2d_freudenthal::N_INCIDENT_EDGES,
+                                    this->UseGetMax,
+                                    this->SortIndices,
+                                    this->SortOrder,
+                                    this->EdgeBoundaryDetectionMasks,
+                                    device,
+                                    token);
 }
 
 inline MeshBoundary2DExec DataSetMeshTriangulation2DFreudenthal::GetMeshBoundaryExecutionObject()

@@ -370,27 +370,23 @@ void CellSetExplicit<SST, CST, OST>
 //----------------------------------------------------------------------------
 
 template <typename SST, typename CST, typename OST>
-template <typename Device, typename VisitTopology, typename IncidentTopology>
+template <typename VisitTopology, typename IncidentTopology>
 VTKM_CONT
 auto CellSetExplicit<SST, CST, OST>
-::PrepareForInput(Device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
--> typename ExecutionTypes<Device,
-                           VisitTopology,
-                           IncidentTopology>::ExecObjectType
+::PrepareForInput(vtkm::cont::DeviceAdapterId device, VisitTopology, IncidentTopology, vtkm::cont::Token& token) const
+-> ExecConnectivityType<VisitTopology, IncidentTopology>
 {
-  this->BuildConnectivity(Device{}, VisitTopology{}, IncidentTopology{});
+  this->BuildConnectivity(device, VisitTopology{}, IncidentTopology{});
 
   const auto& connectivity = this->GetConnectivity(VisitTopology{},
                                                    IncidentTopology{});
   VTKM_ASSERT(connectivity.ElementsValid);
 
-  using ExecObjType = typename ExecutionTypes<Device,
-                                              VisitTopology,
-                                              IncidentTopology>::ExecObjectType;
+  using ExecObjType = ExecConnectivityType<VisitTopology, IncidentTopology>;
 
-  return ExecObjType(connectivity.Shapes.PrepareForInput(Device{}, token),
-                     connectivity.Connectivity.PrepareForInput(Device{}, token),
-                     connectivity.Offsets.PrepareForInput(Device{}, token));
+  return ExecObjType(connectivity.Shapes.PrepareForInput(device, token),
+                     connectivity.Connectivity.PrepareForInput(device, token),
+                     connectivity.Offsets.PrepareForInput(device, token));
 }
 
 //----------------------------------------------------------------------------
