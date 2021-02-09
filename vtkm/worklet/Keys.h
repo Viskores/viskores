@@ -71,7 +71,7 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
   template <typename Device>
-  struct VTKM_DEPRECATED(1.6, "Use ExecLookup.") ExecutionTypes
+  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
   {
     using Lookup = ExecLookup;
   };
@@ -194,7 +194,7 @@ public:
     typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::ReadPortalType>;
 
   template <typename Device>
-  struct VTKM_DEPRECATED(1.6, "Use ExecLookup.") ExecutionTypes
+  struct VTKM_DEPRECATED(1.6, "Replace ExecutionTypes<D>::Lookup with ExecLookup.") ExecutionTypes
   {
     using Lookup = ExecLookup;
   };

@@ -106,7 +106,10 @@ public:
                                                        IncidentTopology>::ExecConnectivityType;
 
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(1.6, "Use ExecConnectivityType.") ExecutionTypes
+  struct VTKM_DEPRECATED(
+    1.6,
+    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
+    ExecutionTypes
   {
     using ExecObjectType = ExecConnectivityType<VisitTopology, IncidentTopology>;
   };

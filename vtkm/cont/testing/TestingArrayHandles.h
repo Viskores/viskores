@@ -77,6 +77,16 @@ struct OtherType<vtkm::Int32>
 template <class DeviceAdapterTag>
 struct TestingArrayHandles
 {
+  // Make sure deprecated types still work (while applicable)
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  VTKM_STATIC_ASSERT(
+    (std::is_same<typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType,
+                  typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<
+                    DeviceAdapterTag>::PortalConst>::value));
+  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::cont::ArrayHandle<vtkm::Id>::WritePortalType,
+                                   typename vtkm::cont::ArrayHandle<vtkm::Id>::
+                                     template ExecutionTypes<DeviceAdapterTag>::Portal>::value));
+  VTKM_DEPRECATED_SUPPRESS_END
 
   template <typename PortalType>
   struct PortalExecObjectWrapper : vtkm::cont::ExecutionObjectBase

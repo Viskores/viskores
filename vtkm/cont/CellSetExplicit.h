@@ -221,7 +221,10 @@ public:
             const vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorageTag>& offsets);
 
   template <typename Device, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(1.6, "Use ExecConnectivityType.") ExecutionTypes
+  struct VTKM_DEPRECATED(
+    1.6,
+    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
+    ExecutionTypes
   {
   private:
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);

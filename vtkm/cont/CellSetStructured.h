@@ -113,7 +113,9 @@ public:
     vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
 
   template <typename DeviceAdapter, typename VisitTopology, typename IncidentTopology>
-  struct VTKM_DEPRECATED(1.6, "Provide a vtkm::cont::Token object when calling PrepareForInput.")
+  struct VTKM_DEPRECATED(
+    1.6,
+    "Replace ExecutionTypes<D, V, I>::ExecObjectType with ExecConnectivityType<V, I>.")
     ExecutionTypes
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
