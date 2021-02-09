@@ -130,10 +130,7 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const
-  {
-    return m3d_marchingcubes::N_FACE_NEIGHBOURS;
-  }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return m3d_marchingcubes::N_FACE_NEIGHBOURS; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id nbrNo) const

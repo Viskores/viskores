@@ -106,7 +106,7 @@ public:
   }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return m2d_freudenthal::N_INCIDENT_EDGES; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id edgeNo) const

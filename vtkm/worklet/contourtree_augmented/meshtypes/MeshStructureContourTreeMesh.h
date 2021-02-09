@@ -114,7 +114,7 @@ public:
   vtkm::Id GetNumberOfVertices() const { return this->FirstNeighbourPortal.GetNumberOfValues(); }
 
   VTKM_EXEC
-  constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return this->MaxNeighbours; }
+  vtkm::Id GetMaxNumberOfNeighbours() const { return this->MaxNeighbours; }
 
   VTKM_EXEC
   inline vtkm::Id GetNeighbourIndex(vtkm::Id sortIndex, vtkm::Id neighbourNo) const
