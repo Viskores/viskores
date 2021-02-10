@@ -226,20 +226,20 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  template <typename WeightType, typename T, typename S, typename D>
+  template <typename WeightType, typename T, typename S>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
                             const WeightType& weight,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>& inPortal,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, S>& inPortal,
                             T& result) const
   {
     //fetch the low / high values from inPortal
     result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
-  template <typename WeightType, typename T, typename S, typename D, typename U>
+  template <typename WeightType, typename T, typename S, typename U>
   VTKM_EXEC void operator()(const vtkm::Id2&,
                             const WeightType&,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>&,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, S>&,
                             U&) const
   {
     //the inPortal and result need to be the same type so this version only
