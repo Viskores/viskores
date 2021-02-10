@@ -27,7 +27,7 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter, vtkm::IdComponent dimensions>
+template <vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorUniformGrid final : public vtkm::exec::CellLocator
 {
 private:
@@ -41,8 +41,7 @@ public:
                          const vtkm::Id3 pointDims,
                          const vtkm::Vec3f origin,
                          const vtkm::Vec3f invSpacing,
-                         const vtkm::Vec3f maxPoint,
-                         DeviceAdapter)
+                         const vtkm::Vec3f maxPoint)
     : CellDims(cellDims)
     , PointDims(pointDims)
     , Origin(origin)

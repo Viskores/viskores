@@ -61,7 +61,7 @@ struct CellLocatorBoundingIntervalHierarchyNode
   }
 }; // struct CellLocatorBoundingIntervalHierarchyNode
 
-template <typename DeviceAdapter, typename CellSetType>
+template <typename CellSetType>
 class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchyExec final
   : public vtkm::exec::CellLocator
 {
@@ -79,12 +79,12 @@ public:
     const CellIdArrayHandle& cellIds,
     const CellSetType& cellSet,
     const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coords,
-    DeviceAdapter,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
-    : Nodes(nodes.PrepareForInput(DeviceAdapter(), token))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter(), token))
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
-    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
+    : Nodes(nodes.PrepareForInput(device, token))
+    , CellIds(cellIds.PrepareForInput(device, token))
+    , CellSet(cellSet.PrepareForInput(device, VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(device, token))
   {
   }
 

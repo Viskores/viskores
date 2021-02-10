@@ -449,48 +449,26 @@ void CellLocatorBoundingIntervalHierarchy::Build()
 namespace
 {
 
-struct CellLocatorBIHPrepareForExecutionFunctor
+struct BIHCellSetCaster
 {
-  template <typename DeviceAdapter, typename CellSetType>
-  bool operator()(
-    DeviceAdapter,
+  template <typename CellSetType>
+  void operator()(
     const CellSetType& cellset,
+    vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token,
     vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator>& bihExec,
     const vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>& nodes,
     const vtkm::cont::ArrayHandle<vtkm::Id>& processedCellIds,
     const vtkm::cont::CoordinateSystem::MultiplexerArrayType& coords) const
   {
-    using ExecutionType =
-      vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<DeviceAdapter, CellSetType>;
+    using ExecutionType = vtkm::exec::CellLocatorBoundingIntervalHierarchyExec<CellSetType>;
     ExecutionType* execObject =
-      new ExecutionType(nodes, processedCellIds, cellset, coords, DeviceAdapter(), token);
+      new ExecutionType(nodes, processedCellIds, cellset, coords, device, token);
     bihExec.Reset(execObject);
-    return true;
   }
 };
 
-struct BIHCellSetCaster
-{
-  template <typename CellSet, typename... Args>
-  void operator()(CellSet&& cellset,
-                  vtkm::cont::DeviceAdapterId device,
-                  vtkm::cont::Token& token,
-                  Args&&... args) const
-  {
-    //We need to go though CastAndCall first
-    const bool success = vtkm::cont::TryExecuteOnDevice(device,
-                                                        CellLocatorBIHPrepareForExecutionFunctor(),
-                                                        cellset,
-                                                        token,
-                                                        std::forward<Args>(args)...);
-    if (!success)
-    {
-      throwFailedRuntimeDeviceTransfer("BoundingIntervalHierarchy", device);
-    }
-  }
-};
-}
+} // anonymous namespace
 
 
 const vtkm::exec::CellLocator* CellLocatorBoundingIntervalHierarchy::PrepareForExecution(

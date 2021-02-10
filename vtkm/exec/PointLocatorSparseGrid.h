@@ -11,8 +11,6 @@
 #define vtk_m_exec_PointLocatorSparseGrid_h
 
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -26,7 +24,6 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter>
 class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid : public vtkm::exec::PointLocator
 {
 public:
