@@ -13,6 +13,10 @@
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DeviceAdapterTag.h>
+
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
@@ -79,7 +83,7 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
-template <typename CellSetType, typename DeviceAdapter>
+template <typename CellSetType>
 class VTKM_ALWAYS_EXPORT CellLocatorTwoLevel : public vtkm::exec::CellLocator
 {
 private:
@@ -92,11 +96,11 @@ private:
   using CoordsPortalType =
     typename vtkm::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
 
-  using CellSetP2CExecType =
-    decltype(std::declval<CellSetType>().PrepareForInput(DeviceAdapter{},
-                                                         vtkm::TopologyElementTagCell{},
-                                                         vtkm::TopologyElementTagPoint{},
-                                                         std::declval<vtkm::cont::Token&>()));
+  using CellSetP2CExecType = decltype(
+    std::declval<CellSetType>().PrepareForInput(std::declval<vtkm::cont::DeviceAdapterId>(),
+                                                vtkm::TopologyElementTagCell{},
+                                                vtkm::TopologyElementTagPoint{},
+                                                std::declval<vtkm::cont::Token&>()));
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -133,18 +137,19 @@ public:
                                 const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
                                 const CellSetType& cellSet,
                                 const vtkm::cont::CoordinateSystem& coords,
+                                vtkm::cont::DeviceAdapterId device,
                                 vtkm::cont::Token& token)
     : TopLevel(topLevelGrid)
-    , LeafDimensions(leafDimensions.PrepareForInput(DeviceAdapter{}, token))
-    , LeafStartIndex(leafStartIndex.PrepareForInput(DeviceAdapter{}, token))
-    , CellStartIndex(cellStartIndex.PrepareForInput(DeviceAdapter{}, token))
-    , CellCount(cellCount.PrepareForInput(DeviceAdapter{}, token))
-    , CellIds(cellIds.PrepareForInput(DeviceAdapter{}, token))
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter{},
+    , LeafDimensions(leafDimensions.PrepareForInput(device, token))
+    , LeafStartIndex(leafStartIndex.PrepareForInput(device, token))
+    , CellStartIndex(cellStartIndex.PrepareForInput(device, token))
+    , CellCount(cellCount.PrepareForInput(device, token))
+    , CellIds(cellIds.PrepareForInput(device, token))
+    , CellSet(cellSet.PrepareForInput(device,
                                       vtkm::TopologyElementTagCell{},
                                       vtkm::TopologyElementTagPoint{},
                                       token))
-    , Coords(coords.GetDataAsMultiplexer().PrepareForInput(DeviceAdapter{}, token))
+    , Coords(coords.GetDataAsMultiplexer().PrepareForInput(device, token))
   {
   }
 

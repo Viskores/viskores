@@ -85,7 +85,6 @@ private:
   mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
 
   struct MakeExecObject;
-  struct PrepareForExecutionFunctor;
 };
 }
 } // vtkm::cont

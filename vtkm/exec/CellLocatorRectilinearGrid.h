@@ -15,6 +15,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecFromPortalPermute.h>
 
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/CellSetStructured.h>
 
 #include <vtkm/exec/CellInside.h>
@@ -28,7 +29,7 @@ namespace vtkm
 namespace exec
 {
 
-template <typename DeviceAdapter, vtkm::IdComponent dimensions>
+template <vtkm::IdComponent dimensions>
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid final : public vtkm::exec::CellLocator
 {
 private:
@@ -48,12 +49,12 @@ public:
                              const vtkm::Id rowSize,
                              const vtkm::cont::CellSetStructured<dimensions>& cellSet,
                              const RectilinearType& coords,
-                             DeviceAdapter,
+                             vtkm::cont::DeviceAdapterId device,
                              vtkm::cont::Token& token)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
-    , CellSet(cellSet.PrepareForInput(DeviceAdapter(), VisitType(), IncidentType(), token))
-    , Coords(coords.PrepareForInput(DeviceAdapter(), token))
+    , CellSet(cellSet.PrepareForInput(device, VisitType(), IncidentType(), token))
+    , Coords(coords.PrepareForInput(device, token))
     , PointDimensions(cellSet.GetPointDimensions())
   {
     this->AxisPortals[0] = this->Coords.GetFirstPortal();

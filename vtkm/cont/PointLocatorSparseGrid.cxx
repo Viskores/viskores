@@ -98,45 +98,26 @@ void PointLocatorSparseGrid::Build()
   vtkm::cont::Algorithm::LowerBounds(cellIds, cell_ids_counting, this->CellLower);
 }
 
-struct PointLocatorSparseGrid::PrepareExecutionObjectFunctor
-{
-  template <typename DeviceAdapter>
-  VTKM_CONT bool operator()(DeviceAdapter,
-                            const vtkm::cont::PointLocatorSparseGrid& self,
-                            ExecutionObjectHandleType& handle,
-                            vtkm::cont::Token& token) const
-  {
-    auto rmin = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(self.Range[0].Min),
-                               static_cast<vtkm::FloatDefault>(self.Range[1].Min),
-                               static_cast<vtkm::FloatDefault>(self.Range[2].Min));
-    auto rmax = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(self.Range[0].Max),
-                               static_cast<vtkm::FloatDefault>(self.Range[1].Max),
-                               static_cast<vtkm::FloatDefault>(self.Range[2].Max));
-    vtkm::exec::PointLocatorSparseGrid<DeviceAdapter>* h =
-      new vtkm::exec::PointLocatorSparseGrid<DeviceAdapter>(
-        rmin,
-        rmax,
-        self.Dims,
-        self.GetCoordinates().GetDataAsMultiplexer().PrepareForInput(DeviceAdapter(), token),
-        self.PointIds.PrepareForInput(DeviceAdapter(), token),
-        self.CellLower.PrepareForInput(DeviceAdapter(), token),
-        self.CellUpper.PrepareForInput(DeviceAdapter(), token));
-    handle.Reset(h);
-    return true;
-  }
-};
-
 VTKM_CONT void PointLocatorSparseGrid::PrepareExecutionObject(
   ExecutionObjectHandleType& execObjHandle,
-  vtkm::cont::DeviceAdapterId deviceId,
+  vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
-  const bool success = vtkm::cont::TryExecuteOnDevice(
-    deviceId, PrepareExecutionObjectFunctor(), *this, execObjHandle, token);
-  if (!success)
-  {
-    throwFailedRuntimeDeviceTransfer("PointLocatorSparseGrid", deviceId);
-  }
+  auto rmin = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(this->Range[0].Min),
+                             static_cast<vtkm::FloatDefault>(this->Range[1].Min),
+                             static_cast<vtkm::FloatDefault>(this->Range[2].Min));
+  auto rmax = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(this->Range[0].Max),
+                             static_cast<vtkm::FloatDefault>(this->Range[1].Max),
+                             static_cast<vtkm::FloatDefault>(this->Range[2].Max));
+  vtkm::exec::PointLocatorSparseGrid* h = new vtkm::exec::PointLocatorSparseGrid(
+    rmin,
+    rmax,
+    this->Dims,
+    this->GetCoordinates().GetDataAsMultiplexer().PrepareForInput(device, token),
+    this->PointIds.PrepareForInput(device, token),
+    this->CellLower.PrepareForInput(device, token),
+    this->CellUpper.PrepareForInput(device, token));
+  execObjHandle.Reset(h);
 }
 }
 } // vtkm::cont
