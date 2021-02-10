@@ -43,6 +43,10 @@ private:
 
   mutable vtkm::cont::internal::Buffer BufferAsStorageWrapper;
 
+  struct PrepareForInputFunctor;
+  struct PrepareForOutputFunctor;
+  struct PrepareForInPlaceFunctor;
+
 public:
   using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
   using ValueType = T;
@@ -359,9 +363,9 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::PortalConst PrepareForInput(
-    DeviceAdapterTag,
-    vtkm::cont::Token& token) const;
+  VTKM_CONT ReadPortalType PrepareForInput(DeviceAdapterTag, vtkm::cont::Token& token) const;
+  VTKM_CONT ReadPortalType PrepareForInput(vtkm::cont::DeviceAdapterId device,
+                                           vtkm::cont::Token& token) const;
 
   /// Prepares (allocates) this array to be used as an output from an operation
   /// in the execution environment. The internal state of this class is set to
@@ -378,8 +382,12 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag, vtkm::cont::Token& token);
+  VTKM_CONT WritePortalType PrepareForOutput(vtkm::Id numberOfValues,
+                                             DeviceAdapterTag,
+                                             vtkm::cont::Token& token);
+  VTKM_CONT WritePortalType PrepareForOutput(vtkm::Id numberOfValues,
+                                             vtkm::cont::DeviceAdapterId device,
+                                             vtkm::cont::Token& token);
 
   /// Prepares this array to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -395,9 +403,9 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   template <typename DeviceAdapterTag>
-  VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForInPlace(
-    DeviceAdapterTag,
-    vtkm::cont::Token& token);
+  VTKM_CONT WritePortalType PrepareForInPlace(DeviceAdapterTag, vtkm::cont::Token& token);
+  VTKM_CONT WritePortalType PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
+                                              vtkm::cont::Token& token);
 
   template <typename DeviceAdapterTag>
   VTKM_CONT VTKM_DEPRECATED(1.6, "PrepareForInput now requires a vtkm::cont::Token object.")
@@ -959,9 +967,9 @@ void ArrayHandleDeprecated<T, S>::Shrink(vtkm::Id numberOfValues, vtkm::cont::To
 
 template <typename T, typename S>
 template <typename DeviceAdapterTag>
-typename ArrayHandleDeprecated<T, S>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-ArrayHandleDeprecated<T, S>::PrepareForInput(DeviceAdapterTag device,
-                                             vtkm::cont::Token& token) const
+typename ArrayHandleDeprecated<T, S>::ReadPortalType ArrayHandleDeprecated<T, S>::PrepareForInput(
+  DeviceAdapterTag device,
+  vtkm::cont::Token& token) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
@@ -986,11 +994,35 @@ ArrayHandleDeprecated<T, S>::PrepareForInput(DeviceAdapterTag device,
 }
 
 template <typename T, typename S>
+struct ArrayHandleDeprecated<T, S>::PrepareForInputFunctor
+{
+  template <typename Device>
+  bool operator()(Device device,
+                  const ArrayHandleDeprecated<T, S>& self,
+                  vtkm::cont::Token& token,
+                  ReadPortalType& portal) const
+  {
+    portal = self.PrepareForInput(device, token);
+    return true;
+  }
+};
+
+template <typename T, typename S>
+typename ArrayHandleDeprecated<T, S>::ReadPortalType ArrayHandleDeprecated<T, S>::PrepareForInput(
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token) const
+{
+  ReadPortalType portal;
+  vtkm::cont::TryExecuteOnDevice(device, PrepareForInputFunctor{}, *this, token, portal);
+  return portal;
+}
+
+template <typename T, typename S>
 template <typename DeviceAdapterTag>
-typename ArrayHandleDeprecated<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandleDeprecated<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
-                                              DeviceAdapterTag device,
-                                              vtkm::cont::Token& token)
+typename ArrayHandleDeprecated<T, S>::WritePortalType ArrayHandleDeprecated<T, S>::PrepareForOutput(
+  vtkm::Id numberOfValues,
+  DeviceAdapterTag device,
+  vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
@@ -1021,8 +1053,35 @@ ArrayHandleDeprecated<T, S>::PrepareForOutput(vtkm::Id numberOfValues,
 }
 
 template <typename T, typename S>
+struct ArrayHandleDeprecated<T, S>::PrepareForOutputFunctor
+{
+  template <typename Device>
+  bool operator()(Device device,
+                  ArrayHandleDeprecated<T, S>& self,
+                  vtkm::Id numberOfValues,
+                  vtkm::cont::Token& token,
+                  WritePortalType& portal) const
+  {
+    portal = self.PrepareForOutput(numberOfValues, device, token);
+    return true;
+  }
+};
+
+template <typename T, typename S>
+typename ArrayHandleDeprecated<T, S>::WritePortalType ArrayHandleDeprecated<T, S>::PrepareForOutput(
+  vtkm::Id numberOfValues,
+  vtkm::cont::DeviceAdapterId device,
+  vtkm::cont::Token& token)
+{
+  WritePortalType portal;
+  vtkm::cont::TryExecuteOnDevice(
+    device, PrepareForOutputFunctor{}, *this, numberOfValues, token, portal);
+  return portal;
+}
+
+template <typename T, typename S>
 template <typename DeviceAdapterTag>
-typename ArrayHandleDeprecated<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
+typename ArrayHandleDeprecated<T, S>::WritePortalType
 ArrayHandleDeprecated<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::cont::Token& token)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
@@ -1049,6 +1108,30 @@ ArrayHandleDeprecated<T, S>::PrepareForInPlace(DeviceAdapterTag device, vtkm::co
   // array. It may be shared as the execution array.
   this->Internals->SetControlArrayValid(lock, false);
 
+  return portal;
+}
+
+template <typename T, typename S>
+struct ArrayHandleDeprecated<T, S>::PrepareForInPlaceFunctor
+{
+  template <typename Device>
+  bool operator()(Device device,
+                  ArrayHandleDeprecated<T, S>& self,
+                  vtkm::cont::Token& token,
+                  ReadPortalType& portal) const
+  {
+    portal = self.PrepareForInPlace(device, token);
+    return true;
+  }
+};
+
+template <typename T, typename S>
+typename ArrayHandleDeprecated<T, S>::WritePortalType
+ArrayHandleDeprecated<T, S>::PrepareForInPlace(vtkm::cont::DeviceAdapterId device,
+                                               vtkm::cont::Token& token)
+{
+  WritePortalType portal;
+  vtkm::cont::TryExecuteOnDevice(device, PrepareForInPlaceFunctor{}, *this, token, portal);
   return portal;
 }
 
