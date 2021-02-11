@@ -25,8 +25,6 @@ set(headers
   ArrayHandleDecorator.h
   ArrayHandleDiscard.h
   ArrayHandleExtractComponent.h
-  ArrayHandleExtrudeCoords.h
-  ArrayHandleExtrudeField.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -44,6 +42,7 @@ set(headers
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleView.h
+  ArrayHandleXGCCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
@@ -112,7 +111,6 @@ set(headers
   RuntimeDeviceTracker.h
   Serialization.h
   Storage.h
-  StorageExtrude.h
   StorageImplicit.h # Deprecated, rolled into ArrayHandleImplicit.h
   StorageList.h
   StorageListTag.h
@@ -222,6 +220,11 @@ vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_VTK
   )
 if (VTKm_USE_DEFAULT_TYPES_FOR_VTK)
   set(VTKm_DEFAULT_TYPES_HEADER "internal/DefaultTypesVTK.h.in")
+  vtkm_option(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK "Add XGC types to default VTK types." OFF)
+  mark_as_advanced(VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+    set(VTKM_ADD_XGC_DEFAULT_TYPES TRUE)
+  endif()
 endif()
 
 vtkm_option(VTKm_USE_DEFAULT_TYPES_FOR_ASCENT

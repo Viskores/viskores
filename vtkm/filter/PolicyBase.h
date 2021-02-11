@@ -153,6 +153,19 @@ struct AllCastArraysForStorageImpl<TargetT,
   using type = vtkm::ListEmpty;
 };
 
+#ifdef VTKM_ADD_XGC_DEFAULT_TYPES
+template <typename T>
+struct AllCastArraysForStorageImpl<vtkm::Vec<T, 3>, vtkm::cont::StorageTagXGCCoordinates, true>
+{
+  using type = vtkm::List<vtkm::cont::ArrayHandleXGCCoordinates<T>>;
+};
+template <typename TargetT>
+struct AllCastArraysForStorageImpl<TargetT, vtkm::cont::StorageTagXGCCoordinates, false>
+{
+  using type = vtkm::ListEmpty;
+};
+#endif
+
 // Given a target type and storage of an array handle, provides a list this array handle plus all
 // array handles that can be cast to the target type wrapped in an ArrayHandleCast that does so.
 template <typename TargetT, typename Storage>

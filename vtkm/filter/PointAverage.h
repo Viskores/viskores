@@ -38,7 +38,7 @@ public:
                                           vtkm::filter::PolicyBase<DerivedPolicy> policy);
 
   // PointAverage is a simple filter that is used to test custom filter types.
-  using AdditionalFieldStorage = vtkm::List<vtkm::cont::internal::StorageTagExtrude>;
+  using AdditionalFieldStorage = vtkm::List<vtkm::cont::StorageTagXGCCoordinates>;
   using SupportedCellSets =
     vtkm::ListAppend<vtkm::List<vtkm::cont::CellSetExtrude>, VTKM_DEFAULT_CELL_SET_LIST>;
 

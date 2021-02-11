@@ -13,9 +13,11 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
+#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <algorithm>
 
 namespace
 {
@@ -90,12 +92,28 @@ void verify_results(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S> const& handle)
   }
 }
 
+template <typename T>
+void test_range(const vtkm::cont::ArrayHandleXGCCoordinates<T>& handle)
+{
+  auto x_result = std::minmax_element(correct_x_coords.begin(), correct_x_coords.end());
+  auto y_result = std::minmax_element(correct_y_coords.begin(), correct_y_coords.end());
+  auto z_result = std::minmax_element(correct_z_coords.begin(), correct_z_coords.end());
 
-int TestArrayHandleExtrude()
+  auto range = vtkm::cont::ArrayRangeCompute(handle);
+  auto rangePortal = range.ReadPortal();
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(0).Min, *x_result.first), "incorrect min for x");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(0).Max, *x_result.second), "incorrect max for x");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(1).Min, *y_result.first), "incorrect min for y");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(1).Max, *y_result.second), "incorrect max for y");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(2).Min, *z_result.first), "incorrect min for z");
+  VTKM_TEST_ASSERT(test_equal(rangePortal.Get(2).Max, *z_result.second), "incorrect max for z");
+}
+
+int TestArrayHandleXGCCoordinates()
 {
   const int numPlanes = 8;
 
-  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(
+  auto coords = vtkm::cont::make_ArrayHandleXGCCoordinates(
     vtkm::cont::make_ArrayHandle(points_rz, vtkm::CopyFlag::Off), numPlanes, false);
 
   VTKM_TEST_ASSERT(coords.GetNumberOfValues() ==
@@ -111,13 +129,15 @@ int TestArrayHandleExtrude()
   dispatcher.Invoke(coords, output1D);
   verify_results(output1D);
 
+  test_range(coords);
+
   return 0;
 }
 
 } // end namespace anonymous
 
-int UnitTestArrayHandleExtrude(int argc, char* argv[])
+int UnitTestArrayHandleXGCCoordinates(int argc, char* argv[])
 {
   vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
-  return vtkm::cont::testing::Testing::Run(TestArrayHandleExtrude, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleXGCCoordinates, argc, argv);
 }

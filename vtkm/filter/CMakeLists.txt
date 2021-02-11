@@ -26,7 +26,6 @@ set(common_headers
   MapFieldPermutation.h
   PolicyBase.h
   PolicyDefault.h
-  PolicyExtrude.h
   Threshold.h
   ThresholdPoints.h
   )
@@ -206,6 +205,10 @@ set(gradient_sources_device
   GradientUniformPoints.cxx
   GradientVector.cxx
   )
+
+if (VTKm_ADD_XGC_TO_DEFAULT_TYPES_VTK)
+  list(APPEND gradient_sources_device GradientXGCPoints.cxx)
+endif()
 
 vtkm_pyexpander_generated_file(ClipWithFieldSkipInstantiations.hxx)
 vtkm_pyexpander_generated_file(ClipWithImplicitFunctionSkipInstantiations.hxx)

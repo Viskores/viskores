@@ -41,7 +41,6 @@ set(unit_tests
   UnitTestArrayHandleDecorator.cxx
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleExtractComponent.cxx
-  UnitTestArrayHandleExtrude.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
@@ -54,6 +53,7 @@ set(unit_tests
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleVirtual.cxx
+  UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx

@@ -10,7 +10,7 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/ArrayHandleExtrudeCoords.h>
+#include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/CellSetExtrude.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -112,7 +112,7 @@ int TestCellSetExtrude()
 {
   const std::size_t numPlanes = 8;
 
-  auto coords = vtkm::cont::make_ArrayHandleExtrudeCoords(points_rz, numPlanes, false);
+  auto coords = vtkm::cont::make_ArrayHandleXGCCoordinates(points_rz, numPlanes, false);
   auto cells = vtkm::cont::make_CellSetExtrude(topology, coords, nextNode);
   VTKM_TEST_ASSERT(cells.GetNumberOfPoints() == coords.GetNumberOfValues(),
                    "number of points don't match between cells and coordinates");
