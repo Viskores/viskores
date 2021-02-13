@@ -56,7 +56,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Devi
   using ValueType = typename ContObjectType::ValueType;
   using StorageTag = typename ContObjectType::StorageTag;
 
-  using ExecObjectType = vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag, Device>;
+  using ExecObjectType = vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag>;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(ContObjectType& array,
@@ -69,7 +69,7 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Devi
     // array might not have the same size depending on how the user is using
     // the array.
 
-    return ExecObjectType(array, token);
+    return ExecObjectType(array, Device{}, token);
   }
 
 #ifdef VTKM_MSVC
