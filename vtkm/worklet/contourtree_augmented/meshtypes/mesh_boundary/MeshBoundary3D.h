@@ -234,13 +234,13 @@ public:
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
             return CountLinkComponentsIn2DSlice(meshIndex,
-                                                vtkm::Id2(this->MeshStructure.MeshSize[0], 1)) != 2;
+                                                vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2;
           }
           else if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
           { // On [1]-perpendicular face
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
-            return CountLinkComponentsIn2DSlice(meshIndex, vtkm::Id2(nPerSlice, 1)) != 2;
+            return CountLinkComponentsIn2DSlice(meshIndex, vtkm::Id2(1, nPerSlice)) != 2;
           }
           else
           { // On [0]-perpendicular face
@@ -248,7 +248,7 @@ public:
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
             return CountLinkComponentsIn2DSlice(
-                     meshIndex, vtkm::Id2(this->MeshStructure.MeshSize[0], nPerSlice)) != 2;
+                     meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2;
           }
         }
       }
