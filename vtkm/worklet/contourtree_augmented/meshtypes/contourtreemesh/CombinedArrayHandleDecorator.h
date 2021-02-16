@@ -60,8 +60,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
-#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_vector_different_from_next_h
+#ifndef vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_array_handle_decorator_h
+#define vtk_m_worklet_contourtree_augmented_contourtree_mesh_inc_combined_array_handle_decorator_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
@@ -76,39 +76,33 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-/// Decorator to compute if element i is different from element i+1 in an arrays. The
-/// resulting array should hence be 1 element shorter than the input arrays
-class CombinedVectorDifferentFromNextDecoratorImpl
+// Decorator implementation that cobmines two arrays. Arrays are
+// accessed depending on whether a flag in the index is set.
+//
+template <typename ValueType>
+struct CombinedArrayHandleDecoratorImpl
 {
-public:
-  template <typename Portal1Type, typename Portal2Type, typename Portal3Type>
+  // The functor use to read values.
+  template <typename Portal1Type, typename Portal2Type>
   struct Functor
   {
-    Portal1Type OverallSortOrderPortal;
-    Portal2Type ThisGlobalMeshIndex;
-    Portal3Type OtherGlobalMeshIndex;
+    Portal1Type ThisGlobalMeshIndex;
+    Portal2Type OtherGlobalMeshIndex;
 
-    vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+    VTKM_EXEC_CONT
+    ValueType operator()(vtkm::Id idx) const
     {
       return vtkm::worklet::contourtree_augmented::IsThis(idx)
         ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
         : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
     }
-
-    vtkm::Id operator()(vtkm::Id i) const
-    {
-      vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
-      vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
-      return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
-    }
   };
 
-  template <typename PT1, typename PT2, typename PT3>
-  Functor<PT1, PT2, PT3> CreateFunctor(PT1 OverallSortOrderPortal,
-                                       PT2 ThisGlobalMeshIndex,
-                                       PT3 OtherGlobalMeshIndex) const
+  // Factory function to produce a functor.
+  template <typename P1T, typename P2T>
+  Functor<P1T, P2T> CreateFunctor(P1T p1, P2T p2) const
   {
-    return { OverallSortOrderPortal, ThisGlobalMeshIndex, OtherGlobalMeshIndex };
+    return { p1, p2 };
   }
 };
 
