@@ -20,9 +20,11 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
+#include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandleXGCCoordinates.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
@@ -50,6 +52,10 @@ namespace cont
 /// ArrayRangeComputeTemplate.h. This contains a templated version of ArrayRangeCompute
 /// that will compile for any `ArrayHandle` type not already handled.
 ///
+
+VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::UnknownArrayHandle& array,
+  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{});
 
 #define VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_T(T, Storage)    \
   VTKM_CONT_EXPORT                                        \
@@ -104,6 +110,8 @@ VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(2, vtkm::cont::StorageTagSOA);
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(3, vtkm::cont::StorageTagSOA);
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_VEC(4, vtkm::cont::StorageTagSOA);
 
+VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_ALL_SCALAR_T(vtkm::cont::StorageTagStride);
+
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 3, vtkm::cont::StorageTagXGCCoordinates);
 VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 3, vtkm::cont::StorageTagXGCCoordinates);
 
@@ -115,25 +123,6 @@ VTK_M_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 3, vtkm::cont::StorageTagXGC
 VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<vtkm::Vec3f,
                                 vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
-  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
-
-// Implementation of composite vectors
-VTKM_CONT_EXPORT
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec3f_32,
-                                typename vtkm::cont::ArrayHandleCompositeVector<
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag>& input,
-  vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
-
-VTKM_CONT_EXPORT VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<vtkm::Vec3f_64,
-                                typename vtkm::cont::ArrayHandleCompositeVector<
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
 // Implementation of cartesian products
@@ -204,7 +193,7 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   if (portal.GetNumberOfValues() > 0)
   {
     T first = input.ReadPortal().Get(0);
-    T last = input.ReadPortal().Get(portal.GetNumberOfValues() - 1);
+    T last = input.ReadPortal().Get(input.GetNumberOfValues() - 1);
     for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
     {
       auto firstComponent = Traits::GetComponent(first, cIndex);
@@ -226,7 +215,7 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 }
 
 // Implementation of index arrays
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{});
 ///@}
