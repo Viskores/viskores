@@ -29,6 +29,7 @@ set(headers
   OptionParser.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
+  PointLocatorBase.h
   ReverseConnectivityBuilder.h
   StorageDeprecated.h
   StorageError.h

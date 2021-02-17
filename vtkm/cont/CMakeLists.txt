@@ -105,7 +105,6 @@ set(headers
   Logging.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
-  PointLocator.h
   PointLocatorUniformGrid.h
   PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
@@ -184,7 +183,6 @@ set(device_sources
   FieldRangeCompute.cxx
   FieldRangeGlobalCompute.cxx
   PartitionedDataSet.cxx
-  PointLocator.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
   Timer.cxx
@@ -196,6 +194,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
     ArrayHandleVirtual.h
     ArrayHandleVirtualCoordinates.h
     CellLocator.h
+    PointLocator.h
     StorageVirtual.h
     )
 
@@ -207,6 +206,7 @@ if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
   set(device_sources ${device_sources}
     ArrayHandleVirtual.cxx
     CellLocator.cxx
+    PointLocator.cxx
     StorageVirtual.cxx
     )
 endif()

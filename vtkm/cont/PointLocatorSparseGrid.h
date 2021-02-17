@@ -16,7 +16,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/PointLocator.h>
+#include <vtkm/cont/internal/PointLocatorBase.h>
 #include <vtkm/exec/PointLocatorSparseGrid.h>
 
 namespace vtkm
@@ -38,8 +38,11 @@ namespace cont
 /// Parallel Techniques." In _Eurographics Symposium on Parallel Graphics and Visualization
 /// (EGPGV)_, June 2019. DOI 10.2312/pgv.20191112.
 ///
-class VTKM_CONT_EXPORT PointLocatorSparseGrid : public vtkm::cont::PointLocator
+class VTKM_CONT_EXPORT PointLocatorSparseGrid
+  : public vtkm::cont::internal::PointLocatorBase<PointLocatorSparseGrid>
 {
+  using Superclass = vtkm::cont::internal::PointLocatorBase<PointLocatorSparseGrid>;
+
 public:
   using RangeType = vtkm::Vec<vtkm::Range, 3>;
 
@@ -74,22 +77,20 @@ public:
 
   const vtkm::Id3& GetNumberOfBins() const { return this->Dims; }
 
-protected:
-  void Build() override;
+  VTKM_CONT
+  vtkm::exec::PointLocatorSparseGrid PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                         vtkm::cont::Token& token) const;
 
-  struct PrepareExecutionObjectFunctor;
-
-  VTKM_CONT void PrepareExecutionObject(ExecutionObjectHandleType& execObjHandle,
-                                        vtkm::cont::DeviceAdapterId deviceId,
-                                        vtkm::cont::Token& token) const override;
-
+private:
   bool IsRangeInvalid() const
   {
     return (this->Range[0].Max < this->Range[0].Min) || (this->Range[1].Max < this->Range[1].Min) ||
       (this->Range[2].Max < this->Range[2].Min);
   }
 
-private:
+  friend Superclass;
+  VTKM_CONT void Build();
+
   RangeType Range = { { 0.0, -1.0 } };
   vtkm::Id3 Dims = { 32 };
 
