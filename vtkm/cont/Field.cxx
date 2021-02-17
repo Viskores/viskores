@@ -12,30 +12,7 @@
 
 #include <vtkm/TypeList.h>
 
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/UncertainArrayHandle.h>
-
-namespace
-{
-
-using ComputeRangeTypes = vtkm::TypeListAll;
-using ComputeRangeStorage = vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST,
-                                             vtkm::List<vtkm::cont::StorageTagConstant,
-                                                        vtkm::cont::StorageTagCounting,
-                                                        vtkm::cont::StorageTagIndex>>;
-
-struct ComputeRange
-{
-  template <typename ArrayHandleType>
-  void operator()(const ArrayHandleType& input, vtkm::cont::ArrayHandle<vtkm::Range>& range) const
-  {
-    range = vtkm::cont::ArrayRangeCompute(input);
-  }
-};
-
-} // anonymous namespace
+#include <vtkm/cont/ArrayRangeCompute.h>
 
 namespace vtkm
 {
@@ -142,8 +119,7 @@ VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
 
   if (this->ModifiedFlag)
   {
-    vtkm::cont::CastAndCall(
-      this->Data.ResetTypes<ComputeRangeTypes, ComputeRangeStorage>(), ComputeRange{}, this->Range);
+    this->Range = vtkm::cont::ArrayRangeCompute(this->Data);
     this->ModifiedFlag = false;
   }
 
