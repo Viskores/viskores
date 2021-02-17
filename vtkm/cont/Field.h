@@ -16,28 +16,12 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
 namespace vtkm
 {
 namespace cont
 {
-
-namespace internal
-{
-
-// This implements deprecated functionality.
-struct ComputeRange
-{
-  template <typename ArrayHandleType>
-  void operator()(const ArrayHandleType& input, vtkm::cont::ArrayHandle<vtkm::Range>& range) const
-  {
-    range = vtkm::cont::ArrayRangeCompute(input);
-  }
-};
-
-} // namespace internal
 
 
 /// A \c Field encapsulates an array on some piece of the mesh, such as
@@ -91,22 +75,14 @@ public:
   VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
   {
-    this->GetRangeImpl(TypeList());
-    const vtkm::Id length = this->Range.GetNumberOfValues();
-    auto portal = this->Range.ReadPortal();
-    for (vtkm::Id i = 0; i < length; ++i)
-    {
-      range[i] = portal.Get(i);
-    }
+    this->GetRange(range);
   }
 
   template <typename TypeList>
   VTKM_DEPRECATED(1.6, "TypeList no longer supported in Field::GetRange.")
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
-    VTKM_STATIC_ASSERT_MSG((!std::is_same<TypeList, vtkm::ListUniversal>::value),
-                           "Cannot get the field range with vtkm::ListUniversal.");
-    return this->GetRangeImpl(TypeList());
+    return this->GetRange();
   }
 
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
@@ -138,24 +114,6 @@ private:
   vtkm::cont::UnknownArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag = true;
-
-  // This implements deprecated functionality
-  template <typename TypeList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRangeImpl(TypeList) const
-  {
-    VTKM_IS_LIST(TypeList);
-
-    VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf, "Field::GetRange");
-
-    if (this->ModifiedFlag)
-    {
-      vtkm::cont::CastAndCall(
-        this->Data.ResetTypes(TypeList()), internal::ComputeRange{}, this->Range);
-      this->ModifiedFlag = false;
-    }
-
-    return this->Range;
-  }
 };
 
 template <typename Functor, typename... Args>
