@@ -43,11 +43,12 @@ set(unit_tests
   UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
-  UnitTestArrayHandleReverse.cxx
+  UnitTestArrayHandleOffsetsToNumComponents.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformBits.cxx
   UnitTestArrayHandleRandomUniformReal.cxx
+  UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleTransform.cxx
