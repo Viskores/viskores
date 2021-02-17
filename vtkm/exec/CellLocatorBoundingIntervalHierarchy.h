@@ -7,15 +7,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
-#define vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
+#ifndef vtk_m_exec_CellLocatorBoundingIntervalHierarchy_h
+#define vtk_m_exec_CellLocatorBoundingIntervalHierarchy_h
 
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/exec/CellInside.h>
-#include <vtkm/exec/CellLocator.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
 namespace vtkm
@@ -62,8 +61,7 @@ struct CellLocatorBoundingIntervalHierarchyNode
 }; // struct CellLocatorBoundingIntervalHierarchyNode
 
 template <typename CellSetType>
-class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchyExec final
-  : public vtkm::exec::CellLocator
+class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy
 {
   using NodeArrayHandle =
     vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode>;
@@ -71,10 +69,7 @@ class VTKM_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchyExec final
 
 public:
   VTKM_CONT
-  CellLocatorBoundingIntervalHierarchyExec() {}
-
-  VTKM_CONT
-  CellLocatorBoundingIntervalHierarchyExec(
+  CellLocatorBoundingIntervalHierarchy(
     const NodeArrayHandle& nodes,
     const CellIdArrayHandle& cellIds,
     const CellSetType& cellSet,
@@ -89,16 +84,10 @@ public:
   }
 
 
-  VTKM_EXEC_CONT virtual ~CellLocatorBoundingIntervalHierarchyExec() noexcept override
-  {
-    // This must not be defaulted, since defaulted virtual destructors are
-    // troublesome with CUDA __host__ __device__ markup.
-  }
-
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
                            vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric) const override
+                           vtkm::Vec3f& parametric) const
   {
     cellId = -1;
     vtkm::Id nodeIndex = 0;
@@ -132,6 +121,11 @@ public:
       return vtkm::ErrorCode::CellNotFound;
     }
   }
+
+  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_EXEC CellLocatorBoundingIntervalHierarchy* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_EXEC const CellLocatorBoundingIntervalHierarchy* operator->() const { return this; }
 
 private:
   enum struct FindCellState
@@ -282,10 +276,10 @@ private:
   CellIdPortal CellIds;
   CellSetPortal CellSet;
   CoordsPortal Coords;
-}; // class CellLocatorBoundingIntervalHierarchyExec
+}; // class CellLocatorBoundingIntervalHierarchy
 
 } // namespace exec
 
 } // namespace vtkm
 
-#endif //vtk_m_cont_CellLocatorBoundingIntervalHierarchyExec_h
+#endif //vtk_m_exec_CellLocatorBoundingIntervalHierarchy_h

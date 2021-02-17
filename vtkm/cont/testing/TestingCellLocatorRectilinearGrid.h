@@ -103,7 +103,7 @@ public:
                             bool& match) const
   {
     vtkm::Id calculated = CalculateCellId(pointIn);
-    vtkm::ErrorCode status = locator->FindCell(pointIn, cellId, parametric);
+    vtkm::ErrorCode status = locator.FindCell(pointIn, cellId, parametric);
     if (status != vtkm::ErrorCode::Success)
     {
       this->RaiseError(vtkm::ErrorString(status));

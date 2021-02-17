@@ -528,7 +528,7 @@ public:
         query_distance += bumpDistance;
         vtkm::Vec<FloatType, 3> location = origin + rdir * (query_distance);
         vtkm::Vec<vtkm::FloatDefault, 3> pcoords;
-        locator->FindCell(location, cellId, pcoords);
+        locator.FindCell(location, cellId, pcoords);
       }
 
       currentCell = cellId;

@@ -16,7 +16,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorGeneral.h>
 #include <vtkm/cont/CellLocatorRectilinearGrid.h>
 #include <vtkm/cont/CellLocatorTwoLevel.h>
 #include <vtkm/cont/CellLocatorUniformGrid.h>
@@ -45,7 +45,7 @@ public:
   ExecutionGridEvaluator() = default;
 
   VTKM_CONT
-  ExecutionGridEvaluator(std::shared_ptr<vtkm::cont::CellLocator> locator,
+  ExecutionGridEvaluator(const vtkm::cont::CellLocatorGeneral& locator,
                          std::shared_ptr<vtkm::cont::CellInterpolationHelper> interpolationHelper,
                          const vtkm::Bounds& bounds,
                          const FieldType& field,
@@ -57,7 +57,7 @@ public:
     , GhostCells(ghostCells.PrepareForInput(device, token))
     , HaveGhostCells(ghostCells.GetNumberOfValues() > 0)
     , InterpolationHelper(interpolationHelper->PrepareForExecution(device, token))
-    , Locator(locator->PrepareForExecution(device, token))
+    , Locator(locator.PrepareForExecution(device, token))
   {
   }
 
@@ -67,7 +67,7 @@ public:
     vtkm::Id cellId;
     Point parametric;
 
-    Locator->FindCell(point, cellId, parametric);
+    this->Locator.FindCell(point, cellId, parametric);
 
     if (cellId == -1)
       return false;
@@ -94,7 +94,7 @@ public:
                                          const vtkm::FloatDefault& time,
                                          vtkm::VecVariable<Point, 2>& out) const
   {
-    vtkm::Id cellId;
+    vtkm::Id cellId = -1;
     Point parametric;
     GridEvaluatorStatus status;
 
@@ -105,7 +105,7 @@ public:
       status.SetTemporalBounds();
     }
 
-    Locator->FindCell(point, cellId, parametric);
+    this->Locator.FindCell(point, cellId, parametric);
     if (cellId == -1)
     {
       status.SetFail();
@@ -150,7 +150,7 @@ private:
   GhostCellPortal GhostCells;
   bool HaveGhostCells;
   const vtkm::exec::CellInterpolationHelper* InterpolationHelper;
-  const vtkm::exec::CellLocator* Locator;
+  typename vtkm::cont::CellLocatorGeneral::ExecObjType Locator;
 };
 
 template <typename FieldType>
@@ -214,55 +214,23 @@ private:
   VTKM_CONT void InitializeLocator(const vtkm::cont::CoordinateSystem& coordinates,
                                    const vtkm::cont::DynamicCellSet& cellset)
   {
+    this->Locator.SetCoordinates(coordinates);
+    this->Locator.SetCellSet(cellset);
+    this->Locator.Update();
     if (cellset.IsSameType(Structured2DType()) || cellset.IsSameType(Structured3DType()))
     {
-      if (coordinates.GetData().IsType<UniformType>())
-      {
-        vtkm::cont::CellLocatorUniformGrid locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorUniformGrid>(locator);
-      }
-      else if (coordinates.GetData().IsType<RectilinearType>())
-      {
-        vtkm::cont::CellLocatorRectilinearGrid locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorRectilinearGrid>(locator);
-      }
-      else
-      {
-        // Default to using an locator for explicit meshes.
-        vtkm::cont::CellLocatorTwoLevel locator;
-        locator.SetCoordinates(coordinates);
-        locator.SetCellSet(cellset);
-        locator.Update();
-        this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
-      }
       vtkm::cont::StructuredCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::StructuredCellInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
-      vtkm::cont::CellLocatorTwoLevel locator;
-      locator.SetCoordinates(coordinates);
-      locator.SetCellSet(cellset);
-      locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
       vtkm::cont::SingleCellTypeInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::SingleCellTypeInterpolationHelper>(interpolationHelper);
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
-      vtkm::cont::CellLocatorTwoLevel locator;
-      locator.SetCoordinates(coordinates);
-      locator.SetCellSet(cellset);
-      locator.Update();
-      this->Locator = std::make_shared<vtkm::cont::CellLocatorTwoLevel>(locator);
       vtkm::cont::ExplicitCellInterpolationHelper interpolationHelper(cellset);
       this->InterpolationHelper =
         std::make_shared<vtkm::cont::ExplicitCellInterpolationHelper>(interpolationHelper);
@@ -275,7 +243,7 @@ private:
   FieldType Field;
   GhostCellArrayType GhostCellArray;
   std::shared_ptr<vtkm::cont::CellInterpolationHelper> InterpolationHelper;
-  std::shared_ptr<vtkm::cont::CellLocator> Locator;
+  vtkm::cont::CellLocatorGeneral Locator;
 };
 
 } //namespace particleadvection

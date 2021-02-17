@@ -55,6 +55,7 @@ set(unit_tests
   UnitTestArrayHandleVirtual.cxx
   UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestCellLocatorChooser.cxx
   UnitTestCellLocatorGeneral.cxx
   UnitTestCellSet.cxx
   UnitTestCellSetExplicit.cxx

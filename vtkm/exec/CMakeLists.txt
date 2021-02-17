@@ -16,8 +16,8 @@ set(headers
   CellFace.h
   CellInside.h
   CellInterpolate.h
-  CellLocator.h
-  CellLocatorBoundingIntervalHierarchyExec.h
+  CellLocatorBoundingIntervalHierarchy.h
+  CellLocatorMultiplexer.h
   CellLocatorRectilinearGrid.h
   CellLocatorTwoLevel.h
   CellLocatorUniformGrid.h
@@ -39,6 +39,12 @@ set(headers
 set(header_impls
   ColorTable.hxx
   )
+
+if (NOT VTKm_NO_DEPRECATED_VIRTUAL)
+  set(headers ${headers}
+    CellLocator.h
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)

@@ -461,28 +461,31 @@ struct CellLocatorTwoLevel::MakeExecObject
   VTKM_CONT void operator()(const CellSetType& cellSet,
                             vtkm::cont::DeviceAdapterId device,
                             vtkm::cont::Token& token,
-                            const CellLocatorTwoLevel& self) const
+                            const CellLocatorTwoLevel& self,
+                            ExecObjType& execObject) const
   {
-    auto execObject = new vtkm::exec::CellLocatorTwoLevel<CellSetType>(self.TopLevel,
-                                                                       self.LeafDimensions,
-                                                                       self.LeafStartIndex,
-                                                                       self.CellStartIndex,
-                                                                       self.CellCount,
-                                                                       self.CellIds,
-                                                                       cellSet,
-                                                                       self.GetCoordinates(),
-                                                                       device,
-                                                                       token);
-    self.ExecutionObjectHandle.Reset(execObject);
+    using CellStructuredType = CellSetContToExec<CellSetType>;
+    execObject = vtkm::exec::CellLocatorTwoLevel<CellStructuredType>(self.TopLevel,
+                                                                     self.LeafDimensions,
+                                                                     self.LeafStartIndex,
+                                                                     self.CellStartIndex,
+                                                                     self.CellCount,
+                                                                     self.CellIds,
+                                                                     cellSet,
+                                                                     self.GetCoordinates(),
+                                                                     device,
+                                                                     token);
   }
 };
 
-VTKM_CONT const vtkm::exec::CellLocator* CellLocatorTwoLevel::PrepareForExecution(
+CellLocatorTwoLevel::ExecObjType CellLocatorTwoLevel::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
-  this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this);
-  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
+  this->Update();
+  ExecObjType execObject;
+  this->GetCellSet().CastAndCall(MakeExecObject{}, device, token, *this, execObject);
+  return execObject;
 }
 
 //----------------------------------------------------------------------------

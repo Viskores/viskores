@@ -16,8 +16,11 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/CellLocator.h>
-#include <vtkm/cont/VirtualObjectHandle.h>
+
+#include <vtkm/cont/internal/CellLocatorBase.h>
+
+#include <vtkm/exec/CellLocatorBoundingIntervalHierarchy.h>
+#include <vtkm/exec/CellLocatorMultiplexer.h>
 
 #include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
 
@@ -26,9 +29,19 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocator
+class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy
+  : public vtkm::cont::internal::CellLocatorBase<CellLocatorBoundingIntervalHierarchy>
 {
+  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorBoundingIntervalHierarchy>;
+
 public:
+  using SupportedCellSets = VTKM_DEFAULT_CELL_SET_LIST;
+
+  using CellLocatorExecList =
+    vtkm::ListTransform<SupportedCellSets, vtkm::exec::CellLocatorBoundingIntervalHierarchy>;
+
+  using ExecObjType = vtkm::ListApply<CellLocatorExecList, vtkm::exec::CellLocatorMultiplexer>;
+
   VTKM_CONT
   CellLocatorBoundingIntervalHierarchy(vtkm::IdComponent numPlanes = 4,
                                        vtkm::IdComponent maxLeafSize = 5)
@@ -38,8 +51,6 @@ public:
     , ProcessedCellIds()
   {
   }
-
-  VTKM_CONT ~CellLocatorBoundingIntervalHierarchy() override;
 
   VTKM_CONT
   void SetNumberOfSplittingPlanes(vtkm::IdComponent numPlanes)
@@ -61,13 +72,8 @@ public:
   VTKM_CONT
   vtkm::Id GetMaxLeafSize() { return this->MaxLeafSize; }
 
-  VTKM_CONT
-  const vtkm::exec::CellLocator* PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                                     vtkm::cont::Token& token) const override;
-
-protected:
-  VTKM_CONT
-  void Build() override;
+  VTKM_CONT ExecObjType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                            vtkm::cont::Token& token) const;
 
 private:
   vtkm::IdComponent NumPlanes;
@@ -75,7 +81,10 @@ private:
   vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> Nodes;
   vtkm::cont::ArrayHandle<vtkm::Id> ProcessedCellIds;
 
-  mutable vtkm::cont::VirtualObjectHandle<vtkm::exec::CellLocator> ExecutionObjectHandle;
+  friend Superclass;
+  VTKM_CONT void Build();
+
+  struct MakeExecObject;
 };
 
 } // namespace cont

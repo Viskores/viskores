@@ -20,15 +20,6 @@ namespace vtkm
 namespace cont
 {
 
-CellLocatorRectilinearGrid::CellLocatorRectilinearGrid() = default;
-
-CellLocatorRectilinearGrid::~CellLocatorRectilinearGrid() = default;
-
-using Structured2DType = vtkm::cont::CellSetStructured<2>;
-using Structured3DType = vtkm::cont::CellSetStructured<3>;
-using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-using RectilinearType = vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
-
 void CellLocatorRectilinearGrid::Build()
 {
   vtkm::cont::CoordinateSystem coords = this->GetCoordinates();
@@ -59,35 +50,33 @@ void CellLocatorRectilinearGrid::Build()
   }
 }
 
-const vtkm::exec::CellLocator* CellLocatorRectilinearGrid::PrepareForExecution(
+vtkm::exec::CellLocatorRectilinearGrid CellLocatorRectilinearGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
+  this->Update();
+
+  using ExecObjType = vtkm::exec::CellLocatorRectilinearGrid;
+
   if (this->Is3D)
   {
-    using ExecutionType = vtkm::exec::CellLocatorRectilinearGrid<3>;
-    ExecutionType* execObject =
-      new ExecutionType(this->PlaneSize,
-                        this->RowSize,
-                        this->GetCellSet().Cast<Structured3DType>(),
-                        this->GetCoordinates().GetData().AsArrayHandle<RectilinearType>(),
-                        device,
-                        token);
-    this->ExecutionObjectHandle.Reset(execObject);
+    return ExecObjType(this->PlaneSize,
+                       this->RowSize,
+                       this->GetCellSet().template Cast<Structured3DType>(),
+                       this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
+                       device,
+                       token);
   }
   else
   {
-    using ExecutionType = vtkm::exec::CellLocatorRectilinearGrid<2>;
-    ExecutionType* execObject =
-      new ExecutionType(this->PlaneSize,
-                        this->RowSize,
-                        this->GetCellSet().Cast<Structured2DType>(),
-                        this->GetCoordinates().GetData().AsArrayHandle<RectilinearType>(),
-                        device,
-                        token);
-    this->ExecutionObjectHandle.Reset(execObject);
+    return ExecObjType(this->PlaneSize,
+                       this->RowSize,
+                       this->GetCellSet().template Cast<Structured2DType>(),
+                       this->GetCoordinates().GetData().template AsArrayHandle<RectilinearType>(),
+                       device,
+                       token);
   }
-  return this->ExecutionObjectHandle.PrepareForExecution(device, token);
 }
+
 } //namespace cont
 } //namespace vtkm
