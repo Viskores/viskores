@@ -78,7 +78,6 @@
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h> // This is needed only as an unused default argument.
 #include <vtkm/worklet/contourtree_augmented/meshtypes/MeshStructureContourTreeMesh.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/ArcComparator.h>
-#include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedArrayHandleDecorator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedOtherStartIndexNNeighboursWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedSimulatedSimplicityIndexComparator.h>
 #include <vtkm/worklet/contourtree_augmented/meshtypes/contourtreemesh/CombinedVectorDifferentFromNext.h>
@@ -565,37 +564,12 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   {
     // Array decorator with functor returning 0, 1 for each element depending
     // on whethern the current value is different from the next
-#if 1
     auto differentFromNextArr = vtkm::cont::make_ArrayHandleDecorator(
       overallSortIndex.GetNumberOfValues() - 1,
       mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNextDecoratorImpl{},
       overallSortOrder,
       this->GlobalMeshIndex,
       other.GlobalMeshIndex);
-#else
-    struct OneIfDifferentFunctor
-    {
-      VTKM_EXEC_CONT
-      vtkm::Id operator()(vtkm::Pair<vtkm::Id, vtkm::Id> x) const
-      {
-        return x.first == x.second ? 0 : 1;
-      }
-    };
-    // Alternate implementation
-    auto combinedMeshIndexArray = vtkm::cont::make_ArrayHandleDecorator(
-      this->GlobalMeshIndex.GetNumberOfValues() + other.GlobalMeshIndex.GetNumberOfValues(),
-      mesh_dem_contourtree_mesh_inc::CombinedArrayHandleDecoratorImpl<vtkm::Id>{},
-      this->GlobalMeshIndex,
-      other.GlobalMeshIndex);
-    auto permutedMeshIndexHandle =
-      make_ArrayHandlePermutation(overallSortOrder, combinedMeshIndexArray);
-    auto view0 = make_ArrayHandleView(
-      permutedMeshIndexHandle, 0, permutedMeshIndexHandle.GetNumberOfValues() - 1);
-    auto view1 = make_ArrayHandleView(
-      permutedMeshIndexHandle, 1, permutedMeshIndexHandle.GetNumberOfValues() - 1);
-    auto zipped = make_ArrayHandleZip(view0, view1);
-    auto differentFromNextArr = make_ArrayHandleTransform(zipped, OneIfDifferentFunctor{});
-#endif
 
     // Compute the exclusive scan of our transformed combined vector
     overallSortIndex.WritePortal().Set(0, 0);
