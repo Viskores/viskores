@@ -180,6 +180,7 @@ private:
     std::cout << "  Specified min/max box" << std::endl;
     box.SetMinPoint({ 0.0f, -0.5f, -0.5f });
     box.SetMaxPoint({ 1.5f, 1.5f, 0.5f });
+    boxHandle.Reset(&box, false);
     this->Try(boxHandle,
               { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
@@ -194,6 +195,7 @@ private:
 
     std::cout << "  Specified bounds box" << std::endl;
     box.SetBounds({ vtkm::Range(0.0, 1.5), vtkm::Range(-0.5, 1.5), vtkm::Range(-0.5, 0.5) });
+    boxHandle.Reset(&box, false);
     this->Try(boxHandle,
               { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, 0.0f },
@@ -232,6 +234,7 @@ private:
     cylinder.SetCenter({ 0.0f, 0.0f, 1.0f });
     cylinder.SetAxis({ 0.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
+    cylinderHandle.Reset(&cylinder, false);
     this->Try(cylinderHandle,
               { { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, -2.0f },
@@ -248,6 +251,7 @@ private:
     cylinder.SetCenter({ 0.0f, 0.0f, 0.0f });
     cylinder.SetAxis({ 1.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
+    cylinderHandle.Reset(&cylinder, false);
     this->Try(cylinderHandle,
               { { -1.0f, -0.5f, 0.5f, 0.0f, -0.5f, -1.0f, 0.0f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 0.0f },
@@ -278,9 +282,8 @@ private:
       { 1.5f, 1.0f, 0.5f },   // 6
       { 1.5f, 1.0f, -0.5f }   // 7
     };
-    vtkm::cont::ImplicitFunctionHandle frustumHandle =
-      vtkm::cont::make_ImplicitFunctionHandle<vtkm::Frustum>(cornerPoints);
-    vtkm::Frustum* frustum = static_cast<vtkm::Frustum*>(frustumHandle.Get());
+    vtkm::Frustum frustum{ cornerPoints };
+    vtkm::cont::ImplicitFunctionHandle frustumHandle(&frustum, false);
     this->Try(frustumHandle,
               { { 0.0f, 0.353553f, 0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
@@ -301,6 +304,7 @@ private:
                                     { -1.0f, 0.0f, 0.0f }, { 0.707107f, -0.707107f, 0.0f },
                                     { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
     frustum->SetPlanes(planePoints, planeNormals);
+    frustumHandle.Reset(&frustum, false);
     this->Try(frustumHandle,
               { { 0.0f, 0.353553f, 0.5f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f } },
               { { vtkm::Vec3f{ 0.0f, -1.0f, 0.0f },
@@ -321,9 +325,8 @@ private:
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
     std::cout << "  Default plane" << std::endl;
-    vtkm::cont::ImplicitFunctionHandle planeHandle =
-      vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane());
-    vtkm::Plane* plane = static_cast<vtkm::Plane*>(planeHandle.Get());
+    vtkm::Plane plane;
+    vtkm::cont::ImplicitFunctionHandle planeHandle = vtkm::cont::make_ImplicitFunctionHandle(plane);
     this->Try(planeHandle,
               { { 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
@@ -339,6 +342,7 @@ private:
     std::cout << "  Normal of length 2" << std::endl;
     plane->SetOrigin({ 1.0f, 1.0f, 1.0f });
     plane->SetNormal({ 0.0f, 0.0f, 2.0f });
+    planeHandle.Reset(&plane, false);
     this->Try(planeHandle,
               { { -2.0f, -2.0f, 0.0f, 0.0f, -2.0f, -2.0f, 0.0f, 0.0f } },
               { { vtkm::Vec3f{ 0.0f, 0.0f, 2.0f },
@@ -354,6 +358,7 @@ private:
     std::cout << "  Oblique plane" << std::endl;
     plane->SetOrigin({ 0.5f, 0.5f, 0.5f });
     plane->SetNormal({ 1.0f, 0.0f, 1.0f });
+    planeHandle.Reset(&plane, false);
     this->Try(planeHandle,
               { { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f } },
               { { vtkm::Vec3f{ 1.0f, 0.0f, 1.0f },
@@ -368,6 +373,7 @@ private:
 
     std::cout << "  Another oblique plane" << std::endl;
     plane->SetNormal({ -1.0f, 0.0f, -1.0f });
+    planeHandle.Reset(&plane, false);
     this->Try(planeHandle,
               { { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
               { { vtkm::Vec3f{ -1.0f, 0.0f, -1.0f },
@@ -405,6 +411,7 @@ private:
     std::cout << "  Shifted and scaled sphere" << std::endl;
     sphere.SetCenter({ 1.0f, 1.0f, 1.0f });
     sphere.SetRadius(1.0f);
+    sphereHandle.Reset(&sphere, false);
     this->Try(sphereHandle,
               { { 2.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f } },
               { { vtkm::Vec3f{ -2.0f, -2.0f, -2.0f },

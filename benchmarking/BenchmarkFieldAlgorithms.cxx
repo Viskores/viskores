@@ -248,50 +248,35 @@ public:
   }
 };
 
-template <typename ImplicitFunction>
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut, ExecObject);
+  using ExecutionSignature = void(_1, _2, _3);
 
-  EvaluateImplicitFunction(const ImplicitFunction* function)
-    : Function(function)
+  template <typename VecType, typename ScalarType, typename FunctionType>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            const FunctionType& function) const
   {
+    val = function->Value(point);
   }
-
-  template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
-  {
-    val = this->Function->Value(point);
-  }
-
-private:
-  const ImplicitFunction* Function;
 };
 
-template <typename T1, typename T2>
 class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldIn, FieldOut, ExecObject, ExecObject);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
-    : Function1(f1)
-    , Function2(f2)
+  template <typename VecType, typename ScalarType, typename FType1, typename FType2>
+  VTKM_EXEC void operator()(const VecType& point,
+                            ScalarType& val,
+                            const FType1& function1,
+                            const FType2& function2) const
   {
+    val = function1->Value(point) + function2->Value(point);
   }
-
-  template <typename VecType, typename ScalarType>
-  VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
-  {
-    val = this->Function1->Value(point) + this->Function2->Value(point);
-  }
-
-private:
-  const T1* Function1;
-  const T2* Function2;
 };
 
 struct PassThroughFunctor
@@ -821,7 +806,7 @@ static ImplicitFunctionBenchData MakeImplicitFunctionBenchData()
 
 void BenchImplicitFunction(::benchmark::State& state)
 {
-  using EvalWorklet = EvaluateImplicitFunction<vtkm::Sphere>;
+  using EvalWorklet = EvaluateImplicitFunction;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -835,8 +820,7 @@ void BenchImplicitFunction(::benchmark::State& state)
 
   vtkm::cont::Token token;
   auto handle = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto function = static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(device, token));
-  EvalWorklet eval(function);
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -845,7 +829,7 @@ void BenchImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, handle);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -855,7 +839,7 @@ VTKM_BENCHMARK(BenchImplicitFunction);
 
 void BenchVirtualImplicitFunction(::benchmark::State& state)
 {
-  using EvalWorklet = EvaluateImplicitFunction<vtkm::ImplicitFunction>;
+  using EvalWorklet = EvaluateImplicitFunction;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -869,7 +853,7 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
 
   vtkm::cont::Token token;
   auto sphere = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  EvalWorklet eval(sphere.PrepareForExecution(device, token));
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -878,7 +862,7 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, sphere);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -888,7 +872,7 @@ VTKM_BENCHMARK(BenchVirtualImplicitFunction);
 
 void Bench2ImplicitFunctions(::benchmark::State& state)
 {
-  using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::Sphere, vtkm::Sphere>;
+  using EvalWorklet = Evaluate2ImplicitFunctions;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -903,9 +887,7 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
   vtkm::cont::Token token;
   auto h1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto h2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(device, token));
-  auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(device, token));
-  EvalWorklet eval(f1, f2);
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -914,7 +896,7 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, h1, h2);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -924,7 +906,7 @@ VTKM_BENCHMARK(Bench2ImplicitFunctions);
 
 void Bench2VirtualImplicitFunctions(::benchmark::State& state)
 {
-  using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::ImplicitFunction, vtkm::ImplicitFunction>;
+  using EvalWorklet = Evaluate2ImplicitFunctions;
 
   const vtkm::cont::DeviceAdapterId device = Config.Device;
 
@@ -939,7 +921,7 @@ void Bench2VirtualImplicitFunctions(::benchmark::State& state)
   vtkm::cont::Token token;
   auto s1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   auto s2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  EvalWorklet eval(s1.PrepareForExecution(device, token), s2.PrepareForExecution(device, token));
+  EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
   vtkm::cont::Invoker invoker{ device };
@@ -948,7 +930,7 @@ void Bench2VirtualImplicitFunctions(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result);
+    invoker(eval, data.Points, data.Result, s1, s2);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
