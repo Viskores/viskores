@@ -75,6 +75,17 @@ public:
   {
     return reinterpret_cast<const Derived*>(this)->Gradient(Vector(x, y, z));
   }
+
+  VTKM_CONT const Derived& PrepareForExecution(vtkm::cont::DeviceAdapterId,
+                                               vtkm::cont::Token&) const
+  {
+    return *reinterpret_cast<const Derived*>(this);
+  }
+
+  VTKM_CONT const Derived& PrepareForControl() const
+  {
+    return *reinterpret_cast<const Derived*>(this);
+  }
 };
 
 } // namespace vtkm::internal
