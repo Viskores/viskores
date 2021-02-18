@@ -131,9 +131,31 @@ private:
       VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
       VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
     }
-  }
-  VTKM_DEPRECATED_SUPPRESS_END
+    VTKM_DEPRECATED_SUPPRESS_END
 #endif //!VTKM_NO_DEPRECATED_VIRTUAL
+
+    {
+      vtkm::ImplicitFunctionMultiplexer<ImplicitFunctorType> functionChoose(function);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), functionChoose, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
+
+    {
+      vtkm::ImplicitFunctionGeneral functionChoose(function);
+      vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> gradients;
+      implicit_function_detail::EvaluateOnCoordinates(
+        this->Input.GetCoordinateSystem(0), functionChoose, values, gradients, device);
+
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(values, expectedValuesArray));
+      VTKM_TEST_ASSERT(test_equal_ArrayHandles(gradients, expectedGradientsArray));
+    }
+  }
 
   template <typename DeviceAdapter>
   void TestBox(DeviceAdapter device)

@@ -14,10 +14,15 @@
 #include <vtkm/Deprecated.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/VirtualObjectBase.h>
+
+#include <vtkm/exec/internal/Variant.h>
 
 // For interface class only.
 #include <vtkm/cont/ExecutionAndControlObjectBase.h>
+
+#ifndef VTKM_NO_DEPRECATED_VIRTUAL
+#include <vtkm/VirtualObjectBase.h>
+#endif // VTKM_NO_DEPRECATED_VIRTUAL
 
 namespace vtkm
 {
@@ -776,6 +781,84 @@ public:
 private:
   Scalar Radius;
   Vector Center;
+};
+
+namespace detail
+{
+
+struct ImplicitFunctionValueFunctor
+{
+  template <typename ImplicitFunctionType>
+  VTKM_EXEC_CONT typename ImplicitFunctionType::Scalar operator()(
+    const ImplicitFunctionType& function,
+    const typename ImplicitFunctionType::Vector& point) const
+  {
+    return function.Value(point);
+  }
+};
+
+struct ImplicitFunctionGradientFunctor
+{
+  template <typename ImplicitFunctionType>
+  VTKM_EXEC_CONT typename ImplicitFunctionType::Vector operator()(
+    const ImplicitFunctionType& function,
+    const typename ImplicitFunctionType::Vector& point) const
+  {
+    return function.Gradient(point);
+  }
+};
+
+} // namespace detail
+
+template <typename... ImplicitFunctionTypes>
+class ImplicitFunctionMultiplexer
+  : public vtkm::internal::ImplicitFunctionBase<
+      ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>
+{
+  vtkm::exec::internal::Variant<ImplicitFunctionTypes...> Variant;
+
+  using Superclass =
+    vtkm::internal::ImplicitFunctionBase<ImplicitFunctionMultiplexer<ImplicitFunctionTypes...>>;
+
+public:
+  using Scalar = typename Superclass::Scalar;
+  using Vector = typename Superclass::Vector;
+
+  VTKM_EXEC_CONT ImplicitFunctionMultiplexer() = default;
+
+  template <typename FunctionType>
+  VTKM_EXEC_CONT ImplicitFunctionMultiplexer(
+    const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
+    : Variant(reinterpret_cast<const FunctionType&>(function))
+  {
+  }
+
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
+  {
+    return this->Variant.CastAndCall(detail::ImplicitFunctionValueFunctor{}, point);
+  }
+
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
+  {
+    return this->Variant.CastAndCall(detail::ImplicitFunctionGradientFunctor{}, point);
+  }
+};
+
+class ImplicitFunctionGeneral
+  : public vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
+                                             vtkm::Cylinder,
+                                             vtkm::Frustum,
+                                             vtkm::Plane,
+                                             vtkm::Sphere>
+{
+  using Superclass = vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
+                                                       vtkm::Cylinder,
+                                                       vtkm::Frustum,
+                                                       vtkm::Plane,
+                                                       vtkm::Sphere>;
+
+public:
+  using Superclass::Superclass;
 };
 
 } // namespace vtkm
