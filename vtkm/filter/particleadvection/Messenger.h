@@ -44,14 +44,14 @@ public:
 #endif
   }
 
+  int GetRank() const { return this->Rank; }
+  int GetNumRanks() const { return this->NumRanks; }
+
 #ifdef VTKM_ENABLE_MPI
   VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
 
 protected:
   static std::size_t CalcMessageBufferSize(std::size_t msgSz);
-
-  int GetRank() const { return this->Rank; }
-  int GetNumRanks() const { return this->NumRanks; }
 
   void InitializeBuffers();
   void CheckPendingSendRequests();
