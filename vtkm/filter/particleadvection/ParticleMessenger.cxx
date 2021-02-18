@@ -124,7 +124,7 @@ void ParticleMessenger::Exchange(
 
   //Do all the sends first.
   if (numLocalTerm > 0)
-    SendAllMsg({ MSG_TERMINATE, static_cast<int>(numLocalTerm) });
+    this->SendAllMsg({ MSG_TERMINATE, static_cast<int>(numLocalTerm) });
   this->SendParticles(sendData);
   this->CheckPendingSendRequests();
 
@@ -211,23 +211,23 @@ bool ParticleMessenger::RecvAny(std::vector<MsgCommType>* msgs,
   if (!this->RecvData(tags, buffers, blockAndWait))
     return false;
 
-  for (size_t i = 0; i < buffers.size(); i++)
+  for (auto& buff : buffers)
   {
-    if (buffers[i].first == ParticleMessenger::MESSAGE_TAG)
+    if (buff.first == ParticleMessenger::MESSAGE_TAG)
     {
       int sendRank;
       std::vector<int> m;
-      vtkmdiy::load(buffers[i].second, sendRank);
-      vtkmdiy::load(buffers[i].second, m);
+      vtkmdiy::load(buff.second, sendRank);
+      vtkmdiy::load(buff.second, m);
       msgs->push_back(std::make_pair(sendRank, m));
     }
-    else if (buffers[i].first == ParticleMessenger::PARTICLE_TAG)
+    else if (buff.first == ParticleMessenger::PARTICLE_TAG)
     {
       int sendRank;
       std::vector<ParticleCommType> particles;
 
-      vtkmdiy::load(buffers[i].second, sendRank);
-      vtkmdiy::load(buffers[i].second, particles);
+      vtkmdiy::load(buff.second, sendRank);
+      vtkmdiy::load(buff.second, particles);
       recvParticles->push_back(std::make_pair(sendRank, particles));
     }
   }
