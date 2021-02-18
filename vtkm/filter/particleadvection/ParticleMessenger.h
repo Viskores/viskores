@@ -114,7 +114,7 @@ VTKM_CONT
 template <typename P, template <typename, typename> class Container, typename Allocator>
 inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator>& c)
 {
-  if (dst == this->Rank)
+  if (dst == this->GetRank())
   {
     VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Error. Sending a particle to yourself.");
     return;
@@ -123,7 +123,7 @@ inline void ParticleMessenger::SendParticles(int dst, const Container<P, Allocat
     return;
 
   vtkmdiy::MemoryBuffer bb;
-  vtkmdiy::save(bb, this->Rank);
+  vtkmdiy::save(bb, this->GetRank());
   vtkmdiy::save(bb, c);
   this->SendData(dst, ParticleMessenger::PARTICLE_TAG, bb);
 }

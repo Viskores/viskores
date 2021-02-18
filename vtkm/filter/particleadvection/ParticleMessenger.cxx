@@ -106,7 +106,7 @@ void ParticleMessenger::Exchange(
   numTerminateMessages = 0;
   inDataBlockIDsMap.clear();
 
-  if (this->NumRanks == 1)
+  if (this->GetNumRanks() == 1)
     return this->SerialExchange(
       outData, outBlockIDsMap, numLocalTerm, inData, inDataBlockIDsMap, blockAndWait);
 
@@ -160,7 +160,7 @@ void ParticleMessenger::RegisterMessages(int msgSz, int nParticles, int numBlock
   std::size_t messageBuffSz = CalcMessageBufferSize(msgSz + 1);
   std::size_t particleBuffSz = CalcParticleBufferSize(nParticles, numBlockIds);
 
-  int numRecvs = std::min(64, this->NumRanks - 1);
+  int numRecvs = std::min(64, this->GetNumRanks() - 1);
 
   this->RegisterTag(ParticleMessenger::MESSAGE_TAG, numRecvs, messageBuffSz);
   this->RegisterTag(ParticleMessenger::PARTICLE_TAG, numRecvs, particleBuffSz);
@@ -174,7 +174,7 @@ void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
   vtkmdiy::MemoryBuffer buff;
 
   //Write data.
-  vtkmdiy::save(buff, this->Rank);
+  vtkmdiy::save(buff, this->GetRank());
   vtkmdiy::save(buff, msg);
   this->SendData(dst, ParticleMessenger::MESSAGE_TAG, buff);
 }
@@ -182,8 +182,8 @@ void ParticleMessenger::SendMsg(int dst, const std::vector<int>& msg)
 VTKM_CONT
 void ParticleMessenger::SendAllMsg(const std::vector<int>& msg)
 {
-  for (int i = 0; i < this->NumRanks; i++)
-    if (i != this->Rank)
+  for (int i = 0; i < this->GetNumRanks(); i++)
+    if (i != this->GetRank())
       this->SendMsg(i, msg);
 }
 

@@ -120,43 +120,63 @@ void Messenger::PostRecv(int tag, std::size_t sz, int src)
 
 void Messenger::CheckPendingSendRequests()
 {
-  std::vector<MPI_Request> req, copy;
-  std::vector<int> tags;
+  std::vector<RequestTagPair> reqTags;
+  this->CheckRequests(this->SendBuffers, {}, false, reqTags);
 
-  for (auto&& it : this->SendBuffers)
+  //Cleanup any send buffers that have completed.
+  for (auto&& rt : reqTags)
   {
-    req.push_back(it.first.first);
-    copy.push_back(it.first.first);
-    tags.push_back(it.first.second);
-  }
-
-  if (req.empty())
-    return;
-
-  //See if any sends are done.
-  int num = 0, *indices = new int[req.size()];
-  MPI_Status* status = new MPI_Status[req.size()];
-  int err = MPI_Testsome(req.size(), &req[0], &num, indices, status);
-  if (err != MPI_SUCCESS)
-    throw vtkm::cont::ErrorFilterExecution(
-      "Error iwth MPI_Testsome in Messenger::CheckPendingSendRequests");
-
-  for (int i = 0; i < num; i++)
-  {
-    MPI_Request r = copy[indices[i]];
-    int tag = tags[indices[i]];
-
-    RequestTagPair k(r, tag);
-    auto entry = this->SendBuffers.find(k);
+    auto entry = this->SendBuffers.find(rt);
     if (entry != this->SendBuffers.end())
     {
       delete[] entry->second;
       this->SendBuffers.erase(entry);
     }
   }
+}
 
-  delete[] indices;
-  delete[] status;
+void Messenger::CheckRequests(const std::map<RequestTagPair, char*>& buffers,
+                              const std::set<int>& tagsToCheck,
+                              bool BlockAndWait,
+                              std::vector<RequestTagPair>& reqTags)
+{
+  std::vector<MPI_Request> req, copy;
+  std::vector<int> tags;
+
+  reqTags.resize(0);
+
+  //Check the buffers for the specified tags.
+  for (auto&& it : buffers)
+  {
+    if (tagsToCheck.empty() || tagsToCheck.find(it.first.second) != tagsToCheck.end())
+    {
+      req.push_back(it.first.first);
+      copy.push_back(it.first.first);
+      tags.push_back(it.first.second);
+    }
+  }
+
+  //Nothing..
+  if (req.empty())
+    return;
+
+  //Check the outstanding requests.
+  std::vector<MPI_Status> status(req.size());
+  std::vector<int> indices(req.size());
+  int num = 0;
+
+  int err;
+  if (BlockAndWait)
+    err = MPI_Waitsome(req.size(), req.data(), &num, indices.data(), status.data());
+  else
+    err = MPI_Testsome(req.size(), req.data(), &num, indices.data(), status.data());
+  if (err != MPI_SUCCESS)
+    throw vtkm::cont::ErrorFilterExecution("Error with MPI_Testsome in Messenger::RecvData");
+
+
+  //Add the req/tag to the return vector.
+  for (int i = 0; i < num; i++)
+    reqTags.push_back(RequestTagPair(copy[indices[i]], tags[indices[i]]));
 }
 
 bool Messenger::PacketCompare(const char* a, const char* b)
@@ -259,56 +279,36 @@ bool Messenger::RecvData(int tag, std::vector<vtkmdiy::MemoryBuffer>& buffers, b
   return false;
 }
 
-bool Messenger::RecvData(std::set<int>& tags,
+bool Messenger::RecvData(const std::set<int>& tags,
                          std::vector<std::pair<int, vtkmdiy::MemoryBuffer>>& buffers,
                          bool blockAndWait)
 {
   buffers.resize(0);
 
-  //Find all recv of type tag.
-  std::vector<MPI_Request> req, copy;
-  std::vector<int> reqTags;
-  for (const auto& i : this->RecvBuffers)
-  {
-    if (tags.find(i.first.second) != tags.end())
-    {
-      req.push_back(i.first.first);
-      copy.push_back(i.first.first);
-      reqTags.push_back(i.first.second);
-    }
-  }
+  std::vector<RequestTagPair> reqTags;
+  this->CheckRequests(this->RecvBuffers, tags, blockAndWait, reqTags);
 
-  if (req.empty())
+  //Nothing came in.
+  if (reqTags.empty())
     return false;
 
-  std::vector<MPI_Status> status(req.size());
-  std::vector<int> indices(req.size());
-  int num = 0;
-
-  if (blockAndWait)
-    MPI_Waitsome(req.size(), req.data(), &num, indices.data(), status.data());
-  else
-    MPI_Testsome(req.size(), req.data(), &num, indices.data(), status.data());
-
-  if (num == 0)
-    return false;
-
-  std::vector<char*> incomingBuffers(num);
-  for (int i = 0; i < num; i++)
+  std::vector<char*> incomingBuffers;
+  incomingBuffers.reserve(reqTags.size());
+  for (auto&& rt : reqTags)
   {
-    RequestTagPair entry(copy[indices[i]], reqTags[indices[i]]);
-    auto it = this->RecvBuffers.find(entry);
+    auto it = this->RecvBuffers.find(rt);
     if (it == this->RecvBuffers.end())
       throw vtkm::cont::ErrorFilterExecution("receive buffer not found");
 
-    incomingBuffers[i] = it->second;
+    incomingBuffers.push_back(it->second);
     this->RecvBuffers.erase(it);
   }
 
   this->ProcessReceivedBuffers(incomingBuffers, buffers);
 
-  for (int i = 0; i < num; i++)
-    PostRecv(reqTags[indices[i]]);
+  //Re-post receives
+  for (auto&& rt : reqTags)
+    this->PostRecv(rt.second);
 
   return !buffers.empty();
 }
