@@ -200,9 +200,9 @@ public:
     return vtkm::ErrorCode::CellNotFound;
   }
 
-  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
   VTKM_EXEC CellLocatorTwoLevel* operator->() { return this; }
-  VTKM_DEPRECATED(1.6, "Locators no longer pointers. Use . operator.")
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
   VTKM_EXEC const CellLocatorTwoLevel* operator->() const { return this; }
 
 private:
