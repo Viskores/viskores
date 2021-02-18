@@ -83,7 +83,7 @@ public:
                             vtkm::Id& nnIdOut,
                             vtkm::FloatDefault& nnDis) const
   {
-    locator->FindNearestNeighbor(qc, nnIdOut, nnDis);
+    locator.FindNearestNeighbor(qc, nnIdOut, nnDis);
   }
 };
 
@@ -121,13 +121,12 @@ public:
 
     vtkm::cont::CoordinateSystem coord("points", coordi_Handle);
 
-    vtkm::cont::PointLocatorSparseGrid pointLocatorUG;
-    pointLocatorUG.SetCoordinates(coord);
-    pointLocatorUG.SetRange({ { 0.0, 10.0 } });
-    pointLocatorUG.SetNumberOfBins({ 5, 5, 5 });
+    vtkm::cont::PointLocatorSparseGrid locator;
+    locator.SetCoordinates(coord);
+    locator.SetRange({ { 0.0, 10.0 } });
+    locator.SetNumberOfBins({ 5, 5, 5 });
 
-    vtkm::cont::PointLocator* locator = &pointLocatorUG;
-    locator->Update();
+    locator.Update();
 
     ///// randomly generate testing points/////
     std::vector<vtkm::Vec3f_32> qcVec;

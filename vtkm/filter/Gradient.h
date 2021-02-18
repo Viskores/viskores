@@ -15,6 +15,8 @@
 
 #include <vtkm/filter/FilterField.h>
 
+#include <vtkm/cont/ArrayHandleSOA.h>
+
 namespace vtkm
 {
 namespace filter

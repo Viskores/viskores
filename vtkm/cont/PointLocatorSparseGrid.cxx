@@ -57,7 +57,7 @@ private:
   vtkm::Vec3f Dxdydz;
 };
 
-} // internal
+} // vtkm::cont::internal
 
 void PointLocatorSparseGrid::Build()
 {
@@ -98,8 +98,7 @@ void PointLocatorSparseGrid::Build()
   vtkm::cont::Algorithm::LowerBounds(cellIds, cell_ids_counting, this->CellLower);
 }
 
-VTKM_CONT void PointLocatorSparseGrid::PrepareExecutionObject(
-  ExecutionObjectHandleType& execObjHandle,
+vtkm::exec::PointLocatorSparseGrid PointLocatorSparseGrid::PrepareForExecution(
   vtkm::cont::DeviceAdapterId device,
   vtkm::cont::Token& token) const
 {
@@ -109,7 +108,7 @@ VTKM_CONT void PointLocatorSparseGrid::PrepareExecutionObject(
   auto rmax = vtkm::make_Vec(static_cast<vtkm::FloatDefault>(this->Range[0].Max),
                              static_cast<vtkm::FloatDefault>(this->Range[1].Max),
                              static_cast<vtkm::FloatDefault>(this->Range[2].Max));
-  vtkm::exec::PointLocatorSparseGrid* h = new vtkm::exec::PointLocatorSparseGrid(
+  return vtkm::exec::PointLocatorSparseGrid(
     rmin,
     rmax,
     this->Dims,
@@ -117,7 +116,7 @@ VTKM_CONT void PointLocatorSparseGrid::PrepareExecutionObject(
     this->PointIds.PrepareForInput(device, token),
     this->CellLower.PrepareForInput(device, token),
     this->CellUpper.PrepareForInput(device, token));
-  execObjHandle.Reset(h);
 }
-}
+
 } // vtkm::cont
+} // vtkm

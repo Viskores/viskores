@@ -11,6 +11,7 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
 
