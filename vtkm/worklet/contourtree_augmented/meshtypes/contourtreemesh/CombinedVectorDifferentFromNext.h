@@ -88,14 +88,14 @@ public:
     Portal2Type ThisGlobalMeshIndex;
     Portal3Type OtherGlobalMeshIndex;
 
-    vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+    VTKM_EXEC_CONT inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
     {
       return vtkm::worklet::contourtree_augmented::IsThis(idx)
         ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
         : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
     }
 
-    vtkm::Id operator()(vtkm::Id i) const
+    VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id i) const
     {
       vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
       vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
