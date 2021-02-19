@@ -29,7 +29,7 @@ public:
     // Implicit function
     vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
     vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
-    auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
+    vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
     vtkm::filter::ExtractGeometry extractGeometry;
@@ -56,7 +56,7 @@ public:
     // Implicit function
     vtkm::Vec3f minPoint(1.f, 1.f, 1.f);
     vtkm::Vec3f maxPoint(3.f, 3.f, 3.f);
-    auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
+    vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
     vtkm::filter::ExtractGeometry extractGeometry;
@@ -83,7 +83,7 @@ public:
     // Implicit function
     vtkm::Vec3f minPoint(0.5f, 0.5f, 0.5f);
     vtkm::Vec3f maxPoint(3.5f, 3.5f, 3.5f);
-    auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
+    vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
     vtkm::filter::ExtractGeometry extractGeometry;
@@ -109,7 +109,7 @@ public:
     // Implicit function
     vtkm::Vec3f minPoint(0.5f, 0.5f, 0.5f);
     vtkm::Vec3f maxPoint(3.5f, 3.5f, 3.5f);
-    auto box = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint);
+    vtkm::Box box(minPoint, maxPoint);
 
     // Setup and run filter to extract by volume of interest
     vtkm::filter::ExtractGeometry extractGeometry;

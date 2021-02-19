@@ -18,7 +18,8 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
+
+#include <vtkm/ImplicitFunction.h>
 
 namespace vtkm
 {
@@ -46,11 +47,12 @@ public:
     {
     }
 
-    VTKM_EXEC
-    bool operator()(const vtkm::Vec3f_64& coordinate, const vtkm::ImplicitFunction* function) const
+    template <typename ImplicitFunction>
+    VTKM_EXEC bool operator()(const vtkm::Vec3f_64& coordinate,
+                              const ImplicitFunction& function) const
     {
       bool pass = passValue;
-      vtkm::Float64 value = function->Value(coordinate);
+      vtkm::Float64 value = function.Value(coordinate);
       if (value > 0)
       {
         pass = failValue;
@@ -81,10 +83,10 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
-  template <typename CellSetType, typename CoordinateType>
+  template <typename CellSetType, typename CoordinateType, typename ImplicitFunction>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       const CoordinateType& coordinates,
-                                      const vtkm::cont::ImplicitFunctionHandle& implicitFunction,
+                                      const ImplicitFunction& implicitFunction,
                                       bool extractInside)
   {
     // Worklet output will be a boolean passFlag array

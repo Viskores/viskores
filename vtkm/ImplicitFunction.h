@@ -182,6 +182,11 @@ public:
   {
   }
 
+  VTKM_EXEC_CONT ImplicitFunctionValueFunctor(const FunctionType& function)
+    : Function(function)
+  {
+  }
+
   VTKM_EXEC_CONT Scalar operator()(const Vector& point) const
   {
     return this->Function.Value(point);
@@ -214,6 +219,11 @@ public:
   VTKM_EXEC_CONT ImplicitFunctionGradientFunctor(
     const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
     : Function(reinterpret_cast<const FunctionType&>(function))
+  {
+  }
+
+  VTKM_EXEC_CONT ImplicitFunctionGradientFunctor(const FunctionType& function)
+    : Function(function)
   {
   }
 

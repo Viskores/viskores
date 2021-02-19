@@ -18,8 +18,9 @@
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/Testing.h>
+
+#include <vtkm/ImplicitFunction.h>
 
 #include <vector>
 
@@ -234,11 +235,8 @@ void TestClippingWithImplicitFunction()
 
   bool invertClip = false;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(),
-             vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-             ds.GetCoordinateSystem("coords"),
-             invertClip);
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(), vtkm::Sphere(center, radius), ds.GetCoordinateSystem("coords"), invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);
@@ -293,11 +291,8 @@ void TestClippingWithImplicitFunctionInverted()
 
   bool invertClip = true;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(),
-             vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
-             ds.GetCoordinateSystem("coords"),
-             invertClip);
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(), vtkm::Sphere(center, radius), ds.GetCoordinateSystem("coords"), invertClip);
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetDataAsMultiplexer();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn);

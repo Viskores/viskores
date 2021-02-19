@@ -8,13 +8,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/ImplicitFunction.h>
 #include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/Timer.h>
@@ -259,7 +259,7 @@ public:
                             ScalarType& val,
                             const FunctionType& function) const
   {
-    val = function->Value(point);
+    val = function.Value(point);
   }
 };
 
@@ -275,7 +275,7 @@ public:
                             const FType1& function1,
                             const FType2& function2) const
   {
-    val = function1->Value(point) + function2->Value(point);
+    val = function1.Value(point) + function2.Value(point);
   }
 };
 
@@ -818,8 +818,6 @@ void BenchImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto handle = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
@@ -829,7 +827,7 @@ void BenchImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result, handle);
+    invoker(eval, data.Points, data.Result, data.Sphere1);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -851,8 +849,6 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto sphere = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
   EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
@@ -862,7 +858,7 @@ void BenchVirtualImplicitFunction(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result, sphere);
+    invoker(eval, data.Points, data.Result, data.Sphere1);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -884,9 +880,6 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::Token token;
-  auto h1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto h2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
   EvalWorklet eval;
 
   vtkm::cont::Timer timer{ device };
@@ -896,47 +889,13 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    invoker(eval, data.Points, data.Result, h1, h2);
+    invoker(eval, data.Points, data.Result, data.Sphere1, data.Sphere2);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
 VTKM_BENCHMARK(Bench2ImplicitFunctions);
-
-void Bench2VirtualImplicitFunctions(::benchmark::State& state)
-{
-  using EvalWorklet = Evaluate2ImplicitFunctions;
-
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-
-  auto data = MakeImplicitFunctionBenchData();
-
-  {
-    std::ostringstream desc;
-    desc << data.Points.GetNumberOfValues() << " points";
-    state.SetLabel(desc.str());
-  }
-
-  vtkm::cont::Token token;
-  auto s1 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere1);
-  auto s2 = vtkm::cont::make_ImplicitFunctionHandle(data.Sphere2);
-  EvalWorklet eval;
-
-  vtkm::cont::Timer timer{ device };
-  vtkm::cont::Invoker invoker{ device };
-
-  for (auto _ : state)
-  {
-    (void)_;
-    timer.Start();
-    invoker(eval, data.Points, data.Result, s1, s2);
-    timer.Stop();
-
-    state.SetIterationTime(timer.GetElapsedTime());
-  }
-}
-VTKM_BENCHMARK(Bench2VirtualImplicitFunctions);
 
 } // end anon namespace
 

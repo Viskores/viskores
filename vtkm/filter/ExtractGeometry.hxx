@@ -24,7 +24,7 @@ struct CallWorker
   vtkm::cont::DynamicCellSet& Output;
   vtkm::worklet::ExtractGeometry& Worklet;
   const vtkm::cont::CoordinateSystem& Coords;
-  const vtkm::cont::ImplicitFunctionHandle& Function;
+  const vtkm::ImplicitFunctionGeneral& Function;
   bool ExtractInside;
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
@@ -32,7 +32,7 @@ struct CallWorker
   CallWorker(vtkm::cont::DynamicCellSet& output,
              vtkm::worklet::ExtractGeometry& worklet,
              const vtkm::cont::CoordinateSystem& coords,
-             const vtkm::cont::ImplicitFunctionHandle& function,
+             const vtkm::ImplicitFunctionGeneral& function,
              bool extractInside,
              bool extractBoundaryCells,
              bool extractOnlyBoundaryCells)

@@ -52,7 +52,7 @@ class Redistributor
 
     vtkm::filter::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
-    extractor.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(box));
+    extractor.SetImplicitFunction(box);
     return extractor.Execute(input);
   }
 
