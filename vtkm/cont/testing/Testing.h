@@ -208,13 +208,20 @@ private:
   {
     static std::string TestDataBasePath;
 
-    if (path != "")
+    if (!path.empty())
     {
       TestDataBasePath = path;
       if ((TestDataBasePath.back() != '/') && (TestDataBasePath.back() != '\\'))
       {
         TestDataBasePath = TestDataBasePath + "/";
       }
+    }
+
+    if (TestDataBasePath.empty())
+    {
+      VTKM_LOG_S(
+        vtkm::cont::LogLevel::Error,
+        "TestDataBasePath was never set, was --data-dir set correctly? (hint: ../data/data)");
     }
 
     return TestDataBasePath;
@@ -224,7 +231,7 @@ private:
   {
     static std::string RegressionTestImageBasePath;
 
-    if (path != "")
+    if (!path.empty())
     {
       RegressionTestImageBasePath = path;
       if ((RegressionTestImageBasePath.back() != '/') &&
@@ -234,6 +241,13 @@ private:
       }
     }
 
+    if (RegressionTestImageBasePath.empty())
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                 "RegressionTestImageBasePath was never set, was --baseline-dir set correctly? "
+                 "(hint: ../data/baseline)");
+    }
+
     return RegressionTestImageBasePath;
   }
 
@@ -241,7 +255,7 @@ private:
   {
     static std::string WriteDirBasePath;
 
-    if (path != "")
+    if (!path.empty())
     {
       WriteDirBasePath = path;
       if ((WriteDirBasePath.back() != '/') && (WriteDirBasePath.back() != '\\'))
