@@ -10,6 +10,8 @@
 #ifndef vtk_m_cont_testing_TestingImplicitFunction_h
 #define vtk_m_cont_testing_TestingImplicitFunction_h
 
+#include <vtkm/ImplicitFunction.h>
+
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterList.h>
 #include <vtkm/cont/DeviceAdapterTag.h>

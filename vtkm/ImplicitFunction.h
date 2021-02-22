@@ -176,7 +176,7 @@ public:
   using Scalar = typename FunctionType::Scalar;
   using Vector = typename FunctionType::Vector;
 
-  VTKM_EXEC_CONT ImplicitFunctionValueFunctor() = default;
+  ImplicitFunctionValueFunctor() = default;
 
   VTKM_EXEC_CONT ImplicitFunctionValueFunctor(
     const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
@@ -216,7 +216,7 @@ public:
   using Scalar = typename FunctionType::Scalar;
   using Vector = typename FunctionType::Vector;
 
-  VTKM_EXEC_CONT ImplicitFunctionGradientFunctor() = default;
+  ImplicitFunctionGradientFunctor() = default;
 
   VTKM_EXEC_CONT ImplicitFunctionGradientFunctor(
     const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
@@ -836,7 +836,7 @@ public:
   using Scalar = typename Superclass::Scalar;
   using Vector = typename Superclass::Vector;
 
-  VTKM_EXEC_CONT ImplicitFunctionMultiplexer() = default;
+  ImplicitFunctionMultiplexer() = default;
 
   template <typename FunctionType>
   VTKM_EXEC_CONT ImplicitFunctionMultiplexer(
