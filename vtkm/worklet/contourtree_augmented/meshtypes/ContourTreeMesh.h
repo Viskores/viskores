@@ -562,14 +562,14 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   IdArrayType overallSortIndex;
   overallSortIndex.Allocate(overallSortOrder.GetNumberOfValues());
   {
-    // Functor return 0,1 for each element depending on whethern the current value is different from the next
-    mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNext differentFromNextFunctor(
-      this->GlobalMeshIndex, other.GlobalMeshIndex, overallSortOrder);
-    // Array based on the functor
-    // TODO: This should really use ArrayHandleDecorator, not ArrayHandleTransform
-    auto differentFromNextArr = vtkm::cont::make_ArrayHandleTransform(
-      vtkm::cont::ArrayHandleIndex(overallSortIndex.GetNumberOfValues() - 1),
-      differentFromNextFunctor);
+    // Array decorator with functor returning 0, 1 for each element depending
+    // on whethern the current value is different from the next
+    auto differentFromNextArr = vtkm::cont::make_ArrayHandleDecorator(
+      overallSortIndex.GetNumberOfValues() - 1,
+      mesh_dem_contourtree_mesh_inc::CombinedVectorDifferentFromNextDecoratorImpl{},
+      overallSortOrder,
+      this->GlobalMeshIndex,
+      other.GlobalMeshIndex);
 
     // Compute the exclusive scan of our transformed combined vector
     overallSortIndex.WritePortal().Set(0, 0);
