@@ -294,24 +294,29 @@ namespace internal
 template <typename SourcePortalType>
 class ArrayPortalRecombineVec
 {
-  vtkm::VecCConst<SourcePortalType> Portals;
+  // Note that this ArrayPortal has a pointer to a C array of other portals. We need to
+  // make sure that the pointer is valid on the device we are using it on. See the
+  // CreateReadPortal and CreateWritePortal in the Storage below to see how that is
+  // managed.
+  const SourcePortalType* Portals;
+  vtkm::IdComponent NumberOfComponents;
 
 public:
   using ValueType = vtkm::internal::RecombineVec<SourcePortalType>;
 
   ArrayPortalRecombineVec() = default;
-  ArrayPortalRecombineVec(const vtkm::VecCConst<SourcePortalType>& portals)
-    : Portals(portals)
-  {
-  }
   ArrayPortalRecombineVec(const SourcePortalType* portals, vtkm::IdComponent numComponents)
-    : Portals(portals, numComponents)
+    : Portals(portals)
+    , NumberOfComponents(numComponents)
   {
   }
 
   VTKM_EXEC_CONT vtkm::Id GetNumberOfValues() const { return this->Portals[0].GetNumberOfValues(); }
 
-  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const { return ValueType(this->Portals, index); }
+  VTKM_EXEC_CONT ValueType Get(vtkm::Id index) const
+  {
+    return ValueType({ this->Portals, this->NumberOfComponents }, index);
+  }
 
   VTKM_EXEC_CONT void Set(vtkm::Id index, const ValueType& value) const
   {
@@ -324,8 +329,8 @@ public:
   VTKM_EXEC_CONT void Set(vtkm::Id index, const T& value) const
   {
     using Traits = vtkm::VecTraits<T>;
-    VTKM_ASSERT(Traits::GetNumberOfComponents(value) == this->Portals.GetNumberOfComponents());
-    for (vtkm::IdComponent cIndex = 0; cIndex < this->Portals.GetNumberOfComponents(); ++cIndex)
+    VTKM_ASSERT(Traits::GetNumberOfComponents(value) == this->NumberOfComponents);
+    for (vtkm::IdComponent cIndex = 0; cIndex < this->NumberOfComponents; ++cIndex)
     {
       this->Portals[cIndex].Set(index, Traits::GetComponent(value, cIndex));
     }
@@ -441,7 +446,6 @@ public:
                                                    vtkm::cont::DeviceAdapterId device,
                                                    vtkm::cont::Token& token)
   {
-    ReadPortalType portal;
     vtkm::IdComponent numComponents = NumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
@@ -479,7 +483,6 @@ public:
                                                      vtkm::cont::DeviceAdapterId device,
                                                      vtkm::cont::Token& token)
   {
-    WritePortalType portal;
     vtkm::IdComponent numComponents = NumberOfComponents(buffers);
 
     // The array portal needs a runtime-allocated array of portals for each component.
