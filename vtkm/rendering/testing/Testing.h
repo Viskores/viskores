@@ -73,7 +73,7 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
     }
     catch (const vtkm::cont::ErrorExecution& error)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error, error.what());
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error, error.GetMessage());
       imageResult.PushMessage(error.GetMessage());
 
       const std::string outputImagePath = vtkm::cont::testing::Testing::WriteDirPath(fileName);
@@ -85,7 +85,7 @@ inline TestEqualResult test_equal_images(const std::shared_ptr<ViewType> view,
     }
     catch (const vtkm::cont::ErrorBadValue& error)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error, error.what());
+      VTKM_LOG_S(vtkm::cont::LogLevel::Error, error.GetMessage());
       imageResult.PushMessage(error.GetMessage());
       imageResult.PushMessage("Unsupported file type for image: " + fileName);
       testResults.PushMessage(imageResult.GetMergedMessage());
@@ -198,6 +198,5 @@ inline TestEqualResult test_equal_images_matching_name(
                            writeDiff,
                            returnOnPass);
 }
-
 
 #endif // vtk_m_rendering_testing_Testing_h
