@@ -77,7 +77,7 @@ void LineRenderer::RenderLine(const vtkm::Vec3f_64& point0,
     // I haven't looked, but the wireframmer probably suffers from this too.
     // Additionally, this should not happen on the CPU. Annotations take
     // far longer than the the geometry.
-    vtkm::Float32 t = pdist == 0.f ? 1.0 : vtkm::Sqrt(deltaX * deltaX + deltaY * deltaY) / pdist;
+    vtkm::Float32 t = pdist == 0.f ? 1.0f : vtkm::Sqrt(deltaX * deltaX + deltaY * deltaY) / pdist;
     t = vtkm::Min(1.f, vtkm::Max(0.f, t));
     vtkm::Float32 z = vtkm::Lerp(z0, z1, t);
 
