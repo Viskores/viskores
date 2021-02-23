@@ -95,12 +95,14 @@ public:
   {
   }
 
+  /// Operator used by DIY to compute a step in the fan in
+  /// @param[in] block The local data block to be processed in this step. Instance of DistributedContourTreeBlockData.
+  /// @param[in] rp DIY communication proxy
+  /// @param[in] unused partners of the current block (unused)
   void operator()(
-    vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-      block,                            // local Block.
-    const vtkmdiy::ReduceProxy& rp,     // communication proxy
-    const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const
+    vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>* block,
+    const vtkmdiy::ReduceProxy& rp,
+    const vtkmdiy::RegularSwapPartners&) const
   {
     // Track timing of main steps
     vtkm::cont::Timer totalTimer; // Total time for each call
@@ -218,14 +220,39 @@ public:
                           currBlockOrigin[2] + currBlockSize[2] - 1 };
         auto meshBoundaryExecObj = block->ContourTreeMeshes.back().GetMeshBoundaryExecutionObject(
           this->GlobalSize, currBlockOrigin, maxIdx);
-        worklet.Run(block->ContourTreeMeshes.back()
-                      .SortedValues, // Unused param. Provide something to keep the API happy
-                    block->ContourTreeMeshes.back(),
-                    block->ContourTrees.back(),
-                    currSortOrder,
-                    currNumIterations,
-                    1, // Fully augmented
-                    meshBoundaryExecObj);
+        try
+        {
+          worklet.Run(block->ContourTreeMeshes.back()
+                        .SortedValues, // Unused param. Provide something to keep the API happy
+                      block->ContourTreeMeshes.back(),
+                      block->ContourTrees.back(),
+                      currSortOrder,
+                      currNumIterations,
+                      1, // Fully augmented
+                      meshBoundaryExecObj);
+        }
+        // In case the contour tree got stuck, expand the debug information from
+        // the message to check whether we combined bad blocks
+        catch (const std::domain_error& ex)
+        {
+          std::stringstream ex_message;
+          ex_message << ex.what();
+          ex_message << " Self/In DIY Id=(" << selfid << ", " << ingid << ")";
+          ex_message << " Rank=" << rank << " Round=" << rp.round();
+          ex_message << " Origin Self=(" << block->BlockOrigin[0] << ", " << block->BlockOrigin[1]
+                     << ", " << block->BlockOrigin[2] << ")";
+          ex_message << " Origin In=(" << otherBlockOrigin[0] << ", " << otherBlockOrigin[1] << ", "
+                     << otherBlockOrigin[2] << ")";
+          ex_message << " Origin Comb=(" << currBlockOrigin[0] << ", " << currBlockOrigin[1] << ", "
+                     << currBlockOrigin[2] << ")";
+          ex_message << " Size Self=(" << block->BlockSize[0] << ", " << block->BlockSize[1] << ", "
+                     << block->BlockSize[2] << ")";
+          ex_message << " Size In=(" << otherBlockSize[0] << ", " << otherBlockSize[1] << ", "
+                     << otherBlockSize[2] << ")";
+          ex_message << " Size Comb=(" << currBlockSize[0] << ", " << currBlockSize[1] << ", "
+                     << currBlockSize[2] << ")";
+          std::throw_with_nested(std::domain_error(ex_message.str()));
+        }
 
         // Update block extents
         block->BlockOrigin = currBlockOrigin;
