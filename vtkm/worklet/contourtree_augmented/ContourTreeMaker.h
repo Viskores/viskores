@@ -201,6 +201,7 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // tree can end with either 0 or 1 vertices unprocessed
   // 0 means the last edge was pruned from both ends
   // 1 means that there were two final edges meeting at a vertex
+  vtkm::Id maxNumIterations = this->ActiveSupernodes.GetNumberOfValues();
   while (this->ActiveSupernodes.GetNumberOfValues() > 1)
   { // loop until no active vertices remaining
     // recompute the vertex degrees
@@ -218,6 +219,15 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     CompressActiveSupernodes();
     this->ContourTreeResult.NumIterations++;
 
+    // Check to make sure we are not iterating too long
+    // this can happen if we are given a bad mesh that defines
+    // a forest of contour trees, rather than a single tree.
+    // Raise error if we have done more itertions than there are active nodes to remove
+    if (this->ContourTreeResult.NumIterations >= maxNumIterations)
+    {
+      throw new std::domain_error("Bad iteration. This can happen if the input mesh "
+                                  "defines a contour forest rather than a simple tree.");
+    }
   } // loop until no active vertices remaining
 
   // test for final edges meeting
