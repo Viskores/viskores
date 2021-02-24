@@ -27,13 +27,11 @@ namespace internal
 class SurfaceConverter : public vtkm::worklet::WorkletMapField
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjMat;
-  bool Is3d;
 
 public:
   VTKM_CONT
-  SurfaceConverter(const vtkm::Matrix<vtkm::Float32, 4, 4> viewProjMat, bool is3d)
+  SurfaceConverter(const vtkm::Matrix<vtkm::Float32, 4, 4> viewProjMat)
     : ViewProjMat(viewProjMat)
-    , Is3d(is3d)
   {
   }
 
@@ -53,18 +51,8 @@ public:
                             ColorBufferPortalType& colorBuffer,
                             const vtkm::Id& index) const
   {
-    vtkm::Vec<Precision, 3> intersection;
-    // For reasons I can't explain atm, the view direction
-    // is different for for 2d and 3d so that it matches the
-    // gl depth buffer values for annotations
-    if (Is3d)
-    {
-      intersection = origin + inDepth * dir;
-    }
-    else
-    {
-      intersection = origin + inDepth * (-dir);
-    }
+    vtkm::Vec<Precision, 3> intersection = origin + inDepth * dir;
+
     vtkm::Vec4f_32 point;
     point[0] = static_cast<vtkm::Float32>(intersection[0]);
     point[1] = static_cast<vtkm::Float32>(intersection[1]);
@@ -118,8 +106,7 @@ VTKM_CONT void WriteToCanvas(const vtkm::rendering::raytracing::Ray<Precision>& 
     vtkm::MatrixMultiply(camera.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
                          camera.CreateViewMatrix());
 
-  bool is3d = camera.GetMode() == vtkm::rendering::Camera::MODE_3D;
-  vtkm::worklet::DispatcherMapField<SurfaceConverter>(SurfaceConverter(viewProjMat, is3d))
+  vtkm::worklet::DispatcherMapField<SurfaceConverter>(SurfaceConverter(viewProjMat))
     .Invoke(rays.PixelIdx,
             colors,
             rays.Distance,
