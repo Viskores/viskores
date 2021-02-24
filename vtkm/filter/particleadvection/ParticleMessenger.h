@@ -133,7 +133,7 @@ template <typename P, template <typename, typename> class Container, typename Al
 inline void ParticleMessenger::SendParticles(
   const std::unordered_map<int, Container<P, Allocator>>& m)
 {
-  for (auto&& mit : m)
+  for (const auto& mit : m)
     if (!mit.second.empty())
       this->SendParticles(mit.first, mit.second);
 }
