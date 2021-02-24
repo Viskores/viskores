@@ -76,83 +76,41 @@ namespace contourtree_augmented
 namespace mesh_dem_contourtree_mesh_inc
 {
 
-/// transform functor to compute if element i is different from element i+1 in an arrays. The
+/// Decorator to compute if element i is different from element i+1 in an arrays. The
 /// resulting array should hence be 1 element shorter than the input arrays
-class CombinedVectorDifferentFromNextExecObj
+class CombinedVectorDifferentFromNextDecoratorImpl
 {
 public:
-  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::Id>::ReadPortalType;
-
-  VTKM_EXEC_CONT
-  CombinedVectorDifferentFromNextExecObj() {}
-
-  VTKM_CONT
-  CombinedVectorDifferentFromNextExecObj(const IdPortalType& thisGlobalMeshIndex,
-                                         const IdPortalType& otherGlobalMeshIndex,
-                                         const IdPortalType& sortOrder)
-    : OverallSortOrderPortal(sortOrder)
-    , ThisGlobalMeshIndex(thisGlobalMeshIndex)
-    , OtherGlobalMeshIndex(otherGlobalMeshIndex)
+  template <typename Portal1Type, typename Portal2Type, typename Portal3Type>
+  struct Functor
   {
-  }
+    Portal1Type OverallSortOrderPortal;
+    Portal2Type ThisGlobalMeshIndex;
+    Portal3Type OtherGlobalMeshIndex;
 
-  VTKM_EXEC_CONT
-  inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+    VTKM_EXEC_CONT inline vtkm::Id GetGlobalMeshIndex(vtkm::Id idx) const
+    {
+      return vtkm::worklet::contourtree_augmented::IsThis(idx)
+        ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
+        : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
+    }
+
+    VTKM_EXEC_CONT vtkm::Id operator()(vtkm::Id i) const
+    {
+      vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
+      vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
+      return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
+    }
+  };
+
+  template <typename PT1, typename PT2, typename PT3>
+  Functor<PT1, PT2, PT3> CreateFunctor(PT1 OverallSortOrderPortal,
+                                       PT2 ThisGlobalMeshIndex,
+                                       PT3 OtherGlobalMeshIndex) const
   {
-    return vtkm::worklet::contourtree_augmented::IsThis(idx)
-      ? this->ThisGlobalMeshIndex.Get(MaskedIndex(idx))
-      : this->OtherGlobalMeshIndex.Get(MaskedIndex(idx));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id i) const
-  {
-    vtkm::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
-    vtkm::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
-    return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
-  }
-
-private:
-  IdPortalType OverallSortOrderPortal;
-  IdPortalType ThisGlobalMeshIndex;
-  IdPortalType OtherGlobalMeshIndex;
-};
-
-class CombinedVectorDifferentFromNext : public vtkm::cont::ExecutionAndControlObjectBase
-{
-  IdArrayType OverallSortOrder;
-  IdArrayType ThisGlobalMeshIndex;
-  IdArrayType OtherGlobalMeshIndex;
-
-public:
-  CombinedVectorDifferentFromNext() = default;
-
-  CombinedVectorDifferentFromNext(const IdArrayType& thisGlobalMeshIndex,
-                                  const IdArrayType& otherGlobalMeshIndex,
-                                  const IdArrayType& sortOrder)
-    : OverallSortOrder(sortOrder)
-    , ThisGlobalMeshIndex(thisGlobalMeshIndex)
-    , OtherGlobalMeshIndex(otherGlobalMeshIndex)
-  {
-  }
-
-  VTKM_CONT CombinedVectorDifferentFromNextExecObj
-  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
-  {
-    return CombinedVectorDifferentFromNextExecObj(
-      this->ThisGlobalMeshIndex.PrepareForInput(device, token),
-      this->OtherGlobalMeshIndex.PrepareForInput(device, token),
-      this->OverallSortOrder.PrepareForInput(device, token));
-  }
-
-  VTKM_CONT CombinedVectorDifferentFromNextExecObj PrepareForControl() const
-  {
-    return CombinedVectorDifferentFromNextExecObj(this->ThisGlobalMeshIndex.ReadPortal(),
-                                                  this->OtherGlobalMeshIndex.ReadPortal(),
-                                                  this->OverallSortOrder.ReadPortal());
+    return { OverallSortOrderPortal, ThisGlobalMeshIndex, OtherGlobalMeshIndex };
   }
 };
-
 
 } // namespace mesh_dem_contourtree_mesh_inc
 } // namespace contourtree_augmented

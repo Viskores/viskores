@@ -69,7 +69,7 @@ namespace contourtree_distributed
 {
 // Possibly change the following when comapring to PPP prototype
 constexpr int PRINT_WIDTH = 12;
-using dataType = vtkm::FloatDefault;
+using dataType = vtkm::Float64;
 using indexType = vtkm::Id;
 
 // small class for storing the contour arcs
@@ -224,7 +224,7 @@ inline void TreeCompiler::AddHierarchicalTree(const vtkm::cont::DataSet& addedTr
 { // TreeCompiler::AddHierarchicalTree()
   // Copy relevant tree content to STL arrays
   vtkm::cont::UnknownArrayHandle dataValues_array = addedTree.GetField("DataValues").GetData();
-  std::vector<vtkm::FloatDefault> dataValues(dataValues_array.GetNumberOfValues());
+  std::vector<vtkm::Float64> dataValues(dataValues_array.GetNumberOfValues());
   auto dataValues_handle = vtkm::cont::make_ArrayHandle(dataValues, vtkm::CopyFlag::Off);
   vtkm::cont::ArrayCopy(dataValues_array, dataValues_handle);
   dataValues_handle.SyncControlArray();

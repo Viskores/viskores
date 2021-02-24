@@ -85,6 +85,11 @@ public:
     this->FindInBox(queryPoint, ijk, level, nearestNeighborId, distance2);
   }
 
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC PointLocatorSparseGrid* operator->() { return this; }
+  VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
+  VTKM_EXEC const PointLocatorSparseGrid* operator->() const { return this; }
+
 private:
   vtkm::Vec3f Min;
   vtkm::Id3 Dims;
