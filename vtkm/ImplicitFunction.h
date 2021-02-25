@@ -818,6 +818,23 @@ struct ImplicitFunctionGradientFunctor
 
 } // namespace detail
 
+//============================================================================
+/// \brief Implicit function that can switch among different types.
+///
+/// An `ImplicitFunctionMultiplexer` is a templated `ImplicitFunction` that takes
+/// as template arguments any number of other `ImplicitFunction`s that it can
+/// behave as. This allows you to decide at runtime which of these implicit
+/// functions to define and compute.
+///
+/// For example, let's say you want a filter that finds points either inside
+/// a sphere or inside a box. Rather than create 2 different filters, one for
+/// each type of implicit function, you can use `ImplicitFunctionMultiplexer<Sphere, Box>`
+/// and then set either a `Sphere` or a `Box` at runtime.
+///
+/// To use `ImplicitFunctionMultiplexer`, simply create the actual implicit
+/// function that you want to use, and then set the `ImplicitFunctionMultiplexer`
+/// to that concrete implicit function object.
+///
 template <typename... ImplicitFunctionTypes>
 class ImplicitFunctionMultiplexer
   : public vtkm::internal::ImplicitFunctionBase<
@@ -852,6 +869,20 @@ public:
   }
 };
 
+//============================================================================
+/// \brief Implicit function that can switch among known implicit function types.
+///
+/// `ImplicitFunctionGeneral` can behave as any of the predefined implicit functions
+/// provided by VTK-m. This is helpful when the type of implicit function is not
+/// known at compile time. For example, say you want a filter that can operate on
+/// an implicit function. Rather than compile separate versions of the filter, one
+/// for each type of implicit function, you can compile the filter once for
+/// `ImplicitFunctionGeneral` and then set the desired implicit function at runtime.
+///
+/// To use `ImplicitFunctionGeneral`, simply create the actual implicit
+/// function that you want to use, and then set the `ImplicitFunctionGeneral`
+/// to that concrete implicit function object.
+///
 class ImplicitFunctionGeneral
   : public vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
                                              vtkm::Cylinder,
