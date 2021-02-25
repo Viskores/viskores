@@ -194,13 +194,6 @@ private:
   FunctionType Function;
 };
 
-template <typename FunctionType>
-vtkm::ImplicitFunctionValueFunctor<FunctionType> make_ImplicitFunctionValueFunctor(
-  const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
-{
-  return ImplicitFunctionValueFunctor<FunctionType>(function);
-}
-
 /// A helpful functor that calls the gradient method of a given `ImplicitFunction`. Can be
 /// passed to things that expect a functor instead of an `ImplictFunction` class (like an array
 /// transform).
@@ -233,13 +226,6 @@ public:
 private:
   FunctionType Function;
 };
-
-template <typename FunctionType>
-vtkm::ImplicitFunctionGradientFunctor<FunctionType> make_ImplicitFunctionGradientFunctor(
-  const vtkm::internal::ImplicitFunctionBase<FunctionType>& function)
-{
-  return ImplicitFunctionGradientFunctor<FunctionType>(function);
-}
 
 //============================================================================
 /// \brief Implicit function for a box
