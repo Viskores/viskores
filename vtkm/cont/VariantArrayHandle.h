@@ -25,6 +25,8 @@
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
+#include <sstream>
+
 #ifndef VTKM_NO_DEPRECATED_VIRTUAL
 #include <vtkm/cont/ArrayHandleVirtual.h>
 #endif //VTKM_NO_DEPRECATED_VIRTUAL
