@@ -22,6 +22,8 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 
+#include <sstream>
+
 namespace
 {
 
