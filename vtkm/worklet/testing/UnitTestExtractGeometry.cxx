@@ -75,7 +75,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coordinates"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
+                          vtkm::Box(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);
@@ -183,7 +183,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
+                          vtkm::Box(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);
@@ -223,7 +223,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
+                          vtkm::Sphere(center, radius),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells);

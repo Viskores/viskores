@@ -13,7 +13,7 @@
 
 #include <vtkm/filter/vtkm_filter_common_export.h>
 
-#include <vtkm/cont/ImplicitFunctionHandle.h>
+#include <vtkm/ImplicitFunction.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractGeometry.h>
 
@@ -47,12 +47,9 @@ public:
   VTKM_CONT ExtractGeometry();
 
   // Set the volume of interest to extract
-  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
-  {
-    this->Function = func;
-  }
+  void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
 
-  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
+  const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
   bool GetExtractInside() { return this->ExtractInside; }
@@ -99,7 +96,7 @@ private:
   bool ExtractInside;
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
-  vtkm::cont::ImplicitFunctionHandle Function;
+  vtkm::ImplicitFunctionGeneral Function;
   vtkm::worklet::ExtractGeometry Worklet;
 };
 

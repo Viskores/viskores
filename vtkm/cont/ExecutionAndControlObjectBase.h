@@ -17,11 +17,12 @@ namespace vtkm
 namespace cont
 {
 
-/// Base \c ExecutionAndControlObjectBase class. These are objects that behave
+/// Base `ExecutionAndControlObjectBase` class. These are objects that behave
 /// as execution objects but can also be use din the control environment.
-/// Any subclass of \c ExecutionAndControlObjectBase must implement a
-/// \c PrepareForExecution method that takes a device adapter tag and returns
-/// an object for that device as well as a \c PrepareForControl that simply
+/// Any subclass of `ExecutionAndControlObjectBase` must implement a
+/// `PrepareForExecution` method that takes a device adapter tag and a
+/// `vtkm::cont::Token` reference and returns
+/// an object for that device. It also must implement `PrepareForControl` that simply
 /// returns an object that works in the control environment.
 ///
 struct ExecutionAndControlObjectBase : vtkm::cont::ExecutionObjectBase

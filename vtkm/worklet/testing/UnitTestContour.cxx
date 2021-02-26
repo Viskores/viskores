@@ -15,7 +15,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 #include <vtkm/source/Tangle.h>
 #include <vtkm/worklet/Contour.h>
@@ -366,7 +365,7 @@ void TestContourClipped()
 
   vtkm::Plane plane(vtkm::make_Vec(0.51, 0.51, 0.51), vtkm::make_Vec(1, 1, 1));
   vtkm::filter::ClipWithImplicitFunction clip;
-  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(plane));
+  clip.SetImplicitFunction(plane);
   vtkm::cont::DataSet clipped = clip.Execute(dataSet);
 
   vtkm::cont::CellSetExplicit<> cellSet;
