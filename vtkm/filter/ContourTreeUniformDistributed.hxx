@@ -741,29 +741,34 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timer.Start();
 
   // 1.2.1 Compute the gids for our local blocks
+  using RegularDecomposer = vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>;
   const vtkm::worklet::contourtree_distributed::SpatialDecomposition& spatialDecomp =
     this->MultiBlockSpatialDecomposition;
+  const auto numDims = spatialDecomp.NumberOfDimensions();
+
+  // ... division vector
+  RegularDecomposer::DivisionsVector diyDivisions(numDims);
+  for (vtkm::IdComponent d = 0;
+       d < static_cast<vtkm::IdComponent>(spatialDecomp.NumberOfDimensions());
+       ++d)
+  {
+    diyDivisions[d] = static_cast<int>(spatialDecomp.BlocksPerDimension[d]);
+  }
+
+  // ... coordinates of local blocks
   auto localBlockIndicesPortal = spatialDecomp.LocalBlockIndices.ReadPortal();
   std::vector<vtkm::Id> vtkmdiyLocalBlockGids(static_cast<size_t>(input.GetNumberOfPartitions()));
   for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
-    std::vector<int> tempCoords;    // DivisionsVector type in DIY
-    std::vector<int> tempDivisions; // DivisionsVector type in DIY
-    tempCoords.resize(static_cast<size_t>(spatialDecomp.NumberOfDimensions()));
-    tempDivisions.resize(static_cast<size_t>(spatialDecomp.NumberOfDimensions()));
+    RegularDecomposer::DivisionsVector diyCoords(static_cast<size_t>(numDims));
     auto currentCoords = localBlockIndicesPortal.Get(bi);
-    for (std::size_t di = 0; di < static_cast<size_t>(spatialDecomp.NumberOfDimensions()); di++)
+    for (vtkm::IdComponent d = 0; d < numDims; ++d)
     {
-      tempCoords[di] = static_cast<int>(currentCoords[static_cast<vtkm::IdComponent>(di)]);
-      tempDivisions[di] =
-        static_cast<int>(spatialDecomp.BlocksPerDimension[static_cast<vtkm::IdComponent>(di)]);
+      diyCoords[d] = static_cast<int>(currentCoords[d]);
     }
     vtkmdiyLocalBlockGids[static_cast<size_t>(bi)] =
-      vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds>::coords_to_gid(tempCoords, tempDivisions);
+      RegularDecomposer::coords_to_gid(diyCoords, diyDivisions);
   }
-
-  std::vector<vtkmdiy::Link*> localLinks(static_cast<std::vector<vtkmdiy::Link>::size_type>(
-    input.GetNumberOfPartitions())); // dummy links needed to make DIY happy
 
   // Record time to compute the local block ids
   timingsStream << "    " << std::setw(38) << std::left << "Compute Block Ids and Local Links"
@@ -773,10 +778,13 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   // 1.2.2 Add my local blocks to the vtkmdiy master.
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
-    localLinks[bi] = new vtkmdiy::Link;
     master.add(static_cast<int>(vtkmdiyLocalBlockGids[bi]), // block id
                localDataBlocks[bi],
-               localLinks[bi]);
+               new vtkmdiy::Link); // Use dummy link to make DIY happy.
+    // NOTE: The dummy link is never used, since all communication is via RegularDecomposer,
+    //       which sets up its own links
+    // NOTE: No need to keep the pointer, as DIY will "own" it and delete it when no longer
+    //       needed TODO/FIXME: Confirm that last statement
   }
 
   // Record time for dding data blocks to the master
@@ -785,10 +793,16 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timer.Start();
 
   // 1.2.3 Define the decomposition of the domain into regular blocks
-  vtkmdiy::RegularDecomposer<vtkmdiy::DiscreteBounds> decomposer(
-    static_cast<int>(spatialDecomp.NumberOfDimensions()), // number of dims
-    spatialDecomp.GetVTKmDIYBounds(),
-    static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()));
+  RegularDecomposer::BoolVector shareFace(3, true);
+  RegularDecomposer::BoolVector wrap(3, false);
+  RegularDecomposer::CoordinateVector ghosts(3, 1);
+  RegularDecomposer decomposer(static_cast<int>(numDims),
+                               spatialDecomp.GetVTKmDIYBounds(),
+                               static_cast<int>(spatialDecomp.GetGlobalNumberOfBlocks()),
+                               shareFace,
+                               wrap,
+                               ghosts,
+                               diyDivisions);
 
   // Define which blocks live on which rank so that vtkmdiy can manage them
   vtkmdiy::DynamicAssigner assigner(
