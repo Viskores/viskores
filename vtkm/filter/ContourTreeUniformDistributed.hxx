@@ -829,8 +829,8 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   // partners for merge over regular block grid
   vtkmdiy::RegularSwapPartners partners(
     decomposer, // domain decomposition
-    2,          // raix of k-ary reduction. TODO check this value
-    true        // contiguous: true=distance doubling , false=distnace halving TODO check this value
+    2,          // radix of k-ary reduction.
+    true        // contiguous: true=distance doubling, false=distance halving
   );
 
   // Record time to create the swap partners
