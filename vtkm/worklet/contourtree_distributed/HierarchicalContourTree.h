@@ -255,15 +255,18 @@ void HierarchicalContourTree<FieldType>::Initialize(
     this->NumHypernodesInRound.WritePortal().Set(this->NumRounds,
                                                  tree.Hypernodes.GetNumberOfValues());
   }
-  // copy the iterations of the top level hypersweep - this is +2: one because we are counting inclusively, the second because we need an
-  // extra one at the end to compute sizes with deltas
-  this->NumIterations.WritePortal().Set(this->NumRounds, tree.NumIterations);
+  // copy the iterations of the top level hypersweep - this is +1: one because we are counting inclusively
+  // HAC JAN 15, 2020: In order to make this consistent with grafting rounds for hybrid hypersweeps, we add one to the logical number of
+  // iterations instead of the prior version which stored an extra extra element (ie +2)
+  // WARNING! WARNING! WARNING!  This is a departure from the treatment in the contour tree, where the last iteration to the NULL root was
+  // treated as an implicit round.
+  this->NumIterations.WritePortal().Set(this->NumRounds, tree.NumIterations + 1);
   this->FirstSupernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
   this->FirstSupernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
-    this->NumIterations.ReadPortal().Get(this->NumRounds) + 2);
+    this->NumIterations.ReadPortal().Get(this->NumRounds) + 1);
   this->FirstHypernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
   this->FirstHypernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
-    this->NumIterations.ReadPortal().Get(this->NumRounds) + 2);
+    this->NumIterations.ReadPortal().Get(this->NumRounds) + 1);
 
   // now copy in the details. Use CopySubRagnge to ensure that the Copy does not shrink the size
   // of the array as the arrays are in this case allocated above to the approbriate size
