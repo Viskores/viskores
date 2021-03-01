@@ -232,7 +232,7 @@ void TestIndexing()
 
 void TestTriviallyCopyable()
 {
-#ifndef VTKM_USING_GLIBCXX_4
+#ifdef VTKM_USE_STD_IS_TRIVIAL
   // Make sure base types are behaving as expected
   VTKM_STATIC_ASSERT(std::is_trivially_constructible<float>::value);
   VTKM_STATIC_ASSERT(std::is_trivially_copyable<float>::value);

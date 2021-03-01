@@ -23,6 +23,8 @@
 #include <vtkm/TypeList.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkmstd/is_trivial.h>
+
 #include <type_traits>
 
 namespace
@@ -63,7 +65,7 @@ template<typename T>
 void is_triv_noexcept_movable()
 {
   constexpr bool valid =
-#if !(defined(__GNUC__) && (__GNUC__ <= 5))
+#ifdef VTKM_USE_STD_IS_TRIVIAL
                          //GCC 4.X and compilers that act like it such as Intel 17.0
                          //don't have implementations for is_trivially_*
                          std::is_trivially_move_constructible<T>::value &&
