@@ -63,6 +63,8 @@ namespace worklet
 {
 namespace contourtree_augmented
 {
+namespace mesh_extrema_inc
+{
 
 // Functor for doing chain doubling
 // Unary because it takes the index of the element to process, and is not guaranteed to
@@ -94,6 +96,7 @@ public:
   }
 }; // PointerDoubling
 
+} // namespace mesh_extrema_inc
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm
