@@ -55,6 +55,19 @@ struct VariantDestroyFunctor
   }
 };
 
+template <typename T>
+struct VariantCheckType
+{
+  // We are currently not allowing reference types (e.g. FooType&) or pointer types (e.g. FooType*)
+  // in Variant objects. References and pointers can fail badly when things are passed around
+  // devices. If you get a compiler error here, consider removing the reference or using something
+  // like std::decay to remove qualifiers on the type. (We may decide to do that automatically in
+  // the future.)
+  VTKM_STATIC_ASSERT_MSG(!std::is_reference<T>::value,
+                         "References are not allowed in VTK-m Variant.");
+  VTKM_STATIC_ASSERT_MSG(!std::is_pointer<T>::value, "Pointers are not allowed in VTK-m Variant.");
+};
+
 template <typename... Ts>
 struct AllTriviallyCopyable;
 
@@ -305,6 +318,9 @@ template <typename... Ts>
 class Variant : detail::VariantConstructorImpl<Variant<Ts...>>
 {
   using Superclass = detail::VariantConstructorImpl<Variant<Ts...>>;
+
+  // Type not used, but has the compiler check all the types for validity.
+  using CheckTypes = vtkm::List<detail::VariantCheckType<Ts>...>;
 
 public:
   /// Returns the index of the type of object this variant is storing. If no object is currently
