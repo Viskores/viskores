@@ -60,11 +60,11 @@ namespace internal
 using StorageListField = vtkm::ListAppend<
   vtkm::cont::StorageListBasic,
   vtkm::List<
+    vtkm::cont::StorageTagSOA,
     vtkm::cont::StorageTagUniformPoints,
     vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
                                            vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic>,
-    vtkm::cont::StorageTagSOA>>;
+                                           vtkm::cont::StorageTagBasic>>>;
 }
 }
 } // namespace vtkm::cont
