@@ -44,8 +44,8 @@ public:
 #endif
   }
 
-  inline int GetRank() const { return this->Rank; }
-  inline int GetNumRanks() const { return this->NumRanks; }
+  int GetRank() const { return this->Rank; }
+  int GetNumRanks() const { return this->NumRanks; }
 
 #ifdef VTKM_ENABLE_MPI
   VTKM_CONT void RegisterTag(int tag, std::size_t numRecvs, std::size_t size);
@@ -96,10 +96,10 @@ private:
   std::map<RequestTagPair, char*> SendBuffers;
   static constexpr int TAG_ANY = -1;
 
-  bool CheckRequests(const std::map<RequestTagPair, char*>& buffer,
+  void CheckRequests(const std::map<RequestTagPair, char*>& buffer,
                      const std::set<int>& tags,
                      bool BlockAndWait,
-                     std::vector<std::pair<RequestTagPair, char*>>& ret);
+                     std::vector<RequestTagPair>& reqTags);
 #else
 protected:
   static constexpr int NumRanks = 1;
