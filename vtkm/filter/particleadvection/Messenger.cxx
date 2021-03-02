@@ -173,8 +173,8 @@ void Messenger::CheckRequests(const std::map<RequestTagPair, char*>& buffers,
   if (err != MPI_SUCCESS)
     throw vtkm::cont::ErrorFilterExecution("Error with MPI_Testsome in Messenger::RecvData");
 
-
   //Add the req/tag to the return vector.
+  reqTags.reserve(static_cast<std::size_t>(num));
   for (int i = 0; i < num; i++)
     reqTags.push_back(RequestTagPair(copy[indices[i]], tags[indices[i]]));
 }
