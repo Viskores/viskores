@@ -66,6 +66,7 @@
 #include <vtkm/worklet/contourtree_augmented/ContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <vtkm/worklet/contourtree_distributed/InteriorForest.h>
+#include <vtkm/worklet/contourtree_distributed/tree_grafter/CalculateAttachementCounterWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CollapseRegularChainsWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CopyFirstHypernodePerIterationWorklet.h>
 #include <vtkm/worklet/contourtree_distributed/tree_grafter/CopyFirstSupernodePerIterationWorklet.h>
@@ -354,7 +355,18 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
   // count the number of iterations
   this->NumTransferIterations = 0;
 
-  //  Now loop to transfer one iteration at a time
+  // There are several cases we need to handle properly
+  // 1.  We could have a round with no superarcs to add (in which case we are
+  //     guaranteed not to have attachment points)
+  // 2.  We could have a round with some superarcs but no attachment points
+  //     (because we attach to existing supernodes)
+  // 3.  We could have a round with attachment points to add
+  // Attachment points are interior, so are never added to the active superarc
+  // list in the first place. This means that we need to have an extra round
+  // some of the time to transfer attachment points. So the logic is:
+  // first we transfer all active superarcs, then we test (somehow) for having
+  // attachment points to transfer
+  //  Loop to transfer active superarcs with a variation of the PPP transfer phase
   //  We stop when all that is left are attachment points (which aren't included in the active list)
   while (this->ActiveSuperarcs.GetNumberOfValues() > 0)
   { // loop to transfer
@@ -381,18 +393,34 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
              DebugPrint("Finished Transfer Iterations", __FILE__, __LINE__));
 #endif
 
-  //  Now set the transfer iteration for all attachment points
-  //  If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
-  auto setTransferIterationWorklet = vtkm::worklet::contourtree_distributed::tree_grafter::
-    GraftInteriorForestsSetTransferIterationWorklet(this->NumTransferIterations);
-  this->Invoke(setTransferIterationWorklet,
-               this->SupernodeType,       // input
-               this->HierarchicalSuperId, // input
-               this->WhenTransferred      // output
+  // At this point, we can check to see whether all supernodes in the residue have already been transferred
+  // length of the attachementCounter will be set to (this->ContourTree->Supernodes.GetNumberOfValue());
+  // as a result of the worklet
+  vtkm::worklet::contourtree_augmented::IdArrayType attachmentCounter;
+  vtkm::worklet::contourtree_distributed::tree_grafter::CalculateAttachementCounterWorklet
+    calculateAttachementCounterWorklet;
+  this->Invoke(calculateAttachementCounterWorklet, // worklet
+               this->SupernodeType,                // input
+               this->HierarchicalSuperId,          // input
+               attachmentCounter                   // output
   );
+  vtkm::Id numAttachmentPoints = vtkm::cont::Algorithm::Reduce(attachmentCounter, 0, vtkm::Sum());
 
-  // and increment the number of iterations
-  this->NumTransferIterations++;
+  // if there are any at all, we need an extra iteration
+  if (numAttachmentPoints > 0)
+  { // attachment points needing transfer
+    //  Now set the transfer iteration for all attachment points
+    //  If there were no supernodes to transfer, their types are all NO_SUCH_ELEMENT
+    auto setTransferIterationWorklet = vtkm::worklet::contourtree_distributed::tree_grafter::
+      GraftInteriorForestsSetTransferIterationWorklet(this->NumTransferIterations);
+    this->Invoke(setTransferIterationWorklet,
+                 this->SupernodeType,       // input
+                 this->HierarchicalSuperId, // input
+                 this->WhenTransferred      // output
+    );
+    // and increment the number of iterations
+    this->NumTransferIterations++;
+  } // attachment points needing transfer
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1397,8 +1425,8 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
                                                           this->NewSupernodes.GetNumberOfValues());
   hierarchicalTree.NumHypernodesInRound.WritePortal().Set(theRound,
                                                           this->NewHypernodes.GetNumberOfValues());
-  // the -1 is because the last iteration is just setting attachment points
-  hierarchicalTree.NumIterations.WritePortal().Set(theRound, this->NumTransferIterations - 1);
+  // last iteration is just setting attachment points (but we are including this now) (previously added -1)
+  hierarchicalTree.NumIterations.WritePortal().Set(theRound, this->NumTransferIterations);
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
@@ -1424,7 +1452,7 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
   // and set the per round iteration counts. There may be smarter ways of doing this, but . . .
   this->ResizeVector<vtkm::Id>(
     hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)],
-    this->NumTransferIterations,
+    this->NumTransferIterations + 1,
     vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   {
     auto copyFirstSupernodePerIterationWorklet =
@@ -1445,11 +1473,16 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
              hierarchicalTree.DebugPrint("Supernode Iteration Counts Set", __FILE__, __LINE__));
 #endif
 
-  // Initalize hierarchicalTree.FirstHypernodePerIteration with NO_SUCH_ELEMENT
+  // we add one so we don't need special cases when establishing subranges
+  // There's a tricky case to be dealt with due to attachment points - the last (extra) iteration transfers supernodes
+  // with a "virtual" superarc but no hyperarc.  This can only occur in the final iteration, in which case the correct value is
+  // the "off the end" sentinel.  But it is also possible for there to be no attachment points, in which case the final iteration
+  // will have some other value.  Also, we need to set the "off the end" for the extra entry in any event.
+  // THEREFORE, instead of instantiating to NO_SUCH_ELEMENT for safety, we instantiate to the hypernodes.size()
   this->ResizeVector<vtkm::Id>(
     hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)],
-    this->NumTransferIterations,
-    vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    this->NumTransferIterations + 1,
+    hierarchicalTree.Hypernodes.GetNumberOfValues());
   // copy the approbriat hierarchicalTree.FirstHypernodePerIteration values
   {
     auto copyFirstHypernodePerIterationWorklet =
@@ -1466,9 +1499,9 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
     );
   }
 
-  // force the extra one to be one-off-the end for safety
-  hierarchicalTree.FirstHypernodePerIteration[static_cast<size_t>(theRound)].WritePortal().Set(
-    this->NumTransferIterations - 1, hierarchicalTree.Hypernodes.GetNumberOfValues());
+  // force the extra one to be one-off-the end for safety; REMOVED - SEE ABOVE FOR LOGIC
+  //hierarchicalTree.FirstHypernodePerIteration[static_cast<size_t>(theRound)].WritePortal().Set(
+  //  this->NumTransferIterations, hierarchicalTree.Hypernodes.GetNumberOfValues());
 
 #ifdef DEBUG_PRINT
   VTKM_LOG_S(vtkm::cont::LogLevel::Info,
