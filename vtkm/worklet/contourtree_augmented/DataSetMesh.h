@@ -80,7 +80,9 @@
 
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/GetOwnedVerticesByGlobalIdWorklet.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/worklet/contourtree_augmented/data_set_mesh/NotNoSuchElementPredicate.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/SimulatedSimplicityComperator.h>
 #include <vtkm/worklet/contourtree_augmented/data_set_mesh/SortIndices.h>
 
@@ -181,14 +183,83 @@ public:
       meshIds, *localToGlobalIdRelabeler);
   } // GetGlobalIDsFromMeshIndices()
 
+  ///Compute a list of the global Iss of all vertices that logically belong to the data block represented by this
+  ///mesh object (used in distributd parallel computation). This is needed  to avoid multiple counting on bousndaries
+  ///in the hierarchy during distributed parallel contour tree computation.
+  ///This function is defined as virtual on the base DataSet mesh to make it easy to reuse across the mesh types
+  ///since in the distributed case we may store the meshes in their generic version. The specific implementation
+  /// must be handled in the specialized mesh types.
+  /// @param[in] localToGlobalIdRelabeler IdRelabeler for the mesh needed to map local to global Ids
+  /// @param[out] ownedVertices List of vertices that logically belong to
+  virtual void GetOwnedVerticesByGlobalId(
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+    IdArrayType& ownedVertices) const
+  {
+    (void)localToGlobalIdRelabeler;
+    (void)ownedVertices;
+    throw std::logic_error("GetOwnedVerticesByGlobalId not implemented on the "
+                           "base DataSetMesh. The function must be implemented "
+                           "on derived classes, typically using  the provided "
+                           "GetOwnedVerticesByGlobalIdImpl function.");
+  }
+
   //routine that dumps out the contents of the mesh
   void DebugPrint(const char* message, const char* fileName, long lineNum);
 
 protected:
+  /// Implementation of GetOwnedVerticesByGlobalId used internally by derived classes to
+  /// implement the specific variant of the function .The implementations vary based on the
+  /// MeshBoundary object used, and so derived classes just need to specify their mesh
+  /// boundary object and then call this funtion
+  /// @param[in] mesh For derived meshes set simply to this. Derived meshes inherit also from ExecutionObjectBase
+  ///                 and as such have PrepareForExecution functions that return a MeshBoundary object that
+  ///                 we can use here. We are passing in the mesh since the base DataSetMesh class does
+  ///                 not know about MeshBoundary classes and so we are passing the mesh in.
+  /// @param[out] ownedVertices List of vertices that logically belong to
+  template <typename MeshTypeObj>
+  void GetOwnedVerticesByGlobalIdImpl(
+    const MeshTypeObj* mesh,
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+    IdArrayType& ownedVertices) const;
+
   virtual void DebugPrintExtends();
   template <typename T, typename StorageType>
   void DebugPrintValues(const vtkm::cont::ArrayHandle<T, StorageType>& values);
 }; // class DataSetMesh
+
+// Implementation of GetOwnedVerticesByGlobalId used by subclasses
+template <typename MeshTypeObj>
+void DataSetMesh::GetOwnedVerticesByGlobalIdImpl(
+  const MeshTypeObj* mesh,
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler,
+  IdArrayType& ownedVertices) const
+{
+  // use temporary array since we need to compress these at the end via CopyIf so we
+  // can move the values to keep to the ownedVertices ouput array then
+  IdArrayType tempOwnedVertices;
+  // Fancy array for the running mesh index
+  vtkm::cont::ArrayHandleIndex meshIndexArray(this->GetNumberOfVertices());
+  auto ownedVerticesWorklet =
+    vtkm::worklet::contourtree_augmented::data_set_mesh::GetOwnedVerticesByGlobalIdWorklet(
+      localToGlobalIdRelabeler);
+  vtkm::cont::Invoker invoke;
+  invoke(ownedVerticesWorklet, // worklet ot run
+         meshIndexArray,       // input mesh index to map
+         mesh,                 // input the mesh object
+         tempOwnedVertices     // output
+  );
+  // now compress out the NO_SUCH_ELEMENT ones
+  auto notNoSuchElementPredicate =
+    vtkm::worklet::contourtree_augmented::data_set_mesh::NotNoSuchElementPredicate();
+  // compress the array
+  vtkm::cont::Algorithm::CopyIf(
+    tempOwnedVertices,        // compress the array of owned vertices
+    tempOwnedVertices,        // stencil. Same as input. Values to remove have NO_SUCH_ELEMENT flag
+    ownedVertices,            // array where the compressed ownedVertices are stored
+    notNoSuchElementPredicate // unary predicate for deciding which nodes are considered true. Here those that do not have a NO_SUCH_ELEMENT flag.
+  );
+}
+
 
 // Sorts the data and initialises the SortIndices & SortOrder
 template <typename T, typename StorageType>

@@ -50,11 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_data_set_mesh_execution_object_mesh_2d_h
-#define vtk_m_worklet_contourtree_augmented_data_set_mesh_execution_object_mesh_2d_h
+#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_get_owned_vertices_by_global_id_worklet_h
+#define vtk_m_worklet_contourtree_augmented_mesh_dem_get_owned_vertices_by_global_id_worklet_h
 
-#include <vtkm/Types.h>
-#include <vtkm/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -66,68 +65,38 @@ namespace data_set_mesh
 {
 
 // Worklet for computing the sort indices from the sort order
-class MeshStructure2D
+class GetOwnedVerticesByGlobalIdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
+  using ControlSignature = void(FieldIn meshIndices,      // (input) index into active vertices
+                                ExecObject meshStructure, // (input) mesh structure execution object
+                                FieldOut ownedVertices    // (output) vertices owned by the mesh
+  );
+  using ExecutionSignature = _3(_1, _2);
+  using InputDomain = _1;
+
+  // Constructor
   VTKM_EXEC_CONT
-  MeshStructure2D()
-    : MeshSize{ 0, 0 }
+  GetOwnedVerticesByGlobalIdWorklet(
+    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler)
+    : LocalToGlobalIdRelabeler(localToGlobalIdRelabeler)
   {
   }
 
-  VTKM_EXEC_CONT
-  MeshStructure2D(vtkm::Id2 meshSize)
-    : MeshSize(meshSize)
+  /// Functor returning NO_SUCH_ELEMENT if vertex is not owed or the global mesh index if the vertex is owned
+  /// The functor simply calls the GetVertexOwned functin of the meshStructure for all vertices
+  template <typename MeshStructureType>
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id meshIndex,
+                                const MeshStructureType& meshStructure) const
   {
+    return meshStructure.GetVertexOwned(meshIndex, this->LocalToGlobalIdRelabeler);
   }
 
-  /// Get the number of mesh vertices
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfVertices() const { return (this->MeshSize[0] * this->MeshSize[1]); }
+private:
+  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler* LocalToGlobalIdRelabeler;
+}; // Mesh2D_DEM_VertexStarter
 
-  /// Get the (x,y) position of the vertex based on its index
-  VTKM_EXEC
-  inline vtkm::Id2 VertexPos(vtkm::Id v) const
-  {
-    return vtkm::Id2{ v % this->MeshSize[0], v / this->MeshSize[0] };
-  }
-
-  ///vertex ID - row * ncols + col
-  VTKM_EXEC
-  inline vtkm::Id VertexId(vtkm::Id2 pos) const { return pos[1] * this->MeshSize[0] + pos[0]; }
-
-  /// determine if the vertex is owned by this mesh block or not
-  /// The function returns NO_SUCH_ELEMENT if the vertex is not owned by the block and
-  /// otherwise it returns global id of the vertex as determined via the IdRelabeler
-  VTKM_EXEC_CONT
-  inline vtkm::Id GetVertexOwned(const vtkm::Id& meshIndex,
-                                 const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
-                                   localToGlobalIdRelabeler) const
-  {
-    // Get the vertex position
-    vtkm::Id2 pos = this->VertexPos(meshIndex);
-    // now test - the low ID boundary belongs to this block
-    // the high ID boundary belongs to the next block if there is one
-    if (((pos[1] == this->MeshSize[1] - 1) &&
-         (pos[1] + localToGlobalIdRelabeler->LocalBlockOrigin[1] !=
-          localToGlobalIdRelabeler->GlobalSize[1] - 1)) ||
-        ((pos[0] == this->MeshSize[0] - 1) &&
-         (pos[0] + localToGlobalIdRelabeler->LocalBlockOrigin[0] !=
-          localToGlobalIdRelabeler->GlobalSize[0] - 1)))
-    {
-      return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-    }
-    else
-    {
-      return (*localToGlobalIdRelabeler)(meshIndex);
-    }
-  }
-
-  vtkm::Id2 MeshSize;
-
-}; // MeshStructure2D
-
-} // namespace mesh_dem
+} // namespace data_set_mesh
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm
