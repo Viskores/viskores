@@ -48,6 +48,7 @@
 #ifndef VTKM_DEFAULT_STORAGE_LIST
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/StorageList.h>
 namespace vtkm
 {
@@ -62,8 +63,8 @@ using StorageListField = vtkm::ListAppend<
     vtkm::cont::StorageTagUniformPoints,
     vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
                                            vtkm::cont::StorageTagBasic,
-                                           vtkm::cont::StorageTagBasic>>>;
-
+                                           vtkm::cont::StorageTagBasic>,
+    vtkm::cont::StorageTagSOA>>;
 }
 }
 } // namespace vtkm::cont
