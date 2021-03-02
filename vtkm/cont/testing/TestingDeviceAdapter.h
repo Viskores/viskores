@@ -1332,17 +1332,17 @@ private:
 
     //the output of reduce and scan inclusive should be the same
     std::cout << "  Reduce with initial value of 0." << std::endl;
-    vtkm::Id reduce_sum = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum = Algorithm::Reduce(array, 0);
     std::cout << "  Reduce with initial value." << std::endl;
     vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array, vtkm::Id(ARRAY_SIZE));
     std::cout << "  Inclusive scan to check" << std::endl;
     vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
     std::cout << "  Reduce with 1 value." << std::endl;
     array.Allocate(1, vtkm::CopyFlag::On);
-    vtkm::Id reduce_sum_one_value = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum_one_value = Algorithm::Reduce(array, 0);
     std::cout << "  Reduce with 0 values." << std::endl;
     array.Allocate(0);
-    vtkm::Id reduce_sum_no_values = Algorithm::Reduce(array, vtkm::Id(0));
+    vtkm::Id reduce_sum_no_values = Algorithm::Reduce(array, 0);
     VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE, "Got bad sum from Reduce");
     VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
                      "Got bad sum from Reduce with initial value");
