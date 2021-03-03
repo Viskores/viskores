@@ -572,6 +572,61 @@ VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt32, LONG, )
 VTKM_ATOMIC_OPS_FOR_TYPE(vtkm::UInt64, LONG64, 64)
 
 #undef VTKM_ATOMIC_OPS_FOR_TYPE
+
+VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* addr,
+                                                  vtkm::Float32 arg,
+                                                  vtkm::MemoryOrder order)
+{
+  union {
+    vtkm::UInt32 i;
+    vtkm::Float32 f;
+  } expected{ .f = *addr }, desired{};
+
+  do
+  {
+    desired.f = expected.f + arg;
+  } while (
+    //    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt32*>(addr),
+    //                                 &expected.i, // reloads expected with *addr prior to the operation
+    //                                 desired.i,
+    //                                 false,
+    //                                 GccAtomicMemOrder(order),
+    //                                 GccAtomicMemOrder(order)));
+    !AtomicCompareExchangeImpl(reinterpret_cast<vtkm::UInt32*>(addr),
+                               &expected.i, // reloads expected with *addr prior to the operation
+                               desired.i,
+                               order));
+  // return the "old" value that was in the memory.
+  return expected.f;
+}
+
+VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float64* addr,
+                                                  vtkm::Float64 arg,
+                                                  vtkm::MemoryOrder order)
+{
+  union {
+    vtkm::UInt64 i;
+    vtkm::Float64 f;
+  } expected{ .f = *addr }, desired{};
+
+  do
+  {
+    desired.f = expected.f + arg;
+  } while (
+    //    !__atomic_compare_exchange_n(reinterpret_cast<vtkm::UInt64*>(addr),
+    //                                 &expected.i, // reloads expected with *addr prior to the operation
+    //                                 desired.i,
+    //                                 false,
+    //                                 GccAtomicMemOrder(order),
+    //                                 GccAtomicMemOrder(order)));
+    !AtomicCompareExchangeImpl(reinterpret_cast<vtkm::UInt64*>(addr),
+                               &expected.i, // reloads expected with *addr prior to the operation
+                               desired.i,
+                               order));
+  // return the "old" value that was in the memory.
+  return expected.f;
+}
+
 }
 } // namespace vtkm::detail
 
