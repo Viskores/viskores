@@ -74,6 +74,9 @@
 #include <vtkm/worklet/contourtree_distributed/SpatialDecomposition.h>
 #include <vtkm/worklet/contourtree_distributed/TreeGrafter.h>
 
+
+#include <vtkm/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
+
 // DIY includes
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE

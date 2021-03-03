@@ -9,25 +9,14 @@
 ##============================================================================
 
 set(headers
-  BoundaryTree.h
-  BoundaryTreeMaker.h
-  ComputeDistributedContourTreeFunctor.h
-  ContourTreeBlockData.h
-  DistributedContourTreeBlockData.h
-  HierarchicalContourTree.h
-  HierarchicalHyperSweeper.h
-  InteriorForest.h
-  MergeBlockFunctor.h
-  MultiBlockContourTreeHelper.h
-  PrintGraph.h
-  SpatialDecomposition.h
-  TreeCompiler.h
-  TreeGrafter.h
+  InitializeRegularVertexCountComputeSuperparentIds.h
+  InitializeRegularVertexCountInitalizeCountsWorklet.h
+  InitializeRegularVertexCountSubtractLowEndWorklet.h
+  ComputeSuperarcDependentWeightsWorklet.h
+  ComputeSuperarcTransferWeightsWorklet.h
+  TransferTargetComperator.h
+  TransferWeightsUpdateRHEWorklet.h
+  TransferWeightsUpdateLHEWorklet.h
 )
 
 vtkm_declare_headers(${headers})
-
-add_subdirectory(boundary_tree_maker)
-add_subdirectory(tree_grafter)
-add_subdirectory(hierarchical_contour_tree)
-add_subdirectory(hierarchical_hyper_sweeper)

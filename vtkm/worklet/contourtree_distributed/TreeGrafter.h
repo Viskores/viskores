@@ -404,7 +404,10 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
                this->HierarchicalSuperId,          // input
                attachmentCounter                   // output
   );
-  vtkm::Id numAttachmentPoints = vtkm::cont::Algorithm::Reduce(attachmentCounter, 0, vtkm::Sum());
+  // Compute the sum of all values in attachmentCounter. vtkm::Add() is the default (so it could be omitted).
+  // We include it here to be more explicit about what Reduce does.
+  vtkm::Id numAttachmentPoints =
+    vtkm::cont::Algorithm::Reduce(attachmentCounter, static_cast<vtkm::Id>(0), vtkm::Add());
 
   // if there are any at all, we need an extra iteration
   if (numAttachmentPoints > 0)
