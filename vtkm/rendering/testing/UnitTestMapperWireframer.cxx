@@ -118,12 +118,16 @@ void RenderTests()
   std::vector<vtkm::rendering::Color> colors;
   colors.push_back(vtkm::rendering::Color(1.f, 0.f, 0.f));
   colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
-  vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), fields, colors, "wf_lines1D.pnm");
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
+    maker.Make1DUniformDataSet0(), fields, colors, "rendering/wireframer/wf_lines1D.png");
   //test log y
   vtkm::rendering::Color red = vtkm::rendering::Color::red;
-  vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet1(), "pointvar", red, "wf_linesLogY1D.pnm", true);
+  vtkm::rendering::testing::RenderAndRegressionTest<M, C, V1>(
+    maker.Make1DUniformDataSet1(),
+    "pointvar",
+    red,
+    "rendering/wireframer/wf_linesLogY1D.png",
+    true);
 }
 
 } //namespace
