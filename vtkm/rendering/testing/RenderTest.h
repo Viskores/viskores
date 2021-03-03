@@ -115,7 +115,7 @@ std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
   std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
       "Test Plot", vtkm::rendering::Color(1, 1, 1, 1), .075f, vtkm::Vec2f_32(-.11f, .92f), 0.f));
-  view->AddAnnotation(std::move(titleAnnotation));
+  view->AddTextAnnotation(std::move(titleAnnotation));
   return view;
 }
 
@@ -140,6 +140,7 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const std::string& fieldNm,
                              const vtkm::cont::ColorTable& colorTable,
                              const std::string& outputFile,
+                             const bool& enableAnnotations = true,
                              const vtkm::Float64& dataViewPadding = 0)
 {
   MapperType mapper;
@@ -148,6 +149,7 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
 
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
+  view->SetRenderAnnotationsEnabled(enableAnnotations);
   VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
 }
 // --------------------------------------------------------------
@@ -181,7 +183,7 @@ std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
   std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
       "Test Plot", vtkm::rendering::Color(1, 1, 1, 1), .075f, vtkm::Vec2f_32(-.11f, .92f), 0.f));
-  view->AddAnnotation(std::move(titleAnnotation));
+  view->AddTextAnnotation(std::move(titleAnnotation));
   return view;
 }
 
@@ -207,6 +209,7 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const std::vector<std::string>& fields,
                              const std::vector<vtkm::rendering::Color>& colors,
                              const std::string& outputFile,
+                             const bool& enableAnnotations = true,
                              const vtkm::Float64& dataViewPadding = 0)
 {
   MapperType mapper;
@@ -216,6 +219,7 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
 
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fields, colors, canvas, mapper, scene, dataViewPadding);
+  view->SetRenderAnnotationsEnabled(enableAnnotations);
   VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
 }
 // --------------------------------------------------------------
@@ -247,7 +251,7 @@ std::shared_ptr<ViewType> GetViewPtr(const vtkm::cont::DataSet& ds,
   std::unique_ptr<vtkm::rendering::TextAnnotationScreen> titleAnnotation(
     new vtkm::rendering::TextAnnotationScreen(
       "1D Test Plot", foreground, .1f, vtkm::Vec2f_32(-.27f, .87f), 0.f));
-  view->AddAnnotation(std::move(titleAnnotation));
+  view->AddTextAnnotation(std::move(titleAnnotation));
   view->SetLogY(logY);
   return view;
 }
@@ -275,6 +279,7 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
                              const vtkm::rendering::Color& color,
                              const std::string& outputFile,
                              const bool logY = false,
+                             const bool& enableAnnotations = true,
                              const vtkm::Float64& dataViewPadding = 0)
 {
   MapperType mapper;
@@ -283,10 +288,10 @@ void RenderAndRegressionTest(const vtkm::cont::DataSet& ds,
 
   auto view = GetViewPtr<MapperType, CanvasType, ViewType>(
     ds, fieldNm, canvas, mapper, scene, color, logY, dataViewPadding);
+  view->SetRenderAnnotationsEnabled(enableAnnotations);
   VTKM_TEST_ASSERT(test_equal_images(view, outputFile));
 }
 // --------------------------------------------------------------
-
 
 // A render test that allows for testing different mapper params
 template <typename MapperType, typename CanvasType, typename ViewType>
@@ -304,8 +309,6 @@ void Render(MapperType& mapper,
     ds, fieldNm, canvas, mapper, scene, colorTable, dataViewPadding);
   Render<MapperType, CanvasType, ViewType>(*view, outputFile);
 }
-
-
 
 template <typename MapperType1, typename MapperType2, typename CanvasType, typename ViewType>
 void MultiMapperRender(const vtkm::cont::DataSet& ds1,
@@ -351,8 +354,9 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
 
   canvas.SaveAs(outputFile);
 }
-}
-}
+
 } // namespace vtkm::rendering::testing
+} // namespace vtkm::rendering
+} // namespace vtkm
 
 #endif //vtk_m_rendering_testing_RenderTest_h

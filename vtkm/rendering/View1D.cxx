@@ -42,13 +42,9 @@ void View1D::Paint()
 {
   this->GetCanvas().Clear();
   this->UpdateCameraProperties();
-  this->SetupForWorldSpace();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
-  this->RenderWorldAnnotations();
-  this->SetupForScreenSpace();
-  this->RenderScreenAnnotations();
-  this->RenderColorLegendAnnotations();
+  this->AddAdditionalAnnotation([&]() { this->RenderColorLegendAnnotations(); });
   this->RenderAnnotations();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
 }
 
 void View1D::RenderScreenAnnotations()

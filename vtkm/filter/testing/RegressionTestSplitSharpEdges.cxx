@@ -46,7 +46,7 @@ void TestSplitSharpEdges()
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/split-sharp-edges.png");
+    result, "pointvar", colorTable, "filter/split-sharp-edges.png", false);
 }
 } // namespace
 

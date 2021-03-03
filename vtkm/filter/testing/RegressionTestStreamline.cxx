@@ -69,7 +69,7 @@ void TestStreamline()
   result.PrintSummary(std::cout);
 
   vtkm::rendering::testing::RenderAndRegressionTest<M, C, V3>(
-    result, "pointvar", colorTable, "filter/streamline.png");
+    result, "pointvar", colorTable, "filter/streamline.png", false);
 }
 } // namespace
 
